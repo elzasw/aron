@@ -1,0 +1,24 @@
+build:
+  stage: build
+  script:
+    - cd doc
+    - pip install sphinx sphinx-rtd-theme
+    - make html
+    - rm -f -r ./aron-doc
+    - mkdir aron-doc
+    - mv build/html aron-doc/
+  artifacts:
+    paths:
+      - aron-doc
+  only:
+    - master
+
+deploy-portal-user-doc:
+  stage: deploy
+  script:
+    - rm -f -r ./aron-doc.tar.gz
+    - tar czf aron-doc.tar.gz ./aron-doc
+    - scp aron-doc.tar.gz cdrobot@frnk.lightcomp.cz:/home/cdrobot/deploy
+    - ssh cdrobot@frnk.lightcomp.cz "./cdscripts/deploy-aron-doc.sh"
+  only:
+    - master
