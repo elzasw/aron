@@ -1,0 +1,48 @@
+openapi: "3.0.3"
+info:
+  title: Aron Kernel API
+  version: "1.0"
+tags:
+  - name: ApuSource
+    description: Manipulace s APU
+paths:
+  /apusrc/{uuid}:
+    parameters:
+      - in: path
+        name: uuid
+        required: true
+        description: UUID zdroje APU
+        schema:
+          type: string
+    get:
+      operationId: getApuSourceById
+      tags:
+        - ApuSource
+      description: Vrátí aktuální podobu zdroje dat
+      responses:
+        '200':
+          description: Úspěšné nalezení záznamu.
+          content:
+            text/xml:
+              schema:
+                description: XML has root element <apusrc> from schema http://www.aron.cz/apux/2020
+                type: string
+                format: binary
+  /apusrc:
+    post:
+      operationId: putApuSource
+      tags:
+        - ApuSource
+      description: Vložení nebo aktualizace ApuSource
+      requestBody:
+        description: XML s popisem ApuSource
+        required: true
+        content:
+          text/xml:
+            schema:
+              description: XML has root element <apusrc> from schema http://www.aron.cz/apux/2020
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Úspěšné vložení.

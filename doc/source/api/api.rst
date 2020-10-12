@@ -10,4 +10,5 @@ kapitolách a formou OpenAPI rozhraní.
   
 .. toctree::
 
+   openapi.rst
    schema.rst
