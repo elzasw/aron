@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema targetNamespace="http://www.aron.cz/apux/2020" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020" elementFormDefault="qualified">
 	<xs:element name="apusrc" type="s1:ApuSource"/>
+	<xs:element name="dao" type="s1:Dao">
+		<xs:annotation>
+			<xs:documentation>Kořenový element pro jeden DAO</xs:documentation>
+		</xs:annotation>
+	</xs:element>
 	<xs:simpleType name="ApuType">
 		<xs:annotation>
 			<xs:documentation>Druh APU</xs:documentation>
@@ -12,6 +17,16 @@
 			<xs:enumeration value="FindingAid"/>
 			<xs:enumeration value="Fund"/>
 			<xs:enumeration value="Institution"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DaoBundleType">
+		<xs:annotation>
+			<xs:documentation>Druh digitálního svazku</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="HightResView"/>
+			<xs:enumeration value="Published"/>
+			<xs:enumeration value="Thumbnail"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="LongString">
@@ -47,6 +62,7 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 					<xs:documentation>Odkaz na rodiče (volitelný)</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="attchs" type="s1:Attachment" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="type" use="required" type="s1:ApuType"/>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid"/>
@@ -66,6 +82,54 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid">
 			<xs:annotation>
 				<xs:documentation>Přenosový objekt pro kolekci APU. Objekty přenášené v rámci jedné kolekce jsou její trvalou součástí.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Attachment">
+		<xs:annotation>
+			<xs:documentation>Příloha</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="file" type="s1:DaoFile" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Dao">
+		<xs:annotation>
+			<xs:documentation>Digitalizát</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="bndl" type="s1:DaoBundle" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid">
+			<xs:annotation>
+				<xs:documentation>Identifikátor DAO</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoBundle">
+		<xs:annotation>
+			<xs:documentation>Svazek souborů</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="file" type="s1:DaoFile" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" use="required" type="s1:DaoBundleType"/>
+	</xs:complexType>
+	<xs:complexType name="DaoFile">
+		<xs:sequence>
+			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="mtdt" type="s1:Metadata" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="pos" use="optional" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>pozice souboru (číslo stránky)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid">
+			<xs:annotation>
+				<xs:documentation>UUID souboru/stránky</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>
@@ -164,6 +228,17 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
 			</xs:extension>
 		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="Metadata">
+		<xs:sequence>
+			<xs:element name="itms" type="s1:MetadataItem" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MetadataItem">
+		<xs:sequence>
+			<xs:element name="code" type="s1:String250" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="value" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="Part">
 		<xs:annotation>

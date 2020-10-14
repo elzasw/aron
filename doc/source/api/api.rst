@@ -4,11 +4,18 @@
 Programátorské rozhraní  (API)
 ==============================
 
-Programátorské rozhraní je založeno na REST službách s možností
+Programátorské rozhraní je založeno na WSDL službách s možností
 přenosu dat v XML formátu. Služby jsou popsány v samostatných 
-kapitolách a formou OpenAPI rozhraní.
+kapitolách.
+
+API je tvořeno sadou služeb:
+ - Jádro - příjem dat
+ - Jádro - management dat
+ - Transformační agent - příjem požadavků
+
+Výměnný datový formát pro zasílání informací o APU se označuje jako :ref:`APUX <api_apux>`.
   
 .. toctree::
-
-   openapi.rst
-   schema.rst
+   
+   apux.rst
+   jadro-prijem.rst
