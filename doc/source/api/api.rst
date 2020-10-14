@@ -19,3 +19,4 @@ Výměnný datový formát pro zasílání informací o APU se označuje jako :r
    
    apux.rst
    jadro-prijem.rst
+   jadro-api.rst

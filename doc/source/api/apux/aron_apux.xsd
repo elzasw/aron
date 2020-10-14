@@ -265,6 +265,14 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 			<xs:element name="part" type="s1:Part" minOccurs="1" maxOccurs="unbounded"/>
 		</xs:sequence>
 	</xs:complexType>
+	<xs:complexType name="UuidList">
+		<xs:annotation>
+			<xs:documentation>Seznam Uuid</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="uuid" type="s1:Uuid" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:attributeGroup name="ItemAttrGroup">
 		<xs:annotation>
 			<xs:documentation>Skupina společných atributů pro DescItem</xs:documentation>
