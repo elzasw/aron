@@ -10,4 +10,4 @@ jedinou funkci umožňující vymazat sadu datových zdrojů.
 Definice rozhraní
 =======================
 
-Definice rozhraní WSDL: :download:`aron_core.wsdl <aron_core/aron_core.wsdl>`
+Definice rozhraní WSDL: :download:`aron_core.wsdl <core/aron_core.wsdl>`
