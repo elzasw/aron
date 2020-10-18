@@ -90,6 +90,7 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 			<xs:documentation>Příloha</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="file" type="s1:DaoFile" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
