@@ -54,7 +54,16 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 			<xs:documentation>Single Archival Publication Unit</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="name" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="name" type="s1:LongString" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Název Apu, zobrazuje se ve výsledcích vyhledávání, či při odkazování.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="desc" type="s1:LongString" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Volitelný popis APU, zobrazí se ve výsledcích vyhledávání nebo v tooltipu.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="prts" type="s1:Parts" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="prnt" type="s1:Uuid" minOccurs="0" maxOccurs="1">
@@ -278,6 +287,11 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 		<xs:annotation>
 			<xs:documentation>Skupina společných atributů pro DescItem</xs:documentation>
 		</xs:annotation>
+		<xs:attribute name="visible" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Volitelný příznak určující, zda prvek popisu je pouze indexován, tj. není přímo uživateli viditelný a slouží jen pro dohledání jednotky popisu.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 		<xs:attribute name="type" use="optional" type="s1:String250"/>
 	</xs:attributeGroup>
 </xs:schema>
