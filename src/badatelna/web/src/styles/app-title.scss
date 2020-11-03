@@ -1,0 +1,12 @@
+.app-title {
+  font-size: 1.2rem;
+  color: $color-white;
+
+  &.clickable {
+    cursor: pointer;
+  }
+
+  .first {
+    font-weight: 600;
+  }
+}

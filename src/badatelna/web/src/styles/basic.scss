@@ -1,0 +1,31 @@
+body {
+  margin: 0;
+  font-family: "Proxima Nova", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: $color-text;
+  overflow: hidden;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+button {
+  color: $color-white !important;
+  background: $color-blue;
+  border: 1px solid $color-blue;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.4s;
+  cursor: pointer;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-height {
+  height: 100%;
+}
