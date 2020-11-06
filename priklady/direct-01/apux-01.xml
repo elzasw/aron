@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<apusrc xmlns="https://www.aron.cz/apux/2020" uuid="d3fe5715-70f3-4739-9ed6-2972397c0255">
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="d3fe5715-70f3-4739-9ed6-2972397c0255">
  <apus>
   <apu type="Institution" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891bf">
    <name>První virtuální archiv</name>
