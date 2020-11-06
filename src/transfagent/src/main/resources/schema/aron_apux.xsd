@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://www.aron.cz/apux/2020" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020" elementFormDefault="qualified">
+	<xs:element name="apusrc" type="s1:ApuSource"/>
+	<xs:element name="dao" type="s1:Dao">
+		<xs:annotation>
+			<xs:documentation>Kořenový element pro jeden DAO</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:simpleType name="ApuType">
+		<xs:annotation>
+			<xs:documentation>Druh APU</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ArchDesc"/>
+			<xs:enumeration value="Collection"/>
+			<xs:enumeration value="Entity"/>
+			<xs:enumeration value="FindingAid"/>
+			<xs:enumeration value="Fund"/>
+			<xs:enumeration value="Institution"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DaoBundleType">
+		<xs:annotation>
+			<xs:documentation>Druh digitálního svazku</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="HightResView"/>
+			<xs:enumeration value="Published"/>
+			<xs:enumeration value="Thumbnail"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="LongString">
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="String250">
+		<xs:annotation>
+			<xs:documentation>Řetězec s délkou maximálně 250 znaků</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="Uuid">
+		<xs:annotation>
+			<xs:documentation>Jednoznačný identifikátor typu UUID.
+
+Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[14][0-9a-fA-F]{3}-[8-9a-bA-B][0-9a-fA-F]{3}-[0-9a-fA-F]{12}"/>
+			<xs:length value="36"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Apu">
+		<xs:annotation>
+			<xs:documentation>Single Archival Publication Unit</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Název Apu, zobrazuje se ve výsledcích vyhledávání, či při odkazování.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="desc" type="s1:LongString" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Volitelný popis APU, zobrazí se ve výsledcích vyhledávání nebo v tooltipu.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="prts" type="s1:Parts" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="prnt" type="s1:Uuid" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Odkaz na rodiče (volitelný)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="attchs" type="s1:Attachment" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" use="required" type="s1:ApuType"/>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid"/>
+	</xs:complexType>
+	<xs:complexType name="ApuList">
+		<xs:annotation>
+			<xs:documentation>Collection of Apu</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="apu" type="s1:Apu" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ApuSource">
+		<xs:sequence>
+			<xs:element name="apus" type="s1:ApuList" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid">
+			<xs:annotation>
+				<xs:documentation>Přenosový objekt pro kolekci APU. Objekty přenášené v rámci jedné kolekce jsou její trvalou součástí.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Attachment">
+		<xs:annotation>
+			<xs:documentation>Příloha</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="file" type="s1:DaoFile" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Dao">
+		<xs:annotation>
+			<xs:documentation>Digitalizát</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="bndl" type="s1:DaoBundle" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid">
+			<xs:annotation>
+				<xs:documentation>Identifikátor DAO</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoBundle">
+		<xs:annotation>
+			<xs:documentation>Svazek souborů</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="file" type="s1:DaoFile" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="type" use="required" type="s1:DaoBundleType"/>
+	</xs:complexType>
+	<xs:complexType name="DaoFile">
+		<xs:sequence>
+			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="mtdt" type="s1:Metadata" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="pos" use="optional" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>pozice souboru (číslo stránky)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="uuid" use="required" type="s1:Uuid">
+			<xs:annotation>
+				<xs:documentation>UUID souboru/stránky</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DescItems">
+		<xs:annotation>
+			<xs:documentation>Prvek popisu s hodnotou</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="str" type="s1:ItemString" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="lnk" type="s1:ItemLink" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="enm" type="s1:ItemEnum" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="ref" type="s1:ItemRef" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="drng" type="s1:ItemDateRange" minOccurs="0" maxOccurs="1"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ItemDateRange">
+		<xs:annotation>
+			<xs:documentation>Časový rozsah</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="f" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>from / od
+Uvádí se hodnota dle ISO-8601 avšak pouze ve formátu [-]YYYY-MM-DDThh:mm:ss.
+Hodnota je bez milisekund a časového pásma. 
+
+Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="fe" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Příznak, zda datum od (f) je odhadem. Pokud neuvádí se pokud se nejedná o odhad.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="fmt" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Formát uložené datace.
+
+Možnosti hodnot formátu:
+	- století: C
+	- rok: Y
+	- rok/měsíc: YM
+	- datum (rok/měsíc/den): D
+	- datum a čas: DT
+
+Formát může být zadán:
+	- jako jedna hodnota (např. Y)
+	- jako interval (např. Y-Y)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="to" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>to / do
+Uvádí se hodnota dle ISO-8601 avšak pouze ve formátu [-]YYYY-MM-DDThh:mm:ss.
+Hodnota je bez milisekund a časového pásma. 
+
+Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="toe" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Přízna určující zda datum do (to) je odhad. Pokud se neuvede hodnota do není odhad.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+	</xs:complexType>
+	<xs:complexType name="ItemEnum">
+		<xs:simpleContent>
+			<xs:extension base="s1:String250">
+				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="ItemLink">
+		<xs:annotation>
+			<xs:documentation>Odkaz</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="link" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+	</xs:complexType>
+	<xs:complexType name="ItemRef">
+		<xs:simpleContent>
+			<xs:extension base="s1:Uuid">
+				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="ItemString">
+		<xs:simpleContent>
+			<xs:extension base="s1:LongString">
+				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="Metadata">
+		<xs:sequence>
+			<xs:element name="itms" type="s1:MetadataItem" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MetadataItem">
+		<xs:sequence>
+			<xs:element name="code" type="s1:String250" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="value" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Part">
+		<xs:annotation>
+			<xs:documentation>Logická část APU</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="value" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="itms" type="s1:DescItems" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="id" use="optional" type="xs:ID">
+			<xs:annotation>
+				<xs:documentation>ID partu pro potřeby odkazů</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="prnt" use="optional" type="xs:IDREF">
+			<xs:annotation>
+				<xs:documentation>Odkaz na rodičovský Part</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="type" use="required" type="s1:String250"/>
+	</xs:complexType>
+	<xs:complexType name="Parts">
+		<xs:sequence>
+			<xs:element name="part" type="s1:Part" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="UuidList">
+		<xs:annotation>
+			<xs:documentation>Seznam Uuid</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="uuid" type="s1:Uuid" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:attributeGroup name="ItemAttrGroup">
+		<xs:annotation>
+			<xs:documentation>Skupina společných atributů pro DescItem</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="visible" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Volitelný příznak určující, zda prvek popisu je pouze indexován, tj. není přímo uživateli viditelný a slouží jen pro dohledání jednotky popisu.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="type" use="required" type="s1:String250"/>
+	</xs:attributeGroup>
+</xs:schema>
