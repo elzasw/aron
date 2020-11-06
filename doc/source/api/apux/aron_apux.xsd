@@ -221,7 +221,7 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 		</xs:annotation>
 		<xs:sequence>
 			<xs:element name="name" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
-			<xs:element name="linl" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="link" type="s1:LongString" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attributeGroup ref="s1:ItemAttrGroup"/>
 	</xs:complexType>
@@ -255,8 +255,8 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 			<xs:documentation>Logická část APU</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="itms" type="s1:DescItems" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="value" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="itms" type="s1:DescItems" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="id" use="optional" type="xs:ID">
 			<xs:annotation>
@@ -292,6 +292,6 @@ Rok má vždy minimálně 4 pozice. Je možné uvádět i roky před 1583.</xs:d
 				<xs:documentation>Volitelný příznak určující, zda prvek popisu je pouze indexován, tj. není přímo uživateli viditelný a slouží jen pro dohledání jednotky popisu.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
-		<xs:attribute name="type" use="optional" type="s1:String250"/>
+		<xs:attribute name="type" use="required" type="s1:String250"/>
 	</xs:attributeGroup>
 </xs:schema>
