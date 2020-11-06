@@ -1,0 +1,71 @@
+.app-header {
+  width: 100%;
+  min-width: 100%;
+  height: $app-header-height;
+  background: $color-blue-dark;
+  position: relative;
+
+  &-inner {
+    padding: 0 $spacing-big;
+  }
+
+  &-items {
+    display: none;
+  }
+
+  &-items-mobile {
+    position: absolute;
+    top: 6rem;
+    right: 0;
+    background: $color-blue-dark;
+    border-bottom-left-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  &-item,
+  &-item-mobile {
+    color: $color-white;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover,
+    &.active {
+      background: $color-blue;
+    }
+  }
+
+  &-item {
+    height: 100%;
+  }
+
+  &-item-mobile {
+    padding: 0.8rem 1.2rem;
+
+    &:last-child {
+      border-bottom-left-radius: 4px;
+    }
+  }
+
+  .icon {
+    color: $color-white;
+    cursor: pointer;
+
+    &:hover {
+      color: $color-blue;
+    }
+  }
+
+  @media (min-width: $lg) {
+    &-items-mobile,
+    .icon {
+      display: none;
+    }
+
+    &-items {
+      display: flex;
+    }
+  }
+}
