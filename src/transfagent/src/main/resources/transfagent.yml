@@ -1,0 +1,24 @@
+server:
+  port: 8088 # by default
+
+spring:
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      show-sql: true
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/transfagent
+    username: postgres
+    password: root
+
+logging:
+  file: C:/temp/transfagent/logs/transfagent.log
+  pattern:
+    # smazat komentář pro zakázání logování konzoly
+    #console:
+  level:
+    # Je možné nastavit ERROR, INFO, DEBUG
+    cz.aron.transfagent: INFO
+    #org.springframework.security: INFO
+    #org.springframework.cloud: INFO
