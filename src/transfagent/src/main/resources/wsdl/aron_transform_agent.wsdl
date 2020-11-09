@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions name="AronTransformAgentWSDLFile" targetNamespace="http://www.aron.cz/transform-agent/v1" xmlns:ax="http://www.aron.cz/apux/2020" xmlns:tns="http://www.aron.cz/transform-agent/v1" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<wsdl:types>
+		<xs:schema targetNamespace="http://www.aron.cz/transform-agent/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020">
+			<xs:import namespace="http://www.aron.cz/apux/2020" schemaLocation="aron_apux.xsd"/>
+			<xs:element name="requestApus" type="s1:UuidList"/>
+		</xs:schema>
+	</wsdl:types>
+	<wsdl:message name="RequestApusResponse"/>
+	<wsdl:message name="RequestApusMsg">
+		<wsdl:part name="requestApus" element="tns:requestApus"/>
+	</wsdl:message>
+	<wsdl:portType name="ApuTransformManager">
+		<wsdl:operation name="RequestApus">
+			<wsdl:input name="Request" message="tns:RequestApusMsg"/>
+			<wsdl:output name="Response" message="tns:RequestApusResponse"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="ApuTranformManagerBindingSOAP" type="tns:ApuTransformManager">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="RequestApus">
+			<soap:operation soapAction="www.aron.cz/transformer/request-apus" style="document"/>
+			<wsdl:input name="Request">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="Response">
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="AronTransformAgentService">
+		<wsdl:port name="TransformManagerPortSOAP" binding="tns:ApuTranformManagerBindingSOAP">
+			<soap:address location="http://www.aron.cz/transform-agent/v1/SamplePortSOAP"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>
