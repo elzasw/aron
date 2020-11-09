@@ -2,7 +2,7 @@
 <wsdl:definitions name="AronManagementWSDLFile" targetNamespace="http://www.aron.cz/management/v1" xmlns:ax="http://www.aron.cz/apux/2020" xmlns:tns="http://www.aron.cz/management/v1" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 	<wsdl:types>
 		<xs:schema targetNamespace="http://www.aron.cz/management/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020">
-			<xs:import namespace="http://www.aron.cz/apux/2020"/>
+			<xs:import namespace="http://www.aron.cz/apux/2020" schemaLocation="aron_apux.xsd"/>
 			<xs:element name="deleteApuSources" type="s1:UuidList">
 				<xs:annotation>
 					<xs:documentation>Požadavek na vymazání APU</xs:documentation>
