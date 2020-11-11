@@ -31,6 +31,13 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/javax.jws/javax.jws-api -->
+		<dependency>
+		    <groupId>javax.jws</groupId>
+		    <artifactId>javax.jws-api</artifactId>
+		    <version>1.1</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
