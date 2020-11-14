@@ -1,0 +1,85 @@
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+
+  <changeSet id="1" author="sergey.iryupin@lightcomp.cz">
+
+    <!-- Datové zdroje: apu_source, institution, fund -->
+
+    <createTable tableName="apu_source">
+      <column name="apusource_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="data" type="text">
+        <constraints nullable="false" />
+      </column>
+      <column name="source_type" type="varchar(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="deleted" type="boolean">
+        <constraints nullable="false" />
+      </column>
+      <column name="date_imported" type="time with time zone" />
+    </createTable>
+
+    <createTable tableName="institution">
+      <column name="institution_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="code" type="varchar(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="source" type="text">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <createTable tableName="fund">
+      <column name="fund_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="institution_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="source" type="text">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint
+      baseTableName="institution" baseColumnNames="apusource_id"
+      constraintName="institution_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="fund" baseColumnNames="institution_id"
+      constraintName="fund_institution_id"
+      referencedTableName="institution"
+      referencedColumnNames="institution_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="fund" baseColumnNames="apusource_id"
+      constraintName="fund_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
+  </changeSet>
+
+</databaseChangeLog>
