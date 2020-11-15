@@ -1,9 +1,11 @@
-package domain;
+package cz.aron.transfagent.domain;
 
 import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -13,27 +15,27 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "Fund")
-public class Fund {
+@Table(name = "archival_entity")
+public class ArchivalEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "fund_id")
+    @Column(name = "entity_id")
     private Integer id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "institution_id", nullable = true)
-    private Institution institution;
 
     @Column(nullable = false)
     private UUID uuid;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = true)
+    private EntityStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
-    @Column(nullable = false)
-    private String source;
+    @Column(name = "src_data")
+    private String srcData;
 
     public Integer getId() {
         return id;
@@ -41,14 +43,6 @@ public class Fund {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Institution getInstitution() {
-        return institution;
-    }
-
-    public void setInstitution(Institution institution) {
-        this.institution = institution;
     }
 
     public UUID getUuid() {
@@ -59,6 +53,14 @@ public class Fund {
         this.uuid = uuid;
     }
 
+    public EntityStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(EntityStatus status) {
+        this.status = status;
+    }
+
     public ApuSource getApuSource() {
         return apuSource;
     }
@@ -67,12 +69,12 @@ public class Fund {
         this.apuSource = apuSource;
     }
 
-    public String getSource() {
-        return source;
+    public String getSrcData() {
+        return srcData;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setSrcData(String srcData) {
+        this.srcData = srcData;
     }
 
 }

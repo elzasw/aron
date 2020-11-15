@@ -1,4 +1,4 @@
-package domain;
+package cz.aron.transfagent.domain;
 
 public enum SourceType {
 

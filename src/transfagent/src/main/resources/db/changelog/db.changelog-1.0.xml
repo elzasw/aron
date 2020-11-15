@@ -80,6 +80,95 @@
       referencedTableName="apu_source"
       referencedColumnNames="apusource_id" />
 
+    <!-- Jádro a komunikace s ním -->
+    
+    <createTable tableName="archival_entity">
+      <column name="entity_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="status" type="varchar(50)" />
+      <column name="apusource_id" type="int" />
+      <column name="src_data" type="text" />
+    </createTable>
+
+    <createTable tableName="dao_file">
+      <column name="dao_file_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="path" type="varchar(250)">
+        <constraints nullable="false" />
+      </column>
+      <column name="transferred" type="boolean">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <createTable tableName="dao_request">
+      <column name="dao_request_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="dao_file_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="thumbnail_file_id" type="int" />
+      <column name="view_file_id" type="int" />
+    </createTable>
+
+    <createTable tableName="core_queue">
+      <column name="core_queue_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="error_message" type="text" />
+    </createTable>
+
+    <addForeignKeyConstraint
+      baseTableName="dao_file" baseColumnNames="apusource_id"
+      constraintName="dao_file_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="archival_entity" baseColumnNames="apusource_id"
+      constraintName="archival_entity_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="dao_request" baseColumnNames="dao_file_id"
+      constraintName="dao_request_dao_file_id"
+      referencedTableName="dao_file"
+      referencedColumnNames="dao_file_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="dao_request" baseColumnNames="thumbnail_file_id"
+      constraintName="dao_request_thumbnail_file_id"
+      referencedTableName="dao_file"
+      referencedColumnNames="dao_file_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="dao_request" baseColumnNames="view_file_id"
+      constraintName="dao_request_view_file_id"
+      referencedTableName="dao_file"
+      referencedColumnNames="dao_file_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="core_queue" baseColumnNames="apusource_id"
+      constraintName="core_queue_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
   </changeSet>
 
 </databaseChangeLog>

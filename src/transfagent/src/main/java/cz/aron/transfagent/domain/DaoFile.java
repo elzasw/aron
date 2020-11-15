@@ -1,4 +1,4 @@
-package domain;
+package cz.aron.transfagent.domain;
 
 import java.util.UUID;
 
@@ -13,26 +13,26 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "institution")
-public class Institution {
+@Table(name = "dao_file")
+public class DaoFile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "institution_id")
+    @Column(name = "dao_file_id")
     private Integer id;
 
     @Column(nullable = false)
     private UUID uuid;
 
-    @Column(length = 50, nullable = false)
-    private String code;
-
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "apusource_id", nullable = true)
+    @JoinColumn(name = "apusource_id", nullable = false)
     private ApuSource apuSource;
 
+    @Column(length = 250, nullable = false)
+    private String path;
+
     @Column(nullable = false)
-    private String source;
+    private boolean transferred;
 
     public Integer getId() {
         return id;
@@ -50,14 +50,6 @@ public class Institution {
         this.uuid = uuid;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
     public ApuSource getApuSource() {
         return apuSource;
     }
@@ -66,12 +58,20 @@ public class Institution {
         this.apuSource = apuSource;
     }
 
-    public String getSource() {
-        return source;
+    public String getPath() {
+        return path;
     }
 
-    public void setSource(String source) {
-        this.source = source;
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public boolean isTransferred() {
+        return transferred;
+    }
+
+    public void setTransferred(boolean transferred) {
+        this.transferred = transferred;
     }
 
 }

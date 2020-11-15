@@ -1,4 +1,4 @@
-package domain;
+package cz.aron.transfagent.domain;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -35,7 +35,7 @@ public class ApuSource {
     @Column(nullable = false)
     private boolean deleted;
 
-    @JoinColumn(name = "date_imported", nullable = false)
+    @JoinColumn(name = "date_imported", nullable = true)
     private ZonedDateTime dateImported;
 
     public Integer getId() {
