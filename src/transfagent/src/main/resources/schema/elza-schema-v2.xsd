@@ -1,0 +1,1200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://elza.tacr.cz/schema/v2" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:e="http://elza.tacr.cz/schema/v2">
+	<xs:element name="edx" type="e:ElzaDataExchange">
+		<xs:annotation>
+			<xs:documentation>Root element for elza data exchange format</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:simpleType name="AccessPointType">
+		<xs:annotation>
+			<xs:documentation>Registry item type. Value have to be one of items stored in the table reg_registry_type.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="BinData">
+		<xs:annotation>
+			<xs:documentation>Encoded binary data</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:base64Binary"/>
+	</xs:simpleType>
+	<xs:simpleType name="GenericString">
+		<xs:annotation>
+			<xs:documentation>Generic string value. It may contain EOL and other formatting characters.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="Id">
+		<xs:annotation>
+			<xs:documentation>Id of the item. This id is valid and usable only in the context of given elza data exchange file</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="String250">
+		<xs:annotation>
+			<xs:documentation>String with max length 250 characters</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="Uuid">
+		<xs:annotation>
+			<xs:documentation>UUID</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:complexType name="AccessPoint">
+		<xs:annotation>
+			<xs:documentation>Access point with all attributes</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="chr" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Characteristics of record</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="nms" type="e:AccessPointNames" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Names of accesspoint
+
+At least one name have to be defined.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ape" type="e:AccessPointEntry" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Entry infor for access point</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="frgs" type="e:Fragments" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AccessPointEntry">
+		<xs:annotation>
+			<xs:documentation>Registry item / one record</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="eid" type="e:ExternalId" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="id" use="required" type="e:Id"/>
+		<xs:attribute name="t" use="required" type="e:AccessPointType">
+			<xs:annotation>
+				<xs:documentation>Type of access point</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="uuid" use="optional" type="e:Uuid">
+			<xs:annotation>
+				<xs:documentation>UUID of one registry record</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="AccessPointName">
+		<xs:annotation>
+			<xs:documentation>Variant name of record</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="l" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Language of name (ISO code, 3letters)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="n" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Name of access point</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="cpl" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Complement</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="AccessPointNames">
+		<xs:annotation>
+			<xs:documentation>List of variant record names</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nm" type="e:AccessPointName" minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Names of access point. First name is prefered one.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AccessPointRefs">
+		<xs:annotation>
+			<xs:documentation>List of references to access points</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="apid" type="e:Id" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Access point ID</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AccessPoints">
+		<xs:annotation>
+			<xs:documentation>Registry record list</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="ap" type="e:AccessPoint" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItem" abstract="true">
+		<xs:annotation>
+			<xs:documentation>Abstract description item</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="s" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Specification of description item. Specification is subtype of the type.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="t" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Type of description item</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemAPRef">
+		<xs:annotation>
+			<xs:documentation>Access point entry reference</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="apid" use="optional" type="e:Id">
+					<xs:annotation>
+						<xs:documentation>Acess point entry ID</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemBit">
+		<xs:annotation>
+			<xs:documentation>Boolean value</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="v" use="required" type="xs:boolean">
+					<xs:annotation>
+						<xs:documentation>Value of the boolean item</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemDate">
+		<xs:annotation>
+			<xs:documentation>Standard date</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="v" use="optional" type="xs:date">
+					<xs:annotation>
+						<xs:documentation>Date value</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemDecimal">
+		<xs:annotation>
+			<xs:documentation>Description Item for single decimal value</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="v" use="required" type="xs:decimal">
+					<xs:annotation>
+						<xs:documentation>Value
+Type: decimal</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemEnum">
+		<xs:annotation>
+			<xs:documentation>Description item for enumeration</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemFileRef">
+		<xs:annotation>
+			<xs:documentation>Reference to the file</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="fid" use="optional" type="e:Id">
+					<xs:annotation>
+						<xs:documentation>Referenced file ID</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemInteger">
+		<xs:annotation>
+			<xs:documentation>Description Item with single integer value</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="v" use="required" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>Value
+Type: Integer</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemPartyRef">
+		<xs:annotation>
+			<xs:documentation>Party reference</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="paid" use="optional" type="e:Id">
+					<xs:annotation>
+						<xs:documentation>Party ID</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemString">
+		<xs:annotation>
+			<xs:documentation>Description item for single String value. This is most generic description item. It can be used to store values of other types.
+
+Item is used to represent at least:
+Coordinates serialized in string
+Simple string value
+Text  / LongText with unlimited length
+Formatted text
+Item ID</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence>
+					<xs:element name="v" type="e:GenericString" minOccurs="1" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>String value. String may contain EOL and other formatting characters.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemStructObjectRef">
+		<xs:annotation>
+			<xs:documentation>Description item to reference structured object</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="soid" use="required" type="e:Id">
+					<xs:annotation>
+						<xs:documentation>ID of the structured object, this ID is valid only in XML</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemUndefined">
+		<xs:annotation>
+			<xs:documentation>Value is undefined</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemUnitDate">
+		<xs:annotation>
+			<xs:documentation>Date value.</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence>
+					<xs:element name="d" type="e:TimeInterval" minOccurs="1" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Link to complex date. Complex date have to have valid data in f, to and fmt.</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemUriRef">
+		<xs:annotation>
+			<xs:documentation>Link to other item</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence/>
+				<xs:attribute name="lbl" use="optional" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Link label</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="schm" use="required" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Schema, typical values are: http, https, elza-node</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+				<xs:attribute name="uri" use="required" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>URI of linked item</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ElzaDataExchange">
+		<xs:annotation>
+			<xs:documentation>Elza data</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="aps" type="e:AccessPoints" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of access points</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="pars" type="e:Parties" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of parties.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="inss" type="e:Institutions" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Institutions</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="rels" type="e:Relations" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Party relations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="fs" type="e:Sections" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of funds</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Event">
+		<xs:annotation>
+			<xs:documentation>event</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:Party">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="ExternalId">
+		<xs:annotation>
+			<xs:documentation>ID defined by external system</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="t" type="e:Id" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>External system ID code / type</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="v" type="e:Id" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>ID in external system</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Family">
+		<xs:annotation>
+			<xs:documentation>Family/dynasty description</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:Party">
+				<xs:sequence>
+					<xs:element name="gen" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Genealogy</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="File">
+		<xs:annotation>
+			<xs:documentation>Single file.
+Each file has name and its content - binary data.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="d" type="e:BinData" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="fn" use="optional" type="e:String250">
+			<xs:annotation>
+				<xs:documentation>File name, original name of file</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="id" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>ID of attachment</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="mt" use="optional" type="e:String250">
+			<xs:annotation>
+				<xs:documentation>mime-type</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="n" use="required" type="e:String250">
+			<xs:annotation>
+				<xs:documentation>Name of file</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Files">
+		<xs:annotation>
+			<xs:documentation>Collection of files</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="f" type="e:File" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Fragment">
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Description item</xs:documentation>
+				</xs:annotation>
+				<xs:element name="dd" type="e:DescriptionItemDecimal" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="do" type="e:DescriptionItemStructObjectRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item for packet</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dp" type="e:DescriptionItemPartyRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Party reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dt" type="e:DescriptionItemUnitDate" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item date</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ds" type="e:DescriptionItemString" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="de" type="e:DescriptionItemEnum" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="di" type="e:DescriptionItemInteger" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="du" type="e:DescriptionItemUndefined" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="da" type="e:DescriptionItemAPRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Access point entry reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="df" type="e:DescriptionItemFileRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="fid" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Fragment ID, valid only in XML, allows to reference such fragment</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="pid" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Parent fragment</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="t" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Type of fragment</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Fragments">
+		<xs:annotation>
+			<xs:documentation>Collection of fragments</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="frg" type="e:Fragment" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FundInfo">
+		<xs:annotation>
+			<xs:documentation>Basic fund information </xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="c" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Internal code of fund (optional)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="ic" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Institution code</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="n" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Fund name</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="tr" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Time range of stored items</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Institution">
+		<xs:annotation>
+			<xs:documentation>Single institution</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="c" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Internal code of instituion</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="paid" use="required" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Party ID</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="t" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Type of institution. This is code of type.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Institutions">
+		<xs:annotation>
+			<xs:documentation>List of institutions</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="inst" type="e:Institution" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Institution description</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Level">
+		<xs:annotation>
+			<xs:documentation>Description level</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Description item</xs:documentation>
+				</xs:annotation>
+				<xs:element name="dd" type="e:DescriptionItemDecimal" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="do" type="e:DescriptionItemStructObjectRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item for packet</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dp" type="e:DescriptionItemPartyRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Party reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dt" type="e:DescriptionItemUnitDate" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item date</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ds" type="e:DescriptionItemString" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="de" type="e:DescriptionItemEnum" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="di" type="e:DescriptionItemInteger" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="du" type="e:DescriptionItemUndefined" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="da" type="e:DescriptionItemAPRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Access point entry reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="df" type="e:DescriptionItemFileRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+			</xs:choice>
+			<xs:element name="aprs" type="e:AccessPointRefs" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of access points refernces</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" use="required" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Level id</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="pid" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Parent ID</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="uuid" use="optional" type="e:Uuid">
+			<xs:annotation>
+				<xs:documentation>UUID of the given node. UUID is optional.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Levels">
+		<xs:annotation>
+			<xs:documentation>List of levels</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="lvl" type="e:Level" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="LinkToRecord">
+		<xs:annotation>
+			<xs:documentation>Link to record</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Note to the link</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="rid" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Record ID</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="t" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Link type</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="LinkToRecords">
+		<xs:annotation>
+			<xs:documentation>Link to registry record</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="lr" type="e:LinkToRecord" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Link to record</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NameComplement">
+		<xs:annotation>
+			<xs:documentation>Complement type</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="ct" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Complement type</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="v" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Value of the complement</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="NameComplements">
+		<xs:annotation>
+			<xs:documentation>List of name complements</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nc" type="e:NameComplement" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Name complement</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Parties">
+		<xs:annotation>
+			<xs:documentation>Party list</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="per" type="e:Person" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="famy" type="e:Family" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Family</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="pg" type="e:PartyGroup" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="evnt" type="e:Event" minOccurs="1" maxOccurs="1"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Party">
+		<xs:annotation>
+			<xs:documentation>Party</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="chr" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Characteristics</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="hst" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>History of party</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="src" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Source of information</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="nms" type="e:PartyNames" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Party names. At least one name have to exists.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ape" type="e:AccessPointEntry" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="id" use="required" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Party ID</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PartyCreator">
+		<xs:annotation>
+			<xs:documentation>Party creator</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="cid" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>ID of the creator.
+This is person who created description.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="paid" use="optional" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Party ID.
+This is ID of the created party</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PartyCreatorList">
+		<xs:annotation>
+			<xs:documentation>List of persons who created description of given party.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="pc" type="e:PartyCreator" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Party creator</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyGroup">
+		<xs:complexContent>
+			<xs:extension base="e:Party">
+				<xs:sequence>
+					<xs:element name="fn" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Founding norm</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="scp" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Scope of organization</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="sn" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Norms related to operation of corporate</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="str" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Structure of organization</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="pis" type="e:PartyIdentifiers" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>List of party identifiers</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PartyIdentifier">
+		<xs:annotation>
+			<xs:documentation>Party identifier</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Note</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="src" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Source of identifier</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vf" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Valid from</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vto" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Valid to</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="v" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Value of identifier</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PartyIdentifiers">
+		<xs:annotation>
+			<xs:documentation>List of party identifiers</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="pi" type="e:PartyIdentifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Party identifier</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyName">
+		<xs:annotation>
+			<xs:documentation>Name of party</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="dga" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Degree after name (e.g. Dr.)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="dgb" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Degree before name (e.g. Dr.)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="main" type="xs:string" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Main part of the name</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Note</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="oth" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Other part of name</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ncs" type="e:NameComplements" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Name complements</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vf" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Valid from</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="vto" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Valid to</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="ft" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Form type</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PartyNames">
+		<xs:annotation>
+			<xs:documentation>Collection of party names. First name is prefered name.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="nm" type="e:PartyName" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PartyRelation">
+		<xs:annotation>
+			<xs:documentation>One party relation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Note for relation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="src" type="xs:string" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Source of relation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="lrs" type="e:LinkToRecords" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of connected records</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="eto" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Exists to</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="ef" type="e:TimeIntervalExt" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Exist from</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="ct" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Class type of the relation</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="paid" use="required" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Party ID</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="t" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Type of relation</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="PartyRelations">
+		<xs:sequence>
+			<xs:element name="pr" type="e:PartyRelation" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Single party relation</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Person">
+		<xs:annotation>
+			<xs:documentation>Person</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:Party">
+				<xs:sequence/>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="Relations">
+		<xs:annotation>
+			<xs:documentation>Relations</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="pcs" type="e:PartyCreatorList" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>List of party creators</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="prs" type="e:PartyRelations" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Party relations</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Section">
+		<xs:annotation>
+			<xs:documentation>One subtree of fund</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="fi" type="e:FundInfo" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>basic fund information</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="sts" type="e:StructuredTypes" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Structured types used in a section</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="fs" type="e:Files" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="lvls" type="e:Levels" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Levels</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="rule" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Code of rules used for arrangement of this fund</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Sections">
+		<xs:annotation>
+			<xs:documentation>List of funds or sections</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="s" type="e:Section" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StructuredObject">
+		<xs:annotation>
+			<xs:documentation>Structured object (instance of StructuredType)</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Description item</xs:documentation>
+				</xs:annotation>
+				<xs:element name="dd" type="e:DescriptionItemDecimal" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="do" type="e:DescriptionItemStructObjectRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item for packet</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dp" type="e:DescriptionItemPartyRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Party reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="dt" type="e:DescriptionItemUnitDate" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Description item date</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="ds" type="e:DescriptionItemString" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="de" type="e:DescriptionItemEnum" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="di" type="e:DescriptionItemInteger" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="du" type="e:DescriptionItemUndefined" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="da" type="e:DescriptionItemAPRef" minOccurs="1" maxOccurs="1">
+					<xs:annotation>
+						<xs:documentation>Access point entry reference</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="df" type="e:DescriptionItemFileRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="id" use="required" type="e:Id">
+			<xs:annotation>
+				<xs:documentation>Structured Object ID, used for referencing structured object inside XML</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="StructuredObjects">
+		<xs:annotation>
+			<xs:documentation>Collection of structured objects</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="so" type="e:StructuredObject" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Structured Object</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StructuredType">
+		<xs:annotation>
+			<xs:documentation>Structured type in context of fund section</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="sos" type="e:StructuredObjects" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="c" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>code of structured type (required)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="StructuredTypes">
+		<xs:sequence>
+			<xs:element name="st" type="e:StructuredType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TimeInterval">
+		<xs:annotation>
+			<xs:documentation>Complex date.
+Allows to represent single time point and also interval</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="ct" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Calendar type. If calendar type is not present then Gregorian calendar is used. Typical values are: 
+G - Gregorian calendar
+J - Julian calendar</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="f" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>from</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="fe" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>From is estimate. If not present then value is not estimate. Set this value only if 'from' is set.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="fmt" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Format of the stored value.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="to" use="required" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>To</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="toe" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Flag if to is estimate. If flag is not present then to is not estimate. Use this attribute only if 'to' is set.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="TimeIntervalExt">
+		<xs:annotation>
+			<xs:documentation>Extended complex date with:
+	- text form of date
+	- note</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:TimeInterval">
+				<xs:sequence>
+					<xs:element name="note" type="xs:string" minOccurs="0" maxOccurs="1">
+						<xs:annotation>
+							<xs:documentation>Note</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+				<xs:attribute name="tf" use="optional" type="xs:string">
+					<xs:annotation>
+						<xs:documentation>Text from of date</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+</xs:schema>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="d6060989-89dd-4ca3-ba58-9083120c3824">
+    <apus>
+        <apu type="Institution" uuid="f819881c-d3c8-4f4b-a1e3-8355c2406fca">
+            <name>Státní okresní archiv Svitavy se sídlem v Litomyšli</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Svitavy se sídlem v Litomyšli</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Svitavy se sídlem v Litomyšli</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Svitavy</value>
+                    <itms>
+                        <str type="NAME">SOkA Svitavy</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">225203010</str>
+                        <ref type="AP_REF">19c88d80-2946-4093-901a-1949f53746af</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

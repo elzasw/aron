@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="6c01e83a-e1a2-4d98-9153-081254dcaece">
+    <apus>
+        <apu type="Institution" uuid="500b474f-66c5-4bd2-b1e5-55ff3ea940de">
+            <name>Státní okresní archiv Trutnov</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Trutnov</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Trutnov</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Trutnov</value>
+                    <itms>
+                        <str type="NAME">SOkA Trutnov</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">225105010</str>
+                        <ref type="AP_REF">d84a5237-4ac0-4cc1-85b1-8188e1ae705a</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

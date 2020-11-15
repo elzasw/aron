@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="cde8fbdd-41b8-4f51-bbaf-4812511ca8e2">
+    <apus>
+        <apu type="Institution" uuid="55b4dce5-d7e8-4e87-bcbd-c6c0d0e3f281">
+            <name>Státní oblastní archiv v Zámrsku</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní oblastní archiv v Zámrsku</value>
+                    <itms>
+                        <str type="NAME">Státní oblastní archiv v Zámrsku</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOA v Zámrsku</value>
+                    <itms>
+                        <str type="NAME">SOA v Zámrsku</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">215000010</str>
+                        <ref type="AP_REF">3d392a72-6ad4-4fa3-a237-e5a4d7a7f91d</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

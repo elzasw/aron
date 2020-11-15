@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<jxb:bindings version="1.0"
+	xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+	xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
+	xmlns:abstract="http://www.example.com/jaxb/abstract-modifier/1-0"
+	jxb:extensionBindingPrefixes="xjc">
+
+	<jxb:bindings schemaLocation="elza-schema-v2.xsd">
+
+<!--		<jxb:bindings node="//xs:complexType[@name='DescriptionItem']">
+			<inheritance:implements>cz.tacr.elza.dataexchange.common.items.ImportableItem</inheritance:implements>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemAPRef']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemAPRefImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemBit']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemBitImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemDate']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemDateImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemDecimal']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemDecimalImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemEnum']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemEnumImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemFileRef']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemFileRefImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemInteger']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemIntegerImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemPartyRef']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemPartyRefImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemString']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemStringImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemStructObjectRef']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemStructObjectRefImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemUndefined']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemUndefinedImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemUnitDate']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemUnitDateImpl"/>
+		</jxb:bindings>
+		<jxb:bindings node="//xs:complexType[@name='DescriptionItemUriRef']">
+			<jxb:class implClass="cz.tacr.elza.dataexchange.common.items.DescriptionItemUriRefImpl"/>
+		</jxb:bindings>-->
+		<jxb:bindings node="//xs:complexType[@name='ElzaDataExchange']">
+		</jxb:bindings>
+	</jxb:bindings>
+
+</jxb:bindings>

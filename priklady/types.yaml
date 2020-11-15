@@ -1,0 +1,29 @@
+# Druhy částí
+partyTypes:
+ - name: Název
+   code: PT_NAME
+   # STANDALONE | GROUPED
+   viewType: GROUPED
+ - name: Informace o archivu
+   code: PT_INST_INFO
+   viewType: STANDALONE
+
+# Jednotlivé prvky popisu
+itemTypes:
+ - code: NAME
+   name: Název
+   # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+   type: STRING
+   indexed: true
+ - code: INST_CODE
+   name: Kód archivu
+   type: STRING
+   indexed: true
+ - code: AP_REF
+   name: Odkaz na entitu
+   type: APU_REF
+
+# Metadata a jejich popis
+metaDataTypes:
+ - code: mimeType 
+   name: Typ souboru

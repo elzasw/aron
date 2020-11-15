@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="bd49fcbf-c7a4-4939-baa3-4ceb32dd31dd">
+    <apus>
+        <apu type="Institution" uuid="3051c1f6-3828-44b9-8987-0ffac0ca5188">
+            <name>Státní okresní archiv Hradec Králové</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Hradec Králové</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Hradec Králové</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Hradec Králové</value>
+                    <itms>
+                        <str type="NAME">SOkA Hradec Králové</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">225101010</str>
+                        <ref type="AP_REF">8a3f1154-74af-4144-a3c1-cecba7329bd8</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

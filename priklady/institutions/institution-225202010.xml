@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="a6cdb052-605a-4696-9abf-d5fd6c934cde">
+    <apus>
+        <apu type="Institution" uuid="b9819cb6-4444-43f7-add1-157699451322">
+            <name>Státní okresní archiv Pardubice</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Pardubice</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Pardubice</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Pardubice</value>
+                    <itms>
+                        <str type="NAME">SOkA Pardubice</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">225202010</str>
+                        <ref type="AP_REF">0db5911a-7718-4465-9807-b4ac537dfe20</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

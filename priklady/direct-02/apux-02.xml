@@ -6,6 +6,7 @@
    <desc>popis archivu</desc>
    <prts>
      <part type="PT_NAME">
+       <value></value>
        <itms>
          <str type="NAME">První virtuální archiv</str>
          <lnk type="URL">
