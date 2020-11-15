@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c2ad1327-c70b-41e1-8ac6-208b1c719f47">
+    <apus>
+        <apu type="Entity" uuid="cfec1c2d-8bb8-4ce0-b9dd-a6e7302c3269">
+            <name>Státní okresní archiv Rychnov nad Kněžnou</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Rychnov nad Kněžnou</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Rychnov nad Kněžnou</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Rychnov nad Kn.</value>
+                    <itms>
+                        <str type="NAME">SOkA Rychnov nad Kn.</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

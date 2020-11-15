@@ -22,6 +22,8 @@ import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.ObjectFactory;
 import cz.aron.apux._2020.Part;
 import cz.aron.apux._2020.Parts;
+import cz.aron.transfagent.elza.ElzaXmlReader;
+import cz.tacr.elza.schema.v2.Fragment;
 
 public class ApuSourceBuilder {
 	
@@ -107,6 +109,13 @@ public class ApuSourceBuilder {
 		
 		part.getItms().getStrOrLnkOrEnm().add(item);
 		return item;
+	}
+
+	public Part addName(Apu apu, String name) {
+		Part part = addPart(apu, "PT_NAME");
+		addString(part, "NAME", name);
+		part.setValue(name);
+		return part;
 	}
 
 }

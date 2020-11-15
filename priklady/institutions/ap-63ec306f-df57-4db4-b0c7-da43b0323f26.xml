@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="38e465f6-5fd7-494b-99fc-8df738ec33d6">
+    <apus>
+        <apu type="Entity" uuid="2d6c7fcf-2a97-4394-87cf-d0e5b16f86ee">
+            <name>Státní okresní archiv Ústí nad Orlicí</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Ústí nad Orlicí</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Ústí nad Orlicí</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Ústí nad Orlicí</value>
+                    <itms>
+                        <str type="NAME">SOkA Ústí nad Orlicí</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

@@ -63,7 +63,7 @@ public class ImportInstitution {
 			throw new IllegalStateException("Institution not found: "+instCode);
 		}
 		String paid = inst.getPaid();
-		AccessPoint ap = findAccessPoint(edx, paid);
+		AccessPoint ap = ElzaXmlReader.findAccessPoint(edx, paid);
 		if(ap==null) {
 			throw new IllegalStateException("AccessPoint for institution not found: "+instCode);
 		}
@@ -78,10 +78,11 @@ public class ImportInstitution {
 			if(frg.getT().equals("PT_NAME")) {			
 				// add name
 				if(apu==null) {
-					String fullName = getFullName(frg);
+					String fullName = ElzaXmlReader.getFullName(frg);
 					apu = apusBuilder.createApu(fullName, ApuType.INSTITUTION);
 				}
-				addName(apu, frg);
+				String name = ElzaXmlReader.getFullName(frg);
+				apusBuilder.addName(apu, name);
 			}
 		}
 		if(apu==null) {
@@ -100,35 +101,6 @@ public class ImportInstitution {
 		
 		
 		return apusBuilder;
-	}
-	
-	private String getFullName(Fragment frg) {
-		return elzaXmlReader.getStringType(frg, "NM_MAIN");
-	}
-
-	private void addName(Apu apu, Fragment frg) {		
-		Part part = apusBuilder.addPart(apu, "PT_NAME");		
-		
-		String name = this.elzaXmlReader.getStringType(frg, "NM_MAIN");
-		apusBuilder.addString(part, "NAME", name);
-		part.setValue(name);
-	}
-
-	private AccessPoint findAccessPoint(ElzaDataExchange edx, String paid) {
-		AccessPoints aps = edx.getAps();
-		if(aps==null) {
-			return null;
-		}
-		for(AccessPoint ap: aps.getAp()) {
-			AccessPointEntry ape = ap.getApe();
-			if(ape!=null) {
-				if(ape.getUuid()!=null&&
-						ape.getUuid().equals(paid)) {
-					return ap;
-				}
-			}
-		}
-		return null;
 	}
 
 	private Institution findInstitution(ElzaDataExchange edx, String instCode) {

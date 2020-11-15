@@ -14,6 +14,9 @@ import javax.xml.validation.SchemaFactory;
 import org.xml.sax.SAXException;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.tacr.elza.schema.v2.AccessPoint;
+import cz.tacr.elza.schema.v2.AccessPointEntry;
+import cz.tacr.elza.schema.v2.AccessPoints;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
 import cz.tacr.elza.schema.v2.ElzaDataExchange;
@@ -43,7 +46,7 @@ public class ElzaXmlReader {
 		return unm.unmarshal(source, declaredType);
 	}
 
-	public String getStringType(Fragment frg, String itemType) {
+	public static String getStringType(Fragment frg, String itemType) {
 		for(DescriptionItem item: frg.getDdOrDoOrDp()) {
 			if(item.getT().equals(itemType)) {
 				if(item instanceof DescriptionItemString) {
@@ -56,6 +59,29 @@ public class ElzaXmlReader {
 			}
 		}
 		return null;
+	}
+
+	public static AccessPoint findAccessPoint(ElzaDataExchange edx, String paid) {
+		AccessPoints aps = edx.getAps();
+		if (aps == null) {
+			return null;
+		}
+		for (AccessPoint ap : aps.getAp()) {
+			AccessPointEntry ape = ap.getApe();
+			if (ape != null) {
+				if (ape.getUuid() != null && ape.getUuid().equals(paid)) {
+					return ap;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static String getFullName(Fragment frg) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getStringType(frg, "NM_MAIN"));
+		// TODO: add other name parts
+		return sb.toString();
 	}
 
 }

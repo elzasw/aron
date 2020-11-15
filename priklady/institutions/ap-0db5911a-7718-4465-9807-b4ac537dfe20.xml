@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="211ef1fc-4d7a-4684-8c21-cc9459bb720e">
+    <apus>
+        <apu type="Entity" uuid="42668281-1004-48c4-99b2-c210db2a5a32">
+            <name>Státní okresní archiv Pardubice</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Pardubice</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Pardubice</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Pardubice</value>
+                    <itms>
+                        <str type="NAME">SOkA Pardubice</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>
