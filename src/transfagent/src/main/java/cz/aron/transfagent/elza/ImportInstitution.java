@@ -15,8 +15,6 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
 import cz.tacr.elza.schema.v2.AccessPoint;
-import cz.tacr.elza.schema.v2.AccessPointEntry;
-import cz.tacr.elza.schema.v2.AccessPoints;
 import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
@@ -34,7 +32,7 @@ public class ImportInstitution {
 	}
 
 	public static void main(String[] args) {
-		Path inputFile = Path.of(args[0]);
+        Path inputFile = Paths.get(args[0]);
 		ImportInstitution ii = new ImportInstitution();
 		try {
 			ApuSourceBuilder apusrcBuilder = ii.importInstitution(inputFile, args[1]);
