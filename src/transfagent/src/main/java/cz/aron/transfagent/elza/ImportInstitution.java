@@ -32,7 +32,7 @@ public class ImportInstitution {
 	}
 
 	public static void main(String[] args) {
-        Path inputFile = Paths.get(args[0]);
+        Path inputFile = Path.of(args[0]);
 		ImportInstitution ii = new ImportInstitution();
 		try {
 			ApuSourceBuilder apusrcBuilder = ii.importInstitution(inputFile, args[1]);
