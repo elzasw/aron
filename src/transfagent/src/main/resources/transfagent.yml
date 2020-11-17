@@ -12,6 +12,9 @@ spring:
     username: postgres
     password: root
 
+config:
+  file: C:/Users/lamp/aron/src/aron-common/src/main/resources/config/types.yaml
+
 logging:
   file: C:/temp/transfagent/logs/transfagent.log
   pattern:
