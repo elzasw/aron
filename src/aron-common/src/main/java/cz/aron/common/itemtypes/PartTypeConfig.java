@@ -6,26 +6,35 @@ public class PartTypeConfig {
         STANDALONE, GROUPED
     }
 
-    private final String code;
-    private final String name;
-    private final ViewTypes viewType;
+    private String code;
+    private String name;
+    private ViewTypes viewType;
 
-    public PartTypeConfig(String code, String name, ViewTypes viewType) {
-        this.code = code;
-        this.name = name;
-        this.viewType = viewType;
+    public PartTypeConfig() {
     }
 
     public String getCode() {
         return code;
     }
 
+    public void setCode(String code) {
+        this.code = code;
+    }
+
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public ViewTypes getViewType() {
         return viewType;
+    }
+
+    public void setViewType(ViewTypes viewType) {
+        this.viewType = viewType;
     }
 
 }

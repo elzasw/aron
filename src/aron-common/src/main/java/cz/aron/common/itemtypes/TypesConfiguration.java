@@ -4,14 +4,22 @@ import java.util.List;
 
 public class TypesConfiguration {
 
-    private final List<PartTypeConfig> partTypes;
-    private final List<ItemTypeConfig> itemTypes;
-    private final List<MetaDataConfig> metaDataTypes;
+    private List<PartTypeConfig> partTypes;
+    private List<ItemTypeConfig> itemTypes;
+    private List<MetaDataConfig> metaDataTypes;
 
-    public TypesConfiguration(List<PartTypeConfig> partTypes, List<ItemTypeConfig> itemTypes,
-                              List<MetaDataConfig> metaDataTypes) {
+    public TypesConfiguration() {
+    }
+
+    public void setPartTypes(List<PartTypeConfig> partTypes) {
         this.partTypes = partTypes;
+    }
+
+    public void setItemTypes(List<ItemTypeConfig> itemTypes) {
         this.itemTypes = itemTypes;
+    }
+
+    public void setMetaDataTypes(List<MetaDataConfig> metaDataTypes) {
         this.metaDataTypes = metaDataTypes;
     }
 
