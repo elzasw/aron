@@ -28,7 +28,7 @@ public class ImportAp {
 	}
 	
 	public static void main(String[] args) {
-		Path inputFile = Path.of(args[0]);
+        Path inputFile = Path.of(args[0]);
 		ImportAp iap = new ImportAp();
 		try {
 			ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1]);
