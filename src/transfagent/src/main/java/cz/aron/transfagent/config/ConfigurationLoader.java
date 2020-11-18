@@ -22,11 +22,20 @@ public class ConfigurationLoader {
 
     @Scheduled(fixedRate = 10000)
     private void load() {
-        TypesConfiguration config;
-        FileSystemResource fileSystemResource = new FileSystemResource(configFile);
+        TypesConfiguration config = load(configFile);
+    }
+
+    /**
+     * Čtení dat pro konfigurační třídu ze souboru yaml
+     * 
+     * @param path
+     * @return TypesConfiguration
+     */
+    public TypesConfiguration load(String path) {
+        FileSystemResource fileSystemResource = new FileSystemResource(path);
         try (Reader reader = new UnicodeReader(fileSystemResource.getInputStream())) {
             Yaml yaml = new Yaml();
-            config = yaml.loadAs(reader, TypesConfiguration.class);
+            return yaml.loadAs(reader, TypesConfiguration.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

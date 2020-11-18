@@ -1,6 +1,6 @@
-# Druhy částí
+# Druhy ??st?
 partTypes:
- - name: Název
+ - name: N?zev
    code: PT_NAME
    # STANDALONE | GROUPED
    viewType: GROUPED
@@ -8,15 +8,15 @@ partTypes:
    code: PT_INST_INFO
    viewType: STANDALONE
 
-# Jednotlivé prvky popisu
+# Jednotliv? prvky popisu
 itemTypes:
  - code: NAME
-   name: Název
+   name: N?zev
    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
    type: STRING
    indexed: true
  - code: INST_CODE
-   name: Kód archivu
+   name: K?d archivu
    type: STRING
    indexed: true
  - code: AP_REF
