@@ -7,9 +7,9 @@
 	xmlns:abstract="http://www.example.com/jaxb/abstract-modifier/1-0"
 	jxb:extensionBindingPrefixes="xjc">
 
-	<jxb:bindings schemaLocation="peva_prod.xsd">
+	<jxb:bindings schemaLocation="peva_export_prod.xsd">
         <jxb:schemaBindings>
-            <jxb:package name="cz.peva.schema"/>
+            <jxb:package name="cz.peva.expschema"/>
         </jxb:schemaBindings>
 	</jxb:bindings>
 </jxb:bindings>

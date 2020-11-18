@@ -7,6 +7,9 @@ partyTypes:
  - name: Informace o archivu
    code: PT_INST_INFO
    viewType: STANDALONE
+ - name: Informace o archivním souboru
+   code: PT_FUND_INFO
+   viewType: STANDALONE
 
 # Jednotlivé prvky popisu
 itemTypes:
@@ -21,6 +24,9 @@ itemTypes:
    indexed: true
  - code: AP_REF
    name: Odkaz na entitu
+   type: APU_REF
+ - code: INST_REF
+   name: Instituce
    type: APU_REF
 
 # Metadata a jejich popis

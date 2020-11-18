@@ -1,0 +1,482 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="https://portal.nacr.cz/peva" xmlns:tns="https://portal.nacr.cz/peva-export" targetNamespace="https://portal.nacr.cz/peva-export" version="1.0">
+  <xs:import namespace="https://portal.nacr.cz/peva" schemaLocation="peva_prod.xsd"/>
+  <xs:element name="AccessibilityExport" type="tns:AccessibilityExport"/>
+  <xs:element name="ArchivalAidAuthorExport" type="tns:ArchivalAidAuthorExport"/>
+  <xs:element name="ArchivalAidCopyExport" type="tns:ArchivalAidCopyExport"/>
+  <xs:element name="ArchivalAidExport" type="tns:ArchivalAidExport"/>
+  <xs:element name="ArchivalAidFormTypeExport" type="tns:ArchivalAidFormTypeExport"/>
+  <xs:element name="ArchivalAidTypeExport" type="tns:ArchivalAidTypeExport"/>
+  <xs:element name="ArchivalOwnerExport" type="tns:ArchivalOwnerExport"/>
+  <xs:element name="DatingMethodExport" type="tns:DatingMethodExport"/>
+  <xs:element name="DatingTypeExport" type="tns:DatingTypeExport"/>
+  <xs:element name="DictionaryExport" type="tns:DictionaryExport"/>
+  <xs:element name="ExternalChangeExport" type="tns:ExternalChangeExport"/>
+  <xs:element name="ExternalChangeIncreaseTypeExport" type="tns:ExternalChangeIncreaseTypeExport"/>
+  <xs:element name="GeoObjectTypeExport" type="tns:GeoObjectTypeExport"/>
+  <xs:element name="HandoverPersonExport" type="tns:HandoverPersonExport"/>
+  <xs:element name="IntegrityExport" type="tns:IntegrityExport"/>
+  <xs:element name="InternalChangeExport" type="tns:InternalChangeExport"/>
+  <xs:element name="LanguageExport" type="tns:LanguageExport"/>
+  <xs:element name="LocationExport" type="tns:LocationExport"/>
+  <xs:element name="MainEvidenceUnitTypeExport" type="tns:MainEvidenceUnitTypeExport"/>
+  <xs:element name="NadSheetExport" type="tns:NadSheetExport"/>
+  <xs:element name="OriginatorExport" type="tns:OriginatorExport"/>
+  <xs:element name="OriginatorNameTypeExport" type="tns:OriginatorNameTypeExport"/>
+  <xs:element name="OriginatorSubClassExport" type="tns:OriginatorSubClassExport"/>
+  <xs:element name="PhysicalStateExport" type="tns:PhysicalStateExport"/>
+  <xs:element name="ProcessorExport" type="tns:ProcessorExport"/>
+  <xs:element name="SequenceExport" type="tns:SequenceExport"/>
+  <xs:element name="StoragePlaceExport" type="tns:StoragePlaceExport"/>
+  <xs:element name="StorageUnitExport" type="tns:StorageUnitExport"/>
+  <xs:element name="ThematicEvidenceGroupExport" type="tns:ThematicEvidenceGroupExport"/>
+  <xs:complexType name="ArchivalAidCopyExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:FindingAidCopy"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType abstract="true" name="ExportDto">
+    <xs:annotation>
+      <xs:documentation>
+        <![CDATA[Base for all export DTOs.]]>
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="count" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>
+            <![CDATA[Count of exported items]]>
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ArchivalAidExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:FindingAid"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType abstract="true" name="DictionaryExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="AccessibilityExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Accessibility"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="OriginatorExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:choice maxOccurs="unbounded">
+                  <xs:element name="item" type="ns1:Dynasty"/>
+                  <xs:element name="item" type="ns1:Event"/>
+                  <xs:element name="item" type="ns1:GeoObject"/>
+                  <xs:element name="item" type="ns1:PartyGroup"/>
+                  <xs:element name="item" type="ns1:Person"/>
+                </xs:choice>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="SequenceExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Sequence"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ArchivalAidAuthorExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:FindingAidAuthor"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ArchivalOwnerExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:ArchivalOwner"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="HandoverPersonExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:HandoverPerson"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ArchivalAidFormTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:FindingAidFormType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ArchivalAidTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:FindingAidType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ExternalChangeIncreaseTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:ExternalChangeIncreaseType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="IntegrityExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Integrity"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="LanguageExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Language"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="MainEvidenceUnitTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:MainEvidenceUnitType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="PhysicalStateExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:PhysicalState"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ThematicEvidenceGroupExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:ThematicEvidenceGroup"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="DatingMethodExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:DatingMethod"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="DatingTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:DatingType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="GeoObjectTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:GeoObjectType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="OriginatorNameTypeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:OriginatorNameType"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="OriginatorSubClassExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:OriginatorSubClass"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ProcessorExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Processor"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="StoragePlaceExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:StoragePlace"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="StorageUnitExport">
+    <xs:complexContent>
+      <xs:extension base="tns:DictionaryExport">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:StorageUnit"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="ExternalChangeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:ExternalChange"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="InternalChangeExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:InternalChange"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="LocationExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:Location"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="NadSheetExport">
+    <xs:complexContent>
+      <xs:extension base="tns:ExportDto">
+        <xs:sequence>
+          <xs:element name="items">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element maxOccurs="unbounded" name="item" type="ns1:NadSheet"/>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>
