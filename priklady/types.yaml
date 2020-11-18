@@ -10,6 +10,9 @@ partyTypes:
  - name: Informace o archivním souboru
    code: PT_FUND_INFO
    viewType: STANDALONE
+ - name: Původce
+   code: PT_ORIGINATOR
+   viewType: STANDALONE
 
 # Jednotlivé prvky popisu
 itemTypes:
@@ -27,6 +30,9 @@ itemTypes:
    type: APU_REF
  - code: INST_REF
    name: Instituce
+   type: APU_REF
+ - code: ORIGINATOR_REF
+   name: Původce
    type: APU_REF
 
 # Metadata a jejich popis

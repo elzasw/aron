@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c9cb9bdc-4fa4-4441-a419-970643a176d6">
+    <apus>
+        <apu type="Fund" uuid="f3fbd4d6-0638-4b18-82ba-8e4ccbf5c28d">
+            <name>Farní úřad Všestary</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Farní úřad Všestary</value>
+                    <itms>
+                        <str type="NAME">Farní úřad Všestary</str>
+                    </itms>
+                </part>
+                <part type="PT_FUND_INFO">
+                    <itms>
+                        <ref type="INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
+                    </itms>
+                </part>
+                <part type="PT_ORIGINATOR">
+                    <itms>
+                        <ref type="ORIGINATOR_REF">ffea2394-43b9-4a19-a6c6-9f46fb917a31</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>
