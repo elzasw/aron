@@ -7,19 +7,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.tacr.elza.schema.v2.AccessPoint;
-import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 
 public class ImportAp {
-	ElzaXmlReader elzaXmlReader = new ElzaXmlReader();	
+	ElzaXmlReader elzaXmlReader;	
 	
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 
@@ -45,14 +43,13 @@ public class ImportAp {
 
 	private ApuSourceBuilder importAp(Path inputFile, String apUuid) throws IOException, JAXBException {
 		try(InputStream is = Files.newInputStream(inputFile);) {
-			JAXBElement<ElzaDataExchange> edxElem = ElzaXmlReader.read(is, ElzaDataExchange.class);
-			ElzaDataExchange edx = edxElem.getValue();
-			return importAp(edx, apUuid);
+			elzaXmlReader = ElzaXmlReader.read(is);
+			return importAp(apUuid);
 		}
 	}
 
-	private ApuSourceBuilder importAp(ElzaDataExchange edx, String apUuid) {
-		AccessPoint ap = ElzaXmlReader.findAccessPoint(edx, apUuid);
+	private ApuSourceBuilder importAp(String apUuid) {
+		AccessPoint ap = elzaXmlReader.findAccessPointByUUID(apUuid);
 		if(ap==null) {
 			throw new IllegalStateException("AccessPoint not found: "+apUuid);
 		}

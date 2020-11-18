@@ -23,7 +23,7 @@ import cz.tacr.elza.schema.v2.Institutions;
 
 public class ImportInstitution {
 	
-	ElzaXmlReader elzaXmlReader = new ElzaXmlReader();	
+	ElzaXmlReader elzaXmlReader;	
 	
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 	
@@ -49,19 +49,18 @@ public class ImportInstitution {
 
 	private ApuSourceBuilder importInstitution(Path inputFile, String instCode) throws IOException, JAXBException {
 		try(InputStream is = Files.newInputStream(inputFile);) {
-			JAXBElement<ElzaDataExchange> edxElem = ElzaXmlReader.read(is, ElzaDataExchange.class);
-			ElzaDataExchange edx = edxElem.getValue();
-			return importInstitution(edx, instCode);
+			elzaXmlReader = ElzaXmlReader.read(is);
+			return importInstitution(instCode);
 		}
 	}
 
-	private ApuSourceBuilder importInstitution(ElzaDataExchange edx, String instCode) {
-		Institution inst = findInstitution(edx, instCode);
+	private ApuSourceBuilder importInstitution(String instCode) {
+		Institution inst = elzaXmlReader.findInstitution(instCode);
 		if(inst==null) {
 			throw new IllegalStateException("Institution not found: "+instCode);
 		}
 		String paid = inst.getPaid();
-		AccessPoint ap = ElzaXmlReader.findAccessPoint(edx, paid);
+		AccessPoint ap = elzaXmlReader.findAccessPointByUUID(paid);
 		if(ap==null) {
 			throw new IllegalStateException("AccessPoint for institution not found: "+instCode);
 		}
@@ -100,18 +99,4 @@ public class ImportInstitution {
 		
 		return apusBuilder;
 	}
-
-	private Institution findInstitution(ElzaDataExchange edx, String instCode) {
-		Institutions inss = edx.getInss();
-		if(inss==null) {
-			return null;
-		}
-		for(Institution inst: inss.getInst()) {
-			if(inst.getC().equals(instCode)) {
-				return inst;
-			}
-		}
-		return null;
-	}
-
 }
