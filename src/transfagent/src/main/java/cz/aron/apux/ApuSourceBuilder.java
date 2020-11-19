@@ -17,6 +17,7 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuList;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.ObjectFactory;
@@ -116,6 +117,22 @@ public class ApuSourceBuilder {
 		addString(part, "NAME", name);
 		part.setValue(name);
 		return part;
+	}
+
+	public void addDateRange(Part part, ItemDateRange idr) {
+		part.getItms().getStrOrLnkOrEnm().add(idr);		
+	}
+
+	public ItemDateRange createDateRange(String targetType, 
+			String from, Boolean fromEst, String to, Boolean toEst, String format) {
+		ItemDateRange idr = this.objFactory.createItemDateRange();
+		idr.setType(targetType);
+		idr.setF(from);
+		idr.setFe(fromEst);
+		idr.setTo(to);
+		idr.setToe(toEst);
+		idr.setFmt(format);
+		return idr;
 	}
 
 }

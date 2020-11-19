@@ -10,8 +10,8 @@ partyTypes:
  - name: Informace o archivním souboru
    code: PT_FUND_INFO
    viewType: STANDALONE
- - name: Původce
-   code: PT_ORIGINATOR
+ - name: Archivní popis
+   code: PT_ARCH_DESC
    viewType: STANDALONE
 
 # Jednotlivé prvky popisu
@@ -28,12 +28,67 @@ itemTypes:
  - code: AP_REF
    name: Odkaz na entitu
    type: APU_REF
+   indexed: true
  - code: INST_REF
    name: Instituce
    type: APU_REF
+   indexed: true
  - code: ORIGINATOR_REF
    name: Původce
    type: APU_REF
+   indexed: true
+ - code: ABSTRACT
+   name: Obsah
+   type: STRING
+   indexed: true
+ - code: HISTORY
+   name: Historie
+   type: STRING
+   indexed: true
+ - code: UNIT_ARR
+   name: Způsob uspořádání
+   type: STRING
+   indexed: true
+ - code: UNIT_CONTENT
+   name: Tematický popis jednotky popisu
+   type: STRING
+   indexed: true
+ - code: UNIT_SOURCE
+   name: Přímý zdroj akvizice
+   type: STRING
+   indexed: true
+ - code: FUTURE_UNITS
+   name: Budoucí přírůstky
+   type: STRING
+   indexed: true
+ - code: UNIT_ACCESS
+   name: Podmínky přístupu
+   type: STRING
+   indexed: true
+ - code: UNIT_CURRENT_STATUS
+   name: Fyzický stav
+   type: STRING
+   indexed: true
+ - code: ARRANGE_RULES
+   name: Pravidla zpracování
+   type: STRING
+   indexed: true
+ - code: FORMAL_TITLE
+   name: Formální název
+   type: STRING
+   indexed: true
+ - code: SCALE
+   name: Měřítko
+   type: STRING
+   indexed: true
+ - code: STORAGE_COND
+   name: Způsob a forma dochování
+   type: STRING
+   indexed: true
+ - code: RELATED_UNITS
+   name: Odkazy na příbuzné dokumenty
+   type: STRING
+   indexed: true
 
 # Metadata a jejich popis
 metaDataTypes:

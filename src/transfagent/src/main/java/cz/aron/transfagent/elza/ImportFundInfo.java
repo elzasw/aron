@@ -94,8 +94,7 @@ public class ImportFundInfo {
 		// Puvodce
 		List<String> puvodci = getPuvodci(sect.getLvls());
 		for(String puvodceUuid: puvodci) {
-			Part partOrig = apusBuilder.addPart(apu, "PT_ORIGINATOR");
-			apusBuilder.addApuRef(partOrig, "ORIGINATOR_REF", puvodceUuid);
+			apusBuilder.addApuRef(partFundInfo, "ORIGINATOR_REF", puvodceUuid);
 		}
 		
 		return apusBuilder;
