@@ -1,36 +1,26 @@
-package cz.aron.transfagent;
+package cz.aron.common;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.core.io.ClassPathResource;
 
+import cz.aron.common.config.ConfigLoader;
 import cz.aron.common.itemtypes.ItemTypeConfig;
 import cz.aron.common.itemtypes.MetaDataConfig;
 import cz.aron.common.itemtypes.PartTypeConfig;
 import cz.aron.common.itemtypes.TypesConfiguration;
-import cz.aron.transfagent.config.ConfigurationLoader;
 
-@SpringBootTest
-public class ConfigurationLoaderTest {
+public class ConfigLoaderTest {
 
-    @Value("${config.file}")
-    private String configFile;
-
-    @Autowired
-    ConfigurationLoader configurationLoader;
+    private static final String CONFIG_TYPES_YAML = "config/types.yaml";
 
     @Test
-    public void testConfigurationLoader() throws IOException {
-        String cfgFile = new ClassPathResource(configFile).getFile().getAbsolutePath();
-        TypesConfiguration config = configurationLoader.load(cfgFile);
+    public void testConfigurationLoader() {
+        String cfgFile = getClass().getClassLoader().getResource(CONFIG_TYPES_YAML).getFile();
+        TypesConfiguration config = ConfigLoader.load(cfgFile);
 
         assertNotNull(config);
 
@@ -42,4 +32,5 @@ public class ConfigurationLoaderTest {
         assertTrue(itemTypes.size() == 3);
         assertTrue(metaDataTypes.size() == 1);
     }
+
 }
