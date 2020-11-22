@@ -94,6 +94,18 @@
       <column name="src_data" type="text" />
     </createTable>
 
+    <createTable tableName="entity_source">
+      <column name="entity_source_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="entity_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+	</createTable>
+
     <createTable tableName="dao_file">
       <column name="dao_file_id" type="int" autoIncrement="true">
         <constraints primaryKey="true" />
@@ -134,14 +146,26 @@
     </createTable>
 
     <addForeignKeyConstraint
-      baseTableName="dao_file" baseColumnNames="apusource_id"
-      constraintName="dao_file_apusource_id"
+      baseTableName="archival_entity" baseColumnNames="apusource_id"
+      constraintName="archival_entity_apusource_id"
       referencedTableName="apu_source"
       referencedColumnNames="apusource_id" />
 
     <addForeignKeyConstraint
-      baseTableName="archival_entity" baseColumnNames="apusource_id"
-      constraintName="archival_entity_apusource_id"
+      baseTableName="entity_source" baseColumnNames="entity_id"
+      constraintName="entity_source_entity_id"
+      referencedTableName="archival_entity"
+      referencedColumnNames="entity_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="entity_source" baseColumnNames="apusource_id"
+      constraintName="entity_source_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="dao_file" baseColumnNames="apusource_id"
+      constraintName="dao_file_apusource_id"
       referencedTableName="apu_source"
       referencedColumnNames="apusource_id" />
 
