@@ -13,7 +13,7 @@ spring:
     password: root
 
 config:
-  file: C:/Users/lamp/aron/src/transfagent/src/test/resources/config/types.yaml
+  file: C:/Users/lamp/aron/src/aron-common/src/test/resources/config/types.yaml
 
 logging:
   file: C:/temp/transfagent/logs/transfagent.log
