@@ -1,22 +1,39 @@
 package cz.aron.transfagent.service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.stream.StreamSource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
+
+import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.repository.ApuSourceRepository;
 
 @Service
 public class FileImportService implements SmartLifecycle {
 
     static final Logger log = LoggerFactory.getLogger(FileImportService.class);
+
+    private static final JAXBContext JAXB_CONTEXT = createJaxbContext(ApuSource.class);
+
+    @Autowired
+    ApuSourceRepository apuSourceRepository;
 
     private enum ThreadStatus {
         RUNNING, STOP_REQUEST, STOPPED
@@ -54,20 +71,48 @@ public class FileImportService implements SmartLifecycle {
         // zpracování souborů v adresáři direct
         if (processDirectFolder(direct)) {
             moveFolderTo(direct, processed.resolve("direct"));
-        } else {
-            moveFolderTo(direct, error);
+            Files.createDirectories(input.resolve("direct"));
         }
     }
 
     /**
      * Zpracování souborů v adresáři direct
      * 
-     * @param path
-     * @return
+     * @param path adresář direct
+     * @return true nebo false
      */
     private boolean processDirectFolder(Path path) {
-        // TODO process apux.xml or apux-XY.xml files
-        return true;
+        File[] files = path.toFile().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String name) {
+                // process apux.xml or apux-XY.xml files
+                if (name.startsWith("apux") && name.endsWith("xml")) {
+                    return true;
+                }
+                return false;
+            }
+        });
+        for (File file : files) {
+            ApuSource apuSource = createApuSourceFromXml(file);
+            apuSourceRepository.save(apuSource);
+        }
+        return files.length > 0;
+    }
+
+    /**
+     * Vytváření objektů na základě XML souboru
+     * 
+     * @param file
+     * @return
+     */
+    private ApuSource createApuSourceFromXml(File file) {
+        ApuSource apuSource = null;
+        try (InputStream is = new FileInputStream(file)) {
+            apuSource = JAXB_CONTEXT.createUnmarshaller().unmarshal(new StreamSource(is), ApuSource.class).getValue();
+        } catch (JAXBException | IOException e) {
+            throw new RuntimeException("Failed to parse", e);
+        }
+        return apuSource;
     }
 
     /**
@@ -112,6 +157,14 @@ public class FileImportService implements SmartLifecycle {
     @Override
     public boolean isRunning() {
         return status == ThreadStatus.RUNNING;
+    }
+
+    public static JAXBContext createJaxbContext(Class<?>... classesToBeBound) {
+        try {
+            return JAXBContext.newInstance(classesToBeBound);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }
