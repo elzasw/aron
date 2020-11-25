@@ -1,0 +1,30 @@
+﻿facets:
+ # Nazev AS
+ # Zdroj je text
+ - when:
+     apuType: Fund   
+   # Druh fazety
+   type: FULLTEXT
+   # zdrojovy itemtype
+   source: NAME
+   # Pokud bude nutne specializovat
+   #   title: Název AS ??
+
+ # Archiv kam patri AS
+ # je jich malo
+ - when:
+     apuType: Fund
+   # Druh fazety
+   type: ENUM
+   # zdrojovy itemtype
+   source: INST_REF
+   # Max pocet zobrazenych itemu   
+   maxItems: 5
+ # Puvodce AS
+ # Zdroj je odkaz na APU
+ - when:
+     apuType: Fund
+   # Druh fazety
+   type: FULLTEXT
+   # zdrojovy itemtype
+   source: INST_REF
