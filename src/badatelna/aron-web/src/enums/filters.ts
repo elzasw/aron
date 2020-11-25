@@ -1,0 +1,7 @@
+export enum FilterType {
+  CHECKBOX,
+  CHECKBOX_WITH_RANGE,
+  RADIOBUTTON,
+  INPUTBOX,
+  SELECT,
+}

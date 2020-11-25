@@ -1,0 +1,26 @@
+{
+  "name": "@eas/aron",
+  "version": "0.0.1",
+  "description": "ARON",
+  "author": "inQool a.s.",
+  "contributors": [
+    {
+      "name": "Matus Zamborsky",
+      "email": "zamborsky@inqool.cz"
+    }
+  ],
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "workspaces": [
+    "common-web",
+    "aron-web"
+  ],
+  "devDependencies": {
+    "eslint": "^7.1.0",
+    "prettier": "2.0.5",
+    "typescript": "3.9.3"
+  },
+  "scripts": {
+    "watch": "yarn workspaces foreach -piv run watch"
+  }
+}

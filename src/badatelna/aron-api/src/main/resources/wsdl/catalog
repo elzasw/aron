@@ -1,0 +1,5 @@
+--
+doesn't work, can't ever find the right path to reference the file :(
+--
+SYSTEM "https://www.aron.cz/apux/2020" "aron_apux.xsd"
+SYSTEM "https://grr" "grr.xsd"

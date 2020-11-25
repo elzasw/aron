@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="d3fe5715-70f3-4739-9ed6-2972397c0255">
+ <apus>
+  <apu type="Entity" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891bf">
+   <name>Pepa Čech</name>
+   <desc>popis osobyyyy</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf">
+       <itms>
+         <str type="FIRST_NAME">Josef</str>
+         <str type="SECOND_NAME">Čech</str>
+       </itms>
+     </part>
+     <part type="BIRTH" id="asdf2">
+       <itms>
+         <str type="PLACE">Brno</str>
+         <drng type="DATE" f="1980-01-01T00:00:00" to="1980-01-01T00:00:00" fmt="D"/>
+       </itms>
+     </part>
+     <part type="DEATH" id="asdf3">
+       <itms>
+         <str type="PLACE">Zámrks</str>
+         <drng type="DATE" f="2000-01-01T00:00:00" to="2000-01-01T00:00:00" fmt="D"/>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf4">
+       <itms>
+         <str type="DESCRIPTION">Velice vzdělaný člověk</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Entity" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c0">
+   <name>Jirka Slovák</name>
+   <desc>jiný popis osoby</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf21">
+       <itms>
+         <str type="FIRST_NAME">Jiří</str>
+         <str type="SECOND_NAME">Slovák</str>
+       </itms>
+     </part>
+     <part type="BIRTH" id="asdf22">
+       <itms>
+         <str type="PLACE">Hertník</str>
+         <drng type="DATE" f="1980-01-01T00:00:00" to="1980-01-01T00:00:00" fmt="D"/>
+       </itms>
+     </part>
+     <part type="DEATH" id="asdf23">
+       <itms>
+         <str type="PLACE">Bardějov</str>
+         <drng type="DATE" f="2000-01-01T00:00:00" to="2000-01-01T00:00:00" fmt="D"/>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf24">
+       <itms>
+         <str type="DESCRIPTION">takzvaný Vidlák z vidlákova</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c2">
+   <name>Sbírky Brna</name>
+   <desc>velmi cenné archiválie</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf31">
+       <itms>
+         <str type="NAME">Sbírky archiválií Brno</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf34">
+       <itms>
+         <str type="DESCRIPTION">tak strašně moc archivní archivy že víc archivní už ani být nemůžou</str>
+         <str type="LANGUAGE">Česky</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c3">
+   <name>Sbírky Zámrsku</name>
+   <desc>další cenné archiválie</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf41">
+       <itms>
+         <str type="NAME">Sbírky archiválií Zámrsk - české</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf44">
+       <itms>
+         <str type="DESCRIPTION">ještě víc archivní archivy</str>
+         <str type="ARCHIVE">SOA v Zámrsku</str>
+         <str type="LANGUAGE">Česky</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c4">
+   <name>Sbírky Zámrsku - anglické</name>
+   <desc>další cenné archiválie, tentokrát anglické</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf42">
+       <itms>
+         <str type="NAME">Sbírky archiválií Zámrsk - anglické</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf45">
+       <itms>
+         <str type="DESCRIPTION">ještě víc archivní archivy</str>
+         <str type="ARCHIVE">SOA v Zámrsku</str>
+         <str type="LANGUAGE">Anglicky</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c5">
+   <name>Sbírky Náchod</name>
+   <desc>východ, ...</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf43">
+       <itms>
+         <str type="NAME">Sbírky archiválií Náchod - české</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf46">
+       <itms>
+         <str type="DESCRIPTION">ještě víc archivní archivy než jinde</str>
+         <str type="ARCHIVE">SOkA Náchod</str>
+         <str type="LANGUAGE">Česky</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c6">
+   <name>Sbírky Náchod německé</name>
+   <desc>achtung, das archiválie</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf50">
+       <itms>
+         <str type="NAME">Sbírky archiválií Náchod - něm.</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf51">
+       <itms>
+         <str type="DESCRIPTION">ještě víc archivní archivy než jinde</str>
+         <str type="ARCHIVE">SOkA Náchod</str>
+         <str type="LANGUAGE">Německy</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+  <apu type="Fund" uuid="a3eda48e-e14a-4baa-9aa3-21fc876891c7">
+   <name>Sbírky z předměstí Hradce, něm.</name>
+   <desc>archiválie z perníku</desc>
+   <prmLnk>https:/example.com/permalink</prmLnk>
+   <prts>
+     <part type="PT_NAME" id="asdf52">
+       <itms>
+         <str type="NAME">Sbírky archiválií Pardubice</str>
+       </itms>
+     </part>
+     <part type="OTHER" id="asdf53">
+       <itms>
+         <str type="DESCRIPTION">a tady je ukrytý hranostaj</str>
+         <str type="ARCHIVE">SOkA Pardubice</str>
+         <str type="LANGUAGE">Německy</str>
+       </itms>
+     </part>
+   </prts>
+  </apu>
+ </apus>
+</apusrc>

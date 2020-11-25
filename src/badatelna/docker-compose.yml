@@ -1,0 +1,135 @@
+version: '3.7'
+services:
+  database:
+    image: postgres:11-alpine
+    networks:
+      - backend
+    ports:
+      - "5000:5432"
+    environment:
+      POSTGRES_PASSWORD: changeit
+      POSTGRES_USER: eas
+      POSTGRES_DB: eas
+    tty: true
+    volumes:
+      - database_volume:/var/lib/postgresql/data/
+  databasefe:
+    image: dpage/pgadmin4
+    user: root
+    networks:
+      - backend
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_LISTEN_ADDRESS: 0.0.0.0
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+      SERVER_CONFIG: |
+        {
+          "Servers": {
+            "1": {
+              "Name": "Docker",
+              "Group": "Servers",
+              "Port": 5432,
+              "Username": "eas",
+              "Host": "database",
+              "SSLMode": "prefer",
+              "MaintenanceDB": "eas",
+              "PassFile": "/pgpassfile"
+            }
+          }
+        }
+      SERVER_PASSWORD_FILE: |
+        database:5432:eas:eas:changeit
+    entrypoint: /bin/sh -c "echo $$SERVER_CONFIG > /pgadmin4/servers.json; echo $$SERVER_PASSWORD_FILE > /pgpassfile; chmod 600 /pgpassfile; /entrypoint.sh"
+    ports:
+      - "8082:80"
+  index:
+    build: ./index
+    image: inqool/elasticsearch:7.6.2
+    networks:
+      - backend
+    environment:
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - index_volume:/usr/share/elasticsearch/data
+  indexfe:
+    image: blacktop/kibana:7.6.2
+    networks:
+      - backend
+    environment:
+      - server.port=8080
+      - server.basePath=/index
+      - server.rewriteBasePath=true
+      - elasticsearch.hosts=http://index:9200
+      - logging.json=false
+    ports:
+      - "8083:8080"
+  aron-api:
+    image: aron-api:latest
+    build:
+      context: .
+      dockerfile: aron-api/docker/prod.Dockerfile
+    networks:
+      - backend
+    depends_on:
+      - "database"
+    environment:
+      SERVER_PORT: "80"
+      JAVA_TOOL_OPTIONS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5008 -Xverify:none"
+    tty: true
+    ports:
+      - 5008:5008
+  aron-web:
+    image: aron-web:latest
+    build:
+      context: .
+      dockerfile: aron-web/docker/prod.Dockerfile
+    networks:
+      - backend
+    tty: true
+    environment:
+      PORT: 80
+    ports:
+      - "8080:80"
+    mem_limit: 3000m
+    cpus: 3
+    volumes:
+      - fe_build_volume:/yarn
+      - type: bind
+        source: ./package.json
+        target: /build/package.json
+        consistency: delegated
+      - type: bind
+        source: ./yarn.lock
+        target: /build/yarn.lock
+        consistency: delegated
+      - type: bind
+        source: ./common-web
+        target: /build/common-web
+        consistency: delegated
+      - type: bind
+        source: ./aron-web
+        target: /build/aron-web
+        consistency: delegated
+  swagger:
+    image: swaggerapi/swagger-ui
+    networks:
+      - backend
+    environment:
+      PORT: 80
+      BASE_URL: /swagger
+      URLS: "[{ name: \"Api\", url: \"http://localhost:8080/api/aron/api-docs\"}]"
+      DEFAULT_MODEL_RENDERING: model
+      DISPLAY_REQUEST_DURATION: "true"
+networks:
+  backend:
+volumes:
+  report_volume:
+  index_volume:
+  database_volume:
+  fe_build_volume:

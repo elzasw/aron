@@ -1,0 +1,5 @@
+rootProject.name = 'aron-badatelna'
+
+includeBuild './entity-views'
+includeBuild './common'
+includeBuild './aron-api'

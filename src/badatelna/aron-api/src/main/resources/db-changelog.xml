@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+    <property name="now" value="now()" dbms="postgresql"/>
+    <property name="id" value="varchar(255)" dbms="postgresql"/>
+    <property name="reindex_queue_table_name" value="reindex_queue"/>
+    <include file="changelog/storage.xml"/>
+    <include file="changelog/reindex.xml"/>
+    <changeSet id="aron:1" author="jane">
+        <createTable tableName="apu_source">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_source"/>
+            </column>
+            <column name="published" type="datetime"/>
+            <column name="data" type="nclob"/>
+        </createTable>
+        <createTable tableName="digital_object">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_digital_object"/>
+            </column>
+            <column name="permalink" type="nvarchar(255)"/>
+            <column name="name" type="nvarchar(255)"/>
+        </createTable>
+        <createTable tableName="apu_entity">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_entity"/>
+            </column>
+            <column name="name" type="nvarchar(255)"/>
+            <column name="description" type="nclob"/>
+            <column name="permalink" type="nvarchar(255)"/>
+            <column name="published" type="boolean"/>
+            <column name="source_id" type="${id}">
+                <constraints referencedTableName="apu_source" referencedColumnNames="id" foreignKeyName="FK_apu_entity_source"/>
+            </column>
+            <column name="parent_id" type="${id}">
+                <constraints referencedTableName="apu_entity" referencedColumnNames="id" foreignKeyName="FK_apu_entity_parent"/>
+            </column>
+            <column name="type" type="varchar(255)"/>
+        </createTable>
+        <createTable tableName="apu_attachment">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_attachment"/>
+            </column>
+            <column name="name" type="nvarchar(255)"/>
+            <column name="apu_id" type="${id}">
+                <constraints referencedTableName="apu_entity" referencedColumnNames="id" foreignKeyName="FK_apu_attachment_apu"/>
+            </column>
+        </createTable>
+        <createTable tableName="apu_part">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_part"/>
+            </column>
+            <column name="value" type="nvarchar(1024)"/>
+            <column name="type" type="varchar(255)"/>
+            <column name="apu_id" type="${id}">
+                <constraints referencedTableName="apu_entity" referencedColumnNames="id" foreignKeyName="FK_apu_part_apu"/>
+            </column>
+            <column name="parent_part_id" type="${id}">
+                <constraints referencedTableName="apu_part" referencedColumnNames="id" foreignKeyName="FK_apu_part_parent_part"/>
+            </column>
+        </createTable>
+        <createTable tableName="apu_part_item">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_part_item"/>
+            </column>
+            <column name="value" type="nclob"/>
+            <column name="href" type="nvarchar(1024)"/>
+            <column name="visible" type="boolean"/>
+            <column name="type" type="varchar(255)"/>
+            <column name="apu_part_id" type="${id}">
+                <constraints referencedTableName="apu_part" referencedColumnNames="id" foreignKeyName="FK_apu_part_item_apu_part"/>
+            </column>
+        </createTable>
+        <createTable tableName="digital_object_file">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_digital_object_file"/>
+            </column>
+            <column name="permalink" type="nvarchar(255)"/>
+            <column name="order" type="int"/>
+            <column name="type" type="varchar(255)"/>
+            <column name="name" type="nclob"/>
+            <column name="file_id" type="${id}">
+                <constraints referencedTableName="eas_file" referencedColumnNames="id" foreignKeyName="FK_digital_object_file_file"/>
+            </column>
+            <column name="digital_object_id" type="${id}">
+                <constraints referencedTableName="digital_object" referencedColumnNames="id" foreignKeyName="FK_digital_object_file_digital_object"/>
+            </column>
+            <column name="attachment_id" type="${id}">
+                <constraints referencedTableName="apu_attachment" referencedColumnNames="id" foreignKeyName="FK_digital_object_file_attachment"/>
+            </column>
+        </createTable>
+        <createTable tableName="metadatum">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_metadatum"/>
+            </column>
+            <column name="value" type="nvarchar(255)"/>
+            <column name="order" type="int"/>
+            <column name="type" type="nvarchar(255)"/>
+            <column name="file_id" type="${id}">
+                <constraints referencedTableName="digital_object_file" referencedColumnNames="id" foreignKeyName="FK_metadatum_file"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

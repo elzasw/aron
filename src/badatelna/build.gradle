@@ -1,0 +1,74 @@
+plugins {
+    id 'com.avast.gradle.docker-compose' version "0.10.10"
+}
+
+group = 'cz.inqool.eas.aron'
+version = '0.0.1'
+
+dockerCompose {
+    projectName = project.name
+    captureContainersOutput = false
+    buildBeforeUp = true
+    waitForTcpPorts = false
+    forceRecreate = true
+
+    all {
+        projectName = project.name
+        removeVolumes = false
+    }
+
+    allAndClear {
+        projectName = project.name
+        removeVolumes = true
+    }
+
+    api {
+        projectName = project.name
+        startedServices = ['aron-api']
+    }
+}
+
+tasks.register("buildAll") {
+    group = 'build'
+    description = 'Build all microservices'
+    dependsOn buildApi
+}
+
+tasks.register("runAll") {
+    group = 'run'
+    description = 'Build and run all microservices'
+    dependsOn buildAll
+    finalizedBy allComposeUp
+}
+
+tasks.register("stopAll") {
+    group = 'run'
+    description = 'Stops all microservices and remove temporary files'
+    finalizedBy allComposeDown
+}
+
+tasks.register("stopAllAndClear") {
+    group = 'run'
+    description = 'Stops all microservices and remove temporary files'
+    finalizedBy allAndClearComposeDown
+}
+
+//Aron API microservice
+tasks.register("buildApi") {
+    group = 'build'
+    description = 'Build api microservice'
+    dependsOn gradle.includedBuild('aron-api').task(':build')
+}
+
+tasks.register("runApi") {
+    group = 'run'
+    description = 'Run api microservice'
+    dependsOn buildApi
+    finalizedBy apiComposeUp
+}
+
+tasks.register("stopApi") {
+    group = 'run'
+    description = 'Stop api microservice'
+    finalizedBy apiComposeDown
+}

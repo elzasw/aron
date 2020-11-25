@@ -1,0 +1,6 @@
+# Ignore TS build output directory
+dist
+
+node_modules
+yarn-error.log
+.yarn

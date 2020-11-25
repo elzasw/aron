@@ -1,0 +1,76 @@
+# use default docker compose names, change to real IP or hostname if needed
+database-server: database:5432
+
+server:
+  servlet:
+    context-path: /api/aron
+
+springdoc:
+  api-docs:
+    path: "/api-docs"
+
+spring:
+  application:
+    name: aron
+  elasticsearch:
+    rest:
+      uris: index:9200
+  data:
+    elasticsearch:
+      repositories:
+        enabled: false
+  datasource:
+    url: jdbc:postgresql://${database-server}/eas
+    username: eas
+    password: changeit
+    driver-class-name: org.postgresql.Driver
+    name: mainPool
+  liquibase:
+    changeLog: classpath:db-changelog.xml
+  jpa:
+    generate-ddl: false
+    database-platform: cz.inqool.eas.common.db.EasPostgreSQL95Dialect
+    hibernate:
+      ddl-auto: validate
+      naming:
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+      use-new-id-generator-mappings: true
+    open-in-view: false
+    properties:
+      hibernate:
+        globally_quoted_identifiers: true
+        cache:
+          use_second_level_cache: false
+          use_query_cache: false
+        event:
+          merge:
+            entity_copy_observer: allow
+        jdbc:
+          batch_size: 100
+        generate_statistics: false
+  security:
+
+eas:
+  session:
+    redis: false
+
+syslog:
+  enabled: true
+  hostName: localhost
+  appName: aron
+
+files:
+  storage: /opt/aron/fileStorage
+  transfer:
+    path: /tmp/aronFileTransfer
+
+tile:
+  tmp: /tmp/aronTile
+#  gm: "D:/ProgramsEternal/DCAP/vm2/graphicsmagick-1.3.20-q8"
+  folder: /opt/aron/tiles
+  size: 512
+  format: jpg
+
+news:
+  file: "./news.json"

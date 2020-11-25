@@ -1,0 +1,12 @@
+[submodule "index"]
+	path = index
+	url = git@git.inqool.cz:eas/index.git
+[submodule "entity-views"]
+	path = entity-views
+	url = git@git.inqool.cz:backslash/entity-views.git
+[submodule "common"]
+	path = common
+	url = git@git.inqool.cz:eas/common.git
+[submodule "common-web"]
+	path = common-web
+	url = git@git.inqool.cz:eas/common-web.git

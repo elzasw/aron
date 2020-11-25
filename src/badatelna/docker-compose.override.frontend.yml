@@ -1,0 +1,28 @@
+version: '3.7'
+services:
+  ksfe:
+    image: aron-web:latest
+    build:
+      dockerfile: aron-web/docker/dev.Dockerfile
+    volumes:
+      - type: bind
+        source: ./aron-web/dist
+        target: /usr/local/apache2/htdocs/
+        consistency: delegated
+  hotreload:
+    image: hotreload:latest
+    build:
+      context: ./hotreload
+      dockerfile: Dockerfile
+    networks:
+      - backend
+    tty: true
+    mem_limit: 256m
+    cpus: 1
+    ports:
+      - 8090:8090
+    volumes:
+      - type: bind
+        source: ./aron-web/dist
+        target: /build/app
+        consistency: delegated

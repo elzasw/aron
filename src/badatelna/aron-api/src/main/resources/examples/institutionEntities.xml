@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c2ad1327-c70b-41e1-8ac6-208b1c719f47">
+    <apus>
+        <apu type="Entity" uuid="cfec1c2d-8bb8-4ce0-b9dd-a6e7302c3269">
+            <name>Státní okresní archiv Rychnov nad Kněžnou</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Rychnov nad Kněžnou</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Rychnov nad Kněžnou</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Rychnov nad Kn.</value>
+                    <itms>
+                        <str type="NAME">SOkA Rychnov nad Kn.</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="42668281-1004-48c4-99b2-c210db2a5a32">
+            <name>Státní okresní archiv Pardubice</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Pardubice</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Pardubice</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Pardubice</value>
+                    <itms>
+                        <str type="NAME">SOkA Pardubice</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="d72e1213-8422-47e3-a94e-748cc98f7697">
+            <name>Státní okresní archiv Náchod</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Náchod</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Náchod</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Náchod</value>
+                    <itms>
+                        <str type="NAME">SOkA Náchod</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="575b3481-253e-49d5-9aea-43e388fba771">
+            <name>Státní oblastní archiv v Zámrsku</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní oblastní archiv v Zámrsku</value>
+                    <itms>
+                        <str type="NAME">Státní oblastní archiv v Zámrsku</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOA v Zámrsku</value>
+                    <itms>
+                        <str type="NAME">SOA v Zámrsku</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="4fe85268-4cac-41c0-9817-c69fd52c5c57">
+            <name>Státní okresní archiv Hradec Králové</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Hradec Králové</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Hradec Králové</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Hradec Králové</value>
+                    <itms>
+                        <str type="NAME">SOkA Hradec Králové</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="b0e02f4c-61ac-492d-8e55-ee3951e0ba76">
+            <name>Státní okresní archiv Svitavy se sídlem v Litomyšli</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Svitavy se sídlem v Litomyšli</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Svitavy se sídlem v Litomyšli</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Svitavy</value>
+                    <itms>
+                        <str type="NAME">SOkA Svitavy</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="471932ad-c09c-4485-a32c-d6383b2c2335">
+            <name>Státní okresní archiv Chrudim</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Chrudim</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Chrudim</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Chrudim</value>
+                    <itms>
+                        <str type="NAME">SOkA Chrudim</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="2d6c7fcf-2a97-4394-87cf-d0e5b16f86ee">
+            <name>Státní okresní archiv Ústí nad Orlicí</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Ústí nad Orlicí</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Ústí nad Orlicí</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Ústí nad Orlicí</value>
+                    <itms>
+                        <str type="NAME">SOkA Ústí nad Orlicí</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="45229808-fdb5-44a7-b0a0-8816b710992b">
+            <name>Státní okresní archiv Trutnov</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Trutnov</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Trutnov</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Trutnov</value>
+                    <itms>
+                        <str type="NAME">SOkA Trutnov</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="Entity" uuid="681a7299-b9c4-4c06-aeb8-51e6a62d73bb">
+            <name>Státní okresní archiv Jičín</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Jičín</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Jičín</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Jičín</value>
+                    <itms>
+                        <str type="NAME">SOkA Jičín</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

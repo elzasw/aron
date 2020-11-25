@@ -1,0 +1,6 @@
+version: '3.7'
+services:
+  aron-api:
+    image: aron-api-dev:latest
+    build:
+      dockerfile: aron-api/docker/dev.Dockerfile

@@ -1,0 +1,37 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
+    <changeSet id="mail:1" author="zamborsky">
+        <createTable tableName="${mail_table_name}">
+            <!-- BaseObject -->
+            <column name="id" type="varchar(255)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="${mail_table_name}_PK"/>
+            </column>
+
+            <!-- DatedObject -->
+            <column name="created" type="timestamp"/>
+            <column name="updated" type="timestamp"/>
+            <column name="deleted" type="timestamp"/>
+
+            <!-- AuthoredObject -->
+            <column name="created_by_id" type="varchar(255)"/>
+            <column name="created_by_name" type="nvarchar(1024)"/>
+            <column name="updated_by_id" type="varchar(255)"/>
+            <column name="updated_by_name" type="nvarchar(1024)"/>
+            <column name="deleted_by_id" type="varchar(255)"/>
+            <column name="deleted_by_name" type="nvarchar(1024)"/>
+            <column name="created_by_tenant_id" type="varchar(255)"/>
+            <column name="created_by_tenant_name" type="nvarchar(1024)"/>
+            <column name="updated_by_tenant_id" type="varchar(255)"/>
+            <column name="updated_by_tenant_name" type="nvarchar(1024)"/>
+            <column name="deleted_by_tenant_id" type="varchar(255)"/>
+            <column name="deleted_by_tenant_name" type="nvarchar(1024)"/>
+
+            <!-- Own properties -->
+            <column name="subject" type="nvarchar(2048)"/>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="content" type="nclob"/>
+            <column name="to" type="varchar(255)"/>
+            <column name="sent" type="boolean"/>
+            <column name="error" type="nclob"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

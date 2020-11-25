@@ -1,3 +1,14 @@
-target/
 .idea
-*.iml
+.gradle/
+docker-compose.override.yml
+aron-api/build/
+
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
+**/dist/
+**/node_modules/

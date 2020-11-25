@@ -1,0 +1,16 @@
+*
+!package.json
+!yarn.lock
+
+!aron-web/docker
+!aron-web/public
+!aron-web/src
+!aron-web/.babelrc
+!aron-web/package.json
+!aron-web/tsconfig.json
+!aron-web/webpack.config.js
+
+!common-web/src
+!common-web/.babelrc
+!common-web/package.json
+!common-web/tsconfig.json

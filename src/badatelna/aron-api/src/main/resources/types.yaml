@@ -1,0 +1,147 @@
+# Druhy částí
+partyTypes:
+  - name: Název
+    code: PT_NAME
+    # STANDALONE | GROUPED
+    viewType: GROUPED
+  - name: Informace o archivu
+    code: PT_INST_INFO
+    viewType: STANDALONE
+  - name: Informace o archivním souboru
+    code: PT_FUND_INFO
+    viewType: STANDALONE
+  - name: Archivní popis
+    code: PT_ARCH_DESC
+    viewType: STANDALONE
+  - name: Původce
+    code: PT_ORIGINATOR
+    viewType: STANDALONE
+  - name: Narození
+    code: BIRTH
+    viewType: STANDALONE
+  - name: Úmrtí
+    code: DEATH
+    viewType: STANDALONE
+  - name: Další
+    code: OTHER
+    viewType: STANDALONE
+
+# Jednotlivé prvky popisu
+itemTypes:
+  - code: NAME
+    name: Název
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+    type: STRING
+    indexed: true
+  - code: INST_CODE
+    name: Kód archivu
+    type: STRING
+    indexed: true
+  - code: AP_REF
+    name: Odkaz na entitu
+    type: APU_REF
+    indexed: true
+  - code: INST_REF
+    name: Instituce
+    type: APU_REF
+    indexed: true
+  - code: ORIGINATOR_REF
+    name: Původce
+    type: APU_REF
+  - code: SECOND_NAME
+    name: Příjmení
+    type: STRING
+    indexed: true
+  - code: FIRST_NAME
+    name: Křestní jméno
+    type: STRING
+    indexed: true
+  - code: PLACE
+    name: Místo
+    type: STRING
+    indexed: true
+  - code: DATE
+    name: Datum
+    type: UNITDATE
+    indexed: true
+  - code: DESCRIPTION
+    name: Charakteristika
+    type: STRING
+    indexed: true
+  - code: ARCHIVE
+    name: Archiv
+    type: ENUM
+    indexed: true
+  - code: LANGUAGE
+    name: Jazyk
+    type: ENUM
+    indexed: true
+  - code: APU_REF
+    name: apu ref
+    type: APU_REF
+    indexed: true
+  - code: UNIT_DATE
+    name: unit date
+    type: STRING
+    indexed: true
+  - code: UNIT_ID
+    name: unit id
+    type: ENUM
+    indexed: true
+  - code: ABSTRACT
+    name: Obsah
+    type: STRING
+    indexed: true
+  - code: HISTORY
+    name: Historie
+    type: STRING
+    indexed: true
+  - code: UNIT_ARR
+    name: Způsob uspořádání
+    type: STRING
+    indexed: true
+  - code: UNIT_CONTENT
+    name: Tematický popis jednotky popisu
+    type: STRING
+    indexed: true
+  - code: UNIT_SOURCE
+    name: Přímý zdroj akvizice
+    type: STRING
+    indexed: true
+  - code: FUTURE_UNITS
+    name: Budoucí přírůstky
+    type: STRING
+    indexed: true
+  - code: UNIT_ACCESS
+    name: Podmínky přístupu
+    type: STRING
+    indexed: true
+  - code: UNIT_CURRENT_STATUS
+    name: Fyzický stav
+    type: STRING
+    indexed: true
+  - code: ARRANGE_RULES
+    name: Pravidla zpracování
+    type: STRING
+    indexed: true
+  - code: FORMAL_TITLE
+    name: Formální název
+    type: STRING
+    indexed: true
+  - code: SCALE
+    name: Měřítko
+    type: STRING
+    indexed: true
+  - code: STORAGE_COND
+    name: Způsob a forma dochování
+    type: STRING
+    indexed: true
+  - code: RELATED_UNITS
+    name: Odkazy na příbuzné dokumenty
+    type: STRING
+    indexed: true
+
+# Metadata a jejich popis
+metaDataTypes:
+  - code: mimeType
+    name: Typ souboru
