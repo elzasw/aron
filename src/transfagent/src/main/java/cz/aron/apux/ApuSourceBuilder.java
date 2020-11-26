@@ -23,16 +23,14 @@ import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.ObjectFactory;
 import cz.aron.apux._2020.Part;
 import cz.aron.apux._2020.Parts;
-import cz.aron.transfagent.elza.ElzaXmlReader;
-import cz.tacr.elza.schema.v2.Fragment;
 
 public class ApuSourceBuilder {
 	
 	static ObjectFactory objFactory = new ObjectFactory();
 	
-	static JAXBContext apuxXmlContext;
+    public static JAXBContext apuxXmlContext;
 	
-    static Schema schemaApux;
+    public static Schema schemaApux;
 	
 	static {
 		try {			

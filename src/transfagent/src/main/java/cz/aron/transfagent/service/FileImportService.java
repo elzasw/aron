@@ -1,19 +1,25 @@
 package cz.aron.transfagent.service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
-import javax.xml.transform.stream.StreamSource;
+import javax.xml.bind.Unmarshaller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,15 +28,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
-import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux._2020.Apu;
+import cz.aron.apux._2020.ApuSource;
+import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 
 @Service
 public class FileImportService implements SmartLifecycle {
 
     static final Logger log = LoggerFactory.getLogger(FileImportService.class);
-
-    private static final JAXBContext JAXB_CONTEXT = createJaxbContext(ApuSource.class);
 
     @Autowired
     ApuSourceRepository apuSourceRepository;
@@ -69,9 +76,8 @@ public class FileImportService implements SmartLifecycle {
         }
 
         // zpracování souborů v adresáři direct
-        if (processDirectFolder(direct)) {
+        if (processDirectFolder(direct, error)) {
             moveFolderTo(direct, processed.resolve("direct"));
-            Files.createDirectories(input.resolve("direct"));
         }
     }
 
@@ -81,7 +87,7 @@ public class FileImportService implements SmartLifecycle {
      * @param path adresář direct
      * @return true nebo false
      */
-    private boolean processDirectFolder(Path path) {
+    private boolean processDirectFolder(Path path, Path error) throws IOException {
         File[] files = path.toFile().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -93,8 +99,23 @@ public class FileImportService implements SmartLifecycle {
             }
         });
         for (File file : files) {
-            ApuSource apuSource = createApuSourceFromXml(file);
-            apuSourceRepository.save(apuSource);
+            String xml = Files.lines(file.toPath(), StandardCharsets.UTF_8)
+                    .collect(Collectors.joining("\n"));
+            try {
+                ApuSource apux = unmarshalApuSourceFromXml(xml);
+                List<Apu> apuList = apux.getApus().getApu();
+                Apu apuItem = apuList.get(0);
+                cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
+                apuSource.setData(xml);
+                apuSource.setSourceType(SourceType.valueOf(apuItem.getType().toString()));
+                apuSource.setUuid(UUID.fromString(apuItem.getUuid()));
+                apuSource.setDeleted(false);
+                apuSource.setDateImported(ZonedDateTime.now());
+                apuSourceRepository.save(apuSource);
+            } catch (JAXBException e) {
+                moveFolderTo(path, error);
+                throw new RuntimeException("Failed to parse", e);
+            }
         }
         return files.length > 0;
     }
@@ -102,15 +123,17 @@ public class FileImportService implements SmartLifecycle {
     /**
      * Vytváření objektů na základě XML souboru
      * 
-     * @param file
-     * @return
+     * @param xml
+     * @return cz.aron.apux._2020.ApuSource
+     * @throws IOException
+     * @throws JAXBException
      */
-    private ApuSource createApuSourceFromXml(File file) {
+    private ApuSource unmarshalApuSourceFromXml(String xml) throws IOException, JAXBException {
         ApuSource apuSource = null;
-        try (InputStream is = new FileInputStream(file)) {
-            apuSource = JAXB_CONTEXT.createUnmarshaller().unmarshal(new StreamSource(is), ApuSource.class).getValue();
-        } catch (JAXBException | IOException e) {
-            throw new RuntimeException("Failed to parse", e);
+        try (InputStream is = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+            Unmarshaller unmarshaller = ApuSourceBuilder.apuxXmlContext.createUnmarshaller();
+            unmarshaller.setSchema(ApuSourceBuilder.schemaApux);
+            apuSource = ((JAXBElement<ApuSource>) unmarshaller.unmarshal(is)).getValue();
         }
         return apuSource;
     }
@@ -128,6 +151,7 @@ public class FileImportService implements SmartLifecycle {
             target = Path.of(target.toString() + dateTime);
         }
         Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        Files.createDirectories(source);
     }
 
     public void run() {
