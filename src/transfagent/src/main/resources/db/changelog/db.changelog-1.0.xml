@@ -23,7 +23,7 @@
       <column name="deleted" type="boolean">
         <constraints nullable="false" />
       </column>
-      <column name="date_imported" type="time with time zone" />
+      <column name="date_imported" type="timestamp with time zone" />
     </createTable>
 
     <createTable tableName="institution">
