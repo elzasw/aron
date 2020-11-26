@@ -26,7 +26,6 @@ public class ImageProcessor {
 
     public void process(String fileId) throws IOException {
         OpenedFile openedFile = fileManager.open(fileId);
-        cz.inqool.eas.common.storage.file.File file = openedFile.getDescriptor();
         InputStream is = openedFile.getStream();
 
         TiledImage image = tiler.tileJpeg(is);

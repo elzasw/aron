@@ -33,23 +33,6 @@ public class JavaImageTiler implements ImageTiler {
         int imageWidth = bimg.getWidth();
         int imageHeight = bimg.getHeight();
 
-
-//            Iterator<ImageReader> iter = ImageIO.getImageReadersBySuffix("jpg");
-//            while(iter.hasNext()) {
-//                ImageReader reader = iter.next();
-//                try {
-//                    ImageInputStream stream = new MemoryCacheImageInputStream(inputStream);
-//                    reader.setInput(stream);
-//                    int width = reader.getWidth(reader.getMinIndex());
-//                    int height = reader.getHeight(reader.getMinIndex());
-//                    return new Dimension(width, height);
-//                } catch (IOException e) {
-//                    log.warn("Error reading: " + imgFile.getAbsolutePath(), e);
-//                } finally {
-//                    reader.dispose();
-//                }
-//            }
-
         int imageMax = Math.max(imageWidth, imageHeight);
         int levels = (int) Math.ceil(Math.log10(imageMax));
 
