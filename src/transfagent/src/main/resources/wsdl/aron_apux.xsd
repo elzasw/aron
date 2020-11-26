@@ -72,6 +72,7 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="attchs" type="s1:Attachment" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="daos" type="s1:Daos" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="type" use="required" type="s1:ApuType"/>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid"/>
@@ -142,6 +143,18 @@ Identifikátor může být UUID verze 1 nebo verze 4.</xs:documentation>
 				<xs:documentation>UUID souboru/stránky</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Daos">
+		<xs:annotation>
+			<xs:documentation>Seznam objektů DAO</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="uuid" type="s1:Uuid" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Identifikátor DAO</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="DescItems">
 		<xs:annotation>
