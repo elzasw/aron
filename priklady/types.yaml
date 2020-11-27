@@ -53,6 +53,10 @@ itemTypes:
    name: Tematický popis jednotky popisu
    type: STRING
    indexed: true
+ - code: UNIT_DATE
+   name: Datace
+   type: UNITDATE
+   indexed: true
  - code: UNIT_SOURCE
    name: Přímý zdroj akvizice
    type: STRING
