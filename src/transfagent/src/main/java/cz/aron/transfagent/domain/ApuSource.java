@@ -11,7 +11,10 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name = "apu_source")
@@ -22,8 +25,10 @@ public class ApuSource {
     @Column(name = "apusource_id")
     private Integer id;
 
+    @Lob
+    @Type(type = "org.hibernate.type.BinaryType")
     @JoinColumn(nullable = false)
-    private String data;
+    private byte[] data;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "source_type", nullable = false)
@@ -46,11 +51,11 @@ public class ApuSource {
         this.id = id;
     }
 
-    public String getData() {
+    public byte[] getData() {
         return data;
     }
 
-    public void setData(String data) {
+    public void setData(byte[] data) {
         this.data = data;
     }
 

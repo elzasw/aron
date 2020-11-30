@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -14,7 +13,6 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -76,9 +74,8 @@ public class FileImportService implements SmartLifecycle {
         }
 
         // zpracování souborů v adresáři direct
-        if (processDirectFolder(direct, error)) {
-            moveFolderTo(direct, processed.resolve("direct"));
-        }
+        processDirectFolder(direct, error);
+        moveFolderTo(direct, processed.resolve("direct"));
     }
 
     /**
@@ -87,7 +84,7 @@ public class FileImportService implements SmartLifecycle {
      * @param path adresář direct
      * @return true nebo false
      */
-    private boolean processDirectFolder(Path path, Path error) throws IOException {
+    private void processDirectFolder(Path path, Path error) throws IOException {
         File[] files = path.toFile().listFiles(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
@@ -98,26 +95,28 @@ public class FileImportService implements SmartLifecycle {
                 return false;
             }
         });
-        for (File file : files) {
-            String xml = Files.lines(file.toPath(), StandardCharsets.UTF_8)
-                    .collect(Collectors.joining("\n"));
-            try {
-                ApuSource apux = unmarshalApuSourceFromXml(xml);
-                List<Apu> apuList = apux.getApus().getApu();
-                Apu apuItem = apuList.get(0);
-                cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
-                apuSource.setData(xml);
-                apuSource.setSourceType(SourceType.valueOf(apuItem.getType().toString()));
-                apuSource.setUuid(UUID.fromString(apuItem.getUuid()));
-                apuSource.setDeleted(false);
-                apuSource.setDateImported(ZonedDateTime.now());
-                apuSourceRepository.save(apuSource);
-            } catch (JAXBException e) {
-                moveFolderTo(path, error);
-                throw new RuntimeException("Failed to parse", e);
-            }
+
+        if (files.length == 0 || files.length > 1) {
+            moveFolderTo(path, error);
+            throw new RuntimeException("The folder should contain only one apux...xml file");
         }
-        return files.length > 0;
+
+        byte[] xml = Files.readAllBytes(files[0].toPath());
+        try {
+            ApuSource apux = unmarshalApuSourceFromXml(xml);
+            List<Apu> apuList = apux.getApus().getApu();
+            Apu apuItem = apuList.get(0);
+            cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
+            apuSource.setData(xml);
+            apuSource.setSourceType(SourceType.valueOf(apuItem.getType().toString()));
+            apuSource.setUuid(UUID.fromString(apuItem.getUuid()));
+            apuSource.setDeleted(false);
+            apuSource.setDateImported(ZonedDateTime.now());
+            apuSourceRepository.save(apuSource);
+        } catch (JAXBException e) {
+            moveFolderTo(path, error);
+            throw new RuntimeException("Failed to parse", e);
+        }
     }
 
     /**
@@ -125,12 +124,12 @@ public class FileImportService implements SmartLifecycle {
      * 
      * @param xml
      * @return cz.aron.apux._2020.ApuSource
-     * @throws IOException
      * @throws JAXBException
+     * @throws IOException
      */
-    private ApuSource unmarshalApuSourceFromXml(String xml) throws IOException, JAXBException {
+    private ApuSource unmarshalApuSourceFromXml(byte[] xml) throws JAXBException, IOException {
         ApuSource apuSource = null;
-        try (InputStream is = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8))) {
+        try (InputStream is = new ByteArrayInputStream(xml)) {
             Unmarshaller unmarshaller = ApuSourceBuilder.apuxXmlContext.createUnmarshaller();
             unmarshaller.setSchema(ApuSourceBuilder.schemaApux);
             apuSource = ((JAXBElement<ApuSource>) unmarshaller.unmarshal(is)).getValue();
