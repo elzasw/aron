@@ -164,6 +164,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
 		stringTypeMap.put("ZP2015_RELATED_UNITS",new EdxStringConvertor("RELATED_UNITS"));
 		stringTypeMap.put("ZP2015_UNIT_DATE",new EdxUnitDateConvertor("UNIT_DATE"));
+		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
+		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
+		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO"));
+		stringTypeMap.put("ZP2015_OTHER_ID",new EdxStringConvertor("OTHER_ID"));
+		stringTypeMap.put("ZP2015_EDITION",new EdxStringConvertor("EDITION"));
+		stringTypeMap.put("ZP2015_UNIT_DATE_TEXT",new EdxStringConvertor("UNIT_DATE_TEXT"));
+		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));
+		stringTypeMap.put("ZP2015_PAINTING_CHAR",new EdxStringConvertor("PAINTING_CHAR"));
+		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));		
 		
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
 		if(convertor!=null) {

@@ -13,6 +13,7 @@
                 <part type="PT_FUND_INFO">
                     <itms>
                         <ref type="INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
+                        <ref type="ARCHDESC_ROOT_REF">6d05e4b6-336e-4067-ba49-5a2f643119df</ref>
                     </itms>
                 </part>
                 <part type="PT_ORIGINATOR">

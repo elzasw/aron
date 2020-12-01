@@ -14,21 +14,31 @@ partyTypes:
    code: PT_ARCH_DESC
    viewType: STANDALONE
 
+# Pridat: 
+#   hierarchical: true | false
+
 # Jednotlivé prvky popisu
 itemTypes:
+# Obecné
  - code: NAME
    name: Název
    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
-   type: STRING
-   indexed: true
- - code: INST_CODE
-   name: Kód archivu
    type: STRING
    indexed: true
  - code: AP_REF
    name: Odkaz na entitu
    type: APU_REF
    indexed: true
+# Archivy
+ - code: INST_CODE
+   name: Kód archivu
+   type: STRING
+   indexed: true
+# Archivní soubory
+ - code: ARCHDESC_ROOT_REF
+   name: Odkaz na kořen archivního popisu
+   type: APU_REF
+   indexed: false
  - code: INST_REF
    name: Instituce
    type: APU_REF
@@ -37,6 +47,7 @@ itemTypes:
    name: Původce
    type: APU_REF
    indexed: true
+# Archivní popis
  - code: ABSTRACT
    name: Obsah
    type: STRING
@@ -83,6 +94,42 @@ itemTypes:
    indexed: true
  - code: SCALE
    name: Měřítko
+   type: STRING
+   indexed: true
+ - code: SIZE
+   name: Rozměry, velikost
+   type: STRING
+   indexed: true
+ - code: ITEM_MAT
+   name: Materiál
+   type: STRING
+   indexed: true
+ - code: INV_CISLO
+   name: Inventární číslo
+   type: STRING
+   indexed: true
+ - code: OTHER_ID
+   name: Jiný identifikátor
+   type: STRING
+   indexed: true
+ - code: EDITION
+   name: Edice
+   type: STRING
+   indexed: true
+ - code: UNIT_DATE_TEXT
+   name: Textová datace
+   type: STRING
+   indexed: true
+ - code: EXERQUE
+   name: Otisk
+   type: STRING
+   indexed: true
+ - code: PAINTING_CHAR
+   name: Malba
+   type: STRING
+   indexed: true
+ - code: EXISTING_COPY
+   name: Kopie
    type: STRING
    indexed: true
  - code: STORAGE_COND
