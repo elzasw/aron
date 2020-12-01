@@ -10,10 +10,6 @@ public class CoreQueueService implements SmartLifecycle {
 
     static final Logger log = LoggerFactory.getLogger(CoreQueueService.class);
 
-    private enum ThreadStatus {
-        RUNNING, STOP_REQUEST, STOPPED
-    }
-
     private ThreadStatus status;
 
     /**

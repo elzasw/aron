@@ -39,10 +39,6 @@ public class FileImportService implements SmartLifecycle {
     @Autowired
     ApuSourceRepository apuSourceRepository;
 
-    private enum ThreadStatus {
-        RUNNING, STOP_REQUEST, STOPPED
-    }
-
     private ThreadStatus status;
 
     @Value("${aron.inputFolder}")
