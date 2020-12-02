@@ -16,6 +16,8 @@ import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
+import org.springframework.util.StringUtils;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
@@ -90,6 +92,10 @@ public class ImportFundInfo {
 		String instApu = dataProvider.getInstitutionApu(instCode);
 		Part partFundInfo = apusBuilder.addPart(apu, "PT_FUND_INFO");
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
+		String rootLvlUuid = getRootLevelUuid(sect.getLvls());
+		if(rootLvlUuid!=null) {
+			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", rootLvlUuid);
+		}
 		
 		// Puvodce
 		List<String> puvodci = getPuvodci(sect.getLvls());
@@ -98,6 +104,18 @@ public class ImportFundInfo {
 		}
 		
 		return apusBuilder;
+	}
+
+	private String getRootLevelUuid(Levels lvls) {
+		if(lvls==null) {
+			return null;
+		}
+		List<Level> lvlList = lvls.getLvl();
+		if(lvlList.size()==0) {
+			return null;
+		}
+		Level lvl = lvlList.get(0);
+		return lvl.getUuid();
 	}
 
 	private List<String> getPuvodci(Levels lvls) {

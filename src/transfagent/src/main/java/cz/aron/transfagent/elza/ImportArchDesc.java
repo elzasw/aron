@@ -19,6 +19,7 @@ import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
+import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.transformation.ContextDataProvider;
@@ -172,7 +173,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_DATE_TEXT",new EdxStringConvertor("UNIT_DATE_TEXT"));
 		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));
 		stringTypeMap.put("ZP2015_PAINTING_CHAR",new EdxStringConvertor("PAINTING_CHAR"));
-		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));		
+		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
+		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));		
+		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());		
 		
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
 		if(convertor!=null) {
