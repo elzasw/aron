@@ -48,6 +48,10 @@ itemTypes:
     type: APU_REF
     indexed: true
   # Archivní popis
+  - code: UNIT_ID
+    name: Referenční označení
+    type: ENUM
+    indexed: true
   - code: ABSTRACT
     name: Obsah
     type: STRING
@@ -82,6 +86,10 @@ itemTypes:
     indexed: true
   - code: UNIT_CURRENT_STATUS
     name: Fyzický stav
+    type: STRING
+    indexed: true
+  - code: ARRANGEMENT_INFO
+    name: Informace o zpracování
     type: STRING
     indexed: true
   - code: ARRANGE_RULES
@@ -139,10 +147,6 @@ itemTypes:
   - code: RELATED_UNITS
     name: Odkazy na příbuzné dokumenty
     type: STRING
-    indexed: true
-  - code: UNIT_ID
-    name: unit id
-    type: ENUM
     indexed: true
 
 # Metadata a jejich popis
