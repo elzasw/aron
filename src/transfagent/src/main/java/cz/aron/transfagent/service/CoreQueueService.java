@@ -2,13 +2,20 @@ package cz.aron.transfagent.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
+
+import cz.aron.transfagent.domain.CoreQueue;
+import cz.aron.transfagent.repository.CoreQueueRepository;
 
 @Service
 public class CoreQueueService implements SmartLifecycle {
 
     static final Logger log = LoggerFactory.getLogger(CoreQueueService.class);
+
+    @Autowired
+    CoreQueueRepository coreQueueRepository;
 
     private ThreadStatus status;
 
@@ -16,7 +23,13 @@ public class CoreQueueService implements SmartLifecycle {
      * Odeslání pomocí WSDL data do jádra
      */
     private void sendData() {
-        // TODO
+        if (coreQueueRepository.count() > 0) {
+            CoreQueue item = coreQueueRepository.findFirstByOrderById();
+
+            // TODO send to core
+
+            coreQueueRepository.delete(item);
+        }
     }
 
     public void run() {

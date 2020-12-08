@@ -19,6 +19,13 @@ config:
 aron:
   inputFolder: C:\temp\transfagent\input\
 
+# Parametry přístupu k jádru
+aronCore:
+  url: http://localhost
+  user: x
+  pass: x
+  soapLogging: false
+
 logging:
   file: C:/temp/transfagent/logs/transfagent.log
   pattern:
