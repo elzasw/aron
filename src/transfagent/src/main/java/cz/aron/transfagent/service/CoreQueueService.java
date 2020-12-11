@@ -56,12 +56,15 @@ public class CoreQueueService implements SmartLifecycle {
 
         // vytváření Requesta
         GenericDataType dataType = new GenericDataType();
+        dataType.setType("APUSRC");
+        dataType.setBinData(item.getApuSource().getData());
         UploadRequest request = new UploadRequestImpl(clientConfig.getWorkDir(), dataType);
         try {
             client.uploadSync(request);
         } finally {
             client.stop();
         }
+
     }
 
     public void run() {
