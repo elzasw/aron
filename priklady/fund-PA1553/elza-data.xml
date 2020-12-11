@@ -16,7 +16,7 @@
                     <ds t="NM_MINOR">
                         <v>Renata</v>
                     </ds>
-                    <de s="ET_MARRIAGE" t="NM_TYPE"/>
+                    <de s="NT_ACCEPTED" t="NM_TYPE"/>
                 </frg>
             </frgs>
         </ap>
