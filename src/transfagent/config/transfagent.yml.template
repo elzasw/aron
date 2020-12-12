@@ -1,0 +1,14 @@
+﻿spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/transfagent
+    username: app
+    password: app
+aron:
+  inputFolder: C:\Pyta\ArchivOnline\transfagent.work
+logging:
+  file: 
+    name: C:\Pyta\ArchivOnline\transfagent.work\log\transfagent.log
+  level:
+    cz: DEBUG
+config:
+  file: C:\Pyta\ArchivOnline\aron.git\priklady\types.yaml

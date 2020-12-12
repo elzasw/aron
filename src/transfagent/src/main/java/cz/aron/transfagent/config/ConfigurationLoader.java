@@ -1,5 +1,7 @@
 package cz.aron.transfagent.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -11,13 +13,23 @@ import cz.aron.common.itemtypes.TypesConfiguration;
 @Configuration
 @EnableScheduling
 public class ConfigurationLoader {
+	
+	final private static Logger log = LoggerFactory.getLogger(ConfigurationLoader.class);
 
     @Value("${config.file}")
     private String configFile;
 
     @Scheduled(fixedRate = 10000)
     private void load() {
-        TypesConfiguration config = ConfigLoader.load(configFile);
+    	try {
+    		log.debug("Loading configuration {}", configFile);
+    		
+    		TypesConfiguration config = ConfigLoader.load(configFile);
+    		
+    		log.debug("Configuration reloaded");
+    	} catch(Exception e) {
+    		log.error("Failed to load configuration: "+configFile, e);
+    	}
     }
 
 }

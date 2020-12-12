@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>aron</artifactId>
@@ -14,7 +14,7 @@
 
     <properties>
 		<!--<java.version>11</java.version>-->
-        <cxf.version>3.3.0</cxf.version> <!-- 3.1.11 -->
+        <cxf.version>3.3.7</cxf.version>
     </properties>
 
     <dependencies>
@@ -22,9 +22,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -38,11 +47,26 @@
 			</exclusions>
 		</dependency>
 
+	    <dependency>
+      		<groupId>org.liquibase</groupId>
+      		<artifactId>liquibase-core</artifactId>
+      		<exclusions>
+        		<exclusion>
+          			<groupId>ch.qos.logback</groupId>
+          			<artifactId>logback-classic</artifactId>
+        		</exclusion>
+      		</exclusions>
+    	</dependency>
+
 		<dependency>
       		<groupId>cz.aron</groupId>
       		<artifactId>aron-common</artifactId>
 		    <version>0.0.1-SNAPSHOT</version>
     	</dependency>
+	    <dependency>
+	      <groupId>org.apache.commons</groupId>
+	      <artifactId>commons-lang3</artifactId>
+	    </dependency>    
 
 		<dependency>
 			<groupId>com.lightcomp.ft</groupId>
@@ -66,35 +90,8 @@
 		    <artifactId>jaxws-api</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
 
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-	    <dependency>
-      		<groupId>org.liquibase</groupId>
-      		<artifactId>liquibase-core</artifactId>
-      		<exclusions>
-        		<exclusion>
-          			<groupId>ch.qos.logback</groupId>
-          			<artifactId>logback-classic</artifactId>
-        		</exclusion>
-      		</exclusions>
-    	</dependency>
-
+        <!-- pro testování -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
@@ -106,16 +103,28 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>11</source>
                     <target>11</target>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>cz.aron.transfagent.Application</mainClass>
+                    <executable>true</executable>
+                    <layout>JAR</layout>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jvnet.jaxb2.maven2</groupId>

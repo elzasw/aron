@@ -14,6 +14,8 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -29,6 +31,8 @@ import cz.tacr.elza.schema.v2.Institutions;
 import cz.tacr.elza.schema.v2.ObjectFactory;
 
 public class ElzaXmlReader {
+	
+	static Logger log = LoggerFactory.getLogger(ElzaXmlReader.class);
 
 	static JAXBContext jaxbContext;
 	static Schema schemaElza;
@@ -41,6 +45,7 @@ public class ElzaXmlReader {
 					ApuSourceBuilder.class.getResourceAsStream("/schema/elza-schema-v2.xsd"));
 			schemaElza = schemaFactory.newSchema(stream);
 		} catch (JAXBException | SAXException e) {
+			log.error("Failed to initialize Elza schema", e);
 			throw new RuntimeException("Failed to initialize ElzaXmlReader", e);
 		}
 	}
