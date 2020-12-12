@@ -11,7 +11,6 @@ import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBElement;
@@ -20,35 +19,39 @@ import javax.xml.bind.Unmarshaller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuSource;
+import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.CoreQueueRepository;
 
 @Service
 public class FileImportService implements SmartLifecycle {
 
-    static final Logger log = LoggerFactory.getLogger(FileImportService.class);
+    private static final Logger log = LoggerFactory.getLogger(FileImportService.class);
 
-    @Autowired
-    ApuSourceRepository apuSourceRepository;
-
+    private final ApuSourceRepository apuSourceRepository;
+    
+    private final CoreQueueRepository coreQueueRepository;
+    
+    private final TransactionTemplate transactionTemplate;
+    
+    private final StorageService storageService;
+    
     private ThreadStatus status;
-
-    @Value("${aron.inputFolder}")
-    private String inputFolder;
-
-    private Path inputPath;
-
-    private Path processedPath;
-
-    private Path errorPath;
+    
+	public FileImportService(ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
+			TransactionTemplate transactionTemplate, StorageService storageService) {
+		this.apuSourceRepository = apuSourceRepository;
+		this.coreQueueRepository = coreQueueRepository;
+		this.transactionTemplate = transactionTemplate;
+		this.storageService = storageService;
+	}
 
     /**
      * Monitorování vstupního adresáře
@@ -56,9 +59,12 @@ public class FileImportService implements SmartLifecycle {
      * @throws IOException
      */
     private void importFile() throws IOException {
+    	
+    	Path inputPath = storageService.getInputPath();
+    	
         // kontrola, zda vstupní adresář existuje
-        if (Files.notExists(Path.of(inputFolder))) {
-            log.error("Input folder {} not exists.", inputFolder);
+        if (Files.notExists(inputPath)) {
+            log.error("Input folder {} not exists.", inputPath);
             throw new RuntimeException("Input folder not exists.");
         }
 
@@ -66,7 +72,7 @@ public class FileImportService implements SmartLifecycle {
 
         // kontrola, zda adresář direct existuje
         if (Files.notExists(direct)) {
-            log.error("Direct folder in input folder {} not exists.", inputFolder);
+            log.error("Direct folder in input folder {} not exists.", direct);
             throw new RuntimeException("Direct folder in input folder not exists.");
         }
 
@@ -79,53 +85,65 @@ public class FileImportService implements SmartLifecycle {
      * @param path adresář direct
      * @return true nebo false
      */
-    private void processDirectFolder(Path path) throws IOException {
-        File[] dirs = path.toFile().listFiles(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return dir.isDirectory();
-            }
-        });
-        // pokud je adresář prázdný, není co zpracovávat
-        if (dirs.length == 0) {
-            return;
-        }
-        for (File dir : dirs) {
-            File[] files = dir.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    // process apux.xml or apux-XY.xml files
-                    if (name.startsWith("apux") && name.endsWith("xml")) {
-                        return true;
-                    }
-                    return false;
-                }
-            });
+	private void processDirectFolder(Path path) throws IOException {
+		File[] dirs = path.toFile().listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return dir.isDirectory();
+			}
+		});
+		// pokud je adresář prázdný, není co zpracovávat
+		if (dirs.length == 0) {
+			return;
+		}
+		for (File dir : dirs) {
+			File[] files = dir.listFiles(new FilenameFilter() {
+				@Override
+				public boolean accept(File dir, String name) {
+					// process apux.xml or apux-XY.xml files
+					if (name.startsWith("apux") && name.endsWith("xml")) {
+						return true;
+					}
+					return false;
+				}
+			});
 
-            if (files.length == 0 || files.length > 1) {
-                moveFolderTo(dir.toPath(), errorPath);
-                throw new RuntimeException("The folder should contain only one apux...xml file");
-            }
+			if (files.length == 0 || files.length > 1) {
+				Path storedToDir = storageService.moveToErrorDir(dir.toPath());
+				log.error("Folder {} doesn't contains apu.xml file, moved to error directory {}", dir.getName(),
+						storedToDir);
+				continue;
+			}
 
-            byte[] xml = Files.readAllBytes(files[0].toPath());
-            try {
-                ApuSource apux = unmarshalApuSourceFromXml(xml);
-                List<Apu> apuList = apux.getApus().getApu();
-                Apu apuItem = apuList.get(0);
-                cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
-                apuSource.setData(xml);
-                apuSource.setSourceType(SourceType.valueOf(apuItem.getType().toString()));
-                apuSource.setUuid(UUID.fromString(apuItem.getUuid()));
-                apuSource.setDeleted(false);
-                apuSource.setDateImported(ZonedDateTime.now());
-                apuSourceRepository.save(apuSource);
-            } catch (JAXBException e) {
-                moveFolderTo(dir.toPath(), errorPath);
-                throw new RuntimeException("Failed to parse", e);
-            }
-            moveFolderTo(dir.toPath(), processedPath);
-        }
-    }
+			byte[] xml = Files.readAllBytes(files[0].toPath());
+			ApuSource apux;
+
+			try {
+				apux = unmarshalApuSourceFromXml(xml);
+			} catch (JAXBException | IOException e1) {
+				Path storedToDir = storageService.moveToErrorDir(dir.toPath());
+				log.error("Fail to parse apu.xml. Dir {} moved to error directory {}", dir.getName(), storedToDir);
+				continue;
+			}
+
+			Path dataDir = storageService.moveToDataDir(dir.toPath());
+			cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
+			apuSource.setOrigDir(files[0].getName());
+			apuSource.setDataDir(dataDir.toString());
+			apuSource.setSourceType(SourceType.DIRECT);
+			apuSource.setUuid(UUID.fromString(apux.getUuid()));
+			apuSource.setDeleted(false);
+			apuSource.setDateImported(ZonedDateTime.now());
+			CoreQueue coreQueue = new CoreQueue();
+			coreQueue.setApuSource(apuSource);
+			transactionTemplate.execute(t -> {
+				apuSourceRepository.save(apuSource);
+				coreQueueRepository.save(coreQueue);
+				return null;
+			});
+
+		}
+	}
 
     /**
      * Vytváření objektů na základě XML souboru
@@ -165,6 +183,7 @@ public class FileImportService implements SmartLifecycle {
         while (status == ThreadStatus.RUNNING) {
             try {
                 importFile();
+                Thread.sleep(5000);
             } catch (Exception e) {
                 log.error("Error in import file. ", e);
             }
@@ -175,11 +194,6 @@ public class FileImportService implements SmartLifecycle {
     @Override
     public void start() {
         status = ThreadStatus.RUNNING;
-
-        inputPath = Path.of(inputFolder).resolve("input");
-        processedPath = Path.of(inputFolder).resolve("processed");
-        errorPath = Path.of(inputFolder).resolve("error");
-
         new Thread(() -> {
             run();
         }).start();

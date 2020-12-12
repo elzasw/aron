@@ -25,17 +25,18 @@ public class ApuSource {
     @Column(name = "apusource_id")
     private Integer id;
 
-    @Lob
-    @Type(type = "org.hibernate.type.BinaryType")
-    @JoinColumn(nullable = false)
-    private byte[] data;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "source_type", nullable = false)
     private SourceType sourceType;
 
     @Column(nullable = false)
     private UUID uuid;
+    
+    @Column(name="orig_dir")
+    private String origDir;
+    
+    @Column(name="data_dir")
+    private String dataDir;
 
     @Column(nullable = false)
     private boolean deleted;
@@ -49,14 +50,6 @@ public class ApuSource {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
     }
 
     public SourceType getSourceType() {
@@ -75,7 +68,23 @@ public class ApuSource {
         this.uuid = uuid;
     }
 
-    public boolean isDeleted() {
+    public String getOrigDir() {
+		return origDir;
+	}
+
+	public void setOrigDir(String origDir) {
+		this.origDir = origDir;
+	}
+
+	public String getDataDir() {
+		return dataDir;
+	}
+
+	public void setDataDir(String dataDir) {
+		this.dataDir = dataDir;
+	}
+
+	public boolean isDeleted() {
         return deleted;
     }
 
