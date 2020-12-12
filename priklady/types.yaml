@@ -1,5 +1,5 @@
 # Druhy částí
-partyTypes:
+partTypes:
   - name: Název
     code: PT_NAME
     # STANDALONE | GROUPED
