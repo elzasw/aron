@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,6 @@ import java.util.Set;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.Validate;
-import org.springframework.util.StringUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
@@ -68,16 +66,15 @@ public class ImportFundInfo {
 		
 		return importFundInfo(inputFile, pdp);
 	}
-	
-	private ApuSourceBuilder importFundInfo(final Path inputFile, 
-			final ContextDataProvider cdp) throws IOException, JAXBException {
-		this.dataProvider = cdp;
-		
-		try(InputStream is = Files.newInputStream(inputFile);) {
-			elzaXmlReader = ElzaXmlReader.read(is);
-			return importFundInfo();
-		}		
-	}
+
+    public ApuSourceBuilder importFundInfo(final Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
+        this.dataProvider = cdp;
+
+        try (InputStream is = Files.newInputStream(inputFile)) {
+            elzaXmlReader = ElzaXmlReader.read(is);
+            return importFundInfo();
+        }
+    }
 
 	private ApuSourceBuilder importFundInfo() {
 		Sections sections = elzaXmlReader.getEdx().getFs();
