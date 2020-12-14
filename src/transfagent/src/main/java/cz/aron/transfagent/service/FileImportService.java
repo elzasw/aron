@@ -31,9 +31,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.ApuSource;
-import cz.aron.apux._2020.DescItems;
-import cz.aron.apux._2020.Part;
-import cz.aron.apux._2020.Parts;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
@@ -191,21 +188,14 @@ public class FileImportService implements SmartLifecycle {
 			} catch (IOException e) {
 				throw new IllegalStateException(e);
 			}
-    		    		
-    		UUID instUuid;
-    		if (institution==null) {
-    			instUuid = UUID.fromString(apusrcBuilder.getApusrc().getUuid());
-    		} else {
-    			instUuid = institution.getUuid();
-    		}
-    		
+
     		if (institution == null) {    			
-    			// instituce neexistuje, vytvorim novou
+    			// instituce neexistuje, vytvorim novou    			
     			cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
     			apuSource.setOrigDir(dir.getFileName().toString());
     			apuSource.setDataDir(dataDir.toString());
     			apuSource.setSourceType(SourceType.INSTITUTION);
-    			apuSource.setUuid(UUID.randomUUID());
+    			apuSource.setUuid(UUID.fromString(apusrcBuilder.getApusrc().getUuid()));
     			apuSource.setDeleted(false);
     			apuSource.setDateImported(ZonedDateTime.now());
     			
@@ -213,7 +203,7 @@ public class FileImportService implements SmartLifecycle {
     			newInstitution.setApuSource(apuSource);
     			newInstitution.setCode(code);
     			newInstitution.setSource("source");    			
-    			newInstitution.setUuid(instUuid);
+    			newInstitution.setUuid(UUID.fromString(apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid()));
     			
     			CoreQueue coreQueue = new CoreQueue();
     			coreQueue.setApuSource(apuSource);
@@ -236,8 +226,7 @@ public class FileImportService implements SmartLifecycle {
     				institutionRepository.save(institution);
     				coreQueueRepository.save(coreQueue);
     				return null;
-    			});
-    			
+    			});    			
     		}
     		
     	}

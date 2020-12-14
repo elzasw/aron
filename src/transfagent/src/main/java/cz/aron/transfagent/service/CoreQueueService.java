@@ -88,7 +88,7 @@ public class CoreQueueService implements SmartLifecycle {
             log.error("transfer to server failed.");
             throw new IllegalStateException();
         }
-
+        log.info("Uploaded apusrc={}, type={}",item.getApuSource().getUuid().toString(),item.getApuSource().getSourceType());
     }
     
     private List<SourceItem> createSourceItems(CoreQueue item) {
