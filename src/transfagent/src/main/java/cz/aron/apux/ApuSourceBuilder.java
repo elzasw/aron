@@ -46,6 +46,10 @@ public class ApuSourceBuilder {
 		
 	private ApuSource apusrc = objFactory.createApuSource();
 
+	public ApuSource getApusrc() {
+		return apusrc;
+	}
+
 	public JAXBElement<ApuSource> build() {
 		if(apusrc.getUuid()==null) {
 			apusrc.setUuid(UUID.randomUUID().toString());

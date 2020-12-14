@@ -49,12 +49,13 @@ public class CoreQueueService implements SmartLifecycle {
     private void sendData() {
         if (coreQueueRepository.count() > 0) {
             CoreQueue item = coreQueueRepository.findFirstByOrderById();
-            uploadData(item);            
+            uploadData(item);
+            /*
             try {
 				storageService.moveToProcessed(storageService.getApuDataDir(item.getApuSource().getDataDir()));
 			} catch (IOException e) {
 				log.error("Fail to move to processed directory {}",item.getApuSource().getDataDir(),e);
-			}            
+			}*/           
             coreQueueRepository.delete(item);
         }
     }
@@ -71,21 +72,8 @@ public class CoreQueueService implements SmartLifecycle {
         clientConfig.setSoapLogging(configAronCore.getSoapLogging());
         Client client = FileTransfer.createClient(clientConfig);
         
-        Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
-        File [] files = dataDir.toFile().listFiles((f)->f.isFile());
-        
-        Path file;
-        if (files!=null&&files.length==1) {
-        	file = files[0].toPath();
-        } else {
-        	throw new IllegalStateException();
-        }
-        
-        List<SourceItem> sourceItems = new ArrayList<>();
-        SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
-        sourceItems.add(simpleFile);
-        
-        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getApuSource().getId());
+        List<SourceItem> sourceItems = createSourceItems(item);                
+        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
         try {
             client.uploadSync(request);
         } finally {
@@ -100,7 +88,44 @@ public class CoreQueueService implements SmartLifecycle {
             log.error("transfer to server failed.");
             throw new IllegalStateException();
         }
+
+    }
+    
+    private List<SourceItem> createSourceItems(CoreQueue item) {
+    	switch (item.getApuSource().getSourceType()) {
+    	case DIRECT:
+    		return createSourceItemsDirect(item);
+    	case INSTITUTION:
+    		return createSourceItemsInstitution(item);
+    	default:
+    		throw new IllegalStateException();
+    	}
+    }
+    
+    private List<SourceItem> createSourceItemsDirect(CoreQueue item) {
+        Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
+        File [] files = dataDir.toFile().listFiles((f)->f.isFile());
         
+        Path file;
+        if (files!=null&&files.length==1) {
+        	file = files[0].toPath();
+        } else {
+        	throw new IllegalStateException();
+        }
+        
+        List<SourceItem> sourceItems = new ArrayList<>();        
+        SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
+        sourceItems.add(simpleFile);
+        return sourceItems;
+    }
+    
+    private List<SourceItem> createSourceItemsInstitution(CoreQueue item) {
+    	Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
+    	Path file = dataDir.resolve("apusrc.xml");        
+        List<SourceItem> sourceItems = new ArrayList<>();        
+        SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
+        sourceItems.add(simpleFile);
+        return sourceItems;
     }
 
     public void run() {

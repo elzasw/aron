@@ -47,7 +47,7 @@ public class ImportInstitution {
 
 	}
 
-	private ApuSourceBuilder importInstitution(Path inputFile, String instCode) throws IOException, JAXBException {
+	public ApuSourceBuilder importInstitution(Path inputFile, String instCode) throws IOException, JAXBException {
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importInstitution(instCode);

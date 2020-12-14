@@ -5,13 +5,19 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -25,10 +31,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.ApuSource;
+import cz.aron.apux._2020.DescItems;
+import cz.aron.apux._2020.Part;
+import cz.aron.apux._2020.Parts;
 import cz.aron.transfagent.domain.CoreQueue;
+import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ImportInstitution;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
+import cz.aron.transfagent.repository.InstitutionRepository;
 
 @Service
 public class FileImportService implements SmartLifecycle {
@@ -39,6 +51,8 @@ public class FileImportService implements SmartLifecycle {
     
     private final CoreQueueRepository coreQueueRepository;
     
+    private final InstitutionRepository institutionRepository;
+    
     private final TransactionTemplate transactionTemplate;
     
     private final StorageService storageService;
@@ -46,9 +60,11 @@ public class FileImportService implements SmartLifecycle {
     private ThreadStatus status;
     
 	public FileImportService(ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
+			InstitutionRepository institutionRepository,
 			TransactionTemplate transactionTemplate, StorageService storageService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.coreQueueRepository = coreQueueRepository;
+		this.institutionRepository = institutionRepository;
 		this.transactionTemplate = transactionTemplate;
 		this.storageService = storageService;
 	}
@@ -77,8 +93,157 @@ public class FileImportService implements SmartLifecycle {
         }
 
         processDirectFolder(direct);
+        
+        var institutionsPath = inputPath.resolve("institutions");
+        processInstitutionsFolder(institutionsPath);
+        
+        var fundsPath = inputPath.resolve("funds");
+        processFundsFolder(fundsPath);
+        
+        var findingAidsPath = inputPath.resolve("faindingAids");
+        processFindingAidsFolder(findingAidsPath);
+        
+        var archDescPath = inputPath.resolve("archdesc");
+        processArchDescsFolder(archDescPath);
+        
+        var collectionsPath = inputPath.resolve("collections");
+        processCollectionsFolder(collectionsPath);
+    }
+    
+    private void processCollectionsFolder(Path path) {
+    	
+    }
+    
+    private void processArchDescsFolder(Path path) {
+    	
+    }
+    
+    private void processFindingAidsFolder(Path path) {
+    	
     }
 
+    private void processFundsFolder(Path path) {
+    	
+    }
+    
+    private void processInstitutionsFolder(Path path) {
+    	
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+    	
+    	for(Path dir:dirs) {
+    		
+    		List<Path> xmls;    		
+			try (var stream = Files.list(dir)) {
+				 xmls = stream
+						.filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith("institution")
+								&& f.getFileName().toString().endsWith(".xml"))
+						.collect(Collectors.toList());								
+			} catch (IOException ioEx) {
+				throw new UncheckedIOException(ioEx);
+			}
+			
+			Optional<Path> inst = xmls.stream().filter(p -> p.getFileName().toString().startsWith("institution-")
+					&& p.getFileName().toString().endsWith(".xml")).findFirst();
+			
+			if (inst.isEmpty()) {
+				log.warn("Directory is empty {}", dir);
+				return;
+			}
+			
+			String fileName = inst.get().getFileName().toString();			
+			String tmp = fileName.substring("institution-".length());
+			String code = tmp.substring(0,tmp.length()-".xml".length());
+			
+    		ImportInstitution ii = new ImportInstitution();
+    		ApuSourceBuilder apusrcBuilder;
+    		
+			try {
+				apusrcBuilder = ii.importInstitution(inst.get(), code);
+			} catch (IOException e1) {
+				throw new UncheckedIOException(e1);
+			} catch (JAXBException e1) {
+				throw new IllegalStateException(e1);
+			}
+    		
+    		Institution institution = institutionRepository.findByCode(code);
+    		if (institution!=null) {
+    			apusrcBuilder.getApusrc().setUuid(institution.getApuSource().getUuid().toString());
+    			apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(institution.getUuid().toString());
+    		}
+    		
+    		Path dataDir;
+    		try(OutputStream fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+    			apusrcBuilder.build(fos);
+    			
+    		} catch (IOException ioEx) {
+    			throw new UncheckedIOException(ioEx);
+    		} catch (JAXBException e) {
+				throw new IllegalStateException(e);
+			}
+    		
+    		try {
+				dataDir = storageService.moveToDataDir(dir);
+			} catch (IOException e) {
+				throw new IllegalStateException(e);
+			}
+    		    		
+    		UUID instUuid;
+    		if (institution==null) {
+    			instUuid = UUID.fromString(apusrcBuilder.getApusrc().getUuid());
+    		} else {
+    			instUuid = institution.getUuid();
+    		}
+    		
+    		if (institution == null) {    			
+    			// instituce neexistuje, vytvorim novou
+    			cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
+    			apuSource.setOrigDir(dir.getFileName().toString());
+    			apuSource.setDataDir(dataDir.toString());
+    			apuSource.setSourceType(SourceType.INSTITUTION);
+    			apuSource.setUuid(UUID.randomUUID());
+    			apuSource.setDeleted(false);
+    			apuSource.setDateImported(ZonedDateTime.now());
+    			
+    			Institution newInstitution = new Institution();
+    			newInstitution.setApuSource(apuSource);
+    			newInstitution.setCode(code);
+    			newInstitution.setSource("source");    			
+    			newInstitution.setUuid(instUuid);
+    			
+    			CoreQueue coreQueue = new CoreQueue();
+    			coreQueue.setApuSource(apuSource);
+    			transactionTemplate.execute(t -> {
+    				apuSourceRepository.save(apuSource);
+    				institutionRepository.save(newInstitution);
+    				coreQueueRepository.save(coreQueue);
+    				return null;
+    			});    			
+    		} else {    			
+    			// aktualizace, pouze zmenim datovy adresar
+    			cz.aron.transfagent.domain.ApuSource apuSource = institution.getApuSource();
+    			apuSource.setDataDir(dataDir.toString());
+    			apuSource.setOrigDir(dir.getFileName().toString());
+
+    			CoreQueue coreQueue = new CoreQueue();
+    			coreQueue.setApuSource(apuSource);
+    			transactionTemplate.execute(t -> {
+    				apuSourceRepository.save(apuSource);
+    				institutionRepository.save(institution);
+    				coreQueueRepository.save(coreQueue);
+    				return null;
+    			});
+    			
+    		}
+    		
+    	}
+    	
+    }
+    
     /**
      * Zpracování adresářů v adresáři direct
      *
@@ -186,6 +351,12 @@ public class FileImportService implements SmartLifecycle {
                 Thread.sleep(5000);
             } catch (Exception e) {
                 log.error("Error in import file. ", e);
+                try {
+					Thread.sleep(5000);
+				} catch (InterruptedException e1) {
+					Thread.currentThread().interrupt();
+					return;
+				}
             }
         }
         status = ThreadStatus.STOPPED;
@@ -208,4 +379,14 @@ public class FileImportService implements SmartLifecycle {
     public boolean isRunning() {
         return status == ThreadStatus.RUNNING;
     }
+    
+	private List<Path> getOrderedDirectories(Path path) throws IOException {
+		try (var stream = Files.list(path)) {
+			List<Path> directories = stream.filter(f -> Files.isDirectory(f))
+					.collect(Collectors.toCollection(ArrayList::new));
+			directories.sort((p1, p2) -> p1.compareTo(p2));
+			return directories;
+		}
+	}
+    
 }
