@@ -16,6 +16,7 @@ import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.Validate;
 import org.springframework.util.StringUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -58,18 +59,24 @@ public class ImportFundInfo {
 
 	}
 
-	private ApuSourceBuilder importFundInfo(Path inputFile, String propFile) throws IOException, JAXBException {		
-		if(propFile!=null&&propFile.length()>0) {
-			PropertiesDataProvider pdp = new PropertiesDataProvider();
-			Path propPath = Paths.get(propFile);
-			pdp.load(propPath);
-			dataProvider = pdp;
-		}
+	private ApuSourceBuilder importFundInfo(Path inputFile, String propFile) throws IOException, JAXBException {
+		Validate.isTrue(propFile!=null&&propFile.length()>0);
+		
+		PropertiesDataProvider pdp = new PropertiesDataProvider();
+		Path propPath = Paths.get(propFile);
+		pdp.load(propPath);
+		
+		return importFundInfo(inputFile, pdp);
+	}
+	
+	private ApuSourceBuilder importFundInfo(final Path inputFile, 
+			final ContextDataProvider cdp) throws IOException, JAXBException {
+		this.dataProvider = cdp;
 		
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importFundInfo();
-		}
+		}		
 	}
 
 	private ApuSourceBuilder importFundInfo() {
