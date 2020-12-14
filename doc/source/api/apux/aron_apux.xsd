@@ -24,7 +24,7 @@
 			<xs:documentation>Druh digitálního svazku</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="HightResView"/>
+			<xs:enumeration value="HighResView"/>
 			<xs:enumeration value="Published"/>
 			<xs:enumeration value="Thumbnail"/>
 		</xs:restriction>
