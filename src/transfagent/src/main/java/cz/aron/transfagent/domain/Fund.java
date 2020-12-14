@@ -28,6 +28,9 @@ public class Fund {
     @Column(nullable = false)
     private UUID uuid;
 
+    @Column(length = 50, nullable = false)
+    private String code;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "apusource_id", nullable = false)
     private ApuSource apuSource;
@@ -57,6 +60,14 @@ public class Fund {
 
     public void setUuid(UUID uuid) {
         this.uuid = uuid;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public ApuSource getApuSource() {
