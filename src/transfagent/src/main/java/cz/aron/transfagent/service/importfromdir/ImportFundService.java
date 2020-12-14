@@ -13,7 +13,6 @@ import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -36,23 +35,28 @@ public class ImportFundService {
 
     private static final Logger log = LoggerFactory.getLogger(ImportFundService.class);
 
-    @Autowired
-    StorageService storageService;
+    private final StorageService storageService;
 
-    @Autowired
-    FundRepository fundRepository;
+    private final FundRepository fundRepository;
 
-    @Autowired
-    ApuSourceRepository apuSourceRepository;
+    private final ApuSourceRepository apuSourceRepository;
 
-    @Autowired
-    InstitutionRepository institutionRepository;
+    private final InstitutionRepository institutionRepository;
 
-    @Autowired
-    CoreQueueRepository coreQueueRepository;
+    private final CoreQueueRepository coreQueueRepository;
 
-    @Autowired
-    TransactionTemplate transactionTemplate;
+    private final TransactionTemplate transactionTemplate;
+
+    public ImportFundService(StorageService storageService, FundRepository fundRepository,
+                             ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
+                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate) {
+        this.storageService = storageService;
+        this.fundRepository = fundRepository;
+        this.apuSourceRepository = apuSourceRepository;
+        this.institutionRepository = institutionRepository;
+        this.coreQueueRepository = coreQueueRepository;
+        this.transactionTemplate = transactionTemplate;
+    }
 
     /**
      * Zpracování adresářů s archivními soubory
