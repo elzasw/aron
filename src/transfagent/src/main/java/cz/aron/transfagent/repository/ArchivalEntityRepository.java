@@ -1,6 +1,7 @@
 package cz.aron.transfagent.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,5 +14,7 @@ import cz.aron.transfagent.domain.EntityStatus;
 public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, Integer> {
 
     List<ArchivalEntity> findByUuidInAndStatus(List<UUID> uuids, EntityStatus status);
+    
+    Optional<ArchivalEntity> findByUuid(UUID uuid);
 
 }

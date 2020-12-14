@@ -29,6 +29,10 @@
       <column name="date_imported" type="timestamp with time zone" />
     </createTable>
 
+    <createIndex indexName="idx_apu_source_uuid" tableName="apu_source" unique="true">
+      <column name="uuid" />
+    </createIndex>
+
     <createTable tableName="institution">
       <column name="institution_id" type="int" autoIncrement="true">
         <constraints primaryKey="true" />
@@ -46,6 +50,14 @@
         <constraints nullable="false" />
       </column>
     </createTable>
+
+    <createIndex indexName="idx_institution_code" tableName="institution" unique="true">
+      <column name="code" />
+    </createIndex>
+
+    <createIndex indexName="idx_institution_uuid" tableName="institution" unique="true">
+      <column name="uuid" />
+    </createIndex>
 
     <createTable tableName="fund">
       <column name="fund_id" type="int" autoIncrement="true">
@@ -95,6 +107,10 @@
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
     </createTable>
+
+    <createIndex indexName="idx_archival_entity_uuid" tableName="archival_entity" unique="true">
+      <column name="uuid" />
+    </createIndex>
 
     <createTable tableName="entity_source">
       <column name="entity_source_id" type="int" autoIncrement="true">

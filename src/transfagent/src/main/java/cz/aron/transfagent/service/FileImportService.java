@@ -157,7 +157,9 @@ public class FileImportService implements SmartLifecycle {
 		}
     	
     	for(Path dir:dirs) {    		
-    		importInstitutionService.processDirectory(dir);    		
+    		if (!importInstitutionService.processDirectory(dir)) {
+    			return;
+    		}
     	}
     }
     
