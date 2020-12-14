@@ -34,9 +34,6 @@ public class ArchivalEntity {
     @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
-    @Column(name = "src_data")
-    private String srcData;
-
     public Integer getId() {
         return id;
     }
@@ -67,14 +64,6 @@ public class ArchivalEntity {
 
     public void setApuSource(ApuSource apuSource) {
         this.apuSource = apuSource;
-    }
-
-    public String getSrcData() {
-        return srcData;
-    }
-
-    public void setSrcData(String srcData) {
-        this.srcData = srcData;
     }
 
 }

@@ -94,7 +94,6 @@
       </column>
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
-      <column name="src_data" type="text" />
     </createTable>
 
     <createTable tableName="entity_source">

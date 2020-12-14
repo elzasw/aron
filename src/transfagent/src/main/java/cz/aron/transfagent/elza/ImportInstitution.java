@@ -23,12 +23,18 @@ import cz.tacr.elza.schema.v2.Institutions;
 
 public class ImportInstitution {
 	
-	ElzaXmlReader elzaXmlReader;	
+	private ElzaXmlReader elzaXmlReader;	
 	
-	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+	private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+
+	private String apRefUuid;
 	
 	public ImportInstitution() {
 		
+	}
+	
+	public String getApRefUuid() {
+		return apRefUuid;
 	}
 
 	public static void main(String[] args) {
@@ -91,7 +97,7 @@ public class ImportInstitution {
 		apusBuilder.addString(infoPart, "INST_CODE", instCode);
 		
 		// odkaz na entitu
-		String apRefUuid = ap.getApe().getUuid();
+		apRefUuid = ap.getApe().getUuid();
 		if(apRefUuid!=null) {
 			apusBuilder.addApuRef(infoPart, "AP_REF", apRefUuid);
 		}
