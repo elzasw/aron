@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.EntityStatus;
+import cz.aron.transfagent.domain.IdProjection;
 
 @Repository
 public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, Integer> {
@@ -16,5 +17,7 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
     List<ArchivalEntity> findByUuidInAndStatus(List<UUID> uuids, EntityStatus status);
     
     Optional<ArchivalEntity> findByUuid(UUID uuid);
+    
+    List<IdProjection> findTop1000ByStatusOrderById(EntityStatus status);
 
 }

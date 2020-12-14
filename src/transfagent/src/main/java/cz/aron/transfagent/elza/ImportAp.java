@@ -41,7 +41,7 @@ public class ImportAp {
 
 	}
 
-	private ApuSourceBuilder importAp(Path inputFile, String apUuid) throws IOException, JAXBException {
+	public ApuSourceBuilder importAp(Path inputFile, String apUuid) throws IOException, JAXBException {
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importAp(apUuid);

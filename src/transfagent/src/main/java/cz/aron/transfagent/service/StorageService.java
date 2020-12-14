@@ -54,7 +54,7 @@ public class StorageService {
 		Path dirPath = parentDir.resolve(dirName);
 		int count = 0;
 		while (Files.exists(dirPath)) {
-			dirPath.resolve(dirName + "_" + counter.incrementAndGet());
+			dirPath = parentDir.resolve(dirName + "_" + counter.incrementAndGet());
 			count++;
 			if (count > 1000) {
 				throw new IOException("Fail to create data directory for source " + dirName);
@@ -80,5 +80,20 @@ public class StorageService {
 	public Path getApuDataDir(String dataDir) {
 		return dataPath.resolve(dataDir);
 	}
-	
+
+	public Path createTempDir(String prefix) throws IOException {
+		var dailyTmpDir = inputFolder.resolve("tmp").resolve(String.format("%1$tY%1$tm%1$td", new Date()));
+		Files.createDirectories(dailyTmpDir);		
+		var tmpDir = dailyTmpDir.resolve(prefix);
+		int count = 0;
+		while (Files.exists(tmpDir)) {
+			tmpDir = dailyTmpDir.resolve(prefix + "_" + counter.incrementAndGet());
+			count++;
+			if (count > 1000) {
+				throw new IOException("Fail to create data directory for source " + prefix);
+			}
+		}
+		Files.createDirectory(tmpDir);
+		return tmpDir;
+	}
 }
