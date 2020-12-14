@@ -1,0 +1,1049 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="http://elza.tacr.cz/ws/types/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:eat="http://elza.tacr.cz/ws/types/v1" xmlns:xmime="http://www.w3.org/2005/05/xmlmime" elementFormDefault="qualified">
+	<xs:annotation>
+		<xs:documentation>Common data structures used by Elza web services. </xs:documentation>
+	</xs:annotation>
+	<xs:element name="addPermissions" type="eat:PermissionsForUser"/>
+	<xs:element name="createFundFailed" type="eat:ErrorDescription">
+		<xs:annotation>
+			<xs:documentation>Failed to create fund</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="createStructuredObjectFailed" type="eat:ErrorDescription"/>
+	<xs:element name="createUser" type="eat:User">
+		<xs:annotation>
+			<xs:documentation>Žádost o založení uživatele</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="daoIdentifier" type="eat:Identifier"/>
+	<xs:element name="daoImport" type="eat:DaoImport"/>
+	<xs:element name="daoLink" type="eat:DaoLink"/>
+	<xs:element name="daoPackage" type="eat:DaoPackage"/>
+	<xs:element name="daoPackageIdentifier" type="eat:Identifier"/>
+	<xs:element name="daosSyncRequest" type="eat:DaosSyncRequest"/>
+	<xs:element name="daosSyncResponse" type="eat:DaosSyncResponse"/>
+	<xs:element name="deleteFundFailed" type="eat:ErrorDescription"/>
+	<xs:element name="deleteStructuredObjectFailed" type="eat:ErrorDescription"/>
+	<xs:element name="descriptionItems" type="eat:Items">
+		<xs:annotation>
+			<xs:documentation>Collection of description items</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="destructionRequest" type="eat:DestructionRequest"/>
+	<xs:element name="destructionRequestId" type="eat:RequestId"/>
+	<xs:element name="destructionRequestRevoked" type="eat:RequestRevoked"/>
+	<xs:element name="did" type="eat:Did"/>
+	<xs:element name="didIdentifier" type="eat:Identifier"/>
+	<xs:element name="digitizationRequest" type="eat:DigitizationRequest"/>
+	<xs:element name="digitizationRequestId" type="eat:RequestId"/>
+	<xs:element name="digitizationRequestResult" type="eat:DigitizationRequestResult"/>
+	<xs:element name="errorMessage" type="eat:ErrorDescription">
+		<xs:annotation>
+			<xs:documentation>Element pro přenos chybové zprávy</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="exportRequest" type="eat:ExportRequest"/>
+	<xs:element name="exportRequestFailed" type="eat:ErrorDescription"/>
+	<xs:element name="exportResponse" type="eat:ExportResponseData">
+		<xs:annotation>
+			<xs:documentation>List of archival entities</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="fundCreate" type="eat:Fund"/>
+	<xs:element name="fundCreated" type="eat:FundIdentifiers"/>
+	<xs:element name="fundDelete" type="eat:FundIdentifiers">
+		<xs:annotation>
+			<xs:documentation>Request to delete fund</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="fundUpdate" type="eat:Fund">
+		<xs:annotation>
+			<xs:documentation>Update fund information</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="importRequest" type="eat:ImportRequest"/>
+	<xs:element name="importRequestId" type="eat:Uuid">
+		<xs:annotation>
+			<xs:documentation>Top level element to get statatus of import</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="importRequestStatus" type="eat:RequestStatusInfo"/>
+	<xs:element name="onDaoLinked" type="eat:OnDaoLinked"/>
+	<xs:element name="onDaoUnlinked" type="eat:OnDaoUnlinked"/>
+	<xs:element name="removePermissions" type="eat:PermissionsForUser">
+		<xs:annotation>
+			<xs:documentation>Remove permissions</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="searchEntityException" type="eat:ErrorDescription"/>
+	<xs:element name="searchEntityResult" type="eat:SearchEntityResult"/>
+	<xs:element name="searchSingleEntity" type="eat:SearchEntity"/>
+	<xs:element name="setUserState" type="eat:SetUserState">
+		<xs:annotation>
+			<xs:documentation>Element to set user state</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="structuredObjectCreate" type="eat:StructuredObject"/>
+	<xs:element name="structuredObjectCreated" type="eat:StructuredObjectIdentifiers"/>
+	<xs:element name="structuredObjectDelete" type="eat:StructuredObjectIdentifiers">
+		<xs:annotation>
+			<xs:documentation>Delete given structured object.</xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:element name="structuredObjectUpdate" type="eat:StructuredObject"/>
+	<xs:element name="transferRequest" type="eat:TransferRequest"/>
+	<xs:element name="transferRequestId" type="eat:RequestId"/>
+	<xs:element name="transferRequestRevoked" type="eat:RequestRevoked"/>
+	<xs:element name="updateFundFailed" type="eat:ErrorDescription"/>
+	<xs:element name="updateStructuredObjectFailed" type="eat:ErrorDescription"/>
+	<xs:simpleType name="Abstract">
+		<xs:annotation>
+			<xs:documentation>A child element of &lt;did&gt; that provides a brief characterization of the materials being described. </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="AuthType">
+		<xs:annotation>
+			<xs:documentation>Způsob autorizace</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="PASSWORD"/>
+			<xs:enumeration value="SAML2"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="BinaryData">
+		<xs:annotation>
+			<xs:documentation>binary data</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:base64Binary"/>
+	</xs:simpleType>
+	<xs:simpleType name="Calendar">
+		<xs:annotation>
+			<xs:documentation>System of reckoning time, such as the Gregorian calendar or Julian calendar. Suggested values include but are not limited to "gregorian" and "julian." Available in &lt;date&gt;, &lt;unitdate&gt;, and &lt;unitdatestructured&gt;.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="gregorian"/>
+			<xs:enumeration value="julian"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Certainity">
+		<xs:annotation>
+			<xs:documentation>The level of confidence for the information given in &lt;date&gt;, &lt;unitdate&gt;, or &lt;unitdatestructured&gt;, e.g., approximate or circa. </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="approximate"/>
+			<xs:enumeration value="approximate-notafter"/>
+			<xs:enumeration value="approximate-notbefore"/>
+			<xs:enumeration value="exact"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ChecksumType">
+		<xs:annotation>
+			<xs:documentation>Specifies checksum algorithm.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="MD5"/>
+			<xs:enumeration value="SHA-1"/>
+			<xs:enumeration value="SHA-256"/>
+			<xs:enumeration value="SHA-384"/>
+			<xs:enumeration value="SHA-512"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DaoType">
+		<xs:annotation>
+			<xs:documentation>Type of digital archival object.
+	- attachment - might be attached to the existing level
+	- level - will create its own level</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="attachment"/>
+			<xs:enumeration value="level"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Description">
+		<xs:annotation>
+			<xs:documentation>Maximal length of the description is 65536.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="65536"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="EntityConflictResolution">
+		<xs:annotation>
+			<xs:documentation>Conflict resolution strategy.
+
+KEEP_MODIFIED is used if modified entity in Elza should not be overwritten by imported entity.
+UPDATE_MODIFIED is used when imported entity has precedence over current entity in Elza. Imported entity will overwrite current entity version.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="KEEP_MODIFIED"/>
+			<xs:enumeration value="UPDATE_MODIFIED"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Identifier">
+		<xs:annotation>
+			<xs:documentation>This is a machine-processable unique identifier for the descriptive component in which the element appears</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:minLength value="1"/>
+			<xs:maxLength value="250"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Label">
+		<xs:annotation>
+			<xs:documentation>A display label for an element.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="250"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Localtype">
+		<xs:annotation>
+			<xs:documentation>This optional attribute provides a means to narrow the semantics of an element, or provide semantics for elements that are primarily structural or semantically weak. The value of localtype may be from a local or generally used external vocabulary. While the value of localtype may be any string, to facilitate exchange of data, it is recommended that the value be either the URI or the preferred label for a term defined in a formal vocabulary (e.g., SKOS), which is identified by an absolute URI, and is resolvable to a web resource that describes the semantic scope and use of the value. Local conventions or controlled vocabularies used in localtype may be declared in &lt;localtypedeclaration&gt; within &lt;control&gt;. 
+
+Source: EAD3</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="Long">
+		<xs:restriction base="xs:long"/>
+	</xs:simpleType>
+	<xs:simpleType name="NonNegativeRealType">
+		<xs:annotation>
+			<xs:documentation>type for non-negative real number</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:float">
+			<xs:minInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="PermissionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ADMIN"/>
+			<xs:enumeration value="AP_CONFIRM"/>
+			<xs:enumeration value="AP_CONFIRM_ALL"/>
+			<xs:enumeration value="AP_EDIT_CONFIRMED"/>
+			<xs:enumeration value="AP_EDIT_CONFIRMED_ALL"/>
+			<xs:enumeration value="AP_SCOPE_RD"/>
+			<xs:enumeration value="AP_SCOPE_RD_ALL"/>
+			<xs:enumeration value="AP_SCOPE_WR"/>
+			<xs:enumeration value="AP_SCOPE_WR_ALL"/>
+			<xs:enumeration value="FUND_ADMIN"/>
+			<xs:enumeration value="FUND_ARR"/>
+			<xs:enumeration value="FUND_ARR_ALL"/>
+			<xs:enumeration value="FUND_ARR_NODE"/>
+			<xs:enumeration value="FUND_BA"/>
+			<xs:enumeration value="FUND_BA_ALL"/>
+			<xs:enumeration value="FUND_CREATE"/>
+			<xs:enumeration value="FUND_EXPORT"/>
+			<xs:enumeration value="FUND_EXPORT_ALL"/>
+			<xs:enumeration value="FUND_ISSUE_ADMIN"/>
+			<xs:enumeration value="FUND_ISSUE_ADMIN_ALL"/>
+			<xs:enumeration value="FUND_ISSUE_LIST_RD"/>
+			<xs:enumeration value="FUND_ISSUE_LIST_WR"/>
+			<xs:enumeration value="FUND_OUTPUT_WR"/>
+			<xs:enumeration value="FUND_OUTPUT_WR_ALL"/>
+			<xs:enumeration value="FUND_RD"/>
+			<xs:enumeration value="FUND_RD_ALL"/>
+			<xs:enumeration value="FUND_VER_WR"/>
+			<xs:enumeration value="GROUP_CONTROL"/>
+			<xs:enumeration value="USER_CONTROL"/>
+			<xs:enumeration value="USR_PERM"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="RequestId">
+		<xs:annotation>
+			<xs:documentation>Request ID in the system which will process given request.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token"/>
+	</xs:simpleType>
+	<xs:simpleType name="RequestStatus">
+		<xs:annotation>
+			<xs:documentation>	- OK. The request has succeeded.
+	- FAILED. Request received but processing failed.
+	- NOT_EXISTS. Received was not received.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="FAILED"/>
+			<xs:enumeration value="NOT_EXISTS"/>
+			<xs:enumeration value="OK"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Standarddate">
+		<xs:annotation>
+			<xs:documentation>The standardized form of date expressed in &lt;datesingle&gt;, &lt;fromdate&gt;, or &lt;todate&gt;. It is recommened that standarddate values follow ISO 8601, for example, 2011-07-22, 1963, or 1912-11, or another standard date format as specified in dateencoding. </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="String250">
+		<xs:annotation>
+			<xs:documentation>String value, maximal length 250 characters</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="StringLong">
+		<xs:annotation>
+			<xs:documentation>Long string.
+
+Used to pass unrestricted attribute value.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="SystemIdentifier">
+		<xs:annotation>
+			<xs:documentation>System identifier, allows other party to identify given system. Identifier is used to identify caller party during method call.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string"/>
+	</xs:simpleType>
+	<xs:simpleType name="UnitOfMeasure">
+		<xs:annotation>
+			<xs:documentation>Type of measurement unit</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:token">
+			<xs:enumeration value="in."/>
+			<xs:enumeration value="mm"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Username">
+		<xs:annotation>
+			<xs:documentation>Name of user, used to identify user.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:maxLength value="250"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="UserState">
+		<xs:annotation>
+			<xs:documentation>User state</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ACTIVE"/>
+			<xs:enumeration value="INACTIVE"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="Uuid">
+		<xs:annotation>
+			<xs:documentation>UUID</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[14][0-9a-fA-F]{3}-[8-9a-bA-B][0-9a-fA-F]{3}-[0-9a-fA-F]{12}"/>
+			<xs:length value="36"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="Authorization">
+		<xs:sequence>
+			<xs:element name="authType" type="eat:AuthType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="value" type="eat:String250" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="AuthorizationList">
+		<xs:annotation>
+			<xs:documentation>Authorization data</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="auth" type="eat:Authorization" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Dao">
+		<xs:annotation>
+			<xs:documentation>Child element of &lt;did&gt; used for linking to born digital records or a digital representation of the materials being described. 
+
+Digital archival object might contain link to several files in repository. Digital representations may include graphic images, audio or video clips, images of text pages, and electronic transcriptions of text.
+
+Original source: EAD3
+
+Note: Some types of DAO does not have to have link to any file.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="folders" type="eat:FolderGroup" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="files" type="eat:FileGroup" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="items" type="eat:Items" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="daoType" use="required" type="eat:DaoType">
+			<xs:annotation>
+				<xs:documentation>Type of DAO</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of the digital archival object</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="label" use="optional" type="eat:Label">
+			<xs:annotation>
+				<xs:documentation>Name of digital archival object</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoBatchInfo">
+		<xs:annotation>
+			<xs:documentation>Basic information about batch of packages containing digital archival objects.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier"/>
+		<xs:attribute name="label" use="optional" type="eat:Label">
+			<xs:annotation>
+				<xs:documentation>Optional name of the batch</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoIdentifiers">
+		<xs:annotation>
+			<xs:documentation>An element for binding together identifiers of digital archival objects.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="identifier" type="eat:Identifier" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DaoImport">
+		<xs:annotation>
+			<xs:documentation>Structure for importing one or more packages with digital archival objects.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoPackages" type="eat:DaoPackages" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Kolekce Dao balicku</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="daoLinks" type="eat:DaoLinks" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Kolekce vazeb mezi Dao a Did</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DaoLink">
+		<xs:annotation>
+			<xs:documentation>Tag represents link between digital archival object and did.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoIdentifier" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="didIdentifier" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="repositoryIdentifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of repository where is stored given dao referenced by daoIdentifier</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoLinks">
+		<xs:annotation>
+			<xs:documentation>Set of links between digital archival objects and material being described with &lt;did&gt; element.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoLink" type="eat:DaoLink" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DaoPackage">
+		<xs:annotation>
+			<xs:documentation>Package of one or more digital archival objects. One package have to contain DAOs exactly for one fund.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoBatchInfo" type="eat:DaoBatchInfo" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="daos" type="eat:Daoset" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="fundIdentifier" use="optional" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Fund identifier. This is optional attribute which have to be filled only in some cases. </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="identifier" use="optional" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Package identifier</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="repositoryIdentifier" use="optional" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of repository where package is stored.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="DaoPackages">
+		<xs:annotation>
+			<xs:documentation>Set of packages</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoPackage" type="eat:DaoPackage" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Daoset">
+		<xs:annotation>
+			<xs:documentation>An element for binding together two or more links to digital archival objects. </xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="dao" type="eat:Dao" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DaosSyncRequest">
+		<xs:annotation>
+			<xs:documentation>Request to synchronize daos</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="username" type="eat:Username" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="dids" type="eat:Dids" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="daoSyncRequests" type="eat:DaoSyncRequest" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attribute name="fundIdentifier" use="optional" type="eat:Identifier"/>
+	</xs:complexType>
+	<xs:complexType name="DaosSyncResponse">
+		<xs:annotation>
+			<xs:documentation>Response on daosSyncRequest. Each dao has separate answer.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daos" type="eat:Daoset" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="nonExistDaos" type="eat:NonexistingDaos" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DaoSyncRequest">
+		<xs:sequence>
+			<xs:element name="daoId" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="didId" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Datesingle">
+		<xs:annotation>
+			<xs:documentation>An element for encoding an individual date related to the materials being described. </xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="localtype" use="optional" type="eat:Localtype"/>
+		<xs:attribute name="standarddate" use="optional" type="eat:Standarddate"/>
+		<xs:attribute name="notafter" use="optional" type="eat:Standarddate"/>
+		<xs:attribute name="notbefore" use="optional" type="eat:Standarddate"/>
+	</xs:complexType>
+	<xs:complexType name="DestructionRequest">
+		<xs:annotation>
+			<xs:documentation>Request to destruct one or more digital archival objects.
+
+At a minimum, destruction may be no more complicated than placing materials in the trash for transfer to a landfill. In other instances, the manner of destruction is appropriate to the sensitivity of the information contained in the materials and may involve shredding, maceration, or incineration. For electronic records, simple destruction may be accomplished by deleting the record, which merely removes the pointer from an index without overwriting the data. For sensitive information in electronic format, the media may be overwritten numerous time or physically destroyed to make it impossible to recover the data</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoIdentifiers" type="eat:DaoIdentifiers" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="description" type="eat:Description" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="username" type="eat:Username" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier"/>
+		<xs:attribute name="systemIdentifier" use="optional" type="eat:SystemIdentifier"/>
+	</xs:complexType>
+	<xs:complexType name="Did">
+		<xs:annotation>
+			<xs:documentation>Descriptive Identification, a wrapper element that encloses information essential for identifying the material being described. 
+Source: EAD3</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="unitId" type="eat:Unitid" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="unitTitle" type="eat:Unittitle" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="unitDateStructured" type="eat:Unitdatestructured" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="abstract" type="eat:Abstract" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="optional" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of description</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Dids">
+		<xs:annotation>
+			<xs:documentation>Collection of dids</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="did" type="eat:Did" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DigitizationRequest">
+		<xs:annotation>
+			<xs:documentation>Digitization request.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="description" type="eat:Description" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="materials" type="eat:Materials" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>identifier of the request in the source system where the request was created</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="systemIdentifier" use="optional" type="eat:SystemIdentifier"/>
+	</xs:complexType>
+	<xs:complexType name="DigitizationRequestResult">
+		<xs:annotation>
+			<xs:documentation>Result of digitization. Attribute identifier is used to pair result with the request.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DaoImport" type="eat:DaoImport" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of the request in the source system where the request was created.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="EntitiesRequest">
+		<xs:annotation>
+			<xs:documentation>Požadavek na archivní entity</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="identifiers" type="eat:IdentifierList" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="EntityInfo">
+		<xs:annotation>
+			<xs:documentation>Brief info about access point / archival entity</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="entityId" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="uuid" type="eat:Uuid" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="prefName" type="eat:StringLong" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="briefDesc" type="eat:StringLong" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Stručná charakteristika</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="entityClass" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ErrorDescription">
+		<xs:annotation>
+			<xs:documentation>Type for failure description</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="detail" use="optional" type="xs:string"/>
+		<xs:attribute name="userMessage" use="optional" type="xs:string"/>
+	</xs:complexType>
+	<xs:complexType name="ExportRequest">
+		<xs:sequence>
+			<xs:element name="requiredFormat" type="eat:String250" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entities" type="eat:EntitiesRequest" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fundSections" type="eat:FundSections" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ExportResponseData">
+		<xs:sequence>
+			<xs:element name="binData" type="eat:BinaryData" xmime:expectedContentTypes="application/octet-stream" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="File">
+		<xs:annotation>
+			<xs:documentation>The file element provides access to the content files for the digital object being described.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="description" type="eat:Description" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="eat:FileCoreGroup"/>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier of the file.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attributeGroup ref="eat:MixCoreGroup"/>
+		<xs:attributeGroup ref="eat:VideoMDGroup"/>
+	</xs:complexType>
+	<xs:complexType name="FileGroup">
+		<xs:annotation>
+			<xs:documentation>Complex Type for File Groups The file group is used to cluster all of the digital files composing a digital archival object in a hierarchical arrangement (fileGrp is recursively defined to enable the creation of the hierarchy). Any file group may contain zero or more file elements.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="file" type="eat:File" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Folder">
+		<xs:annotation>
+			<xs:documentation>Digital archival object might have several related files. Several related files are connected to digital archival object wrapped in this named container.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="folders" type="eat:FolderGroup" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="files" type="eat:FileGroup" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="optional" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>Identifier for related set of digitial data object is optional.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="label" use="optional" type="eat:Label">
+			<xs:annotation>
+				<xs:documentation>Optional name of the related file group. It is recommended to name related files.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="FolderGroup">
+		<xs:annotation>
+			<xs:documentation>Group of foders</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="folder" type="eat:Folder" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="Fund">
+		<xs:sequence>
+			<xs:element name="id" type="eat:Identifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Database ID of fund</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="uuid" type="eat:Uuid" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fundName" type="eat:Label" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="rulesetCode" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="institutionIdentifier" type="eat:Identifier" minOccurs="1" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Institution identifier, typicaly UUID or other ID</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="internalCode" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="dateRange" type="eat:String250" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="mark" type="eat:String250" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fundNumber" type="eat:String250" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Fund number, logical fund number, usually INT
+
+This is fund identifier inside one institution/archive</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FundIdentifiers">
+		<xs:annotation>
+			<xs:documentation>Fond identifiers</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="id" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="uuid" type="eat:Uuid" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FundSection">
+		<xs:sequence>
+			<xs:element name="fundId" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="nodeIds" type="eat:IdentifierList" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FundSections">
+		<xs:sequence>
+			<xs:element name="fundSection" type="eat:FundSection" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IdentifierList">
+		<xs:annotation>
+			<xs:documentation>List of entity IDs</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="identifier" type="eat:Identifier" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ImportDisposition">
+		<xs:annotation>
+			<xs:documentation>Dispositions for import</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="primaryScope" type="eat:String250" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="conflictResolution" type="eat:EntityConflictResolution" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ImportRequest">
+		<xs:annotation>
+			<xs:documentation>Import request.
+
+Each import request has unique identifier - requestId.
+Format of imported data is determined by value dataFormat. 
+
+Supported data formats:
+	- http://cam.tacr.cz/2019
+	- http://elza.tacr.cz/schema/v2</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="requestId" type="eat:Uuid" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="externalSystem" type="eat:String250" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="dataFormat" type="eat:String250" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="disposition" type="eat:ImportDisposition" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="binData" type="eat:BinaryData" xmime:expectedContentTypes="application/octet-stream" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ItemEnum">
+		<xs:sequence/>
+		<xs:attributeGroup ref="eat:ItemAttrGroup"/>
+	</xs:complexType>
+	<xs:complexType name="ItemLong">
+		<xs:simpleContent>
+			<xs:extension base="eat:Long">
+				<xs:attributeGroup ref="eat:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="Items">
+		<xs:annotation>
+			<xs:documentation>Collection of items</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice minOccurs="1" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Item</xs:documentation>
+				</xs:annotation>
+				<xs:element name="str" type="eat:ItemString" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="long" type="eat:ItemLong" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="enm" type="eat:ItemEnum" minOccurs="1" maxOccurs="1"/>
+			</xs:choice>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ItemString">
+		<xs:simpleContent>
+			<xs:extension base="eat:StringLong">
+				<xs:attributeGroup ref="eat:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="Materials">
+		<xs:annotation>
+			<xs:documentation>Wrapper element for set of archival materials for digitization.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="did" type="eat:Did" minOccurs="1" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="NonexistingDaos">
+		<xs:annotation>
+			<xs:documentation>Collection of DAOs which do not exists in the repository</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoId" type="eat:Identifier" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="OnDaoLinked">
+		<xs:annotation>
+			<xs:documentation>Wrapper tag for message/notification about linking together of digital archival object and did.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoIdentifier" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="did" type="eat:Did" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="username" type="eat:Username" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="systemIdentifier" use="optional" type="eat:SystemIdentifier"/>
+	</xs:complexType>
+	<xs:complexType name="OnDaoUnlinked">
+		<xs:annotation>
+			<xs:documentation>Wrapper tag for message/notification about unlinking of digital archival object and did.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="daoIdentifier" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="username" type="eat:Username" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="systemIdentifier" use="optional" type="eat:SystemIdentifier"/>
+	</xs:complexType>
+	<xs:complexType name="Permission">
+		<xs:sequence>
+			<xs:element name="permType" type="eat:PermissionType" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityId" type="eat:Identifier" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>ID of connected entity.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PermissionList">
+		<xs:sequence>
+			<xs:element name="perm" type="eat:Permission" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="PermissionsForUser">
+		<xs:annotation>
+			<xs:documentation>List of permissions for given user.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="username" type="eat:Username" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="permList" type="eat:PermissionList" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RequestRevoked">
+		<xs:annotation>
+			<xs:documentation>Request revoked.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="description" use="optional" type="eat:Description"/>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier">
+			<xs:annotation>
+				<xs:documentation>identifier of the revoked request in the system where request was created</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="RequestStatusInfo">
+		<xs:sequence>
+			<xs:element name="status" type="eat:RequestStatus" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="errorDetail" type="eat:StringLong" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SearchEntity">
+		<xs:sequence>
+			<xs:element name="entityId" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="items" type="eat:Items" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SearchEntityResult">
+		<xs:sequence>
+			<xs:element name="entityInfo" type="eat:EntityInfo" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SetUserState">
+		<xs:sequence>
+			<xs:element name="username" type="eat:Username" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="state" type="eat:UserState" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StructuredObject">
+		<xs:sequence>
+			<xs:element name="id" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="uuid" type="eat:Uuid" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="type" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="fund" type="eat:FundIdentifiers" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="items" type="eat:Items" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="StructuredObjectIdentifiers">
+		<xs:sequence>
+			<xs:element name="id" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="uuid" type="eat:Uuid" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TransferRequest">
+		<xs:annotation>
+			<xs:documentation>Request to transfer set of digital archival objects to other fund.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="DaoIdentifiers" type="eat:DaoIdentifiers" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="targetFund" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Description" type="eat:Description" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="Username" type="eat:Username" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+		<xs:attribute name="identifier" use="required" type="eat:Identifier"/>
+		<xs:attribute name="systemIdentifier" use="optional" type="eat:SystemIdentifier"/>
+	</xs:complexType>
+	<xs:complexType name="Unitdatestructured">
+		<xs:annotation>
+			<xs:documentation>A child element of &lt;did&gt; that provides a simple statement of the date(s) covered by the described materials.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="dateSingle" type="eat:Datesingle" minOccurs="1" maxOccurs="1"/>
+		</xs:choice>
+		<xs:attribute name="calendar" use="optional" type="eat:Calendar"/>
+		<xs:attribute name="certainty" use="optional" type="eat:Certainity"/>
+	</xs:complexType>
+	<xs:complexType name="Unitid">
+		<xs:annotation>
+			<xs:documentation>A child element of &lt;did&gt; that provides an identifier for the materials being described, such as an accession number.
+
+&lt;unitid&gt; may contain any alpha-numeric text string that serves as a unique reference point or control number for the described material, such as a lot number, an accession number, a classification number, or an entry number in a bibliography or catalog. &lt;unitid&gt; is primarily a logical designation, which sometimes indirectly provides location information, as in the case of a classification number.
+
+Attribute localtype can be used to declare type of unitid.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="localtype" use="optional" type="eat:Localtype"/>
+	</xs:complexType>
+	<xs:complexType name="Unittitle">
+		<xs:annotation>
+			<xs:documentation>A child element of &lt;did&gt; that specifies a title for the described materials.
+
+&lt;unittitle&gt; is for recording the title statement, either formal or supplied, of the described materials. The title statement may consist of a word or phrase. &lt;unittitle&gt; is used at both the highest unit or &lt;archdesc&gt; level (e.g., collection, record group, or fonds) and at all the subordinate &lt;c&gt; levels (e.g., subseries, files, items, or other intervening stages within a hierarchical description).
+
+Attribute usage:
+	- use @localtype if local use requires recording the type of &lt;unittitle&gt;.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence/>
+		<xs:attribute name="localtype" use="optional" type="eat:Localtype"/>
+	</xs:complexType>
+	<xs:complexType name="User">
+		<xs:sequence>
+			<xs:element name="username" type="eat:Username" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="personId" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="authList" type="eat:AuthorizationList" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="permList" type="eat:PermissionList" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:attributeGroup name="FileCoreGroup">
+		<xs:annotation>
+			<xs:documentation>Core attributes for file, structure is similar to FILECORE defined in METS standard.
+Source: METS, version 3.0</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="checksum" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>CHECKSUM (string/O): Provides a checksum value for the associated file or wrapped content.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="checksumType" use="optional" type="eat:ChecksumType">
+			<xs:annotation>
+				<xs:documentation>CHECKSUMTYPE (enumerated string/O): Specifies the checksum algorithm used to produce the value contained in the CHECKSUM attribute. CHECKSUMTYPE must contain one of the following values: MD5 SHA-1 SHA-256 SHA-384 SHA-512 </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="created" use="optional" type="xs:dateTime">
+			<xs:annotation>
+				<xs:documentation>CREATED (dateTime/O): Specifies the date and time of creation for the associated file or wrapped content.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="mimetype" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>MIMETYPE (string/O): The IANA MIME media type for the associated file or wrapped content. Some values for this attribute can be found on the IANA website.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="name" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>File name</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="size" use="optional" type="xs:long">
+			<xs:annotation>
+				<xs:documentation>SIZE (long/O): Specifies the size in bytes of the associated file or wrapped content.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="ItemAttrGroup">
+		<xs:attribute name="readOnly" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Flag if item is readonly</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="spec" use="optional" type="xs:string"/>
+		<xs:attribute name="type" use="required" type="xs:string"/>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="MixCoreGroup">
+		<xs:annotation>
+			<xs:documentation>Core attributes for image data
+Source: MIX standard, version 2.0</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="imageHeight" use="optional" type="xs:positiveInteger">
+			<xs:annotation>
+				<xs:documentation>a data element that specifies the height of the digital image, i.e. vertical or Y dimension in pixels
+Source: MIX Version 2.0</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="imageWidth" use="optional" type="xs:positiveInteger">
+			<xs:annotation>
+				<xs:documentation>a data element that specifies the width of the digital image, i.e. horizontal or X dimension in pixels
+Source: MIX Version 2.0</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sourceXDimensionUnit" use="optional" type="eat:UnitOfMeasure">
+			<xs:annotation>
+				<xs:documentation>the unit of measure used in sourceXDimensionValue</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sourceXDimensionValue" use="optional" type="eat:NonNegativeRealType">
+			<xs:annotation>
+				<xs:documentation>numerical value that specifies the width (i.e. horizontal dimension) of the imaged object</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sourceYDimensionUnit" use="optional" type="eat:UnitOfMeasure">
+			<xs:annotation>
+				<xs:documentation>the unit of measure used in sourceYDimensionValue</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sourceYDimensionValue" use="optional" type="eat:NonNegativeRealType">
+			<xs:annotation>
+				<xs:documentation>numerical value that specifies the height (i.e. vertical dimension) of the imaged object</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="VideoMDGroup">
+		<xs:annotation>
+			<xs:documentation>Common attributes for video and audio files
+Source: VideoMD 2.0</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="duration" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Elapsed time of the entire file, expressed using ISO 8601 syntax; see http://www.w3.org/TR/NOTE-datetime.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+</xs:schema>

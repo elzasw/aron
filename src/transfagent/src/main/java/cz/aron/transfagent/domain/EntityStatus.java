@@ -4,6 +4,8 @@ public enum EntityStatus {
 
     ACCESSIBLE,
 
-    AVAILABLE
+    AVAILABLE,
+    
+    NOT_AVAILABLE
 
 }
