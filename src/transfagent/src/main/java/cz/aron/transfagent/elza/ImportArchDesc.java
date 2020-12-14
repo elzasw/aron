@@ -12,6 +12,8 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.Validate;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
@@ -59,17 +61,22 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	}
 
 	private ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
-		if(propFile!=null&&propFile.length()>0) {
-			PropertiesDataProvider pdp = new PropertiesDataProvider();
-			Path propPath = Paths.get(propFile);
-			pdp.load(propPath);
-			dataProvider = pdp;
-		}
+		Validate.isTrue(propFile!=null&&propFile.length()>0);
+		
+		PropertiesDataProvider pdp = new PropertiesDataProvider();
+		Path propPath = Paths.get(propFile);
+		pdp.load(propPath);
+		return importArchDesc(inputFile, pdp);
+	}
+	
+	private ApuSourceBuilder importArchDesc(Path inputFile, 
+											final ContextDataProvider cdp) throws IOException, JAXBException {
+		this.dataProvider = cdp;
 		
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importArchDesc();
-		}
+		}		
 	}
 
 	private ApuSourceBuilder importArchDesc() {
