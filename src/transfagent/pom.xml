@@ -188,7 +188,7 @@
 						<id>generate-sources</id>
 						<phase>generate-sources</phase>
 						<configuration>
-							<sourceRoot>${project.build.directory}/generated/cxf</sourceRoot>
+							<sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
 							<defaultOptions>
 								<exceptionSuper>java.lang.RuntimeException</exceptionSuper>
 							</defaultOptions>
@@ -215,7 +215,7 @@
 						<id>elzaws</id>
 						<phase>generate-sources</phase>
 						<configuration>
-							<sourceRoot>${project.build.directory}/generated/cxf</sourceRoot>
+							<sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
 							<wsdlOptions>
 								<wsdlOption>
 									<wsdl>${basedir}/src/main/resources/wsdl/elza-core-v1.wsdl</wsdl>
@@ -245,7 +245,7 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.build.directory}/generated/cxf</source>
+								<source>${project.build.directory}/generated-sources/cxf</source>
 								<source>${project.build.directory}/generated-sources/jaxb</source>
 								<!-- <source>${project.build.directory}/generated-sources/peva-jaxb</source> -->
 								<!--<source>${project.build.directory}/generated-sources/api/rest</source> -->
