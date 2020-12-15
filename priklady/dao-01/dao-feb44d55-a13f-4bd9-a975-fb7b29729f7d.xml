@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<dao xmlns="http://www.aron.cz/apux/2020" uuid="feb44d55-a13f-4bd9-a975-fb7b29729f7d">
+ <bndl type="Thumbnail">
+  <file pos="1" uuid="cd6ceb5f-858f-4240-85fa-fbbbcd29073e">
+    <mtdt>
+      <itms>
+        <code>mimetype</code>
+        <value>image/jpeg</value>
+      </itms>
+    </mtdt>
+  </file>
+ </bndl>
+ <bndl type="HighResView">
+  <file pos="1" uuid="80381d6e-cc3c-435f-8c87-6939fc844c37" />
+ </bndl>
+ <bndl type="Published">
+  <file pos="1" uuid="fa8dc5fd-3653-45b7-be40-0e1a323e0939">
+    <mtdt>
+      <itms>
+        <code>mimetype</code>
+        <value>image/jpeg</value>
+      </itms>
+    </mtdt>
+  </file>
+ </bndl>
+</apusrc>

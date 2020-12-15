@@ -26,8 +26,8 @@ facets:
     type: FULLTEXT
     # zdrojovy itemtype
     source: NAME
-    # Kdy se zobrazi
-    display: ALWAYS | DETAIL
+    # Kdy se zobrazi ALWAYS | DETAIL
+    display: ALWAYS
     # Pokud bude nutne specializovat
     #   title: Název AS ??
 
