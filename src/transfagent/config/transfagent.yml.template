@@ -12,3 +12,22 @@ logging:
     cz: DEBUG
 config:
   file: C:\Pyta\ArchivOnline\aron.git\priklady\types.yaml
+
+# Parametry přístupu k jádru
+aronCore:
+  url: http://localhost:8089/ws/ft
+  user: x
+  pass: x
+  soapLogging: false
+
+elza:
+  url: http://localhost:8210/services/ExportService
+  soapLogging: true
+  username: vyber
+  password: vyber
+
+dao:
+  dir:
+    path: /opt/daos
+  # Pocet sekund pro novy pokus o odeslani
+  sendInterval: 60
