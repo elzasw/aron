@@ -2,6 +2,7 @@ package cz.aron.transfagent.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +17,8 @@ public interface DaoFileRepository extends JpaRepository<DaoFile, Integer> {
 	
 	@EntityGraph(attributePaths = { "apuSource" })
 	Optional<DaoFile> findById(int id);
+	
+	@EntityGraph(attributePaths = { "apuSource" })
+	Optional<DaoFile> findByUuid(UUID uuid);
 	
 }

@@ -1,8 +1,5 @@
 package cz.aron.transfagent.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,15 +10,9 @@ import com.lightcomp.ft.FileTransfer;
 import com.lightcomp.ft.client.Client;
 import com.lightcomp.ft.client.ClientConfig;
 import com.lightcomp.ft.core.send.items.DirReader;
-import com.lightcomp.ft.core.send.items.ListReader;
-import com.lightcomp.ft.core.send.items.SimpleFile;
-import com.lightcomp.ft.core.send.items.SourceItem;
 
 import cz.aron.transfagent.config.ConfigAronCore;
-import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.repository.DaoFileRepository;
 
 @Service
@@ -70,7 +61,7 @@ public class DaoSendService implements SmartLifecycle {
 			clientConfig.setSoapLogging(configAronCore.getSoapLogging());
 			Client client = FileTransfer.createClient(clientConfig);
 			
-			var daoPath = storageService.getDaoPath().resolve(dao.getUuid().toString());
+			var daoPath = storageService.getDataPath().resolve(dao.getPath());
 			UploadRequestImpl request = UploadRequestImpl.buildDaoRequest(new DirReader(daoPath), dao.getUuid().toString());
 			try {
 				client.uploadSync(request);

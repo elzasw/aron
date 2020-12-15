@@ -1,43 +1,21 @@
 package cz.aron.transfagent.service;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
-
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.apux._2020.ApuSource;
-import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.domain.Institution;
-import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportInstitution;
-import cz.aron.transfagent.repository.ApuSourceRepository;
-import cz.aron.transfagent.repository.ArchivalEntityRepository;
-import cz.aron.transfagent.repository.CoreQueueRepository;
-import cz.aron.transfagent.repository.EntitySourceRepository;
-import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.importfromdir.ImportArchDescService;
+import cz.aron.transfagent.service.importfromdir.ImportDaoService;
+import cz.aron.transfagent.service.importfromdir.ImportDirectService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService;
 import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
 
@@ -45,45 +23,32 @@ import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
 public class FileImportService implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(FileImportService.class);
-
-    private final ApuSourceRepository apuSourceRepository;
-    
-    private final CoreQueueRepository coreQueueRepository;
-    
-    private final InstitutionRepository institutionRepository;
-    
-    private final TransactionTemplate transactionTemplate;
     
     private final StorageService storageService;
-    
-    private final ArchivalEntityRepository archivalEntityRepository;
-    
-    private final EntitySourceRepository entitySourceRepository;
-    
+        
     private final ImportInstitutionService importInstitutionService;
     
     private final ImportFundService importFundService;
+    
+    private final ImportDirectService importDirectService;
+    
+    private final ImportDaoService importDaoService;
     
     private final ImportArchDescService importArchDescService;
 
     private ThreadStatus status;
     
-	public FileImportService(ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
-			InstitutionRepository institutionRepository, ArchivalEntityRepository archivalEntityRepository,
-			EntitySourceRepository entitySourceRepository,
-			TransactionTemplate transactionTemplate, StorageService storageService,
-			ImportInstitutionService importInstitutionService, ImportFundService importFundService, ImportArchDescService importArchDescService) {
-		this.apuSourceRepository = apuSourceRepository;
-		this.coreQueueRepository = coreQueueRepository;
-		this.institutionRepository = institutionRepository;
-		this.archivalEntityRepository = archivalEntityRepository;
-		this.entitySourceRepository = entitySourceRepository;
-		this.transactionTemplate = transactionTemplate;
-		this.storageService = storageService;
-		this.importInstitutionService = importInstitutionService;
-		this.importFundService = importFundService;
-		this.importArchDescService = importArchDescService;
-	}
+    public FileImportService(StorageService storageService,
+            ImportInstitutionService importInstitutionService, ImportFundService importFundService,
+            ImportDirectService importDirectService, ImportDaoService importDaoService,
+            ImportArchDescService importArchDescService) {
+        this.storageService = storageService;
+        this.importInstitutionService = importInstitutionService;
+        this.importFundService = importFundService;
+        this.importDirectService = importDirectService;
+        this.importDaoService = importDaoService;
+        this.importArchDescService = importArchDescService;
+    }
 
     /**
      * Monitorování vstupního adresáře
@@ -124,6 +89,24 @@ public class FileImportService implements SmartLifecycle {
         
         var collectionsPath = inputPath.resolve("collections");
         processCollectionsFolder(collectionsPath);
+        
+        var daoPath = inputPath.resolve("dao");
+        processDaoFolder(daoPath);
+        
+        var directPath = inputPath.resolve("direct");
+        processDirectFolder(directPath);
+    }
+    
+    private void processDaoFolder(Path path) {
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}    	
+    	for(Path dir:dirs) {    		
+    		importDaoService.processDirectory(dir);    		
+    	}
     }
     
     private void processCollectionsFolder(Path path) {
@@ -153,12 +136,10 @@ public class FileImportService implements SmartLifecycle {
 			 dirs = getOrderedDirectories(path);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
-		}
-    	
+		}    	
     	for(Path dir:dirs) {    		
     		importFundService.processDirectory(dir);    		
     	}
-    	
     }
     
     private void processInstitutionsFolder(Path path) {    	
@@ -182,83 +163,20 @@ public class FileImportService implements SmartLifecycle {
      * @param path adresář direct
      * @return true nebo false
      */
-	private void processDirectFolder(Path path) throws IOException {
-		File[] dirs = path.toFile().listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return dir.isDirectory();
-			}
-		});
-		// pokud je adresář prázdný, není co zpracovávat
-		if (dirs.length == 0) {
-			return;
+	private void processDirectFolder(Path path) throws IOException {		
+		List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
 		}
-		for (File dir : dirs) {
-			File[] files = dir.listFiles(new FilenameFilter() {
-				@Override
-				public boolean accept(File dir, String name) {
-					// process apux.xml or apux-XY.xml files
-					if (name.startsWith("apux") && name.endsWith("xml")) {
-						return true;
-					}
-					return false;
-				}
-			});
 
-			if (files.length == 0 || files.length > 1) {
-				Path storedToDir = storageService.moveToErrorDir(dir.toPath());
-				log.error("Folder {} doesn't contains apu.xml file, moved to error directory {}", dir.getName(),
-						storedToDir);
-				continue;
-			}
-
-			byte[] xml = Files.readAllBytes(files[0].toPath());
-			ApuSource apux;
-
-			try {
-				apux = unmarshalApuSourceFromXml(xml);
-			} catch (JAXBException | IOException e1) {
-				Path storedToDir = storageService.moveToErrorDir(dir.toPath());
-				log.error("Fail to parse apu.xml. Dir {} moved to error directory {}", dir.getName(), storedToDir);
-				continue;
-			}
-
-			Path dataDir = storageService.moveToDataDir(dir.toPath());
-			cz.aron.transfagent.domain.ApuSource apuSource = new cz.aron.transfagent.domain.ApuSource();
-			apuSource.setOrigDir(files[0].getName());
-			apuSource.setDataDir(dataDir.toString());
-			apuSource.setSourceType(SourceType.DIRECT);
-			apuSource.setUuid(UUID.fromString(apux.getUuid()));
-			apuSource.setDeleted(false);
-			apuSource.setDateImported(ZonedDateTime.now());
-			CoreQueue coreQueue = new CoreQueue();
-			coreQueue.setApuSource(apuSource);
-			transactionTemplate.execute(t -> {
-				apuSourceRepository.save(apuSource);
-				coreQueueRepository.save(coreQueue);
-				return null;
-			});
-
-		}
+    	for(Path dir:dirs) {    		
+    		if (!importDirectService.processDirectory(dir)) {
+    			return;
+    		}
+    	}		
 	}
-
-    /**
-     * Vytváření objektů na základě XML souboru
-     * 
-     * @param xml
-     * @return cz.aron.apux._2020.ApuSource
-     * @throws JAXBException
-     * @throws IOException
-     */
-    private ApuSource unmarshalApuSourceFromXml(byte[] xml) throws JAXBException, IOException {
-        ApuSource apuSource = null;
-        try (InputStream is = new ByteArrayInputStream(xml)) {
-            Unmarshaller unmarshaller = ApuSourceBuilder.apuxXmlContext.createUnmarshaller();
-            unmarshaller.setSchema(ApuSourceBuilder.schemaApux);
-            apuSource = ((JAXBElement<ApuSource>) unmarshaller.unmarshal(is)).getValue();
-        }
-        return apuSource;
-    }
 
     public void run() {
         while (status == ThreadStatus.RUNNING) {
