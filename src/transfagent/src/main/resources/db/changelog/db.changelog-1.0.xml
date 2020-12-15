@@ -84,18 +84,12 @@
       <column name="arch_desc_id" type="int" autoIncrement="true">
         <constraints primaryKey="true" />
       </column>
-      <column name="apusource_id" type="int">
-        <constraints nullable="false" />
-      </column>
+      <column name="apusource_id" type="int" />
       <column name="uuid" type="uuid">
         <constraints nullable="false" />
       </column>
-      <column name="fund_id" type="int">
-        <constraints nullable="false" />
-      </column>
-      <column name="collection_id" type="int">
-        <constraints nullable="false" />
-      </column>
+      <column name="fund_id" type="int" />
+      <column name="collection_id" type="int" />
     </createTable>
 
     <createTable tableName="collection">

@@ -106,6 +106,12 @@ public class ImportFundService {
             apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(fund.getUuid().toString());
         }
 
+        var institutionCode = ifi.getInstitutionCode();
+        var institution = institutionRepository.findByCode(institutionCode);
+        if (institution == null) {
+        	throw new NullPointerException("The entry institution code={" + institutionCode + "} must exist.");
+        }
+
         Path dataDir;
         try {
             dataDir = storageService.moveToDataDir(dir);
@@ -114,16 +120,15 @@ public class ImportFundService {
         }
 
         if (fund == null) {
-            createFund(dataDir, dir, apusrcBuilder, fundCode);
+            createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
         } else {
-            updateFund(fund, dataDir, dir, apusrcBuilder, fundCode);
+            updateFund(fund, dataDir, dir);
         }
         return true;
 	}
 
-    private void createFund(Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
+    private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
 
-        var institutionUuid = UUID.randomUUID();
         var fundUuid = UUID.randomUUID();
         var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
@@ -137,13 +142,6 @@ public class ImportFundService {
             apuSource.setDeleted(false);
             apuSource.setDateImported(ZonedDateTime.now());
             apuSource = apuSourceRepository.save(apuSource);
-
-            var institution = new Institution();
-            institution.setCode(fundCode); // TODO upřesnit
-            institution.setSource("source");
-            institution.setUuid(institutionUuid);
-            institution.setApuSource(apuSource);
-            institution = institutionRepository.save(institution);
 
             var fund = new Fund();
             fund.setApuSource(apuSource);
@@ -161,7 +159,7 @@ public class ImportFundService {
         log.info("Fund created code={}, uuid={}", fundCode, fundUuid);
     }
 
-    private void updateFund(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
+    private void updateFund(Fund fund, Path dataDir, Path origDir) {
 
         var oldDir = fund.getApuSource().getDataDir();
 
@@ -177,7 +175,7 @@ public class ImportFundService {
             coreQueueRepository.save(coreQueue);
             return null;
         });
-        log.info("Fund updated code={}, uuid={}, original data dir {}", fundCode, fund.getUuid(), oldDir);
+        log.info("Fund updated code={}, uuid={}, original data dir {}", fund.getCode(), fund.getUuid(), oldDir);
     }
 
 }

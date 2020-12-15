@@ -22,18 +22,18 @@ public class ArchDesc {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "apusource_id", nullable = false)
+    @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
     @Column(nullable = false)
     private UUID uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fund_id", nullable = false)
+    @JoinColumn(name = "fund_id", nullable = true)
     private Fund fund;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collection_id", nullable = false)
+    @JoinColumn(name = "collection_id", nullable = true)
     private Collection collection;
 
 	public Integer getId() {
