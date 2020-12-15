@@ -215,17 +215,15 @@
 						<id>elzaws</id>
 						<phase>generate-sources</phase>
 						<configuration>
+							<sourceRoot>${project.build.directory}/generated/cxf</sourceRoot>
 							<wsdlOptions>
 								<wsdlOption>
-									<wsdl>src/main/resources/ws/elza-core-v1.wsdl</wsdl>
-									<wsdlLocation>classpath:/ws/elza-core-v1.wsdl</wsdlLocation>
+									<wsdl>${basedir}/src/main/resources/wsdl/elza-core-v1.wsdl</wsdl>
+									<wsdlLocation>classpath:/wsdl/elza-core-v1.wsdl</wsdlLocation>
 									<autoNameResolution>true</autoNameResolution>
 									<packagenames>
 										<packagename>cz.aron.elza.wsdl</packagename>
 									</packagenames>
-									<extraargs>
-										<extraarg>-verbose</extraarg>
-									</extraargs>
 								</wsdlOption>
 							</wsdlOptions>
 						</configuration>
