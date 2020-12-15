@@ -73,5 +73,12 @@ public class UploadRequestImpl extends AbstractRequest implements UploadRequest 
 		dataType.setId(id);
 		return new UploadRequestImpl(dataType, sourceItemReader);
 	}
+	
+	public static UploadRequestImpl buildDaoRequest(SourceItemReader sourceItemReader, String daoId) {
+		GenericDataType dataType = new GenericDataType();
+		dataType.setType("DAO");
+		dataType.setId(daoId);
+		return new UploadRequestImpl(dataType, sourceItemReader);
+	}
 
 }

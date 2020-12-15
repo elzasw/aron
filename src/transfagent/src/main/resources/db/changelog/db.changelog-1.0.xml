@@ -191,7 +191,7 @@
       <column name="apusource_id" type="int">
         <constraints nullable="false" />
       </column>
-      <column name="path" type="varchar(250)">
+      <column name="state" type="varchar(50)">
         <constraints nullable="false" />
       </column>
       <column name="transferred" type="boolean">

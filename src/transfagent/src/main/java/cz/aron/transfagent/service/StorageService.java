@@ -3,8 +3,6 @@ package cz.aron.transfagent.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -20,12 +18,15 @@ public class StorageService {
 	
 	private final Path inputPath;
 	
+	private final Path daoPath;
+	
 	private final AtomicLong counter = new AtomicLong(0);
 	
-	public StorageService(@Value("${aron.inputFolder}") String inputFolderStr) {
+	public StorageService(@Value("${aron.inputFolder}") String inputFolderStr, @Value("${dao.dir.path}")String daoFolderStr) {
 		this.inputFolder = Path.of(inputFolderStr);
 		this.dataPath = inputFolder.resolve("data");
 		this.inputPath = inputFolder.resolve("input");
+		this.daoPath = Path.of(daoFolderStr);
 	}
 	
 	public Path getDataPath() {
@@ -34,6 +35,10 @@ public class StorageService {
 	
 	public Path getInputPath() {
 		return inputPath;
+	}
+	
+	public Path getDaoPath() {
+		return daoPath;
 	}
 	
 	/**

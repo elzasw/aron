@@ -1,7 +1,6 @@
 package cz.aron.transfagent.service;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +13,9 @@ import org.springframework.stereotype.Service;
 import com.lightcomp.ft.FileTransfer;
 import com.lightcomp.ft.client.Client;
 import com.lightcomp.ft.client.ClientConfig;
-import com.lightcomp.ft.client.UploadRequest;
 import com.lightcomp.ft.core.send.items.ListReader;
 import com.lightcomp.ft.core.send.items.SimpleFile;
 import com.lightcomp.ft.core.send.items.SourceItem;
-import com.lightcomp.ft.xsd.v1.GenericDataType;
 
 import cz.aron.transfagent.config.ConfigAronCore;
 import cz.aron.transfagent.domain.CoreQueue;

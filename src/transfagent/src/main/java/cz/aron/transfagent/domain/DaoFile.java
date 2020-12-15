@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -33,6 +35,10 @@ public class DaoFile {
 
     @Column(nullable = false)
     private boolean transferred;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    private DaoState state;
 
     public Integer getId() {
         return id;
@@ -73,5 +79,13 @@ public class DaoFile {
     public void setTransferred(boolean transferred) {
         this.transferred = transferred;
     }
+
+	public DaoState getState() {
+		return state;
+	}
+
+	public void setState(DaoState state) {
+		this.state = state;
+	}
 
 }
