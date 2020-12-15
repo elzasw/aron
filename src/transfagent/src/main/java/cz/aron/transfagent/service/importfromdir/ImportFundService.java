@@ -109,7 +109,7 @@ public class ImportFundService {
         var institutionCode = ifi.getInstitutionCode();
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
-        	throw new NullPointerException("The entry institution code={" + institutionCode + "} must exist.");
+        	throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
         Path dataDir;
