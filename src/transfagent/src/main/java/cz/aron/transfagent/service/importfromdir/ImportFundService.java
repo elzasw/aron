@@ -93,11 +93,11 @@ public class ImportFundService {
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = ifi.importFundInfo(fundXml.get(), new DatabaseDataProvider());
+            apusrcBuilder = ifi.importFundInfo(fundXml.get(), new DatabaseDataProvider(institutionRepository));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
-            throw new IllegalStateException(e);
+        	throw new IllegalStateException(e);
         }
 
         var fund = fundRepository.findByCode(fundCode);
@@ -125,13 +125,15 @@ public class ImportFundService {
 
         var institutionUuid = UUID.randomUUID();
         var fundUuid = UUID.randomUUID();
+        var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
+        var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
             var apuSource = new ApuSource();
             apuSource.setOrigDir(origDir.getFileName().toString());
             apuSource.setDataDir(dataDir.toString());
             apuSource.setSourceType(SourceType.FUND);
-            apuSource.setUuid(UUID.fromString(apusrcBuilder.getApusrc().getUuid()));
+            apuSource.setUuid(apuSourceUuid);
             apuSource.setDeleted(false);
             apuSource.setDateImported(ZonedDateTime.now());
             apuSource = apuSourceRepository.save(apuSource);

@@ -7,8 +7,11 @@ import cz.aron.transfagent.repository.InstitutionRepository;
 
 public class DatabaseDataProvider implements ContextDataProvider {
 
-    @Autowired
-    InstitutionRepository institutionRepository;
+    private InstitutionRepository institutionRepository;
+
+    public DatabaseDataProvider(InstitutionRepository institutionRepository) {
+    	this.institutionRepository = institutionRepository;
+    }
 
     @Override
     public String getInstitutionApu(String instCode) {
