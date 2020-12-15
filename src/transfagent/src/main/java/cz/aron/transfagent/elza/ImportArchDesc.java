@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBException;
@@ -69,7 +68,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		return importArchDesc(inputFile, pdp);
 	}
 	
-	private ApuSourceBuilder importArchDesc(Path inputFile, 
+    public ApuSourceBuilder importArchDesc(Path inputFile,
 											final ContextDataProvider cdp) throws IOException, JAXBException {
 		this.dataProvider = cdp;
 		

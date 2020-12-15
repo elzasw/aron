@@ -37,6 +37,7 @@ import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.importfromdir.ImportArchDescService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService;
 import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
 
@@ -63,13 +64,15 @@ public class FileImportService implements SmartLifecycle {
     
     private final ImportFundService importFundService;
     
+    private final ImportArchDescService importArchDescService;
+
     private ThreadStatus status;
     
 	public FileImportService(ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
 			InstitutionRepository institutionRepository, ArchivalEntityRepository archivalEntityRepository,
 			EntitySourceRepository entitySourceRepository,
 			TransactionTemplate transactionTemplate, StorageService storageService,
-			ImportInstitutionService importInstitutionService, ImportFundService importFundService) {
+			ImportInstitutionService importInstitutionService, ImportFundService importFundService, ImportArchDescService importArchDescService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.coreQueueRepository = coreQueueRepository;
 		this.institutionRepository = institutionRepository;
@@ -79,6 +82,7 @@ public class FileImportService implements SmartLifecycle {
 		this.storageService = storageService;
 		this.importInstitutionService = importInstitutionService;
 		this.importFundService = importFundService;
+		this.importArchDescService = importArchDescService;
 	}
 
     /**
@@ -127,9 +131,18 @@ public class FileImportService implements SmartLifecycle {
     }
     
     private void processArchDescsFolder(Path path) {
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
     	
+    	for(Path dir:dirs) {    		
+    		importArchDescService.processDirectory(dir);    		
+    	}
     }
-    
+
     private void processFindingAidsFolder(Path path) {
     	
     }
