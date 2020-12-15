@@ -69,7 +69,7 @@ public class ImportDaoService {
 		}
 		
 		transactionTemplate.execute(t->{			
-			daoFile.setPath(dataPath.toString());
+			daoFile.setDataDir(dataPath.toString());
 			daoFile.setState(DaoState.READY);
 			daoFile.setTransferred(false);
 			daoFileRepository.save(daoFile);

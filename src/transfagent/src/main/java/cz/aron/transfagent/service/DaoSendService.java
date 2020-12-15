@@ -39,7 +39,7 @@ public class DaoSendService implements SmartLifecycle {
 	}
 	
 	private void uploadDaos() {
-		var ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,true);
+		var ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,false);
 		while (!ids.isEmpty()) {
 			for (var id : ids) {
 				uploadDao(id.getId());
@@ -47,7 +47,7 @@ public class DaoSendService implements SmartLifecycle {
 					return;
 				}
 			}
-			ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,true);
+			ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,false);
 		}
 	}
 	
@@ -61,7 +61,7 @@ public class DaoSendService implements SmartLifecycle {
 			clientConfig.setSoapLogging(configAronCore.getSoapLogging());
 			Client client = FileTransfer.createClient(clientConfig);
 			
-			var daoPath = storageService.getDataPath().resolve(dao.getPath());
+			var daoPath = storageService.getDataPath().resolve(dao.getDataDir());
 			UploadRequestImpl request = UploadRequestImpl.buildDaoRequest(new DirReader(daoPath), dao.getUuid().toString());
 			try {
 				client.uploadSync(request);

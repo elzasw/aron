@@ -191,6 +191,8 @@
       <column name="transferred" type="boolean">
         <constraints nullable="false" />
       </column>
+      <column name="data_dir" type="varchar(255)">
+      </column>
     </createTable>
 
     <createTable tableName="dao_request">

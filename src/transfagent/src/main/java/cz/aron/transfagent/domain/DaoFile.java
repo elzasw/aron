@@ -30,8 +30,8 @@ public class DaoFile {
     @JoinColumn(name = "apusource_id", nullable = false)
     private ApuSource apuSource;
 
-    @Column(length = 250, nullable = false)
-    private String path;
+    @Column(length = 255)
+    private String dataDir;
 
     @Column(nullable = false)
     private boolean transferred;
@@ -64,12 +64,12 @@ public class DaoFile {
         this.apuSource = apuSource;
     }
 
-    public String getPath() {
-        return path;
+    public String getDataDir() {
+        return dataDir;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setDataDir(String dataDir) {
+        this.dataDir = dataDir;
     }
 
     public boolean isTransferred() {

@@ -132,6 +132,12 @@ public class CoreQueueService implements SmartLifecycle {
                 Thread.sleep(5000);
             } catch (Exception e) {
                 log.error("Error in sending data. ", e);
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e1) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
         }
         status = ThreadStatus.STOPPED;
