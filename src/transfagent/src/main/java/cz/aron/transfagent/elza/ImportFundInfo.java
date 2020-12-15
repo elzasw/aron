@@ -33,13 +33,14 @@ import cz.tacr.elza.schema.v2.Section;
 import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportFundInfo {
-	
-	ElzaXmlReader elzaXmlReader;	
-	
-	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
-	
-	ContextDataProvider dataProvider;	
 
+	private ElzaXmlReader elzaXmlReader;
+
+	private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+
+	private ContextDataProvider dataProvider;
+
+	private String institutionCode;
 	
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
@@ -92,8 +93,8 @@ public class ImportFundInfo {
 		partName.setValue(fundName);
 		apusBuilder.addString(partName, "NAME", fundName);
 		
-		String instCode = fi.getIc();
-		String instApu = dataProvider.getInstitutionApu(instCode);
+		institutionCode = fi.getIc();
+		String instApu = dataProvider.getInstitutionApu(institutionCode);
 		Part partFundInfo = apusBuilder.addPart(apu, "PT_FUND_INFO");
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
 		String rootLvlUuid = getRootLevelUuid(sect.getLvls());
@@ -155,5 +156,9 @@ public class ImportFundInfo {
 		}
 		return puvodci;
 	}
-	
+
+	public String getInstitutionCode() {
+		return institutionCode;
+	}
+
 }
