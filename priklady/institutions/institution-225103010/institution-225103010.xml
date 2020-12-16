@@ -1,0 +1,3489 @@
+<?xml version="1.0"?>
+<ns2:edx xmlns:ns2="http://elza.tacr.cz/schema/v2">
+  <aps>
+    <ap>
+      <ape id="b50776b9-8d76-4688-ad15-9358b59d057b" uuid="b50776b9-8d76-4688-ad15-9358b59d057b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="994d2598-cac7-4b66-b9f3-1501fc9b1d80" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archivní správa Ministerstva vnitra České republiky</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="27c37f5d-121e-4420-b198-109cf91afb44" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AS MV ČR</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="aec567b4-fbd4-48ae-b957-17da6a3ff69d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>000000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9f783015-b9af-42fc-bff4-11ff57cdb072" uuid="9f783015-b9af-42fc-bff4-11ff57cdb072" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a1ebacdb-ce49-44b1-ac51-a6e7f724ac51" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Národní archiv</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="252caef6-fd27-44ba-87bf-fb876e55fc30" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>NA</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="937821db-614d-481c-8031-b431eebdea6d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>100000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c4b13fa0-89a2-44a2-954f-e281934c3dcf" uuid="c4b13fa0-89a2-44a2-954f-e281934c3dcf" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8ab53f80-e098-4943-93b2-1833dcdd42bb" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv bezpečnostních složek</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="8b8e1722-2259-482f-8b5e-af2f2c1402dd" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ABS</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="15af8860-1d04-4b79-a5de-6d72d84d3f2a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>100000020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e1ad171f-aee0-4e6e-b692-8bfb09f44eaf" uuid="e1ad171f-aee0-4e6e-b692-8bfb09f44eaf" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="e49f16db-4311-49aa-b5db-e8d76703c547" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní oblastní archiv v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="de16f536-d115-4aa4-a02f-97fb70293874" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOA v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="5e6c2826-f425-46d2-a9a7-87a73e3a8f68" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>211000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="921ee434-ef97-4b65-86d9-22313513d43b" uuid="921ee434-ef97-4b65-86d9-22313513d43b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="77f0c67d-9944-4ae2-bf09-fbf0abbcc62e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní oblastní archiv v Třeboni</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="f3683fb8-6f90-44d1-adc8-75072fac6762" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOA v Třeboni</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="3007845b-c849-413e-8848-2969b8b6b9f1" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>212000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c0471c34-4dbd-4fa0-8929-ccfe8e8cb325" uuid="c0471c34-4dbd-4fa0-8929-ccfe8e8cb325" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="5a161216-4a7e-4875-aa9d-cd530f5600bd" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní oblastní archiv v Plzni</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="1e6f0a19-18de-43d7-ba2b-35d681c78215" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOA v Plzni</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="3c73265f-0ad5-4eaf-85e0-eeae07141ec6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>213000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="252edbbc-f893-4083-8702-c0e1432dbe89" uuid="252edbbc-f893-4083-8702-c0e1432dbe89" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="64ceb7fe-8eb4-4ec1-ba6e-5dd7f8385468" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní oblastní archiv v Litoměřicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="addd63cd-46a0-442a-91b6-96d9acedf37c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOA v Litoměřicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="c3e108a9-ca73-41e1-877a-eabc12690bef" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>214000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="3d392a72-6ad4-4fa3-a237-e5a4d7a7f91d" uuid="3d392a72-6ad4-4fa3-a237-e5a4d7a7f91d" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="258a6459-922f-4da7-a9f5-f239b0635ad4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní oblastní archiv v Zámrsku</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ea6c6366-f431-4555-b42d-3837d4435e43" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOA v Zámrsku</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="9ab00786-6d0a-4e79-8024-8b58685ea3ce" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>215000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="32eff1a7-4a2f-4462-a6de-29c9fa39ead5" uuid="32eff1a7-4a2f-4462-a6de-29c9fa39ead5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="c583de47-e61b-4993-967b-0b92aed280f4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Moravský zemský archiv v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="0d40e754-5771-4a1b-a660-a4385e51bcb7" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>MZA v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="c1d040a6-f921-468c-95b3-0c2e90dab45d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>216000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1a381845-785f-4cb2-8290-fa1e0c54e1bd" uuid="1a381845-785f-4cb2-8290-fa1e0c54e1bd" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="446caaa8-d248-4015-8b6c-d7e27740b6eb" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Zemský archiv v Opavě</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="7ea44550-10a4-411a-9302-08e3c84ac82e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ZA v Opavě</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="69cc962c-bc97-4bce-bed0-4ad159b36acd" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>217000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9668ae9f-e3fa-402e-9817-d1fcd730110e" uuid="9668ae9f-e3fa-402e-9817-d1fcd730110e" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="2257ff7d-f241-4a2d-a43f-8f3b53844943" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Benešov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="fbb3f6b8-8c7e-4d04-8d9e-e805a444ad32" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Benešov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="8981f37a-6ad4-4049-9af9-76747e4c5cf5" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0d158984-9b53-4660-b08b-f23fdf39e764" uuid="0d158984-9b53-4660-b08b-f23fdf39e764" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="f5d5ce3d-d43c-4f81-be75-90c89e0b31a2" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Beroun</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="1714e21c-6ebb-4396-8d8a-fc0a0a38a219" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Beroun</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d762da2e-b328-4526-a04d-8f1eec7e59b4" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d865cc77-fbb3-4224-9eee-1a8f2ebcea29" uuid="d865cc77-fbb3-4224-9eee-1a8f2ebcea29" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="5dcf38ad-990d-4f7f-ab31-d90d21b86229" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Kladno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ef850c68-2a8c-4db1-a361-b3cbdf153cd2" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Kladno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1e9532f6-4c22-4026-9191-712d83bf866c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="64364a53-fa2c-4e28-bef3-8693b00f6776" uuid="64364a53-fa2c-4e28-bef3-8693b00f6776" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="342443f8-bcaa-4cd9-8019-a992d57247b0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Kolín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b5e5ea55-c1db-4c27-be4e-9594da9fde7d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Kolín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="8adbc83f-7571-4a3f-a548-af4ff26f77fa" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221204010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="32b92f0c-046f-4d7d-b04e-6cee2862ee99" uuid="32b92f0c-046f-4d7d-b04e-6cee2862ee99" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="d3779d00-6bae-4029-8e2a-b3b803eb7f6a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Kutná Hora</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="515c2a9b-0e00-4002-a3f0-c3335e2532be" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Kutná Hora</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ceb56b56-445e-4143-9ff3-6c66e9f2a870" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221205010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8f8c422f-deda-4445-b640-931c2d6b116a" uuid="8f8c422f-deda-4445-b640-931c2d6b116a" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="2758e153-7184-487d-9165-72dbdf9aee7c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Mělník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="8b059e25-c763-4664-87b5-816e866891d1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Mělník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="96c5f82a-2784-4e4b-9906-16648a24b4e8" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221206010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="08b9e050-4821-41eb-98f8-160022099243" uuid="08b9e050-4821-41eb-98f8-160022099243" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="64f2ede3-8e1b-41e1-ac07-0c14c455c4a2" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Mladá Boleslav</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="957b8c26-18fa-49e3-8990-8ad6f6d280a5" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Mladá Boleslav</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="52452c2b-6577-467d-952b-e374f3802409" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221207010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="21b0f0da-9113-4146-bc85-18bbd5df17c0" uuid="21b0f0da-9113-4146-bc85-18bbd5df17c0" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8c85bed3-d7e4-4d92-b08d-6f5c74ad0a74" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Nymburk se sídlem v Lysé nad Labem</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="fd0e7799-f6ec-46f2-93a5-037256745147" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Nymburk</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="35880f40-c5e6-4f61-ab6c-5a6b7ef278fb" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221208010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2dab13a8-437d-49ed-9e04-37433790a8d3" uuid="2dab13a8-437d-49ed-9e04-37433790a8d3" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="535fdde6-cd27-41ba-9eb9-66ddfa98a2bf" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Praha-východ se sídlem v Přemyšlení</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="fc7404a5-0012-465c-854a-01238eb4806a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Praha-východ</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ba026734-de1f-483e-934f-88d91fa90930" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221209010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="b1b0d00b-233e-497b-b7ea-66343a1600d6" uuid="b1b0d00b-233e-497b-b7ea-66343a1600d6" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="3a22ac28-6239-4a8a-a980-e16197bdd154" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Praha-západ se sídlem v Dobřichovicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="a9ae6a40-6fda-475a-9c84-9af3378c4d08" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Praha-západ</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="da6fcc73-2004-4d59-b9ca-56f96cb4db54" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221210010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2d2ef1c1-f137-49a0-b9cf-a800b58c530d" uuid="2d2ef1c1-f137-49a0-b9cf-a800b58c530d" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="5409ff4b-abc1-45af-b988-04d9778571fd" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Příbram</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b27010de-bcf8-40ef-9635-f3a085e147b4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Příbram</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="9ed8ba09-5967-4dd9-b44e-8f9a42f117c3" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221211010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8b8ae293-2f56-426f-89d5-0c98ac2ba1ea" uuid="8b8ae293-2f56-426f-89d5-0c98ac2ba1ea" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="eaca00bd-786f-4ea1-bde2-023a34a489b1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Rakovník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="de33b4a2-95ba-4539-a2fe-1e6b51389077" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Rakovník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="a31e10a1-8684-4f19-9547-5a7a9c1c5774" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>221212010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9c9365db-435a-4b4b-a2d2-73862fd686d5" uuid="9c9365db-435a-4b4b-a2d2-73862fd686d5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="d1213d53-732b-440a-921b-d04a085e4cd1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv České Budějovice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="233a6575-edbe-4d2f-a59b-56df75dfa801" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA České Budějovice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="cb231033-b127-48a3-b3b1-789933a2339b" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e52ca1a4-b155-40c5-a2d9-130173832f96" uuid="e52ca1a4-b155-40c5-a2d9-130173832f96" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="bc13859f-fe3a-41f4-be79-3c25bdedcc38" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Český Krumlov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="0753bcc9-b3da-41e7-8e60-ba5bbdcc4aea" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Český Krumlov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="04a06f6f-1467-4233-9b4d-bac15f2dba17" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="290efa39-f5d3-4bbe-a4e2-d7e246a99af5" uuid="290efa39-f5d3-4bbe-a4e2-d7e246a99af5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="e8ceb335-46cc-426a-8237-cc6203a93175" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Jindřichův Hradec</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="642963f2-4df6-40d5-ba87-b751879caf97" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Jindřichův Hradec</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="fd396784-ad23-43a0-bb61-0b6dfc656a4a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="90aae591-dcb9-4e53-9c28-2971121009ec" uuid="90aae591-dcb9-4e53-9c28-2971121009ec" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a4640d84-69e0-4638-83df-343ca623c330" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Písek</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="15d16bc4-42eb-4221-a778-21e7ec3ed2d9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Písek</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="12821144-7e43-460f-ba17-f8b6c0d3bc47" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d037558f-8715-4ac5-9908-e40efb5d61ba" uuid="d037558f-8715-4ac5-9908-e40efb5d61ba" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="fe5961e4-efc8-4c65-bdd1-48243c58ce60" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Prachatice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="65818de6-5f2d-4507-b61b-9433d25fa50e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Prachatice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="64c60864-be79-4a0c-885c-771d7a3829de" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="18ed12b1-e272-4721-a86c-c50a6eb60949" uuid="18ed12b1-e272-4721-a86c-c50a6eb60949" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="4def981f-3ece-484e-bc94-63f7c487f6c6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Strakonice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e00a4380-a271-48ae-b56d-874ec0ae77e8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Strakonice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b56d22b6-42d4-49c1-b9d8-0f6f0c1bd4fe" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222106010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="68a37692-15c5-4c11-afb2-b9b91d850258" uuid="68a37692-15c5-4c11-afb2-b9b91d850258" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="618becd0-4721-4fb8-9eba-46525179d5a8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Tábor</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="169dfa13-bb24-490c-94af-acef4aa00f49" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Tábor</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="6ec7189a-7d61-44da-8ec3-d7f508833233" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>222107010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="5c37b075-f144-4cd6-8025-dc3a11ed393b" uuid="5c37b075-f144-4cd6-8025-dc3a11ed393b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="4e4a91ea-5c6a-4475-b50a-5381695c503c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Domažlice se sídlem v Horšovském Týně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="057004e0-7b23-4c31-b788-2c46b935c7fe" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Domažlice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="41395d21-4bad-4190-abe1-110776111979" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="69328285-debe-4f87-bc8f-bdd28905e322" uuid="69328285-debe-4f87-bc8f-bdd28905e322" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="761db6e6-6b65-4fbc-9f21-893013e319d6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Klatovy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="bcc6d07a-f7ec-4ba6-b58f-08ac6a702386" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Klatovy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="289b7f48-1668-4c2c-9917-69f4df4d20e2" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e4015348-52fa-4f41-92ea-df72f6a9833f" uuid="e4015348-52fa-4f41-92ea-df72f6a9833f" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a4d924a4-e663-4df9-b21d-1c76bc103ea8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Plzeň-jih se sídlem v Blovicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="94baaf7d-4196-4c54-a90f-536b2dd9daae" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Plzeň-jih</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="110cb837-6403-421c-83b8-b41daa95356c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d0abb221-fb6f-4acb-b2a0-a57799fe7d3c" uuid="d0abb221-fb6f-4acb-b2a0-a57799fe7d3c" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="fd5bb8af-69dd-4ad5-9eea-ae56d6803fee" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Plzeň-sever se sídlem v Plasích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="235b2830-0c27-4f4c-b82e-94fc303144e1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Plzeň-sever</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1afaded5-1c53-4c04-95d8-b8cb93802e2d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="4e81142a-5b99-4c17-a27a-687f578f6016" uuid="4e81142a-5b99-4c17-a27a-687f578f6016" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="2d056fe6-8685-466c-a461-7219982c6fa4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Rokycany</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="da8a14e8-9225-4bc3-908e-5803c1542a9b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Rokycany</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="f0e9b925-c9ad-4359-b687-3b2fdab6231b" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223106010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="46d706f2-7fe1-4e63-8ab3-f8152166011a" uuid="46d706f2-7fe1-4e63-8ab3-f8152166011a" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="0a143074-2cb2-4639-a3f2-71e7a76d2970" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Tachov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="d6fb8b44-9356-4e24-b3e8-3e5ff5692670" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Tachov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1b36ee92-0bff-475c-8dce-37d556570a4d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223107010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="4bb423a4-c930-4060-91d1-13934f15fb42" uuid="4bb423a4-c930-4060-91d1-13934f15fb42" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="d423981b-9bdc-465f-9752-4e92f9a8ae9b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Cheb</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="043cf165-4e88-4b27-97db-8677667c9d84" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Cheb</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e453868b-40a2-40f3-a62d-e7277f2d0b39" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="079f9a24-707c-473b-bedc-721a0ff64372" uuid="079f9a24-707c-473b-bedc-721a0ff64372" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="c0828910-9575-46b1-bf8e-c8dd7f966278" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Karlovy Vary</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="d2a71925-158a-40b9-9687-318c41c42c79" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Karlovy Vary</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b19e03f6-4e12-4fcc-affe-da8fb206600a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="3b0c1dd8-3fac-4d75-990f-4f2ee31e0906" uuid="3b0c1dd8-3fac-4d75-990f-4f2ee31e0906" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="cfd72a26-0b00-4456-bd4a-f29bd450277d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Sokolov se sídlem v Jindřichovicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="cfd024a1-b035-4312-8ead-457161e68d6f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Sokolov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e2f16cad-fbe8-4e6d-bef8-221f27d50e06" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>223203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d7fafd5e-92d7-47e7-b7f4-348a36827ca3" uuid="d7fafd5e-92d7-47e7-b7f4-348a36827ca3" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="ca31bd44-f7d6-4a2f-a755-15fb5ff1f74d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Děčín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="066b2bb3-6d97-4d64-b4c1-01e7fbecb2c0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Děčín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="64717b0d-ec10-4973-8593-159149084fef" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8fa7fe8e-6793-4c09-a8d0-f44ddfb5115d" uuid="8fa7fe8e-6793-4c09-a8d0-f44ddfb5115d" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="b5a630d5-208c-4d74-b2e4-756fd478532e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Chomutov se sídlem v Kadani</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="81d9c701-92d5-409d-90ea-46d4459f0f93" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Chomutov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e3c971fa-8b7d-44c8-865e-7d6afebce069" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0f60c827-b614-40c8-b2e7-dec00e77d291" uuid="0f60c827-b614-40c8-b2e7-dec00e77d291" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="ad4249f1-6598-44b9-b215-80851f650e82" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Litoměřice se sídlem v Lovosicích</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="53bae541-4df8-43ba-8cf6-b447ee86f328" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Litoměřice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="4fe0b07d-ccd9-4247-958a-c6f546f03e2f" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="5d3eda10-4c1d-4333-b842-5fa4b0766ceb" uuid="5d3eda10-4c1d-4333-b842-5fa4b0766ceb" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="7da013e9-67a0-47c7-a598-6d6b3b821182" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Louny</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4966d0c5-e78c-4d89-9933-f6d22fff7ac1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Louny</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b18245ca-4a8d-4828-b46f-9ea6c6118340" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="3e537690-41ff-41a3-aac9-5fd0e7c955b8" uuid="3e537690-41ff-41a3-aac9-5fd0e7c955b8" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8fbed73d-81cb-4288-a5e5-431159578446" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Most</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="c7a9640b-b953-4b25-ad3e-f7dd11eb0d53" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Most</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="c0fbbab7-a43a-42bb-97fe-bde94e27fa29" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9061b7f2-4bdd-4cc2-9677-6133539be02e" uuid="9061b7f2-4bdd-4cc2-9677-6133539be02e" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="bb984ea2-b88f-4861-8132-aacc4c34f104" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Teplice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="efafe5f9-6a96-4ac4-ad30-c8a51845581a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Teplice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="04e9741d-eb1b-4335-9397-31c7a3f103ac" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224106010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="dafd0a3e-e1b4-438f-9775-e4cb742c02dd" uuid="dafd0a3e-e1b4-438f-9775-e4cb742c02dd" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="9b2d915f-a281-49ae-9af0-97aca1365287" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Česká Lípa</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ca415a89-8f9f-4a62-b69f-078db2cbf454" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Česká Lípa</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d9a397d2-069f-41d1-a0f6-3c62e7d87b6e" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="28c86428-cffe-40de-bab9-c4148c964000" uuid="28c86428-cffe-40de-bab9-c4148c964000" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="be42be9c-b62d-4767-a115-d6cf68dc00c6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Jablonec nad Nisou</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="2e99a492-c02e-4592-b684-520980ad5b4f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Jablonec nad N.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="9047f189-aaad-40a2-983b-9c39def192cb" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="77bd7659-bc7f-482f-82e5-04c933948116" uuid="77bd7659-bc7f-482f-82e5-04c933948116" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="6f84973e-e1a8-44ef-88c4-8bbc0948f910" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Liberec</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="122efb18-40ad-4ba2-8ef9-5b61d8bb754d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Liberec</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="3172c5fd-f9bc-4b43-95e6-0588155cc9bf" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1a1f10dc-d3e7-493a-95da-3a0eda108a61" uuid="1a1f10dc-d3e7-493a-95da-3a0eda108a61" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="07064f9b-3b3c-46b1-9113-f61a035152de" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Semily</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="945021b2-ec6a-4f84-9da0-4930d5ee4344" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Semily</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="6c7e3127-1048-429a-a821-1daf1dee98d8" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>224204010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8a3f1154-74af-4144-a3c1-cecba7329bd8" uuid="8a3f1154-74af-4144-a3c1-cecba7329bd8" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="f213f906-e066-400a-8abc-ea0678028e5b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Hradec Králové</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="7d5b86df-b9a3-40af-84dc-136b84297c3b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Hradec Králové</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="8be441d5-4cc1-4305-811d-bbfa52013543" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="f9c1aa26-830f-4ad1-ae92-575e932c7c1c" uuid="f9c1aa26-830f-4ad1-ae92-575e932c7c1c" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="b17f6a7d-c38c-432d-84df-56276879f12a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Jičín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="7c11ea86-6c12-446c-bb20-4283e66dba1b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Jičín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="9c23ff80-9e28-490e-8f2b-2fa07ea61854" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2e8b81ae-830b-4d2e-9f22-50fccf9caeab" uuid="2e8b81ae-830b-4d2e-9f22-50fccf9caeab" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="7e1de10b-7c9b-4c51-8d08-7cba7cc2d5b4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Náchod</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="89dbcc68-574c-4e1c-93e4-3295c876d22e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Náchod</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d83e1676-45d2-41bc-9af5-df26ac86ea80" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0c1c929f-9479-4af9-9834-675751a9f37a" uuid="0c1c929f-9479-4af9-9834-675751a9f37a" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8d4ec20b-6499-4cf4-9ce7-a13489e2dad0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Rychnov nad Kněžnou</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="1a621b32-abf1-4949-a3f0-095485431597" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Rychnov nad Kn.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b12700b2-c4e1-42b3-927a-63cd9ec8905c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d84a5237-4ac0-4cc1-85b1-8188e1ae705a" uuid="d84a5237-4ac0-4cc1-85b1-8188e1ae705a" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="9f439d66-b35c-4e8c-a389-dad557fc955d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Trutnov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="cc5a356e-55e5-4619-a837-678e18679c5b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Trutnov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1e60107b-0dd2-4699-85ba-fd387de7d3b6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="48c5571b-dbf5-48e5-b615-5cf7cef71489" uuid="48c5571b-dbf5-48e5-b615-5cf7cef71489" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="0f4455d5-95fe-440e-89b7-acf6cb5da3e7" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Chrudim</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="fbdf921f-fecf-413d-b44c-acaf41e49179" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Chrudim</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="00687e93-2578-4118-b4fe-b57001b72c0e" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0db5911a-7718-4465-9807-b4ac537dfe20" uuid="0db5911a-7718-4465-9807-b4ac537dfe20" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a40f6478-7da0-46a7-88ad-d379b2dac9c7" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Pardubice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ae704cb3-d685-420a-bba2-d6586e4f195d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Pardubice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="0c73cdd6-754e-420c-8252-ac467f26813e" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="19c88d80-2946-4093-901a-1949f53746af" uuid="19c88d80-2946-4093-901a-1949f53746af" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="0cced6c5-e798-44ac-9188-e98880686f23" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Svitavy se sídlem v Litomyšli</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="8581fb20-658e-4c80-a5eb-dc3c671bcb72" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Svitavy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="a43a8027-19ca-4b5d-867d-37b68b70fa4d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="63ec306f-df57-4db4-b0c7-da43b0323f26" uuid="63ec306f-df57-4db4-b0c7-da43b0323f26" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="4582adb9-97da-4331-812e-3b4ba58580b9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Ústí nad Orlicí</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e07d3e79-9521-46c7-9845-f8458ca1e6eb" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Ústí nad Orlicí</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="5592574e-6899-49ff-8e21-6fbee9d1db14" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>225204010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="7497d383-dec5-44ce-8362-bf3932ebcde5" uuid="7497d383-dec5-44ce-8362-bf3932ebcde5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="db0a9468-fb90-4bb6-9354-adab3cc86215" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Havlíčkův Brod</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="dfc1b819-d9fa-4848-b4bf-118ecccb7a5c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Havlíčkův Brod</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="7cee7876-9a12-4eb2-9a17-24463cedab3f" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9b468443-026c-44c6-8c6f-00f0ce1e59cc" uuid="9b468443-026c-44c6-8c6f-00f0ce1e59cc" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="f17084e9-181d-42aa-b4ad-acde12a74a1c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Jihlava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="737480d2-c063-4968-a8a8-9d4185636c93" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Jihlava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="94f8c0da-b78b-4c9b-8d97-00cbdb28236d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8def92e9-7788-4d6c-a6e2-aebe0a0155c3" uuid="8def92e9-7788-4d6c-a6e2-aebe0a0155c3" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="30e0c222-5c8b-4402-a28b-f062c72c097e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Pelhřimov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="16e3c7ca-2132-4098-8275-89f58f96f429" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Pelhřimov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="5891a91e-2b7d-44f9-ad4b-7527c5624666" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="134eba54-096d-4279-9469-a987b7f44eec" uuid="134eba54-096d-4279-9469-a987b7f44eec" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="b3695a9a-9aa0-474d-8821-c4c4e71d2262" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Třebíč</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="0bb56f82-db3c-4ef8-8d22-e4b377082838" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Třebíč</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="3af28442-0422-4829-b33b-db335d1f20fc" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e0d15f0c-f383-4b2f-b9f4-9daf288c6cda" uuid="e0d15f0c-f383-4b2f-b9f4-9daf288c6cda" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8435c998-2255-40eb-9483-14381092b1ad" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Žďár nad Sázavou</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="2602bf81-9e01-4d4e-9f10-a92013636677" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Žďár nad Sázavou</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="fc2baa67-ffc1-4d93-9ca2-87c22c2ead6b" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="96c7c9a4-0a0c-4a9c-af97-6e09a51e0ceb" uuid="96c7c9a4-0a0c-4a9c-af97-6e09a51e0ceb" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="5767f8d0-946f-4909-9180-6a69a4a04590" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Blansko</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="f6cc1385-1523-4218-817d-fbdce165fe8e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Blansko</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e7a85300-12cc-4abf-b5ba-3341ba2cef66" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="a3c6f569-4a57-4871-8697-9767831451c0" uuid="a3c6f569-4a57-4871-8697-9767831451c0" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="7ae8a592-5ef9-4857-9ee3-3d4cef9e8ae1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Brno-venkov se sídlem v Rajhradě</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="364ca69c-fff4-4a6b-b2ec-bc5dbb21db8d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Brno-venkov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d754a26f-c487-4639-95d3-2dd4e24c729d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2ca2e335-387c-4e6a-a9b1-5e08ff48f4d5" uuid="2ca2e335-387c-4e6a-a9b1-5e08ff48f4d5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="da4d9225-85a7-4321-a0dc-6b8513e9542b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Břeclav se sídlem v Mikulově</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="11e532ff-0e15-49b5-bc5a-50836b3d4d3e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Břeclav</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="35dc84cb-394b-44b3-80c9-0cf8242b30f3" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226204010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="95b1d4ab-4419-4a86-a28f-25fe52572c1f" uuid="95b1d4ab-4419-4a86-a28f-25fe52572c1f" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="97bdf52a-4bf1-4a85-a2cc-6c3629d21d42" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Hodonín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="f0978eb6-1192-4359-a85e-2309299ec9a2" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Hodonín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d929c5c1-3763-4cd6-91e6-54a6db768b49" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226205010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="afea7996-b878-428d-839f-4e7b4a1c4774" uuid="afea7996-b878-428d-839f-4e7b4a1c4774" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="f72472f4-e9ed-4d5d-9e3f-33e3866ca8ba" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Vyškov se sídlem ve Slavkově u Brna</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4fe75328-4a16-423b-bd78-a13e95971684" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Vyškov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="30ea5f36-8e10-4756-9aad-ab2f238b5502" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226206010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="fb6e5fa7-8baa-4922-8a25-b5c45ca2eeca" uuid="fb6e5fa7-8baa-4922-8a25-b5c45ca2eeca" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="20392615-90e6-4625-947b-8cf27973e5a4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Znojmo</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="5b486c3c-3a4b-4783-aba3-6bea9c2b4a8c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Znojmo</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="61d80a69-0611-4be4-a894-cdb9c0879bbf" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226207010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="68243149-e5d2-440d-9c6e-2f93baa015c2" uuid="68243149-e5d2-440d-9c6e-2f93baa015c2" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a6b1489b-4c98-4081-a113-4766efc2536d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Kroměříž</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4cc43a66-8063-4973-bb12-fd720543168f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Kroměříž</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="f43524f0-dbeb-48e7-a543-6907de566088" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226301010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0dd05a49-fdcf-4c63-8af1-8889b7a969c8" uuid="0dd05a49-fdcf-4c63-8af1-8889b7a969c8" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="2bab469f-aaaf-40ca-b5f5-21be938331ff" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Uherské Hradiště</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="67bef508-5986-446b-a625-5275146f176d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Uherské Hradiště</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="787c9f33-d871-411c-9487-b8fdf34358aa" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226302010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d97deea9-49e7-45f3-917d-ad7a14e721e6" uuid="d97deea9-49e7-45f3-917d-ad7a14e721e6" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="4a994767-5ddc-4e2d-a726-bd943707ae9b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Vsetín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="cbe5eefc-189f-49c0-b5ca-b7ce88bf98ab" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Vsetín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="72767cf3-bc58-488a-80d1-757ca7797eb6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226303010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2ecebed8-aae6-4981-a423-b15f4dcffe17" uuid="2ecebed8-aae6-4981-a423-b15f4dcffe17" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="6822605c-94e1-4c38-adec-1953e38cd9ef" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Zlín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="f0cecf1d-3add-4780-8366-0085eaef9492" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Zlín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="32f6f97c-6e9f-4b5c-9049-6dadd5842964" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>226304010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="47d8bfed-8ebe-4e92-a351-82c04a9cd359" uuid="47d8bfed-8ebe-4e92-a351-82c04a9cd359" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="61dc059f-c289-44d6-8c6f-ec5b1edbab21" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Jeseník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="9932006f-0359-4009-b932-f1437af1941a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Jeseník</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="751f8207-d2c2-4f40-9e42-afcaf22a5b69" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d4b0e75f-2d69-4e70-b3c7-0038a992e91e" uuid="d4b0e75f-2d69-4e70-b3c7-0038a992e91e" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="3b354cde-7701-4b9b-9772-afedae230853" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Olomouc</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b51a3c94-e54f-4e3a-bf42-7cbaec08f555" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Olomouc</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d526e92e-26a9-420f-b7e4-37bb8193d510" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227102010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c52330bd-3faa-4fed-9dcc-70185ccbd805" uuid="c52330bd-3faa-4fed-9dcc-70185ccbd805" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="518ff6e0-59c2-412c-ba3e-c9c556c4d387" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Prostějov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="cb1bc866-b71f-4d8c-84ac-a40c5aadbcae" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Prostějov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="afc15930-02b0-4562-8065-3c53b4a5af26" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="65d82539-3c69-4b9b-8be1-f2482a3bbc13" uuid="65d82539-3c69-4b9b-8be1-f2482a3bbc13" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="c5133182-0273-4907-aefe-fd6a7a1c42df" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Přerov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="92d26fbe-d8a8-423c-b856-2e09c6414439" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Přerov</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="4577fb42-0409-4a88-b72a-7e6965481a3c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227104010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0d549f67-6861-4fac-b2b6-3b4e68016997" uuid="0d549f67-6861-4fac-b2b6-3b4e68016997" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="9dcfd7c2-12c8-4791-a55a-fc3bdb8fab46" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Šumperk</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="c90c47cc-faf9-4f67-bb13-e3350acc80f1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Šumperk</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="cece5bbd-bca0-4748-a9fb-5fd06250f63a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227105010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1b3efb79-bdad-4a1a-a6c6-16b56e949dcc" uuid="1b3efb79-bdad-4a1a-a6c6-16b56e949dcc" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="e11ff394-6542-42a7-8193-9a40f2655237" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Bruntál se sídlem v Krnově</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="65eac652-18df-4a5c-9e2a-96dca5558a8c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Bruntál</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b398509d-a342-4338-971f-9a965713d82f" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227201010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="d2218aa2-c114-4bf7-af36-61736df2b689" uuid="d2218aa2-c114-4bf7-af36-61736df2b689" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="c9481a71-e08a-4519-9683-2e53d317b9f1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Frýdek-Místek</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b2b75083-1af7-44e9-b8f1-5e189e00b24e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Frýdek-Místek</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="dc61e095-9fa8-4544-aa56-d27e1a1cd9ce" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c1b00bfb-65db-4c39-8f4a-e0f93c0c5d79" uuid="c1b00bfb-65db-4c39-8f4a-e0f93c0c5d79" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="331ca6d5-552c-4e38-a200-aa207fb3d059" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Karviná</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="81cea927-4a83-44d8-8b4a-c13200e82edc" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Karviná</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e5cdf2b5-0649-464e-8c2b-259c026db753" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ba4772f7-e4f7-4430-8a9c-9a13fe377ed5" uuid="ba4772f7-e4f7-4430-8a9c-9a13fe377ed5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="8c1e2a33-2c7a-4980-970f-a17ac3fd7ebf" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Nový Jičín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="57713302-b387-4182-a587-0046068396fc" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Nový Jičín</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ac9c66b8-4a21-4399-ba8a-97f4a8858219" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227204010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="5fa204fe-490c-430e-b05a-202c283bdfc7" uuid="5fa204fe-490c-430e-b05a-202c283bdfc7" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="696dd16f-3a41-4fd1-9738-a47e33073b31" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Státní okresní archiv Opava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="19895ab2-8f11-4717-92ba-56b347820d14" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>SOkA Opava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="57cb5d84-1b2a-49f3-9397-2cb159044620" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>227205010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="f6a50fd5-d939-4445-8317-eb4ff3b46f9c" uuid="f6a50fd5-d939-4445-8317-eb4ff3b46f9c" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="f48730e1-541b-42f6-bfe4-5b9f48ad9c86" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv hlavního města Prahy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b707c516-8a78-4947-ab3c-c8c2c65ecca6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AHMP</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="83b4f9c0-7521-43f5-aad2-6256befbf84e" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>321100010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e211d416-3d04-4fae-8225-0eb0e722e24b" uuid="e211d416-3d04-4fae-8225-0eb0e722e24b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="c4ad8734-44a7-4af6-b3ed-0c492629e529" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv města Plzně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="cce66d9f-985d-4a33-8bc2-0de57efe2e12" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AM Plzně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="f3c28dd7-1c0f-4e07-8c8b-305076769077" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>323103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="2bb1d13a-3a61-4d42-b395-bf10048ff97b" uuid="2bb1d13a-3a61-4d42-b395-bf10048ff97b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="cac9a574-b8d1-497a-b4b6-dde575624b27" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv města Ústí nad Labem</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="9ea79b48-317e-473d-bfb9-3aaedd8a6232" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AM Ústí nad Labem</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="beb09ba1-a52a-4c60-b738-ecb943525735" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>324107010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c99dd0e7-e473-43da-8228-fc8607606f1b" uuid="c99dd0e7-e473-43da-8228-fc8607606f1b" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="ebab98ab-68d7-4717-acac-93f3d4c2cf15" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv města Brna</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="eb1f7195-bf2e-45e5-b3c6-044c42acb5d9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AM Brna</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e8e71531-90ff-43c1-8482-db14dce39ce4" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>326202010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="38762000-44c2-4f19-98ef-7a2335aa68d5" uuid="38762000-44c2-4f19-98ef-7a2335aa68d5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="6f4eea8d-6c9d-4797-9a46-da745c695bc3" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv města Ostravy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="67f12983-9e69-4089-8566-a024038520e9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AMO</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="9feae2a2-df96-4416-8dc4-b7baee3a30c2" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>327206010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="84df4233-2d2b-4f66-9c95-47a7d55f1883" uuid="84df4233-2d2b-4f66-9c95-47a7d55f1883" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="2a6be3ec-855d-4c87-8b23-0983bab0ab17" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv společnosti Škoda Auto</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ffca4b6f-fd32-49f2-9df7-8fa0bf4e00b6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Škoda Auto</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e1fe2868-a453-4a67-a3a9-8a9753d9ed57" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>511207010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="01629fda-572a-4a18-8001-301c318fa7bc" uuid="01629fda-572a-4a18-8001-301c318fa7bc" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="7f45bdc4-fd20-418d-933f-32a625ecefc3" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv společnosti Plzeňský Prazdroj, a.s.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="37d52680-ecc9-4e68-b19a-5ddcf4a01126" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Plzeňský Prazdroj</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="7e32cbd1-1c4a-44a2-8ba0-b29ef60eb5d9" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>513103010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1f3979e5-dccd-426f-87ca-ffedea5b6816" uuid="1f3979e5-dccd-426f-87ca-ffedea5b6816" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="8bcfdd11-1a6d-424c-a9a3-5a8d5de78653" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv společnosti Sokolovská uhelná a. s.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="a21e7031-afb2-4594-b91e-a6666506b477" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Arch. Sokolovská uhel.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="348eee3e-f877-426f-8f96-7b7f87930bd1" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>513203010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="295416a7-06bc-47dc-a19e-487c5dd469a9" uuid="295416a7-06bc-47dc-a19e-487c5dd469a9" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="0d41da16-677a-4177-b55c-dee73798e939" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv OKD a. s. , Ostrava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="715ab202-90ad-42c8-89b9-e99b53d5b5fb" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv OKD</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="e3780c78-39b3-4a50-819a-dfee67491bcb" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>517206010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="3410a550-21eb-40d5-90c4-cc3f8b0b3091" uuid="3410a550-21eb-40d5-90c4-cc3f8b0b3091" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="472fb941-b42f-407d-9449-b48be51d0a70" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Vítkovice, a.s.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="5ae23fd1-736f-4917-a0e6-572d054ded23" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Vítkovice</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="57bfe0bf-9cb6-4a15-ade6-574a5d27bdf8" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>517206020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="644a40b9-cddd-459a-8dba-05d3cb9c722d" uuid="644a40b9-cddd-459a-8dba-05d3cb9c722d" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="2f91ff6a-d99f-46af-b7c5-2583c3f4b723" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ArcelorMittal Ostrava a. s.</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="355a2a13-6419-4915-bce5-cb37e341e2f5" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ArcelorMittal</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="d9acfc23-f791-48f9-a6b7-eb4fdd9a2f2f" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>517206040</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ff5b6542-772a-4f91-84c1-2c39bd660151" uuid="ff5b6542-772a-4f91-84c1-2c39bd660151" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="1a6594f9-292d-47d7-a580-395b0a88605e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Všeodborový archiv Českomoravské konfederace odborových svazů</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b39cac5a-44f9-4214-950f-2a969ab7aed1" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Všeodborový archiv</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="09770d23-1ddb-482e-a0f0-1639be961d1e" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>521100010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="f9d334fd-fd98-4f9e-b88e-42740d1c6773" uuid="f9d334fd-fd98-4f9e-b88e-42740d1c6773" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="10f65df3-51bc-4e42-8a0f-580fcf4f01da" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv České strany sociálně demokratické</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ae63f396-7113-41c6-be80-905973def2cc" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ČSSD</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="dc0b4222-4552-420b-8608-9c73b07cb694" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>521100020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ca2fcd2a-f4d2-460d-9c06-e8000bc7e070" uuid="ca2fcd2a-f4d2-460d-9c06-e8000bc7e070" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="c3df76c3-3ab1-41b5-9864-645039b344b3" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Židovského muzea v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="99ff63e6-82d7-410b-927e-4636188fa509" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ŽM v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="7fe06358-e38f-4cee-a50e-9c12f617b29a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>521100030</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="574efc6e-b581-4c8e-833c-f04bf6e80cdb" uuid="574efc6e-b581-4c8e-833c-f04bf6e80cdb" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="c27e7b42-7d5e-455e-b628-7dce0d285ec4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Centra hasičského hnutí Přibyslav</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e1b26fb0-ae24-4d98-9ada-e70dfd7668b8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv CHH Přibyslav</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ac163e52-35f6-4094-97eb-fa98ce5a5bb6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>526101010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="6ea5bf19-4533-4fed-9c0f-3787bd302eb9" uuid="6ea5bf19-4533-4fed-9c0f-3787bd302eb9" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="7cd9d9be-550e-43cf-bb60-076d42806fb0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Biskupství brněnského</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="85f4f805-0ec9-493d-962a-4b291222574e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ABB</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1ce504eb-0cd0-489d-8b7d-977c21d29b8b" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>536000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="451dd601-78b9-4ec3-9f2d-e9cb939a8a75" uuid="451dd601-78b9-4ec3-9f2d-e9cb939a8a75" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="4c3e8cc2-c520-4bae-8d5c-173968ccc55c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Kanceláře prezidenta republiky</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="f18d4eee-b53c-419e-8aa0-95c590567f77" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv KPR</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="31f9a0d4-c79a-45be-bfe5-91bf2ba00335" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="8416538c-90df-4758-9b04-53d7f99e4d99" uuid="8416538c-90df-4758-9b04-53d7f99e4d99" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="263ca170-5f8c-433b-8837-3ba83447cd46" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Pražského hradu</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="125307ce-4f50-4769-b2d4-c05b6cf04b39" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="16208eaa-e391-453f-8d47-f20ea9a2e394" uuid="16208eaa-e391-453f-8d47-f20ea9a2e394" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="01b13238-7fdb-4df4-810e-3a7e88dcaa03" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Odbor administrativy a zpracování informací MZV - Archiv MZV</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b170e9bd-69aa-4149-9d16-7335f4ee1502" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv MZV Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="bdff67e2-984e-4729-ae9c-5d64a44cffc0" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000030</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="7048bede-352d-4e2f-9e2f-6191c2b7e5bd" uuid="7048bede-352d-4e2f-9e2f-6191c2b7e5bd" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="26fcebb5-a036-44ba-94fe-a97d0486b410" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Vojenský historický archiv</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="34da0e5a-8624-4047-9715-9dd370ae0939" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>VHA Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="971083ca-695a-44bc-be8e-d34a57045471" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000040</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="62eec208-29b5-44f0-af64-a705213efb3c" uuid="62eec208-29b5-44f0-af64-a705213efb3c" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="24afe05c-6839-4439-bb7e-db58da7e6c3e" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Českého rozhlasu</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="147651ca-0b6c-4cfa-a97e-48b23abd270f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ČRO</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="0c0dbdc0-aac7-46dc-ab1a-9c1bfdac01f6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000050</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9923ea86-57de-4828-b4f3-fe442a0c2b68" uuid="9923ea86-57de-4828-b4f3-fe442a0c2b68" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="555304a3-09b0-45ef-b723-4bef9ad64612" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv České televize</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ee3ed283-4bb5-4f4b-87a2-27a9b3153750" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000060</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ff4d292a-4574-4dc7-8ae5-387832e4f8db" uuid="ff4d292a-4574-4dc7-8ae5-387832e4f8db" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="c7c78bab-ae16-4561-8866-9766bee24c20" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Akademie věd České republiky</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="719c68f9-223b-4d44-b1da-749ca2408290" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv AV ČR</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="dbdf277a-26c6-491d-967f-531ea3dadfd6" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000070</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="f43a45aa-23e0-4871-bbe1-c2df7870154c" uuid="f43a45aa-23e0-4871-bbe1-c2df7870154c" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="00b8f784-ba0f-4cbb-91f7-2d5e8f7cc98d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Poslanecké sněmovny</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="be007201-e17d-4efb-80ec-ef6ca391a15c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv PS</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="39c4381d-83fc-46d8-88ba-e15bef78c875" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000080</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9f6428bd-7931-4543-ae44-05958d51b130" uuid="9f6428bd-7931-4543-ae44-05958d51b130" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="0a0ca159-8985-4695-bc40-a29119f6b476" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Senátu</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e0d12bc2-e34c-469a-955c-19272890e828" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000090</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="a2e3130d-7ad4-4a9b-a84a-4bcbf1e6b92a" uuid="a2e3130d-7ad4-4a9b-a84a-4bcbf1e6b92a" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="02981e98-5d47-4b7a-b191-2dbe9e9f7ae8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv České národní banky</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="369d0191-3c12-4e04-9af5-3a6e446ac05b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ČNB</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="70654a97-9d5a-41ec-a97d-fa01ec4f4638" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000100</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9e4ef863-969c-4dfc-ab82-4a2a980a8e8d" uuid="9e4ef863-969c-4dfc-ab82-4a2a980a8e8d" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="eab51b66-61fa-4790-aa93-8bb156ee14e6" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Ústřední archiv zeměměřictví a katastru</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="aed9f3f1-511b-4643-b7ab-59d3f36956bd" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ÚA ZAK Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="fc46f0a3-2cc1-4a48-a02d-4f3ac156510d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000110</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="de5924a1-e2fb-47c4-b1b7-e29f7715c794" uuid="de5924a1-e2fb-47c4-b1b7-e29f7715c794" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="9f067538-c584-4abe-91e6-c427f75c85e4" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Národní filmový archiv</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="3690f727-e3c0-4ec4-9c63-f291491eb86f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>NFA Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="0ca270d8-a9ae-431a-ab32-8ab229f5de23" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000130</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="c24d82c2-ed61-4e55-9fa8-57623b46f8b6" uuid="c24d82c2-ed61-4e55-9fa8-57623b46f8b6" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="2585d6d4-d302-4d0a-b2e0-f8301495a116" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národního bezpečnostního úřadu - specializovaný</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="539f8edc-6c5e-477f-8910-a06c2f1d712c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ANBU-S</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="210ce962-3567-4af7-98cb-f9adbf49c296" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>610000140</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="fe5fccc4-9fb1-43ec-9a89-4ef017c7b8a9" uuid="fe5fccc4-9fb1-43ec-9a89-4ef017c7b8a9" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="2f67c367-f2a2-4f21-b437-c453014d5944" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Ústav dějin Univerzity Karlovy – Archiv Univerzity Karlovy</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e0f8903b-910d-4168-8e6f-766a40c7a4f9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv UK Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b2e46f45-0a7e-47f1-b729-f213cd887f18" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="dceb7449-711d-4911-8248-626dbd6cc658" uuid="dceb7449-711d-4911-8248-626dbd6cc658" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="c962b25f-0159-43ba-84ba-b355a98c405c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Českého vysokého učení technického v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="1a6dff36-a84e-4674-b7d1-a4fcb4b6f83d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ČVUT Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="c8decbf0-2ac5-481a-b2d1-cdc38f6b5738" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e8b6df17-ec75-4767-b92c-f29f38d4a9c5" uuid="e8b6df17-ec75-4767-b92c-f29f38d4a9c5" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="e7bfc5fb-03f4-47b5-84d9-b387f5fd5a4c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Masarykovy univerzity v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="588e287d-71bd-4a51-bc67-8dc753c88e29" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv AMU Brno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="79b22a0d-c2c5-4864-8b30-1489151f8f00" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000030</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="21eff654-9e88-477e-8e25-d5ec1bbee7f6" uuid="21eff654-9e88-477e-8e25-d5ec1bbee7f6" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="8c0e82df-9395-49da-95f4-e2e5969d5061" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Vysokého učení technického v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="677dda64-82f2-43ab-ad00-e17fbe32e81a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv VUT Brno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="1e59a11b-2fc8-4447-8ff6-56053025620d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000040</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="48d63566-44ce-425e-870c-0255573f3788" uuid="48d63566-44ce-425e-870c-0255573f3788" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="0542dea6-df60-4a4f-9279-d90e938aa143" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Univerzity Hradec Králové</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="76d9962a-aafb-4c38-a094-ab96309a4b02" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv UHK</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="091dba56-0913-498a-b60f-573d7350b46b" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000050</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="fd747aeb-21ac-4141-b3e7-67765cb200da" uuid="fd747aeb-21ac-4141-b3e7-67765cb200da" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="39d1390b-eec7-41d9-83c1-427d6c791e5a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Univerzity Palackého v Olomouci</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="e1e4bc33-fd05-4296-8c36-83f39373bbdc" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv UP Olomouc</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="951bc3d4-683b-4643-b3cb-0bd11996598c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000060</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="f163517e-2a83-4cc3-b84f-3a69a15d2d39" uuid="f163517e-2a83-4cc3-b84f-3a69a15d2d39" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="938a8f41-749d-455e-90ae-69b711fad9b9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Akademie výtvarných umění v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="8abeda7d-20a3-468f-b20b-2f9f54d5976b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv AVU Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b20d8432-8dc8-4bb5-9ae2-62457a737f50" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000070</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="9ad6c9ce-b07b-4e37-8662-2bf091f97375" uuid="9ad6c9ce-b07b-4e37-8662-2bf091f97375" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="f68113e1-6426-4cf7-ad86-367f12edbe1d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Vysoké školy báňské - Technické univerzity Ostrava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4cc9d641-72b6-4f5b-8fdb-322b5c3041db" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv VŠB Ostrava</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="82d7f13d-30d4-42fc-bfa6-7381e8d4b7ed" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000080</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="a0a9af28-3460-44a2-a916-3aa1385d2bf3" uuid="a0a9af28-3460-44a2-a916-3aa1385d2bf3" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="4a7ba4e2-4891-44e0-b35a-ebfc96697701" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Slezské univerzity v Opavě</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ffa6a655-75be-4936-b0b1-3177b1d6e2ae" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv SU v Opavě</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="90baca63-0d4d-49ba-a803-7e1f8aa16601" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000090</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="7a7b7d01-b450-4816-9940-bfc1333c4509" uuid="7a7b7d01-b450-4816-9940-bfc1333c4509" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="b5ede926-166c-4d7c-bddc-83bf35f419c9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Mendelovy univerzity v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="ba61ac19-2a7c-45e2-957f-03923f5e04a8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv MENDELU</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="285d2940-92ac-44a6-b4ed-2850d2547a0a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000100</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="553be9d2-ccc1-40fb-a8e6-176cc5b3a4cc" uuid="553be9d2-ccc1-40fb-a8e6-176cc5b3a4cc" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="26c2812e-b961-497f-ab90-6e44187f1199" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Veterinární a farmaceutické univerzity Brno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="3756a28e-0fe6-4567-b73f-e0cc1263c673" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>AVFU Brno</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="4974fe8f-14bb-4b73-978b-6c73573f8313" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>620000110</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0fc3fa38-b5f0-44f6-a0ce-462a2a614c2d" uuid="0fc3fa38-b5f0-44f6-a0ce-462a2a614c2d" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="2448bd2a-fcad-454f-ad4f-b7f017fc4552" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národního muzea</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="5d0d0560-4dab-4a11-972b-2bcc74aa5174" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>ANM</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="756a9c52-17fe-4b54-a556-22fae400cc77" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ee1a3cbb-f6b0-412e-860f-65e3930afa6f" uuid="ee1a3cbb-f6b0-412e-860f-65e3930afa6f" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="305b8cfe-a5cf-4a92-9cfa-c6840d2b7bac" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Literární archiv Památníku národního písemnictví</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="b05b556a-b54a-49d3-beea-5eac0394d28c" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>LA PNP Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ca408269-bb5a-42fa-bab8-b03b0f1ff4eb" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="e9ceb79e-7679-4741-89f6-8834fa231e46" uuid="e9ceb79e-7679-4741-89f6-8834fa231e46" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="776f89c8-cec4-4cc5-a69f-814b65e1f9cc" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národní galerie</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="0c39e6fe-568e-4037-8ccd-cbf922eacaa5" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv NG Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="74eebeb3-bed3-42e4-9e5a-7bb93f0dc320" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000040</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="886df522-5987-4191-a528-445ce8fb199b" uuid="886df522-5987-4191-a528-445ce8fb199b" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="28fc2cfa-b4d7-4e64-a1e1-4e165aa8b11f" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národní knihovny</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4f290b45-dc5c-4a50-b986-5b38174dd2c0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv NK Praha</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="493e881f-2eb0-4fd1-882b-09ffd84ec7f7" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000050</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1d4013f3-a6af-4425-b9fe-b50483e5a785" uuid="1d4013f3-a6af-4425-b9fe-b50483e5a785" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="a25b8439-ef43-4269-b856-8b3da58b8e4a" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národního technického muzea</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="5abb1447-89b3-490b-bb25-0f4561a4f1fb" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv NTM v Praze</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="0e7cf67e-3308-4702-8263-fa4f4262a72d" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000060</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="35fd090b-3186-4f11-88a6-951255c8557d" uuid="35fd090b-3186-4f11-88a6-951255c8557d" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="78fa2381-93d2-42a1-be8b-c8501b14408d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Moravské galerie v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="4281abe7-deb7-44c0-b969-5c4a12337674" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv MG v Brně</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="2bcc2bda-8c75-4ef7-b1bc-dbeef3b5090c" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>630000070</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="88617219-51c2-4941-9426-39858e5a0769" uuid="88617219-51c2-4941-9426-39858e5a0769" t="HEALTH_AND_EDU"/>
+      <frgs>
+        <frg fid="d567637f-fbf8-455c-9b74-1a939710e12d" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv DIAMO</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="9a6be99b-c36a-44f5-b3c6-6568df6c4214" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>640000010</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="211e6b1d-99b7-4664-a1b8-1ae658d6fc78" uuid="211e6b1d-99b7-4664-a1b8-1ae658d6fc78" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="ee884f89-3859-4d8f-87d9-bfb2c1cf37f0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Bezpečnostní informační služby</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="192a214a-99f2-4fdb-a3fd-2477b86f13c7" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv BIS</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="cca09452-f4d6-4946-9433-347029a579d3" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000020</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="0756fe68-3ff1-49ec-a7a1-c6a7eac7d662" uuid="0756fe68-3ff1-49ec-a7a1-c6a7eac7d662" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="dd58a5bc-da00-4858-bbd1-2dfed7749432" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Úřadu pro zahraniční styky a informace</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="55046c21-2762-44e6-9245-4ce56722cba8" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv ÚZI</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="2f481809-68f2-4c18-ab1c-cde8f565b695" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000030</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="60071f26-a5ea-49bd-bd1d-7ddf2d43d68c" uuid="60071f26-a5ea-49bd-bd1d-7ddf2d43d68c" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="0c075459-0a5d-42a0-9de2-174bb560e949" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Národního bezpečnostního úřadu</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="8f11543a-7e61-44da-94c8-c70712d11b3b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv NBÚ</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="5ddd798d-4171-468a-b1c5-0f6c058e1f51" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000040</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="a14e5d7b-83fe-46e8-a81b-e3fd513073cc" uuid="a14e5d7b-83fe-46e8-a81b-e3fd513073cc" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="63f5cdac-5116-4146-970c-853479751fda" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Bezpečnostní archiv Vojenského zpravodajství</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="6fa33908-c161-4be5-9b08-41b5b4ec68b0" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>BA Vojen.zpravodajství</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="ab1836d7-be29-4ec2-b50d-3044f4be1e73" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000050</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="ee700a25-6195-4a80-b2a5-c43b691b36ca" uuid="ee700a25-6195-4a80-b2a5-c43b691b36ca" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="a5c86b82-9c52-4b65-bd73-40b62db63a7b" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Policie České republiky</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="a07b4f58-556d-423e-aebc-37529f2d25a9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>BAP ČR</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="b06f091d-d71c-436e-b049-b01410993913" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000060</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+    <ap>
+      <ape id="1ec5ea44-cf34-4652-a70c-9d72ec2a9aa5" uuid="1ec5ea44-cf34-4652-a70c-9d72ec2a9aa5" t="PUBLIC_ADMINISTRATION"/>
+      <frgs>
+        <frg fid="715550e8-4f76-4f8a-ae62-31a4111f61a2" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv Ministerstva vnitra ČR</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+        </frg>
+        <frg fid="76dd408d-79bc-42f0-b8f1-3cf50f2af4e9" t="PT_NAME">
+          <ds t="NM_MAIN">
+            <v>Archiv MV</v>
+          </ds>
+          <de t="NM_LANG" s="LNG_cze"/>
+          <de t="NM_TYPE" s="NT_ACRONYM"/>
+        </frg>
+        <frg fid="64e4367e-f796-408f-84b5-7b580d68b28a" t="PT_IDENT">
+          <de t="IDN_TYPE" s="ARCHNUM"/>
+          <ds t="IDN_VALUE">
+            <v>700000070</v>
+          </ds>
+          <db t="IDN_VERIFIED" v="true"/>
+        </frg>
+      </frgs>
+    </ap>
+  </aps>
+  <inss>
+    <inst c="000000010" paid="b50776b9-8d76-4688-ad15-9358b59d057b" t="DEFAULT"/>
+    <inst c="100000010" paid="9f783015-b9af-42fc-bff4-11ff57cdb072" t="DEFAULT"/>
+    <inst c="100000020" paid="c4b13fa0-89a2-44a2-954f-e281934c3dcf" t="DEFAULT"/>
+    <inst c="211000010" paid="e1ad171f-aee0-4e6e-b692-8bfb09f44eaf" t="DEFAULT"/>
+    <inst c="212000010" paid="921ee434-ef97-4b65-86d9-22313513d43b" t="DEFAULT"/>
+    <inst c="213000010" paid="c0471c34-4dbd-4fa0-8929-ccfe8e8cb325" t="DEFAULT"/>
+    <inst c="214000010" paid="252edbbc-f893-4083-8702-c0e1432dbe89" t="DEFAULT"/>
+    <inst c="215000010" paid="3d392a72-6ad4-4fa3-a237-e5a4d7a7f91d" t="DEFAULT"/>
+    <inst c="216000010" paid="32eff1a7-4a2f-4462-a6de-29c9fa39ead5" t="DEFAULT"/>
+    <inst c="217000010" paid="1a381845-785f-4cb2-8290-fa1e0c54e1bd" t="DEFAULT"/>
+    <inst c="221201010" paid="9668ae9f-e3fa-402e-9817-d1fcd730110e" t="DEFAULT"/>
+    <inst c="221202010" paid="0d158984-9b53-4660-b08b-f23fdf39e764" t="DEFAULT"/>
+    <inst c="221203010" paid="d865cc77-fbb3-4224-9eee-1a8f2ebcea29" t="DEFAULT"/>
+    <inst c="221204010" paid="64364a53-fa2c-4e28-bef3-8693b00f6776" t="DEFAULT"/>
+    <inst c="221205010" paid="32b92f0c-046f-4d7d-b04e-6cee2862ee99" t="DEFAULT"/>
+    <inst c="221206010" paid="8f8c422f-deda-4445-b640-931c2d6b116a" t="DEFAULT"/>
+    <inst c="221207010" paid="08b9e050-4821-41eb-98f8-160022099243" t="DEFAULT"/>
+    <inst c="221208010" paid="21b0f0da-9113-4146-bc85-18bbd5df17c0" t="DEFAULT"/>
+    <inst c="221209010" paid="2dab13a8-437d-49ed-9e04-37433790a8d3" t="DEFAULT"/>
+    <inst c="221210010" paid="b1b0d00b-233e-497b-b7ea-66343a1600d6" t="DEFAULT"/>
+    <inst c="221211010" paid="2d2ef1c1-f137-49a0-b9cf-a800b58c530d" t="DEFAULT"/>
+    <inst c="221212010" paid="8b8ae293-2f56-426f-89d5-0c98ac2ba1ea" t="DEFAULT"/>
+    <inst c="222101010" paid="9c9365db-435a-4b4b-a2d2-73862fd686d5" t="DEFAULT"/>
+    <inst c="222102010" paid="e52ca1a4-b155-40c5-a2d9-130173832f96" t="DEFAULT"/>
+    <inst c="222103010" paid="290efa39-f5d3-4bbe-a4e2-d7e246a99af5" t="DEFAULT"/>
+    <inst c="222104010" paid="90aae591-dcb9-4e53-9c28-2971121009ec" t="DEFAULT"/>
+    <inst c="222105010" paid="d037558f-8715-4ac5-9908-e40efb5d61ba" t="DEFAULT"/>
+    <inst c="222106010" paid="18ed12b1-e272-4721-a86c-c50a6eb60949" t="DEFAULT"/>
+    <inst c="222107010" paid="68a37692-15c5-4c11-afb2-b9b91d850258" t="DEFAULT"/>
+    <inst c="223101010" paid="5c37b075-f144-4cd6-8025-dc3a11ed393b" t="DEFAULT"/>
+    <inst c="223102010" paid="69328285-debe-4f87-bc8f-bdd28905e322" t="DEFAULT"/>
+    <inst c="223104010" paid="e4015348-52fa-4f41-92ea-df72f6a9833f" t="DEFAULT"/>
+    <inst c="223105010" paid="d0abb221-fb6f-4acb-b2a0-a57799fe7d3c" t="DEFAULT"/>
+    <inst c="223106010" paid="4e81142a-5b99-4c17-a27a-687f578f6016" t="DEFAULT"/>
+    <inst c="223107010" paid="46d706f2-7fe1-4e63-8ab3-f8152166011a" t="DEFAULT"/>
+    <inst c="223201010" paid="4bb423a4-c930-4060-91d1-13934f15fb42" t="DEFAULT"/>
+    <inst c="223202010" paid="079f9a24-707c-473b-bedc-721a0ff64372" t="DEFAULT"/>
+    <inst c="223203010" paid="3b0c1dd8-3fac-4d75-990f-4f2ee31e0906" t="DEFAULT"/>
+    <inst c="224101010" paid="d7fafd5e-92d7-47e7-b7f4-348a36827ca3" t="DEFAULT"/>
+    <inst c="224102010" paid="8fa7fe8e-6793-4c09-a8d0-f44ddfb5115d" t="DEFAULT"/>
+    <inst c="224103010" paid="0f60c827-b614-40c8-b2e7-dec00e77d291" t="DEFAULT"/>
+    <inst c="224104010" paid="5d3eda10-4c1d-4333-b842-5fa4b0766ceb" t="DEFAULT"/>
+    <inst c="224105010" paid="3e537690-41ff-41a3-aac9-5fd0e7c955b8" t="DEFAULT"/>
+    <inst c="224106010" paid="9061b7f2-4bdd-4cc2-9677-6133539be02e" t="DEFAULT"/>
+    <inst c="224201010" paid="dafd0a3e-e1b4-438f-9775-e4cb742c02dd" t="DEFAULT"/>
+    <inst c="224202010" paid="28c86428-cffe-40de-bab9-c4148c964000" t="DEFAULT"/>
+    <inst c="224203010" paid="77bd7659-bc7f-482f-82e5-04c933948116" t="DEFAULT"/>
+    <inst c="224204010" paid="1a1f10dc-d3e7-493a-95da-3a0eda108a61" t="DEFAULT"/>
+    <inst c="225101010" paid="8a3f1154-74af-4144-a3c1-cecba7329bd8" t="DEFAULT"/>
+    <inst c="225102010" paid="f9c1aa26-830f-4ad1-ae92-575e932c7c1c" t="DEFAULT"/>
+    <inst c="225103010" paid="2e8b81ae-830b-4d2e-9f22-50fccf9caeab" t="DEFAULT"/>
+    <inst c="225104010" paid="0c1c929f-9479-4af9-9834-675751a9f37a" t="DEFAULT"/>
+    <inst c="225105010" paid="d84a5237-4ac0-4cc1-85b1-8188e1ae705a" t="DEFAULT"/>
+    <inst c="225201010" paid="48c5571b-dbf5-48e5-b615-5cf7cef71489" t="DEFAULT"/>
+    <inst c="225202010" paid="0db5911a-7718-4465-9807-b4ac537dfe20" t="DEFAULT"/>
+    <inst c="225203010" paid="19c88d80-2946-4093-901a-1949f53746af" t="DEFAULT"/>
+    <inst c="225204010" paid="63ec306f-df57-4db4-b0c7-da43b0323f26" t="DEFAULT"/>
+    <inst c="226101010" paid="7497d383-dec5-44ce-8362-bf3932ebcde5" t="DEFAULT"/>
+    <inst c="226102010" paid="9b468443-026c-44c6-8c6f-00f0ce1e59cc" t="DEFAULT"/>
+    <inst c="226103010" paid="8def92e9-7788-4d6c-a6e2-aebe0a0155c3" t="DEFAULT"/>
+    <inst c="226104010" paid="134eba54-096d-4279-9469-a987b7f44eec" t="DEFAULT"/>
+    <inst c="226105010" paid="e0d15f0c-f383-4b2f-b9f4-9daf288c6cda" t="DEFAULT"/>
+    <inst c="226201010" paid="96c7c9a4-0a0c-4a9c-af97-6e09a51e0ceb" t="DEFAULT"/>
+    <inst c="226203010" paid="a3c6f569-4a57-4871-8697-9767831451c0" t="DEFAULT"/>
+    <inst c="226204010" paid="2ca2e335-387c-4e6a-a9b1-5e08ff48f4d5" t="DEFAULT"/>
+    <inst c="226205010" paid="95b1d4ab-4419-4a86-a28f-25fe52572c1f" t="DEFAULT"/>
+    <inst c="226206010" paid="afea7996-b878-428d-839f-4e7b4a1c4774" t="DEFAULT"/>
+    <inst c="226207010" paid="fb6e5fa7-8baa-4922-8a25-b5c45ca2eeca" t="DEFAULT"/>
+    <inst c="226301010" paid="68243149-e5d2-440d-9c6e-2f93baa015c2" t="DEFAULT"/>
+    <inst c="226302010" paid="0dd05a49-fdcf-4c63-8af1-8889b7a969c8" t="DEFAULT"/>
+    <inst c="226303010" paid="d97deea9-49e7-45f3-917d-ad7a14e721e6" t="DEFAULT"/>
+    <inst c="226304010" paid="2ecebed8-aae6-4981-a423-b15f4dcffe17" t="DEFAULT"/>
+    <inst c="227101010" paid="47d8bfed-8ebe-4e92-a351-82c04a9cd359" t="DEFAULT"/>
+    <inst c="227102010" paid="d4b0e75f-2d69-4e70-b3c7-0038a992e91e" t="DEFAULT"/>
+    <inst c="227103010" paid="c52330bd-3faa-4fed-9dcc-70185ccbd805" t="DEFAULT"/>
+    <inst c="227104010" paid="65d82539-3c69-4b9b-8be1-f2482a3bbc13" t="DEFAULT"/>
+    <inst c="227105010" paid="0d549f67-6861-4fac-b2b6-3b4e68016997" t="DEFAULT"/>
+    <inst c="227201010" paid="1b3efb79-bdad-4a1a-a6c6-16b56e949dcc" t="DEFAULT"/>
+    <inst c="227202010" paid="d2218aa2-c114-4bf7-af36-61736df2b689" t="DEFAULT"/>
+    <inst c="227203010" paid="c1b00bfb-65db-4c39-8f4a-e0f93c0c5d79" t="DEFAULT"/>
+    <inst c="227204010" paid="ba4772f7-e4f7-4430-8a9c-9a13fe377ed5" t="DEFAULT"/>
+    <inst c="227205010" paid="5fa204fe-490c-430e-b05a-202c283bdfc7" t="DEFAULT"/>
+    <inst c="321100010" paid="f6a50fd5-d939-4445-8317-eb4ff3b46f9c" t="DEFAULT"/>
+    <inst c="323103010" paid="e211d416-3d04-4fae-8225-0eb0e722e24b" t="DEFAULT"/>
+    <inst c="324107010" paid="2bb1d13a-3a61-4d42-b395-bf10048ff97b" t="DEFAULT"/>
+    <inst c="326202010" paid="c99dd0e7-e473-43da-8228-fc8607606f1b" t="DEFAULT"/>
+    <inst c="327206010" paid="38762000-44c2-4f19-98ef-7a2335aa68d5" t="DEFAULT"/>
+    <inst c="511207010" paid="84df4233-2d2b-4f66-9c95-47a7d55f1883" t="DEFAULT"/>
+    <inst c="513103010" paid="01629fda-572a-4a18-8001-301c318fa7bc" t="DEFAULT"/>
+    <inst c="513203010" paid="1f3979e5-dccd-426f-87ca-ffedea5b6816" t="DEFAULT"/>
+    <inst c="517206010" paid="295416a7-06bc-47dc-a19e-487c5dd469a9" t="DEFAULT"/>
+    <inst c="517206020" paid="3410a550-21eb-40d5-90c4-cc3f8b0b3091" t="DEFAULT"/>
+    <inst c="517206040" paid="644a40b9-cddd-459a-8dba-05d3cb9c722d" t="DEFAULT"/>
+    <inst c="521100010" paid="ff5b6542-772a-4f91-84c1-2c39bd660151" t="DEFAULT"/>
+    <inst c="521100020" paid="f9d334fd-fd98-4f9e-b88e-42740d1c6773" t="DEFAULT"/>
+    <inst c="521100030" paid="ca2fcd2a-f4d2-460d-9c06-e8000bc7e070" t="DEFAULT"/>
+    <inst c="526101010" paid="574efc6e-b581-4c8e-833c-f04bf6e80cdb" t="DEFAULT"/>
+    <inst c="536000010" paid="6ea5bf19-4533-4fed-9c0f-3787bd302eb9" t="DEFAULT"/>
+    <inst c="610000010" paid="451dd601-78b9-4ec3-9f2d-e9cb939a8a75" t="DEFAULT"/>
+    <inst c="610000020" paid="8416538c-90df-4758-9b04-53d7f99e4d99" t="DEFAULT"/>
+    <inst c="610000030" paid="16208eaa-e391-453f-8d47-f20ea9a2e394" t="DEFAULT"/>
+    <inst c="610000040" paid="7048bede-352d-4e2f-9e2f-6191c2b7e5bd" t="DEFAULT"/>
+    <inst c="610000050" paid="62eec208-29b5-44f0-af64-a705213efb3c" t="DEFAULT"/>
+    <inst c="610000060" paid="9923ea86-57de-4828-b4f3-fe442a0c2b68" t="DEFAULT"/>
+    <inst c="610000070" paid="ff4d292a-4574-4dc7-8ae5-387832e4f8db" t="DEFAULT"/>
+    <inst c="610000080" paid="f43a45aa-23e0-4871-bbe1-c2df7870154c" t="DEFAULT"/>
+    <inst c="610000090" paid="9f6428bd-7931-4543-ae44-05958d51b130" t="DEFAULT"/>
+    <inst c="610000100" paid="a2e3130d-7ad4-4a9b-a84a-4bcbf1e6b92a" t="DEFAULT"/>
+    <inst c="610000110" paid="9e4ef863-969c-4dfc-ab82-4a2a980a8e8d" t="DEFAULT"/>
+    <inst c="610000130" paid="de5924a1-e2fb-47c4-b1b7-e29f7715c794" t="DEFAULT"/>
+    <inst c="610000140" paid="c24d82c2-ed61-4e55-9fa8-57623b46f8b6" t="DEFAULT"/>
+    <inst c="620000010" paid="fe5fccc4-9fb1-43ec-9a89-4ef017c7b8a9" t="DEFAULT"/>
+    <inst c="620000020" paid="dceb7449-711d-4911-8248-626dbd6cc658" t="DEFAULT"/>
+    <inst c="620000030" paid="e8b6df17-ec75-4767-b92c-f29f38d4a9c5" t="DEFAULT"/>
+    <inst c="620000040" paid="21eff654-9e88-477e-8e25-d5ec1bbee7f6" t="DEFAULT"/>
+    <inst c="620000050" paid="48d63566-44ce-425e-870c-0255573f3788" t="DEFAULT"/>
+    <inst c="620000060" paid="fd747aeb-21ac-4141-b3e7-67765cb200da" t="DEFAULT"/>
+    <inst c="620000070" paid="f163517e-2a83-4cc3-b84f-3a69a15d2d39" t="DEFAULT"/>
+    <inst c="620000080" paid="9ad6c9ce-b07b-4e37-8662-2bf091f97375" t="DEFAULT"/>
+    <inst c="620000090" paid="a0a9af28-3460-44a2-a916-3aa1385d2bf3" t="DEFAULT"/>
+    <inst c="620000100" paid="7a7b7d01-b450-4816-9940-bfc1333c4509" t="DEFAULT"/>
+    <inst c="620000110" paid="553be9d2-ccc1-40fb-a8e6-176cc5b3a4cc" t="DEFAULT"/>
+    <inst c="630000010" paid="0fc3fa38-b5f0-44f6-a0ce-462a2a614c2d" t="DEFAULT"/>
+    <inst c="630000020" paid="ee1a3cbb-f6b0-412e-860f-65e3930afa6f" t="DEFAULT"/>
+    <inst c="630000040" paid="e9ceb79e-7679-4741-89f6-8834fa231e46" t="DEFAULT"/>
+    <inst c="630000050" paid="886df522-5987-4191-a528-445ce8fb199b" t="DEFAULT"/>
+    <inst c="630000060" paid="1d4013f3-a6af-4425-b9fe-b50483e5a785" t="DEFAULT"/>
+    <inst c="630000070" paid="35fd090b-3186-4f11-88a6-951255c8557d" t="DEFAULT"/>
+    <inst c="640000010" paid="88617219-51c2-4941-9426-39858e5a0769" t="DEFAULT"/>
+    <inst c="700000020" paid="211e6b1d-99b7-4664-a1b8-1ae658d6fc78" t="DEFAULT"/>
+    <inst c="700000030" paid="0756fe68-3ff1-49ec-a7a1-c6a7eac7d662" t="DEFAULT"/>
+    <inst c="700000040" paid="60071f26-a5ea-49bd-bd1d-7ddf2d43d68c" t="DEFAULT"/>
+    <inst c="700000050" paid="a14e5d7b-83fe-46e8-a81b-e3fd513073cc" t="DEFAULT"/>
+    <inst c="700000060" paid="ee700a25-6195-4a80-b2a5-c43b691b36ca" t="DEFAULT"/>
+    <inst c="700000070" paid="1ec5ea44-cf34-4652-a70c-9d72ec2a9aa5" t="DEFAULT"/>
+  </inss>
+</ns2:edx>
