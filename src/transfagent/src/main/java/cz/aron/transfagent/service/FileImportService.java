@@ -25,7 +25,7 @@ public class FileImportService implements SmartLifecycle {
     private static final Logger log = LoggerFactory.getLogger(FileImportService.class);
 
     private enum DataDirs {
-    	direct, institutions, funds, archdesc, collection, faindingAids, dao
+    	direct, institutions, funds, archdesc, collection, faindingAids
     }
 
     private final StorageService storageService;
@@ -68,6 +68,14 @@ public class FileImportService implements SmartLifecycle {
     			Files.createDirectories(itemDir);
 			}
     	}
+    	Path dataPath = storageService.getDataPath();
+		if (Files.notExists(dataPath)) {
+			Files.createDirectory(dataPath);
+		}
+    	Path errorPath = storageService.getErrorPath();
+		if (Files.notExists(errorPath)) {
+			Files.createDirectory(errorPath);
+		}
     }
 
     /**
@@ -78,6 +86,9 @@ public class FileImportService implements SmartLifecycle {
     private void importFile() throws IOException {
 
     	Path inputPath = storageService.getInputPath();
+
+        var directPath = inputPath.resolve(DataDirs.direct.name());
+        processDirectFolder(directPath);
 
         var institutionsPath = inputPath.resolve(DataDirs.institutions.name());
         processInstitutionsFolder(institutionsPath);
@@ -94,11 +105,9 @@ public class FileImportService implements SmartLifecycle {
         var collectionsPath = inputPath.resolve(DataDirs.collection.name());
         processCollectionsFolder(collectionsPath);
 
-        var daoPath = inputPath.resolve(DataDirs.dao.name());
+        var daoPath = storageService.getDaoPath();
         processDaoFolder(daoPath);
 
-        var directPath = inputPath.resolve(DataDirs.direct.name());
-        processDirectFolder(directPath);
     }
 
     private void processDaoFolder(Path path) {

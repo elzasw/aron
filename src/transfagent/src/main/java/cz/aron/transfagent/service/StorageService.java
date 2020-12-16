@@ -11,36 +11,43 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class StorageService {
-	
-	private final Path inputFolder;
-	
-	private final Path dataPath;
-	
+
+	private final Path workDir;
+
 	private final Path inputPath;
-	
+
+	private final Path dataPath;
+
+	private final Path errorPath;
+
 	private final Path daoPath;
-	
+
 	private final AtomicLong counter = new AtomicLong(0);
-	
-	public StorageService(@Value("${aron.inputFolder}") String inputFolderStr, @Value("${dao.dir.path}")String daoFolderStr) {
-		this.inputFolder = Path.of(inputFolderStr);
-		this.dataPath = inputFolder.resolve("data");
-		this.inputPath = inputFolder.resolve("input");
+
+	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir.path}")String daoFolderStr) {
+		this.workDir = Path.of(workDirStr);
+		this.inputPath = workDir.resolve("input");
+		this.dataPath = workDir.resolve("data");
+		this.errorPath = workDir.resolve("error");
 		this.daoPath = Path.of(daoFolderStr);
 	}
-	
-	public Path getDataPath() {
-		return dataPath;
-	}
-	
+
 	public Path getInputPath() {
 		return inputPath;
 	}
-	
+
+	public Path getDataPath() {
+		return dataPath;
+	}
+
+	public Path getErrorPath() {
+		return errorPath;
+	}
+
 	public Path getDaoPath() {
 		return daoPath;
 	}
-	
+
 	/**
 	 * Move directory to data directory
 	 * @param sourceDir dir to move
@@ -50,8 +57,7 @@ public class StorageService {
 	public Path moveToDataDir(Path sourceDir) throws IOException {
 		return moveToDir(dataPath,sourceDir);
 	}
-	
-	
+
 	private Path moveToDir(Path targetDir, Path movedDir) throws IOException {
 		Path parentDir = targetDir.resolve(String.format("%1$tY%1$tm%1$td", new Date()));
 		Files.createDirectories(parentDir);
@@ -87,7 +93,7 @@ public class StorageService {
 	}
 
 	public Path createTempDir(String prefix) throws IOException {
-		var dailyTmpDir = inputFolder.resolve("tmp").resolve(String.format("%1$tY%1$tm%1$td", new Date()));
+		var dailyTmpDir = workDir.resolve("tmp").resolve(String.format("%1$tY%1$tm%1$td", new Date()));
 		Files.createDirectories(dailyTmpDir);		
 		var tmpDir = dailyTmpDir.resolve(prefix);
 		int count = 0;

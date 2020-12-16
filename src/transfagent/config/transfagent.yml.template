@@ -3,15 +3,12 @@
     url: jdbc:postgresql://localhost:5432/transfagent
     username: app
     password: app
-aron:
-  inputFolder: C:\Pyta\ArchivOnline\transfagent.work
-logging:
-  file: 
-    name: C:\Pyta\ArchivOnline\transfagent.work\log\transfagent.log
-  level:
-    cz: DEBUG
+
 config:
   file: C:\Pyta\ArchivOnline\aron.git\priklady\types.yaml
+
+aron:
+  workDir: C:\Pyta\ArchivOnline\transfagent.work
 
 # Parametry přístupu k jádru
 aronCore:
@@ -31,3 +28,9 @@ dao:
     path: /opt/daos
   # Pocet sekund pro novy pokus o odeslani
   sendInterval: 60
+
+logging:
+  file: 
+    name: C:\Pyta\ArchivOnline\transfagent.work\log\transfagent.log
+  level:
+    cz: DEBUG
