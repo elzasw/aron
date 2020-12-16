@@ -157,6 +157,7 @@
       </column>
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
+      <column name="last_update" type="timestamp with time zone" />
     </createTable>
 
     <createIndex indexName="idx_archival_entity_uuid" tableName="archival_entity" unique="true">

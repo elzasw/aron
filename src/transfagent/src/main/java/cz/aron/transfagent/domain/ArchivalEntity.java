@@ -1,5 +1,6 @@
 package cz.aron.transfagent.domain;
 
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -34,6 +35,9 @@ public class ArchivalEntity {
     @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
+    @JoinColumn(name = "last_update", nullable = true)
+    private ZonedDateTime lastUpdate;
+
     public Integer getId() {
         return id;
     }
@@ -65,5 +69,13 @@ public class ArchivalEntity {
     public void setApuSource(ApuSource apuSource) {
         this.apuSource = apuSource;
     }
+
+	public ZonedDateTime getLastUpdate() {
+		return lastUpdate;
+	}
+
+	public void setLastUpdate(ZonedDateTime lastUpdate) {
+		this.lastUpdate = lastUpdate;
+	}
 
 }
