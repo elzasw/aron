@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,14 +21,17 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchDesc;
+import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.Collection;
 import cz.aron.transfagent.domain.CoreQueue;
+import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
+import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CollectionRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -49,7 +54,7 @@ public class ImportArchDescService {
 
     private final ArchDescRepository archDescRepository;
 
-    private final CollectionRepository collectionRepository;
+    private final ArchivalEntityRepository archivalEntityRepository;
 
     private final CoreQueueRepository coreQueueRepository;
 
@@ -57,14 +62,14 @@ public class ImportArchDescService {
 
     public ImportArchDescService(StorageService storageService, FundRepository fundRepository,
                              ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
-                             ArchDescRepository archDescRepository, CollectionRepository collectionRepository,
+                             ArchDescRepository archDescRepository, ArchivalEntityRepository archivalEntityRepository,
                              CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate) {
         this.storageService = storageService;
         this.fundRepository = fundRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.institutionRepository = institutionRepository;
         this.archDescRepository = archDescRepository;
-        this.collectionRepository = collectionRepository;
+        this.archivalEntityRepository = archivalEntityRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
     }
@@ -128,6 +133,19 @@ public class ImportArchDescService {
             createArchDesc(fund, dataDir, dir, apusrcBuilder);
         } else {
             updateArchDesc(archDesc, dataDir, dir);
+        }
+
+        Set<String> uuids = iad.getApRefs();
+        for (String uuid : uuids) {
+        	var archivalEntity = archivalEntityRepository.findByUuid(UUID.fromString(uuid)).orElse(null);
+        	if (archivalEntity == null) {
+        		archivalEntity = new ArchivalEntity();
+        		archivalEntity.setUuid(UUID.fromString(uuid));
+            	archivalEntity.setApuSource(fund.getApuSource());
+            	archivalEntity.setStatus(EntityStatus.ACCESSIBLE);
+            	archivalEntity.setLastUpdate(ZonedDateTime.now());
+        		archivalEntityRepository.save(archivalEntity);
+        	}
         }
         return true;
     }
