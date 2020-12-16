@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
@@ -33,13 +35,16 @@ import cz.tacr.elza.schema.v2.Section;
 import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportArchDesc implements EdxItemCovertContext {
+
 	ElzaXmlReader elzaXmlReader;	
-	
+
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
-	
+
 	ContextDataProvider dataProvider;
-	
+
 	Map<Apu, Apu> apuParentMap = new HashMap<>();
+
+	final Set<String> apRefs = new HashSet<>();
 
 	private Part activePart;
 
@@ -56,7 +61,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			System.err.println("Failed to process input file: "+inputFile);
 			e.printStackTrace();
 		}
+	}
 
+	public Set<String> getApRefs() {
+		return apRefs;
 	}
 
 	private ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
@@ -67,7 +75,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		pdp.load(propPath);
 		return importArchDesc(inputFile, pdp);
 	}
-	
+
     public ApuSourceBuilder importArchDesc(Path inputFile,
 											final ContextDataProvider cdp) throws IOException, JAXBException {
 		this.dataProvider = cdp;
