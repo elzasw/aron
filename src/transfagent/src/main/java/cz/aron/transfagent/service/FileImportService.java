@@ -23,31 +23,51 @@ import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
 public class FileImportService implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(FileImportService.class);
-    
+
+    private enum DataDirs {
+    	direct, institutions, funds, archdesc, collection, faindingAids, dao
+    }
+
     private final StorageService storageService;
-        
+
     private final ImportInstitutionService importInstitutionService;
-    
+
     private final ImportFundService importFundService;
-    
+
     private final ImportDirectService importDirectService;
-    
+
     private final ImportDaoService importDaoService;
-    
+
     private final ImportArchDescService importArchDescService;
 
     private ThreadStatus status;
-    
+
     public FileImportService(StorageService storageService,
             ImportInstitutionService importInstitutionService, ImportFundService importFundService,
             ImportDirectService importDirectService, ImportDaoService importDaoService,
-            ImportArchDescService importArchDescService) {
+            ImportArchDescService importArchDescService) throws IOException {
         this.storageService = storageService;
         this.importInstitutionService = importInstitutionService;
         this.importFundService = importFundService;
         this.importDirectService = importDirectService;
         this.importDaoService = importDaoService;
         this.importArchDescService = importArchDescService;
+        initDirs();
+    }
+
+    /**
+     * Inicializace pracovních adresářů
+     * 
+     * @throws IOException
+     */
+    private void initDirs() throws IOException {
+    	Path input = storageService.getInputPath();
+    	for (DataDirs dir : DataDirs.values()) {
+    		Path itemDir = input.resolve(dir.name());
+    		if (Files.notExists(itemDir)) {
+    			Files.createDirectories(itemDir);
+			}
+    	}
     }
 
     /**
@@ -56,47 +76,31 @@ public class FileImportService implements SmartLifecycle {
      * @throws IOException
      */
     private void importFile() throws IOException {
-    	
+
     	Path inputPath = storageService.getInputPath();
-    	
-        // kontrola, zda vstupní adresář existuje
-        if (Files.notExists(inputPath)) {
-            log.error("Input folder {} not exists.", inputPath);
-            throw new RuntimeException("Input folder not exists.");
-        }
 
-        Path direct = inputPath.resolve("direct");
-
-        // kontrola, zda adresář direct existuje
-        if (Files.notExists(direct)) {
-            log.error("Direct folder in input folder {} not exists.", direct);
-            throw new RuntimeException("Direct folder in input folder not exists.");
-        }
-
-        processDirectFolder(direct);
-        
-        var institutionsPath = inputPath.resolve("institutions");
+        var institutionsPath = inputPath.resolve(DataDirs.institutions.name());
         processInstitutionsFolder(institutionsPath);
-        
-        var fundsPath = inputPath.resolve("funds");
+
+        var fundsPath = inputPath.resolve(DataDirs.funds.name());
         processFundsFolder(fundsPath);
-        
-        var findingAidsPath = inputPath.resolve("faindingAids");
+
+        var findingAidsPath = inputPath.resolve(DataDirs.faindingAids.name());
         processFindingAidsFolder(findingAidsPath);
-        
-        var archDescPath = inputPath.resolve("archdesc");
+
+        var archDescPath = inputPath.resolve(DataDirs.archdesc.name());
         processArchDescsFolder(archDescPath);
-        
-        var collectionsPath = inputPath.resolve("collections");
+
+        var collectionsPath = inputPath.resolve(DataDirs.collection.name());
         processCollectionsFolder(collectionsPath);
-        
-        var daoPath = inputPath.resolve("dao");
+
+        var daoPath = inputPath.resolve(DataDirs.dao.name());
         processDaoFolder(daoPath);
-        
-        var directPath = inputPath.resolve("direct");
+
+        var directPath = inputPath.resolve(DataDirs.direct.name());
         processDirectFolder(directPath);
     }
-    
+
     private void processDaoFolder(Path path) {
     	List<Path> dirs;
     	try {
