@@ -12,10 +12,16 @@ aron:
 
 # Parametry přístupu k jádru
 aronCore:
-  url: http://localhost:8089/ws/ft
-  user: x
-  pass: x
-  soapLogging: false
+  ft:
+    url: http://localhost:8089/ws/ft
+    user: x
+    pass: x
+    soapLogging: false
+  core:
+    url: http://localhost:8089/ws/ft
+    user: x
+    pass: x
+    soapLogging: false
 
 elza:
   url: http://localhost:8210/services/ExportService
