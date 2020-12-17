@@ -19,8 +19,12 @@ import com.lightcomp.ft.core.send.items.SimpleFile;
 import com.lightcomp.ft.core.send.items.SourceItem;
 
 import cz.aron.transfagent.config.ConfigAronCore;
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.repository.CoreQueueRepository;
+import cz.aron.transfagent.service.client.CoreAronClient;
+import cz.aron.apux._2020.UuidList;
+import cz.aron.management.v1.ApuManagementPort;
 
 @Service
 public class CoreQueueService implements SmartLifecycle {
@@ -30,14 +34,17 @@ public class CoreQueueService implements SmartLifecycle {
     private final CoreQueueRepository coreQueueRepository;
 
     private final ConfigAronCore configAronCore;
+    
+    private final CoreAronClient coreAronClient;
 
     private final StorageService storageService;
 
     private ThreadStatus status;
 
-    public CoreQueueService(CoreQueueRepository coreQueueRepository, ConfigAronCore configAronCore, StorageService storageService) {
+    public CoreQueueService(CoreQueueRepository coreQueueRepository, ConfigAronCore configAronCore, CoreAronClient coreAronClient, StorageService storageService) {
     	this.coreQueueRepository = coreQueueRepository;
     	this.configAronCore = configAronCore;
+    	this.coreAronClient = coreAronClient; 
     	this.storageService = storageService;
     }
 
@@ -59,37 +66,57 @@ public class CoreQueueService implements SmartLifecycle {
      */
     private void uploadData(CoreQueue item) {
 
-        // vytváření Clienta
-        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
-        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
-        Client client = FileTransfer.createClient(clientConfig);
+    	ApuSource apuSource = item.getApuSource();
 
-        List<SourceItem> sourceItems = createSourceItems(item);                
-        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
-        try {
-            client.uploadSync(request);
-        } finally {
-            client.stop();
-        }
+    	if (apuSource.isDeleted()) { // požadavek na vymazání záznamu
 
-        String errorMsg = null;
-        if (request.isCanceled()) {
-        	errorMsg = "Transfer to server canceled.";  
-        }
-        if (request.isFailed()) {
-        	errorMsg = "Transfer to server failed.";  
-        }
-        if (request.isTerminated()) {
-        	errorMsg = "Transfer to server terminated.";  
-        }
+    		UuidList uuidList = new UuidList();
+    		uuidList.getUuid().add(apuSource.getUuid().toString());
+    		ApuManagementPort apuManagementPort = coreAronClient.get();
+            try {
+            	apuManagementPort.deleteApuSources(uuidList);
+            } catch (Exception e) {
+	        	item.setErrorMessage(e.getMessage());
+	        	coreQueueRepository.save(item);
+                log.error("Error deleting apusrc.", e);
+                throw new IllegalStateException(e);
+            }
+	        log.info("Deleted apusrc={}, type={}", apuSource.getUuid(), apuSource.getSourceType());
 
-        if (!StringUtils.isBlank(errorMsg)) {
-        	item.setErrorMessage(errorMsg);
-        	coreQueueRepository.save(item);
-        	log.error(errorMsg);
-            throw new IllegalStateException(errorMsg);
-        }
-        log.info("Uploaded apusrc={}, type={}",item.getApuSource().getUuid().toString(),item.getApuSource().getSourceType());
+    	} else {	
+
+	        // vytváření Clienta
+	        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
+	        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
+	        Client client = FileTransfer.createClient(clientConfig);
+
+	        List<SourceItem> sourceItems = createSourceItems(item);                
+	        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
+	        try {
+	            client.uploadSync(request);
+	        } finally {
+	            client.stop();
+	        }
+
+	        String errorMsg = null;
+	        if (request.isCanceled()) {
+	        	errorMsg = "Transfer to server canceled.";  
+	        }
+	        if (request.isFailed()) {
+	        	errorMsg = "Transfer to server failed.";  
+	        }
+	        if (request.isTerminated()) {
+	        	errorMsg = "Transfer to server terminated.";  
+	        }
+
+	        if (!StringUtils.isBlank(errorMsg)) {
+	        	item.setErrorMessage(errorMsg);
+	        	coreQueueRepository.save(item);
+	        	log.error(errorMsg);
+	            throw new IllegalStateException(errorMsg);
+	        }
+	        log.info("Uploaded apusrc={}, type={}", apuSource.getUuid(), apuSource.getSourceType());
+    	}
     }
 
     private List<SourceItem> createSourceItems(CoreQueue item) {
@@ -115,16 +142,16 @@ public class CoreQueueService implements SmartLifecycle {
         }
 
         List<SourceItem> sourceItems = new ArrayList<>();        
-        SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
+        SimpleFile simpleFile = new SimpleFile(file, "apusrc-"+item.getApuSource().getUuid()+".xml");
         sourceItems.add(simpleFile);
         return sourceItems;
     }
 
     private List<SourceItem> createSourceItemsInstitution(CoreQueue item) {
     	Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
-    	Path file = dataDir.resolve("apusrc.xml");        
-        List<SourceItem> sourceItems = new ArrayList<>();        
-        SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
+    	Path file = dataDir.resolve("apusrc.xml");
+        List<SourceItem> sourceItems = new ArrayList<>();
+        SimpleFile simpleFile = new SimpleFile(file, "apusrc-"+item.getApuSource().getUuid()+".xml");
         sourceItems.add(simpleFile);
         return sourceItems;
     }
