@@ -24,9 +24,21 @@ public class FileImportService implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(FileImportService.class);
 
-    private enum DataDirs {
-    	direct, institutions, funds, archdesc, collection, faindingAids
-    }
+    final private String DIRECT_DIR = "direct";
+
+    final private String INSTITUTIONS_DIR = "institutions";
+
+    final private String FUND_DIR = "fund";
+
+    final private String ARCHDESC_DIR = "archdesc";
+
+    final private String COLLECTION_DIR = "collection";
+
+    final private String FINDINGAIDS_DIR = "findingAids";
+
+    final private String DAO_DIR = "dao";
+
+    final private String inputDirs[] = { DIRECT_DIR, INSTITUTIONS_DIR, FUND_DIR, ARCHDESC_DIR, COLLECTION_DIR, FINDINGAIDS_DIR, DAO_DIR };
 
     private final StorageService storageService;
 
@@ -61,21 +73,13 @@ public class FileImportService implements SmartLifecycle {
      * @throws IOException
      */
     private void initDirs() throws IOException {
-    	Path input = storageService.getInputPath();
-    	for (DataDirs dir : DataDirs.values()) {
-    		Path itemDir = input.resolve(dir.name());
-    		if (Files.notExists(itemDir)) {
-    			Files.createDirectories(itemDir);
-			}
+    	Path inputPath = storageService.getInputPath();
+    	for (String dir : inputDirs) {
+    		createDirIfNotExists(inputPath.resolve(dir));
     	}
-    	Path dataPath = storageService.getDataPath();
-		if (Files.notExists(dataPath)) {
-			Files.createDirectory(dataPath);
-		}
-    	Path errorPath = storageService.getErrorPath();
-		if (Files.notExists(errorPath)) {
-			Files.createDirectory(errorPath);
-		}
+    	createDirIfNotExists(storageService.getDataPath());
+    	createDirIfNotExists(storageService.getErrorPath());
+    	createDirIfNotExists(storageService.getDaoPath());
     }
 
     /**
@@ -87,89 +91,29 @@ public class FileImportService implements SmartLifecycle {
 
     	Path inputPath = storageService.getInputPath();
 
-        var directPath = inputPath.resolve(DataDirs.direct.name());
+        var directPath = inputPath.resolve(DIRECT_DIR);
         processDirectFolder(directPath);
 
-        var institutionsPath = inputPath.resolve(DataDirs.institutions.name());
+        var institutionsPath = inputPath.resolve(INSTITUTIONS_DIR);
         processInstitutionsFolder(institutionsPath);
 
-        var fundsPath = inputPath.resolve(DataDirs.funds.name());
+        var fundsPath = inputPath.resolve(FUND_DIR);
         processFundsFolder(fundsPath);
 
-        var findingAidsPath = inputPath.resolve(DataDirs.faindingAids.name());
+        var findingAidsPath = inputPath.resolve(FINDINGAIDS_DIR);
         processFindingAidsFolder(findingAidsPath);
 
-        var archDescPath = inputPath.resolve(DataDirs.archdesc.name());
+        var archDescPath = inputPath.resolve(ARCHDESC_DIR);
         processArchDescsFolder(archDescPath);
 
-        var collectionsPath = inputPath.resolve(DataDirs.collection.name());
+        var collectionsPath = inputPath.resolve(COLLECTION_DIR);
         processCollectionsFolder(collectionsPath);
 
-        var daoPath = storageService.getDaoPath();
+        var daoPath = inputPath.resolve(DAO_DIR);
         processDaoFolder(daoPath);
 
     }
 
-    private void processDaoFolder(Path path) {
-    	List<Path> dirs;
-    	try {
-			 dirs = getOrderedDirectories(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}    	
-    	for(Path dir:dirs) {    		
-    		importDaoService.processDirectory(dir);    		
-    	}
-    }
-    
-    private void processCollectionsFolder(Path path) {
-    	
-    }
-    
-    private void processArchDescsFolder(Path path) {
-    	List<Path> dirs;
-    	try {
-			 dirs = getOrderedDirectories(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-    	
-    	for(Path dir:dirs) {    		
-    		importArchDescService.processDirectory(dir);    		
-    	}
-    }
-
-    private void processFindingAidsFolder(Path path) {
-    	
-    }
-
-    private void processFundsFolder(Path path) {
-    	List<Path> dirs;
-    	try {
-			 dirs = getOrderedDirectories(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}    	
-    	for(Path dir:dirs) {    		
-    		importFundService.processDirectory(dir);    		
-    	}
-    }
-    
-    private void processInstitutionsFolder(Path path) {    	
-    	List<Path> dirs;
-    	try {
-			 dirs = getOrderedDirectories(path);
-		} catch (IOException e) {
-			throw new UncheckedIOException(e);
-		}
-    	
-    	for(Path dir:dirs) {    		
-    		if (!importInstitutionService.processDirectory(dir)) {
-    			return;
-    		}
-    	}
-    }
-    
     /**
      * Zpracování adresářů v adresáři direct
      *
@@ -183,13 +127,70 @@ public class FileImportService implements SmartLifecycle {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
-
-    	for(Path dir:dirs) {    		
+    	for (Path dir : dirs) {    		
     		if (!importDirectService.processDirectory(dir)) {
     			return;
     		}
     	}		
 	}
+
+    private void processInstitutionsFolder(Path path) {    	
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+    	for (Path dir : dirs) {    		
+    		if (!importInstitutionService.processDirectory(dir)) {
+    			return;
+    		}
+    	}
+    }
+
+    private void processFundsFolder(Path path) {
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}    	
+    	for (Path dir : dirs) {    		
+    		importFundService.processDirectory(dir);    		
+    	}
+    }
+
+    private void processFindingAidsFolder(Path path) {
+    	// TODO
+    }
+  
+    private void processArchDescsFolder(Path path) {
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+    	for (Path dir : dirs) {    		
+    		importArchDescService.processDirectory(dir);    		
+    	}
+    }
+
+    private void processCollectionsFolder(Path path) {
+    	// TODO
+    }
+
+    private void processDaoFolder(Path path) {
+    	List<Path> dirs;
+    	try {
+			 dirs = getOrderedDirectories(path);
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}    	
+    	for(Path dir:dirs) {    		
+    		importDaoService.processDirectory(dir);    		
+    	}
+    }
 
     public void run() {
         while (status == ThreadStatus.RUNNING) {
@@ -226,7 +227,13 @@ public class FileImportService implements SmartLifecycle {
     public boolean isRunning() {
         return status == ThreadStatus.RUNNING;
     }
-    
+
+    private void createDirIfNotExists(Path pathDir) throws IOException {
+		if (Files.notExists(pathDir)) {
+			Files.createDirectories(pathDir);
+		}
+    }
+
 	private List<Path> getOrderedDirectories(Path path) throws IOException {
 		try (var stream = Files.list(path)) {
 			List<Path> directories = stream.filter(f -> Files.isDirectory(f))
@@ -235,5 +242,5 @@ public class FileImportService implements SmartLifecycle {
 			return directories;
 		}
 	}
-    
+
 }
