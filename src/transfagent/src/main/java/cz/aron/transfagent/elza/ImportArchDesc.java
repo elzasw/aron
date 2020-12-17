@@ -29,6 +29,7 @@ import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
+import cz.tacr.elza.schema.v2.FundInfo;
 import cz.tacr.elza.schema.v2.Level;
 import cz.tacr.elza.schema.v2.Levels;
 import cz.tacr.elza.schema.v2.Section;
@@ -48,6 +49,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private Part activePart;
 
+	private String institutionCode; 
+
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
 		ImportArchDesc iad = new ImportArchDesc();
@@ -65,6 +68,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public Set<String> getApRefs() {
 		return apRefs;
+	}
+
+	public String getInstitutionCode() {
+		return institutionCode;
 	}
 
 	private ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
@@ -98,9 +105,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		if(sect.getLvls()==null) {
 			throw new RuntimeException("Missing levels.");
 		}
-		
+
+		// read fund info
+		FundInfo fi = sect.getFi();
+		institutionCode = fi.getIc();
+
 		Map<String, Apu> apuMap = new HashMap<>();
-		
+
 		Levels lvls = sect.getLvls();
 		for(Level lvl: lvls.getLvl()) {
 			String name = getName(sect, lvl);
