@@ -7,43 +7,24 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "aron-core")
 public class ConfigAronCore {
 
-    private String url;
+	ConfigWsdl ft;
 
-    private String user;
+	ConfigWsdl core;
 
-    private String pass;
+	public ConfigWsdl getFt() {
+		return ft;
+	}
 
-    private Boolean soapLogging;
+	public void setFt(ConfigWsdl ft) {
+		this.ft = ft;
+	}
 
-    public String getUrl() {
-        return url;
-    }
+	public ConfigWsdl getCore() {
+		return core;
+	}
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
+	public void setCore(ConfigWsdl core) {
+		this.core = core;
+	}
 
-    public String getUser() {
-        return user;
-    }
-
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPass() {
-        return pass;
-    }
-
-    public void setPass(String pass) {
-        this.pass = pass;
-    }
-
-    public Boolean getSoapLogging() {
-        return soapLogging;
-    }
-
-    public void setSoapLogging(Boolean soapLogging) {
-        this.soapLogging = soapLogging;
-    }
 }

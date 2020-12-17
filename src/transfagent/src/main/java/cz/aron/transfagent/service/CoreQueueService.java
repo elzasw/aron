@@ -60,10 +60,10 @@ public class CoreQueueService implements SmartLifecycle {
     private void uploadData(CoreQueue item) {
 
         // vytváření Clienta
-        ClientConfig clientConfig = new ClientConfig(configAronCore.getUrl());
-        clientConfig.setSoapLogging(configAronCore.getSoapLogging());
+        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
+        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
         Client client = FileTransfer.createClient(clientConfig);
-        
+
         List<SourceItem> sourceItems = createSourceItems(item);                
         UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
         try {

@@ -57,10 +57,10 @@ public class DaoSendService implements SmartLifecycle {
 		daoOpt.ifPresentOrElse(dao -> {
 			
 			// vytváření Clienta
-			ClientConfig clientConfig = new ClientConfig(configAronCore.getUrl());
-			clientConfig.setSoapLogging(configAronCore.getSoapLogging());
+			ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
+			clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
 			Client client = FileTransfer.createClient(clientConfig);
-			
+
 			var daoPath = storageService.getDataPath().resolve(dao.getDataDir());
 			UploadRequestImpl request = UploadRequestImpl.buildDaoRequest(new DirReader(daoPath), dao.getUuid().toString());
 			try {
