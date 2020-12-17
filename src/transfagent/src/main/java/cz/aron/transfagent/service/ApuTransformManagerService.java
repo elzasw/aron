@@ -32,6 +32,8 @@ public class ApuTransformManagerService implements ApuTransformManager {
 
     @Override
     public void requestApus(UuidList requestApus) {
+    	log.debug("Received WSDL Apu request");
+    	
         Validate.notNull(requestApus, "The request must not be null");
 
         List<UUID> uuids = requestApus.getUuid().stream()
@@ -52,6 +54,7 @@ public class ApuTransformManagerService implements ApuTransformManager {
                 log.info("Sent to CoreQueue {} record(s).", coreQueues.size());
             }
         }
+        log.info("Processed WSDL Apu request");
     }
 
 }

@@ -111,6 +111,9 @@ public class ImportDirectService {
 
         var daos = apux.getApus().getApu().get(0).getDaos();
         var daosUuids = daos.getUuid().stream().map(uuidStr -> UUID.fromString(uuidStr)).collect(Collectors.toList());
+        // TODO: vyresit v pripade vetsiho mnozstvi DAO (>1000)
+        // TODO: udelat samostatnou service na spravu Dao a vytvorit v ni jako metody
+        //       nebo jako ImportBase (predek pro Import...)
         var dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
 
         // pokud existuji, tak musi byt z jednoho apusrc
