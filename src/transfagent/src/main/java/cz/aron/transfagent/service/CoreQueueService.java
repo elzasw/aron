@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
@@ -29,7 +30,7 @@ public class CoreQueueService implements SmartLifecycle {
     private final CoreQueueRepository coreQueueRepository;
 
     private final ConfigAronCore configAronCore;
-    
+
     private final StorageService storageService;
 
     private ThreadStatus status;
@@ -39,7 +40,7 @@ public class CoreQueueService implements SmartLifecycle {
     	this.configAronCore = configAronCore;
     	this.storageService = storageService;
     }
-    
+
     /**
      * Odeslání dat do jádra
      */
@@ -47,12 +48,6 @@ public class CoreQueueService implements SmartLifecycle {
         if (coreQueueRepository.count() > 0) {
             CoreQueue item = coreQueueRepository.findFirstByOrderById();
             uploadData(item);
-            /*
-            try {
-				storageService.moveToProcessed(storageService.getApuDataDir(item.getApuSource().getDataDir()));
-			} catch (IOException e) {
-				log.error("Fail to move to processed directory {}",item.getApuSource().getDataDir(),e);
-			}*/           
             coreQueueRepository.delete(item);
         }
     }
@@ -77,17 +72,26 @@ public class CoreQueueService implements SmartLifecycle {
             client.stop();
         }
 
+        String errorMsg = null;
         if (request.isCanceled()) {
-            log.error("transfer to server canceled.");
-            throw new IllegalStateException();
+        	errorMsg = "Transfer to server canceled.";  
         }
         if (request.isFailed()) {
-            log.error("transfer to server failed.");
-            throw new IllegalStateException();
+        	errorMsg = "Transfer to server failed.";  
+        }
+        if (request.isTerminated()) {
+        	errorMsg = "Transfer to server terminated.";  
+        }
+
+        if (!StringUtils.isBlank(errorMsg)) {
+        	item.setErrorMessage(errorMsg);
+        	coreQueueRepository.save(item);
+        	log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
         }
         log.info("Uploaded apusrc={}, type={}",item.getApuSource().getUuid().toString(),item.getApuSource().getSourceType());
     }
-    
+
     private List<SourceItem> createSourceItems(CoreQueue item) {
     	switch (item.getApuSource().getSourceType()) {
     	case DIRECT:
@@ -98,24 +102,24 @@ public class CoreQueueService implements SmartLifecycle {
     		throw new IllegalStateException();
     	}
     }
-    
+
     private List<SourceItem> createSourceItemsDirect(CoreQueue item) {
         Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
         File [] files = dataDir.toFile().listFiles((f)->f.isFile());
-        
+
         Path file;
         if (files!=null&&files.length==1) {
         	file = files[0].toPath();
         } else {
         	throw new IllegalStateException();
         }
-        
+
         List<SourceItem> sourceItems = new ArrayList<>();        
         SimpleFile simpleFile = new SimpleFile(file,"apusrc-"+item.getApuSource().getUuid()+".xml");
         sourceItems.add(simpleFile);
         return sourceItems;
     }
-    
+
     private List<SourceItem> createSourceItemsInstitution(CoreQueue item) {
     	Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
     	Path file = dataDir.resolve("apusrc.xml");        
