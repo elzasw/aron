@@ -118,9 +118,6 @@ public class CoreQueueService implements SmartLifecycle {
         if (request.isFailed()) {
             errorMsg = "Transfer to server failed.";  
         }
-        if (request.isTerminated()) {
-            errorMsg = "Transfer to server terminated.";  
-        }
 
         if (!StringUtils.isBlank(errorMsg)) {
             item.setErrorMessage(errorMsg);
