@@ -1,9 +1,13 @@
 package cz.aron.transfagent.elza;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -14,6 +18,7 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -82,6 +87,55 @@ public class ElzaXmlReader {
 		return null;
 	}
 
+	private static List<String> getTypes(Fragment frg, String[] types) {
+		
+		Set<String> itemTypes = new HashSet<>();
+		for(String type: types) {
+			itemTypes.add(type);
+		}
+		
+		List<String> result = new ArrayList<>();
+		
+		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+			if (itemTypes.contains(item.getT())) {
+				if (item instanceof DescriptionItemString) {
+					DescriptionItemString dis = (DescriptionItemString) item;
+					result.add(dis.getV());
+				} else {
+					throw new RuntimeException(
+							"Failed to extract String value from: " + item.getT() + ", real type is: " + item);
+				}
+			}
+		}
+		return result;
+	}
+	
+	public static String getStringsType(Fragment frg, String itemType, String separator) {
+		StringBuilder sb = new StringBuilder();
+		
+		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+			if (item.getT().equals(itemType)) {
+				if (item instanceof DescriptionItemString) {
+					DescriptionItemString dis = (DescriptionItemString) item;
+					String v = dis.getV();
+					if(StringUtils.isNotBlank(v)) {
+						if(sb.length()>0&&separator!=null) {
+							sb.append(separator);
+						}
+						sb.append(v);
+					}
+				} else {
+					throw new RuntimeException(
+							"Failed to extract String value from: " + itemType + ", real type is: " + item);
+				}
+			}
+		}
+		if(sb.length()>0) {
+			return sb.toString();
+		}
+		return null;
+	}
+	
 	public static AccessPoint findAccessPoint(ElzaDataExchange edx, String paid) {
 		AccessPoints aps = edx.getAps();
 		if (aps == null) {
@@ -100,8 +154,34 @@ public class ElzaXmlReader {
 
 	public static String getFullName(Fragment frg) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(getStringType(frg, "NM_MAIN"));
-		// TODO: add other name parts
+		sb.append(getStringType(frg, ElzaTypes.NM_MAIN));
+		
+		String minor = getStringsType(frg, ElzaTypes.NM_MINOR, ", ");
+		if(StringUtils.isNotEmpty(minor)) {
+			sb.append(", ").append(minor);
+		}
+		
+		StringBuilder sbTitules = new StringBuilder();
+		
+		String degreePre = getStringType(frg, ElzaTypes.NM_DEGREE_PRE);		
+		if(StringUtils.isNotEmpty(degreePre)) {
+			sbTitules.append(degreePre);
+		}
+		String degreePost = getStringType(frg, ElzaTypes.NM_DEGREE_POST);
+		if(StringUtils.isNotBlank(degreePost)) {
+			if(sbTitules.length()>0) {
+				sb.append(" ");
+			}
+			sbTitules.append(degreePost);
+		}
+		
+		List<String> additions = getTypes(frg, ElzaTypes.NM_SUPS);		
+		if(additions.size()>0) {
+			sb.append(" (");
+			sb.append(String.join(" : ", additions));
+			sb.append(")");
+		}
+		
 		return sb.toString();
 	}
 

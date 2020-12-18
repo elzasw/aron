@@ -86,6 +86,8 @@ public class ImportInstitution {
 				}
 				String name = ElzaXmlReader.getFullName(frg);
 				apusBuilder.addName(apu, name);
+				// Add only first name
+				break;
 			}
 		}
 		if(apu==null) {
