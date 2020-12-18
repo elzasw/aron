@@ -42,10 +42,10 @@ public class CoreQueueService implements SmartLifecycle {
     private ThreadStatus status;
 
     public CoreQueueService(CoreQueueRepository coreQueueRepository, ConfigAronCore configAronCore, CoreAronClient coreAronClient, StorageService storageService) {
-    	this.coreQueueRepository = coreQueueRepository;
-    	this.configAronCore = configAronCore;
-    	this.coreAronClient = coreAronClient; 
-    	this.storageService = storageService;
+        this.coreQueueRepository = coreQueueRepository;
+        this.configAronCore = configAronCore;
+        this.coreAronClient = coreAronClient; 
+        this.storageService = storageService;
     }
 
     /**
@@ -54,69 +54,81 @@ public class CoreQueueService implements SmartLifecycle {
     private void sendData() {
         if (coreQueueRepository.count() > 0) {
             CoreQueue item = coreQueueRepository.findFirstByOrderById();
-            uploadData(item);
+            uploadOrDeleteData(item);
             coreQueueRepository.delete(item);
         }
     }
 
     /**
-     * Přenos dat pomocí FileTransfer
+     * Přenos dat pomocí FileTransfer nebo mazání přes WSDL dotaz
      * 
      * @param item
      */
-    private void uploadData(CoreQueue item) {
+    private void uploadOrDeleteData(CoreQueue item) {
+        if (item.getApuSource().isDeleted()) { // dotaz na vymazání záznamu
+            deleteItemData(item);
+        } else {
+            uploadItemData(item);
+        }
+    }
 
-    	ApuSource apuSource = item.getApuSource();
+    /**
+     * Mazání dat přes WSDL dotaz
+     * 
+     * @param item
+     */
+    private void deleteItemData(CoreQueue item) {
+        UuidList uuidList = new UuidList();
+        uuidList.getUuid().add(item.getApuSource().getUuid().toString());
+        ApuManagementPort apuManagementPort = coreAronClient.get();
+        try {
+            apuManagementPort.deleteApuSources(uuidList);
+        } catch (Exception e) {
+            item.setErrorMessage(e.getMessage());
+            coreQueueRepository.save(item);
+            log.error("Error deleting apusrc.", e);
+            throw new IllegalStateException(e);
+        }
+        log.info("Deleted apusrc={}, type={}", item.getApuSource().getUuid(), item.getApuSource().getSourceType());
+    }
 
-    	if (apuSource.isDeleted()) { // požadavek na vymazání záznamu
+    /**
+     * Přenos dat přes FileTransfer
+     * 
+     * @param item
+     */
+    private void uploadItemData(CoreQueue item) {
+        // vytváření Clienta
+        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
+        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
+        Client client = FileTransfer.createClient(clientConfig);
 
-    		UuidList uuidList = new UuidList();
-    		uuidList.getUuid().add(apuSource.getUuid().toString());
-    		ApuManagementPort apuManagementPort = coreAronClient.get();
-            try {
-            	apuManagementPort.deleteApuSources(uuidList);
-            } catch (Exception e) {
-	        	item.setErrorMessage(e.getMessage());
-	        	coreQueueRepository.save(item);
-                log.error("Error deleting apusrc.", e);
-                throw new IllegalStateException(e);
-            }
-	        log.info("Deleted apusrc={}, type={}", apuSource.getUuid(), apuSource.getSourceType());
+        List<SourceItem> sourceItems = createSourceItems(item);
+        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
+        try {
+            client.uploadSync(request);
+        } finally {
+            client.stop();
+        }
 
-    	} else {	
+        String errorMsg = null;
+        if (request.isCanceled()) {
+            errorMsg = "Transfer to server canceled.";  
+        }
+        if (request.isFailed()) {
+            errorMsg = "Transfer to server failed.";  
+        }
+        if (request.isTerminated()) {
+            errorMsg = "Transfer to server terminated.";  
+        }
 
-	        // vytváření Clienta
-	        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
-	        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
-	        Client client = FileTransfer.createClient(clientConfig);
-
-	        List<SourceItem> sourceItems = createSourceItems(item);                
-	        UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
-	        try {
-	            client.uploadSync(request);
-	        } finally {
-	            client.stop();
-	        }
-
-	        String errorMsg = null;
-	        if (request.isCanceled()) {
-	        	errorMsg = "Transfer to server canceled.";  
-	        }
-	        if (request.isFailed()) {
-	        	errorMsg = "Transfer to server failed.";  
-	        }
-	        if (request.isTerminated()) {
-	        	errorMsg = "Transfer to server terminated.";  
-	        }
-
-	        if (!StringUtils.isBlank(errorMsg)) {
-	        	item.setErrorMessage(errorMsg);
-	        	coreQueueRepository.save(item);
-	        	log.error(errorMsg);
-	            throw new IllegalStateException(errorMsg);
-	        }
-	        log.info("Uploaded apusrc={}, type={}", apuSource.getUuid(), apuSource.getSourceType());
-    	}
+        if (!StringUtils.isBlank(errorMsg)) {
+            item.setErrorMessage(errorMsg);
+            coreQueueRepository.save(item);
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+        log.info("Uploaded apusrc={}, type={}", item.getApuSource().getUuid(), item.getApuSource().getSourceType());
     }
 
     private List<SourceItem> createSourceItems(CoreQueue item) {
