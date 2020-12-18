@@ -24,8 +24,10 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 		Map<String, AccessPoint> apMap = elzaXmlReader.getApMap();
 		AccessPoint ap = apMap.get(apRef.getApid());
 		if(ap==null) {
-			throw new RuntimeException("Failed to convert AP: "+apRef.getApid());
+			throw new RuntimeException("Failed to convert AP: "+apRef.getApid() + ", ap not found");
 		}
+		
+		ctx.addArchEntityRef(ap.getApe().getUuid());
 
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
 		apusBuilder.addApuRef(ctx.getActivePart(), targetType, ap.getApe().getUuid());

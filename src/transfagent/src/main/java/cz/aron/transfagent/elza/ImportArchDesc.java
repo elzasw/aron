@@ -251,4 +251,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	public ElzaXmlReader getElzaXmlReader() {
 		return elzaXmlReader;
 	}
+
+	@Override
+	public void addArchEntityRef(String uuid) {
+		apRefs.add(uuid);		
+	}
 }
