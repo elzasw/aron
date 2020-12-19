@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.DaoFile;
@@ -162,8 +162,7 @@ public class ImportDirectService {
     private ApuSource unmarshalApuSourceFromXml(byte[] xml) throws JAXBException, IOException {
         ApuSource apuSource = null;
         try (InputStream is = new ByteArrayInputStream(xml)) {
-            Unmarshaller unmarshaller = ApuSourceBuilder.apuxXmlContext.createUnmarshaller();
-            unmarshaller.setSchema(ApuSourceBuilder.schemaApux);
+            Unmarshaller unmarshaller = ApuxFactory.createUnmarshaller();
             apuSource = ((JAXBElement<ApuSource>) unmarshaller.unmarshal(is)).getValue();
         }
         return apuSource;

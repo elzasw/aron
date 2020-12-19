@@ -7,6 +7,7 @@ import org.apache.cxf.bus.spring.SpringBus;
 import org.apache.cxf.ext.logging.LoggingFeature;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.apache.cxf.transport.servlet.CXFServlet;
+import org.apache.cxf.ws.addressing.WSAddressingFeature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -44,6 +45,10 @@ public class WebServiceConfig {
                 .toExternalForm();
         endpoint.setWsdlLocation(wsdlLocation);
         endpoint.publish(TRANSFORM_AGENT_MANAGER_URL);
+        
+        WSAddressingFeature wsAddressingFeature = new WSAddressingFeature();
+        wsAddressingFeature.setAddressingRequired(false);
+        endpoint.getFeatures().add(wsAddressingFeature);
 
         if (soapLogging) {
             LoggingFeature logFeature = new LoggingFeature();
