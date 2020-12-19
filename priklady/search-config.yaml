@@ -66,7 +66,13 @@ facets:
          fromText: 1901
          to: 2000-12-31 23:59:59
          toText: 2000
-
+  - when:
+      apuType: ENTITY
+    type: ENUM
+    source: AE_CLASS
+    display: ALWAYS
+    # Max pocet zobrazenych itemu
+    maxItems: 8
   - when:
       apuType: ENTITY
     # Druh fazety

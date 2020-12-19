@@ -1,11 +1,20 @@
 # Druhy částí
 partTypes:
-  - name: Název
+  - name: Jméno
     code: PT_NAME
     # STANDALONE | GROUPED
     viewType: GROUPED
   - name: Informace o archivu
     code: PT_INST_INFO
+    viewType: STANDALONE
+  - name: Informace o archivní entitě
+    code: PT_AE_INFO
+    viewType: STANDALONE
+  - name: Vznik
+    code: PT_AE_CRE
+    viewType: STANDALONE
+  - name: Zánik
+    code: PT_AE_EXT
     viewType: STANDALONE
   - name: Informace o archivním souboru
     code: PT_FUND_INFO
@@ -21,9 +30,13 @@ partTypes:
 itemTypes:
   # Obecné
   - code: NAME
-    name: Název
+    name: Jméno
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
     type: STRING
+    indexed: true
+  - code: URL
+    name: Odkaz
+    type: LINK
     indexed: true
   - code: AP_REF
     name: Odkaz na entitu
@@ -33,6 +46,11 @@ itemTypes:
   - code: INST_CODE
     name: Kód archivu
     type: STRING
+    indexed: true
+  # Archivní entity
+  - code: AE_CLASS
+    name: Druh entity
+    type: ENUM
     indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF

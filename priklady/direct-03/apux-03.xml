@@ -9,6 +9,11 @@
        <value></value>
        <itms>
          <str type="NAME">Druhý virtuální archiv</str>
+       </itms>
+     </part>
+     <part type="PT_INST_INFO">
+       <value></value>
+       <itms>
          <lnk type="URL">
            <name>Odkaz na http://virtualni-archiv.cz</name>
            <link>http://virtualni-archiv.cz</link>

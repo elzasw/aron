@@ -18,6 +18,7 @@ import cz.aron.apux._2020.ApuList;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.ItemDateRange;
+import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.ObjectFactory;
@@ -135,6 +136,20 @@ public class ApuSourceBuilder {
 		idr.setToe(toEst);
 		idr.setFmt(format);
 		return idr;
+	}
+	
+	public ItemEnum createEnum(String targetType, String value, boolean visible) {
+		ItemEnum ie = this.objFactory.createItemEnum();
+		ie.setType(targetType);
+		ie.setValue(value);
+		ie.setVisible(visible);
+		return ie;
+	}
+
+	public ItemEnum addEnum(Part aeInfoPart, String targetType, String value, boolean visible) {
+		ItemEnum ie = createEnum(targetType, value, visible);
+		aeInfoPart.getItms().getStrOrLnkOrEnm().add(ie);
+		return ie;
 	}
 
 }
