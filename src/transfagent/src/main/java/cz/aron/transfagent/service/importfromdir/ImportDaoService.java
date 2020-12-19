@@ -27,11 +27,15 @@ public class ImportDaoService {
 	
 	private final TransactionTemplate transactionTemplate;
 	
-	public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository, TransactionTemplate transactionTemplate) {
-		this.storageService = storageService;
-		this.daoFileRepository = daoFileRepository;
-		this.transactionTemplate = transactionTemplate;
-	}
+	private final TransformService transformService;
+	
+    public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository,
+            TransactionTemplate transactionTemplate, TransformService transformService) {
+        this.storageService = storageService;
+        this.daoFileRepository = daoFileRepository;
+        this.transactionTemplate = transactionTemplate;
+        this.transformService = transformService;
+    }
 	
 	public boolean processDirectory(Path dir) {
 		
@@ -78,13 +82,15 @@ public class ImportDaoService {
 		log.info("Imported dao {}", path.getFileName());
 	}
 	
-	private void transformAndImportDao(DaoFile daoFile, Path path) {		
-		try {
-			storageService.moveToErrorDir(path);
-		} catch (IOException e) {
-			log.error("Fail to move {} to error directory.",path,e);
-			throw new UncheckedIOException(e);
-		}
+	private void transformAndImportDao(DaoFile daoFile, Path path) {	    
+	    try {
+            transformService.transform(path);
+        } catch (Exception e) {
+            log.error("Fail to move {} to data dir.",path,e);
+            throw new IllegalStateException(e);
+        }
+	    
+	    importCompleteDao(daoFile,path);		
 	}
 	
 }
