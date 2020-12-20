@@ -111,7 +111,7 @@ public class ApuSourceBuilder {
 	}
 	
 	public ItemEnum createEnum(String targetType, String value, boolean visible) {
-		ItemEnum ie = this.objFactory.createItemEnum();
+		ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
 		ie.setType(targetType);
 		ie.setValue(value);
 		ie.setVisible(visible);

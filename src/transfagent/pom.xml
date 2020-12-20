@@ -31,8 +31,18 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-starter-web</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jetty</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -94,6 +104,17 @@
 			<artifactId>jaxws-api</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>gov.nist.isg</groupId>
+			<artifactId>pyramidio</artifactId>
+			<version>1.1.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+			<version>0.4.11</version>
+		</dependency>
 
 		<!-- pro testov�n� -->
 		<dependency>
@@ -101,6 +122,7 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+
 
 	</dependencies>
 
@@ -164,23 +186,6 @@
 							</plugins>
 						</configuration>
 					</execution>
-					<!-- <execution> <id>generate-peva-schema</id> <goals> <goal>generate</goal> 
-						</goals> <phase>generate-sources</phase> <configuration> <extension>true</extension> 
-						<args> <arg>-Xinheritance</arg> </args> <generateDirectory>${project.build.directory}/generated-sources/peva-jaxb</generateDirectory> 
-						<schemaDirectory>${project.basedir}/src/main/resources/schema</schemaDirectory> 
-						<schemaIncludes> <include>peva_prod.xsd</include> </schemaIncludes> <bindingDirectory>${project.basedir}/src/main/resources/schema</bindingDirectory> 
-						<bindingIncludes> <include>peva-bindinds.xml</include> </bindingIncludes> 
-						<plugins> <plugin> <groupId>org.jvnet.jaxb2_commons</groupId> <artifactId>jaxb2-basics</artifactId> 
-						<version>1.11.1</version> </plugin> </plugins> </configuration> </execution> -->
-					<!-- <execution> <id>generate-peva-export-schema</id> <goals> <goal>generate</goal> 
-						</goals> <phase>generate-sources</phase> <configuration> <extension>true</extension> 
-						<args> <arg>-Xinheritance</arg> </args> <generateDirectory>${project.build.directory}/generated-sources/exppeva-jaxb</generateDirectory> 
-						<schemaDirectory>${project.basedir}/src/main/resources/schema</schemaDirectory> 
-						<schemaIncludes> <include>peva_export_prod.xsd</include> </schemaIncludes> 
-						<bindingDirectory>${project.basedir}/src/main/resources/schema</bindingDirectory> 
-						<bindingIncludes> <include>peva-export-bindinds.xml</include> </bindingIncludes> 
-						<plugins> <plugin> <groupId>org.jvnet.jaxb2_commons</groupId> <artifactId>jaxb2-basics</artifactId> 
-						<version>1.11.1</version> </plugin> </plugins> </configuration> </execution> -->
 				</executions>
 			</plugin>
 			<plugin>
@@ -251,8 +256,6 @@
 							<sources>
 								<source>${project.build.directory}/generated-sources/cxf</source>
 								<source>${project.build.directory}/generated-sources/jaxb</source>
-								<!-- <source>${project.build.directory}/generated-sources/peva-jaxb</source> -->
-								<!--<source>${project.build.directory}/generated-sources/api/rest</source> -->
 							</sources>
 						</configuration>
 					</execution>

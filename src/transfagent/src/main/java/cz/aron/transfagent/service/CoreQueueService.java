@@ -18,13 +18,12 @@ import com.lightcomp.ft.core.send.items.ListReader;
 import com.lightcomp.ft.core.send.items.SimpleFile;
 import com.lightcomp.ft.core.send.items.SourceItem;
 
+import cz.aron.apux._2020.UuidList;
+import cz.aron.management.v1.ApuManagementPort;
 import cz.aron.transfagent.config.ConfigAronCore;
-import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.service.client.CoreAronClient;
-import cz.aron.apux._2020.UuidList;
-import cz.aron.management.v1.ApuManagementPort;
 
 @Service
 public class CoreQueueService implements SmartLifecycle {
@@ -101,6 +100,7 @@ public class CoreQueueService implements SmartLifecycle {
         // vytváření Clienta
         ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
         clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
+        clientConfig.setRecoveryDelay(3);
         Client client = FileTransfer.createClient(clientConfig);
 
         List<SourceItem> sourceItems = createSourceItems(item);
