@@ -158,7 +158,15 @@
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
       <column name="last_update" type="timestamp with time zone" />
+      <column name="parent_entity_id" type="int">
+      </column>
     </createTable>
+    <addForeignKeyConstraint
+      baseTableName="archival_entity" baseColumnNames="parent_entity_id"
+      constraintName="archival_entity_parent_entity_id"
+      referencedTableName="archival_entity"
+      referencedColumnNames="entity_id" />
+    
 
     <createIndex indexName="idx_archival_entity_uuid" tableName="archival_entity" unique="true">
       <column name="uuid" />

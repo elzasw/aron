@@ -6,6 +6,8 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "aron-core")
 public class ConfigAronCore {
+	
+	Boolean disabled = false;
 
 	ConfigWsdl ft;
 
@@ -25,6 +27,14 @@ public class ConfigAronCore {
 
 	public void setCore(ConfigWsdl core) {
 		this.core = core;
+	}
+
+	public Boolean getDisabled() {
+		return disabled;
+	}
+
+	public void setDisabled(Boolean disabled) {
+		this.disabled = disabled;
 	}
 
 }

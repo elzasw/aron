@@ -37,8 +37,20 @@ public class ArchivalEntity {
 
     @JoinColumn(name = "last_update", nullable = true)
     private ZonedDateTime lastUpdate;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_entity_id", nullable = true)
+    private ArchivalEntity parentEntity;
 
-    public Integer getId() {
+    public ArchivalEntity getParentEntity() {
+		return parentEntity;
+	}
+
+	public void setParentEntity(ArchivalEntity parentEntity) {
+		this.parentEntity = parentEntity;
+	}
+
+	public Integer getId() {
         return id;
     }
 
