@@ -4,7 +4,7 @@
   <file pos="1" uuid="cd6ceb5f-858f-4240-85fa-fbbbcd29073e">
     <mtdt>
       <itms>
-        <code>mimetype</code>
+        <code>mimeType</code>
         <value>image/jpeg</value>
       </itms>
     </mtdt>
@@ -17,7 +17,7 @@
   <file pos="1" uuid="fa8dc5fd-3653-45b7-be40-0e1a323e0939">
     <mtdt>
       <itms>
-        <code>mimetype</code>
+        <code>mimeType</code>
         <value>image/jpeg</value>
       </itms>
     </mtdt>
