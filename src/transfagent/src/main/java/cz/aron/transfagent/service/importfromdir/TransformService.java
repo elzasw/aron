@@ -145,7 +145,7 @@ public class TransformService {
     private void addMimeTypeToDaoFile(DaoFile daoFile, String mimeType) {
         var metadata = new Metadata();
         var metadataItem = new MetadataItem();
-        metadataItem.setCode("mimetype");
+        metadataItem.setCode("mimeType");
         metadataItem.setValue(mimeType);
         metadata.getItms().add(metadataItem);
         daoFile.setMtdt(metadata);
