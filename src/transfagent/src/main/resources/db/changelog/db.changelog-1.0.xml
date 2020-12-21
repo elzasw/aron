@@ -153,8 +153,9 @@
         <constraints primaryKey="true" />
       </column>
       <column name="uuid" type="uuid">
-        <constraints nullable="false" />
+        <!-- <constraints nullable="false" />-->
       </column>
+      <column name="elza_id" type="int" />
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
       <column name="last_update" type="timestamp with time zone" />

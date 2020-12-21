@@ -24,10 +24,13 @@ public class ArchivalEntity {
     @Column(name = "entity_id")
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private UUID uuid;
+    
+    @Column(name = "elza_id", nullable = true)
+    private Integer elzaId;
 
-    @Enumerated(EnumType.STRING)
+	@Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = true)
     private EntityStatus status;
 
@@ -35,7 +38,7 @@ public class ArchivalEntity {
     @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
-    @JoinColumn(name = "last_update", nullable = true)
+    @Column(name = "last_update", nullable = true)
     private ZonedDateTime lastUpdate;
     
     @ManyToOne(fetch = FetchType.LAZY)
@@ -90,4 +93,11 @@ public class ArchivalEntity {
 		this.lastUpdate = lastUpdate;
 	}
 
+    public Integer getElzaId() {
+		return elzaId;
+	}
+
+	public void setElzaId(Integer elzaId) {
+		this.elzaId = elzaId;
+	}
 }

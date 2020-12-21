@@ -17,6 +17,7 @@ import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
 import cz.aron.apux._2020.Parts;
+import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ApuSourceBuilder {
 		
@@ -54,17 +55,22 @@ public class ApuSourceBuilder {
 		return apu;
 	}
 
-	public Part addPart(Apu apu, String partType) {
+	public void addPart(Apu apu, Part part) {
 		Parts prts = apu.getPrts();
 		if(prts==null) {
 			prts = ApuxFactory.getObjFactory().createParts();
 			apu.setPrts(prts);
 		}
+		
+		prts.getPart().add(part);
+	}
+	
+	public Part addPart(Apu apu, String partType) {
 		Part part = ApuxFactory.getObjFactory().createPart();
 		part.setType(partType);
 		part.setItms(ApuxFactory.getObjFactory().createDescItems());
 		
-		prts.getPart().add(part);
+		addPart(apu, part);
 		
 		return part;
 	}
@@ -88,8 +94,8 @@ public class ApuSourceBuilder {
 	}
 
 	public Part addName(Apu apu, String name) {
-		Part part = addPart(apu, "PT_NAME");
-		addString(part, "NAME", name);
+		Part part = addPart(apu, CoreTypes.PT_NAME);
+		addString(part, CoreTypes.NAME, name);
 		part.setValue(name);
 		return part;
 	}
@@ -123,5 +129,6 @@ public class ApuSourceBuilder {
 		aeInfoPart.getItms().getStrOrLnkOrEnm().add(ie);
 		return ie;
 	}
+
 
 }

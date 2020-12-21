@@ -18,6 +18,8 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
     
     Optional<ArchivalEntity> findByUuid(UUID uuid);
     
+    Optional<ArchivalEntity> findByElzaId(Integer elzaId);
+    
     List<IdProjection> findTop1000ByStatusOrderById(EntityStatus status);
 
 }

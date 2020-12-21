@@ -75,24 +75,33 @@ public class ImportInstitution {
 		
 		// extrakce dat
 		
+		// vyhledani prvniho vhodneho oznaceni
+		
 		// oznaceni
+		
+		Fragment prefName = null;
 		Fragments frgs = ap.getFrgs();		
 		for(Fragment frg: frgs.getFrg()) {
-			if(frg.getT().equals("PT_NAME")) {			
-				// add name
-				if(apu==null) {
-					String fullName = ElzaXmlReader.getFullName(frg);
-					apu = apusBuilder.createApu(fullName, ApuType.INSTITUTION);
+			if(frg.getT().equals("PT_NAME")) {
+				if(prefName==null) {
+					prefName = frg;
 				}
-				String name = ElzaXmlReader.getFullName(frg);
-				apusBuilder.addName(apu, name);
-				// Add only first name
-				break;
+				// zjisteni zda je zkratka				
+				String shortCode = ElzaXmlReader.getSingleEnum(frg, ElzaTypes.NM_TYPE);
+				if(shortCode!=null) {
+					if(shortCode.equals(ElzaTypes.NT_ACRONYM)) {
+						prefName = frg;
+						break;
+					}
+				}
 			}
 		}
-		if(apu==null) {
+		if(prefName==null) {
 			throw new IllegalStateException("Institution without name: "+instCode);
 		}
+		// add name
+		String fullName = ElzaXmlReader.getFullName(prefName);
+		apu = apusBuilder.createApu(fullName, ApuType.INSTITUTION);
 		
 		// kod archivu
 		Part infoPart = apusBuilder.addPart(apu, "PT_INST_INFO");

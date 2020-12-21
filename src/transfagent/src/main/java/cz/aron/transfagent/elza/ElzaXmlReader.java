@@ -28,6 +28,8 @@ import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.AccessPointEntry;
 import cz.tacr.elza.schema.v2.AccessPoints;
 import cz.tacr.elza.schema.v2.DescriptionItem;
+import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
+import cz.tacr.elza.schema.v2.DescriptionItemEnum;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
 import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
@@ -87,6 +89,35 @@ public class ElzaXmlReader {
 		return null;
 	}
 
+	public static String getEnumValue(Fragment frg, String itemType) {
+		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+			if (item.getT().equals(itemType)) {
+				if (item instanceof DescriptionItemEnum) {
+					DescriptionItemEnum die = (DescriptionItemEnum) item;
+					return die.getS();
+				} else {
+					throw new RuntimeException(
+							"Failed to extract enum value from: " + itemType + ", real type is: " + item);
+				}
+			}
+		}
+		return null;
+	}
+
+	public static String getApRef(Fragment frg, String itemType) {
+		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+			if (item.getT().equals(itemType)) {
+				if (item instanceof DescriptionItemAPRef) {
+					DescriptionItemAPRef diapr = (DescriptionItemAPRef) item;
+					return diapr.getApid();
+				} else {
+					throw new RuntimeException(
+							"Failed to extract ap ref value from: " + itemType + ", real type is: " + item);
+				}
+			}
+		}
+		return null;
+	}
 	private static List<String> getTypes(Fragment frg, String[] types) {
 		
 		Set<String> itemTypes = new HashSet<>();
@@ -110,6 +141,20 @@ public class ElzaXmlReader {
 		return result;
 	}
 	
+	public static String getSingleEnum(Fragment frg, String enumType) {
+		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+			if (item.getT().equals(enumType)) {
+				if (item instanceof DescriptionItemEnum) {
+					DescriptionItemEnum die = (DescriptionItemEnum) item;
+					if(die.getT().equals(enumType)) {
+						return die.getS();
+					}
+				}
+			}
+		}
+		return null;
+	}
+
 	public static String getStringsType(Fragment frg, String itemType, String separator) {
 		StringBuilder sb = new StringBuilder();
 		
@@ -151,6 +196,8 @@ public class ElzaXmlReader {
 		}
 		return null;
 	}
+	
+	
 
 	public static String getFullName(Fragment frg) {
 		StringBuilder sb = new StringBuilder();
@@ -226,5 +273,18 @@ public class ElzaXmlReader {
 		}
 		return null;
 	}
+
+	public AccessPoint getSingleAccessPoint() {
+		AccessPoints aps = edx.getAps();
+		if (aps == null) {
+			return null;
+		}
+		if(aps.getAp().size()!=1) {
+			return null;
+		}
+		return aps.getAp().get(0);
+	}
+
+
 
 }

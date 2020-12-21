@@ -6,16 +6,18 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
-import cz.aron.transfagent.elza.archentities.APTypeXml;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.Fragment;
@@ -27,6 +29,14 @@ public class ImportAp {
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 	
 	static ApTypeService apTypeService = new ApTypeService(); 
+	
+	Set<Integer> accesileElzaIds = new HashSet<>();
+
+	private String apUuid; 	
+
+	public String getApUuid() {
+		return apUuid;
+	}
 
 	public ImportAp() {
 		
@@ -55,33 +65,25 @@ public class ImportAp {
 		}
 	}
 
-	private ApuSourceBuilder importAp(String apUuid) {
-		AccessPoint ap = elzaXmlReader.findAccessPointByUUID(apUuid);
-		if(ap==null) {
-			throw new IllegalStateException("AccessPoint not found: "+apUuid);
-		}
-
-		Apu apu = null;
-		
-		// extrakce dat
-		
-		// oznaceni
-		Fragments frgs = ap.getFrgs();		
-		for(Fragment frg: frgs.getFrg()) {
-			if(frg.getT().equals("PT_NAME")) {			
-				// add name
-				if(apu==null) {
-					String fullName = ElzaXmlReader.getFullName(frg);
-					apu = apusBuilder.createApu(fullName, ApuType.ENTITY);
-				}
-				String name = ElzaXmlReader.getFullName(frg);
-				apusBuilder.addName(apu, name);
+	private ApuSourceBuilder importAp(final String apUuid) {
+		AccessPoint ap;
+		if(apUuid!=null) {
+			ap = elzaXmlReader.findAccessPointByUUID(apUuid);
+			if(ap==null) {
+				throw new IllegalStateException("AccessPoint not found: "+apUuid);
+			}
+		} else {
+			// find first
+			ap = elzaXmlReader.getSingleAccessPoint();
+			if(ap==null) {
+				throw new IllegalStateException("AccessPoint not found in result");
 			}
 		}
-		if(apu==null) {
-			throw new IllegalStateException("AP without name: "+apUuid);
-		}
+		this.apUuid = ap.getApe().getUuid();
+
+		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY);
 		
+		// extrakce dat
 		// entity info
 		String entityClass = ap.getApe().getT();
 		String ecName = apTypeService.getTypeName(entityClass);
@@ -94,7 +96,54 @@ public class ImportAp {
 			apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_CLASS, parentEcName, false);
 		}
 		
+		// oznaceni
+		Fragments frgs = ap.getFrgs();		
+		for(Fragment frg: frgs.getFrg()) {
+			switch(frg.getT()) {
+			case "PT_NAME":
+				importName(apu, frg);
+				break;
+			case "PT_BODY":
+				importBody(apu, aeInfoPart, frg);
+				break;
+			}
+		}
+		if(apu==null) {
+			throw new IllegalStateException("AP without name: "+apUuid);
+		}
+		
+		
+		// 
+		
 		return apusBuilder;
 	}
 
+	private void importBody(Apu apu, Part part, Fragment frg) {
+		
+		String briefDesc = ElzaXmlReader.getStringType(frg, ElzaTypes.BRIEF_DESC);
+		if(StringUtils.isNotEmpty(briefDesc)) {
+			apu.setDesc(briefDesc);
+			
+			//apusBuilder.
+		}
+		
+		String adminPrntRefId = ElzaXmlReader.getApRef(frg, ElzaTypes.GEO_ADMIN_CLASS);
+		if(StringUtils.isNotEmpty(adminPrntRefId)) {
+			accesileElzaIds.add(Integer.valueOf(adminPrntRefId));
+		}
+	}
+
+	private void importName(Apu apu, Fragment frg) {
+		String fullName = ElzaXmlReader.getFullName(frg);
+		// add name
+		if(apu.getName()==null) {
+			apu.setName(fullName);
+		}
+
+		apusBuilder.addName(apu, fullName);
+	}
+
+	public Set<Integer> getAccesileElzaIds() {
+		return accesileElzaIds;
+	}
 }
