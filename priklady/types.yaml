@@ -61,7 +61,7 @@ itemTypes:
     indexed: false
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
-    name: Odkaz na kořen archivního popisu
+    name: Seznam archiválií v archivním souboru
     type: APU_REF
     indexed: false
   - code: INST_REF
@@ -179,6 +179,19 @@ itemTypes:
     indexed: true
   - code: ROLE
     name: Role
+    type: ENUM
+    indexed: true
+  # Odkaz z archivniho popisu na archivni soubor
+  - code: FUND_REF
+    name: Archivní soubor
+    type: APU_REF
+    indexed: false
+  - code: FUND_INST_REF
+    name: Archiv
+    type: APU_REF
+    indexed: false
+  - code: DIGITAL
+    name: Digitální podoba
     type: ENUM
     indexed: true
 
