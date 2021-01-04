@@ -18,6 +18,7 @@ import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
 import cz.aron.apux._2020.Parts;
+import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ApuSourceBuilder {
@@ -35,6 +36,13 @@ public class ApuSourceBuilder {
 		JAXBElement<ApuSource> result = ApuxFactory.getObjFactory().createApusrc(apusrc);
 		return result;
 	}
+
+    public void build(OutputStream fos, ApuValidator validator) throws JAXBException {
+        if (validator != null) {
+            validator.validate(apusrc);
+        }
+        build(fos);
+    }
 
 	public void build(OutputStream fos) throws JAXBException {
 		JAXBElement<ApuSource> apusrc = build();
