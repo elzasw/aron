@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="b60f5ad1-4c0a-41ad-868e-184918a818eb">
+ <apus>
+  <apu type="Institution" uuid="fb7496ac-5ea1-4957-a46d-b53ab3cebd9e">
+   <name>Druhý virtuální archiv</name>
+   <desc>popis archivu</desc>
+   <prts>
+     <part type="PT_NAME">
+       <value></value>
+       <itms>
+         <str type="NAME">Druhý virtuální archiv</str>
+       </itms>
+     </part>
+     <part type="PT_INST_INFO">
+       <value></value>
+       <itms>
+         <lnk type="URL">
+           <name>Odkaz na http://virtualni-archiv.cz</name>
+           <link>http://virtualni-archiv.cz</link>
+         </lnk>
+       </itms>
+     </part>
+   </prts>
+   <daos>
+     <uuid>feb44d55-a13f-4bd9-a975-fb7b29729f7d</uuid>
+     <uuid>a51ed9e4-34cc-4954-aad6-3435bb4b1003</uuid>
+   </daos>
+  </apu>
+ </apus>
+</apusrc>

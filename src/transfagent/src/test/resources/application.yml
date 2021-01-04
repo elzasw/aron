@@ -14,4 +14,31 @@ spring:
       path: /h2-console
 
 config:
-  file: config/types.yaml
+  file: src/test/resources/config/types.yaml
+
+aron:
+  workDir: src/test/resources/
+
+dao:
+  dir:
+    path: C:/temp/transfagent/daos/
+
+# Parametry přístupu k jádru
+aronCore:
+  disabled: true
+  ft:
+    url: http://localhost:8089/ws/ft
+    user: x
+    pass: x
+    soapLogging: false
+  core:
+    url: http://localhost:8089/ws/ft
+    user: x
+    pass: x
+    soapLogging: false
+
+elza:
+  url: http://localhost:8080/services/ExportService
+  username: Whois-import
+  password: Whois-import
+  soapLogging: false

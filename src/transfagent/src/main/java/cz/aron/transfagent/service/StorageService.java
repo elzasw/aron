@@ -76,7 +76,7 @@ public class StorageService {
 	}	 
 	
 	public Path moveToErrorDir(Path sourceDir) throws IOException {
-		return moveToDir(inputPath.resolve("error"),sourceDir);
+		return moveToDir(errorPath,sourceDir);
 	}
 	
 	public Path moveToProcessed(Path sourceDir) throws IOException {
