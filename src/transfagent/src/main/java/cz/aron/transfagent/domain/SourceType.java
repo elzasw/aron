@@ -12,6 +12,8 @@ public enum SourceType {
 
     COLLECTION,
 
-    INSTITUTION
+    INSTITUTION,
+    
+    ARCH_ENTITY
 
 }

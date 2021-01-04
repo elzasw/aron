@@ -29,13 +29,14 @@ import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.StorageService;
 
 /**
  *  Import instituce ze vstupniho adresare
  */
 @Service
-public class ImportInstitutionService {
+public class ImportInstitutionService extends ImportDirProcessor {
 	
 	private static final Logger log = LoggerFactory.getLogger(ImportInstitutionService.class);
 	
@@ -53,10 +54,15 @@ public class ImportInstitutionService {
 	
 	private final EntitySourceRepository entitySourceRepository;
 	
+	private final ApuSourceService apuSourceService;
+	
+	final private String INSTITUTIONS_DIR = "institutions";
+	
 	public ImportInstitutionService(StorageService storageService, InstitutionRepository institutionRepository,
 			TransactionTemplate transactionTemplate, ApuSourceRepository apuSourceRepository,
 			CoreQueueRepository coreQueueRepository, ArchivalEntityRepository archivalEntityRepository,
-			EntitySourceRepository entitySourceRepository) {
+			EntitySourceRepository entitySourceRepository,
+			final ApuSourceService apuSourceService) {
 		this.storageService = storageService;
 		this.institutionRepository = institutionRepository;
 		this.transactionTemplate = transactionTemplate;
@@ -64,6 +70,12 @@ public class ImportInstitutionService {
 		this.coreQueueRepository = coreQueueRepository;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.entitySourceRepository = entitySourceRepository;
+		this.apuSourceService = apuSourceService;
+	}
+
+	@Override
+	protected Path getInputDir() {
+		return storageService.getInputPath().resolve(INSTITUTIONS_DIR);
 	}
 	
 	/**
@@ -71,6 +83,7 @@ public class ImportInstitutionService {
 	 * @param dir zpracovavany adresar
 	 * @return true - continue processing next directory, false - stop processing 
 	 */
+	@Override
 	public boolean processDirectory(Path dir) {
 		
 		List<Path> xmls;
@@ -142,15 +155,10 @@ public class ImportInstitutionService {
 		var institutionUuid = UUID.fromString(apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid());
 
 		transactionTemplate.execute(t -> {
-			// instituce neexistuje, vytvorim novou
-			var apuSource = new cz.aron.transfagent.domain.ApuSource();
-			apuSource.setOrigDir(origDir.getFileName().toString());
-			apuSource.setDataDir(dataDir.toString());
-			apuSource.setSourceType(SourceType.INSTITUTION);
-			apuSource.setUuid(UUID.fromString(apusrcBuilder.getApusrc().getUuid()));
-			apuSource.setDeleted(false);
-			apuSource.setDateImported(ZonedDateTime.now());
-			apuSource = apuSourceRepository.save(apuSource);
+			UUID apusrcUuid = UUID.fromString(apusrcBuilder.getApusrc().getUuid());
+			// instituce neexistuje, vytvorim novou			
+			var apuSource = apuSourceService.createApuSource(apusrcUuid, SourceType.INSTITUTION, 
+					dataDir, origDir.getFileName().toString());
 
 			var newInstitution = new Institution();
 			newInstitution.setApuSource(apuSource);

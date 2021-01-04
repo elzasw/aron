@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +17,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntityStatus;
@@ -24,6 +26,8 @@ import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
+import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.transformation.DatabaseDataProvider;
 import cz.tacr.elza.ws.types.v1.EntitiesRequest;
 import cz.tacr.elza.ws.types.v1.ExportRequest;
 import cz.tacr.elza.ws.types.v1.IdentifierList;
@@ -39,23 +43,31 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 	
 	private final TransactionTemplate transactionTemplate;
 	
+	private final InstitutionRepository institutionRepository;
+	
 	private final StorageService storageService;
 	
 	private final ApuSourceRepository apuSourceRepository;
 	
 	private final CoreQueueRepository coreQueueRepository;
 	
+	private final ApuSourceService apuSourceService;
+	
 	private ThreadStatus status;
 	
 	public ArchivalEntityImportService(ElzaExportService elzaExportService,
 			ArchivalEntityRepository archivalEntityRepository, TransactionTemplate transactionTemplate,
 			StorageService storageService, ApuSourceRepository apuSourceRepository,
+			InstitutionRepository institutionRepository,
+			ApuSourceService apuSourceService,
 			CoreQueueRepository coreQueueRepository) {
 		this.elzaExportService = elzaExportService;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.transactionTemplate = transactionTemplate;
 		this.storageService = storageService;
 		this.apuSourceRepository = apuSourceRepository;
+		this.institutionRepository = institutionRepository;
+		this.apuSourceService = apuSourceService;
 		this.coreQueueRepository = coreQueueRepository;
 	}
 	
@@ -76,9 +88,12 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 		Path tmpDir = downloadEntity(ae);
 		ApuSourceBuilder apuSourceBuilder;
 		final var importAp = new ImportAp();
-		try {			
+		try {
+			DatabaseDataProvider ddp = new DatabaseDataProvider(institutionRepository, archivalEntityRepository);
+			
 			apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
-					(ae.getUuid()!=null)?ae.getUuid().toString():null);
+					(ae.getUuid()!=null)?ae.getUuid().toString():null,
+							ddp);
 			try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os);
 			}
@@ -106,47 +121,63 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 			throw new IllegalStateException(e);
 		}
 
-		transactionTemplate.execute(t -> {
-			// store subsequent hierarchical entities
-			Set<Integer> elzaIds = importAp.getAccesileElzaIds();
-			for(Integer elzaId: elzaIds) {
-				addAccessibleByElzaId(elzaId);
-			}
-			final ArchivalEntity srcArchivalEntity = archivalEntityRepository.getOne(ae.getId());
-			if(srcArchivalEntity.getUuid()==null) {
-				// we have to add uuid from downloaded data and check that it does not exists
-				UUID uuid = UUID.fromString(importAp.getApUuid());
-				var archivalEntity = archivalEntityRepository.findByUuid(uuid);
-				archivalEntity.ifPresentOrElse((ae2) -> {
-					ae.setElzaId(srcArchivalEntity.getElzaId());
-					archivalEntityRepository.save(ae);
-					// drop redundant
-					archivalEntityRepository.delete(srcArchivalEntity);
-				},
-			    ()-> {
-			    	srcArchivalEntity.setUuid(uuid);
-			    	saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder);
-			    	archivalEntityRepository.save(srcArchivalEntity);
-			    }
-			    );
-			} else {
-				saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder);
-			}
-			
+		transactionTemplate.execute(t -> { 
+			saveEntity(dataDir, importAp, apuSourceBuilder, ae);
 			return null;
 		});
+		
+	}
+
+	private void saveEntity(Path dataDir, ImportAp importAp, ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae) {
+		// store subsequent hierarchical entities
+		ArchivalEntity parentEntity;
+		if (importAp.getParentElzaId() != null) {
+			parentEntity = addAccessibleByElzaId(importAp.getParentElzaId());
+		} else {
+			parentEntity = null;
+		}
+
+		final ArchivalEntity srcArchivalEntity = archivalEntityRepository.getOne(ae.getId());
+		if (srcArchivalEntity.getUuid() == null) {
+			// we have to add uuid from downloaded data and check that it does not exists
+			UUID uuid = UUID.fromString(importAp.getApUuid());
+			var archivalEntity = archivalEntityRepository.findByUuid(uuid);
+			if (archivalEntity.isPresent()) {
+				ae.setElzaId(srcArchivalEntity.getElzaId());
+				ae.setParentEntity(parentEntity);
+				archivalEntityRepository.save(ae);
+				// drop redundant
+				archivalEntityRepository.delete(srcArchivalEntity);
+				
+				reindexAfterEntityChanged(ae);
+				return;
+			} else {
+				srcArchivalEntity.setUuid(uuid);
+			}
+		}
+		// update elza id
+		if (srcArchivalEntity.getElzaId() == null) {
+			srcArchivalEntity.setElzaId(importAp.getElzaId());
+		}
+		srcArchivalEntity.setParentEntity(parentEntity);
+		saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder);
+
+		// entity received new uuid
+		// -> we have to reindex all entities having this entity as parent
+		reindexAfterEntityChanged(srcArchivalEntity);
+	}
+
+	private void reindexAfterEntityChanged(ArchivalEntity archivalEntity) {
+		List<ArchivalEntity> ents = this.archivalEntityRepository.findAllByParentEntity(archivalEntity);
+		for(ArchivalEntity ent: ents) {
+			apuSourceService.reimport(ent.getApuSource());			
+		}
 	}
 
 	private void saveApuSource(Path dataDir, ArchivalEntity ae, ApuSourceBuilder apuSourceBuilder) {
-		var apuSource = new cz.aron.transfagent.domain.ApuSource();
-		apuSource.setDataDir(dataDir.toString());
-		apuSource.setOrigDir("");
-		apuSource.setSourceType(SourceType.INSTITUTION);
-		apuSource.setUuid(UUID.fromString(apuSourceBuilder.getApusrc().getUuid()));
-		apuSource.setDeleted(false);
-		apuSource.setDateImported(ZonedDateTime.now());
-		apuSource = apuSourceRepository.save(apuSource);
-
+		UUID apusrcUuid = UUID.fromString(apuSourceBuilder.getApusrc().getUuid());
+		var apuSource = apuSourceService.createApuSource(apusrcUuid, SourceType.ARCH_ENTITY, dataDir, "");
+		
 		ae.setStatus(EntityStatus.AVAILABLE);
 		ae.setApuSource(apuSource);
 		archivalEntityRepository.save(ae);
@@ -157,15 +188,15 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 		
 	}
 
-	private void addAccessibleByElzaId(Integer elzaId) {
+	private ArchivalEntity addAccessibleByElzaId(Integer elzaId) {
 		Optional<ArchivalEntity> request = archivalEntityRepository.findByElzaId(elzaId);
-		if(request.isEmpty()) {
+		return request.orElseGet(()->{		
 			ArchivalEntity ae = new ArchivalEntity();
 			ae.setElzaId(elzaId);
 			ae.setStatus(EntityStatus.ACCESSIBLE);
 			
-			archivalEntityRepository.save(ae);
-		}
+			return archivalEntityRepository.save(ae);
+		});
 	}
 
 	private void importEntity(Integer archivalEntityId) {

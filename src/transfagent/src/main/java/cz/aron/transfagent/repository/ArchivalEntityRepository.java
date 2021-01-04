@@ -22,4 +22,6 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
     
     List<IdProjection> findTop1000ByStatusOrderById(EntityStatus status);
 
+	List<ArchivalEntity> findAllByParentEntity(ArchivalEntity archivalEntity);
+
 }

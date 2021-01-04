@@ -29,4 +29,10 @@ public class PropertiesDataProvider implements ContextDataProvider {
 		}
 		return apuUuid;
 	}
+
+	@Override
+	public String getArchivalEntityApuByElzaId(Integer elzaId) {
+		String propName = "entity."+elzaId;
+		return getProperty(propName);
+	}
 }

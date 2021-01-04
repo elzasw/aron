@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -36,7 +37,7 @@ import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
-public class ImportDirectService {
+public class ImportDirectService extends ImportDirProcessor {
 	
 	private static final Logger log = LoggerFactory.getLogger(ImportDirectService.class);
 	
@@ -50,6 +51,8 @@ public class ImportDirectService {
 	
 	private final DaoFileRepository daoFileRepository;
 	
+	final private String DIRECT_DIR = "direct";
+	
     public ImportDirectService(StorageService storageService, TransactionTemplate transactionTemplate,
             ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
             DaoFileRepository daoFileRepository) {
@@ -59,8 +62,12 @@ public class ImportDirectService {
         this.coreQueueRepository = coreQueueRepository;
         this.daoFileRepository = daoFileRepository;
     }
-	
-    public boolean processDirectory(Path dir) {
+		
+	protected Path getInputDir() {
+		return storageService.getInputPath().resolve(DIRECT_DIR);
+	}
+
+	public boolean processDirectory(Path dir) {
 
         File[] files = dir.toFile().listFiles(new FilenameFilter() {
             @Override
@@ -83,7 +90,7 @@ public class ImportDirectService {
             }
             log.error("Folder {} doesn't contains apu.xml file, moved to error directory {}", dir.getFileName(),
                       storedToDir);
-            return true;
+            return false;
         }
 
         byte[] xml;
@@ -106,7 +113,7 @@ public class ImportDirectService {
                 throw new UncheckedIOException(e);
             }
             log.error("Fail to parse apu.xml. Dir {} moved to error directory {}", dir.getFileName(), storedToDir);
-            return true;
+            return false;
         }
 
         var daos = apux.getApus().getApu().get(0).getDaos();
@@ -127,7 +134,7 @@ public class ImportDirectService {
                 throw new UncheckedIOException(e);
             }
             log.error("Daos from different apu sources. ApuSource ids={}", apuSrcIds);
-            return true;
+            return false;
         }
 
         var apuSource = apuSourceRepository.findByUuid(UUID.fromString(apux.getUuid()));

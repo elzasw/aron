@@ -7,5 +7,7 @@ package cz.aron.transfagent.transformation;
 public interface ContextDataProvider {
 
 	String getInstitutionApu(String instCode);
+	
+	String getArchivalEntityApuByElzaId(Integer elzaId);
 
 }

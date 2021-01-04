@@ -133,9 +133,15 @@ public class CoreQueueService implements SmartLifecycle {
     	case DIRECT:
     		return createSourceItemsDirect(item);
     	case INSTITUTION:
-    		return createSourceItemsInstitution(item);
+    		return createSourceItemsSimple(item);
+    	case ARCH_ENTITY:
+    		return createSourceItemsSimple(item);
+    	case FUND:
+    		return createSourceItemsSimple(item);
+    	case ARCH_DESCS:
+    		return createSourceItemsSimple(item);
     	default:
-    		throw new IllegalStateException();
+    		throw new IllegalStateException("Unsupprted source type: "+item.getApuSource().getSourceType());
     	}
     }
 
@@ -156,7 +162,7 @@ public class CoreQueueService implements SmartLifecycle {
         return sourceItems;
     }
 
-    private List<SourceItem> createSourceItemsInstitution(CoreQueue item) {
+    private List<SourceItem> createSourceItemsSimple(CoreQueue item) {
     	Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
     	Path file = dataDir.resolve("apusrc.xml");
         List<SourceItem> sourceItems = new ArrayList<>();

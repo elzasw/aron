@@ -40,6 +40,10 @@ public class ApuSource {
 
     @Column(nullable = false)
     private boolean deleted;
+    
+    @Column(nullable = false)
+    private boolean reimport;
+   
 
     @JoinColumn(name = "date_imported", nullable = true)
     private ZonedDateTime dateImported;
@@ -92,7 +96,15 @@ public class ApuSource {
         this.deleted = deleted;
     }
 
-    public ZonedDateTime getDateImported() {
+    public boolean isReimport() {
+		return reimport;
+	}
+
+	public void setReimport(boolean reimport) {
+		this.reimport = reimport;
+	}
+
+	public ZonedDateTime getDateImported() {
         return dateImported;
     }
 

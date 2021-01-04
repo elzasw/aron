@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,28 +18,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.ArchivalEntity;
-import cz.aron.transfagent.domain.Collection;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Fund;
-import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
-import cz.aron.transfagent.repository.CollectionRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportArchDescService {
+public class ImportArchDescService extends ImportDirProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportArchDescService.class);
 
@@ -59,11 +55,16 @@ public class ImportArchDescService {
     private final CoreQueueRepository coreQueueRepository;
 
     private final TransactionTemplate transactionTemplate;
+    
+    private final ApuSourceService apuSourceService;
+    
+    final private String ARCHDESC_DIR = "archdesc";
 
     public ImportArchDescService(StorageService storageService, FundRepository fundRepository,
                              ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
                              ArchDescRepository archDescRepository, ArchivalEntityRepository archivalEntityRepository,
-                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate) {
+                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+                             ApuSourceService apuSourceService) {
         this.storageService = storageService;
         this.fundRepository = fundRepository;
         this.apuSourceRepository = apuSourceRepository;
@@ -72,13 +73,21 @@ public class ImportArchDescService {
         this.archivalEntityRepository = archivalEntityRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
+        this.apuSourceService = apuSourceService; 
     }
+    
+	@Override
+	protected Path getInputDir() {
+		return storageService.getInputPath().resolve(ARCHDESC_DIR);
+	}    
+    
 
     /**
      * Zpracování adresářů s archdesc.xml soubory
      * 
      * @param dir zpracovavany adresar
      */
+    @Override
     public boolean processDirectory(Path dir) {
 
         List<Path> xmls;
@@ -109,7 +118,7 @@ public class ImportArchDescService {
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = iad.importArchDesc(archdescXml.get(), new DatabaseDataProvider(institutionRepository));
+            apusrcBuilder = iad.importArchDesc(archdescXml.get(), new DatabaseDataProvider(institutionRepository, archivalEntityRepository));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -125,6 +134,14 @@ public class ImportArchDescService {
         if (fund == null) {
         	throw new NullPointerException("The entry Fund code={" + fundCode + "} must exist.");
         }
+        
+		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+			apusrcBuilder.build(fos);
+		} catch (IOException ioEx) {
+			throw new UncheckedIOException(ioEx);
+		} catch (JAXBException e) {
+			throw new IllegalStateException(e);
+		}        
 
         Path dataDir;
         try {
@@ -162,14 +179,8 @@ public class ImportArchDescService {
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
-            var apuSource = new ApuSource();
-            apuSource.setOrigDir(origDir.getFileName().toString());
-            apuSource.setDataDir(dataDir.toString());
-            apuSource.setSourceType(SourceType.ARCH_DESCS);
-            apuSource.setUuid(apuSourceUuid);
-            apuSource.setDeleted(false);
-            apuSource.setDateImported(ZonedDateTime.now());
-            apuSource = apuSourceRepository.save(apuSource);
+            var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.ARCH_DESCS, 
+            		dataDir, origDir.getFileName().toString());
 
             var archDesc = new ArchDesc();
             archDesc.setApuSource(apuSource);

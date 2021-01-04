@@ -22,6 +22,9 @@ partTypes:
   - name: Archivní popis
     code: PT_ARCH_DESC
     viewType: STANDALONE
+  - name: Role
+    code: PT_ENTITY_ROLE
+    viewType: STANDALONE
 
 # Pridat: 
 #   hierarchical: true | false
@@ -52,6 +55,10 @@ itemTypes:
     name: Druh entity
     type: ENUM
     indexed: true
+  - code: AE_BRIEF_DESC
+    name: Stručná charakteristika
+    type: STRING
+    indexed: false
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Odkaz na kořen archivního popisu
@@ -73,6 +80,10 @@ itemTypes:
   - code: ABSTRACT
     name: Obsah
     type: STRING
+    indexed: true
+  - code: UNIT_TYPE
+    name: Druh archiválie
+    type: ENUM
     indexed: true
   - code: HISTORY
     name: Historie
@@ -165,6 +176,10 @@ itemTypes:
   - code: RELATED_UNITS
     name: Odkazy na příbuzné dokumenty
     type: STRING
+    indexed: true
+  - code: ROLE
+    name: Role
+    type: ENUM
     indexed: true
 
 # Metadata a jejich popis

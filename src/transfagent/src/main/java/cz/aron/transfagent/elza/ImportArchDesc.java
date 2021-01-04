@@ -20,12 +20,15 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
+import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
+import cz.aron.transfagent.elza.convertor.EdxEnumConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.transformation.ContextDataProvider;
+import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
@@ -49,7 +52,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private Part activePart;
 
-	private String institutionCode; 
+	private String institutionCode;
+
+	private Apu activeApu; 
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
@@ -146,9 +151,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				"ZP2015_INTERNAL_NOTE", "ZP2015_POSITION",
 		// TODO: k zapracovani
 				"ZP2015_LANGUAGE",
-				"ZP2015_DATE_OTHER",
-				"ZP2015_UNIT_TYPE",
-				"ZP2015_ENTITY_ROLE"
+				"ZP2015_DATE_OTHER",				
+				//"ZP2015_ENTITY_ROLE"
 		};
 		
 		// check ignored items
@@ -158,6 +162,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			}
 		}
 		
+		activeApu = apu;
 		activePart = null;
 		if(apu.getPrts()!=null) {
 			for (Part p : apu.getPrts().getPart()) {
@@ -173,6 +178,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		
 		Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
 		stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));
+		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor("UNIT_TYPE", ElzaTypes.unitTypeMap));
 		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID"));
 		stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
 		stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));
@@ -199,7 +205,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));
 		stringTypeMap.put("ZP2015_PAINTING_CHAR",new EdxStringConvertor("PAINTING_CHAR"));
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
-		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));		
+		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
+		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());		
 		
@@ -208,8 +215,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			convertor.convert(this, item);
 			activePart = null;
 			return;
-		}
-		
+		}		
 		activePart = null;
 		
 		throw new RuntimeException("Unsupported item type: " + item.getT());		
@@ -255,5 +261,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	@Override
 	public void addArchEntityRef(String uuid) {
 		apRefs.add(uuid);		
+	}
+
+	@Override
+	public Apu getActiveApu() {
+		return activeApu;
 	}
 }

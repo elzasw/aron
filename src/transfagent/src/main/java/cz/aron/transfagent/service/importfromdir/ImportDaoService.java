@@ -17,7 +17,7 @@ import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
-public class ImportDaoService {
+public class ImportDaoService extends ImportDirProcessor {
 	
 	private static final Logger log = LoggerFactory.getLogger(ImportDaoService.class);
 	
@@ -29,6 +29,8 @@ public class ImportDaoService {
 	
 	private final TransformService transformService;
 	
+	final private String DAO_DIR = "dao";
+	
     public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository,
             TransactionTemplate transactionTemplate, TransformService transformService) {
         this.storageService = storageService;
@@ -36,7 +38,13 @@ public class ImportDaoService {
         this.transactionTemplate = transactionTemplate;
         this.transformService = transformService;
     }
+    
+	@Override
+	protected Path getInputDir() {
+		return storageService.getInputPath().resolve(DAO_DIR);
+	}        
 	
+    @Override
 	public boolean processDirectory(Path dir) {
 		
 		var uuidStr = dir.getFileName().toString();

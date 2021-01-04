@@ -18,7 +18,9 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
+import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
+import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
@@ -28,11 +30,15 @@ public class ImportAp {
 	
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 	
-	static ApTypeService apTypeService = new ApTypeService(); 
+	static ApTypeService apTypeService = new ApTypeService();
 	
-	Set<Integer> accesileElzaIds = new HashSet<>();
+	private ContextDataProvider dataProvider;
+	
+	Integer parentElzaId;
 
-	private String apUuid; 	
+	private String apUuid;
+	
+	private Integer elzaId;
 
 	public String getApUuid() {
 		return apUuid;
@@ -46,7 +52,7 @@ public class ImportAp {
         Path inputFile = Path.of(args[0]);
 		ImportAp iap = new ImportAp();
 		try {
-			ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1]);
+			ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1], args[2]);
 			Path ouputPath = Paths.get(args[2]);
 			try(OutputStream fos = Files.newOutputStream(ouputPath)) {
 				apusrcBuilder.build(fos);
@@ -58,19 +64,30 @@ public class ImportAp {
 
 	}
 
-	public ApuSourceBuilder importAp(Path inputFile, String apUuid) throws IOException, JAXBException {
+	private ApuSourceBuilder importAp(Path inputFile, String expUuid, String propFile) throws IOException {
+		Validate.isTrue(propFile!=null&&propFile.length()>0);
+		
+		PropertiesDataProvider pdp = new PropertiesDataProvider();
+		Path propPath = Paths.get(propFile);
+		pdp.load(propPath);
+		return importAp(inputFile, expUuid, propFile);
+	}
+
+	public ApuSourceBuilder importAp(Path inputFile, String expUuid, final ContextDataProvider cdp) throws IOException, JAXBException {
+		this.dataProvider = cdp;
+		
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
-			return importAp(apUuid);
+			return importAp(expUuid);
 		}
 	}
 
-	private ApuSourceBuilder importAp(final String apUuid) {
+	private ApuSourceBuilder importAp(final String expUuid) {
 		AccessPoint ap;
-		if(apUuid!=null) {
-			ap = elzaXmlReader.findAccessPointByUUID(apUuid);
+		if(expUuid!=null) {
+			ap = elzaXmlReader.findAccessPointByUUID(expUuid);
 			if(ap==null) {
-				throw new IllegalStateException("AccessPoint not found: "+apUuid);
+				throw new IllegalStateException("AccessPoint not found: "+expUuid);
 			}
 		} else {
 			// find first
@@ -80,8 +97,10 @@ public class ImportAp {
 			}
 		}
 		this.apUuid = ap.getApe().getUuid();
+		this.elzaId = Integer.valueOf(ap.getApe().getId());
 
 		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY);
+		apu.setUuid(this.apUuid);
 		
 		// extrakce dat
 		// entity info
@@ -123,13 +142,17 @@ public class ImportAp {
 		String briefDesc = ElzaXmlReader.getStringType(frg, ElzaTypes.BRIEF_DESC);
 		if(StringUtils.isNotEmpty(briefDesc)) {
 			apu.setDesc(briefDesc);
-			
-			//apusBuilder.
 		}
 		
 		String adminPrntRefId = ElzaXmlReader.getApRef(frg, ElzaTypes.GEO_ADMIN_CLASS);
 		if(StringUtils.isNotEmpty(adminPrntRefId)) {
-			accesileElzaIds.add(Integer.valueOf(adminPrntRefId));
+			Validate.isTrue(this.parentElzaId==null);
+			
+			parentElzaId = Integer.valueOf(adminPrntRefId);
+			
+			// TODO....
+			// String parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
+			
 		}
 	}
 
@@ -143,7 +166,11 @@ public class ImportAp {
 		apusBuilder.addName(apu, fullName);
 	}
 
-	public Set<Integer> getAccesileElzaIds() {
-		return accesileElzaIds;
+	public Integer getParentElzaId() {
+		return parentElzaId;
+	}
+
+	public Integer getElzaId() {
+		return elzaId;
 	}
 }

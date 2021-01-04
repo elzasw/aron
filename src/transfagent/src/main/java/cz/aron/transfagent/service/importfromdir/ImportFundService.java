@@ -24,14 +24,16 @@ import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportFundService {
+public class ImportFundService extends ImportDirProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportFundService.class);
 
@@ -42,27 +44,43 @@ public class ImportFundService {
     private final ApuSourceRepository apuSourceRepository;
 
     private final InstitutionRepository institutionRepository;
+    
+    private final ArchivalEntityRepository archivalEntityRepository;
 
     private final CoreQueueRepository coreQueueRepository;
 
     private final TransactionTemplate transactionTemplate;
+    
+    private final ApuSourceService apuSourceService;
+    
+    final private String FUND_DIR = "fund";
 
     public ImportFundService(StorageService storageService, FundRepository fundRepository,
+    					     ArchivalEntityRepository archivalEntityRepository,
                              ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
-                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate) {
+                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+                             final ApuSourceService apuSourceService) {
         this.storageService = storageService;
         this.fundRepository = fundRepository;
+        this.archivalEntityRepository = archivalEntityRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.institutionRepository = institutionRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
+        this.apuSourceService = apuSourceService;
     }
+    
+	@Override
+	protected Path getInputDir() {
+		return storageService.getInputPath().resolve(FUND_DIR);
+	}    
 
     /**
      * Zpracování adresářů s archivními soubory
      * 
      * @param dir zpracovavany adresar
      */
+    @Override
     public boolean processDirectory(Path dir) {
 
         List<Path> xmls;
@@ -93,7 +111,7 @@ public class ImportFundService {
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = ifi.importFundInfo(fundXml.get(), new DatabaseDataProvider(institutionRepository));
+            apusrcBuilder = ifi.importFundInfo(fundXml.get(), new DatabaseDataProvider(institutionRepository, archivalEntityRepository));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -111,6 +129,14 @@ public class ImportFundService {
         if (institution == null) {
         	throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
         }
+        
+		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+			apusrcBuilder.build(fos);
+		} catch (IOException ioEx) {
+			throw new UncheckedIOException(ioEx);
+		} catch (JAXBException e) {
+			throw new IllegalStateException(e);
+		}        
 
         Path dataDir;
         try {
@@ -134,14 +160,8 @@ public class ImportFundService {
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
-            var apuSource = new ApuSource();
-            apuSource.setOrigDir(origDir.getFileName().toString());
-            apuSource.setDataDir(dataDir.toString());
-            apuSource.setSourceType(SourceType.FUND);
-            apuSource.setUuid(apuSourceUuid);
-            apuSource.setDeleted(false);
-            apuSource.setDateImported(ZonedDateTime.now());
-            apuSource = apuSourceRepository.save(apuSource);
+        	var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FUND, 
+        			dataDir, origDir.getFileName().toString());
 
             var fund = new Fund();
             fund.setApuSource(apuSource);
