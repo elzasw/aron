@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.IdProjection;
@@ -23,5 +24,7 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
     List<IdProjection> findTop1000ByStatusOrderById(EntityStatus status);
 
 	List<ArchivalEntity> findAllByParentEntity(ArchivalEntity archivalEntity);
+
+	ArchivalEntity findByApuSource(ApuSource apuSource);
 
 }

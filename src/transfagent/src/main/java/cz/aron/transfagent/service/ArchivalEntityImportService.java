@@ -9,6 +9,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
@@ -27,13 +29,14 @@ import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 import cz.tacr.elza.ws.types.v1.EntitiesRequest;
 import cz.tacr.elza.ws.types.v1.ExportRequest;
 import cz.tacr.elza.ws.types.v1.IdentifierList;
 
 @Service
-public class ArchivalEntityImportService implements SmartLifecycle {
+public class ArchivalEntityImportService implements SmartLifecycle, ReimportProcessor {
 	
 	private static Logger log = LoggerFactory.getLogger(ArchivalEntityImportService.class);
 	
@@ -53,6 +56,8 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 	
 	private final ApuSourceService apuSourceService;
 	
+	private final ReimportService reimportService;
+	
 	private ThreadStatus status;
 	
 	public ArchivalEntityImportService(ElzaExportService elzaExportService,
@@ -60,7 +65,8 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 			StorageService storageService, ApuSourceRepository apuSourceRepository,
 			InstitutionRepository institutionRepository,
 			ApuSourceService apuSourceService,
-			CoreQueueRepository coreQueueRepository) {
+			CoreQueueRepository coreQueueRepository,
+			final ReimportService reimportService) {
 		this.elzaExportService = elzaExportService;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.transactionTemplate = transactionTemplate;
@@ -69,6 +75,12 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 		this.institutionRepository = institutionRepository;
 		this.apuSourceService = apuSourceService;
 		this.coreQueueRepository = coreQueueRepository;
+		this.reimportService = reimportService;
+	}
+	
+	@PostConstruct
+	void init() {
+		reimportService.registerReimportProcessor(this);
 	}
 	
 	private void importEntities() {
@@ -293,6 +305,39 @@ public class ArchivalEntityImportService implements SmartLifecycle {
 	@Override
 	public boolean isRunning() {
 		return status == ThreadStatus.RUNNING;
+	}
+
+	@Override
+	public boolean reimport(ApuSource apuSource) {
+		if(apuSource.getSourceType()!=SourceType.ARCH_ENTITY)
+			return false;
+		
+		ArchivalEntity archEntity = archivalEntityRepository.findByApuSource(apuSource);
+		if(archEntity==null) {
+			log.error("Missing archival entity: {}", apuSource.getId());
+			return false;
+		}
+		if(archEntity.getStatus()!=EntityStatus.AVAILABLE) {
+			log.warn("Archival entity {} cannot be reimported, status: {}", apuSource.getId(), archEntity.getStatus());
+			return true;
+		}
+		
+		Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());		
+		ApuSourceBuilder apuSourceBuilder;
+		final var importAp = new ImportAp();
+		try {
+			DatabaseDataProvider ddp = new DatabaseDataProvider(institutionRepository, archivalEntityRepository);
+			
+			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid().toString(), ddp);
+			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+				apuSourceBuilder.build(os);
+			}
+						
+		} catch (Exception e) {
+			log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+			return false;
+		}
+		return true;
 	}
 
 }

@@ -113,4 +113,8 @@ public class FileImportService implements SmartLifecycle {
         return status == ThreadStatus.RUNNING;
     }
 
+	public void registerImportProcessor(ImportProcessor importProcessor) {
+		importProcessors.add(importProcessor);		
+	}
+
 }

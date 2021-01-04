@@ -1,5 +1,6 @@
 package cz.aron.transfagent.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -13,4 +14,5 @@ public interface ApuSourceRepository extends JpaRepository<ApuSource, Integer> {
     
     Optional<ApuSource> findByUuid(UUID uuid);
 
+	List<ApuSource> findByReimport(boolean reimport);
 }
