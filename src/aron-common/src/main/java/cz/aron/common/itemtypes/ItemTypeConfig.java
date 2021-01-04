@@ -2,7 +2,7 @@ package cz.aron.common.itemtypes;
 
 public class ItemTypeConfig {
 
-    private enum Types {
+    public enum Types {
         ENUM, APU_REF, INTEGER, STRING, UNITDATE, LINK
     }
 
