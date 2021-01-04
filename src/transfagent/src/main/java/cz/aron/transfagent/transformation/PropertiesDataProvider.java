@@ -35,4 +35,10 @@ public class PropertiesDataProvider implements ContextDataProvider {
 		String propName = "entity."+elzaId;
 		return getProperty(propName);
 	}
+
+	@Override
+	public String getFundApu(String institutionCode, String fundCode) {
+		String propName = "fund."+institutionCode+"."+fundCode;
+		return getProperty(propName);
+	}
 }

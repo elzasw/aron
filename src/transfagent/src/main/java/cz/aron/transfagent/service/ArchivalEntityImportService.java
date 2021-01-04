@@ -3,10 +3,8 @@ package cz.aron.transfagent.service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -25,7 +23,6 @@ import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportAp;
-import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -45,36 +42,33 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 	private final ArchivalEntityRepository archivalEntityRepository;
 	
 	private final TransactionTemplate transactionTemplate;
-	
-	private final InstitutionRepository institutionRepository;
-	
+		
 	private final StorageService storageService;
-	
-	private final ApuSourceRepository apuSourceRepository;
-	
+			
 	private final CoreQueueRepository coreQueueRepository;
 	
 	private final ApuSourceService apuSourceService;
 	
 	private final ReimportService reimportService;
 	
+	private final DatabaseDataProvider databaseDataProvider;
+	
 	private ThreadStatus status;
 	
 	public ArchivalEntityImportService(ElzaExportService elzaExportService,
 			ArchivalEntityRepository archivalEntityRepository, TransactionTemplate transactionTemplate,
-			StorageService storageService, ApuSourceRepository apuSourceRepository,
-			InstitutionRepository institutionRepository,
+			StorageService storageService,
 			ApuSourceService apuSourceService,
 			CoreQueueRepository coreQueueRepository,
+			final DatabaseDataProvider databaseDataProvider,
 			final ReimportService reimportService) {
 		this.elzaExportService = elzaExportService;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.transactionTemplate = transactionTemplate;
 		this.storageService = storageService;
-		this.apuSourceRepository = apuSourceRepository;
-		this.institutionRepository = institutionRepository;
 		this.apuSourceService = apuSourceService;
 		this.coreQueueRepository = coreQueueRepository;
+		this.databaseDataProvider = databaseDataProvider;
 		this.reimportService = reimportService;
 	}
 	
@@ -100,12 +94,10 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 		Path tmpDir = downloadEntity(ae);
 		ApuSourceBuilder apuSourceBuilder;
 		final var importAp = new ImportAp();
-		try {
-			DatabaseDataProvider ddp = new DatabaseDataProvider(institutionRepository, archivalEntityRepository);
-			
+		try {						
 			apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
 					(ae.getUuid()!=null)?ae.getUuid().toString():null,
-							ddp);
+							databaseDataProvider);
 			try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os);
 			}
@@ -325,10 +317,8 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 		Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());		
 		ApuSourceBuilder apuSourceBuilder;
 		final var importAp = new ImportAp();
-		try {
-			DatabaseDataProvider ddp = new DatabaseDataProvider(institutionRepository, archivalEntityRepository);
-			
-			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid().toString(), ddp);
+		try {			
+			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid().toString(), databaseDataProvider);
 			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os);
 			}

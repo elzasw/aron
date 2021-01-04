@@ -58,12 +58,15 @@ public class ImportArchDescService extends ImportDirProcessor {
     
     private final ApuSourceService apuSourceService;
     
+    private final DatabaseDataProvider databaseDataProvider;
+    
     final private String ARCHDESC_DIR = "archdesc";
 
     public ImportArchDescService(StorageService storageService, FundRepository fundRepository,
                              ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
                              ArchDescRepository archDescRepository, ArchivalEntityRepository archivalEntityRepository,
                              CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+                             final DatabaseDataProvider databaseDataProvider,
                              ApuSourceService apuSourceService) {
         this.storageService = storageService;
         this.fundRepository = fundRepository;
@@ -73,6 +76,7 @@ public class ImportArchDescService extends ImportDirProcessor {
         this.archivalEntityRepository = archivalEntityRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
+        this.databaseDataProvider = databaseDataProvider;
         this.apuSourceService = apuSourceService; 
     }
     
@@ -118,7 +122,7 @@ public class ImportArchDescService extends ImportDirProcessor {
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = iad.importArchDesc(archdescXml.get(), new DatabaseDataProvider(institutionRepository, archivalEntityRepository));
+            apusrcBuilder = iad.importArchDesc(archdescXml.get(), databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {

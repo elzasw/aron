@@ -10,4 +10,6 @@ public interface ContextDataProvider {
 	
 	String getArchivalEntityApuByElzaId(Integer elzaId);
 
+	String getFundApu(String institutionCode, String fundCode);
+
 }

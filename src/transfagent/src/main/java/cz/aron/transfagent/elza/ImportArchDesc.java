@@ -18,6 +18,7 @@ import org.apache.commons.lang3.Validate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -32,6 +33,8 @@ import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
+import cz.tacr.elza.schema.v2.DigitalArchivalObject;
+import cz.tacr.elza.schema.v2.DigitalArchivalObjects;
 import cz.tacr.elza.schema.v2.FundInfo;
 import cz.tacr.elza.schema.v2.Level;
 import cz.tacr.elza.schema.v2.Levels;
@@ -114,6 +117,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// read fund info
 		FundInfo fi = sect.getFi();
 		institutionCode = fi.getIc();
+		String instApu = dataProvider.getInstitutionApu(institutionCode);
+		Validate.notNull(instApu, "Missing institution, code: %s", institutionCode);
+		
+		String fundApu = dataProvider.getFundApu(institutionCode, fi.getC());
+		Validate.notNull(instApu, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);
 
 		Map<String, Apu> apuMap = new HashMap<>();
 
@@ -133,35 +141,33 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			}
 			apuMap.put(lvl.getId(), apu);
 			
+			activateArchDescPart(apu);
 			// add items	
 			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
 				addItem(apu, item);
 			}
+			// Add static values
+			apusBuilder.addApuRef(activePart, "FUND_REF", fundApu);
+			apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApu);
+			
+			// daos
+			DigitalArchivalObjects daos = lvl.getDaos();
+			if(daos!=null&&daos.getDao().size()>0) {
+				apusBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
+				for(DigitalArchivalObject dao: daos.getDao()) {
+					apusBuilder.addDao(activeApu, dao.getId());
+				}
+			}
+			
+			activePart = null;
 		}		
 		return apusBuilder;
 	}
-
-	private void addItem(Apu apu, DescriptionItem item) {
-		final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
-				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
-				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
-				"ZP2015_UNIT_DATE_BULK","ZP2015_FOLDER_TYPE",
-				"ZP2015_STORAGE_ID", "ZP2015_ITEM_ORDER",
-				"ZP2015_UNIT_COUNT_ITEM",
-				"ZP2015_INTERNAL_NOTE", "ZP2015_POSITION",
-		// TODO: k zapracovani
-				"ZP2015_LANGUAGE",
-				"ZP2015_DATE_OTHER",				
-				//"ZP2015_ENTITY_ROLE"
-		};
-		
-		// check ignored items
-		for(String ignoredType: ignoredTypes) {
-			if(ignoredType.equals(item.getT())) {
-				return;
-			}
-		}
-		
+	
+	/**
+	 * Set PT_ARCH_DESC as active part
+	 */
+	void activateArchDescPart(Apu apu) {		
 		activeApu = apu;
 		activePart = null;
 		if(apu.getPrts()!=null) {
@@ -174,6 +180,27 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 		if(activePart==null) {
 			activePart = apusBuilder.addPart(apu, "PT_ARCH_DESC");
+		}		
+	}
+
+	private void addItem(Apu apu, DescriptionItem item) {
+		final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
+				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
+				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
+				"ZP2015_UNIT_DATE_BULK","ZP2015_FOLDER_TYPE",
+				"ZP2015_STORAGE_ID", "ZP2015_ITEM_ORDER",
+				"ZP2015_UNIT_COUNT_ITEM",
+				"ZP2015_INTERNAL_NOTE", "ZP2015_POSITION",
+		// TODO: k zapracovani
+				"ZP2015_LANGUAGE",
+				"ZP2015_DATE_OTHER"
+		};
+		
+		// check ignored items
+		for(String ignoredType: ignoredTypes) {
+			if(ignoredType.equals(item.getT())) {
+				return;
+			}
 		}
 		
 		Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
@@ -208,15 +235,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
 		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
-		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());		
+		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());
 		
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
 		if(convertor!=null) {
 			convertor.convert(this, item);
-			activePart = null;
 			return;
 		}		
-		activePart = null;
 		
 		throw new RuntimeException("Unsupported item type: " + item.getT());		
 	}

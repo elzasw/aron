@@ -11,6 +11,7 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuList;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.ItemRef;
@@ -128,6 +129,14 @@ public class ApuSourceBuilder {
 		ItemEnum ie = createEnum(targetType, value, visible);
 		aeInfoPart.getItms().getStrOrLnkOrEnm().add(ie);
 		return ie;
+	}
+
+	public void addDao(Apu apu, String daoId) {
+		Daos daos = apu.getDaos();
+		if(daos==null) {
+			daos = ApuxFactory.getObjFactory().createDaos();
+		}
+		daos.getUuid().add(daoId);
 	}
 
 

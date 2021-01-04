@@ -45,29 +45,29 @@ public class ImportFundService extends ImportDirProcessor {
 
     private final InstitutionRepository institutionRepository;
     
-    private final ArchivalEntityRepository archivalEntityRepository;
-
     private final CoreQueueRepository coreQueueRepository;
 
     private final TransactionTemplate transactionTemplate;
     
     private final ApuSourceService apuSourceService;
     
+    private final DatabaseDataProvider databaseDataProvider;
+    
     final private String FUND_DIR = "fund";
 
     public ImportFundService(StorageService storageService, FundRepository fundRepository,
-    					     ArchivalEntityRepository archivalEntityRepository,
                              ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
                              CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+                             final DatabaseDataProvider databaseDataProvider,
                              final ApuSourceService apuSourceService) {
         this.storageService = storageService;
         this.fundRepository = fundRepository;
-        this.archivalEntityRepository = archivalEntityRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.institutionRepository = institutionRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
         this.apuSourceService = apuSourceService;
+        this.databaseDataProvider = databaseDataProvider;
     }
     
 	@Override
@@ -111,7 +111,7 @@ public class ImportFundService extends ImportDirProcessor {
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = ifi.importFundInfo(fundXml.get(), new DatabaseDataProvider(institutionRepository, archivalEntityRepository));
+            apusrcBuilder = ifi.importFundInfo(fundXml.get(), databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
