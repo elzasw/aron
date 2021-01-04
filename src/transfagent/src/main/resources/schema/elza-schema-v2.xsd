@@ -360,6 +360,16 @@ Item ID</xs:documentation>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
+	<xs:complexType name="DigitalArchivalObject">
+		<xs:sequence>
+			<xs:element name="Id" type="e:Id" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DigitalArchivalObjects">
+		<xs:sequence>
+			<xs:element name="dao" type="e:DigitalArchivalObject" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:complexType name="ElzaDataExchange">
 		<xs:annotation>
 			<xs:documentation>Elza data</xs:documentation>
@@ -636,6 +646,7 @@ Each file has name and its content - binary data.</xs:documentation>
 					<xs:documentation>List of access points refernces</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="daos" type="e:DigitalArchivalObjects" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="id" use="required" type="e:Id">
 			<xs:annotation>
