@@ -25,49 +25,73 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux.ApuValidator;
 import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.ApuSource;
+import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
+import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportDirectService extends ImportDirProcessor {
-	
-	private static final Logger log = LoggerFactory.getLogger(ImportDirectService.class);
-	
-	private final StorageService storageService;
-	
-	private final TransactionTemplate transactionTemplate;
-	
-	private final ApuSourceRepository apuSourceRepository;
-	
-	private final CoreQueueRepository coreQueueRepository;
-	
-	private final DaoFileRepository daoFileRepository;
-	
-	final private String DIRECT_DIR = "direct";
-	
-    public ImportDirectService(StorageService storageService, TransactionTemplate transactionTemplate,
+public class ImportDirectService extends ImportDirProcessor implements ReimportProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(ImportDirectService.class);
+
+    private final ReimportService reimportService;
+
+    private final StorageService storageService;
+
+    private final ApuSourceRepository apuSourceRepository;
+
+    private final CoreQueueRepository coreQueueRepository;
+
+    private final DaoFileRepository daoFileRepository;
+
+    private final DatabaseDataProvider databaseDataProvider;
+
+    private final TransactionTemplate transactionTemplate;
+
+    private final ConfigurationLoader configurationLoader;
+
+    final private String DIRECT_DIR = "direct";
+
+    public ImportDirectService(ReimportService reimportService, StorageService storageService,
             ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
-            DaoFileRepository daoFileRepository) {
+            DaoFileRepository daoFileRepository, DatabaseDataProvider databaseDataProvider, 
+            TransactionTemplate transactionTemplate, ConfigurationLoader configurationLoader) {
+        this.reimportService = reimportService;
         this.storageService = storageService;
-        this.transactionTemplate = transactionTemplate;
         this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.daoFileRepository = daoFileRepository;
+        this.databaseDataProvider = databaseDataProvider;
+        this.transactionTemplate = transactionTemplate;
+        this.configurationLoader = configurationLoader;
     }
-		
-	protected Path getInputDir() {
-		return storageService.getInputPath().resolve(DIRECT_DIR);
-	}
 
-	public boolean processDirectory(Path dir) {
+    @PostConstruct
+    void register() {
+        reimportService.registerReimportProcessor(this);
+    }
+
+    @Override
+    protected Path getInputDir() {
+        return storageService.getInputPath().resolve(DIRECT_DIR);
+    }
+
+    @Override
+    public boolean processDirectory(Path dir) {
 
         File[] files = dir.toFile().listFiles(new FilenameFilter() {
             @Override
@@ -156,7 +180,7 @@ public class ImportDirectService extends ImportDirProcessor {
         }
         return true;
     }
-	
+
     /**
      * Vytváření objektů na základě XML souboru
      * 
@@ -175,7 +199,6 @@ public class ImportDirectService extends ImportDirProcessor {
         return apuSource;
     }
 
-    
     private void createApuSource(Path dataDir, String origDir, ApuSource apux, List<UUID> daoUuids) {
         transactionTemplate.execute(t -> {
             var apuSource = new cz.aron.transfagent.domain.ApuSource();
@@ -250,6 +273,36 @@ public class ImportDirectService extends ImportDirProcessor {
             return null;
         });
         log.info("Direct updated uuid={}, directory={}", apux.getUuid(), origDir);
+    }
+
+    @Override
+    public boolean reimport(cz.aron.transfagent.domain.ApuSource apuSource) {
+        if (apuSource.getSourceType() != SourceType.DIRECT)
+            return false;
+
+        var daoFile = daoFileRepository.findByApuSource(apuSource);
+        if (daoFile == null) {
+            log.error("Missing dao file: {}", apuSource.getId());
+            return false;
+        }
+        if (daoFile.getState() != DaoState.ACCESSIBLE) {
+            log.warn("Dao file {} cannot be reimported, status: {}", apuSource.getId(), daoFile.getState());
+            return true;
+        }
+
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        ApuSourceBuilder apuSourceBuilder;
+        final var importAp = new ImportAp();
+        try {
+            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), daoFile.getUuid().toString(), databaseDataProvider);
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            return false;
+        }
+        return true;
     }
 
 }

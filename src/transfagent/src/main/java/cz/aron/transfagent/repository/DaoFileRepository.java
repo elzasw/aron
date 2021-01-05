@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.IdProjection;
@@ -23,5 +24,6 @@ public interface DaoFileRepository extends JpaRepository<DaoFile, Integer> {
 	
 	@EntityGraph(attributePaths = { "apuSource" })
 	List<DaoFile> findAllByUuidIn(List<UUID> uuids);
-	
+
+	DaoFile findByApuSource(ApuSource apuSource);
 }
