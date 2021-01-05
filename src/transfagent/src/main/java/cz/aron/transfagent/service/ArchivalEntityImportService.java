@@ -23,11 +23,13 @@ import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
+import cz.aron.transfagent.domain.EntitySource;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
+import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -41,45 +43,45 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 	private static Logger log = LoggerFactory.getLogger(ArchivalEntityImportService.class);
 
 	private final ElzaExportService elzaExportService;
-
-    private final ApuSourceService apuSourceService;
-
-    private final ReimportService reimportService;
-
-    private final StorageService storageService;
-
-    private final ArchivalEntityRepository archivalEntityRepository;
-
-    private final CoreQueueRepository coreQueueRepository;
-
-    private final DatabaseDataProvider databaseDataProvider;
-
-    private final TransactionTemplate transactionTemplate;
-
-    private final ConfigurationLoader configurationLoader;
-
-    private final ConfigElza configElza;
-
-    private ThreadStatus status;
-
-	public ArchivalEntityImportService(ElzaExportService elzaExportService, ApuSourceService apuSourceService,
-            ReimportService reimportService, StorageService storageService,
-            ArchivalEntityRepository archivalEntityRepository, CoreQueueRepository coreQueueRepository,
-            DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader, ConfigElza configElza) {
-        this.elzaExportService = elzaExportService;
-        this.apuSourceService = apuSourceService;
-        this.reimportService = reimportService;
-        this.storageService = storageService;
-        this.archivalEntityRepository = archivalEntityRepository;
-        this.coreQueueRepository = coreQueueRepository;
-        this.databaseDataProvider = databaseDataProvider;
-        this.transactionTemplate = transactionTemplate;
-        this.configurationLoader = configurationLoader;
-        this.configElza = configElza;
-    }
-
-    @PostConstruct
+	
+	private final ArchivalEntityRepository archivalEntityRepository;
+	
+	private final TransactionTemplate transactionTemplate;
+		
+	private final StorageService storageService;
+			
+	private final CoreQueueRepository coreQueueRepository;
+	
+	private final ApuSourceService apuSourceService;
+	
+	private final ReimportService reimportService;
+	
+	private final DatabaseDataProvider databaseDataProvider;
+	
+	private final EntitySourceRepository entitySourceRepository;
+	
+	private ThreadStatus status;
+	
+	public ArchivalEntityImportService(ElzaExportService elzaExportService,
+			ArchivalEntityRepository archivalEntityRepository, TransactionTemplate transactionTemplate,
+			StorageService storageService,
+			ApuSourceService apuSourceService,
+			CoreQueueRepository coreQueueRepository,
+			final DatabaseDataProvider databaseDataProvider,
+			final EntitySourceRepository entitySourceRepository,
+			final ReimportService reimportService) {
+		this.elzaExportService = elzaExportService;
+		this.archivalEntityRepository = archivalEntityRepository;
+		this.transactionTemplate = transactionTemplate;
+		this.storageService = storageService;
+		this.apuSourceService = apuSourceService;
+		this.coreQueueRepository = coreQueueRepository;
+		this.databaseDataProvider = databaseDataProvider;
+		this.entitySourceRepository = entitySourceRepository;
+		this.reimportService = reimportService;
+	}
+	
+	@PostConstruct
 	void init() {
 		reimportService.registerReimportProcessor(this);
 	}
@@ -132,14 +134,25 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 			throw new IllegalStateException(e);
 		}
 
-		transactionTemplate.execute(t -> { 
+		transactionTemplate.execute(t -> {
 			saveEntity(dataDir, importAp, apuSourceBuilder, ae);
 			return null;
 		});
 		
 	}
 
-	private void saveEntity(Path dataDir, ImportAp importAp, ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae) {
+	/**
+	 * Save entity to DB
+	 * 
+	 * Method requires active transaction
+	 * 
+	 * @param dataDir
+	 * @param importAp
+	 * @param apuSourceBuilder
+	 * @param ae Detached source entity
+	 */
+	private void saveEntity(Path dataDir, ImportAp importAp, 
+			ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae) {
 		// store subsequent hierarchical entities
 		ArchivalEntity parentEntity;
 		if (importAp.getParentElzaId() != null) {
@@ -149,14 +162,24 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 		}
 
 		final ArchivalEntity srcArchivalEntity = archivalEntityRepository.getOne(ae.getId());
+		boolean needReindex = false;
 		if (srcArchivalEntity.getUuid() == null) {
 			// we have to add uuid from downloaded data and check that it does not exists
 			UUID uuid = UUID.fromString(importAp.getApUuid());
 			var archivalEntity = archivalEntityRepository.findByUuid(uuid);
 			if (archivalEntity.isPresent()) {
-				ae.setElzaId(srcArchivalEntity.getElzaId());
-				ae.setParentEntity(parentEntity);
-				archivalEntityRepository.save(ae);
+				ArchivalEntity dbArchEntity = archivalEntity.get(); 
+				dbArchEntity.setElzaId(srcArchivalEntity.getElzaId());
+				dbArchEntity.setParentEntity(parentEntity);
+				archivalEntityRepository.save(dbArchEntity);
+				
+				// move all links from this entity to new ae
+				List<EntitySource> ess = entitySourceRepository.findByArchivalEntity(srcArchivalEntity);
+				for(EntitySource es: ess) {
+					es.setArchivalEntity(dbArchEntity);
+					entitySourceRepository.save(es);
+				}
+				
 				// drop redundant
 				archivalEntityRepository.delete(srcArchivalEntity);
 				
@@ -164,6 +187,7 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 				return;
 			} else {
 				srcArchivalEntity.setUuid(uuid);
+				needReindex = true;
 			}
 		}
 		// update elza id
@@ -171,18 +195,26 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 			srcArchivalEntity.setElzaId(importAp.getElzaId());
 		}
 		srcArchivalEntity.setParentEntity(parentEntity);
+		if(srcArchivalEntity.getStatus()!=EntityStatus.AVAILABLE) {
+			needReindex = true;
+		}
 		saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder);
 
 		// entity received new uuid
-		// -> we have to reindex all entities having this entity as parent
-		reindexAfterEntityChanged(srcArchivalEntity);
+		if(needReindex) {
+			// -> we have to reindex all entities having this entity as parent
+			reindexAfterEntityChanged(srcArchivalEntity);
+		}
 	}
 
 	private void reindexAfterEntityChanged(ArchivalEntity archivalEntity) {
-		List<ArchivalEntity> ents = this.archivalEntityRepository.findAllByParentEntity(archivalEntity);
+		// reindex directly connected items
+		List<ArchivalEntity> ents = archivalEntityRepository.findAllByParentEntity(archivalEntity);
 		for(ArchivalEntity ent: ents) {
 			apuSourceService.reimport(ent.getApuSource());			
 		}
+		// reindex all connected sources on whole subtree
+		archivalEntityRepository.reimportConnected(archivalEntity.getId());
 	}
 
 	private void saveApuSource(Path dataDir, ArchivalEntity ae, ApuSourceBuilder apuSourceBuilder) {
