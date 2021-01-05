@@ -27,11 +27,11 @@ import cz.aron.transfagent.service.FileImportService;
 @SpringBootTest
 public class FileImportServiceTest {
 
-    private final String DIR_FROM = "src/test/resources/xml";
+    private final String DIR_FROM = "src/test/resources/files/xml";
 
     private final String FILE_XML = "apux-03.xml";
 
-    private final String DIR_FROM_ERR = "src/test/resources/xml_err";
+    private final String DIR_FROM_ERR = "src/test/resources/files/xml_err";
 
     private final String FILE_XML_EMPTY = "apux-00.xml";
 
