@@ -16,13 +16,19 @@ import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
 import cz.aron.common.itemtypes.ItemTypeConfig;
 import cz.aron.common.itemtypes.ItemTypeConfig.Types;
+import cz.aron.common.itemtypes.PartTypeConfig;
 import cz.aron.common.itemtypes.TypesConfiguration;
 
 public class ApuValidator {
 
+    Map<String, PartTypeConfig> mapParts = new HashMap<>();
     Map<String, Types> mapItems = new HashMap<>();
 
     public ApuValidator(TypesConfiguration config) {
+        List<PartTypeConfig> partTypes = config.getPartTypes();
+        for (PartTypeConfig item : partTypes) {
+            mapParts.put(item.getCode(), item);
+        }
         List<ItemTypeConfig> itemTypes = config.getItemTypes();
         for (ItemTypeConfig item : itemTypes) {
             mapItems.put(item.getCode(), item.getType());
@@ -33,6 +39,9 @@ public class ApuValidator {
         List<Apu> apus = apusrc.getApus().getApu();
         for (Apu apu : apus) {
             for (Part part : apu.getPrts().getPart()) {
+                if (mapParts.get(part.getType()) == null) {
+                    throw new IllegalStateException("Illegal part: " + part.getType());
+                }
                 for (Object obj : part.getItms().getStrOrLnkOrEnm()) {
                     validateItem(obj);
                 }
@@ -43,43 +52,31 @@ public class ApuValidator {
     private void validateItem(Object obj) {
         // ItemString
         if (obj instanceof ItemString) {
-            ItemString item = (ItemString) obj;
-            Types type = mapItems.get(item.getType());
-            if (type == null || type != Types.STRING) {
-                throw new IllegalStateException();
-            }
+            validateItem(((ItemString) obj).getType(), Types.STRING);
         }
         // ItemLink
         if (obj instanceof ItemLink) {
-            ItemLink item = (ItemLink) obj;
-            Types type = mapItems.get(item.getType());
-            if (type == null || type != Types.LINK) {
-                throw new IllegalStateException();
-            }
+            validateItem(((ItemLink) obj).getType(), Types.LINK);
         }
         // ItemEnum
         if (obj instanceof ItemEnum) {
             ItemEnum item = (ItemEnum) obj;
-            Types type = mapItems.get(item.getType());
-            if (type == null || type != Types.ENUM) {
-                throw new IllegalStateException();
-            }
+            validateItem(((ItemEnum) obj).getType(), Types.ENUM);
         }
         // ItemRef
         if (obj instanceof ItemRef) {
-            ItemRef item = (ItemRef) obj;
-            Types type = mapItems.get(item.getType());
-            if (type == null || type != Types.APU_REF) {
-                throw new IllegalStateException();
-            }
+            validateItem(((ItemRef) obj).getType(), Types.APU_REF);
         }
         // ItemDateRange
         if (obj instanceof ItemDateRange) {
-            ItemDateRange item = (ItemDateRange) obj;
-            Types type = mapItems.get(item.getType());
-            if (type == null || type != Types.UNITDATE) {
-                throw new IllegalStateException();
-            }
+            validateItem(((ItemDateRange) obj).getType(), Types.UNITDATE);
+        }
+    }
+
+    public void validateItem(String key, Types value) {
+        Types type = mapItems.get(key);
+        if (type == null || type != value) {
+            throw new IllegalStateException("Illegal " + value + " item: " + key);
         }
     }
 

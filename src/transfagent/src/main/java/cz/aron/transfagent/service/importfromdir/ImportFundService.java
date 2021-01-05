@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Fund;
@@ -37,40 +39,44 @@ public class ImportFundService extends ImportDirProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportFundService.class);
 
+    private final ApuSourceService apuSourceService;
+
     private final StorageService storageService;
 
     private final FundRepository fundRepository;
 
+    private final InstitutionRepository institutionRepository;
+
     private final ApuSourceRepository apuSourceRepository;
 
-    private final InstitutionRepository institutionRepository;
-    
     private final CoreQueueRepository coreQueueRepository;
 
     private final TransactionTemplate transactionTemplate;
-    
-    private final ApuSourceService apuSourceService;
-    
+
     private final DatabaseDataProvider databaseDataProvider;
-    
+
+    private final ConfigurationLoader configurationLoader;
+
     final private String FUND_DIR = "fund";
 
-    public ImportFundService(StorageService storageService, FundRepository fundRepository,
-                             ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
-                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
-                             final DatabaseDataProvider databaseDataProvider,
-                             final ApuSourceService apuSourceService) {
+    public ImportFundService(ApuSourceService apuSourceService, StorageService storageService,
+            FundRepository fundRepository, InstitutionRepository institutionRepository,
+            ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
+            TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
+            ConfigurationLoader configurationLoader) {
+        super();
+        this.apuSourceService = apuSourceService;
         this.storageService = storageService;
         this.fundRepository = fundRepository;
-        this.apuSourceRepository = apuSourceRepository;
         this.institutionRepository = institutionRepository;
+        this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.transactionTemplate = transactionTemplate;
-        this.apuSourceService = apuSourceService;
         this.databaseDataProvider = databaseDataProvider;
+        this.configurationLoader = configurationLoader;
     }
-    
-	@Override
+
+    @Override
 	protected Path getInputDir() {
 		return storageService.getInputPath().resolve(FUND_DIR);
 	}    
@@ -131,7 +137,7 @@ public class ImportFundService extends ImportDirProcessor {
         }
         
 		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-			apusrcBuilder.build(fos);
+			apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
 		} catch (IOException ioEx) {
 			throw new UncheckedIOException(ioEx);
 		} catch (JAXBException e) {

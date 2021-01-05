@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
@@ -40,51 +42,53 @@ public class ImportArchDescService extends ImportDirProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportArchDescService.class);
 
+    private final ApuSourceService apuSourceService;
+
     private final StorageService storageService;
 
     private final FundRepository fundRepository;
 
-    private final ApuSourceRepository apuSourceRepository;
+    private final ArchivalEntityRepository archivalEntityRepository;
 
     private final InstitutionRepository institutionRepository;
 
-    private final ArchDescRepository archDescRepository;
-
-    private final ArchivalEntityRepository archivalEntityRepository;
+    private final ApuSourceRepository apuSourceRepository;
 
     private final CoreQueueRepository coreQueueRepository;
 
+    private final ArchDescRepository archDescRepository;
+
     private final TransactionTemplate transactionTemplate;
-    
-    private final ApuSourceService apuSourceService;
-    
+
     private final DatabaseDataProvider databaseDataProvider;
-    
+
+    private final ConfigurationLoader configurationLoader;
+
     final private String ARCHDESC_DIR = "archdesc";
 
-    public ImportArchDescService(StorageService storageService, FundRepository fundRepository,
-                             ApuSourceRepository apuSourceRepository, InstitutionRepository institutionRepository,
-                             ArchDescRepository archDescRepository, ArchivalEntityRepository archivalEntityRepository,
-                             CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
-                             final DatabaseDataProvider databaseDataProvider,
-                             ApuSourceService apuSourceService) {
+    public ImportArchDescService(ApuSourceService apuSourceService, StorageService storageService,
+            FundRepository fundRepository, ArchivalEntityRepository archivalEntityRepository,
+            InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
+            CoreQueueRepository coreQueueRepository, ArchDescRepository archDescRepository,
+            TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
+            ConfigurationLoader configurationLoader) {
+        this.apuSourceService = apuSourceService;
         this.storageService = storageService;
         this.fundRepository = fundRepository;
-        this.apuSourceRepository = apuSourceRepository;
-        this.institutionRepository = institutionRepository;
-        this.archDescRepository = archDescRepository;
         this.archivalEntityRepository = archivalEntityRepository;
+        this.institutionRepository = institutionRepository;
+        this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
+        this.archDescRepository = archDescRepository;
         this.transactionTemplate = transactionTemplate;
         this.databaseDataProvider = databaseDataProvider;
-        this.apuSourceService = apuSourceService; 
+        this.configurationLoader = configurationLoader;
     }
-    
-	@Override
+
+    @Override
 	protected Path getInputDir() {
 		return storageService.getInputPath().resolve(ARCHDESC_DIR);
-	}    
-    
+	}
 
     /**
      * Zpracování adresářů s archdesc.xml soubory
@@ -136,16 +140,16 @@ public class ImportArchDescService extends ImportDirProcessor {
 
         var fund = fundRepository.findByCodeAndInstitution(fundCode, institution);
         if (fund == null) {
-        	throw new NullPointerException("The entry Fund code={" + fundCode + "} must exist.");
+            throw new NullPointerException("The entry Fund code={" + fundCode + "} must exist.");
         }
-        
-		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-			apusrcBuilder.build(fos);
-		} catch (IOException ioEx) {
-			throw new UncheckedIOException(ioEx);
-		} catch (JAXBException e) {
-			throw new IllegalStateException(e);
-		}        
+
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+        } catch (IOException ioEx) {
+            throw new UncheckedIOException(ioEx);
+        } catch (JAXBException e) {
+            throw new IllegalStateException(e);
+        }
 
         Path dataDir;
         try {

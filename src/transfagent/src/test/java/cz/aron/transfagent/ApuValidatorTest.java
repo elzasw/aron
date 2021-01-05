@@ -16,7 +16,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
-import cz.aron.common.itemtypes.ItemTypeConfig.Types;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.elza.ImportInstitution;
 

@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntitySource;
@@ -37,43 +39,46 @@ import cz.aron.transfagent.service.StorageService;
  */
 @Service
 public class ImportInstitutionService extends ImportDirProcessor {
-	
-	private static final Logger log = LoggerFactory.getLogger(ImportInstitutionService.class);
-	
-	private final StorageService storageService;
-	
-	private final InstitutionRepository institutionRepository;
-	
-	private final TransactionTemplate transactionTemplate;
-	
-	private final ApuSourceRepository apuSourceRepository;
-	
-	private final CoreQueueRepository coreQueueRepository;
-	
-	private final ArchivalEntityRepository archivalEntityRepository;
-	
-	private final EntitySourceRepository entitySourceRepository;
-	
-	private final ApuSourceService apuSourceService;
-	
-	final private String INSTITUTIONS_DIR = "institutions";
-	
-	public ImportInstitutionService(StorageService storageService, InstitutionRepository institutionRepository,
-			TransactionTemplate transactionTemplate, ApuSourceRepository apuSourceRepository,
-			CoreQueueRepository coreQueueRepository, ArchivalEntityRepository archivalEntityRepository,
-			EntitySourceRepository entitySourceRepository,
-			final ApuSourceService apuSourceService) {
-		this.storageService = storageService;
-		this.institutionRepository = institutionRepository;
-		this.transactionTemplate = transactionTemplate;
-		this.apuSourceRepository = apuSourceRepository;
-		this.coreQueueRepository = coreQueueRepository;
-		this.archivalEntityRepository = archivalEntityRepository;
-		this.entitySourceRepository = entitySourceRepository;
-		this.apuSourceService = apuSourceService;
-	}
 
-	@Override
+    private static final Logger log = LoggerFactory.getLogger(ImportInstitutionService.class);
+
+    private final ApuSourceService apuSourceService;
+
+    private final StorageService storageService;
+
+    private final ArchivalEntityRepository archivalEntityRepository;
+
+    private final EntitySourceRepository entitySourceRepository;
+
+    private final InstitutionRepository institutionRepository;
+
+    private final ApuSourceRepository apuSourceRepository;
+
+    private final CoreQueueRepository coreQueueRepository;
+
+    private final TransactionTemplate transactionTemplate;
+
+    private final ConfigurationLoader configurationLoader;
+
+    final private String INSTITUTIONS_DIR = "institutions";
+
+    public ImportInstitutionService(ApuSourceService apuSourceService, StorageService storageService,
+            ArchivalEntityRepository archivalEntityRepository, EntitySourceRepository entitySourceRepository,
+            InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
+            CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+            ConfigurationLoader configurationLoader) {
+        this.apuSourceService = apuSourceService;
+        this.storageService = storageService;
+        this.archivalEntityRepository = archivalEntityRepository;
+        this.entitySourceRepository = entitySourceRepository;
+        this.institutionRepository = institutionRepository;
+        this.apuSourceRepository = apuSourceRepository;
+        this.coreQueueRepository = coreQueueRepository;
+        this.transactionTemplate = transactionTemplate;
+        this.configurationLoader = configurationLoader;
+    }
+
+    @Override
 	protected Path getInputDir() {
 		return storageService.getInputPath().resolve(INSTITUTIONS_DIR);
 	}
@@ -127,7 +132,7 @@ public class ImportInstitutionService extends ImportDirProcessor {
 		}
 		
 		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-			apusrcBuilder.build(fos);
+			apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
 		} catch (IOException ioEx) {
 			throw new UncheckedIOException(ioEx);
 		} catch (JAXBException e) {
