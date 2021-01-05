@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
@@ -19,12 +20,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntitySource;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportInstitution;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
@@ -32,17 +35,21 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 /**
  *  Import instituce ze vstupniho adresare
  */
 @Service
-public class ImportInstitutionService extends ImportDirProcessor {
+public class ImportInstitutionService extends ImportDirProcessor implements ReimportProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportInstitutionService.class);
 
     private final ApuSourceService apuSourceService;
+
+    private final ReimportService reimportService;
 
     private final StorageService storageService;
 
@@ -56,33 +63,42 @@ public class ImportInstitutionService extends ImportDirProcessor {
 
     private final CoreQueueRepository coreQueueRepository;
 
+    private final DatabaseDataProvider databaseDataProvider;
+
     private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
 
     final private String INSTITUTIONS_DIR = "institutions";
 
-    public ImportInstitutionService(ApuSourceService apuSourceService, StorageService storageService,
+    public ImportInstitutionService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
             ArchivalEntityRepository archivalEntityRepository, EntitySourceRepository entitySourceRepository,
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
-            CoreQueueRepository coreQueueRepository, TransactionTemplate transactionTemplate,
+            CoreQueueRepository coreQueueRepository, DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader) {
         this.apuSourceService = apuSourceService;
+        this.reimportService = reimportService;
         this.storageService = storageService;
         this.archivalEntityRepository = archivalEntityRepository;
         this.entitySourceRepository = entitySourceRepository;
         this.institutionRepository = institutionRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
+        this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
     }
 
+    @PostConstruct
+    void register() {
+        reimportService.registerReimportProcessor(this);
+    }
+
     @Override
-	protected Path getInputDir() {
-		return storageService.getInputPath().resolve(INSTITUTIONS_DIR);
-	}
-	
+    protected Path getInputDir() {
+        return storageService.getInputPath().resolve(INSTITUTIONS_DIR);
+    }
+
 	/**
 	 * Najde soubor institution-${kod_archivu}.xml, vytori z nej apusrc.xml, vytvori nebo aktualizuje zaznamy v databazi a vytvori odesilaci udalost.
 	 * @param dir zpracovavany adresar
@@ -90,47 +106,47 @@ public class ImportInstitutionService extends ImportDirProcessor {
 	 */
 	@Override
 	public boolean processDirectory(Path dir) {
-		
+
 		List<Path> xmls;
 		try (var stream = Files.list(dir)) {
 			 xmls = stream
 					.filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith("institution")
 							&& f.getFileName().toString().endsWith(".xml"))
-					.collect(Collectors.toList());								
+					.collect(Collectors.toList());
 		} catch (IOException ioEx) {
 			log.error("Fail to read directory {}", dir, ioEx);
 			throw new UncheckedIOException(ioEx);
 		}
-		
+
 		var inst = xmls.stream().filter(p -> p.getFileName().toString().startsWith("institution-")
 				&& p.getFileName().toString().endsWith(".xml")).findFirst();
-		
+
 		if (inst.isEmpty()) {
 			log.warn("Directory is empty {}", dir);
 			return false;
 		}
-		
+
 		var fileName = inst.get().getFileName().toString();
 		var tmp = fileName.substring("institution-".length());
 		var code = tmp.substring(0,tmp.length()-".xml".length());
-		
+
 		var ii = new ImportInstitution();
 		ApuSourceBuilder apusrcBuilder;
-		
+
 		try {
 			apusrcBuilder = ii.importInstitution(inst.get(), code);
 		} catch (IOException e1) {
 			throw new UncheckedIOException(e1);
 		} catch (JAXBException e1) {
 			throw new IllegalStateException(e1);
-		}			
-		
+		}
+
 		var institution = institutionRepository.findByCode(code);
 		if (institution!=null) {
 			apusrcBuilder.getApusrc().setUuid(institution.getApuSource().getUuid().toString());
 			apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(institution.getUuid().toString());
 		}
-		
+
 		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
 			apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
 		} catch (IOException ioEx) {
@@ -153,7 +169,7 @@ public class ImportInstitutionService extends ImportDirProcessor {
 		}
 		return true;
 	}
-	
+
 	private void createInstitution(Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String institutionCode,
 			ImportInstitution ii) {
 
@@ -184,12 +200,11 @@ public class ImportInstitutionService extends ImportDirProcessor {
 		});
 		log.info("Institution created code={}, uuid={}", institutionCode, institutionUuid);
 	}
-	
-	
+
 	private void updateInstitution(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String institutionCode, ImportInstitution ii) {
-		
+
 		var origData = institution.getApuSource().getDataDir();
-		
+
 		transactionTemplate.execute(t -> {			
 			// aktualizace, pouze zmenim datovy adresar
 			var apuSource = institution.getApuSource();
@@ -208,18 +223,18 @@ public class ImportInstitutionService extends ImportDirProcessor {
 			institutionRepository.save(institution);
 			coreQueueRepository.save(coreQueue);
 			return null;
-		});    			
+		});
 		log.info("Institution updated code={}, uuid={}, original data dir {}", institutionCode, institution.getUuid(),
 				origData);
 	}
-	
+
 	private void createArchivalEntityIfNotExist(UUID apUuid, cz.aron.transfagent.domain.ApuSource apuSource,
 			String institutionCode, boolean expectExist) {
 		// overim existenci ArchivalEntity
 		var existingArchivalEntity = archivalEntityRepository.findByUuid(apUuid);
 		if (existingArchivalEntity.isEmpty()) {
 			// vytvorim archivni entitu
-			var archivalEntity = new ArchivalEntity();			
+			var archivalEntity = new ArchivalEntity();
 			archivalEntity.setStatus(EntityStatus.ACCESSIBLE);
 			archivalEntity.setUuid(apUuid);
 			archivalEntity = archivalEntityRepository.save(archivalEntity);
@@ -236,5 +251,31 @@ public class ImportInstitutionService extends ImportDirProcessor {
 			}
 		}
 	}
+
+    @Override
+    public boolean reimport(ApuSource apuSource) {
+        if (apuSource.getSourceType() != SourceType.INSTITUTION)
+            return false;
+
+        var institution = institutionRepository.findByApuSource(apuSource);
+        if (institution == null) {
+            log.error("Missing institution: {}", apuSource.getId());
+            return false;
+        }
+
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        ApuSourceBuilder apuSourceBuilder;
+        final var importAp = new ImportAp();
+        try {
+            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), institution.getUuid().toString(), databaseDataProvider);
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            return false;
+        }
+        return true;
+    }
 
 }
