@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
@@ -20,10 +21,12 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
@@ -31,55 +34,63 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportFundService extends ImportDirProcessor {
+public class ImportFundService extends ImportDirProcessor implements ReimportProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportFundService.class);
 
     private final ApuSourceService apuSourceService;
 
-    private final StorageService storageService;
+    private final ReimportService reimportService;
 
-    private final FundRepository fundRepository;
+    private final StorageService storageService;
 
     private final InstitutionRepository institutionRepository;
 
-    private final ApuSourceRepository apuSourceRepository;
-
     private final CoreQueueRepository coreQueueRepository;
 
-    private final TransactionTemplate transactionTemplate;
+    private final ApuSourceRepository apuSourceRepository;
+
+    private final FundRepository fundRepository;
 
     private final DatabaseDataProvider databaseDataProvider;
+
+    private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
 
     final private String FUND_DIR = "fund";
 
-    public ImportFundService(ApuSourceService apuSourceService, StorageService storageService,
-            FundRepository fundRepository, InstitutionRepository institutionRepository,
-            ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
-            TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
+    public ImportFundService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
+            InstitutionRepository institutionRepository, CoreQueueRepository coreQueueRepository,
+            ApuSourceRepository apuSourceRepository, FundRepository fundRepository,
+            DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader) {
-        super();
         this.apuSourceService = apuSourceService;
+        this.reimportService = reimportService;
         this.storageService = storageService;
-        this.fundRepository = fundRepository;
         this.institutionRepository = institutionRepository;
-        this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
-        this.transactionTemplate = transactionTemplate;
+        this.apuSourceRepository = apuSourceRepository;
+        this.fundRepository = fundRepository;
         this.databaseDataProvider = databaseDataProvider;
+        this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
     }
 
+    @PostConstruct
+    void register() {
+        reimportService.registerReimportProcessor(this);
+    }
+
     @Override
-	protected Path getInputDir() {
-		return storageService.getInputPath().resolve(FUND_DIR);
-	}    
+    protected Path getInputDir() {
+        return storageService.getInputPath().resolve(FUND_DIR);
+    }
 
     /**
      * Zpracování adresářů s archivními soubory
@@ -121,7 +132,7 @@ public class ImportFundService extends ImportDirProcessor {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
-        	throw new IllegalStateException(e);
+            throw new IllegalStateException(e);
         }
 
         var fund = fundRepository.findByCode(fundCode);
@@ -133,16 +144,16 @@ public class ImportFundService extends ImportDirProcessor {
         var institutionCode = ifi.getInstitutionCode();
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
-        	throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
+            throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
         }
-        
-		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-			apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
-		} catch (IOException ioEx) {
-			throw new UncheckedIOException(ioEx);
-		} catch (JAXBException e) {
-			throw new IllegalStateException(e);
-		}        
+
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+        } catch (IOException ioEx) {
+            throw new UncheckedIOException(ioEx);
+        } catch (JAXBException e) {
+            throw new IllegalStateException(e);
+        }
 
         Path dataDir;
         try {
@@ -157,7 +168,7 @@ public class ImportFundService extends ImportDirProcessor {
             updateFund(fund, dataDir, dir);
         }
         return true;
-	}
+    }
 
     private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
 
@@ -166,8 +177,8 @@ public class ImportFundService extends ImportDirProcessor {
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
-        	var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FUND, 
-        			dataDir, origDir.getFileName().toString());
+            var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FUND, 
+                    dataDir, origDir.getFileName().toString());
 
             var fund = new Fund();
             fund.setApuSource(apuSource);
@@ -202,6 +213,32 @@ public class ImportFundService extends ImportDirProcessor {
             return null;
         });
         log.info("Fund updated code={}, uuid={}, original data dir {}", fund.getCode(), fund.getUuid(), oldDir);
+    }
+
+    @Override
+    public boolean reimport(ApuSource apuSource) {
+        if (apuSource.getSourceType() != SourceType.FUND)
+            return false;
+
+        var fund = fundRepository.findByApuSource(apuSource);
+        if (fund == null) {
+            log.error("Missing fund: {}", apuSource.getId());
+            return false;
+        }
+
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        ApuSourceBuilder apuSourceBuilder;
+        final var importAp = new ImportAp();
+        try {
+            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), fund.getUuid().toString(), databaseDataProvider);
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            return false;
+        }
+        return true;
     }
 
 }
