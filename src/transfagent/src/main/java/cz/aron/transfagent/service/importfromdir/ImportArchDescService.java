@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
@@ -20,12 +21,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
@@ -34,15 +37,18 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportArchDescService extends ImportDirProcessor {
+public class ImportArchDescService extends ImportDirProcessor implements ReimportProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportArchDescService.class);
 
     private final ApuSourceService apuSourceService;
+
+    private final ReimportService reimportService;
 
     private final StorageService storageService;
 
@@ -66,13 +72,14 @@ public class ImportArchDescService extends ImportDirProcessor {
 
     final private String ARCHDESC_DIR = "archdesc";
 
-    public ImportArchDescService(ApuSourceService apuSourceService, StorageService storageService,
+    public ImportArchDescService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
             FundRepository fundRepository, ArchivalEntityRepository archivalEntityRepository,
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, ArchDescRepository archDescRepository,
             TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
             ConfigurationLoader configurationLoader) {
         this.apuSourceService = apuSourceService;
+        this.reimportService = reimportService;
         this.storageService = storageService;
         this.fundRepository = fundRepository;
         this.archivalEntityRepository = archivalEntityRepository;
@@ -85,10 +92,15 @@ public class ImportArchDescService extends ImportDirProcessor {
         this.configurationLoader = configurationLoader;
     }
 
+    @PostConstruct
+    void register() {
+        reimportService.registerReimportProcessor(this);
+    }
+
     @Override
-	protected Path getInputDir() {
-		return storageService.getInputPath().resolve(ARCHDESC_DIR);
-	}
+    protected Path getInputDir() {
+        return storageService.getInputPath().resolve(ARCHDESC_DIR);
+    }
 
     /**
      * Zpracování adresářů s archdesc.xml soubory
@@ -221,6 +233,32 @@ public class ImportArchDescService extends ImportDirProcessor {
             return null;
         });
         log.info("ArchDesc updated uuid={}, original data dir {}", archDesc.getUuid(), oldDir);
+    }
+
+    @Override
+    public boolean reimport(ApuSource apuSource) {
+        if (apuSource.getSourceType() != SourceType.ARCH_DESCS)
+            return false;
+
+        var archDesc = archDescRepository.findByApuSource(apuSource);
+        if (archDesc == null) {
+            log.error("Missing archive description: {}", apuSource.getId());
+            return false;
+        }
+
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        ApuSourceBuilder apuSourceBuilder;
+        final var importAp = new ImportAp();
+        try {
+            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archDesc.getUuid().toString(), databaseDataProvider);
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            return false;
+        }
+        return true;
     }
 
 }
