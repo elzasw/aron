@@ -10,6 +10,9 @@ partTypes:
   - name: Informace o archivní entitě
     code: PT_AE_INFO
     viewType: STANDALONE
+  - name: Identifikátor
+    code: PT_IDENT
+    viewType: GROUPED
   - name: Vznik
     code: PT_AE_CRE
     viewType: STANDALONE
@@ -54,6 +57,14 @@ itemTypes:
   - code: AE_CLASS
     name: Druh entity
     type: ENUM
+    indexed: true
+  - code: AE_IDENT_TYPE
+    name: Druh identifikátoru
+    type: STRING
+    indexed: true
+  - code: AE_IDENT_VALUE
+    name: Hodnota identifikátoru
+    type: STRING
     indexed: true
   - code: AE_BRIEF_DESC
     name: Stručná charakteristika

@@ -48,6 +48,10 @@ public class ImportAp {
 		
 	}
 	
+	public Set<Integer> getRequiredEntities() {
+		return requiredEntities;
+	}
+
 	public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
 		ImportAp iap = new ImportAp();
@@ -125,19 +129,58 @@ public class ImportAp {
 			case "PT_BODY":
 				importBody(apu, aeInfoPart, frg);
 				break;
+			case "PT_IDENT":
+			    importIdent(apu, frg);
+			    break;
+			case "PT_REL":
+				
+			default:
+				throw new IllegalStateException("AP with unsupported part, type: "+frg.getT());
 			}
 		}
-		if(apu==null) {
+		if(apu.getName()==null) {
 			throw new IllegalStateException("AP without name: "+apUuid);
 		}
-		
-		
-		// 
 		
 		return apusBuilder;
 	}
 
-	private void importBody(Apu apu, Part part, Fragment frg) {
+	private void importIdent(Apu apu, Fragment frg) {
+	    String identValue = ElzaXmlReader.getStringType(frg, ElzaTypes.IDN_VALUE);
+	    if(StringUtils.isEmpty(identValue)) {
+	        // skip empty idents
+	        return;
+	    }
+        String identType = ElzaXmlReader.getEnumValue(frg, ElzaTypes.IDN_TYPE);
+        switch(identType) {
+        case "ISO3166_2":
+        case "ISO3166_3":
+        case "ISO3166_NUM":
+        case "ISO3166_PART2":
+        case "CZ_RETRO":
+        case "TAXONOMY":        
+        case "ORCID":
+        case "PEVA":
+        case "RUIAN":
+        case "ARCHNUM":
+            // ignored idents
+            return;
+        case "NUTSLAU":
+            identType = "NUTS/LAU";
+            break;
+        default:
+            throw new IllegalStateException("Unrecognized identifier: "+identType + ", value: "+identValue);
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(identType).append(": ").append(identValue);
+        // add ident
+        Part part = apusBuilder.addPart(apu, "PT_IDENT");
+        part.setValue(sb.toString());
+        apusBuilder.addString(part, "AE_IDENT_TYPE", identType);
+        apusBuilder.addString(part, "AE_IDENT_VALUE", identValue);
+    }
+
+    private void importBody(Apu apu, Part part, Fragment frg) {
 		
 		String briefDesc = ElzaXmlReader.getStringType(frg, ElzaTypes.BRIEF_DESC);
 		if(StringUtils.isNotEmpty(briefDesc)) {

@@ -44,4 +44,7 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 			)
 	void reimportConnected(@Param("entId") Integer entId);
 
+	@Query("select ae from ArchivalEntity ae where ae.elzaId in (:ids)")
+    List<ArchivalEntity> findByElzaIds(@Param("ids") List<Integer> ids);
+
 }

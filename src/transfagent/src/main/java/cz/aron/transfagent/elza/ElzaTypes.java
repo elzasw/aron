@@ -25,6 +25,10 @@ public abstract class ElzaTypes {
 	public static final String NM_SUPS[] = {
 			NM_SUP_GEN, NM_SUP_CHRO, NM_SUP_GEO
 	};
+	
+	public static final String IDN_TYPE = "IDN_TYPE";
+	public static final String IDN_VALUE = "IDN_VALUE";
+	
 	// Stručná charakteristika
 	public static final String BRIEF_DESC = "BRIEF_DESC";
 	
