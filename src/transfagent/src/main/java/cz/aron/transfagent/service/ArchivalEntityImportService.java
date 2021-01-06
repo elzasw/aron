@@ -18,6 +18,7 @@ import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.config.ConfigElza;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
@@ -57,13 +58,15 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
 
     private final ConfigurationLoader configurationLoader;
 
+    private final ConfigElza configElza;
+
     private ThreadStatus status;
 
 	public ArchivalEntityImportService(ElzaExportService elzaExportService, ApuSourceService apuSourceService,
             ReimportService reimportService, StorageService storageService,
             ArchivalEntityRepository archivalEntityRepository, CoreQueueRepository coreQueueRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader) {
+            ConfigurationLoader configurationLoader, ConfigElza configElza) {
         this.elzaExportService = elzaExportService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -73,6 +76,7 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
+        this.configElza = configElza;
     }
 
     @PostConstruct
@@ -282,13 +286,17 @@ public class ArchivalEntityImportService implements SmartLifecycle, ReimportProc
         status = ThreadStatus.STOPPED;
     }
 
-	@Override
-	public void start() {
+    @Override
+    public void start() {
+        if (configElza.isDisabled()) {
+            status = ThreadStatus.STOPPED;
+            return;
+        }
         status = ThreadStatus.RUNNING;
         new Thread(() -> {
             run();
         }).start();
-	}
+    }
 
 	@Override
 	public void stop() {
