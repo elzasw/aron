@@ -9,12 +9,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 
 public abstract class AbstractCommonTest {
+
+    @Autowired
+    ArchivalEntityRepository archivalEntityRepository;
 
     @Autowired
     EntitySourceRepository entitySourceRepository;
@@ -34,6 +38,7 @@ public abstract class AbstractCommonTest {
     @BeforeEach
     protected void deleteAll() {
         entitySourceRepository.deleteAll();
+        archivalEntityRepository.deleteAll();
         daoFileRepository.deleteAll();
         coreQueueRepository.deleteAll();
         institutionRepository.deleteAll();
