@@ -25,7 +25,6 @@ dao:
 
 # Parametry přístupu k jádru
 aronCore:
-  disabled: true
   ft:
     url: http://localhost:8089/ws/ft
     user: x
@@ -36,9 +35,11 @@ aronCore:
     user: x
     pass: x
     soapLogging: false
+  disabled: true
 
 elza:
   url: http://localhost:8080/services/ExportService
   username: Whois-import
   password: Whois-import
   soapLogging: false
+  disabled: true

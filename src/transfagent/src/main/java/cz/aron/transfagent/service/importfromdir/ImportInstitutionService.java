@@ -261,7 +261,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         }
         String fileName = "institution-"+institution.getCode()+".xml";
 
-        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
         ApuSourceBuilder apuSourceBuilder;
         final var ii = new ImportInstitution();
         try {
@@ -270,7 +270,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
         } catch (Exception e) {
-            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
             return Result.FAILED;
         }
         return Result.REIMPORTED;

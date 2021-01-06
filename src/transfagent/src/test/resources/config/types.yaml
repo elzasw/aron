@@ -10,6 +10,9 @@ partTypes:
   - name: Informace o archivní entitě
     code: PT_AE_INFO
     viewType: STANDALONE
+  - name: Identifikátor
+    code: PT_IDENT
+    viewType: GROUPED
   - name: Vznik
     code: PT_AE_CRE
     viewType: STANDALONE
@@ -55,13 +58,25 @@ itemTypes:
     name: Druh entity
     type: ENUM
     indexed: true
+  - code: AE_IDENT_TYPE
+    name: Druh identifikátoru
+    type: STRING
+    indexed: true
+  - code: AE_IDENT_VALUE
+    name: Hodnota identifikátoru
+    type: STRING
+    indexed: true
   - code: AE_BRIEF_DESC
     name: Stručná charakteristika
     type: STRING
     indexed: false
+  - code: AE_GEO_ADMIN_REF
+    name: Administrativní zařazení
+    type: APU_REF
+    indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
-    name: Odkaz na kořen archivního popisu
+    name: Seznam archiválií v archivním souboru
     type: APU_REF
     indexed: false
   - code: INST_REF
@@ -179,6 +194,19 @@ itemTypes:
     indexed: true
   - code: ROLE
     name: Role
+    type: ENUM
+    indexed: true
+  # Odkaz z archivniho popisu na archivni soubor
+  - code: FUND_REF
+    name: Archivní soubor
+    type: APU_REF
+    indexed: false
+  - code: FUND_INST_REF
+    name: Archiv
+    type: APU_REF
+    indexed: false
+  - code: DIGITAL
+    name: Digitální podoba
     type: ENUM
     indexed: true
 

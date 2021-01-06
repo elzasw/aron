@@ -22,9 +22,9 @@ import cz.aron.transfagent.elza.ImportInstitution;
 @SpringBootTest
 public class ApuValidatorTest {
 
-    private final String INST_DIR = "src/test/resources/files/institutions";
+    private final String INST_DIR = "src/test/resources/files/institutions/institution-225201010";
 
-    private final String INST_FILE = "institution-215000010.xml";
+    private final String INST_FILE = "institution-225201010.xml";
 
     private final String INST_PREFIX = "institution-";
 
@@ -39,7 +39,6 @@ public class ApuValidatorTest {
     @Autowired
     ConfigurationLoader configurationLoader;
 
-    @BeforeEach
     public void initData() throws IOException, JAXBException {
         validator = new ApuValidator(configurationLoader.getConfig());
 
@@ -52,6 +51,7 @@ public class ApuValidatorTest {
 
     @Test
     public void testApuValidatorSucess() throws IOException, JAXBException {
+        initData();
         try (OutputStream fos = Files.newOutputStream(Path.of(INST_DIR, APUSRC_XML))) {
             apusrcBuilder.build(fos, validator);
         }
@@ -59,6 +59,7 @@ public class ApuValidatorTest {
 
     @Test
     public void testApuValidatorException() throws IOException, JAXBException {
+        initData();
         validator.getMapItems().remove("INST_CODE");
 
         Assertions.assertThrows(IllegalStateException.class, () -> {
