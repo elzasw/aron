@@ -6,8 +6,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.UUID;
 
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -15,11 +15,9 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
 import cz.tacr.elza.schema.v2.AccessPoint;
-import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 import cz.tacr.elza.schema.v2.Institution;
-import cz.tacr.elza.schema.v2.Institutions;
 
 public class ImportInstitution {
 	
@@ -27,13 +25,13 @@ public class ImportInstitution {
 	
 	private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 
-	private String apRefUuid;
+	private UUID apRefUuid;
 	
 	public ImportInstitution() {
 		
 	}
 	
-	public String getApRefUuid() {
+	public UUID getApRefUuid() {
 		return apRefUuid;
 	}
 
@@ -108,7 +106,7 @@ public class ImportInstitution {
 		apusBuilder.addString(infoPart, "INST_CODE", instCode);
 		
 		// odkaz na entitu
-		apRefUuid = ap.getApe().getUuid();
+		apRefUuid = UUID.fromString(ap.getApe().getUuid());
 		if(apRefUuid!=null) {
 			apusBuilder.addApuRef(infoPart, "AP_REF", apRefUuid);
 		}

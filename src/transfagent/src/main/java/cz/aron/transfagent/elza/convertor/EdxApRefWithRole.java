@@ -1,6 +1,7 @@
 package cz.aron.transfagent.elza.convertor;
 
 import java.util.Map;
+import java.util.UUID;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Part;
@@ -39,14 +40,16 @@ public class EdxApRefWithRole  implements EdxItemConvertor {
 			throw new RuntimeException("Failed to convert AP: "+apRef.getApid() + ", ap not found");
 		}
 		
-		ctx.addArchEntityRef(ap.getApe().getUuid());
+		UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+		
+		ctx.addArchEntityRef(apUuid);
 
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
 		
 		Part part = apusBuilder.addPart(ctx.getActiveApu(), partType);
 		// TODO: map spec to value
 		apusBuilder.addEnum(part, roleType, apRef.getS(), true);		
-		apusBuilder.addApuRef(part, apRefType, ap.getApe().getUuid());
+		apusBuilder.addApuRef(part, apRefType, apUuid);
 		
 	}
 

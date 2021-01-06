@@ -103,21 +103,27 @@ public class ElzaXmlReader {
 		}
 		return null;
 	}
-
-	public static String getApRef(Fragment frg, String itemType) {
-		for (DescriptionItem item : frg.getDdOrDoOrDp()) {
-			if (item.getT().equals(itemType)) {
-				if (item instanceof DescriptionItemAPRef) {
-					DescriptionItemAPRef diapr = (DescriptionItemAPRef) item;
-					return diapr.getApid();
-				} else {
-					throw new RuntimeException(
-							"Failed to extract ap ref value from: " + itemType + ", real type is: " + item);
-				}
-			}
-		}
-		return null;
+	
+	public static DescriptionItemAPRef getApRef(Fragment frg, String itemType) {
+        for (DescriptionItem item : frg.getDdOrDoOrDp()) {
+            if (item.getT().equals(itemType)) {
+                if (item instanceof DescriptionItemAPRef) {
+                    return (DescriptionItemAPRef) item;
+                } else {
+                    throw new RuntimeException(
+                            "Failed to extract ap ref value from: " + itemType + ", real type is: " + item);
+                }
+            }
+        }
+        return null;
+	    
 	}
+
+	public static String getApRefId(Fragment frg, String itemType) {
+	    DescriptionItemAPRef item = getApRef(frg, itemType);
+	    return item.getApid();
+	}
+	
 	private static List<String> getTypes(Fragment frg, String[] types) {
 		
 		Set<String> itemTypes = new HashSet<>();

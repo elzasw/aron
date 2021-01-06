@@ -1,6 +1,8 @@
 package cz.aron.apux;
 
 import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBElement;
@@ -18,12 +20,16 @@ import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
 import cz.aron.apux._2020.Parts;
-import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ApuSourceBuilder {
 		
 	private ApuSource apusrc = ApuxFactory.getObjFactory().createApuSource();
+	
+    /**
+     * Collection of referenced entities
+     */
+    private Set<UUID> referencedEntities = new HashSet<>();	
 
 	public ApuSource getApusrc() {
 		return apusrc;
@@ -93,16 +99,22 @@ public class ApuSourceBuilder {
 		return itmStr;
 	}
 
-	public ItemRef addApuRef(Part part, String itemType, String value) {
+	public ItemRef addApuRef(Part part, String itemType, UUID value) {
 		ItemRef item = ApuxFactory.getObjFactory().createItemRef();
 		item.setType(itemType);
-		item.setValue(value);
+		item.setValue(value.toString());
 		
 		part.getItms().getStrOrLnkOrEnm().add(item);
+		
+		referencedEntities.add(value);
 		return item;
 	}
 
-	public Part addName(Apu apu, String name) {
+	public Set<UUID> getReferencedEntities() {
+        return referencedEntities;
+    }
+
+    public Part addName(Apu apu, String name) {
 		Part part = addPart(apu, CoreTypes.PT_NAME);
 		addString(part, CoreTypes.NAME, name);
 		part.setValue(name);

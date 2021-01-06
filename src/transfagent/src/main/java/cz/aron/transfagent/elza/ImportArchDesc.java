@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
 
@@ -18,7 +19,6 @@ import org.apache.commons.lang3.Validate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
-import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -51,7 +51,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	Map<Apu, Apu> apuParentMap = new HashMap<>();
 
-	final Set<String> apRefs = new HashSet<>();
+	final Set<UUID> apRefs = new HashSet<>();
 
 	private Part activePart;
 
@@ -74,7 +74,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 	}
 
-	public Set<String> getApRefs() {
+	public Set<UUID> getApRefs() {
 		return apRefs;
 	}
 
@@ -117,10 +117,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// read fund info
 		FundInfo fi = sect.getFi();
 		institutionCode = fi.getIc();
-		String instApu = dataProvider.getInstitutionApu(institutionCode);
+		var instApu = dataProvider.getInstitutionApu(institutionCode);
 		Validate.notNull(instApu, "Missing institution, code: %s", institutionCode);
 		
-		String fundApu = dataProvider.getFundApu(institutionCode, fi.getC());
+		var fundApu = dataProvider.getFundApu(institutionCode, fi.getC());
 		Validate.notNull(instApu, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);
 
 		Map<String, Apu> apuMap = new HashMap<>();
@@ -284,7 +284,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	}
 
 	@Override
-	public void addArchEntityRef(String uuid) {
+	public void addArchEntityRef(UUID uuid) {
 		apRefs.add(uuid);		
 	}
 

@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.UUID;
 
 public class PropertiesDataProvider implements ContextDataProvider {
 
@@ -17,9 +18,9 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	}
 
 	@Override
-	public String getInstitutionApu(String instCode) {
+	public UUID getInstitutionApu(String instCode) {
 		String propName = "institution."+instCode;
-		return getProperty(propName);
+		return UUID.fromString(getProperty(propName));
 	}
 
 	private String getProperty(String propName) {
@@ -31,14 +32,14 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	}
 
 	@Override
-	public String getArchivalEntityApuByElzaId(Integer elzaId) {
+	public UUID getArchivalEntityApuByElzaId(Integer elzaId) {
 		String propName = "entity."+elzaId;
-		return getProperty(propName);
+		return UUID.fromString(getProperty(propName));
 	}
 
 	@Override
-	public String getFundApu(String institutionCode, String fundCode) {
+	public UUID getFundApu(String institutionCode, String fundCode) {
 		String propName = "fund."+institutionCode+"."+fundCode;
-		return getProperty(propName);
+		return UUID.fromString(getProperty(propName));
 	}
 }

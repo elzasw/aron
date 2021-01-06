@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
 
@@ -94,24 +95,24 @@ public class ImportFundInfo {
 		apusBuilder.addString(partName, "NAME", fundName);
 		
 		institutionCode = fi.getIc();
-		String instApu = dataProvider.getInstitutionApu(institutionCode);
+		var instApu = dataProvider.getInstitutionApu(institutionCode);
 		Part partFundInfo = apusBuilder.addPart(apu, "PT_FUND_INFO");
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
-		String rootLvlUuid = getRootLevelUuid(sect.getLvls());
+		var rootLvlUuid = getRootLevelUuid(sect.getLvls());
 		if(rootLvlUuid!=null) {
 			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", rootLvlUuid);
 		}
 		
 		// Puvodce
-		List<String> puvodci = getPuvodci(sect.getLvls());
-		for(String puvodceUuid: puvodci) {
+		var puvodci = getPuvodci(sect.getLvls());
+		for(var puvodceUuid: puvodci) {
 			apusBuilder.addApuRef(partFundInfo, "ORIGINATOR_REF", puvodceUuid);
 		}
 		
 		return apusBuilder;
 	}
 
-	private String getRootLevelUuid(Levels lvls) {
+	private UUID getRootLevelUuid(Levels lvls) {
 		if(lvls==null) {
 			return null;
 		}
@@ -120,10 +121,10 @@ public class ImportFundInfo {
 			return null;
 		}
 		Level lvl = lvlList.get(0);
-		return lvl.getUuid();
+		return UUID.fromString(lvl.getUuid());
 	}
 
-	private List<String> getPuvodci(Levels lvls) {
+	private List<UUID> getPuvodci(Levels lvls) {
 		if(lvls==null) {
 			return Collections.emptyList();
 		}
@@ -146,13 +147,13 @@ public class ImportFundInfo {
 		
 		Map<String, AccessPoint> apMap = elzaXmlReader.getApMap();
 		
-		List<String> puvodci = new ArrayList<>(puvodciXmlId.size());
+		List<UUID> puvodci = new ArrayList<>(puvodciXmlId.size());
 		for(String xmlId: puvodciXmlId) {
 			AccessPoint ap = apMap.get(xmlId);
 			if(ap==null) {
 				throw new RuntimeException("Missing AP with ID: "+xmlId);
 			}
-			puvodci.add(ap.getApe().getUuid());
+			puvodci.add(UUID.fromString(ap.getApe().getUuid()));
 		}
 		return puvodci;
 	}

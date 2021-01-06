@@ -1,6 +1,7 @@
 package cz.aron.transfagent.elza.convertor;
 
 import java.util.Map;
+import java.util.UUID;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.transfagent.elza.ElzaXmlReader;
@@ -27,10 +28,12 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 			throw new RuntimeException("Failed to convert AP: "+apRef.getApid() + ", ap not found");
 		}
 		
-		ctx.addArchEntityRef(ap.getApe().getUuid());
+		UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+		
+		ctx.addArchEntityRef(apUuid);
 
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
-		apusBuilder.addApuRef(ctx.getActivePart(), targetType, ap.getApe().getUuid());
+		apusBuilder.addApuRef(ctx.getActivePart(), targetType, apUuid);
 		
 	}
 

@@ -177,12 +177,12 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             updateArchDesc(archDesc, dataDir, dir);
         }
 
-        Set<String> uuids = iad.getApRefs();
-        for (String uuid : uuids) {
-        	var archivalEntity = archivalEntityRepository.findByUuid(UUID.fromString(uuid)).orElse(null);
+        Set<UUID> uuids = iad.getApRefs();
+        for (UUID uuid : uuids) {
+        	var archivalEntity = archivalEntityRepository.findByUuid(uuid).orElse(null);
         	if (archivalEntity == null) {
         		archivalEntity = new ArchivalEntity();
-        		archivalEntity.setUuid(UUID.fromString(uuid));
+        		archivalEntity.setUuid(uuid);
             	archivalEntity.setApuSource(fund.getApuSource());
             	archivalEntity.setStatus(EntityStatus.ACCESSIBLE);
             	archivalEntity.setLastUpdate(ZonedDateTime.now());

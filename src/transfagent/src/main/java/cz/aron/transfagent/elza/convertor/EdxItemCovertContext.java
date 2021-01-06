@@ -1,5 +1,7 @@
 package cz.aron.transfagent.elza.convertor;
 
+import java.util.UUID;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.Part;
@@ -17,7 +19,7 @@ public interface EdxItemCovertContext {
 	 * Add reference to another APU
 	 * @param uuid
 	 */
-	void addArchEntityRef(String uuid);
+	void addArchEntityRef(UUID uuid);
 
 	Apu getActiveApu();
 

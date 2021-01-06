@@ -34,6 +34,8 @@ public class ApuSourceService {
 		apuSource.setReimport(false);
 		apuSource.setDateImported(ZonedDateTime.now());
 		apuSource = apuSourceRepository.save(apuSource);
+		
+		apuSourceRepository.flush();
 		return apuSource;
 	}
 

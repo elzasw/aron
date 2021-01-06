@@ -22,6 +22,7 @@ import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
+import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 
@@ -40,8 +41,11 @@ public class ImportAp {
 	
 	private Integer elzaId;
 	
+	/**
+	 * ElzaIds which needs to be requested
+	 */
 	private Set<Integer> requiredEntities = new HashSet<>();
-
+	
 	public String getApUuid() {
 		return apUuid;
 	}
@@ -135,7 +139,8 @@ public class ImportAp {
 			    importIdent(apu, frg);
 			    break;
 			case "PT_REL":
-				
+				importRel(apu, frg);
+				break;
 			default:
 				throw new IllegalStateException("AP with unsupported part, type: "+frg.getT());
 			}
@@ -147,7 +152,31 @@ public class ImportAp {
 		return apusBuilder;
 	}
 
-	private void importIdent(Apu apu, Fragment frg) {
+	private void importRel(Apu apu, Fragment frg) {
+
+	    DescriptionItemAPRef apRef = ElzaXmlReader.getApRef(frg, ElzaTypes.REL_ENTITY);
+	    if(apRef==null) {
+	        return;
+	    }
+        String relType = ElzaTypes.relEntityMap.get(apRef.getS());
+	    if(relType==null) {
+	        throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
+	    }
+        Integer apElzaId = Integer.valueOf(apRef.getApid());
+        var apUuid = this.dataProvider.getArchivalEntityApuByElzaId(apElzaId);
+        if(apUuid==null) {
+            this.requiredEntities.add(apElzaId);
+            return;
+        }
+
+        // entity exists -> we can create link
+        Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
+        this.apusBuilder.addApuRef(part, "AE_REL_REF", apUuid);
+        this.apusBuilder.addEnum(part, "AE_REL_TYPE", relType, true);
+	    //
+    }
+
+    private void importIdent(Apu apu, Fragment frg) {
 	    String identValue = ElzaXmlReader.getStringType(frg, ElzaTypes.IDN_VALUE);
 	    if(StringUtils.isEmpty(identValue)) {
 	        // skip empty idents
@@ -178,7 +207,7 @@ public class ImportAp {
         // add ident
         Part part = apusBuilder.addPart(apu, "PT_IDENT");
         part.setValue(sb.toString());
-        apusBuilder.addString(part, "AE_IDENT_TYPE", identType);
+        apusBuilder.addEnum(part, "AE_IDENT_TYPE", identType, true);
         apusBuilder.addString(part, "AE_IDENT_VALUE", identValue);
     }
 
@@ -189,13 +218,13 @@ public class ImportAp {
 			apu.setDesc(briefDesc);
 		}
 		
-		String adminPrntRefId = ElzaXmlReader.getApRef(frg, ElzaTypes.GEO_ADMIN_CLASS);
+		String adminPrntRefId = ElzaXmlReader.getApRefId(frg, ElzaTypes.GEO_ADMIN_CLASS);
 		if(StringUtils.isNotEmpty(adminPrntRefId)) {
 			Validate.isTrue(this.parentElzaId==null);
 			
 			parentElzaId = Integer.valueOf(adminPrntRefId);
 			
-			String parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
+			var parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
 			if(parentEntUuid==null) {
 			    this.requiredEntities.add(parentElzaId);
 			} else {

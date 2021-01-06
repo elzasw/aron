@@ -186,7 +186,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			newInstitution = institutionRepository.save(newInstitution);
 
 			if (ii.getApRefUuid() != null) {
-				var apUuid = UUID.fromString(ii.getApRefUuid());
+				var apUuid = ii.getApRefUuid();
 				createArchivalEntityIfNotExist(apUuid, apuSource, institutionCode, false);
 			}
 
@@ -209,7 +209,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			apuSource.setOrigDir(origDir.getFileName().toString());
 			
 			if (ii.getApRefUuid() != null) {					
-				var apUuid = UUID.fromString(ii.getApRefUuid());						
+				var apUuid = ii.getApRefUuid();						
 				createArchivalEntityIfNotExist(apUuid, apuSource, institutionCode, true);
 			}
 

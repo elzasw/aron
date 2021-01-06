@@ -6,9 +6,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -16,11 +18,13 @@ import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.common.BulkOperation;
 import cz.aron.transfagent.config.ConfigElza;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
@@ -117,59 +121,47 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		}
 	}*/
 	
+	private void importEntityTrans(TransactionStatus t, final Path tmpDir, final ArchivalEntity ae) {
+        ApuSourceBuilder apuSourceBuilder;
+        final var importAp = new ImportAp();
+        Path dataDir;
+        try {                       
+            apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
+                    (ae.getUuid()!=null)?ae.getUuid().toString():null,
+                            databaseDataProvider);
+            try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+            dataDir = storageService.moveToDataDir(tmpDir);
+            
+            saveEntity(dataDir, importAp, apuSourceBuilder, ae, importAp.getRequiredEntities(),
+                       apuSourceBuilder.getReferencedEntities());
+            
+        } catch (Exception e) {         
+            log.error("Fail to process downloaded ap.xml, dir={}", tmpDir, e);
+            try {
+                FileSystemUtils.deleteRecursively(tmpDir);
+            } catch (IOException e1) {
+                log.error("Fail to delete directory {}", tmpDir, e1);
+            }
+            throw new IllegalStateException(e);
+        }
+        
+	}
+	
 	private void importEntity(final ArchivalEntity ae) {
 		Path tmpDir = downloadEntity(ae);
-		ApuSourceBuilder apuSourceBuilder;
-		final var importAp = new ImportAp();
-		try {						
-			apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
-					(ae.getUuid()!=null)?ae.getUuid().toString():null,
-							databaseDataProvider);
-			try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
-				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}
-		} catch (Exception e) {		    
-			log.error("Fail to process downloaded ap.xml, dir={}", tmpDir, e);
-			try {
-				FileSystemUtils.deleteRecursively(tmpDir);
-			} catch (IOException e1) {
-				log.error("Fail to delete directory {}", tmpDir, e1);
-			}
-			throw new IllegalStateException(e);
-		}
-
-		Path dataDir;
-		try {
-			dataDir = storageService.moveToDataDir(tmpDir);
-		} catch (Exception e) {
-			log.error("Fail to move to data directory, src={}", tmpDir);
-			try {
-				FileSystemUtils.deleteRecursively(tmpDir);
-			} catch (IOException e1) {
-				log.error("Fail to delete directory {}", tmpDir, e1);
-			}
-			throw new IllegalStateException(e);
-		}
-
+		
 		transactionTemplate.execute(t -> {
-			saveEntity(dataDir, importAp, apuSourceBuilder, ae, importAp.getRequiredEntities());
-			return null;
+		    importEntityTrans(t, tmpDir, ae);
+		    return null;
 		});
+		
 		
 	}
 
 	private void storeReqEnts(ApuSource apuSource, Set<Integer> reqEnts) {
-	    List<Integer> batch = new ArrayList<>(1000);
-	    for(Integer id: reqEnts) {
-	        if(batch.size()==1000) {
-	            storeReqEntsInternal(apuSource, batch);
-	            batch.clear();
-	        }
-	        batch.add(id);
-	    }
-	    if(batch.size()>0) {
-	        storeReqEntsInternal(apuSource, batch);
-	    }        
+	    BulkOperation.run(reqEnts, 1000, batch -> storeReqEntsInternal(apuSource, batch));
     }
 
     private void storeReqEntsInternal(ApuSource apuSource, List<Integer> batch) {
@@ -212,9 +204,12 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	 * @param apuSourceBuilder
 	 * @param ae Detached source entity
      * @param requiredEntities 
+     * @param referencedEntities
 	 */
 	private void saveEntity(Path dataDir, ImportAp importAp, 
-			ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae, Set<Integer> requiredEntities) {
+			ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae, 
+			Set<Integer> requiredEntities, 
+			Set<UUID> referencedEntities) {
 		// store subsequent hierarchical entities
 		ArchivalEntity parentEntity;
 		if (importAp.getParentElzaId() != null) {
@@ -260,8 +255,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		if(srcArchivalEntity.getStatus()!=EntityStatus.AVAILABLE) {
 			needReindex = true;
 		}
-		saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder, requiredEntities);
-
+		saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder, requiredEntities, referencedEntities);
+		
 		// entity received new uuid
 		if(needReindex) {
 			// -> we have to reindex all entities having this entity as parent
@@ -269,7 +264,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		}
 	}
 
-	private void reindexAfterEntityChanged(ArchivalEntity archivalEntity) {
+    private void reindexAfterEntityChanged(ArchivalEntity archivalEntity) {
 		// reindex directly connected items
 		List<ArchivalEntity> ents = archivalEntityRepository.findAllByParentEntity(archivalEntity);
 		for(ArchivalEntity ent: ents) {
@@ -279,25 +274,83 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		archivalEntityRepository.reimportConnected(archivalEntity.getId());
 	}
 
-	private void saveApuSource(Path dataDir, ArchivalEntity ae, ApuSourceBuilder apuSourceBuilder, 
-	                           Set<Integer> requiredEntities) {
+	private ArchivalEntity saveApuSource(Path dataDir, ArchivalEntity ae, ApuSourceBuilder apuSourceBuilder, 
+	                           Set<Integer> requiredEntities, 
+	                           Set<UUID> referencedEntities) {
 		UUID apusrcUuid = UUID.fromString(apuSourceBuilder.getApusrc().getUuid());
 		var apuSource = apuSourceService.createApuSource(apusrcUuid, SourceType.ARCH_ENTITY, dataDir, "");
 
 		ae.setStatus(EntityStatus.AVAILABLE);
 		ae.setApuSource(apuSource);
-		archivalEntityRepository.save(ae);
+		ArchivalEntity ret = archivalEntityRepository.save(ae);
 		
 		if(requiredEntities.size()>0) {
 		    storeReqEnts(apuSource, requiredEntities);
 		}
+		
+		updateSourceEntityLinks(apuSource, referencedEntities);		
 
 		var coreQueue = new CoreQueue();
 		coreQueue.setApuSource(apuSource);
 		coreQueueRepository.save(coreQueue);
+		
+		return ret;
 	}
 
-	private ArchivalEntity addAccessibleByElzaId(Integer elzaId) {
+	public void updateSourceEntityLinks(ApuSource apuSource, Set<UUID> referencedEntities) {
+	    // find existing links
+	    List<EntitySource> entLinks = this.entitySourceRepository.findByApuSourceFetchJoinArchivalEntity(apuSource);
+	    
+	    Set<UUID> processedUuid = new HashSet<>();
+	    List<EntitySource> deleteEntLinks = new ArrayList<>();
+	    // 
+	    for(var entLink: entLinks) {
+	        if(referencedEntities.contains(entLink.getArchivalEntity().getUuid())) {
+	            processedUuid.add(entLink.getArchivalEntity().getUuid());
+	        } else {
+	            deleteEntLinks.add(entLink);
+	        }
+	    }
+	    if(deleteEntLinks.size()>0) {
+	        BulkOperation.run(deleteEntLinks, 1000, batch -> entitySourceRepository.deleteInBatch(batch));
+	    }
+	    
+	    // prepare new links
+	    List<UUID> createEntLinks = new ArrayList<>();
+	    for(var refEnt: referencedEntities) {
+	        if(!processedUuid.contains(refEnt)) {
+	            createEntLinks.add(refEnt);
+	        }
+	    }
+	    
+	    if(createEntLinks.size()>0)
+	    {
+	        // create source links
+	        BulkOperation.run(createEntLinks, 1000,
+                          batch -> {
+                              // get referenced ents
+                              var archEnts = this.archivalEntityRepository.findByUuidIn(batch);
+                              Map<UUID, ArchivalEntity> lookup = archEnts.stream().
+                                      collect(Collectors.toMap(ArchivalEntity::getUuid, Function.identity() ) );
+                              for(var entUuid: batch) {
+                                  var ent = lookup.get(entUuid);
+                                  if(ent==null) {
+                                      ent = new ArchivalEntity();
+                                      ent.setStatus(EntityStatus.ACCESSIBLE);
+                                      ent.setUuid(entUuid);
+                                      ent = this.archivalEntityRepository.save(ent);
+                                  }
+                                  // create source link
+                                  EntitySource srcLink = new EntitySource();
+                                  srcLink.setApuSource(apuSource);
+                                  srcLink.setArchivalEntity(ent);
+                                  this.entitySourceRepository.save(srcLink);
+                              }
+                          });
+	    }
+    }
+
+    private ArchivalEntity addAccessibleByElzaId(Integer elzaId) {
 		Optional<ArchivalEntity> request = archivalEntityRepository.findByElzaId(elzaId);
 		return request.orElseGet(()->{
 			ArchivalEntity ae = new ArchivalEntity();

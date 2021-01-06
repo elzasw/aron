@@ -19,6 +19,9 @@ partTypes:
   - name: Zánik
     code: PT_AE_EXT
     viewType: STANDALONE
+  - name: Vztah
+    code: PT_AE_REL
+    viewType: STANDALONE
   - name: Informace o archivním souboru
     code: PT_FUND_INFO
     viewType: STANDALONE
@@ -73,6 +76,14 @@ itemTypes:
   - code: AE_GEO_ADMIN_REF
     name: Administrativní zařazení
     type: APU_REF
+    indexed: true
+  - code: AE_REL_REF
+    name: Vztah k
+    type: APU_REF
+    indexed: true
+  - code: AE_REL_TYPE
+    name: Druh vztahu
+    type: STRING
     indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF

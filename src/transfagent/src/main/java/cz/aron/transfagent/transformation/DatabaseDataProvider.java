@@ -1,7 +1,8 @@
 package cz.aron.transfagent.transformation;
 
+import java.util.UUID;
+
 import org.apache.commons.lang3.Validate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import cz.aron.transfagent.domain.Institution;
@@ -27,26 +28,26 @@ public class DatabaseDataProvider implements ContextDataProvider {
     }
 
     @Override
-    public String getInstitutionApu(String instCode) {
+    public UUID getInstitutionApu(String instCode) {
         Institution institution = institutionRepository.findByCode(instCode);
         if (institution != null) {
-            return institution.getUuid().toString();
+            return institution.getUuid();
         }
         return null;
     }
 
 	@Override
-	public String getArchivalEntityApuByElzaId(Integer elzaId) {
+	public UUID getArchivalEntityApuByElzaId(Integer elzaId) {
 		var entity = entityRepository.findByElzaId(elzaId);
 		if(entity.isEmpty()) 
 			return null;
 		var entityRaw = entity.get();
 		Validate.notNull(entityRaw.getUuid());
-		return entityRaw.getUuid().toString();
+		return entityRaw.getUuid();
 	}
 
 	@Override
-	public String getFundApu(String institutionCode, String fundCode) {
+	public UUID getFundApu(String institutionCode, String fundCode) {
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
         	return null;
@@ -56,7 +57,7 @@ public class DatabaseDataProvider implements ContextDataProvider {
 			return null;
 		}
 		Validate.notNull(fund.getUuid());
-		return fund.getUuid().toString();
+		return fund.getUuid();
 	}
 
 }

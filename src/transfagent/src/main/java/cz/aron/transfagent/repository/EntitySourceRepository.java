@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.EntitySource;
 
@@ -12,5 +13,7 @@ import cz.aron.transfagent.domain.EntitySource;
 public interface EntitySourceRepository extends JpaRepository<EntitySource,Integer> {
 
 	List<EntitySource> findByArchivalEntity(ArchivalEntity archivalEntity);
+
+    List<EntitySource> findByApuSourceFetchJoinArchivalEntity(ApuSource apuSource);
 
 }
