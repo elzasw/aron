@@ -236,14 +236,14 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     }
 
     @Override
-    public boolean reimport(ApuSource apuSource) {
+    public Result reimport(ApuSource apuSource) {
         if (apuSource.getSourceType() != SourceType.ARCH_DESCS)
-            return false;
+            return Result.UNSUPPORTED;
 
         var archDesc = archDescRepository.findByApuSource(apuSource);
         if (archDesc == null) {
             log.error("Missing archive description: {}", apuSource.getId());
-            return false;
+            return Result.UNSUPPORTED;
         }
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
@@ -256,9 +256,9 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             }
         } catch (Exception e) {
             log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
-            return false;
+            return Result.FAILED;
         }
-        return true;
+        return Result.REIMPORTED;
     }
 
 }

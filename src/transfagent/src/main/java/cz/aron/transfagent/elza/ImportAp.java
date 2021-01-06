@@ -39,6 +39,8 @@ public class ImportAp {
 	private String apUuid;
 	
 	private Integer elzaId;
+	
+	private Set<Integer> requiredEntities = new HashSet<>();
 
 	public String getApUuid() {
 		return apUuid;
@@ -193,8 +195,12 @@ public class ImportAp {
 			
 			parentElzaId = Integer.valueOf(adminPrntRefId);
 			
-			// TODO....
-			// String parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
+			String parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
+			if(parentEntUuid==null) {
+			    this.requiredEntities.add(parentElzaId);
+			} else {
+			    this.apusBuilder.addApuRef(part, "AE_GEO_ADMIN_REF", parentEntUuid);
+			}
 			
 		}
 	}

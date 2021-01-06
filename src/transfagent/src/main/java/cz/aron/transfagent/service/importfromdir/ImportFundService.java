@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,7 +20,6 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
@@ -29,7 +27,6 @@ import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
-import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -216,14 +213,14 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     }
 
     @Override
-    public boolean reimport(ApuSource apuSource) {
+    public Result reimport(ApuSource apuSource) {
         if (apuSource.getSourceType() != SourceType.FUND)
-            return false;
+            return Result.UNSUPPORTED;
 
         var fund = fundRepository.findByApuSource(apuSource);
         if (fund == null) {
             log.error("Missing fund: {}", apuSource.getId());
-            return false;
+            return Result.UNSUPPORTED;
         }
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
@@ -236,9 +233,9 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
             }
         } catch (Exception e) {
             log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
-            return false;
+            return Result.FAILED;
         }
-        return true;
+        return Result.REIMPORTED;
     }
 
 }

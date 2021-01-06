@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -27,7 +26,6 @@ import cz.aron.transfagent.domain.EntitySource;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportInstitution;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
@@ -106,7 +104,6 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 	 */
 	@Override
 	public boolean processDirectory(Path dir) {
-
 		List<Path> xmls;
 		try (var stream = Files.list(dir)) {
 			 xmls = stream
@@ -154,13 +151,13 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		} catch (JAXBException e) {
 			throw new IllegalStateException(e);
 		}
-
+		
 		Path dataDir;
-		try {
-			dataDir = storageService.moveToDataDir(dir);
-		} catch (IOException e) {
-			throw new IllegalStateException(e);
-		}
+	    try {
+	        dataDir = storageService.moveToDataDir(dir);
+	    } catch (IOException e) {
+	        throw new IllegalStateException(e);
+	    }
 
 		if (institution == null) {
 			createInstitution(dataDir, dir, apusrcBuilder, code, ii);
@@ -253,29 +250,30 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 	}
 
     @Override
-    public boolean reimport(ApuSource apuSource) {
+    public Result reimport(ApuSource apuSource) {
         if (apuSource.getSourceType() != SourceType.INSTITUTION)
-            return false;
+            return Result.UNSUPPORTED;
 
         var institution = institutionRepository.findByApuSource(apuSource);
         if (institution == null) {
             log.error("Missing institution: {}", apuSource.getId());
-            return false;
+            return Result.UNSUPPORTED;
         }
+        String fileName = "institution-"+institution.getCode()+".xml";
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
         ApuSourceBuilder apuSourceBuilder;
-        final var importAp = new ImportAp();
+        final var ii = new ImportInstitution();
         try {
-            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), institution.getUuid().toString(), databaseDataProvider);
+            apuSourceBuilder = ii.importInstitution(apuDir.resolve(fileName), institution.getCode());
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
         } catch (Exception e) {
             log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
-            return false;
+            return Result.FAILED;
         }
-        return true;
+        return Result.REIMPORTED;
     }
 
 }

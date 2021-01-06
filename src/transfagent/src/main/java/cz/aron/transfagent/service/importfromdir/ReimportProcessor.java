@@ -3,12 +3,19 @@ package cz.aron.transfagent.service.importfromdir;
 import cz.aron.transfagent.domain.ApuSource;
 
 public interface ReimportProcessor {
+    
+    enum Result {
+        REIMPORTED,
+        NOCHANGES,
+        UNSUPPORTED,
+        FAILED
+    };
 
 	/**
 	 * 
 	 * @param apuSource
-	 * @return Return true if apuSource was reimported
+	 * @return Return if apuSource was reimported
 	 */
-	boolean reimport(ApuSource apuSource);
+	Result reimport(ApuSource apuSource);
 
 }

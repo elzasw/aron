@@ -9,14 +9,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 
 @Service
 public class ReimportService implements ImportProcessor {
@@ -31,6 +33,9 @@ public class ReimportService implements ImportProcessor {
 	
 	@Autowired
 	private TransactionTemplate transactionTemplate;
+	
+	@Autowired
+	private CoreQueueRepository coreQueueRepository;
 	
 	List<ReimportProcessor> processors = new ArrayList<>();
 	
@@ -56,15 +61,29 @@ public class ReimportService implements ImportProcessor {
 		for(var apuSource: reimportRequests) {
 			log.debug("Reimporting apuSource: {}", apuSource.getId());
 			for(var proc: processors) {
-				if(proc.reimport(apuSource)) {
+			    var result = proc.reimport(apuSource);
+				if(result==Result.REIMPORTED||result==Result.NOCHANGES) {
 					log.info("Reimported apuSource: {}", apuSource.getId());
 					apuSource.setReimport(false);
 					apuSourceRepository.save(apuSource);
+					
+					if(result==Result.REIMPORTED) {
+                        // send to Core
+					    CoreQueue cq = new CoreQueue();
+					    cq.setApuSource(apuSource);
+					    coreQueueRepository.save(cq);
+					}
+					
 					continue apuSourceLabel;
+				} else 
+				if(result==Result.FAILED) {
+				    log.error("Reimport failed");
+				    break;
 				}
 			}
 			log.error("Item cannot be reimported: {}", apuSource.getId());
 			ic.setFailed(true);
+			break;
 		}
 		return null;
 	}

@@ -70,6 +70,10 @@ itemTypes:
     name: Stručná charakteristika
     type: STRING
     indexed: false
+  - code: AE_GEO_ADMIN_REF
+    name: Administrativní zařazení
+    type: APU_REF
+    indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru

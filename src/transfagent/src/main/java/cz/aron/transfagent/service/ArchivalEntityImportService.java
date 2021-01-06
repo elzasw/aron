@@ -68,6 +68,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	
 	private final ConfigurationLoader configurationLoader;
 	
+	private final ConfigElza configElza;
+	
 	//private ThreadStatus status;
 	
 	public ArchivalEntityImportService(ElzaExportService elzaExportService,
@@ -79,7 +81,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			final EntitySourceRepository entitySourceRepository,
 			final ReimportService reimportService,
 			final FileImportService importService,
-			final ConfigurationLoader configurationLoader) {
+			final ConfigurationLoader configurationLoader,
+			final ConfigElza configElza) {
 		this.elzaExportService = elzaExportService;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.transactionTemplate = transactionTemplate;
@@ -91,6 +94,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		this.reimportService = reimportService;
 		this.importService = importService;
 		this.configurationLoader = configurationLoader;
+		this.configElza = configElza;
 	}
 	
 	@PostConstruct
@@ -404,18 +408,18 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	}*/
 
 	@Override
-	public boolean reimport(ApuSource apuSource) {
+	public Result reimport(ApuSource apuSource) {
 		if(apuSource.getSourceType()!=SourceType.ARCH_ENTITY)
-			return false;
+			return Result.UNSUPPORTED;
 
 		ArchivalEntity archEntity = archivalEntityRepository.findByApuSource(apuSource);
 		if(archEntity==null) {
 			log.error("Missing archival entity: {}", apuSource.getId());
-			return false;
+			return Result.UNSUPPORTED;
 		}
 		if(archEntity.getStatus()!=EntityStatus.AVAILABLE) {
 			log.warn("Archival entity {} cannot be reimported, status: {}", apuSource.getId(), archEntity.getStatus());
-			return true;
+			return Result.NOCHANGES;
 		}
 
 		Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());		
@@ -428,13 +432,17 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			}
 		} catch (Exception e) {
 			log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
-			return false;
+			return Result.FAILED;
 		}
-		return true;
+		return Result.REIMPORTED;
 	}
 
     @Override
     public void importData(ImportContext ic) {
+        if (configElza.isDisabled()) {
+            return;
+        }
+        
         var ids = archivalEntityRepository.findTop1000ByStatusOrderById(EntityStatus.ACCESSIBLE);
         for(var id: ids) {
             try {

@@ -33,7 +33,6 @@ import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.repository.ApuSourceRepository;
@@ -276,18 +275,18 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
     }
 
     @Override
-    public boolean reimport(cz.aron.transfagent.domain.ApuSource apuSource) {
+    public Result reimport(cz.aron.transfagent.domain.ApuSource apuSource) {
         if (apuSource.getSourceType() != SourceType.DIRECT)
-            return false;
+            return Result.UNSUPPORTED;
 
         var daoFile = daoFileRepository.findByApuSource(apuSource);
         if (daoFile == null) {
             log.error("Missing dao file: {}", apuSource.getId());
-            return false;
+            return Result.UNSUPPORTED;
         }
         if (daoFile.getState() != DaoState.ACCESSIBLE) {
             log.warn("Dao file {} cannot be reimported, status: {}", apuSource.getId(), daoFile.getState());
-            return true;
+            return Result.UNSUPPORTED;
         }
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
@@ -300,9 +299,9 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             }
         } catch (Exception e) {
             log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
-            return false;
+            return Result.FAILED;
         }
-        return true;
+        return Result.REIMPORTED;
     }
 
 }
