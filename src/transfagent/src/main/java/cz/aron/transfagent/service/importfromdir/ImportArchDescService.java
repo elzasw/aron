@@ -134,7 +134,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var tmp = fileName.substring("archdesc-".length());
         var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
 
-        var iad = new ImportArchDesc();
+        var iad = new ImportArchDesc(archivalEntityRepository);
         ApuSourceBuilder apusrcBuilder;
 
         try {

@@ -64,4 +64,19 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 	        + "ORDER BY depth")
 	List<UUID> findByElzaIdWithParents(Integer elzaId);
 	
+	@Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid) as "
+            + "( "
+            + "SELECT uuid,parent_entity_id,1 as depth "
+            + "FROM archival_entity ae "
+            + "WHERE ae.uuid=?1 "
+            + "UNION ALL "
+            + "SELECT ae2.uuid, ae2.parent_entity_id, cte.depth+1 "
+            + "FROM archival_entity ae2, cte "
+            + "WHERE ae2.entity_id=cte.parent_entity_id "
+            + ") "
+            + "SELECT CAST(uuid as VARCHAR(50)) "
+            + "FROM cte "
+            + "ORDER BY depth")
+	List<UUID> findByUUIDWithParents(UUID uuid);
+	
 }
