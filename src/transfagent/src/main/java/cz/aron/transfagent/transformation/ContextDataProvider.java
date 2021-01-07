@@ -1,5 +1,6 @@
 package cz.aron.transfagent.transformation;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -10,7 +11,7 @@ public interface ContextDataProvider {
 
 	UUID getInstitutionApu(String instCode);
 	
-	UUID getArchivalEntityApuByElzaId(Integer elzaId);
+	List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId);
 
 	UUID getFundApu(String institutionCode, String fundCode);
 

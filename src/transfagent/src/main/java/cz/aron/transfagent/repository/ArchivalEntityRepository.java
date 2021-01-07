@@ -47,5 +47,21 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 	void reimportConnected(@Param("entId") Integer entId);
 
 	@Query("select ae from ArchivalEntity ae where ae.elzaId in (:ids)")
-    List<ArchivalEntity> findByElzaIds(@Param("ids") List<Integer> ids);    
+    List<ArchivalEntity> findByElzaIds(@Param("ids") List<Integer> ids);
+	
+	@Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid) as "
+	        + "( "
+	        + "SELECT uuid,parent_entity_id,1 as depth "
+	        + "FROM archival_entity ae "
+	        + "WHERE ae.elza_id=?1 "
+	        + "UNION ALL "
+	        + "SELECT ae2.uuid, ae2.parent_entity_id, cte.depth+1 "
+	        + "FROM archival_entity ae2, cte "
+	        + "WHERE ae2.entity_id=cte.parent_entity_id "
+	        + ") "
+	        + "SELECT CAST(uuid as VARCHAR(50)) "
+	        + "FROM cte "
+	        + "ORDER BY depth")
+	List<UUID> findByElzaIdWithParents(Integer elzaId);
+	
 }

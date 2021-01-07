@@ -11,6 +11,7 @@ import java.util.Set;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
@@ -174,15 +175,15 @@ public class ImportAp {
 	        throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
 	    }
         Integer apElzaId = Integer.valueOf(apRef.getApid());
-        var apUuid = this.dataProvider.getArchivalEntityApuByElzaId(apElzaId);
-        if(apUuid==null) {
+        var apUuid = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        if(CollectionUtils.isEmpty(apUuid)) {
             this.requiredEntities.add(apElzaId);
             return;
         }
 
         // entity exists -> we can create link
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
-        this.apusBuilder.addApuRef(part, "AE_REL_REF", apUuid);
+        this.apusBuilder.addApuRefsFirstVisible(part, "AE_REL_REF", apUuid);
         this.apusBuilder.addEnum(part, "AE_REL_TYPE", relType, true);
 	    //
     }
@@ -238,11 +239,11 @@ public class ImportAp {
 			
 			parentElzaId = Integer.valueOf(adminPrntRefId);
 			
-			var parentEntUuid = this.dataProvider.getArchivalEntityApuByElzaId(parentElzaId);
-			if(parentEntUuid==null) {
+			var parentEntUuid = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(parentElzaId);
+			if(CollectionUtils.isEmpty(requiredEntities)) {
 			    this.requiredEntities.add(parentElzaId);
 			} else {
-			    this.apusBuilder.addApuRef(part, "AE_GEO_ADMIN_REF", parentEntUuid);
+			    this.apusBuilder.addApuRefsFirstVisible(part, "AE_GEO_ADMIN_REF", parentEntUuid);
 			}
 			
 		}

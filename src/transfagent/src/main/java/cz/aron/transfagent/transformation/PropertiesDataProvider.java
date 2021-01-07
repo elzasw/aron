@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -32,9 +33,9 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	}
 
 	@Override
-	public UUID getArchivalEntityApuByElzaId(Integer elzaId) {
+	public List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
 		String propName = "entity."+elzaId;
-		return UUID.fromString(getProperty(propName));
+		return List.of(UUID.fromString(getProperty(propName)));
 	}
 
 	@Override

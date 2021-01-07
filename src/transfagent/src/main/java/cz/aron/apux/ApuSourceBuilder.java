@@ -1,7 +1,9 @@
 package cz.aron.apux;
 
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -110,6 +112,19 @@ public class ApuSourceBuilder {
 		return item;
 	}
 
+	public List<ItemRef> addApuRefsFirstVisible(Part part, String itemType, List<UUID> uuids) {	    
+	    var itemRefs = new ArrayList<ItemRef>();
+	    var first = true;
+	    for(var uuid:uuids) {
+	        var itemRef = addApuRef(part,itemType,uuid);
+	        if (first) {
+	            first = false;
+	            itemRef.setVisible(true);
+	        }
+	    }
+	    return itemRefs;
+	}
+	
 	public Set<UUID> getReferencedEntities() {
         return referencedEntities;
     }

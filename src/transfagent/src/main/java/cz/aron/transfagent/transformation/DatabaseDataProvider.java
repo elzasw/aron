@@ -1,6 +1,8 @@
 package cz.aron.transfagent.transformation;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.Validate;
 import org.springframework.stereotype.Service;
@@ -37,14 +39,10 @@ public class DatabaseDataProvider implements ContextDataProvider {
     }
 
 	@Override
-	public UUID getArchivalEntityApuByElzaId(Integer elzaId) {
-		var entity = entityRepository.findByElzaId(elzaId);
-		if(entity.isEmpty()) 
-			return null;
-		var entityRaw = entity.get();
-		Validate.notNull(entityRaw.getUuid());
-		return entityRaw.getUuid();
-	}
+    public List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
+        return entityRepository.findByElzaIdWithParents(elzaId).stream().filter(uuid -> uuid != null)
+                .collect(Collectors.toList());
+    }
 
 	@Override
 	public UUID getFundApu(String institutionCode, String fundCode) {
