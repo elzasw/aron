@@ -30,7 +30,7 @@ public class FileImportServiceTest extends AbstractCommonTest {
 
     private final String FILE_XML_EMPTY = "apux-00.xml";
 
-    private final String DIR_TO = "src/test/resources/input/direct";
+    private final String DIR_TO_DIRECT = "src/test/resources/input/direct";
 
     private final String DIR_DATA = "src/test/resources/data";
 
@@ -43,11 +43,7 @@ public class FileImportServiceTest extends AbstractCommonTest {
 
     @Test
     public void testImportDirectDirSuccess() throws IOException, InterruptedException {
-
-        FileUtils.copyDirectory(new File(DIR_FROM), new File(DIR_TO));
-        do {
-            Thread.sleep(1000);
-        } while (!isEmpty(Path.of(DIR_TO)));
+        processXmlFile(DIR_FROM, DIR_TO_DIRECT);
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.size() == 1);
@@ -61,12 +57,8 @@ public class FileImportServiceTest extends AbstractCommonTest {
 
     @Test
     public void testImportDirectDirError() throws IOException, InterruptedException {
-
         FileSystemUtils.deleteRecursively(new File(DIR_ERROR));
-        FileUtils.copyDirectory(new File(DIR_FROM_ERR), new File(DIR_TO));
-        do {
-            Thread.sleep(1000);
-        } while (!isEmpty(Path.of(DIR_TO)));
+        processXmlFile(DIR_FROM_ERR, DIR_TO_DIRECT);
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.isEmpty());

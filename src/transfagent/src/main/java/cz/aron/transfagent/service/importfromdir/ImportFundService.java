@@ -222,17 +222,18 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
             log.error("Missing fund: {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
+        String fileName = "fund-" + fund.getCode() + ".xml";
 
-        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
         ApuSourceBuilder apuSourceBuilder;
-        final var importAp = new ImportAp();
+        var ifi = new ImportFundInfo();
         try {
-            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), fund.getUuid().toString(), databaseDataProvider);
+            apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), databaseDataProvider);
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
         } catch (Exception e) {
-            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            log.error("Fail to process downloaded {}, dir={}", apuDir, e);
             return Result.FAILED;
         }
         return Result.REIMPORTED;
