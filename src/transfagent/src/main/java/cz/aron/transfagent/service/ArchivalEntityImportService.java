@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -160,38 +161,51 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		
 	}
 
-	private void storeReqEnts(ApuSource apuSource, Set<Integer> reqEnts) {
-	    BulkOperation.run(reqEnts, 1000, batch -> storeReqEntsInternal(apuSource, batch));
+	private List<EntitySource> storeReqEnts(ApuSource apuSource, Set<Integer> reqEnts) {
+	    List<EntitySource> storedEntSources = new ArrayList<>();
+	    BulkOperation.run(reqEnts, 1000, batch -> storedEntSources.addAll(storeReqEntsInternal(apuSource, batch)));
+	    return storedEntSources;
     }
 
-    private void storeReqEntsInternal(ApuSource apuSource, List<Integer> batch) {
+    private List<EntitySource> storeReqEntsInternal(ApuSource apuSource, List<Integer> batch) {
+        List<EntitySource> storedEntSources = new ArrayList<>();
+        
         List<ArchivalEntity> ents = archivalEntityRepository.findByElzaIds(batch);
         List<Integer> newIds; 
         if(ents.size()>0) {
-            Set<Integer> lookup = new HashSet<>();
-            lookup.addAll(batch);
+            Set<Integer> existingElzaIds = new HashSet<>();
+                        
+            newIds = new ArrayList<>(batch.size()-ents.size());
             
-            newIds = ents.stream()
-                    .map(ArchivalEntity::getElzaId)
-                    .filter(id -> !lookup.contains(id) )
-                    .collect(Collectors.toList());
-            
+            for(var ent: ents) {
+                existingElzaIds.add(ent.getElzaId());
+                
+                // entity in DB -> create only entity source
+                storedEntSources.add( createEntitySource(apuSource, ent) );
+            }
         } else {
             newIds = batch;
         }
+        
         // insert into DB
         for(Integer elzaId: newIds) {
             ArchivalEntity ae = new ArchivalEntity();
             ae.setElzaId(elzaId);
             ae.setStatus(EntityStatus.ACCESSIBLE);
-            archivalEntityRepository.save(ae);
+            ae = archivalEntityRepository.save(ae);
             
-            // mark as required by master entity
-            EntitySource es = new EntitySource();
-            es.setApuSource(apuSource);
-            es.setArchivalEntity(ae);
-            this.entitySourceRepository.save(es);
+            storedEntSources.add( createEntitySource(apuSource, ae) );
         }
+        
+        return storedEntSources;
+    }
+
+    private EntitySource createEntitySource(ApuSource apuSource, ArchivalEntity ae) {
+        // mark as required by master entity
+        EntitySource es = new EntitySource();
+        es.setApuSource(apuSource);
+        es.setArchivalEntity(ae);
+        return entitySourceRepository.save(es);
     }
 
     /**
@@ -284,11 +298,14 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		ae.setApuSource(apuSource);
 		ArchivalEntity ret = archivalEntityRepository.save(ae);
 		
+		List<EntitySource> createdEntitySource;
 		if(requiredEntities.size()>0) {
-		    storeReqEnts(apuSource, requiredEntities);
+		    createdEntitySource = storeReqEnts(apuSource, requiredEntities);
+		} else {
+		    createdEntitySource = Collections.emptyList();
 		}
 		
-		updateSourceEntityLinks(apuSource, referencedEntities);		
+		updateSourceEntityLinks(apuSource, referencedEntities, createdEntitySource);		
 
 		var coreQueue = new CoreQueue();
 		coreQueue.setApuSource(apuSource);
@@ -297,7 +314,17 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		return ret;
 	}
 
-	public void updateSourceEntityLinks(ApuSource apuSource, Set<UUID> referencedEntities) {
+	/**
+	 * 
+	 * @param apuSource
+	 * @param referencedEntities
+	 * @param extraEntitySource List of already saved entitities
+	 */
+	public void updateSourceEntityLinks(ApuSource apuSource, Set<UUID> referencedEntities, 
+	                                    List<EntitySource> extraEntitySource) {
+	    Set<EntitySource> validEntSrcs = new HashSet<>();
+	    validEntSrcs.addAll(extraEntitySource);
+	    
 	    // find existing links
 	    List<EntitySource> entLinks = this.entitySourceRepository.findByApuSourceJoinFetchArchivalEntity(apuSource);
 	    
@@ -305,6 +332,11 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	    List<EntitySource> deleteEntLinks = new ArrayList<>();
 	    // 
 	    for(var entLink: entLinks) {
+	        // skip recently added entity sources
+	        if(validEntSrcs.contains(entLink)) {
+	            continue;
+	        }
+	        
 	        if(referencedEntities.contains(entLink.getArchivalEntity().getUuid())) {
 	            processedUuid.add(entLink.getArchivalEntity().getUuid());
 	        } else {
@@ -341,10 +373,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
                                       ent = this.archivalEntityRepository.save(ent);
                                   }
                                   // create source link
-                                  EntitySource srcLink = new EntitySource();
-                                  srcLink.setApuSource(apuSource);
-                                  srcLink.setArchivalEntity(ent);
-                                  this.entitySourceRepository.save(srcLink);
+                                  createEntitySource(apuSource, ent);
                               }
                           });
 	    }

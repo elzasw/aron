@@ -121,7 +121,7 @@ public class ElzaXmlReader {
 
 	public static String getApRefId(Fragment frg, String itemType) {
 	    DescriptionItemAPRef item = getApRef(frg, itemType);
-	    return item.getApid();
+	    return item!=null?item.getApid():null;
 	}
 	
 	private static List<String> getTypes(Fragment frg, String[] types) {
