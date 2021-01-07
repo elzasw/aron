@@ -25,5 +25,5 @@ public interface DaoFileRepository extends JpaRepository<DaoFile, Integer> {
 	@EntityGraph(attributePaths = { "apuSource" })
 	List<DaoFile> findAllByUuidIn(List<UUID> uuids);
 
-	DaoFile findByApuSource(ApuSource apuSource);
+	List<DaoFile> findByApuSource(ApuSource apuSource);
 }

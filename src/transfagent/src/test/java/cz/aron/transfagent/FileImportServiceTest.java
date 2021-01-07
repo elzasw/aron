@@ -9,41 +9,19 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.service.FileImportService;
 
 @SpringBootTest
 public class FileImportServiceTest extends AbstractCommonTest {
 
-    private final String DIR_FROM = "src/test/resources/files/xml";
-
-    private final String FILE_XML = "apux-03.xml";
-
-    private final String DIR_FROM_ERR = "src/test/resources/files/xml_err";
-
-    private final String FILE_XML_EMPTY = "apux-00.xml";
-
-    private final String DIR_TO_DIRECT = "src/test/resources/input/direct";
-
-    private final String DIR_DATA = "src/test/resources/data";
-
-    private final String DIR_ERROR = "src/test/resources/error";
-
-    private final String DIRECT_ERR = "direct-err";
-
-    @Autowired
-    FileImportService fileImportService;
-
     @Test
     public void testImportDirectDirSuccess() throws IOException, InterruptedException {
-        processXmlFile(DIR_FROM, DIR_TO_DIRECT);
+        processXmlFile(DIR_FROM_DIRECT, DIR_TO_DIRECT);
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.size() == 1);
@@ -52,19 +30,19 @@ public class FileImportServiceTest extends AbstractCommonTest {
         assertTrue(sourceType == SourceType.DIRECT);
 
         String dataDir = apuSources.get(0).getDataDir();
-        assertTrue(Files.exists(Path.of(DIR_DATA, dataDir, FILE_XML)));
+        assertTrue(Files.exists(Path.of(DIR_DATA, dataDir, FILE_DIRECT)));
     }
 
     @Test
     public void testImportDirectDirError() throws IOException, InterruptedException {
         FileSystemUtils.deleteRecursively(new File(DIR_ERROR));
-        processXmlFile(DIR_FROM_ERR, DIR_TO_DIRECT);
+        processXmlFile(DIR_FROM_DIRECT_ERR, DIR_TO_DIRECT);
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.isEmpty());
 
         String dirDate = String.format("%1$tY%1$tm%1$td", new Date());
-        assertTrue(Files.exists(Path.of(DIR_ERROR, dirDate, DIRECT_ERR, FILE_XML_EMPTY)));
+        assertTrue(Files.exists(Path.of(DIR_ERROR, dirDate, DIRECT_ERR, FILE_DIRECT_EMPTY)));
     }
 
 }

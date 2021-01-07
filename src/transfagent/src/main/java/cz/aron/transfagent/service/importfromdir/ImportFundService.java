@@ -233,7 +233,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
         } catch (Exception e) {
-            log.error("Fail to process downloaded {}, dir={}", apuDir, e);
+            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
             return Result.FAILED;
         }
         return Result.REIMPORTED;

@@ -25,16 +25,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.apux.ApuValidator;
 import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.ApuSource;
+import cz.aron.apux._2020.Daos;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
@@ -271,7 +269,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             coreQueueRepository.save(coreQueue);
             return null;
         });
-        log.info("Direct updated uuid={}, directory={}", apux.getUuid(), origDir);
+        log.info("Direct updated uuid={}, directory={}, file={}", apux.getUuid(), dataDir, origDir);
     }
 
     @Override
@@ -279,26 +277,33 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
         if (apuSource.getSourceType() != SourceType.DIRECT)
             return Result.UNSUPPORTED;
 
-        var daoFile = daoFileRepository.findByApuSource(apuSource);
-        if (daoFile == null) {
-            log.error("Missing dao file: {}", apuSource.getId());
+        List<DaoFile> daoFiles = daoFileRepository.findByApuSource(apuSource);
+        if (daoFiles.isEmpty()) {
+            log.error("Missing dao file(s): {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        if (daoFile.getState() != DaoState.ACCESSIBLE) {
-            log.warn("Dao file {} cannot be reimported, status: {}", apuSource.getId(), daoFile.getState());
-            return Result.UNSUPPORTED;
+        for (DaoFile daoFile: daoFiles) {
+            if (daoFile.getState() != DaoState.ACCESSIBLE) {
+                log.warn("Dao file(s) {} cannot be reimported, status: {}", apuSource.getId(), daoFile.getState());
+                return Result.UNSUPPORTED;
+            }
         }
 
-        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
-        ApuSourceBuilder apuSourceBuilder;
-        final var importAp = new ImportAp();
+        Path dataDir = storageService.getApuDataDir(apuSource.getDataDir());
+        String code = apuSource.getOrigDir().substring("direct-".length());
+        String fileName = "apux-" + code + ".xml";
         try {
-            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), daoFile.getUuid().toString(), databaseDataProvider);
-            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
-                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-            }
+            byte[] xml = Files.readAllBytes(dataDir.resolve(fileName));
+            ApuSource apux = unmarshalApuSourceFromXml(xml);
+            Daos daos = apux.getApus().getApu().get(0).getDaos();
+            List<UUID> daosUuids = daos.getUuid().stream()
+                    .map(uuidStr -> UUID.fromString(uuidStr))
+                    .collect(Collectors.toList());;
+            List<DaoFile> dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
+
+            updateApuSource(apuSource, dataDir, fileName, apux, daosUuids, dbDaos);
         } catch (Exception e) {
-            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            log.error("Fail to reimport, dir={}", dataDir, e);
             return Result.FAILED;
         }
         return Result.REIMPORTED;

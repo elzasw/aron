@@ -44,6 +44,7 @@ public class ImportFundServiceTest extends AbstractCommonTest {
 
         Institution institution = institutions.get(0);
         Fund fund = funds.get(0);
+        assertTrue(fund.getCode().equals(FUND_CODE));
         assertTrue(fund.getApuSource().equals(apuSource));
         assertTrue(fund.getInstitution().equals(institution));
 
