@@ -17,11 +17,11 @@ config:
   file: src/test/resources/config/types.yaml
 
 aron:
-  workDir: src/test/resources/
+  workDir: target/test-resources
 
 dao:
   dir:
-    path: C:/temp/transfagent/daos/
+    path: target/test-resources/daos
 
 # Parametry přístupu k jádru
 aronCore:

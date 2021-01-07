@@ -46,7 +46,7 @@ public class ImportInstitutionServiceTest extends AbstractCommonTest {
         assertTrue(entitySource.getArchivalEntity().equals(archivalEntity));
         assertTrue(entitySource.getApuSource().equals(apuSource));
 
-        Institution institution = institutionRepository.findByApuSource(apuSources.get(0));
+        Institution institution = institutionRepository.findByApuSource(apuSource);
         assertNotNull(institution);
         assertTrue(institution.getCode().equals(INSTITUTION_CODE));
 
