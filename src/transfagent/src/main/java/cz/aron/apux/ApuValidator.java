@@ -73,10 +73,13 @@ public class ApuValidator {
         }
     }
 
-    public void validateItem(String key, Types value) {
-        Types type = mapItems.get(key);
-        if (type == null || type != value) {
-            throw new IllegalStateException("Illegal " + value + " item: " + key);
+    public void validateItem(String itemType, Types value) {
+        Types type = mapItems.get(itemType);
+        if (type == null ) {
+            throw new IllegalStateException("Item type not found in definition, item type: "+itemType);            
+        }
+        if( type != value) {
+            throw new IllegalStateException("Wrong type of item type: " + itemType + ", expected: " + type + ", received: "+ value);
         }
     }
 

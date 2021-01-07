@@ -299,7 +299,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
 	public void updateSourceEntityLinks(ApuSource apuSource, Set<UUID> referencedEntities) {
 	    // find existing links
-	    List<EntitySource> entLinks = this.entitySourceRepository.findByApuSourceFetchJoinArchivalEntity(apuSource);
+	    List<EntitySource> entLinks = this.entitySourceRepository.findByApuSourceJoinFetchArchivalEntity(apuSource);
 	    
 	    Set<UUID> processedUuid = new HashSet<>();
 	    List<EntitySource> deleteEntLinks = new ArrayList<>();

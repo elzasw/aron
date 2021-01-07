@@ -63,7 +63,7 @@ itemTypes:
     indexed: true
   - code: AE_IDENT_TYPE
     name: Druh identifikátoru
-    type: STRING
+    type: ENUM
     indexed: true
   - code: AE_IDENT_VALUE
     name: Hodnota identifikátoru

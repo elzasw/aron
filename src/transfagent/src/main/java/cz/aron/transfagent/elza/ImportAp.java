@@ -141,6 +141,9 @@ public class ImportAp {
 			case "PT_REL":
 				importRel(apu, frg);
 				break;
+			case "PT_CRE":
+			    importCre(apu, frg);
+			    break;
 			default:
 				throw new IllegalStateException("AP with unsupported part, type: "+frg.getT());
 			}
@@ -152,7 +155,15 @@ public class ImportAp {
 		return apusBuilder;
 	}
 
-	private void importRel(Apu apu, Fragment frg) {
+	private void importCre(Apu apu, Fragment frg) {
+        // TODO Auto-generated method stub
+        // PT_AE_CRE
+	    // CRE_DATE
+	    // CRE_TYPE
+	    // CRE_CLASS
+    }
+
+    private void importRel(Apu apu, Fragment frg) {
 
 	    DescriptionItemAPRef apRef = ElzaXmlReader.getApRef(frg, ElzaTypes.REL_ENTITY);
 	    if(apRef==null) {
@@ -196,6 +207,9 @@ public class ImportAp {
         case "ARCHNUM":
             // ignored idents
             return;
+        case "INTERPI":
+            identType = "INTERPI";
+            break;
         case "NUTSLAU":
             identType = "NUTS/LAU";
             break;
