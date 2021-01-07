@@ -240,7 +240,7 @@ public class ImportAp {
 			parentElzaId = Integer.valueOf(adminPrntRefId);
 			
 			var parentEntUuid = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(parentElzaId);
-			if(CollectionUtils.isEmpty(requiredEntities)) {
+			if(CollectionUtils.isEmpty(parentEntUuid)) {
 			    this.requiredEntities.add(parentElzaId);
 			} else {
 			    this.apusBuilder.addApuRefsFirstVisible(part, "AE_GEO_ADMIN_REF", parentEntUuid);
