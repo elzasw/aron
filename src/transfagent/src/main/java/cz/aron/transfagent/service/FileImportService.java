@@ -1,8 +1,6 @@
 package cz.aron.transfagent.service;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,12 +36,13 @@ public class FileImportService implements SmartLifecycle {
             ImportDirectService importDirectService, ImportDaoService importDaoService,
             ImportArchDescService importArchDescService) throws IOException {
         this.storageService = storageService;
+        
         // TODO: Make services as self registered
-        importProcessors.add(importDirectService);
-        importProcessors.add(importInstitutionService);
-        importProcessors.add(importFundService);
-        importProcessors.add(importArchDescService);
-        importProcessors.add(importDaoService);
+        registerImportProcessor(importDirectService);
+        registerImportProcessor(importInstitutionService);
+        registerImportProcessor(importFundService);
+        registerImportProcessor(importArchDescService);
+        registerImportProcessor(importDaoService);
         
         initDirs();
     }
@@ -114,7 +113,14 @@ public class FileImportService implements SmartLifecycle {
     }
 
 	public void registerImportProcessor(ImportProcessor importProcessor) {
-		importProcessors.add(importProcessor);		
+	    for(int i=0; i<importProcessors.size(); i++) {
+	        var p = importProcessors.get(i);
+	        if(importProcessor.getPriority()>p.getPriority()) {
+	            importProcessors.add(0, importProcessor);
+	            return;
+	        }		
+	    }
+	    importProcessors.add(importProcessor);
 	}
 
 }

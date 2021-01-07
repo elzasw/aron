@@ -50,9 +50,11 @@ public class ReimportService implements ImportProcessor {
 
 	@Override
 	public void importData(final ImportContext ic) {
-		transactionTemplate.execute(t -> importTrans(ic));
-		
+		transactionTemplate.execute(t -> importTrans(ic));		
 	}
+	
+	@Override
+	public int getPriority() { return -100; }
 
 	private Object importTrans(ImportContext ic) {
 		// check from DB reimport request
