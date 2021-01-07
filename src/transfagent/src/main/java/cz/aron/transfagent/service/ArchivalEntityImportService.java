@@ -512,6 +512,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
 			}
+			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());
+			this.updateSourceEntityLinks(apuSource, apuSourceBuilder.getReferencedEntities(), ess);
 		} catch (Exception e) {
 			log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
 			return Result.FAILED;
