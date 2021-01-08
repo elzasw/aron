@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +15,7 @@ import javax.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -23,20 +23,18 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchDesc;
-import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
-import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.ArchivalEntityImportService;
+import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -54,8 +52,6 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
     private final FundRepository fundRepository;
 
-    private final ArchivalEntityRepository archivalEntityRepository;
-
     private final InstitutionRepository institutionRepository;
 
     private final ApuSourceRepository apuSourceRepository;
@@ -69,20 +65,25 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     private final DatabaseDataProvider databaseDataProvider;
 
     private final ConfigurationLoader configurationLoader;
+    
+    private final ArchivalEntityImportService archivalEntityImportService;
+    
+    private final FileImportService fileImportService;
 
     final private String ARCHDESC_DIR = "archdesc";
 
     public ImportArchDescService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
-            FundRepository fundRepository, ArchivalEntityRepository archivalEntityRepository,
+            FundRepository fundRepository,
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, ArchDescRepository archDescRepository,
             TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
-            ConfigurationLoader configurationLoader) {
+            ConfigurationLoader configurationLoader,
+            final ArchivalEntityImportService archivalEntityImportService,
+            final FileImportService fileImportService) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
         this.fundRepository = fundRepository;
-        this.archivalEntityRepository = archivalEntityRepository;
         this.institutionRepository = institutionRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
@@ -90,12 +91,18 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.transactionTemplate = transactionTemplate;
         this.databaseDataProvider = databaseDataProvider;
         this.configurationLoader = configurationLoader;
+        this.archivalEntityImportService = archivalEntityImportService;
+        this.fileImportService = fileImportService;
     }
 
     @PostConstruct
     void register() {
         reimportService.registerReimportProcessor(this);
+        fileImportService.registerImportProcessor(this);
     }
+    
+    @Override
+    public int getPriority() { return 7; }    
 
     @Override
     protected Path getInputDir() {
@@ -133,12 +140,30 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var fileName = archdescXml.get().getFileName().toString();
         var tmp = fileName.substring("archdesc-".length());
         var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
+        
+        transactionTemplate.execute(t -> {
+           importArchDesc(t, dir, fundCode, archdescXml.get());
+           return null;
+        });
+        return true;
+    }
 
-        var iad = new ImportArchDesc(archivalEntityRepository);
+    /**
+     * Real import
+     * 
+     * Has to be run in transaction
+     * @param t 
+     * @param dir
+     * @param fundCode
+     * @param archdescXmlPath
+     */
+    private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
+
+        var iad = new ImportArchDesc();
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = iad.importArchDesc(archdescXml.get(), databaseDataProvider);
+            apusrcBuilder = iad.importArchDesc(archdescXmlPath, databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -147,7 +172,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         var institution = institutionRepository.findByCode(iad.getInstitutionCode());
         if (institution == null) {
-        	throw new NullPointerException("The entry Institution code={" + iad.getInstitutionCode() + "} must exist.");
+            throw new NullPointerException("The entry Institution code={" + iad.getInstitutionCode() + "} must exist.");
         }
 
         var fund = fundRepository.findByCodeAndInstitution(fundCode, institution);
@@ -172,66 +197,54 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         var archDesc = archDescRepository.findByFund(fund);
         if (archDesc == null) {
-            createArchDesc(fund, dataDir, dir, apusrcBuilder);
+            archDesc = createArchDesc(fund, dataDir, dir, apusrcBuilder);
         } else {
             updateArchDesc(archDesc, dataDir, dir);
         }
 
-        Set<UUID> uuids = iad.getApRefs();
-        for (UUID uuid : uuids) {
-        	var archivalEntity = archivalEntityRepository.findByUuid(uuid).orElse(null);
-        	if (archivalEntity == null) {
-        		archivalEntity = new ArchivalEntity();
-        		archivalEntity.setUuid(uuid);
-            	archivalEntity.setApuSource(fund.getApuSource());
-            	archivalEntity.setStatus(EntityStatus.ACCESSIBLE);
-            	archivalEntity.setLastUpdate(ZonedDateTime.now());
-        		archivalEntityRepository.save(archivalEntity);
-        	}
-        }
-        return true;
+        // Request entities and store refs
+        Set<UUID> uuids = iad.getApRefs();        
+        archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
     }
 
-    private void createArchDesc(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
+    private ArchDesc createArchDesc(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
     	
         var archDescUuid = UUID.randomUUID();
         var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
-        transactionTemplate.execute(t -> {
-            var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.ARCH_DESCS, 
+        var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.ARCH_DESCS, 
             		dataDir, origDir.getFileName().toString());
 
-            var archDesc = new ArchDesc();
-            archDesc.setApuSource(apuSource);
-            archDesc.setFund(fund);
-            archDesc.setUuid(archDescUuid);
-            archDesc = archDescRepository.save(archDesc);
+        var archDesc = new ArchDesc();
+        archDesc.setApuSource(apuSource);
+        archDesc.setFund(fund);
+        archDesc.setUuid(archDescUuid);
+        archDesc = archDescRepository.save(archDesc);
 
-            var coreQueue = new CoreQueue();
-            coreQueue.setApuSource(apuSource);
-            coreQueueRepository.save(coreQueue);
-            return null;
-        });
+        var coreQueue = new CoreQueue();
+        coreQueue.setApuSource(apuSource);
+        coreQueueRepository.save(coreQueue);
+
         log.info("ArchDesc created uuid={}", archDescUuid);
+        
+        return archDesc;
     }
 
     private void updateArchDesc(ArchDesc archDesc, Path dataDir, Path origDir) {
     	
         var oldDir = archDesc.getApuSource().getDataDir();
 
-        transactionTemplate.execute(t -> {
-            var apuSource = archDesc.getApuSource();
-            apuSource.setDataDir(dataDir.toString());
-            apuSource.setOrigDir(origDir.getFileName().toString());
+        var apuSource = archDesc.getApuSource();
+        apuSource.setDataDir(dataDir.toString());
+        apuSource.setOrigDir(origDir.getFileName().toString());
 
-            var coreQueue = new CoreQueue();
-            coreQueue.setApuSource(apuSource);
+        var coreQueue = new CoreQueue();
+        coreQueue.setApuSource(apuSource);
 
-            apuSourceRepository.save(apuSource);
-            coreQueueRepository.save(coreQueue);
-            return null;
-        });
+        apuSourceRepository.save(apuSource);
+        coreQueueRepository.save(coreQueue);
+
         log.info("ArchDesc updated uuid={}, original data dir {}", archDesc.getUuid(), oldDir);
     }
 
@@ -245,17 +258,24 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             log.error("Missing archive description: {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-
-        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());     
+        var fund = archDesc.getFund();
+        var fileName = "archdesc-"+fund.getCode()+".xml";
+        
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        var inputFile = apuDir.resolve(fileName);
+             
         ApuSourceBuilder apuSourceBuilder;
-        final var importAp = new ImportAp();
+        var iad = new ImportArchDesc();
         try {
-            apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archDesc.getUuid().toString(), databaseDataProvider);
+            apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
+            // Request entities and store refs
+            Set<UUID> uuids = iad.getApRefs();        
+            archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
         } catch (Exception e) {
-            log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
+            log.error("Fail to process, file: {}", inputFile, e);
             return Result.FAILED;
         }
         return Result.REIMPORTED;

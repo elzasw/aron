@@ -10,12 +10,7 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
 import cz.aron.transfagent.service.importfromdir.FileHelper;
-import cz.aron.transfagent.service.importfromdir.ImportArchDescService;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
-import cz.aron.transfagent.service.importfromdir.ImportDaoService;
-import cz.aron.transfagent.service.importfromdir.ImportDirectService;
-import cz.aron.transfagent.service.importfromdir.ImportFundService;
-import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 
 @Service
@@ -31,19 +26,10 @@ public class FileImportService implements SmartLifecycle {
 
     private ThreadStatus status;
 
-    public FileImportService(StorageService storageService,
-            ImportInstitutionService importInstitutionService, ImportFundService importFundService,
-            ImportDirectService importDirectService, ImportDaoService importDaoService,
-            ImportArchDescService importArchDescService) throws IOException {
+    public FileImportService(StorageService storageService
+            ) throws IOException {
         this.storageService = storageService;
-        
-        // TODO: Make services as self registered
-        registerImportProcessor(importDirectService);
-        registerImportProcessor(importInstitutionService);
-        registerImportProcessor(importFundService);
-        registerImportProcessor(importArchDescService);
-        registerImportProcessor(importDaoService);
-        
+                
         initDirs();
     }
 

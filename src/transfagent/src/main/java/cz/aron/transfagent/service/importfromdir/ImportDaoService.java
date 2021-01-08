@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.transfagent.domain.DaoFile;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
@@ -29,15 +32,28 @@ public class ImportDaoService extends ImportDirProcessor {
 	
 	private final TransformService transformService;
 	
+	private final FileImportService fileImportService;
+	
 	final private String DAO_DIR = "dao";
 	
     public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository,
-            TransactionTemplate transactionTemplate, TransformService transformService) {
+            TransactionTemplate transactionTemplate, TransformService transformService,
+            final FileImportService fileImportService) {
         this.storageService = storageService;
         this.daoFileRepository = daoFileRepository;
         this.transactionTemplate = transactionTemplate;
         this.transformService = transformService;
+        this.fileImportService = fileImportService;
     }
+    
+    @PostConstruct
+    void register() {
+        fileImportService.registerImportProcessor(this);
+    }
+
+    @Override
+    public int getPriority() { return 0; }
+    
     
 	@Override
 	protected Path getInputDir() {

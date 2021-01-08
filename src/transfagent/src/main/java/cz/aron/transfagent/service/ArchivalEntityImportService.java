@@ -322,8 +322,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	 */
 	public void updateSourceEntityLinks(ApuSource apuSource, Set<UUID> referencedEntities, 
 	                                    List<EntitySource> extraEntitySource) {
-	    Set<EntitySource> validEntSrcs = new HashSet<>();
-	    validEntSrcs.addAll(extraEntitySource);
+	    Set<EntitySource> validEntSrcs;
+	    if(extraEntitySource!=null&&extraEntitySource.size()>0) {
+	        validEntSrcs = new HashSet<>();
+	        validEntSrcs.addAll(extraEntitySource);
+	    } else {
+	        validEntSrcs = Collections.emptySet();
+	    }
 	    
 	    // find existing links
 	    List<EntitySource> entLinks = this.entitySourceRepository.findByApuSourceJoinFetchArchivalEntity(apuSource);

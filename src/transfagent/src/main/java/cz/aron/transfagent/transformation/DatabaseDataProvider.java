@@ -58,4 +58,9 @@ public class DatabaseDataProvider implements ContextDataProvider {
 		return fund.getUuid();
 	}
 
+    @Override
+    public List<UUID> findByUUIDWithParents(UUID apUuid) {        
+        return entityRepository.findByUUIDWithParents(apUuid);
+    }
+
 }

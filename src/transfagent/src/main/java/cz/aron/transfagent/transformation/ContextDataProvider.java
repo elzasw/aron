@@ -15,4 +15,6 @@ public interface ContextDataProvider {
 
 	UUID getFundApu(String institutionCode, String fundCode);
 
+    List<UUID> findByUUIDWithParents(UUID apUuid);
+
 }

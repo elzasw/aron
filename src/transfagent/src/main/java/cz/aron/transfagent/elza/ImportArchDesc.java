@@ -28,7 +28,6 @@ import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
-import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -60,12 +59,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private Apu activeApu; 
 	
-	private final ArchivalEntityRepository archivalEntityRepository;
-
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		// TODO ArchivalEntityRepository
-		ImportArchDesc iad = new ImportArchDesc(null);
+		ImportArchDesc iad = new ImportArchDesc();
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path ouputPath = Paths.get(args[2]);
@@ -78,8 +74,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 	}
 	
-	public ImportArchDesc(ArchivalEntityRepository archivalEntityRepository) {
-	    this.archivalEntityRepository = archivalEntityRepository;
+	public ImportArchDesc() {
 	}
 
 	public Set<UUID> getApRefs() {
@@ -223,9 +218,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_ACCESS",new EdxStringConvertor("UNIT_ACCESS"));
 		stringTypeMap.put("ZP2015_UNIT_CURRENT_STATUS",new EdxStringConvertor("UNIT_CURRENT_STATUS"));
 		stringTypeMap.put("ZP2015_ARRANGE_RULES",new EdxStringConvertor("ARRANGE_RULES"));
-		stringTypeMap.put("ZP2015_ORIGINATOR",new EdxApRefConvertor("ORIGINATOR_REF",archivalEntityRepository));
-		stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("APU_REF",archivalEntityRepository));
-		stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("APU_REF",archivalEntityRepository));
+		stringTypeMap.put("ZP2015_ORIGINATOR",new EdxApRefConvertor("ORIGINATOR_REF",this.dataProvider));
+		stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("APU_REF",this.dataProvider));
+		stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("APU_REF",this.dataProvider));
 		stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
 		stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
@@ -241,7 +236,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_PAINTING_CHAR",new EdxStringConvertor("PAINTING_CHAR"));
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,archivalEntityRepository));
+		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());
 		

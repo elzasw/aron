@@ -33,6 +33,7 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -66,6 +67,8 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
     private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
+    
+    final FileImportService fileImportService;
 
     final private String INSTITUTIONS_DIR = "institutions";
 
@@ -73,7 +76,8 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
             ArchivalEntityRepository archivalEntityRepository, EntitySourceRepository entitySourceRepository,
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader) {
+            ConfigurationLoader configurationLoader,
+            final FileImportService fileImportService) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
@@ -85,13 +89,18 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
+        this.fileImportService = fileImportService;
     }
 
     @PostConstruct
     void register() {
         reimportService.registerReimportProcessor(this);
+        fileImportService.registerImportProcessor(this);
     }
 
+    @Override
+    public int getPriority() { return 9; }
+    
     @Override
     protected Path getInputDir() {
         return storageService.getInputPath().resolve(INSTITUTIONS_DIR);

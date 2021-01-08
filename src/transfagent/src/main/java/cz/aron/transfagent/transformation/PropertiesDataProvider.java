@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -43,4 +44,9 @@ public class PropertiesDataProvider implements ContextDataProvider {
 		String propName = "fund."+institutionCode+"."+fundCode;
 		return UUID.fromString(getProperty(propName));
 	}
+
+    @Override
+    public List<UUID> findByUUIDWithParents(UUID apUuid) {
+        return Collections.emptyList();
+    }
 }

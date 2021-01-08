@@ -24,13 +24,13 @@ import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportAp;
 import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -59,6 +59,8 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
+    
+    final FileImportService fileImportService;
 
     final private String FUND_DIR = "fund";
 
@@ -66,7 +68,8 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
             InstitutionRepository institutionRepository, CoreQueueRepository coreQueueRepository,
             ApuSourceRepository apuSourceRepository, FundRepository fundRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader) {
+            ConfigurationLoader configurationLoader,
+            final FileImportService fileImportService) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
@@ -77,13 +80,18 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
+        this.fileImportService = fileImportService;
     }
 
     @PostConstruct
     void register() {
         reimportService.registerReimportProcessor(this);
+        fileImportService.registerImportProcessor(this);
     }
 
+    @Override
+    public int getPriority() { return 8; }
+    
     @Override
     protected Path getInputDir() {
         return storageService.getInputPath().resolve(FUND_DIR);
