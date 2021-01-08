@@ -149,9 +149,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
 				addItem(apu, item);
 			}
-			// Add static values
-			apusBuilder.addApuRef(activePart, "FUND_REF", fundApu);
-			apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApu);
 			
 			// daos
 			DigitalArchivalObjects daos = lvl.getDaos();

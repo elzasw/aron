@@ -66,19 +66,25 @@ public class ImportFundInfo {
 		Path propPath = Paths.get(propFile);
 		pdp.load(propPath);
 		
-		return importFundInfo(inputFile, pdp);
+		return importFundInfo(inputFile, null, pdp);
 	}
 
-    public ApuSourceBuilder importFundInfo(final Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
+    public ApuSourceBuilder importFundInfo(final Path inputFile, UUID uuid, final ContextDataProvider cdp) throws IOException, JAXBException {
         this.dataProvider = cdp;
 
         try (InputStream is = Files.newInputStream(inputFile)) {
             elzaXmlReader = ElzaXmlReader.read(is);
-            return importFundInfo();
+            return importFundInfo(uuid);
         }
     }
 
-	private ApuSourceBuilder importFundInfo() {
+    /**
+     * 
+     * @param uuid Optional fund UUID. If known, might be null
+     * @return
+     */
+    
+	private ApuSourceBuilder importFundInfo(UUID uuid) {
 		Sections sections = elzaXmlReader.getEdx().getFs();
 		if(sections==null||sections.getS().size()==0) {
 			throw new RuntimeException("Missing section data");
@@ -89,7 +95,7 @@ public class ImportFundInfo {
 		Section sect = sections.getS().get(0);
 		FundInfo fi = sect.getFi();
 		String fundName = fi.getN();
-		Apu apu = apusBuilder.createApu(fundName,ApuType.FUND);
+		Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, uuid);
 		Part partName = apusBuilder.addPart(apu, "PT_NAME");
 		partName.setValue(fundName);
 		apusBuilder.addString(partName, "NAME", fundName);

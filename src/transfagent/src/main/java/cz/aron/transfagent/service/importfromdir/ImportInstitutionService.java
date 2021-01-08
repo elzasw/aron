@@ -140,7 +140,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		ApuSourceBuilder apusrcBuilder;
 
 		try {
-			apusrcBuilder = ii.importInstitution(inst.get(), code);
+			apusrcBuilder = ii.importInstitution(inst.get(), code, null);
 		} catch (IOException e1) {
 			throw new UncheckedIOException(e1);
 		} catch (JAXBException e1) {
@@ -275,7 +275,8 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         ApuSourceBuilder apuSourceBuilder;
         final var ii = new ImportInstitution();
         try {
-            apuSourceBuilder = ii.importInstitution(apuDir.resolve(fileName), institution.getCode());
+            apuSourceBuilder = ii.importInstitution(apuDir.resolve(fileName), institution.getCode(), institution.getUuid());
+            apuSourceBuilder.setUuid(apuSource.getUuid());
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }

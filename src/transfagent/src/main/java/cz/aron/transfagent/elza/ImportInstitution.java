@@ -39,7 +39,7 @@ public class ImportInstitution {
         Path inputFile = Path.of(args[0]);
 		ImportInstitution ii = new ImportInstitution();
 		try {
-			ApuSourceBuilder apusrcBuilder = ii.importInstitution(inputFile, args[1]);
+			ApuSourceBuilder apusrcBuilder = ii.importInstitution(inputFile, args[1], null);
 			Path ouputPath = Paths.get(args[2]);
 			try(OutputStream fos = Files.newOutputStream(ouputPath)) {
 				apusrcBuilder.build(fos);
@@ -51,14 +51,21 @@ public class ImportInstitution {
 
 	}
 
-	public ApuSourceBuilder importInstitution(Path inputFile, String instCode) throws IOException, JAXBException {
+	public ApuSourceBuilder importInstitution(Path inputFile, String instCode, UUID uuid) throws IOException, JAXBException {
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
-			return importInstitution(instCode);
+			return importInstitution(instCode, uuid);
 		}
 	}
 
-	private ApuSourceBuilder importInstitution(String instCode) {
+	/**
+	 * 
+	 * @param instCode
+	 * @param instUuid Optional UUID of institution. If already assigned.
+	 * @return
+	 */
+	
+	private ApuSourceBuilder importInstitution(String instCode, UUID instUuid) {
 		Institution inst = elzaXmlReader.findInstitution(instCode);
 		if(inst==null) {
 			throw new IllegalStateException("Institution not found: "+instCode);
@@ -99,7 +106,8 @@ public class ImportInstitution {
 		}
 		// add name
 		String fullName = ElzaXmlReader.getFullName(prefName);
-		apu = apusBuilder.createApu(fullName, ApuType.INSTITUTION);
+		
+		apu = apusBuilder.createApu(fullName, ApuType.INSTITUTION, instUuid);
 		
 		// kod archivu
 		Part infoPart = apusBuilder.addPart(apu, "PT_INST_INFO");

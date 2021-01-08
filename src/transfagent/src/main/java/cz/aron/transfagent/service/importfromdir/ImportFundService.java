@@ -129,22 +129,23 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         var fileName = fundXml.get().getFileName().toString();
         var tmp = fileName.substring("fund-".length());
         var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
+        
+        var fund = fundRepository.findByCode(fundCode);
+        UUID fundUuid = (fund!=null)?fund.getUuid():null;
 
         var ifi = new ImportFundInfo();
         ApuSourceBuilder apusrcBuilder;
-
+ 
         try {
-            apusrcBuilder = ifi.importFundInfo(fundXml.get(), databaseDataProvider);
+            apusrcBuilder = ifi.importFundInfo(fundXml.get(), fundUuid, databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
             throw new IllegalStateException(e);
         }
-
-        var fund = fundRepository.findByCode(fundCode);
+        
         if (fund != null) {
-            apusrcBuilder.getApusrc().setUuid(fund.getApuSource().getUuid().toString());
-            apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(fund.getUuid().toString());
+            apusrcBuilder.setUuid(fund.getApuSource().getUuid());
         }
 
         var institutionCode = ifi.getInstitutionCode();
@@ -239,7 +240,8 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         ApuSourceBuilder apuSourceBuilder;
         var ifi = new ImportFundInfo();
         try {
-            apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), databaseDataProvider);
+            apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), fund.getUuid(), databaseDataProvider);
+            apuSourceBuilder.setUuid(apuSource.getUuid());
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }

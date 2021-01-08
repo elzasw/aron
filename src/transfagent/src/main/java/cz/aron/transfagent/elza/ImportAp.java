@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
 
@@ -38,7 +39,7 @@ public class ImportAp {
 	
 	Integer parentElzaId;
 
-	private String apUuid;
+	private UUID apUuid;
 	
 	private Integer elzaId;
 	
@@ -47,7 +48,7 @@ public class ImportAp {
 	 */
 	private Set<Integer> requiredEntities = new HashSet<>();
 	
-	public String getApUuid() {
+	public UUID getApUuid() {
 		return apUuid;
 	}
 
@@ -84,7 +85,7 @@ public class ImportAp {
 		return importAp(inputFile, expUuid, propFile);
 	}
 
-	public ApuSourceBuilder importAp(Path inputFile, String expUuid, final ContextDataProvider cdp) throws IOException, JAXBException {
+	public ApuSourceBuilder importAp(Path inputFile, UUID expUuid, final ContextDataProvider cdp) throws IOException, JAXBException {
 		this.dataProvider = cdp;
 		
 		try(InputStream is = Files.newInputStream(inputFile);) {
@@ -93,10 +94,10 @@ public class ImportAp {
 		}
 	}
 
-	private ApuSourceBuilder importAp(final String expUuid) {
+	private ApuSourceBuilder importAp(final UUID expUuid) {
 		AccessPoint ap;
 		if(expUuid!=null) {
-			ap = elzaXmlReader.findAccessPointByUUID(expUuid);
+			ap = elzaXmlReader.findAccessPointByUUID(expUuid.toString());
 			if(ap==null) {
 				throw new IllegalStateException("AccessPoint not found: "+expUuid);
 			}
@@ -107,11 +108,10 @@ public class ImportAp {
 				throw new IllegalStateException("AccessPoint not found in result");
 			}
 		}
-		this.apUuid = ap.getApe().getUuid();
+		this.apUuid = UUID.fromString(ap.getApe().getUuid());
 		this.elzaId = Integer.valueOf(ap.getApe().getId());
 
-		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY);
-		apu.setUuid(this.apUuid);
+		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY, expUuid);		
 		
 		// extrakce dat
 		// entity info

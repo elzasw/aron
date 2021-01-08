@@ -31,7 +31,14 @@ public class ApuSourceBuilder {
     /**
      * Collection of referenced entities
      */
-    private Set<UUID> referencedEntities = new HashSet<>();	
+    private Set<UUID> referencedEntities = new HashSet<>();
+    
+    public void setUuid(UUID uuid) {
+        if(apusrc.getUuid()!=null) {
+            throw new IllegalStateException("UUID alredy set");
+        }
+        apusrc.setUuid(uuid.toString());
+    }
 
 	public ApuSource getApusrc() {
 		return apusrc;
@@ -59,20 +66,28 @@ public class ApuSourceBuilder {
 	}
 
 	public Apu createApu(String name, ApuType apuType) {
-		ApuList apuList = apusrc.getApus();
-		if(apuList==null) {
-			apuList = ApuxFactory.getObjFactory().createApuList();
-			apusrc.setApus(apuList);
-		}
-		Apu apu = ApuxFactory.getObjFactory().createApu();
-		apu.setName(name);
-		apu.setType(apuType);
-		apu.setUuid(UUID.randomUUID().toString());
-		apuList.getApu().add(apu);
-		return apu;
+		return createApu(name, apuType, null);
 	}
 
-	public void addPart(Apu apu, Part part) {
+    public Apu createApu(String name, ApuType apuType, UUID apuUuid) {
+        ApuList apuList = apusrc.getApus();
+        if(apuList==null) {
+            apuList = ApuxFactory.getObjFactory().createApuList();
+            apusrc.setApus(apuList);
+        }
+        Apu apu = ApuxFactory.getObjFactory().createApu();
+        apu.setName(name);
+        apu.setType(apuType);
+        if(apuUuid==null) {
+            apu.setUuid(UUID.randomUUID().toString());
+        } else {
+            apu.setUuid(apuUuid.toString());
+        }
+        apuList.getApu().add(apu);
+        return apu;
+    }
+
+    public void addPart(Apu apu, Part part) {
 		Parts prts = apu.getPrts();
 		if(prts==null) {
 			prts = ApuxFactory.getObjFactory().createParts();
@@ -173,6 +188,5 @@ public class ApuSourceBuilder {
 		}
 		daos.getUuid().add(daoId);
 	}
-
 
 }

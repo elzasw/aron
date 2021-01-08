@@ -268,6 +268,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var iad = new ImportArchDesc();
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
+            apuSourceBuilder.setUuid(apuSource.getUuid());
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }

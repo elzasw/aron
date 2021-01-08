@@ -128,7 +128,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         Path dataDir;
         try {                       
             apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
-                    (ae.getUuid()!=null)?ae.getUuid().toString():null,
+                    (ae.getUuid()!=null)?ae.getUuid():null,
                             databaseDataProvider);
             try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
@@ -236,7 +236,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		boolean needReindex = false;
 		if (srcArchivalEntity.getUuid() == null) {
 			// we have to add uuid from downloaded data and check that it does not exists
-			UUID uuid = UUID.fromString(importAp.getApUuid());
+			UUID uuid = importAp.getApUuid();
 			var archivalEntity = archivalEntityRepository.findByUuid(uuid);
 			if (archivalEntity.isPresent()) {
 				ArchivalEntity dbArchEntity = archivalEntity.get(); 
@@ -514,10 +514,11 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		ApuSourceBuilder apuSourceBuilder;
 		final var importAp = new ImportAp();
 		try {
-			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid().toString(), databaseDataProvider);
+			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid(), databaseDataProvider);
+			apuSourceBuilder.setUuid(apuSource.getUuid());
 			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}
+			}			
 			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());
 			this.updateSourceEntityLinks(apuSource, apuSourceBuilder.getReferencedEntities(), ess);
 		} catch (Exception e) {

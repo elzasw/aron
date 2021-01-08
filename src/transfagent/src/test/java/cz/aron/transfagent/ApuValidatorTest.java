@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,7 +45,7 @@ public class ApuValidatorTest {
         String instCode = tmp.substring(0, tmp.length() - XML_EXT.length());
 
         ImportInstitution importInstitution = new ImportInstitution();
-        apusrcBuilder = importInstitution.importInstitution(Path.of(INST_DIR, INST_FILE), instCode);
+        apusrcBuilder = importInstitution.importInstitution(Path.of(INST_DIR, INST_FILE), instCode, null);
     }
 
     @Test

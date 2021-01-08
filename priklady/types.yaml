@@ -256,7 +256,7 @@ itemTypes:
     type: APU_REF
     indexed: false
   - code: FUND_INST_REF
-    name: Archiv
+    name: Instituce
     type: APU_REF
     indexed: false
   - code: DIGITAL
