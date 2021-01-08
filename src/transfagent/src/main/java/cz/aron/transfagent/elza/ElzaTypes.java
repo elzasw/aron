@@ -10,39 +10,39 @@ import java.util.Map;
  */
 public abstract class ElzaTypes {
 
-	public static final String NM_MAIN = "NM_MAIN";
-	public static final String NM_MINOR = "NM_MINOR";
-	public static final String NM_DEGREE_PRE = "NM_DEGREE_PRE";
-	public static final String NM_DEGREE_POST = "NM_DEGREE_POST";
-	
-	public static final String NM_SUP_GEN = "NM_SUP_GEN";
-	public static final String NM_SUP_CHRO = "NM_SUP_CHRO";
-	public static final String NM_SUP_GEO = "NM_SUP_GEO";
-	
-	public static final String NM_TYPE = "NM_TYPE";
-	public static final String NT_ACRONYM = "NT_ACRONYM";
-	
-	public static final String NM_SUPS[] = {
-			NM_SUP_GEN, NM_SUP_CHRO, NM_SUP_GEO
-	};
-	
-	public static final String IDN_TYPE = "IDN_TYPE";
-	public static final String IDN_VALUE = "IDN_VALUE";
-	
-	// Stručná charakteristika
-	public static final String BRIEF_DESC = "BRIEF_DESC";
-	
-	// Administrativní zařazení
-	public static final String GEO_ADMIN_CLASS = "GEO_ADMIN_CLASS";
-	
-	public static final String REL_ENTITY = "REL_ENTITY";
-	
-	public static final Map<String, String> unitTypeMap = new HashMap<>();   
-	static {
-		unitTypeMap.put("ZP2015_UNIT_TYPE_LIO", "Listina do roku 1850");
-		unitTypeMap.put("ZP2015_UNIT_TYPE_LIP", "Listina po roce 1850");
-		unitTypeMap.put("ZP2015_UNIT_TYPE_UKN", "Úřední kniha");
-		unitTypeMap.put("ZP2015_UNIT_TYPE_RKP", "Rukopis");
+    public static final String NM_MAIN = "NM_MAIN";
+    public static final String NM_MINOR = "NM_MINOR";
+    public static final String NM_DEGREE_PRE = "NM_DEGREE_PRE";
+    public static final String NM_DEGREE_POST = "NM_DEGREE_POST";
+
+    public static final String NM_SUP_GEN = "NM_SUP_GEN";
+    public static final String NM_SUP_CHRO = "NM_SUP_CHRO";
+    public static final String NM_SUP_GEO = "NM_SUP_GEO";
+
+    public static final String NM_TYPE = "NM_TYPE";
+    public static final String NT_ACRONYM = "NT_ACRONYM";
+
+    public static final String NM_SUPS[] = {
+            NM_SUP_GEN, NM_SUP_CHRO, NM_SUP_GEO
+    };
+
+    public static final String IDN_TYPE = "IDN_TYPE";
+    public static final String IDN_VALUE = "IDN_VALUE";
+
+    // Stručná charakteristika
+    public static final String BRIEF_DESC = "BRIEF_DESC";
+
+    // Administrativní zařazení
+    public static final String GEO_ADMIN_CLASS = "GEO_ADMIN_CLASS";
+
+    public static final String REL_ENTITY = "REL_ENTITY";
+
+    public static final Map<String, String> unitTypeMap = new HashMap<>();
+    static {
+        unitTypeMap.put("ZP2015_UNIT_TYPE_LIO", "Listina do roku 1850");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_LIP", "Listina po roce 1850");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_UKN", "Úřední kniha");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_RKP", "Rukopis");
         unitTypeMap.put("ZP2015_UNIT_TYPE_PPR", "Podací protokol");
         unitTypeMap.put("ZP2015_UNIT_TYPE_IND", "Index");
         unitTypeMap.put("ZP2015_UNIT_TYP_ELE", "Elench");
@@ -79,10 +79,133 @@ public abstract class ElzaTypes {
         unitTypeMap.put("ZP2015_UNIT_TYPE_JIN", "Jiná");
         unitTypeMap.put("ZP2015_UNIT_TYPE_KTT_BOX", "Kartotéční zásuvka");
         unitTypeMap.put("ZP2015_UNIT_TYPE_KTT_ITEM", "Kartotéční lístek");
+    }
+
+    public static Map<String, String> roleSpecMap = new HashMap<>();
+    static {
+	    roleSpecMap.put("ZP2015_ENTITY_ROLE_1",        "autor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_2",
+        "autor dialogu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_4",        "autor fotografií");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_5",
+        "skladatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_10",
+        "autor textové složky/textař");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_6",
+        "autor hudby/skladatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_7",
+        "autor choreografie/choreograf");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_8",
+        "autor komentáře");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_9",
+        "autor námětu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_11",
+        "autor textu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_3",
+        "autor doprovodnéno textu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_12",
+        "autor triků a speciálních efektů");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_13",
+        "autor výtvarné a obrazové stránky");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_14",
+        "autor výtvarné stránky");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_15",
+        "vydavatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_16",
+        "vydavatel / nakladatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_17",
+        "pečetitel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_18",
+        "produkční společnost/producent");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_19",
+        "objednatel / příjemce");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_20",
+        "distributor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_21",
+        "příjemce");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_22",
+        "žadatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_23",
+        "držitel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_24",
+        "odesilatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_25",
+        "schvalovatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_26",
+        "stavitel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_27",
+        "režisér");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_28",
+        "scénárista");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_29",
+        "kameraman");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_30",
+        "interpret hudby");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_31",
+        "fotograf");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_32",
+        "redaktor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_33",
+        "kartograf");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_34",
+        "editor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_35",
+        "editor / redaktor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_36",
+        "kreslič");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_37",
+        "majitel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_38",
+        "tvůrce technického zpracování");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_39",
+        "tvůrce výtvarné stránky");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_40",
+        "dramaturg");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_41",
+        "střih/střihač");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_42",
+        "zvuk/zvukař");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_43",
+        "účinkující");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_44",
+        "překladatel");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_45",
+        "lektor");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_46",
+        "svědek");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_47",
+        "ručitel (rukojmě)");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_48",
+        "písař");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_49",
+        "zpracovatel nosičů záznamů");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_50", "výrobce nosičů záznamů");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_51", "tiskárna");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_52", "tiskárna/tiskař");   
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_53", "výrobce");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_54", "výrobce typářů");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_55", "výrobce odlitků otisků / otisků typářů");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_56", "místo natáčení");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_57", "místo vydavatele");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_58", "místo vydání");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_59", "místo vydání dokumentů");   
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_60", "místo výroby");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_61", "místo vzniku jednotky popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_62", "místo vzniku předlohy popisované kopie");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_63", "typové označení a název výrobku a typové stavby");   
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_64", "entita zachycená jednotkami popisu");   
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_65", "ostatní entita zachycená jednotkami popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_66", "osoba/bytost zachycená jednotkou popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_67", "rod/rodina zachycený/á jednotkou popisu");   
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_68", "korporace zachycená jednotkou popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_69", "událost zachycená jednotkou popisu");  
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_70", "dílo/výtvor zachycené/ý jednotkou popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_71", "geografický objekt zachycený jednotkou popisu");
+    roleSpecMap.put("ZP2015_ENTITY_ROLE_72", "obecný pojem vztahující se k jednotce popisu");
 	}
-	
-	public static Map<String, String> relEntityMap = new HashMap<>();
-	static {
+
+    public static Map<String, String> relEntityMap = new HashMap<>();
+    static {
         relEntityMap.put("RT_AUTHOR", "autor/tvůrce");
         relEntityMap.put("RT_AUTHOROFCHANGE",
                          "autor změny / tvůrce změny");
@@ -261,7 +384,7 @@ public abstract class ElzaTypes {
                          "zřizovatel");
         relEntityMap.put("RT_GEOPARTNER",
                          "partner");
-	    
-	}
-	
+
+    }
+
 }

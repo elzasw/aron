@@ -21,15 +21,18 @@ public class EdxApRefWithRole  implements EdxItemConvertor {
 	private final String apRefType;
 	
 	private final ContextDataProvider dataProvider;
+    private Map<String, String> specMap;
 
     public EdxApRefWithRole(String partType,
             String roleType,
             String apRefType, 
-            final ContextDataProvider dataProvider) {
+            final ContextDataProvider dataProvider, 
+            final Map<String, String> specMap) {
         this.partType = partType;
         this.roleType = roleType;
         this.apRefType = apRefType;
         this.dataProvider = dataProvider;
+        this.specMap = specMap;
     }
 
 	@Override
@@ -49,7 +52,17 @@ public class EdxApRefWithRole  implements EdxItemConvertor {
 		UUID apUuid = UUID.fromString(ap.getApe().getUuid());		
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
 		Part part = apusBuilder.addPart(ctx.getActiveApu(), partType);
-		apusBuilder.addEnum(part, roleType, apRef.getS(), true);
+		String s;
+		if(specMap!=null) {
+		    s = this.specMap.get(apRef.getS());
+		    if(s==null) {
+		        throw new RuntimeException("Missing mapping for specification: "+apRef.getS());
+		    }
+		} else {
+		    s = apRef.getS();
+		}
+		
+		apusBuilder.addEnum(part, roleType, s, true);
 		var uuids = dataProvider.findByUUIDWithParents(apUuid);
         if (CollectionUtils.isEmpty(uuids)) {
             ctx.addArchEntityRef(apUuid);
