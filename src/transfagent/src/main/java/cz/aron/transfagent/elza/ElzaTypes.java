@@ -35,6 +35,16 @@ public abstract class ElzaTypes {
     // Administrativní zařazení
     public static final String GEO_ADMIN_CLASS = "GEO_ADMIN_CLASS";
 
+    public static final String CORP_PURPOSE = "CORP_PURPOSE";
+    public static final String FOUNDING_NORMS = "FOUNDING_NORMS";
+    public static final String HISTORY = "HISTORY";
+    public static final String GENEALOGY = "GENEALOGY";
+    public static final String BIOGRAPHY = "BIOGRAPHY";
+    public static final String DESCRIPTION = "DESCRIPTION";
+    public static final String SCOPE_NORMS = "SCOPE_NORMS";
+    public static final String CORP_STRUCTURE = "CORP_STRUCTURE";
+    public static final String SOURCE_INFO = "SOURCE_INFO";
+    
     public static final String REL_ENTITY = "REL_ENTITY";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();

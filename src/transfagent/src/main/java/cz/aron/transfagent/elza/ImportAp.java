@@ -195,6 +195,10 @@ public class ImportAp {
 	        return;
 	    }
         String identType = ElzaXmlReader.getEnumValue(frg, ElzaTypes.IDN_TYPE);
+        if(identType==null) {
+            // skip ident without type
+            return;
+        }
         switch(identType) {
         case "ISO3166_2":
         case "ISO3166_3":
@@ -208,6 +212,9 @@ public class ImportAp {
         case "ARCHNUM":
             // ignored idents
             return;
+        case "IC":
+            identType = "IČ";
+            break;
         case "INTERPI":
             identType = "INTERPI";
             break;
@@ -247,9 +254,29 @@ public class ImportAp {
 			}
 			
 		}
+		
+		// primy prenos
+		addStringIfExists(frg, ElzaTypes.CORP_PURPOSE, part, CoreTypes.CORP_PURPOSE);
+		addStringIfExists(frg, ElzaTypes.FOUNDING_NORMS, part, CoreTypes.FOUNDING_NORMS);
+	    addStringIfExists(frg, ElzaTypes.SCOPE_NORMS, part, CoreTypes.SCOPE_NORMS);
+	    addStringIfExists(frg, ElzaTypes.CORP_STRUCTURE, part, CoreTypes.CORP_STRUCTURE);
+	    addStringIfExists(frg, ElzaTypes.SOURCE_INFO, part, CoreTypes.SOURCE_INFO);
+		addStringIfExists(frg, ElzaTypes.HISTORY, part, CoreTypes.HISTORY);
+	    addStringIfExists(frg, ElzaTypes.GENEALOGY, part, CoreTypes.GENEALOGY);
+	    addStringIfExists(frg, ElzaTypes.BIOGRAPHY, part, CoreTypes.BIOGRAPHY);
+	    addStringIfExists(frg, ElzaTypes.DESCRIPTION, part, CoreTypes.DESCRIPTION);	    	    
+	    
+	    // TODO: Add warning for all non processed elements
 	}
 
-	private void importName(Apu apu, Fragment frg) {
+	private void addStringIfExists(Fragment frg, String srcType, Part part, String trgType) {
+        String value = ElzaXmlReader.getStringType(frg, srcType);
+        if(StringUtils.isNotBlank(value)) {
+            this.apusBuilder.addString(part, trgType, value);
+        }
+    }
+
+    private void importName(Apu apu, Fragment frg) {
 		String fullName = ElzaXmlReader.getFullName(frg);
 		// add name
 		if(apu.getName()==null) {

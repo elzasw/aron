@@ -496,8 +496,9 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
 	@Override
 	public Result reimport(ApuSource apuSource) {
-		if(apuSource.getSourceType()!=SourceType.ARCH_ENTITY)
+		if(apuSource.getSourceType()!=SourceType.ARCH_ENTITY) {
 			return Result.UNSUPPORTED;
+		}
 
 		ArchivalEntity archEntity = archivalEntityRepository.findByApuSource(apuSource);
 		if(archEntity==null) {

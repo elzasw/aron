@@ -260,8 +260,9 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 
     @Override
     public Result reimport(ApuSource apuSource) {
-        if (apuSource.getSourceType() != SourceType.INSTITUTION)
+        if (apuSource.getSourceType() != SourceType.INSTITUTION) {
             return Result.UNSUPPORTED;
+        }
 
         var institution = institutionRepository.findByApuSource(apuSource);
         if (institution == null) {

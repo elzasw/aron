@@ -76,6 +76,10 @@ itemTypes:
     name: Stručná charakteristika
     type: STRING
     indexed: false
+  - code: AE_BRIEF_DESC
+    name: Stručná charakteristika
+    type: STRING
+    indexed: false
   - code: AE_GEO_ADMIN_REF
     name: Administrativní zařazení
     type: APU_REF
@@ -87,6 +91,42 @@ itemTypes:
   - code: AE_REL_TYPE
     name: Druh vztahu
     type: ENUM
+    indexed: true
+  - code: CORP_PURPOSE
+    name: Funkce korporace
+    type: STRING
+    indexed: true
+  - code: FOUNDING_NORMS
+    name: Normy – konstitutivní
+    type: STRING
+    indexed: true
+  - code: SCOPE_NORMS
+    name: Normy – působnost původce
+    type: STRING
+    indexed: true
+  - code: CORP_STRUCTURE
+    name: Vnitřní struktury korporace
+    type: STRING
+    indexed: true
+  - code: SOURCE_INFO
+    name: Zdroje informací
+    type: STRING
+    indexed: true
+  - code: HISTORY
+    name: Dějiny
+    type: STRING
+    indexed: true
+  - code: GENEALOGY
+    name: Genealogie
+    type: STRING
+    indexed: true
+  - code: BIOGRAPHY
+    name: Životopis
+    type: STRING
+    indexed: true
+  - code: DESCRIPTION
+    name: Popis
+    type: STRING
     indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
