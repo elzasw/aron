@@ -9,6 +9,7 @@ import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import cz.aron.transfagent.elza.ImportInstitution;
 @SpringBootTest
 public class ApuValidatorTest {
 
-    private final String INST_DIR = "src/test/resources/files/institutions/institution-225201010";
+    private final static String INST_DIR = "src/test/resources/files/institutions/institution-225201010";
 
     private final String INST_FILE = "institution-225201010.xml";
 
@@ -31,7 +32,7 @@ public class ApuValidatorTest {
 
     private final String XML_EXT = ".xml";
 
-    private final String APUSRC_XML = "apusrc.xml";
+    private final static String APUSRC_XML = "apusrc.xml";
 
     private ApuValidator validator;
 
@@ -68,6 +69,11 @@ public class ApuValidatorTest {
                 apusrcBuilder.build(fos, validator);
             }
         });
+    }
+
+    @AfterAll
+    public static void deleteApusrcXml() throws IOException {
+        Files.delete(Path.of(INST_DIR, APUSRC_XML));
     }
 
 }
