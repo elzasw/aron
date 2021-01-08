@@ -13,11 +13,11 @@ spring:
       enabled: true
       path: /h2-console
 
-config:
-  file: src/test/resources/config/types.yaml
-
 aron:
   workDir: target/test-resources
+
+typesConfig:
+  types: src/test/resources/config/types.yaml
 
 dao:
   dir:

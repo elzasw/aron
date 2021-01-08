@@ -13,34 +13,34 @@ import cz.aron.common.itemtypes.TypesConfiguration;
 
 @Configuration
 @EnableScheduling
-@ConfigurationProperties(prefix = "config")
+@ConfigurationProperties(prefix = "types-config")
 public class ConfigurationLoader {
 
     final private static Logger log = LoggerFactory.getLogger(ConfigurationLoader.class);
 
-    private String file;
+    private String types;
 
     private TypesConfiguration config;
 
     @Scheduled(fixedRate = 10000)
     private void load() {
         try {
-            log.debug("Loading configuration {}", file);
+            log.debug("Loading configuration {}", types);
 
-            config = ConfigLoader.load(file);
+            config = ConfigLoader.load(types);
 
             log.debug("Configuration reloaded");
         } catch(Exception e) {
-            log.error("Failed to load configuration: " + file, e);
+            log.error("Failed to load configuration: " + types, e);
         }
     }
 
-    public String getFile() {
-        return file;
+    public String getTypes() {
+        return types;
     }
 
-    public void setFile(String file) {
-        this.file = file;
+    public void setTypes(String types) {
+        this.types = types;
     }
 
     public TypesConfiguration getConfig() {
