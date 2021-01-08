@@ -24,7 +24,7 @@ build:
     - cd build/html 
     - mv * ../../../aron-doc/
     - cd ../../..
-    - cd arc/transfagent
+    - cd src/transfagent
     - export JAVA_HOME=/etc/alternatives/jre_11
     - mvn $MAVEN_CLI_OPTS package
   artifacts:
