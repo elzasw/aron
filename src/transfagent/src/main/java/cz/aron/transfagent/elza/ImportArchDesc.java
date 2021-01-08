@@ -122,9 +122,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		institutionCode = fi.getIc();
 		var instApu = dataProvider.getInstitutionApu(institutionCode);
 		Validate.notNull(instApu, "Missing institution, code: %s", institutionCode);
-		
+
 		var fundApu = dataProvider.getFundApu(institutionCode, fi.getC());
-		Validate.notNull(instApu, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);
+		Validate.notNull(fundApu, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);
 
 		Map<String, Apu> apuMap = new HashMap<>();
 
