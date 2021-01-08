@@ -92,10 +92,10 @@ facets:
     # Druh fazety
     type: MULTI_REF_EXT
     # zdrojovy itemtype
-    source: AP_REF
+    source: AE_REL_REF
     facets:
       - type: ENUM
         # zdrojovy itemtype
-        source: NEJAKY_TYP_S_ENUM
+        source: AE_REL_TYPE
         # Max pocet zobrazenych itemu
         maxItems: 5

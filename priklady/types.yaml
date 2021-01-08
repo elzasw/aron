@@ -31,6 +31,9 @@ partTypes:
   - name: Role
     code: PT_ENTITY_ROLE
     viewType: STANDALONE
+  - name: Archivní soubor
+    code: PT_ARCH_DESC_FUND
+    viewType: STANDALONE
 
 # Pridat: 
 #   hierarchical: true | false

@@ -161,32 +161,52 @@ public class ImportArchDesc implements EdxItemCovertContext {
 					apusBuilder.addDao(activeApu, dao.getId());
 				}
 			}
+			deactivatePart(apu);
 			
-			activePart = null;
+			// Add static values
+			activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+            apusBuilder.addApuRef(activePart, "FUND_REF", fundApu);
+            apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApu);
+            deactivatePart(apu);
 		}		
 		return apusBuilder;
 	}
 	
-	/**
+	private void deactivatePart(Apu apu) {
+        if(activePart!=null) {
+            // delete empty part
+            if(activePart.getItms()==null&&activePart.getValue()==null) {
+               apu.getPrts().getPart().remove(activePart); 
+            }
+            activePart = null;
+        }
+        
+    }
+
+    /**
 	 * Set PT_ARCH_DESC as active part
 	 */
-	void activateArchDescPart(Apu apu) {		
-		activeApu = apu;
-		activePart = null;
-		if(apu.getPrts()!=null) {
-			for (Part p : apu.getPrts().getPart()) {
-				if (p.getType().equals("PT_ARCH_DESC")) {
-					activePart = p;
-					break;
-				}
-			}
-		}
-		if(activePart==null) {
-			activePart = apusBuilder.addPart(apu, "PT_ARCH_DESC");
-		}		
+	void activateArchDescPart(Apu apu) {
+	    activatePart(apu, CoreTypes.PT_ARCH_DESC);
 	}
 
-	private void addItem(Apu apu, DescriptionItem item) {
+    void activatePart(Apu apu, String partName) {        
+        activeApu = apu;
+        activePart = null;
+        if(apu.getPrts()!=null) {
+            for (Part p : apu.getPrts().getPart()) {
+                if (p.getType().equals(partName)) {
+                    activePart = p;
+                    break;
+                }
+            }
+        }
+        if(activePart==null) {
+            activePart = apusBuilder.addPart(apu, partName);
+        }       
+    }
+
+    private void addItem(Apu apu, DescriptionItem item) {
 		final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
 				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
 				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
