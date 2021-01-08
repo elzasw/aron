@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
@@ -20,6 +21,7 @@ import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.FileImportService;
+import cz.aron.transfagent.service.importfromdir.ImportArchDescService;
 import cz.aron.transfagent.service.importfromdir.ImportDirectService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService;
 import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
@@ -40,6 +42,10 @@ public abstract class AbstractCommonTest {
 
     final String DIR_TO_FUND = DIR_TEST_RESOURCES + "/input/fund";
 
+    final String DIR_FROM_ARCH_DESC = "src/test/resources/files/archdesc";
+
+    final String DIR_TO_ARCH_DESC = DIR_TEST_RESOURCES + "/input/archdesc";
+
     final String DIR_FROM_DIRECT = "src/test/resources/files/direct";
 
     final String DIRECT_ERR = "direct-err";
@@ -56,6 +62,8 @@ public abstract class AbstractCommonTest {
 
     final String FUND_DIR = "fund-" + FUND_CODE;
 
+    final String ARCH_DESC_DIR = "archdesc-" + FUND_CODE;
+
     final String FILE_DIRECT = "apux-03.xml";
 
     final String FILE_DIRECT_EMPTY = "apux-00.xml";
@@ -64,6 +72,9 @@ public abstract class AbstractCommonTest {
 
     @Autowired
     ImportInstitutionService importInstitutionService;
+
+    @Autowired
+    ImportArchDescService importArchDescService;
 
     @Autowired
     ImportDirectService importDirectService;
@@ -90,6 +101,9 @@ public abstract class AbstractCommonTest {
     CoreQueueRepository coreQueueRepository;
 
     @Autowired
+    ArchDescRepository archDescRepository;
+
+    @Autowired
     DaoFileRepository daoFileRepository;
 
     @Autowired
@@ -101,6 +115,7 @@ public abstract class AbstractCommonTest {
         archivalEntityRepository.deleteAll();
         daoFileRepository.deleteAll();
         coreQueueRepository.deleteAll();
+        archDescRepository.deleteAll();
         fundRepository.deleteAll();
         institutionRepository.deleteAll();
         apuSourceRepository.deleteAll();

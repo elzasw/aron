@@ -19,6 +19,9 @@ partTypes:
   - name: Zánik
     code: PT_AE_EXT
     viewType: STANDALONE
+  - name: Vztah
+    code: PT_AE_REL
+    viewType: STANDALONE
   - name: Informace o archivním souboru
     code: PT_FUND_INFO
     viewType: STANDALONE
@@ -27,6 +30,9 @@ partTypes:
     viewType: STANDALONE
   - name: Role
     code: PT_ENTITY_ROLE
+    viewType: STANDALONE
+  - name: Archivní soubor
+    code: PT_ARCH_DESC_FUND
     viewType: STANDALONE
 
 # Pridat: 
@@ -60,7 +66,7 @@ itemTypes:
     indexed: true
   - code: AE_IDENT_TYPE
     name: Druh identifikátoru
-    type: STRING
+    type: ENUM
     indexed: true
   - code: AE_IDENT_VALUE
     name: Hodnota identifikátoru
@@ -73,6 +79,14 @@ itemTypes:
   - code: AE_GEO_ADMIN_REF
     name: Administrativní zařazení
     type: APU_REF
+    indexed: true
+  - code: AE_REL_REF
+    name: Vztah k
+    type: APU_REF
+    indexed: true
+  - code: AE_REL_TYPE
+    name: Druh vztahu
+    type: ENUM
     indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
@@ -90,7 +104,7 @@ itemTypes:
   # Archivní popis
   - code: UNIT_ID
     name: Referenční označení
-    type: ENUM
+    type: STRING
     indexed: true
   - code: ABSTRACT
     name: Obsah
