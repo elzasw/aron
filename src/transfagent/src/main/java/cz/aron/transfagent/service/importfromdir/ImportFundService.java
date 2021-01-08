@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -177,7 +178,9 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
 
     private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
 
-        var fundUuid = UUID.randomUUID();
+        var fundUuid = apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid();
+        Validate.notNull(fundUuid, "Fund UUID is null");
+        
         var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
@@ -190,7 +193,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
             fund.setInstitution(institution);
             fund.setCode(fundCode);
             fund.setSource("source");
-            fund.setUuid(fundUuid);
+            fund.setUuid(UUID.fromString(fundUuid));
             fund = fundRepository.save(fund);
 
             var coreQueue = new CoreQueue();
