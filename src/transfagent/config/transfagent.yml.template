@@ -4,11 +4,9 @@
     username: app
     password: app
 
-config:
-  file: C:\Pyta\ArchivOnline\aron.git\priklady\types.yaml
-
 aron:
   workDir: C:\Pyta\ArchivOnline\transfagent.work
+  typesConfig: config/types.yaml
 
 # Parametry přístupu k jádru
 aronCore:

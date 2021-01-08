@@ -3,7 +3,6 @@ package cz.aron.transfagent.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,11 +12,11 @@ import cz.aron.common.itemtypes.TypesConfiguration;
 
 @Configuration
 @EnableScheduling
-@ConfigurationProperties(prefix = "types-config")
 public class ConfigurationLoader {
 
     final private static Logger log = LoggerFactory.getLogger(ConfigurationLoader.class);
 
+    @Value("${aron.typesConfig}")
     private String types;
 
     private TypesConfiguration config;

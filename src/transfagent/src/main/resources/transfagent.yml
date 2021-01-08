@@ -12,12 +12,10 @@ spring:
     username: postgres
     password: root
 
-config:
-  file: C:/Users/lamp/aron/src/aron-common/src/test/resources/config/types.yaml
-
 # Vstupní složka pro FileInputService
 aron:
-  inputFolder: C:\temp\transfagent\input\
+  inputFolder: workdir
+  typesConfig: config/types.yaml
 
 # Parametry přístupu k jádru
 aronCore:
