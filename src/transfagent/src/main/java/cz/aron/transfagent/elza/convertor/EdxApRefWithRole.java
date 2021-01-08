@@ -3,9 +3,12 @@ package cz.aron.transfagent.elza.convertor;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.util.CollectionUtils;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.ElzaXmlReader;
+import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
@@ -13,18 +16,20 @@ import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 
 public class EdxApRefWithRole  implements EdxItemConvertor {
 
+	private final  String partType;
+	private final String roleType;
+	private final String apRefType;
+	
+	private final ArchivalEntityRepository archivalEntityRepository;
 
-	private String partType;
-	private String roleType;
-	private String apRefType;
-
-	public EdxApRefWithRole(final String partType,
-			final String roleType, 
-			final String apRefType) {
-		this.partType = partType;
-		this.roleType = roleType;
-		this.apRefType = apRefType;
-	}
+    public EdxApRefWithRole(String partType,
+            String roleType,
+            String apRefType, ArchivalEntityRepository archivalEntityRepository) {
+        this.partType = partType;
+        this.roleType = roleType;
+        this.apRefType = apRefType;
+        this.archivalEntityRepository = archivalEntityRepository;
+    }
 
 	@Override
 	public void convert(EdxItemCovertContext ctx, DescriptionItem item) {
@@ -40,17 +45,18 @@ public class EdxApRefWithRole  implements EdxItemConvertor {
 			throw new RuntimeException("Failed to convert AP: "+apRef.getApid() + ", ap not found");
 		}
 		
-		UUID apUuid = UUID.fromString(ap.getApe().getUuid());
-		
-		ctx.addArchEntityRef(apUuid);
-
+		UUID apUuid = UUID.fromString(ap.getApe().getUuid());		
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
-		
 		Part part = apusBuilder.addPart(ctx.getActiveApu(), partType);
-		// TODO: map spec to value
-		apusBuilder.addEnum(part, roleType, apRef.getS(), true);		
-		apusBuilder.addApuRef(part, apRefType, apUuid);
-		
+		apusBuilder.addEnum(part, roleType, apRef.getS(), true);
+		var uuids = archivalEntityRepository.findByUUIDWithParents(apUuid);
+        if (CollectionUtils.isEmpty(uuids)) {
+            ctx.addArchEntityRef(apUuid);
+            apusBuilder.addApuRef(part, apRefType, apUuid);
+        } else {
+            ctx.addArchEntityRef(apUuid);
+            apusBuilder.addApuRefsFirstVisible(part, apRefType, uuids);
+        }		
 	}
 
 }
