@@ -44,8 +44,22 @@ public abstract class ElzaTypes {
     public static final String SCOPE_NORMS = "SCOPE_NORMS";
     public static final String CORP_STRUCTURE = "CORP_STRUCTURE";
     public static final String SOURCE_INFO = "SOURCE_INFO";
-    
+
     public static final String REL_ENTITY = "REL_ENTITY";
+    public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
+
+    public static final String ZP2015_POSITION = "ZP2015_POSITION";
+    public static final String ZP2015_ORIENTATION = "ZP2015_ORIENTATION";
+    public static final String ZP2015_ITEM_MAT = "ZP2015_ITEM_MAT";
+    public static final String ZP2015_PART = "ZP2015_PART";
+
+    public static final String ZP2015_WRITING = "ZP2015_WRITING";
+    public static final String ZP2015_CORROBORATION = "ZP2015_CORROBORATION";
+    public static final String ZP2015_IMPRINT_COUNT = "ZP2015_IMPRINT_COUNT";
+    public static final String ZP2015_IMPRINT_ORDER = "ZP2015_IMPRINT_ORDER";
+    public static final String ZP2015_LEGEND = "ZP2015_LEGEND";
+    public static final String ZP2015_MOVIE_LENGTH = "ZP2015_MOVIE_LENGTH";
+    public static final String ZP2015_RECORD_LENGTH = "ZP2015_RECORD_LENGTH";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {
@@ -93,126 +107,628 @@ public abstract class ElzaTypes {
 
     public static Map<String, String> roleSpecMap = new HashMap<>();
     static {
-	    roleSpecMap.put("ZP2015_ENTITY_ROLE_1",        "autor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_2",
-        "autor dialogu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_4",        "autor fotografií");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_5",
-        "skladatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_10",
-        "autor textové složky/textař");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_6",
-        "autor hudby/skladatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_7",
-        "autor choreografie/choreograf");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_8",
-        "autor komentáře");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_9",
-        "autor námětu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_11",
-        "autor textu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_3",
-        "autor doprovodnéno textu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_12",
-        "autor triků a speciálních efektů");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_13",
-        "autor výtvarné a obrazové stránky");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_14",
-        "autor výtvarné stránky");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_15",
-        "vydavatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_16",
-        "vydavatel / nakladatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_17",
-        "pečetitel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_18",
-        "produkční společnost/producent");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_19",
-        "objednatel / příjemce");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_20",
-        "distributor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_21",
-        "příjemce");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_22",
-        "žadatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_23",
-        "držitel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_24",
-        "odesilatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_25",
-        "schvalovatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_26",
-        "stavitel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_27",
-        "režisér");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_28",
-        "scénárista");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_29",
-        "kameraman");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_30",
-        "interpret hudby");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_31",
-        "fotograf");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_32",
-        "redaktor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_33",
-        "kartograf");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_34",
-        "editor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_35",
-        "editor / redaktor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_36",
-        "kreslič");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_37",
-        "majitel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_38",
-        "tvůrce technického zpracování");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_39",
-        "tvůrce výtvarné stránky");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_40",
-        "dramaturg");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_41",
-        "střih/střihač");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_42",
-        "zvuk/zvukař");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_43",
-        "účinkující");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_44",
-        "překladatel");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_45",
-        "lektor");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_46",
-        "svědek");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_47",
-        "ručitel (rukojmě)");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_48",
-        "písař");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_49",
-        "zpracovatel nosičů záznamů");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_50", "výrobce nosičů záznamů");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_51", "tiskárna");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_52", "tiskárna/tiskař");   
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_53", "výrobce");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_54", "výrobce typářů");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_55", "výrobce odlitků otisků / otisků typářů");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_56", "místo natáčení");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_57", "místo vydavatele");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_58", "místo vydání");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_59", "místo vydání dokumentů");   
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_60", "místo výroby");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_61", "místo vzniku jednotky popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_62", "místo vzniku předlohy popisované kopie");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_63", "typové označení a název výrobku a typové stavby");   
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_64", "entita zachycená jednotkami popisu");   
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_65", "ostatní entita zachycená jednotkami popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_66", "osoba/bytost zachycená jednotkou popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_67", "rod/rodina zachycený/á jednotkou popisu");   
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_68", "korporace zachycená jednotkou popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_69", "událost zachycená jednotkou popisu");  
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_70", "dílo/výtvor zachycené/ý jednotkou popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_71", "geografický objekt zachycený jednotkou popisu");
-    roleSpecMap.put("ZP2015_ENTITY_ROLE_72", "obecný pojem vztahující se k jednotce popisu");
-	}
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_1", "autor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_2",
+                        "autor dialogu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_4", "autor fotografií");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_5",
+                        "skladatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_10",
+                        "autor textové složky/textař");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_6",
+                        "autor hudby/skladatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_7",
+                        "autor choreografie/choreograf");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_8",
+                        "autor komentáře");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_9",
+                        "autor námětu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_11",
+                        "autor textu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_3",
+                        "autor doprovodnéno textu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_12",
+                        "autor triků a speciálních efektů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_13",
+                        "autor výtvarné a obrazové stránky");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_14",
+                        "autor výtvarné stránky");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_15",
+                        "vydavatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_16",
+                        "vydavatel / nakladatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_17",
+                        "pečetitel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_18",
+                        "produkční společnost/producent");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_19",
+                        "objednatel / příjemce");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_20",
+                        "distributor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_21",
+                        "příjemce");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_22",
+                        "žadatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_23",
+                        "držitel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_24",
+                        "odesilatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_25",
+                        "schvalovatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_26",
+                        "stavitel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_27",
+                        "režisér");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_28",
+                        "scénárista");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_29",
+                        "kameraman");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_30",
+                        "interpret hudby");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_31",
+                        "fotograf");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_32",
+                        "redaktor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_33",
+                        "kartograf");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_34",
+                        "editor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_35",
+                        "editor / redaktor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_36",
+                        "kreslič");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_37",
+                        "majitel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_38",
+                        "tvůrce technického zpracování");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_39",
+                        "tvůrce výtvarné stránky");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_40",
+                        "dramaturg");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_41",
+                        "střih/střihač");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_42",
+                        "zvuk/zvukař");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_43",
+                        "účinkující");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_44",
+                        "překladatel");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_45",
+                        "lektor");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_46",
+                        "svědek");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_47",
+                        "ručitel (rukojmě)");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_48",
+                        "písař");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_49",
+                        "zpracovatel nosičů záznamů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_50", "výrobce nosičů záznamů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_51", "tiskárna");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_52", "tiskárna/tiskař");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_53", "výrobce");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_54", "výrobce typářů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_55", "výrobce odlitků otisků / otisků typářů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_56", "místo natáčení");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_57", "místo vydavatele");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_58", "místo vydání");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_59", "místo vydání dokumentů");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_60", "místo výroby");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_61", "místo vzniku jednotky popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_62", "místo vzniku předlohy popisované kopie");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_63", "typové označení a název výrobku a typové stavby");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_64", "entita zachycená jednotkami popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_65", "ostatní entita zachycená jednotkami popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_66", "osoba/bytost zachycená jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_67", "rod/rodina zachycený/á jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_68", "korporace zachycená jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_69", "událost zachycená jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_70", "dílo/výtvor zachycené/ý jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_71", "geografický objekt zachycený jednotkou popisu");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_72", "obecný pojem vztahující se k jednotce popisu");
+    }
+
+    public static Map<String, String> languageTypeMap = new HashMap<>();
+    static {
+        languageTypeMap.put("ZP2015_LANGUAGE_1",
+                            "blíže neurčený indoevropský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_2",
+                            "blíže neurčený baltský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_3",
+                            "litevština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_4",
+                            "lotyština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_5",
+                            "blíže neurčený germánský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_6",
+                            "afrikánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_7",
+                            "alsaština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_8",
+                            "angličtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_9",
+                            "dánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_10",
+                            "dolnoněmčina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_11",
+                            "faerština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_12",
+                            "fríština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_13",
+                            "holandština (nizozemština)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_14",
+                            "islandština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_15",
+                            "jidiš");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_16",
+                            "judendeutsch");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_17",
+                            "lucemburština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_18",
+                            "němčina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_19",
+                            "norština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_20",
+                            "švédština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_21",
+                            "blíže neurčený keltský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_22",
+                            "bretonština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_23",
+                            "irština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_24",
+                            "skotská gaelština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_25",
+                            "velština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_26",
+                            "blíže neurčený románský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_27",
+                            "francouzština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_28",
+                            "galicijština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_29",
+                            "italština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_30",
+                            "katalánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_31",
+                            "korsičtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_32",
+                            "latina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_33",
+                            "moldavština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_34",
+                            "okcitánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_35",
+                            "portugalština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_36",
+                            "rétorománština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_37",
+                            "rumunština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_38",
+                            "španělština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_39",
+                            "blíže neurčený slovanský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_40",
+                            "běloruština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_41",
+                            "bosenština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_42",
+                            "bulharština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_43",
+                            "čeština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_44",
+                            "chorvatština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_45",
+                            "kašubština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_46",
+                            "lužická srbština dolní (dolnolužičtina)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_47",
+                            "lužická srbština horní (hornolužičtina)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_48",
+                            "makedonština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_49",
+                            "polština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_50",
+                            "rusínština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_51",
+                            "ruština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_52",
+                            "slovenština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_53",
+                            "slovinština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_54",
+                            "srbochorvatština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_55",
+                            "srbština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_56",
+                            "staroslověnština, církevní slovanština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_57",
+                            "ukrajinština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_58",
+                            "blíže neurčený indoevropský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_59",
+                            "albánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_60",
+                            "arménština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_61",
+                            "řečtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_62",
+                            "blíže neurčený uralský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_63",
+                            "estonština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_64",
+                            "finština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_65",
+                            "maďarština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_66",
+                            "livština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_67",
+                            "baskičtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_68",
+                            "blíže neurčený afroasijský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_69",
+                            "blíže neurčený semitský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_70",
+                            "(novo)hebrejština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_71",
+                            "amharština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_72",
+                            "arabština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_73",
+                            "aramejština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_74",
+                            "hauština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_75",
+                            "maltština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_76",
+                            "stará hebrejština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_77",
+                            "akkadština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_78",
+                            "assyrština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_79",
+                            "babylonština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_80",
+                            "chetitština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_81",
+                            "sumerština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_82",
+                            "egyptština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_83",
+                            "koptština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_84",
+                            "blíže neurčený nigerokonžský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_85",
+                            "svahilština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_86",
+                            "blíže neurčený altajský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_87",
+                            "japonština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_88",
+                            "korejština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_89",
+                            "blíže neurčený mongolský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_90",
+                            "mongolština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_91",
+                            "blíže neurčený turkický jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_92",
+                            "azerbajdžánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_93",
+                            "baškirština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_94",
+                            "gagauzština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_95",
+                            "hazarština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_96",
+                            "kyrgyzština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_97",
+                            "krymská tatarština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_98",
+                            "tatarština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_99",
+                            "turečtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_100",
+                            "turkménština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_101",
+                            "ujgurština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_102",
+                            "uzbečtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_103",
+                            "blíže neurčený austroasijský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_104",
+                            "santalština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_105",
+                            "khmérština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_106",
+                            "vietnamština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_107",
+                            "blíže neurčený austronéský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_108",
+                            "indonéština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_109",
+                            "malajština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_110",
+                            "blíže neurčený drávidský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_111",
+                            "kannadština (též kannarština)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_112",
+                            "malajalámština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_113",
+                            "tamilština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_114",
+                            "telugština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_115",
+                            "blíže neurčený indoárijský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_116",
+                            "asámština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_117",
+                            "bengálština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_118",
+                            "Bihárštiina (maithilština)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_119",
+                            "dógrí");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_120",
+                            "gudžarátština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_121",
+                            "hindština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_122",
+                            "kašmírština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_123",
+                            "konkánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_124",
+                            "maráthština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_125",
+                            "pahárské jazyky (nepálština)");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_126",
+                            "pandžábština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_127",
+                            "romština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_128",
+                            "sanskrt");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_129",
+                            "sindština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_130",
+                            "sinhálština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_131",
+                            "urdština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_132",
+                            "urijština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_133",
+                            "blíže neurčený indoíránský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_134",
+                            "(novo)perština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_135",
+                            "kurdština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_136",
+                            "paštština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_137",
+                            "stará perština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_138",
+                            "střední perština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_139",
+                            "tádžičtina");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_140",
+                            "blíže neurčený kartvelský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_141",
+                            "gruzínština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_142",
+                            "blíže neurčený severokavkazský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_143",
+                            "abcházština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_144",
+                            "blíže neurčený tajsko-kadajský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_145",
+                            "laoština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_146",
+                            "thajština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_147",
+                            "blíže neurčený tibetskočínský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_148",
+                            "barmština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_149",
+                            "bodo");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_150",
+                            "bhútánština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_151",
+                            "manípurština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_152",
+                            "čínština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_153",
+                            "tibetština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_154",
+                            "blíže neurčený aleutský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_155",
+                            "grónština");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_156",
+                            "blíže neurčený indiánský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_157",
+                            "blíže neurčený");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_158",
+                            "blíže neurčený izolovaný jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_159",
+                            "blíže neurčený kreolský jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_160",
+                            "blíže neurčený umělý jazyk");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_161",
+                            "esperanto");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_162",
+                            "ido");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_163",
+                            "interlingua");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_164",
+                            "interlingue");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_165",
+                            "volapük");
+
+        languageTypeMap.put("ZP2015_LANGUAGE_166",
+                            "slovio");
+
+    }
 
     public static Map<String, String> relEntityMap = new HashMap<>();
     static {

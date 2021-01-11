@@ -54,6 +54,11 @@ itemTypes:
     name: Odkaz na entitu
     type: APU_REF
     indexed: true
+  - code: NOTE
+    name: Poznámka
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+    type: STRING
+    indexed: true
   # Archivy
   - code: INST_CODE
     name: Kód archivu
@@ -202,6 +207,10 @@ itemTypes:
     name: Název autorského díla
     type: APU_REF
     indexed: true
+  - name: Jazyk
+    code: LANGUAGE
+    type: ENUM
+    indexed: true
   - code: SCALE
     name: Měřítko
     type: STRING
@@ -230,6 +239,22 @@ itemTypes:
     name: Textová datace
     type: STRING
     indexed: true
+  - code: ORIENTATION
+    name: Orientace z hlediska světových stran
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT
+    name: Technika, adjustace, nosič a látka záznamu
+    type: STRING
+    indexed: true
+  - code: PART
+    name: Díl, část, pořadí vydání jednotky popisu
+    type: STRING
+    indexed: true
+  - code: WRITING
+    name: Písmo
+    type: STRING
+    indexed: true
   - code: EXERQUE
     name: Otisk
     type: STRING
@@ -238,6 +263,30 @@ itemTypes:
     name: Malba
     type: STRING
     indexed: true
+  - code: CORROBORATION
+    name: Koroborace
+    type: STRING
+    indexed: true
+  - code: IMPRINT_COUNT
+    name: Počet otisků původní a současný
+    type: STRING
+    indexed: false
+  - code: IMPRINT_ORDER
+    name: Pořadí otisku
+    type: STRING
+    indexed: false
+  - code: LEGEND
+    name: Legenda
+    type: STRING
+    indexed: false
+  - code: MOVIE_LENGTH
+    name: Délka filmového záznamu
+    type: STRING
+    indexed: false
+  - code: RECORD_LENGTH
+    name: Délka zvukového záznamu
+    type: STRING
+    indexed: false
   - code: EXISTING_COPY
     name: Kopie
     type: STRING

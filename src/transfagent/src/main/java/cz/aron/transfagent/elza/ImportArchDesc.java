@@ -27,12 +27,14 @@ import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
+import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
+import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 import cz.tacr.elza.schema.v2.DigitalArchivalObject;
 import cz.tacr.elza.schema.v2.DigitalArchivalObjects;
 import cz.tacr.elza.schema.v2.FundInfo;
@@ -204,15 +206,20 @@ public class ImportArchDesc implements EdxItemCovertContext {
     }
 
     private void addItem(Apu apu, DescriptionItem item) {
+        if(item instanceof DescriptionItemUndefined ) {
+            return;
+        }
+        
 		final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
 				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
 				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
 				"ZP2015_UNIT_DATE_BULK","ZP2015_FOLDER_TYPE",
 				"ZP2015_STORAGE_ID", "ZP2015_ITEM_ORDER",
 				"ZP2015_UNIT_COUNT_ITEM",
-				"ZP2015_INTERNAL_NOTE", "ZP2015_POSITION",
-		// TODO: k zapracovani
-				"ZP2015_LANGUAGE",
+				"ZP2015_INTERNAL_NOTE",
+				// geo souradnice - neumime prevest
+				ElzaTypes.ZP2015_POSITION,
+		// TODO: k zapracovani				
 				"ZP2015_DATE_OTHER"
 		};
 		
@@ -240,6 +247,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("ITEM_TITLE",this.dataProvider));
 		stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
 		stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
+		stringTypeMap.put(ElzaTypes.ZP2015_LANGUAGE, new EdxEnumConvertor(CoreTypes.LANGUAGE, ElzaTypes.languageTypeMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_ORIENTATION, new EdxStringConvertor(CoreTypes.ORIENTATION));
+	    stringTypeMap.put(ElzaTypes.ZP2015_ITEM_MAT, new EdxStringConvertor(CoreTypes.ITEM_MAT));
+	    stringTypeMap.put(ElzaTypes.ZP2015_PART, new EdxStringConvertor(CoreTypes.PART));
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
 		stringTypeMap.put("ZP2015_RELATED_UNITS",new EdxStringConvertor("RELATED_UNITS"));
 		stringTypeMap.put("ZP2015_UNIT_DATE",new EdxUnitDateConvertor("UNIT_DATE"));
@@ -251,12 +262,20 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_DATE_TEXT",new EdxStringConvertor("UNIT_DATE_TEXT"));
 		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));
 		stringTypeMap.put("ZP2015_PAINTING_CHAR",new EdxStringConvertor("PAINTING_CHAR"));
+		stringTypeMap.put(ElzaTypes.ZP2015_CORROBORATION, new EdxStringConvertor(CoreTypes.CORROBORATION));
+		stringTypeMap.put(ElzaTypes.ZP2015_IMPRINT_COUNT, new EdxStringConvertor(CoreTypes.IMPRINT_COUNT));
+		stringTypeMap.put(ElzaTypes.ZP2015_IMPRINT_ORDER, new EdxStringConvertor(CoreTypes.IMPRINT_ORDER));
+		stringTypeMap.put(ElzaTypes.ZP2015_LEGEND, new EdxStringConvertor(CoreTypes.LEGEND));
+		stringTypeMap.put(ElzaTypes.ZP2015_MOVIE_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.MOVIE_LENGTH));
+		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.RECORD_LENGTH));
+		stringTypeMap.put(ElzaTypes.ZP2015_WRITING, new EdxStringConvertor(CoreTypes.WRITING));
+		
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
 		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider, 
 		                                                            ElzaTypes.roleSpecMap));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
-		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());
+		stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
 		stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));
 		
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());

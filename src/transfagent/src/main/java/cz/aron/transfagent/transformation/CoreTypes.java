@@ -10,7 +10,10 @@ public class CoreTypes {
 	public final static String PT_NAME = "PT_NAME";
 	
 	public final static String NAME = "NAME";
-	public final static String AP_REF = "AP_REF";	
+	public final static String AP_REF = "AP_REF";
+	// poznámka
+	public static final String NOTE = "NOTE";
+	public static final String LANGUAGE = "LANGUAGE";
 	
 	// Informace o archivní entitě
 	public final static String PT_AE_INFO = "PT_AE_INFO";
@@ -29,7 +32,18 @@ public class CoreTypes {
 	// Archivní popis
 	public final static String PT_ARCH_DESC = "PT_ARCH_DESC";
 	public final static String PT_ENTITY_ROLE = "PT_ENTITY_ROLE";
-	public final static String ROLE = "ROLE";
 	public final static String PT_ARCH_DESC_FUND = "PT_ARCH_DESC_FUND";
-
+	
+	public final static String ROLE = "ROLE";
+	
+	public static final String ORIENTATION = "ORIENTATION";
+	public static final String ITEM_MAT = "ITEM_MAT";
+	public static final String PART = "PART";
+	public static final String WRITING = "WRITING";
+	public final static String CORROBORATION = "CORROBORATION";
+    public static final String IMPRINT_COUNT = "IMPRINT_COUNT";
+    public static final String IMPRINT_ORDER = "IMPRINT_ORDER";
+    public static final String LEGEND = "LEGEND";
+    public static final String MOVIE_LENGTH = "MOVIE_LENGTH";
+    public static final String RECORD_LENGTH = "RECORD_LENGTH";    
 }
