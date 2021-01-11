@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import cz.aron.transfagent.common.BulkOperation;
 import cz.aron.transfagent.config.ConfigElza;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Property;
@@ -70,8 +71,10 @@ public class ElzaUpdateEntityProcessor implements ImportProcessor {
                 .map(p -> Integer.valueOf(p))
                 .collect(Collectors.toList());
 
-        archivalEntityRepository.setDownloadTrueByIds(ids);
-        apuSourceRepository.setReimportTrueByIds(ids);
+        BulkOperation.run(ids, 1000, sids -> {
+            archivalEntityRepository.setDownloadTrueByIds(sids);
+            apuSourceRepository.setReimportTrueByIds(sids);
+        });
     }
 
 }

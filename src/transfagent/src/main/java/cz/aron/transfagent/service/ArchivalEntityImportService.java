@@ -512,8 +512,10 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		}
 
         Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());
-        if(apuSource.isReimport()) {
+        if(archEntity.isDownload()) {
             apuDir = downloadEntity(archEntity);
+            archEntity.setDownload(false);
+            archivalEntityRepository.save(archEntity);
         }
 
 		ApuSourceBuilder apuSourceBuilder;
