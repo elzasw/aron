@@ -18,8 +18,30 @@
 	<wsdl:message name="DestructionRequestFinishedMsg">
 		<wsdl:part name="requestId" element="eat:destructionRequestId"/>
 	</wsdl:message>
+	<wsdl:message name="DestructionRequestRevokedMsg">
+		<wsdl:part name="requestRevoked" element="eat:destructionRequestRevoked"/>
+	</wsdl:message>
+	<wsdl:message name="CreateUserMsg">
+		<wsdl:documentation>Message to create new user</wsdl:documentation>
+		<wsdl:part name="createUser" element="eat:createUser"/>
+	</wsdl:message>
+	<wsdl:message name="DigitizationRequestRevokedResponse"/>
+	<wsdl:message name="GetDidResponse">
+		<wsdl:documentation>Description of material/level of description</wsdl:documentation>
+		<wsdl:part name="did" element="eat:did"/>
+	</wsdl:message>
+	<wsdl:message name="UpdateFundResponse"/>
+	<wsdl:message name="SearchEntityResponse">
+		<wsdl:part name="searchResult" element="eat:searchEntityResult"/>
+	</wsdl:message>
+	<wsdl:message name="CreateUserResponse">
+		<wsdl:documentation>Prázdná odpověď v případě úspěšného založení uživatele.</wsdl:documentation>
+	</wsdl:message>
 	<wsdl:message name="AddPermissionsMsg">
 		<wsdl:part name="addPermissions" element="eat:addPermissions"/>
+	</wsdl:message>
+	<wsdl:message name="SearchEntityMsg">
+		<wsdl:part name="request" element="eat:searchSingleEntity"/>
 	</wsdl:message>
 	<wsdl:message name="DestructionRequestFinishedResponse"/>
 	<wsdl:message name="DeleteStructuredObjectFailed">
@@ -61,6 +83,12 @@
 	<wsdl:message name="ExportRequestException">
 		<wsdl:part name="exportFailed" element="eat:exportRequestFailed"/>
 	</wsdl:message>
+	<wsdl:message name="SearchEntityUpdateMsg">
+		<wsdl:part name="request" element="eat:searchEntityUpdates"/>
+	</wsdl:message>
+	<wsdl:message name="SearchEntityUpdateResponse">
+		<wsdl:part name="updatedEntitiesResponse" element="eat:updatedEntities"/>
+	</wsdl:message>
 	<wsdl:message name="ExportRequestMsg">
 		<wsdl:part name="request" element="eat:exportRequest"/>
 	</wsdl:message>
@@ -89,9 +117,6 @@
 	</wsdl:message>
 	<wsdl:message name="DaoImportMsg">
 		<wsdl:part name="daoImport" element="eat:daoImport"/>
-	</wsdl:message>
-	<wsdl:message name="SearchEntityException">
-		<wsdl:part name="searchFailed" element="eat:searchEntityException"/>
 	</wsdl:message>
 	<wsdl:message name="DigitizationRequestResultMsg">
 		<wsdl:part name="digitizationRequestResult" element="eat:digitizationRequestResult"/>
@@ -123,6 +148,9 @@
 	<wsdl:message name="UpdateStructuredObjectFailed">
 		<wsdl:part name="updateStructuredObjectError" element="eat:updateStructuredObjectFailed"/>
 	</wsdl:message>
+	<wsdl:message name="SearchEntityException">
+		<wsdl:part name="searchFailed" element="eat:searchEntityException"/>
+	</wsdl:message>
 	<wsdl:message name="ImportStatusMsg">
 		<wsdl:part name="requestId" element="eat:importRequestId"/>
 	</wsdl:message>
@@ -132,28 +160,6 @@
 	</wsdl:message>
 	<wsdl:message name="CreateFundException">
 		<wsdl:part name="fundCreateFailed" element="eat:createFundFailed"/>
-	</wsdl:message>
-	<wsdl:message name="DestructionRequestRevokedMsg">
-		<wsdl:part name="requestRevoked" element="eat:destructionRequestRevoked"/>
-	</wsdl:message>
-	<wsdl:message name="CreateUserMsg">
-		<wsdl:documentation>Message to create new user</wsdl:documentation>
-		<wsdl:part name="createUser" element="eat:createUser"/>
-	</wsdl:message>
-	<wsdl:message name="DigitizationRequestRevokedResponse"/>
-	<wsdl:message name="GetDidResponse">
-		<wsdl:documentation>Description of material/level of description</wsdl:documentation>
-		<wsdl:part name="did" element="eat:did"/>
-	</wsdl:message>
-	<wsdl:message name="UpdateFundResponse"/>
-	<wsdl:message name="CreateUserResponse">
-		<wsdl:documentation>Prázdná odpověď v případě úspěšného založení uživatele.</wsdl:documentation>
-	</wsdl:message>
-	<wsdl:message name="SearchEntityMsg">
-		<wsdl:part name="request" element="eat:searchSingleEntity"/>
-	</wsdl:message>
-	<wsdl:message name="SearchEntityResponse">
-		<wsdl:part name="searchResult" element="eat:searchEntityResult"/>
 	</wsdl:message>
 	<wsdl:portType name="ImportService">
 		<wsdl:operation name="GetImportStatus">
@@ -323,6 +329,11 @@ Function will throw error if didIdentifier is not valid.</wsdl:documentation>
 			<wsdl:output name="searchResponse" message="tns:SearchEntityResponse"/>
 			<wsdl:fault name="searchEntityException" message="tns:SearchEntityException"/>
 		</wsdl:operation>
+		<wsdl:operation name="SearchEntityUpdates">
+			<wsdl:input name="entityUpdatesRequest" message="tns:SearchEntityUpdateMsg"/>
+			<wsdl:output name="entityUpdatesResponse" message="tns:SearchEntityUpdateResponse"/>
+			<wsdl:fault name="failure" message="tns:CoreServiceException"/>
+		</wsdl:operation>
 	</wsdl:portType>
 	<wsdl:binding name="StructuredObjectServiceBinding" type="tns:StructuredObjectService">
 		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
@@ -438,6 +449,18 @@ Function will throw error if didIdentifier is not valid.</wsdl:documentation>
 			</wsdl:output>
 			<wsdl:fault name="searchEntityException">
 				<soap:fault name="searchEntityException" use="literal"/>
+			</wsdl:fault>
+		</wsdl:operation>
+		<wsdl:operation name="SearchEntityUpdates">
+			<soap:operation soapAction="http://elza/exports/search-entity-updates" style="document"/>
+			<wsdl:input name="entityUpdatesRequest">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="entityUpdatesResponse">
+				<soap:body use="literal"/>
+			</wsdl:output>
+			<wsdl:fault name="failure">
+				<soap:fault name="failure" use="literal"/>
 			</wsdl:fault>
 		</wsdl:operation>
 	</wsdl:binding>

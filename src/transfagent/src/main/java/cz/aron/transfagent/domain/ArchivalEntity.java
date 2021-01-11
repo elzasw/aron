@@ -40,10 +40,13 @@ public class ArchivalEntity {
 
     @Column(name = "last_update", nullable = true)
     private ZonedDateTime lastUpdate;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_entity_id", nullable = true)
     private ArchivalEntity parentEntity;
+
+    @Column(nullable = false)
+    private boolean download;
 
     public ArchivalEntity getParentEntity() {
 		return parentEntity;
@@ -94,10 +97,19 @@ public class ArchivalEntity {
 	}
 
     public Integer getElzaId() {
-		return elzaId;
-	}
+        return elzaId;
+    }
 
-	public void setElzaId(Integer elzaId) {
-		this.elzaId = elzaId;
-	}
+    public void setElzaId(Integer elzaId) {
+        this.elzaId = elzaId;
+    }
+
+    public boolean isDownload() {
+        return download;
+    }
+
+    public void setDownload(boolean download) {
+        this.download = download;
+    }
+
 }

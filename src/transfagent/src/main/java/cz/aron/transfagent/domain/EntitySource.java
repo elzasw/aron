@@ -27,9 +27,6 @@ public class EntitySource {
     @JoinColumn(name = "apusource_id", nullable = true)
     private ApuSource apuSource;
 
-    @Column(nullable = false)
-    private boolean download;
-
     public Integer getId() {
         return id;
     }

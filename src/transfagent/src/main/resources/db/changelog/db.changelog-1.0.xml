@@ -162,7 +162,9 @@
       <column name="status" type="varchar(50)" />
       <column name="apusource_id" type="int" />
       <column name="last_update" type="timestamp with time zone" />
-      <column name="parent_entity_id" type="int">
+      <column name="parent_entity_id" type="int" />
+      <column name="download" type="boolean">
+        <constraints nullable="false" />
       </column>
     </createTable>
 
@@ -178,9 +180,6 @@
         <constraints nullable="false" />
       </column>
       <column name="apusource_id" type="int">
-        <constraints nullable="false" />
-      </column>
-      <column name="download" type="boolean">
         <constraints nullable="false" />
       </column>
     </createTable>

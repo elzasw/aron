@@ -511,7 +511,11 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			return Result.NOCHANGES;
 		}
 
-		Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());		
+        Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        if(apuSource.isReimport()) {
+            apuDir = downloadEntity(archEntity);
+        }
+
 		ApuSourceBuilder apuSourceBuilder;
 		final var importAp = new ImportAp();
 		try {
@@ -519,7 +523,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			apuSourceBuilder.setUuid(apuSource.getUuid());
 			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}			
+			}
 			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());
 			this.updateSourceEntityLinks(apuSource, apuSourceBuilder.getReferencedEntities(), ess);
 		} catch (Exception e) {

@@ -77,6 +77,7 @@
 	</xs:element>
 	<xs:element name="searchEntityException" type="eat:ErrorDescription"/>
 	<xs:element name="searchEntityResult" type="eat:SearchEntityResult"/>
+	<xs:element name="searchEntityUpdates" type="eat:SearchEntityUpdates"/>
 	<xs:element name="searchSingleEntity" type="eat:SearchEntity"/>
 	<xs:element name="setUserState" type="eat:SetUserState">
 		<xs:annotation>
@@ -94,6 +95,7 @@
 	<xs:element name="transferRequest" type="eat:TransferRequest"/>
 	<xs:element name="transferRequestId" type="eat:RequestId"/>
 	<xs:element name="transferRequestRevoked" type="eat:RequestRevoked"/>
+	<xs:element name="updatedEntities" type="eat:EntityUpdates"/>
 	<xs:element name="updateFundFailed" type="eat:ErrorDescription"/>
 	<xs:element name="updateStructuredObjectFailed" type="eat:ErrorDescription"/>
 	<xs:simpleType name="Abstract">
@@ -600,6 +602,16 @@ Source: EAD3</xs:documentation>
 			<xs:element name="entityClass" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
+	<xs:complexType name="EntityUpdates">
+		<xs:annotation>
+			<xs:documentation>List of updates Aps</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="fromTrans" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="toTrans" type="eat:Identifier" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="entityIds" type="eat:IdentifierList" minOccurs="1" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
 	<xs:complexType name="ErrorDescription">
 		<xs:annotation>
 			<xs:documentation>Type for failure description</xs:documentation>
@@ -875,6 +887,14 @@ Supported data formats:
 	<xs:complexType name="SearchEntityResult">
 		<xs:sequence>
 			<xs:element name="entityInfo" type="eat:EntityInfo" minOccurs="0" maxOccurs="1"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SearchEntityUpdates">
+		<xs:annotation>
+			<xs:documentation>Search access point updates</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="fromTrans" type="eat:Identifier" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="SetUserState">
