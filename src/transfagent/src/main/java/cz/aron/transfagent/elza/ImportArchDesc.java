@@ -236,8 +236,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_CURRENT_STATUS",new EdxStringConvertor("UNIT_CURRENT_STATUS"));
 		stringTypeMap.put("ZP2015_ARRANGE_RULES",new EdxStringConvertor("ARRANGE_RULES"));
 		stringTypeMap.put("ZP2015_ORIGINATOR",new EdxApRefConvertor("ORIGINATOR_REF",this.dataProvider));
-		stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("APU_REF",this.dataProvider));
-		stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("APU_REF",this.dataProvider));
+		stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("AP_REF",this.dataProvider));
+		stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("ITEM_TITLE",this.dataProvider));
 		stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
 		stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
@@ -257,6 +257,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		                                                            ElzaTypes.roleSpecMap));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxNullConvertor());
+		stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));
 		
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
 		if(convertor!=null) {

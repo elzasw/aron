@@ -198,6 +198,10 @@ itemTypes:
     name: Formální název
     type: STRING
     indexed: true
+  - code: ITEM_TITLE
+    name: Název autorského díla
+    type: APU_REF
+    indexed: true
   - code: SCALE
     name: Měřítko
     type: STRING
@@ -246,6 +250,10 @@ itemTypes:
     name: Odkazy na příbuzné dokumenty
     type: STRING
     indexed: true
+  - code: DESCRIPTION_DATE
+    name: Datum popisu
+    type: STRING
+    indexed: false
   - code: ROLE
     name: Role
     type: ENUM

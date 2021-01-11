@@ -139,7 +139,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
                        apuSourceBuilder.getReferencedEntities());
             
         } catch (Exception e) {         
-            log.error("Fail to process downloaded ap.xml, dir={}", tmpDir, e);
+            log.error("Fail to process downloaded ap.xml, dir={}, elzaId={}, uuid={}", tmpDir, 
+                      ae.getElzaId(), ae.getUuid(), e);
             try {
                 FileSystemUtils.deleteRecursively(tmpDir);
             } catch (IOException e1) {

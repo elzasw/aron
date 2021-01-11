@@ -111,7 +111,7 @@ public class ImportAp {
 		this.apUuid = UUID.fromString(ap.getApe().getUuid());
 		this.elzaId = Integer.valueOf(ap.getApe().getId());
 
-		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY, expUuid);		
+		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);		
 		
 		// extrakce dat
 		// entity info
@@ -145,6 +145,9 @@ public class ImportAp {
 			case "PT_CRE":
 			    importCre(apu, frg);
 			    break;
+            case "PT_EXT":
+                importExt(apu, frg);
+                break;
 			default:
 				throw new IllegalStateException("AP with unsupported part, type: "+frg.getT());
 			}
@@ -162,6 +165,14 @@ public class ImportAp {
 	    // CRE_DATE
 	    // CRE_TYPE
 	    // CRE_CLASS
+    }
+	
+	private void importExt(Apu apu, Fragment frg) {
+        // TODO Auto-generated method stub
+        // PT_AE_CRE
+        // CRE_DATE
+        // CRE_TYPE
+        // CRE_CLASS
     }
 
     private void importRel(Apu apu, Fragment frg) {
