@@ -54,6 +54,11 @@ itemTypes:
     name: Odkaz na entitu
     type: APU_REF
     indexed: true
+  - code: NOTE
+    name: Poznámka
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+    type: STRING
+    indexed: true
   # Archivy
   - code: INST_CODE
     name: Kód archivu
@@ -76,6 +81,10 @@ itemTypes:
     name: Stručná charakteristika
     type: STRING
     indexed: false
+  - code: AE_BRIEF_DESC
+    name: Stručná charakteristika
+    type: STRING
+    indexed: false
   - code: AE_GEO_ADMIN_REF
     name: Administrativní zařazení
     type: APU_REF
@@ -87,6 +96,42 @@ itemTypes:
   - code: AE_REL_TYPE
     name: Druh vztahu
     type: ENUM
+    indexed: true
+  - code: CORP_PURPOSE
+    name: Funkce korporace
+    type: STRING
+    indexed: true
+  - code: FOUNDING_NORMS
+    name: Normy – konstitutivní
+    type: STRING
+    indexed: true
+  - code: SCOPE_NORMS
+    name: Normy – působnost původce
+    type: STRING
+    indexed: true
+  - code: CORP_STRUCTURE
+    name: Vnitřní struktury korporace
+    type: STRING
+    indexed: true
+  - code: SOURCE_INFO
+    name: Zdroje informací
+    type: STRING
+    indexed: true
+  - code: HISTORY
+    name: Dějiny
+    type: STRING
+    indexed: true
+  - code: GENEALOGY
+    name: Genealogie
+    type: STRING
+    indexed: true
+  - code: BIOGRAPHY
+    name: Životopis
+    type: STRING
+    indexed: true
+  - code: DESCRIPTION
+    name: Popis
+    type: STRING
     indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
@@ -158,6 +203,14 @@ itemTypes:
     name: Formální název
     type: STRING
     indexed: true
+  - code: ITEM_TITLE
+    name: Název autorského díla
+    type: APU_REF
+    indexed: true
+  - name: Jazyk
+    code: LANGUAGE
+    type: ENUM
+    indexed: true
   - code: SCALE
     name: Měřítko
     type: STRING
@@ -186,6 +239,22 @@ itemTypes:
     name: Textová datace
     type: STRING
     indexed: true
+  - code: ORIENTATION
+    name: Orientace z hlediska světových stran
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT
+    name: Technika, adjustace, nosič a látka záznamu
+    type: STRING
+    indexed: true
+  - code: PART
+    name: Díl, část, pořadí vydání jednotky popisu
+    type: STRING
+    indexed: true
+  - code: WRITING
+    name: Písmo
+    type: STRING
+    indexed: true
   - code: EXERQUE
     name: Otisk
     type: STRING
@@ -194,6 +263,30 @@ itemTypes:
     name: Malba
     type: STRING
     indexed: true
+  - code: CORROBORATION
+    name: Koroborace
+    type: STRING
+    indexed: true
+  - code: IMPRINT_COUNT
+    name: Počet otisků původní a současný
+    type: STRING
+    indexed: false
+  - code: IMPRINT_ORDER
+    name: Pořadí otisku
+    type: STRING
+    indexed: false
+  - code: LEGEND
+    name: Legenda
+    type: STRING
+    indexed: false
+  - code: MOVIE_LENGTH
+    name: Délka filmového záznamu
+    type: STRING
+    indexed: false
+  - code: RECORD_LENGTH
+    name: Délka zvukového záznamu
+    type: STRING
+    indexed: false
   - code: EXISTING_COPY
     name: Kopie
     type: STRING
@@ -206,6 +299,10 @@ itemTypes:
     name: Odkazy na příbuzné dokumenty
     type: STRING
     indexed: true
+  - code: DESCRIPTION_DATE
+    name: Datum popisu
+    type: STRING
+    indexed: false
   - code: ROLE
     name: Role
     type: ENUM
@@ -216,7 +313,7 @@ itemTypes:
     type: APU_REF
     indexed: false
   - code: FUND_INST_REF
-    name: Archiv
+    name: Instituce
     type: APU_REF
     indexed: false
   - code: DIGITAL
