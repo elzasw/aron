@@ -9,6 +9,8 @@ import { useForceRender } from 'utils/force-render';
 /**
  * Gets value from form at selected place.
  *
+ * fixme: add support for FormFieldContext.
+ *
  * @param selector Selector function accepting the form object and returning the value
  * @param providedContext Custom context for accessing parent form
  * @param comparator Comparator function to detect value change. Defaults to lodash deep compare

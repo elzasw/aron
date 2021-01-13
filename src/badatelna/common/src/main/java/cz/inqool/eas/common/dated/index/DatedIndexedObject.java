@@ -27,13 +27,13 @@ import java.time.Instant;
 @FieldNameConstants
 abstract public class DatedIndexedObject<ROOT extends Dated<ROOT>, PROJECTED extends Dated<ROOT>> extends DomainIndexedObject<ROOT, PROJECTED> implements DatedIndexed<ROOT, PROJECTED> {
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     protected Instant created;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     protected Instant updated;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     protected Instant deleted;
 
     @Override

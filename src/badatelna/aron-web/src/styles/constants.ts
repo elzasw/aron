@@ -18,4 +18,6 @@ export const appHeaderHeight = '6rem';
 export const breadcrumbsHeight = '2.5rem';
 
 /* STYLE */
+
 export const border = `1px solid ${colorGreyLight}`;
+export const borderBold = `1px solid ${colorGrey}`;

@@ -3,12 +3,17 @@ import { useMemo } from 'react';
 import createMuiTheme from '@material-ui/core/styles/createMuiTheme';
 import { ThemeProviderProps } from './theme-types';
 
-export function useTheme({ primary, editing, highlight }: ThemeProviderProps) {
+export function useTheme({
+  primary,
+  secondary,
+  editing,
+  highlight,
+}: ThemeProviderProps) {
   const theme = useMemo(
     () =>
       createMuiTheme({
         typography: {
-          fontFamily: ['"Product Sans"', 'Roboto'].join(','),
+          fontFamily: ['"Public Sans"'].join(','),
           fontSize: 12,
           h6: {
             fontSize: '0.9rem',
@@ -16,6 +21,7 @@ export function useTheme({ primary, editing, highlight }: ThemeProviderProps) {
         },
         palette: {
           primary,
+          secondary,
           editing,
           highlight,
         },

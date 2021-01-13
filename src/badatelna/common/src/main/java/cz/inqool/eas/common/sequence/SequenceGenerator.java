@@ -3,7 +3,7 @@ package cz.inqool.eas.common.sequence;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.text.DecimalFormat;
 
 /**
@@ -16,7 +16,7 @@ public class SequenceGenerator {
 
     private TransactionTemplate transactionTemplate;
 
-    public synchronized Long generatePlain(@Nonnull Sequence sequence) {
+    public synchronized Long generatePlain(@NotNull Sequence sequence) {
         return transactionTemplate.execute(status -> {
                     Long counter = sequence.getCounter();
 
@@ -28,7 +28,7 @@ public class SequenceGenerator {
         );
     }
 
-    public synchronized String generate(@Nonnull Sequence sequence) {
+    public synchronized String generate(@NotNull Sequence sequence) {
         return transactionTemplate.execute(status -> {
             Long counter = sequence.getCounter();
 

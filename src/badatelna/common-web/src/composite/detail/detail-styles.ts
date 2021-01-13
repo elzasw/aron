@@ -28,6 +28,7 @@ export const useStyles = makeStyles(() => ({
     paddingLeft: 0,
     display: 'flex',
     flex: '0 0 auto',
+    minHeight: 52,
   },
   toolbarIndentLeft: {
     marginLeft: 10,

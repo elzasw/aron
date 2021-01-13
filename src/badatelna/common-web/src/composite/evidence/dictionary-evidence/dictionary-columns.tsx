@@ -74,6 +74,19 @@ export function useColumns<OBJECT>(options: {
         sortable: true,
         filterable: true,
       },
+      {
+        datakey: 'code',
+        name: (
+          <FormattedMessage
+            id="EAS_EVIDENCE_COLUMN_CODE"
+            defaultMessage="Kód"
+          />
+        ),
+        width: 100,
+        CellComponent: TableCells.TextCell,
+        sortable: true,
+        filterable: true,
+      },
     ],
     [options.columns]
   );

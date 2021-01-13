@@ -3,17 +3,17 @@ package cz.inqool.eas.common.domain.index.dto.sort;
 import cz.inqool.eas.common.domain.index.field.ES.Suffix;
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
+import cz.inqool.eas.common.domain.index.field.IndexedFieldProps;
 import cz.inqool.eas.common.exception.InvalidAttribute;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import org.elasticsearch.search.sort.*;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
+import static cz.inqool.eas.common.domain.index.dto.sort.Sort.Type.FIELD;
 import static cz.inqool.eas.common.exception.InvalidAttribute.ErrorCode.FIELDDATA_DISABLED;
 import static cz.inqool.eas.common.exception.InvalidAttribute.ErrorCode.FIELD_NOT_INDEXED;
 import static cz.inqool.eas.common.utils.AssertionUtils.ifPresent;
@@ -31,18 +31,25 @@ import static cz.inqool.eas.common.utils.AssertionUtils.isTrue;
 public class FieldSort extends AbstractSort<FieldSortBuilder> {
 
     /**
+     * Sort type
+     */
+    @NotNull
+    @Schema(allowableValues = {FIELD})
+    private final String type = FIELD;
+
+    /**
      * Attribute name to sort on.
      */
     @NotBlank
     @Schema(description = "Attribute name to sort on.")
-    protected String field;
+    private String field;
 
     /**
      * Specifies how attributes with mising values will be treated.
      */
     @NotNull
     @Schema(description = "Order of sorting.", defaultValue = "LAST")
-    protected MissingValues missing = MissingValues.LAST;
+    private MissingValues missing = MissingValues.LAST;
 
     /**
      * Elasticsearch supports sorting by array or multi-valued fields. This option controls what array value is picked
@@ -50,18 +57,16 @@ public class FieldSort extends AbstractSort<FieldSortBuilder> {
      * lowest value is picked. The default sort mode in the descending order is {@code max} — the highest value is
      * picked.
      */
-    @NotNull
     @Schema(description = "Elasticsearch supports sorting by array or multi-valued fields. " +
             "This option controls what array value is picked for sorting the document it belongs to.")
-    protected SortMode sortMode;
+    private SortMode sortMode;
 
 
     FieldSort() {
-        super(Type.FIELD);
     }
 
     public FieldSort(@NotBlank String field, @NotNull SortOrder order) {
-        super(Type.FIELD, order);
+        super(order);
         this.field = field;
     }
 
@@ -99,15 +104,14 @@ public class FieldSort extends AbstractSort<FieldSortBuilder> {
             throw new InvalidAttribute(this.getClass(), null, field, FIELD_NOT_INDEXED);
         }
 
-        InnerField sortField = leafNode.getInnerField(Suffix.SORT);
+        IndexedFieldProps sortField = leafNode.getInnerField(Suffix.SORT);
         if (sortField != null) {
-            if (sortField.type() == FieldType.Text) {
-                isTrue(sortField.fielddata(), () -> new InvalidAttribute(this.getClass(), null, field, FIELDDATA_DISABLED));
+            if (sortField.getFieldType() == FieldType.Text) {
+                isTrue(sortField.isFieldData(), () -> new InvalidAttribute(this.getClass(), null, field, FIELDDATA_DISABLED));
             }
         } else {
-            Field mainField = leafNode.getMainField();
-            if (mainField.type() == FieldType.Text) {
-                isTrue(mainField.fielddata(), () -> new InvalidAttribute(this.getClass(), null, field, FIELDDATA_DISABLED));
+            if (leafNode.getType() == FieldType.Text) {
+                isTrue(leafNode.isFieldData(), () -> new InvalidAttribute(this.getClass(), null, field, FIELDDATA_DISABLED));
             }
         }
 

@@ -7,18 +7,27 @@ import lombok.Getter;
 public class MissingObject extends GeneralException implements CodedException {
 
     private final Class<?> clazz;
-    private String objectId;
+    private String idProperty;
+    private String id;
     private Enum<? extends ExceptionCodeEnum<?>> errorCode;
 
 
-    public MissingObject(Class<?> clazz, String objectId) {
-        this.clazz = clazz;
-        this.objectId = objectId;
+    public MissingObject(Class<?> clazz, String id) {
+        this(clazz, id, (Enum<? extends ExceptionCodeEnum<?>>) null);
     }
 
-    public MissingObject(Class<?> clazz, String objectId, Enum<? extends ExceptionCodeEnum<?>> errorCode) {
+    public MissingObject(Class<?> clazz, String id, Enum<? extends ExceptionCodeEnum<?>> errorCode) {
+        this(clazz, "id", id, errorCode);
+    }
+
+    public MissingObject(Class<?> clazz, String idProperty, String id) {
+        this(clazz, idProperty, id, null);
+    }
+
+    public MissingObject(Class<?> clazz, String idProperty, String id, Enum<? extends ExceptionCodeEnum<?>> errorCode) {
         this.clazz = clazz;
-        this.objectId = objectId;
+        this.idProperty = idProperty;
+        this.id = id;
         this.errorCode = errorCode;
     }
 
@@ -29,7 +38,8 @@ public class MissingObject extends GeneralException implements CodedException {
     public MissingObject(Object object, Enum<? extends ExceptionCodeEnum<?>> errorCode) {
         this.clazz = object.getClass();
         if (object instanceof Domain) {
-            this.objectId = ((Domain<?>) object).getId();
+            this.idProperty = "id";
+            this.id = ((Domain<?>) object).getId();
         }
         this.errorCode = errorCode;
     }
@@ -43,8 +53,9 @@ public class MissingObject extends GeneralException implements CodedException {
     @Override
     public String toString() {
         return "MissingObject{" +
-                "class=" + clazz +
-                ", objectId='" + objectId + '\'' +
+                "clazz=" + clazz +
+                ", idProperty='" + idProperty + '\'' +
+                ", id='" + id + '\'' +
                 ", errorCode=" + errorCode +
                 '}';
     }

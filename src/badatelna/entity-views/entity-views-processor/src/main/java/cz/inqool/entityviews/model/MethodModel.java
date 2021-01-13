@@ -11,6 +11,7 @@ import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static cz.inqool.entityviews.function.Printable.*;
@@ -58,9 +59,14 @@ public class MethodModel implements Viewable, Accessible {
 
             printParameters();
 
-            print(") ");
+            print(")");
 
-            printContent();
+            if (!Set.of(modifiers).contains("abstract")) {
+                print(" ");
+                printContent();
+            } else {
+                print(";");
+            }
         });
 
         println();

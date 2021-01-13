@@ -1,5 +1,5 @@
 import React, { useContext, useRef } from 'react';
-import { noop } from 'lodash';
+import { noop, stubTrue, stubFalse } from 'lodash';
 import { FormattedMessage } from 'react-intl';
 import ButtonGroup from '@material-ui/core/ButtonGroup/ButtonGroup';
 import RefreshIcon from '@material-ui/icons/Refresh';
@@ -14,14 +14,21 @@ import {
   DetailToolbarButtonType,
   DetailMode,
   DetailToolbarProps,
+  DetailHandle,
 } from './detail-types';
 import { ConfirmDialog } from 'composite/confirm-dialog/confirm-dialog';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { useEventCallback } from 'utils/event-callback-hook';
+import { DomainObject } from 'common/common-types';
 
-export function DetailToolbar({ before, after }: DetailToolbarProps) {
+export function DetailToolbar<OBJECT extends DomainObject>({
+  before,
+  after,
+  showButton = stubTrue,
+  disableButton = stubFalse,
+}: DetailToolbarProps<OBJECT>) {
   const classes = useStyles();
-  const { mode } = useContext(DetailContext);
+  const { mode, source } = useContext<DetailHandle<OBJECT>>(DetailContext);
   const confirmDeleteDialog = useRef<DialogHandle>(null);
 
   const {
@@ -82,61 +89,85 @@ export function DetailToolbar({ before, after }: DetailToolbarProps) {
           variant="outlined"
           className={classes.toolbarIndentLeft}
         >
-          {(mode === DetailMode.NONE || mode === DetailMode.VIEW) && (
-            <DetailToolbarButton
-              label={
-                <FormattedMessage
-                  id="EAS_DETAIL_BTN_CREATE"
-                  defaultMessage="Nový"
-                />
-              }
-              startIcon={<AddBoxOutlinedIcon />}
-              tooltip={
-                <FormattedMessage
-                  id="EAS_DETAIL_TOOLTIP_CREATE"
-                  defaultMessage="Zapne editační režim s prázdným formulářem"
-                />
-              }
-              onClick={handleNew}
-            />
-          )}
-          {mode === DetailMode.VIEW && (
-            <DetailToolbarButton
-              startIcon={<EditOutlinedIcon />}
-              label={
-                <FormattedMessage
-                  id="EAS_DETAIL_BTN_EDIT"
-                  defaultMessage="Oprava"
-                />
-              }
-              tooltip={
-                <FormattedMessage
-                  id="EAS_DETAIL_TOOLTIP_EDIT"
-                  defaultMessage="Zapne editační režim s otevřeným záznamem"
-                />
-              }
-              onClick={startEditing}
-            />
-          )}
-          {mode === DetailMode.VIEW && (
-            <DetailToolbarButton
-              startIcon={<DeleteOutlinedIcon />}
-              label={
-                <FormattedMessage
-                  id="EAS_DETAIL_BTN_DELETE"
-                  defaultMessage="Smazat"
-                />
-              }
-              tooltip={
-                <FormattedMessage
-                  id="EAS_DETAIL_TOOLTIP_DELETE"
-                  defaultMessage="Nenávratně smaže záznam"
-                />
-              }
-              onClick={handleDelete}
-              type={DetailToolbarButtonType.SECONDARY}
-            />
-          )}
+          {showButton({
+            button: 'NEW',
+            source,
+          }) &&
+            (mode === DetailMode.NONE || mode === DetailMode.VIEW) && (
+              <DetailToolbarButton
+                label={
+                  <FormattedMessage
+                    id="EAS_DETAIL_BTN_CREATE"
+                    defaultMessage="Nový"
+                  />
+                }
+                startIcon={<AddBoxOutlinedIcon />}
+                tooltip={
+                  <FormattedMessage
+                    id="EAS_DETAIL_TOOLTIP_CREATE"
+                    defaultMessage="Zapne editační režim s prázdným formulářem"
+                  />
+                }
+                disabled={disableButton({
+                  button: 'NEW',
+                  source,
+                })}
+                onClick={handleNew}
+              />
+            )}
+          {showButton({
+            button: 'EDIT',
+            source,
+          }) &&
+            mode === DetailMode.VIEW && (
+              <DetailToolbarButton
+                startIcon={<EditOutlinedIcon />}
+                label={
+                  <FormattedMessage
+                    id="EAS_DETAIL_BTN_EDIT"
+                    defaultMessage="Oprava"
+                  />
+                }
+                tooltip={
+                  <FormattedMessage
+                    id="EAS_DETAIL_TOOLTIP_EDIT"
+                    defaultMessage="Zapne editační režim s otevřeným záznamem"
+                  />
+                }
+                disabled={disableButton({
+                  button: 'EDIT',
+                  source,
+                })}
+                onClick={startEditing}
+              />
+            )}
+          {showButton({
+            button: 'REMOVE',
+            source,
+          }) &&
+            mode === DetailMode.VIEW && (
+              <DetailToolbarButton
+                startIcon={<DeleteOutlinedIcon />}
+                label={
+                  <FormattedMessage
+                    id="EAS_DETAIL_BTN_DELETE"
+                    defaultMessage="Smazat"
+                  />
+                }
+                tooltip={
+                  <FormattedMessage
+                    id="EAS_DETAIL_TOOLTIP_DELETE"
+                    defaultMessage="Nenávratně smaže záznam"
+                  />
+                }
+                disabled={disableButton({
+                  button: 'REMOVE',
+                  source,
+                })}
+                onClick={handleDelete}
+                type={DetailToolbarButtonType.SECONDARY}
+              />
+            )}
           {(mode === DetailMode.NEW || mode === DetailMode.EDIT) && (
             <DetailToolbarButton
               label={

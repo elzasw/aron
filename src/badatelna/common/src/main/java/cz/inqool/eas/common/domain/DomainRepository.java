@@ -1,6 +1,10 @@
 package cz.inqool.eas.common.domain;
 
+import com.google.common.collect.Lists;
 import com.querydsl.jpa.impl.JPAQuery;
+import cz.inqool.eas.common.alog.event.EventBuilder;
+import cz.inqool.eas.common.alog.event.EventService;
+import cz.inqool.eas.common.authored.user.UserGenerator;
 import cz.inqool.eas.common.domain.index.DomainIndex;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
@@ -17,7 +21,7 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.annotation.PostConstruct;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -45,11 +49,15 @@ public abstract class DomainRepository<
         STORE extends DomainStore<ROOT, ROOT, ?>,
         INDEX extends DomainIndex<ROOT, INDEX_PROJECTED, INDEXED>
         > {
-    private ProjectionFactory projectionFactory;
+    protected ProjectionFactory projectionFactory;
 
     private StoreCache stores;
 
     protected ApplicationContext applicationContext;
+
+    protected EventBuilder eventBuilder;
+
+    protected EventService eventService;
 
     protected STORE store;
 
@@ -92,7 +100,7 @@ public abstract class DomainRepository<
      * @return Created object in detached state
      */
     @SuppressWarnings("unchecked")
-    public <PROJECTED extends Domain<ROOT>> PROJECTED create(@Nonnull PROJECTED object) {
+    public <PROJECTED extends Domain<ROOT>> PROJECTED create(@NotNull PROJECTED object) {
         Class<PROJECTED> type = (Class<PROJECTED>) object.getClass();
 
         object = getStore(type).create(object);
@@ -113,7 +121,7 @@ public abstract class DomainRepository<
      * @return Collection of created objects
      */
     @SuppressWarnings("unchecked")
-    public <PROJECTED extends Domain<ROOT>> Collection<? extends PROJECTED> create(@Nonnull Collection<? extends PROJECTED> objects) {
+    public <PROJECTED extends Domain<ROOT>> Collection<? extends PROJECTED> create(@NotNull Collection<? extends PROJECTED> objects) {
         if (objects.size() == 0) {
             return objects;
         }
@@ -136,7 +144,7 @@ public abstract class DomainRepository<
      * @return Saved object
      */
     @SuppressWarnings("unchecked")
-    public <PROJECTED extends Domain<ROOT>> PROJECTED update(@Nonnull PROJECTED object) {
+    public <PROJECTED extends Domain<ROOT>> PROJECTED update(@NotNull PROJECTED object) {
         Class<PROJECTED> type = (Class<PROJECTED>) object.getClass();
 
         object = getStore(type).update(object);
@@ -158,7 +166,7 @@ public abstract class DomainRepository<
      * @return collection of updated objects
      */
     @SuppressWarnings("unchecked")
-    public <PROJECTED extends Domain<ROOT>> Collection<? extends PROJECTED> update(@Nonnull Collection<? extends PROJECTED> objects) {
+    public <PROJECTED extends Domain<ROOT>> Collection<? extends PROJECTED> update(@NotNull Collection<? extends PROJECTED> objects) {
         if (objects.size() == 0) {
             return objects;
         }
@@ -179,12 +187,16 @@ public abstract class DomainRepository<
      * @param id          Id of object to delete
      * @return Resultant entity or {@code null} if the entity was not found
      */
-    public ROOT delete(@Nonnull String id) {
+    public ROOT delete(@NotNull String id) {
         INDEX_PROJECTED projected = getStore(indexProjectedType).delete(id);
 
         if (projected != null) {
             INDEXED indexed = projectedToIndexable(indexProjectedType, projected);
             index.delete(indexed);
+
+            if (eventService != null) {
+                eventService.create(eventBuilder.deleting(projected, UserGenerator.generateValue()));
+            }
         }
 
         Projection<ROOT, ROOT, INDEX_PROJECTED> projection = projectionFactory.get(rootType, indexProjectedType);
@@ -197,7 +209,7 @@ public abstract class DomainRepository<
      * @param ids         Collection of ids of objects to delete
      * @return Collection of deleted objects
      */
-    public Collection<ROOT> delete(@Nonnull Collection<String> ids) {
+    public Collection<ROOT> delete(@NotNull Collection<String> ids) {
         Collection<INDEX_PROJECTED> projected = getStore(indexProjectedType).delete(ids);
 
         List<INDEXED> indexed = projectedToIndexable(indexProjectedType, projected);
@@ -216,7 +228,7 @@ public abstract class DomainRepository<
      * @param params Parameters to comply with
      * @return Sorted list of objects with total number
      */
-    public Result<ROOT> listByParams(@Nonnull Params params) {
+    public Result<ROOT> listByParams(@NotNull Params params) {
         return listByParams(rootType, params);
     }
 
@@ -231,11 +243,18 @@ public abstract class DomainRepository<
      * @param <PROJECTED> Type of projection
      * @return Sorted list of objects with total number
      */
-    public <PROJECTED extends Domain<ROOT>> Result<PROJECTED> listByParams(Class<PROJECTED> type, @Nonnull Params params) {
+    public <PROJECTED extends Domain<ROOT>> Result<PROJECTED> listByParams(Class<PROJECTED> type, @NotNull Params params) {
         Result<String> idsResult = index.listIdsByParams(params);
         List<PROJECTED> items = getStore(type).listByIds(idsResult.getItems());
 
         return new Result<>(items, idsResult.getCount(), idsResult.getSearchAfter(), idsResult.getAggregations());
+    }
+
+    /**
+     * @see DomainIndex#listAllIdsByParams(Params)
+     */
+    public List<String> listAllIdsByParams(@NotNull Params params) {
+        return index.listAllIdsByParams(params);
     }
 
     /**
@@ -262,6 +281,30 @@ public abstract class DomainRepository<
             counter += indexed.size();
             log.debug("Indexed {}/{} objects.", counter, itemCount);
         } while (indexed.size() >= batchSize);
+    }
+
+    /**
+     * Reindexes items with ids in given list using index projection.
+     */
+    public void reindex(List<String> ids) {
+        if (!isIndexInitialized()) {
+            index.initIndex();
+        }
+
+        long itemCount = ids.size();
+        log.info("Indexing {} objects.", itemCount);
+
+        long counter = 0;
+
+        DomainStore<ROOT, INDEX_PROJECTED, ?> store = getStore(indexProjectedType);
+        for (List<String> idsBatch : Lists.partition(ids, getReindexBatchSize())) {
+            Collection<INDEX_PROJECTED> projected = store.listByIds(idsBatch, store::list);
+            Collection<INDEXED> indexed = new ArrayList<>(projectedToIndexable(indexProjectedType, projected));
+            index.index(indexed);
+
+            counter += indexed.size();
+            log.debug("Indexed {}/{} objects.", counter, itemCount);
+        }
     }
 
     /**
@@ -298,28 +341,28 @@ public abstract class DomainRepository<
     /**
      * @see DomainStore#exist(String)
      */
-    public boolean exist(@Nonnull String id) {
+    public boolean exist(@NotNull String id) {
         return getStore().exist(id);
     }
 
     /**
      * @see DomainStore#find(String)
      */
-    public ROOT find(@Nonnull String id) {
+    public ROOT find(@NotNull String id) {
         return find(rootType, id);
     }
 
     /**
      * @see DomainStore#getRef(String)
      */
-    public ROOT getRef(@Nonnull String id) {
+    public ROOT getRef(@NotNull String id) {
         return getRef(rootType, id);
     }
 
     /**
      * @see DomainStore#find(String)
      */
-    public <PROJECTED extends Domain<ROOT>> PROJECTED find(Class<PROJECTED> type, @Nonnull String id) {
+    public <PROJECTED extends Domain<ROOT>> PROJECTED find(Class<PROJECTED> type, @NotNull String id) {
         return getStore(type).find(id);
     }
 
@@ -396,7 +439,7 @@ public abstract class DomainRepository<
      * @return Main store
      */
     @SuppressWarnings("unchecked")
-    protected STORE getStore() {
+    public STORE getStore() {
         return (STORE) stores.get(this.store, rootType);
     }
 
@@ -407,7 +450,7 @@ public abstract class DomainRepository<
         return index;
     }
 
-    private <PROJECTED extends Domain<ROOT>> INDEXED projectedToIndexable(Class<PROJECTED> type, PROJECTED projected) {
+    protected <PROJECTED extends Domain<ROOT>> INDEXED projectedToIndexable(Class<PROJECTED> type, PROJECTED projected) {
         Projection<ROOT, ROOT, PROJECTED> entityProjection = projectionFactory.get(rootType, type);
         Projection<ROOT, ROOT, INDEX_PROJECTED> indexProjection = projectionFactory.get(rootType, indexProjectedType);
         Projection<ROOT, INDEX_PROJECTED, INDEXED> indexedProjection = projectionFactory.get(indexProjectedType, indexableType);
@@ -417,7 +460,7 @@ public abstract class DomainRepository<
         return indexedProjection.toProjected(indexProjected);
     }
 
-    private <PROJECTED extends Domain<ROOT>> List<INDEXED> projectedToIndexable(Class<PROJECTED> type, Collection<? extends PROJECTED> projected) {
+    protected <PROJECTED extends Domain<ROOT>> List<INDEXED> projectedToIndexable(Class<PROJECTED> type, Collection<? extends PROJECTED> projected) {
         Projection<ROOT, ROOT, PROJECTED> entityProjection = projectionFactory.get(rootType, type);
         Projection<ROOT, ROOT, INDEX_PROJECTED> indexProjection = projectionFactory.get(rootType, indexProjectedType);
         Projection<ROOT, INDEX_PROJECTED, INDEXED> indexedProjection = projectionFactory.get(indexProjectedType, indexableType);
@@ -483,5 +526,15 @@ public abstract class DomainRepository<
     @Autowired
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
+    }
+
+    @Autowired(required = false)
+    public void setEventBuilder(EventBuilder eventBuilder) {
+        this.eventBuilder = eventBuilder;
+    }
+
+    @Autowired(required = false)
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
     }
 }

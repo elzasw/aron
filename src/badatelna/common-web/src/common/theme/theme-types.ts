@@ -6,6 +6,7 @@ export interface ColorIntention {
 
 export interface ThemeProviderProps {
   primary: ColorIntention;
+  secondary?: ColorIntention;
   editing: string;
   highlight: string;
 }

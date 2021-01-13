@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class GeoDistanceFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new GeoDistanceFilter(IndexFields.coordinates, new GeoPoint(21.2130969, 49.1852093), 10, DistanceUnit.KILOMETERS);
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -38,7 +38,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new GeoDistanceFilter(IndexFields.coordinates, new GeoPoint(21.2130969, 49.1852093), 10, DistanceUnit.KILOMETERS)
@@ -72,7 +72,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_DISTANCE\",\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
@@ -93,7 +93,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

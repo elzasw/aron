@@ -1,4 +1,10 @@
-import React, { useState, useRef, KeyboardEvent, useEffect } from 'react';
+import React, {
+  useState,
+  useRef,
+  KeyboardEvent,
+  useEffect,
+  MouseEvent,
+} from 'react';
 import clsx from 'clsx';
 import { useDebouncedCallback } from 'use-debounce';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
@@ -32,6 +38,8 @@ export function Autocomplete<OPTION extends DomainObject>({
   const singleValue = value as OPTION;
   const multipleValue = (value as OPTION[]) ?? [];
   const multipleIds = multiple ? multipleValue.map((item) => item.id) : [];
+  const singleLabel = singleValue != null ? labelMapper(singleValue) : '';
+  const multiLabel = multiple ? multipleValue.map(labelMapper).join(', ') : '';
 
   const {
     paper,
@@ -51,16 +59,18 @@ export function Autocomplete<OPTION extends DomainObject>({
   const [textValue, setTextValue] = useState<string | null>(null);
   const infiniteList = useRef<InfiniteListHandle<OPTION>>(null);
 
-  const handleItemClick = useEventCallback((option: OPTION) => {
+  const handleItemClick = useEventCallback(async (option: OPTION) => {
     if (multiple) {
       // toggle item
       if (multipleIds.includes(option.id)) {
         onChange(multipleValue.filter((v) => v.id !== option.id));
       } else {
+        option = await source.loadDetail(option);
         onChange([...multipleValue, option]);
       }
     } else {
       // select item and close popup
+      option = await source.loadDetail(option);
       onChange(option);
       setPopupOpen(false);
 
@@ -86,7 +96,8 @@ export function Autocomplete<OPTION extends DomainObject>({
     setSearchQuery(value);
   });
 
-  const handleClear = useEventCallback(() => {
+  const handleClear = useEventCallback((e: MouseEvent) => {
+    e.stopPropagation();
     onChange(null);
     setTextValue(null);
     setSearchQuery(null);
@@ -94,6 +105,13 @@ export function Autocomplete<OPTION extends DomainObject>({
 
   const handleDelete = useEventCallback((value: OPTION) => {
     onChange(multipleValue.filter((v) => v !== value));
+  });
+
+  const handleClick = useEventCallback(() => {
+    if (!disabled) {
+      setSearchQuery(textValue);
+      setPopupOpen(true);
+    }
   });
 
   const handleKeyDown = useEventCallback((e: KeyboardEvent) => {
@@ -130,7 +148,6 @@ export function Autocomplete<OPTION extends DomainObject>({
     !multiple &&
     textValue !== (value !== null ? labelMapper(singleValue) : null);
 
-  const showInput = !multiple || !disabled || multipleValue.length === 0;
   return (
     <>
       <div
@@ -138,49 +155,56 @@ export function Autocomplete<OPTION extends DomainObject>({
           [wrapperDisabled]: disabled,
         })}
       >
-        {showInput && (
-          <div className={input}>
-            <TextField
-              ref={anchorEl}
-              error={error}
-              disabled={disabled}
-              endAdornment={
-                <>
-                  {!disabled && clearable && value !== null && (
-                    <IconButton
-                      className={clearButton}
-                      size="small"
-                      onClick={handleClear}
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  )}
-                  <ArrowDropDownIcon
-                    classes={{ root: clsx(icon, { [iconOpened]: popupOpen }) }}
-                    onClick={() => !disabled && setPopupOpen(true)}
-                  />
-                </>
-              }
-              value={textValue}
-              onChange={handleChange}
-              onKeyDown={handleKeyDown}
-            />
-          </div>
-        )}
-
-        {multiple && multipleValue.length > 0 && (
-          <div className={chips}>
-            {multipleValue.map((value) => (
-              <Chip
-                key={value.id}
-                label={labelMapper(value)}
-                className={chip}
-                variant="outlined"
-                size="small"
-                onDelete={!disabled ? () => handleDelete(value) : undefined}
+        {disabled ? (
+          <TextField
+            disabled={true}
+            value={multiple ? multiLabel : singleLabel}
+          />
+        ) : (
+          <>
+            <div className={input} onClick={handleClick}>
+              <TextField
+                ref={anchorEl}
+                error={error}
+                endAdornment={
+                  <>
+                    {clearable && value !== null && (
+                      <IconButton
+                        className={clearButton}
+                        size="small"
+                        onClick={handleClear}
+                      >
+                        <ClearIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                    <ArrowDropDownIcon
+                      classes={{
+                        root: clsx(icon, { [iconOpened]: popupOpen }),
+                      }}
+                    />
+                  </>
+                }
+                value={textValue}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
               />
-            ))}
-          </div>
+            </div>
+
+            {multiple && multipleValue.length > 0 && (
+              <div className={chips}>
+                {multipleValue.map((value) => (
+                  <Chip
+                    key={value.id}
+                    label={labelMapper(value)}
+                    className={chip}
+                    variant="outlined"
+                    size="small"
+                    onDelete={!disabled ? () => handleDelete(value) : undefined}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
       {popupOpen && anchorEl && (
@@ -192,7 +216,7 @@ export function Autocomplete<OPTION extends DomainObject>({
           open
         >
           <ClickAwayListener onClickAway={handleClickAway}>
-            <Paper className={paper} square={true}>
+            <Paper className={paper} square={true} elevation={8}>
               <InfiniteList
                 ref={infiniteList}
                 source={source}

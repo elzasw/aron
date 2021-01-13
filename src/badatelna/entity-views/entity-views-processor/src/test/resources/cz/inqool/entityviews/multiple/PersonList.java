@@ -5,7 +5,7 @@ import java.util.List;
 
 @javax.persistence.Entity
 public class PersonList implements cz.inqool.entityviews.View {
-    @javax.persistence.OneToMany(mappedBy = "person_id", fetch = javax.persistence.FetchType.EAGER)
+    @javax.persistence.OneToMany(mappedBy = "person", fetch = javax.persistence.FetchType.EAGER)
     public java.util.List<cz.inqool.entityviews.multiple.AddressPersonList> addresses;
 
     @javax.persistence.OneToMany(fetch = javax.persistence.FetchType.EAGER )

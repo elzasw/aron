@@ -2,9 +2,14 @@ import { ReactNode, ReactNodeArray } from 'react';
 
 export interface DialogProps {
   title: ReactNode;
-  onConfirm: () => Promise<boolean | void> | boolean | void;
+  onConfirm?: () => Promise<boolean | void> | boolean | void;
   onCancel?: () => void;
   onShow?: () => void;
+
+  /**
+   * Fires after the children were mounted
+   */
+  onShown?: () => void;
 
   showConfirm?: boolean;
   confirmLabel?: ReactNode;

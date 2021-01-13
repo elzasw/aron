@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-abstract public class FieldValueFilter extends FieldFilter {
+abstract public class FieldValueFilter<FILTER extends FieldValueFilter<FILTER>> extends FieldFilter<FILTER> {
 
     /**
      * Value used in comparison
@@ -30,10 +30,4 @@ abstract public class FieldValueFilter extends FieldFilter {
         super(operation, field);
         this.value = value;
     }
-
-    protected FieldValueFilter(@NotNull String operation, @NotBlank String field, @NotBlank String value, boolean nestedQueryEnabled) {
-        super(operation, field, nestedQueryEnabled);
-        this.value = value;
-    }
-
 }

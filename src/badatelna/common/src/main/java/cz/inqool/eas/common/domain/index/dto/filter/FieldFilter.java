@@ -25,7 +25,7 @@ import static cz.inqool.eas.common.exception.InvalidAttribute.ErrorCode.FIELD_NO
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-abstract public class FieldFilter extends AbstractFilter {
+abstract public class FieldFilter<FILTER extends FieldFilter<FILTER>> extends AbstractFilter {
 
     /**
      * If set to {@code false}, the filter returned by {@link #toQueryBuilder(IndexObjectFields)} will not be an
@@ -57,10 +57,17 @@ abstract public class FieldFilter extends AbstractFilter {
         this.field = field;
     }
 
-    protected FieldFilter(@NotNull String operation, @NotBlank String field, boolean nestedQueryEnabled) {
-        super(operation);
-        this.field = field;
-        this.nestedQueryEnabled = nestedQueryEnabled;
+
+    /**
+     * Disables wrapping this filter into a nested query (if the field is in a nested object somewhere). Use when
+     * this filter will be used in custom-defined {@link NestedFilter}.
+     *
+     * @return {@code this} for method chaining
+     */
+    public FILTER inNestedQuery() {
+        nestedQueryEnabled = false;
+        //noinspection unchecked
+        return (FILTER) this;
     }
 
 

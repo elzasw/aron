@@ -2,8 +2,10 @@ import React, { useContext } from 'react';
 import clsx from 'clsx';
 import { useIntl, FormattedMessage } from 'react-intl';
 import Typography from '@material-ui/core/Typography';
+import PrintIcon from '@material-ui/icons/Print';
 import CachedIcon from '@material-ui/icons/Cached';
 import ViewColumnIcon from '@material-ui/icons/ViewColumn';
+import SortIcon from '@material-ui/icons/Sort';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import { useStyles } from './table-styles';
 import { TableSelectedContext, TableContext } from './table-context';
@@ -21,16 +23,22 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
     filtersState,
     showRefreshButton,
     showColumnButton,
+    showResetSortsButton,
     showFilterButton,
+    showReportButton,
     showBulkActionButton,
     disabledRefreshButton,
     disabledColumnButton,
+    disabledResetSortsButton,
     disabledFilterButton,
     disabledBulkActionButton,
+    disabledReportButton,
     bulkActions,
     refresh,
     openColumnDialog,
+    openReportDialog,
     openFilterDialog,
+    resetSorts,
   } = useContext(TableContext);
   const { selected } = useContext(TableSelectedContext);
   const selectedCount = selected.length;
@@ -78,6 +86,17 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
               })}
             />
           )}
+          {showResetSortsButton && (
+            <TableToolbarButton
+              label={<SortIcon />}
+              disabled={disabledResetSortsButton}
+              onClick={resetSorts}
+              tooltip={intl.formatMessage({
+                id: 'EAS_TABLE_TOOLBAR_BTN_RESET_SORTS',
+                defaultMessage: 'Obnovení výchozího řazení',
+              })}
+            />
+          )}
           {showColumnButton && (
             <TableToolbarButton
               label={<ViewColumnIcon />}
@@ -114,6 +133,17 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
             <BulkActionButton
               disabled={disabledBulkActionButton || bulkActions.length === 0}
               actions={bulkActions}
+            />
+          )}
+          {showReportButton && (
+            <TableToolbarButton
+              label={<PrintIcon />}
+              disabled={disabledReportButton}
+              onClick={openReportDialog}
+              tooltip={intl.formatMessage({
+                id: 'EAS_TABLE_TOOLBAR_BTN_REPORT_DIALOG_OPEN',
+                defaultMessage: 'Tisk',
+              })}
             />
           )}
           {after}

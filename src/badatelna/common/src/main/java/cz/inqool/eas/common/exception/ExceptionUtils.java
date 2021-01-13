@@ -3,6 +3,19 @@ package cz.inqool.eas.common.exception;
 import java.util.function.Function;
 
 public class ExceptionUtils {
+
+    /**
+     * Return last cause in causual chain of given throwable
+     */
+    public static Throwable getLastCause(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
+        }
+
+        return cause;
+    }
+
     /**
      * Execute given {@code operation}. When a {@link GeneralException} is thrown during execution, it is thrown further
      * untouched. Otherwise, if an exception of different class is thrown during execution, it is wrapped in {@link

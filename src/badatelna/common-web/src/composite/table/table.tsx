@@ -18,6 +18,7 @@ import { TableContext, TableSelectedContext } from './table-context';
 import { DomainObject } from 'common/common-types';
 import { composeRefs } from 'utils/compose-refs';
 import { useScrollBarSize } from 'utils/use-scrollbar-size';
+import { useEventCallback } from 'utils/event-callback-hook';
 
 // eslint-disable-next-line react/display-name
 export const Table = memo(
@@ -33,6 +34,7 @@ export const Table = memo(
       selectedContext,
       columnDialogRef,
       filterDialogRef,
+      reportDialogRef,
       loaderRef,
       listRef,
       handleKeyNavigation,
@@ -44,6 +46,7 @@ export const Table = memo(
       ToolbarComponent,
       ColumnDialogComponent,
       FilterDialogComponent,
+      ReportDialogComponent,
       HeaderComponent,
       RowComponent,
       source,
@@ -98,6 +101,10 @@ export const Table = memo(
     const scrollbarHeight = useScrollBarSize();
     const listHeight = height - barHeight - headerHeight - scrollbarHeight;
 
+    const provideData = useEventCallback(() => ({
+      params: source.getParams(),
+    }));
+
     return (
       <TableContext.Provider value={context}>
         <TableSelectedContext.Provider value={selectedContext}>
@@ -105,7 +112,7 @@ export const Table = memo(
             <div className={classes.tableGroupWrapper}>
               <div ref={barMeasureRef}>
                 <div className={classes.searchWrapper}>
-                  <SearchbarComponent />
+                  {props.showSearchbar && <SearchbarComponent />}
                 </div>
                 <ToolbarComponent {...toolbarProps} />
               </div>
@@ -152,6 +159,13 @@ export const Table = memo(
             </div>
             <ColumnDialogComponent ref={columnDialogRef} />
             <FilterDialogComponent ref={filterDialogRef} />
+            {props.reportTag !== null && (
+              <ReportDialogComponent
+                ref={reportDialogRef}
+                tag={props.reportTag}
+                provideData={provideData}
+              />
+            )}
           </div>
         </TableSelectedContext.Provider>
       </TableContext.Provider>

@@ -13,7 +13,8 @@ export const TableToolbarButton = forwardRef(function TableToolbarButton(
     endIcon,
     onClick,
     label,
-    primary,
+    primary = checked,
+    secondary,
   }: TableToolbarButtonProps,
   ref?: Ref<HTMLSpanElement>
 ) {
@@ -25,15 +26,14 @@ export const TableToolbarButton = forwardRef(function TableToolbarButton(
         <Button
           ref={ref}
           disabled={disabled}
-          className={clsx(classes.toolbarText, classes.toolbarButton, {
-            [classes.toolbarButtonPrimary]: primary,
-          })}
+          className={clsx(classes.toolbarText, classes.toolbarButton)}
           size="small"
           component="span"
           onClick={onClick}
           endIcon={endIcon}
-          color={checked ? 'primary' : 'default'}
-          variant={checked ? 'contained' : 'text'}
+          color={primary ? 'primary' : secondary ? 'secondary' : 'default'}
+          variant="contained"
+          disableElevation
         >
           {label}
         </Button>

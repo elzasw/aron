@@ -1,0 +1,147 @@
+<html lang="en">
+    <head>
+        <title>EAS Admin console</title>
+
+        <meta name="_csrf_header" content="${_csrf.headerName}"/>
+        <meta name="_csrf" content="${_csrf.token}"/>
+
+        <link rel="shortcut icon" href="./favicon.ico" type="image/x-icon" />
+        <link rel="stylesheet" type="text/css" href="./css/bootstrap-4.3.1.min.css" />
+        <link rel="stylesheet" type="text/css" href="./css/style_console.css" />
+
+        <script src="./js/jquery-3.4.1.min.js"></script>
+        <script src="./js/bootstrap-4.3.1.min.js"></script>
+        <script src="./js/sockjs-1.4.0.min.js"></script>
+        <script src="./js/stomp-2.3.3.min.js"></script>
+
+        <script src="./js/utils.js"></script>
+        <script src="./js/cfg.js"></script>
+        <script src="./js/cfgCustom.js"></script>
+        <script src="./js/objects.js"></script>
+        <script src="./js/console.js"></script>
+    </head>
+    <body>
+        <h1 id="pageTitle">EAS Admin console</h1>
+        <div class="container" id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" id="username" aria-describedby="usernameHelp" required>
+                <div class="invalid-feedback" id="usernameError">
+                     Username must not be empty.
+                </div>
+                <small id="usernameHelp" class="form-text text-muted">Enter the configured username.</small>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" aria-describedby="passwordHelp" required>
+                <div class="invalid-feedback" id="passwordError">
+                    Username must not be empty.
+                </div>
+                <small id="passwordHelp" class="form-text text-muted">Enter the configured password.</small>
+            </div>
+            <div class="form-group text-center">
+                <button id="loginBtn" type="button" class="btn btn-outline-primary">Log in</button>
+            </div>
+        </div>
+
+        <div id="scriptForm">
+            <div class="row" style="height:100%">
+                <div class="col-6">
+                    <div class="row" style="height:7%">
+                        <div class="col">
+                            <h3>Input</h3>
+                        </div>
+                    </div>
+
+                    <div class="row" style="height:20%">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label for="scriptType">Script type</label>
+                                <small id="scriptTypeHelp" class="form-text text-muted">Select the type of providen script</small>
+                                <select id="scriptType" class="form-control" aria-describedby="scriptTypeHelp">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label for="scriptTransactionChk">Run script in transaction</label>
+                                <small id="scriptTransactionChkHelp" class="form-text text-muted">Set whether the script will be executed in transaction.</small>
+                                <input type="checkbox" class="form-control" id="scriptTransactionChk" aria-describedby="scriptTransactionChkHelp">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="height:55%">
+                        <div class="col">
+                            <div class="row" style="height:8%">
+                                <div class="col">
+                                    <label for="script">Script</label>
+                                </div>
+                            </div>
+                            <div class="row" style="height:90%">
+                                <div class="col">
+                                    <textarea class="form-control" id="script" style="resize:none;height:100%"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="height:10%">
+                        <div class="col form-group text-center">
+                            <button id="scriptExecuteBtn" type="button" class="btn btn-outline-primary">Execute script</button>
+                            <img id="loader" src="./img/loader.svg" alt="loading animation" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="row" style="height:7%">
+                        <div class="col">
+                            <h3>Output</h3>
+                        </div>
+                    </div>
+
+                    <div class="row" id="scriptOutForm" style="height:20%">
+                        <div class="col-9">
+                            <div class="row">
+                                <div class="col">
+                                    <label for="script_output">Script output</label>
+                                </div>
+                            </div>
+                            <div class="row" style="height:80%">
+                                <div class="col">
+                                    <textarea readonly class="form-control" id="script_output" style="resize:none;height:100%"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="row">
+                                <div class="col">
+                                    <label for="script_message_log">Messsage log</label>
+                                </div>
+                            </div>
+                            <div class="row"  style="height:80%">
+                                <div class="col">
+                                    <textarea readonly class="form-control" id="script_message_log" style="resize:none;height:100%"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="height:55%">
+                        <div class="col">
+                            <div class="row" style="height:8%">
+                                <div class="col">
+                                    <label for="script_console_log">Console log</label>
+                                    <button id="clearConsoleBtn" type="button" class="btn btn-outline-secondary btn-sm">Clear</button>
+                                </div>
+                            </div>
+                            <div class="row" style="height:90%">
+                                <div class="col">
+                                    <textarea readonly class="form-control" id="script_console_log" style="resize:none;height:100%"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

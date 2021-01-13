@@ -38,6 +38,11 @@ export interface TableFieldContext<TObject> {
   visibleRemove: boolean;
 
   /**
+   * Select handler
+   */
+  onSelect?: (row: TObject | null, index: number) => void;
+
+  /**
    * Shows empty dialog.
    */
   showAddDialog: () => void;

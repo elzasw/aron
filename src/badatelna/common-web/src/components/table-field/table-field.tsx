@@ -1,22 +1,35 @@
-import React, { PropsWithChildren, useCallback } from 'react';
+import React, {
+  PropsWithChildren,
+  useCallback,
+  forwardRef,
+  Ref,
+  useImperativeHandle,
+  ReactElement,
+  RefAttributes,
+} from 'react';
 import useMeasure from 'react-use-measure';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import Grid from '@material-ui/core/Grid';
-import { TableFieldProps } from './table-field-types';
+import { TableFieldProps, TableFieldHandle } from './table-field-types';
 import { useStyles } from './table-field-styles';
 import { TableFieldContext } from './table-field-context';
 import { useTableField } from './table-field-hook';
 
-export function TableField<OBJECT>(options: TableFieldProps<OBJECT>) {
+export const TableField = forwardRef(function TableField<OBJECT>(
+  options: TableFieldProps<OBJECT>,
+  ref: Ref<TableFieldHandle>
+) {
   const classes = useStyles();
 
   const {
     props,
     selectedIndex,
+    setSelectedIndex,
     context,
     formDialogRef,
     removeDialogRef,
   } = useTableField(options);
+
   const {
     RowComponent,
     showToolbar,
@@ -27,23 +40,34 @@ export function TableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     RemoveDialogComponent,
   } = props;
 
-  const height = props.maxRows * 25;
+  const height = props.maxRows * 30;
 
   const renderItem = useCallback(
-    (props: PropsWithChildren<ListChildComponentProps>) => {
-      const { index, style } = props;
+    ({ index, style, data }: PropsWithChildren<ListChildComponentProps>) => {
+      const { value, selectedIndex } = data;
 
       return (
         <div style={style}>
           <RowComponent
-            value={context.value[index]}
+            value={value[index]}
             index={index}
             selected={selectedIndex === index}
           />
         </div>
       );
     },
-    [selectedIndex, context.value]
+    []
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      selectedIndex,
+      setSelectedIndex: (index: number) => {
+        setSelectedIndex(index);
+      },
+    }),
+    [selectedIndex, setSelectedIndex]
   );
 
   // we need real width of the header for the react-window wrapper
@@ -60,7 +84,11 @@ export function TableField<OBJECT>(options: TableFieldProps<OBJECT>) {
               <FixedSizeList
                 height={height}
                 width="100%"
-                itemSize={25}
+                itemSize={30}
+                itemData={{
+                  value: context.value,
+                  selectedIndex,
+                }}
                 itemCount={context.value.length}
               >
                 {renderItem}
@@ -78,10 +106,10 @@ export function TableField<OBJECT>(options: TableFieldProps<OBJECT>) {
             }
           />
         )}
-        {selectedIndex !== undefined && (
-          <RemoveDialogComponent ref={removeDialogRef} index={selectedIndex} />
-        )}
+        <RemoveDialogComponent ref={removeDialogRef} index={selectedIndex} />
       </div>
     </TableFieldContext.Provider>
   );
-}
+}) as <OBJECT>(
+  p: TableFieldProps<OBJECT> & RefAttributes<TableFieldHandle>
+) => ReactElement;

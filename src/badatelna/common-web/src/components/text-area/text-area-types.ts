@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 
 export interface TextAreaProps {
+  form?: string;
   value: string | null | undefined;
   onChange?: (value: string | null) => void;
   onBlur?: () => void;

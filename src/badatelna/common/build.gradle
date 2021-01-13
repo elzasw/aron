@@ -1,7 +1,8 @@
 plugins {
     id 'java-library'
-    id 'org.springframework.boot' version '2.3.4.RELEASE' apply false
-    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.springframework.boot' version '2.4.0' apply false
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+    id "java-test-fixtures"
 }
 
 group = 'cz.inqool.eas'
@@ -68,15 +69,22 @@ dependencies {
     api "org.springframework.boot:spring-boot"
     api "org.springframework.boot:spring-boot-autoconfigure"
 
+    /* WebSocket dependencies */
+    api "org.springframework.boot:spring-boot-starter-websocket"
+    api 'org.springframework.security:spring-security-messaging'
+
     api 'org.springframework.data:spring-data-elasticsearch'
     api "org.springframework.security:spring-security-core"
     api "org.springframework.security:spring-security-config"
     api "org.springframework.security:spring-security-web"
+    // api "org.springframework.security.extensions:spring-security-saml2-core:1.0.10.RELEASE"
+    api "org.springframework.security:spring-security-saml2-service-provider"
 
 
     api 'org.springframework.ws:spring-ws-core'
     api 'javax.mail:mail:1.4'
 
+    implementation 'xyz.capybara:clamav-client:2.0.2'
 
     implementation 'org.elasticsearch.client:transport'
 
@@ -84,6 +92,7 @@ dependencies {
     implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
 
+    implementation 'org.reflections:reflections:0.9.11'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testImplementation 'org.junit.jupiter:junit-jupiter-params'
@@ -91,10 +100,10 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation 'org.testcontainers:testcontainers:1.15.0-rc2'
-    testImplementation 'org.testcontainers:junit-jupiter:1.15.0-rc2'
-    testImplementation 'org.testcontainers:postgresql:1.15.0-rc2'
-    testImplementation 'org.testcontainers:elasticsearch:1.15.0-rc2'
+    testFixturesImplementation 'org.testcontainers:testcontainers:1.15.1'
+    testFixturesImplementation 'org.testcontainers:junit-jupiter:1.15.1'
+    testFixturesImplementation 'org.testcontainers:postgresql:1.15.1'
+    testFixturesImplementation 'org.testcontainers:elasticsearch:1.15.1'
 
     testImplementation 'org.liquibase:liquibase-core'
     testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -106,6 +115,8 @@ dependencies {
 
     implementation'net.jodah:typetools:0.6.2'
 
+    api 'com.cloudbees:syslog-java-client:1.1.7'
+    implementation 'org.springframework.retry:spring-retry'
 }
 
 dependencyManagement {

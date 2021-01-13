@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class StartWithFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new StartWithFilter(IndexFields.uuidId, "3daf125");
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -35,7 +35,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new StartWithFilter(IndexFields.uuidId, "3daf125")
@@ -65,7 +65,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"START_WITH\",\r\n" +
                 "  \"nestedQueryEnabled\" : true,\r\n" +
@@ -82,7 +82,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

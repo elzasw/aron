@@ -3,9 +3,9 @@ package cz.inqool.eas.common.domain;
 import cz.inqool.eas.common.domain.event.CreateEvent;
 import cz.inqool.eas.common.domain.event.DeleteEvent;
 import cz.inqool.eas.common.domain.event.UpdateEvent;
-import cz.inqool.eas.common.exception.MissingObject;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
+import cz.inqool.eas.common.exception.MissingObject;
 import cz.inqool.eas.common.projection.Projectable;
 import cz.inqool.eas.common.projection.Projection;
 import cz.inqool.eas.common.projection.ProjectionFactory;
@@ -13,12 +13,13 @@ import net.jodah.typetools.TypeResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -83,7 +84,7 @@ public abstract class DomainService<
      * @param object      Object to create
      */
     @Transactional
-    public <PROJECTED extends Domain<ROOT>> void createInternal(@Nonnull PROJECTED object) {
+    public <PROJECTED extends Domain<ROOT>> void createInternal(@NotNull PROJECTED object) {
         doWithRoot(object, this::preCreateHook);
 
         object = repository.create(object);
@@ -100,7 +101,7 @@ public abstract class DomainService<
      * @param object      Object to update
      */
     @Transactional
-    public <PROJECTED extends Domain<ROOT>> void updateInternal(@Nonnull PROJECTED object) {
+    public <PROJECTED extends Domain<ROOT>> void updateInternal(@NotNull PROJECTED object) {
         doWithRoot(object, this::preUpdateHook);
 
         PROJECTED projected = repository.update(object);
@@ -116,7 +117,7 @@ public abstract class DomainService<
      * @param id          Id of object to delete
      */
     @Transactional
-    public void deleteInternal(@Nonnull String id) {
+    public void deleteInternal(@NotNull String id) {
         preDeleteHook(id);
 
         ROOT object = repository.delete(id);
@@ -135,7 +136,7 @@ public abstract class DomainService<
      * @return The object
      */
     @Transactional
-    public <PROJECTED extends Domain<ROOT>> PROJECTED getInternal(Class<PROJECTED> type, @Nonnull String id) {
+    public <PROJECTED extends Domain<ROOT>> PROJECTED getInternal(Class<PROJECTED> type, @NotNull String id) {
         preGetHook(id);
 
         PROJECTED view = repository.find(type, id);
@@ -231,38 +232,38 @@ public abstract class DomainService<
         return this.listInternal(listType, params);
     }
 
-    public ROOT getRef(@Nonnull String id) {
+    public ROOT getRef(@NotNull String id) {
         return repository.getRef(id);
     }
 
     /**
      * Hook called before creating object.
      */
-    protected void preCreateHook(@Nonnull ROOT object) {
+    protected void preCreateHook(@NotNull ROOT object) {
     }
 
     /**
      * Hook called after creating object.
      */
-    protected void postCreateHook(@Nonnull ROOT object) {
+    protected void postCreateHook(@NotNull ROOT object) {
     }
 
     /**
      * Hook called before updating object.
      */
-    protected void preUpdateHook(@Nonnull ROOT object) {
+    protected void preUpdateHook(@NotNull ROOT object) {
     }
 
     /**
      * Hook called after updating object.
      */
-    protected void postUpdateHook(@Nonnull ROOT object) {
+    protected void postUpdateHook(@NotNull ROOT object) {
     }
 
     /**
      * Hook called before deleting object.
      */
-    protected void preDeleteHook(@Nonnull String id) {
+    protected void preDeleteHook(@NotNull String id) {
     }
 
     /**
@@ -274,19 +275,19 @@ public abstract class DomainService<
     /**
      * Hook called before getting object.
      */
-    protected void preGetHook(@Nonnull String id) {
+    protected void preGetHook(@NotNull String id) {
     }
 
     /**
      * Hook called after getting object.
      */
-    protected void postGetHook(@Nonnull ROOT object) {
+    protected void postGetHook(@NotNull ROOT object) {
     }
 
     /**
      * Hook called before listing objects.
      */
-    protected void preListHook(@Nonnull Params params) {
+    protected void preListHook(@NotNull Params params) {
     }
 
     @SuppressWarnings("unchecked")
@@ -305,13 +306,19 @@ public abstract class DomainService<
             return result;
         }
 
-        Class<PROJECTED> type = (Class<PROJECTED>) result.getItems().get(0).getClass();
-        var projection = projectionFactory.get(rootType, type);
+        Map<String, Class<PROJECTED>> projectedIdTypeMap = new HashMap<>();
+        Map<Class<PROJECTED>, Projection<ROOT, ROOT, PROJECTED>> projections = new HashMap<>();
 
         List<ROOT> rootItems = result.
                 getItems().
                 stream().
-                map(projection::toBase).
+                map(projected -> {
+                    Class<PROJECTED> projectedType = (Class<PROJECTED>) projected.getClass();
+                    Projection<ROOT, ROOT, PROJECTED> projection = projections.computeIfAbsent(projectedType,
+                            type -> projectionFactory.get(rootType, type));
+                    projectedIdTypeMap.put(projected.getId(), projectedType);
+                    return projection.toBase(projected);
+                }).
                 collect(Collectors.toList());
         Result<ROOT> rootResult = new Result<>(rootItems, result.getCount(), result.getSearchAfter(), result.getAggregations());
 
@@ -320,7 +327,11 @@ public abstract class DomainService<
         List<PROJECTED> projectedItems = rootResult.
                 getItems().
                 stream().
-                map(projection::toProjected).
+                map(base -> {
+                    Class<PROJECTED> projectedType = projectedIdTypeMap.get(base.getId());
+                    Projection<ROOT, ROOT, PROJECTED> projection = projections.get(projectedType);
+                    return projection.toProjected(base);
+                }).
                 collect(Collectors.toList());
         return new Result<>(projectedItems, result.getCount(), result.getSearchAfter(), result.getAggregations());
     }
@@ -328,7 +339,7 @@ public abstract class DomainService<
     /**
      * Hook called after listing object.
      */
-    protected void postListHook(@Nonnull Result<ROOT> result) {
+    protected void postListHook(@NotNull Result<ROOT> result) {
     }
 
     @Autowired

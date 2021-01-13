@@ -15,6 +15,7 @@ export function FileField({ value, onChange, disabled }: FileFieldProps) {
 
   const handleUpload = useEventCallback(
     async (event: React.ChangeEvent<any>) => {
+      const input = event.currentTarget;
       const files: File[] = event.currentTarget.files;
 
       if (files.length === 0) {
@@ -24,6 +25,12 @@ export function FileField({ value, onChange, disabled }: FileFieldProps) {
 
       const file = files[0];
       const fileRef = await uploadFile(file);
+
+      /*
+        Reset file input, so one can load the same file again with trigering the onChange event.
+        The event will not be triggered otherwise for the same file.
+      */
+      input.value = null;
 
       if (fileRef !== undefined) {
         onChange(fileRef);

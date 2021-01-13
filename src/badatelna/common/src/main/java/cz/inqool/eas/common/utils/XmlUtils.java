@@ -10,7 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -53,7 +53,7 @@ public class XmlUtils {
      * @param object object to be converted
      * @param marshallerConsumer marshalling function
      */
-    public static <T> void toXml(@Nullable T object, @Nonnull BiConsumer<Marshaller, T> marshallerConsumer) {
+    public static <T> void toXml(@Nullable T object, @NotNull BiConsumer<Marshaller, T> marshallerConsumer) {
         marshall(object, marshallerConsumer);
     }
 
@@ -63,7 +63,7 @@ public class XmlUtils {
      * @param object object to be converted
      * @param filename name of response filename attachment
      */
-    public static <T> ResponseEntity<StreamingResponseBody> toXmlResponse(@Nullable T object, @Nonnull String filename) {
+    public static <T> ResponseEntity<StreamingResponseBody> toXmlResponse(@Nullable T object, @NotNull String filename) {
         StreamingResponseBody responseBody = outputStream -> toXml(object, (marshaller, obj) -> checked(() -> marshaller.marshal(obj, outputStream)));
 
         return ResponseEntity.ok()
@@ -72,7 +72,7 @@ public class XmlUtils {
                 .body(responseBody);
     }
 
-    private static <T> void marshall(@Nullable T object, @Nonnull BiConsumer<Marshaller, T> marshallerConsumer) {
+    private static <T> void marshall(@Nullable T object, @NotNull BiConsumer<Marshaller, T> marshallerConsumer) {
         if (object == null) {
             return;
         }
@@ -95,12 +95,12 @@ public class XmlUtils {
      * @param stream input stream with XML data
      * @param type type of object to convert the stream to
      */
-    public static <T> T fromXml(@Nonnull InputStream stream, @Nonnull Class<T> type) {
+    public static <T> T fromXml(@NotNull InputStream stream, @NotNull Class<T> type) {
         //noinspection unchecked
         return unmarshall(stream, type, (unmarshaller, inputStream) -> (T) checked(() -> unmarshaller.unmarshal(inputStream)));
     }
 
-    private static <T, S> T unmarshall(@Nullable S source, @Nonnull Class<T> type, @Nonnull BiFunction<Unmarshaller, S, T> marshallerConsumer) {
+    private static <T, S> T unmarshall(@Nullable S source, @NotNull Class<T> type, @NotNull BiFunction<Unmarshaller, S, T> marshallerConsumer) {
         if (source == null) {
             return null;
         }
@@ -116,7 +116,7 @@ public class XmlUtils {
     }
 
     @SneakyThrows
-    private static JAXBContext getContext(@Nonnull Class<?> type) {
+    private static JAXBContext getContext(@NotNull Class<?> type) {
         //noinspection UnstableApiUsage
         return JAXB_CONTEXT_CACHE.get(type, () -> JAXBContext.newInstance(type));
     }

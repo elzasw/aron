@@ -1,6 +1,7 @@
 package cz.inqool.eas.common.authored.tenant;
 
 import lombok.*;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
@@ -19,6 +20,7 @@ import static cz.inqool.eas.common.domain.index.field.ES.Suffix.*;
 @EqualsAndHashCode
 public class TenantReferenceIndexed {
 
+    @Id
     @Field(type = FieldType.Keyword)
     protected String id;
 

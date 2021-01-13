@@ -28,6 +28,6 @@ public class RestException extends BaseException {
 
     @Override
     public ObfuscatedException toObfuscatedException() {
-        return new ObfuscatedException(exception.getName(), message, path);
+        return new ObfuscatedException(getException().getName(), message, path);
     }
 }

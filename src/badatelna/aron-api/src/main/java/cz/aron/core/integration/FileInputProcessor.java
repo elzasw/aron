@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * @author Lukas Jane (inQool) 4.11.2020.
@@ -44,17 +45,22 @@ public class FileInputProcessor {
             throw new RuntimeException("missing parent object");
         }
         String mimeType = "application/octet-stream";
-        for (MetadataItem itm : daoFile.getMtdt().getItms()) {
-            Metadatum metadatum = new Metadatum();
-            metadatum.setType(itm.getCode());
-            metadatum.setValue(itm.getValue());
-            metadatum.setFile(digitalObjectFile);
-            digitalObjectFile.getMetadata().add(metadatum);
-            if (metadatum.getType().equals("mimeType")) {
-                mimeType = metadatum.getValue();
+        if (daoFile.getMtdt() != null) {
+            for (MetadataItem itm : daoFile.getMtdt().getItms()) {
+                Metadatum metadatum = new Metadatum();
+                metadatum.setType(itm.getCode());
+                metadatum.setValue(itm.getValue());
+                metadatum.setFile(digitalObjectFile);
+                digitalObjectFile.getMetadata().add(metadatum);
+                if (metadatum.getType().equals("mimeType")) {
+                    mimeType = metadatum.getValue();
+                }
             }
         }
         Path uploadedFile = filesMap.get(digitalObjectFile.getId());
+        if (name == null) {
+            name = UUID.randomUUID().toString();
+        }
         try (InputStream is = Files.newInputStream(uploadedFile)) {
             File file = fileManager.store(
                     name,

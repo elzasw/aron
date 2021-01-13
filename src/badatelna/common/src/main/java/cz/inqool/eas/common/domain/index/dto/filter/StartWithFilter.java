@@ -1,12 +1,13 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
+import cz.inqool.eas.common.domain.index.field.ES;
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import javax.validation.constraints.NotBlank;
 
@@ -16,7 +17,7 @@ import static cz.inqool.eas.common.domain.index.QueryUtils.*;
  * Filter representing the 'starts with' filter condition on given text {@link FieldFilter#field}.
  */
 @EqualsAndHashCode(callSuper = true)
-public class StartWithFilter extends TextFilter {
+public class StartWithFilter extends TextFilter<StartWithFilter> {
 
     StartWithFilter() {
         super(FilterOperation.START_WITH);
@@ -26,17 +27,8 @@ public class StartWithFilter extends TextFilter {
         this(field, value, null);
     }
 
-    public StartWithFilter(@NotBlank String field, @NotBlank String value, boolean nestedQueryEnabled) {
-        this(field, value, null, nestedQueryEnabled);
-    }
-
     public StartWithFilter(@NotBlank String field, @NotBlank String value, Modifier modifier) {
         super(FilterOperation.START_WITH, field, value, modifier);
-    }
-
-    @Builder
-    public StartWithFilter(@NotBlank String field, @NotBlank String value, Modifier modifier, boolean nestedQueryEnabled) {
-        super(FilterOperation.START_WITH, field, value, modifier, nestedQueryEnabled);
     }
 
 
@@ -45,7 +37,9 @@ public class StartWithFilter extends TextFilter {
         IndexFieldLeafNode indexField = getIndexFieldLeafNode(indexedFields);
 
         // regexp and wildcard query do not analyze given query string, so it needs to be folded in the application
-        String normalizedValue = (useFolding && !indexField.getFolded().equals(indexField.getElasticSearchPath())) ? asciiFolding(lowercase(value)) : value;
+        boolean hasDedicatedFoldField = indexField.getInnerField(ES.Suffix.FOLD) != null;
+        boolean mainFieldIsFolded = indexField.getType() == FieldType.Text;
+        String normalizedValue = (useFolding && (hasDedicatedFoldField || mainFieldIsFolded)) ? asciiFolding(lowercase(value)) : value;
         String field = useFolding ? indexField.getFolded() : indexField.getElasticSearchPath();
 
         if (modifier != null) {

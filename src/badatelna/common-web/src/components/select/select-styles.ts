@@ -6,6 +6,12 @@ export const useStyles = makeStyles(() => ({
     paddingBottom: '2pt',
     paddingLeft: '2pt',
   },
+  oneIconShown: {
+    paddingRight: '32px !important',
+  },
+  twoIconShown: {
+    paddingRight: '58px !important',
+  },
   list: {
     paddingTop: 0,
     paddingBottom: 0,
@@ -33,6 +39,7 @@ export const useStyles = makeStyles(() => ({
     },
   },
   adornment: {
-    marginRight: 15,
+    right: 15,
+    position: 'absolute',
   },
 }));

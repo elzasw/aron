@@ -19,7 +19,7 @@ export const useStyles = makeStyles((theme) => ({
   subMenu: {
     position: 'absolute',
     backgroundColor: 'white',
-    left: 250,
+    left: '100%',
     top: 0,
     zIndex: 5,
     boxShadow: theme?.eas?.shadow[1],
@@ -30,6 +30,7 @@ export const useStyles = makeStyles((theme) => ({
   },
   subMenuItem: {
     overflow: 'visible',
+    minWidth: 200,
   },
   subMenuItemText: {
     fontWeight: 400,
@@ -43,4 +44,5 @@ export const useStyles = makeStyles((theme) => ({
   subMenuArrow: {
     fontSize: '0.875rem !important',
   },
+  shortcut: {},
 }));

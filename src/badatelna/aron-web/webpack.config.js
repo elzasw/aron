@@ -21,6 +21,22 @@ function externalForMaterialUi(context, request, callback) {
   callback();
 }
 
+class WatchRunPlugin {
+  apply(compiler) {
+    compiler.hooks.watchRun.tap('WatchRun', (comp) => {
+      const changedTimes = comp.watchFileSystem.watcher.mtimes;
+      const changedFiles = Object.keys(changedTimes)
+        .map((file) => `\n  ${file}`)
+        .join('');
+      if (changedFiles.length) {
+        console.log('====================================');
+        console.log('NEW BUILD FILES CHANGED:', changedFiles);
+        console.log('====================================');
+      }
+    });
+  }
+}
+
 module.exports = (env, argv) => {
   // Only start `fork-ts-checker-webpack-plugin` in development mode. The plugin
   // watches for file changes and performs type checking a separate thread to
@@ -33,15 +49,24 @@ module.exports = (env, argv) => {
           new ForkTsCheckerWebpackPlugin({
             checkSyntacticErrors: true,
           }),
+          new WatchRunPlugin(),
         ]
       : [];
+
+  const urlPrefix = argv.urlPrefix ? `/${argv.urlPrefix}` : '';
 
   return {
     entry: './src/index.tsx',
     output: {
       path: path.resolve(__dirname, 'dist'),
-      filename: '[name].[hash].js',
-      publicPath: '/',
+      filename: argv.mode === 'development' ? '[name].js' : '[name].[hash].js',
+      publicPath: `${urlPrefix}/`,
+    },
+    watchOptions: {
+      // for Windows
+      // ignored: ['**/node_modules/**', '**/build/common-web/**'],
+      aggregateTimeout: 3000,
+      poll: 5000,
     },
     externals: [
       {
@@ -54,12 +79,6 @@ module.exports = (env, argv) => {
       },
       externalForMaterialUi,
     ],
-    watchOptions: {
-      // for Windows
-      ignored: ['**/node_modules/**', '**/build/common-web/**'],
-      aggregateTimeout: 3000,
-      poll: 5000,
-    },
     module: {
       rules: [
         {
@@ -116,6 +135,7 @@ module.exports = (env, argv) => {
             ),
             to: 'hoist-non-react-statics.umd.js',
           },
+          { from: path.resolve(__dirname, 'public', '.htaccess'), to: '.' },
         ],
       }),
       new HtmlWebpackPlugin({
@@ -123,26 +143,11 @@ module.exports = (env, argv) => {
       }),
       new webpack.DefinePlugin({
         // Pass `API_URL` environment variable, defined in `.env`:
-        API_URL: JSON.stringify(process.env.API_URL),
+        'process.env.API_URL': JSON.stringify(process.env.API_URL),
+        'process.env.NODE_ENV': JSON.stringify(argv.mode || 'development'),
+        'process.env.URL_PREFIX': JSON.stringify(urlPrefix),
       }),
     ],
-    devServer: {
-      contentBase: path.join(__dirname, 'public'),
-      compress: true,
-
-      // This allows `webpack-dev-server`, which is run from inside a container,
-      // to listen to requests coming from the host:
-      host: '0.0.0.0',
-
-      port: process.env.PORT,
-      sockPort: 8080,
-
-      publicPath: '/',
-      historyApiFallback: true,
-      //proxy: {
-      //  '/api': 'http://localhost:8080'
-      //}
-    },
     resolveLoader: {
       plugins: [
         // This is necessary to make webpack work with Yarn PnP:

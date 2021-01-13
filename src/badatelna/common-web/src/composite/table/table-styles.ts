@@ -115,21 +115,28 @@ export const useStyles = makeStyles((theme) => ({
   },
   toolbarButton: {
     height: 25,
-    maxWidth: 60,
     minWidth: 40,
     fontSize: 14,
     cursor: 'pointer',
     padding: '2px 5px',
-    backgroundColor: '#f1f3f4',
-    '&:hover': {
-      backgroundColor: '#e0e2e3',
+
+    '&.MuiButton-contained': {
+      backgroundColor: '#f1f3f4',
+      '&:hover': {
+        backgroundColor: '#e0e2e3',
+      },
     },
-  },
-  toolbarButtonPrimary: {
-    backgroundColor: theme.palette.primary.main,
-    color: theme.palette.primary.contrastText,
-    '&:hover': {
-      backgroundColor: theme.palette.primary.dark,
+    '&.MuiButton-contained.MuiButton-containedPrimary': {
+      backgroundColor: theme.palette.primary.main,
+      '&:hover': {
+        backgroundColor: theme.palette.primary.dark,
+      },
+    },
+    '&.MuiButton-contained.MuiButton-containedSecondary': {
+      backgroundColor: theme.palette.secondary.main,
+      '&:hover': {
+        backgroundColor: theme.palette.secondary.dark,
+      },
     },
   },
   dialogTitleHeader: {
@@ -323,5 +330,8 @@ export const useStyles = makeStyles((theme) => ({
   progress: {
     position: 'absolute',
     width: '100%',
+  },
+  buttonLabel: {
+    textTransform: 'uppercase',
   },
 }));

@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 
 /**
  * Singleton for accessing Spring application context from non-spring context.
@@ -17,7 +17,7 @@ public class ApplicationContextUtils implements ApplicationContextAware {
 
 
     @Override
-    public void setApplicationContext(@Nonnull ApplicationContext context) throws BeansException {
+    public void setApplicationContext(@NotNull ApplicationContext context) throws BeansException {
         ctx = context;
     }
 

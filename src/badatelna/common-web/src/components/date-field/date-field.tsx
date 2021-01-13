@@ -10,6 +10,7 @@ import { DateFieldProps } from './date-field-types';
 import { useStyles } from './date-field-styles';
 
 export function DateField({
+  form,
   disabled,
   minDate: minDateString,
   maxDate: maxDateString,
@@ -63,6 +64,9 @@ export function DateField({
       <KeyboardDatePicker
         InputProps={{
           classes,
+        }}
+        inputProps={{
+          form,
         }}
         views={['date', 'month', 'year']}
         disableToolbar

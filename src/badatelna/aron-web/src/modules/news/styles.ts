@@ -5,7 +5,7 @@ export const useStyles = makeStyles((theme) => {
   const md = theme.breakpoints.up('md');
   const border = `1px solid ${colorGreyLight}`;
   return {
-    newsWrapper: {
+    news: {
       background: colorBlueVeryLight,
       minHeight: 'calc(100vh - 96px)',
       padding: theme.spacing(2),
@@ -17,29 +17,28 @@ export const useStyles = makeStyles((theme) => {
         paddingTop: theme.spacing(4),
       },
     },
-    newsSingleItem: {
+    newsItem: {
       marginBottom: theme.spacing(4),
       maxWidth: 1000,
     },
     itemHeading: {
       borderBottom: border,
-      padding: theme.spacing(1),
+      padding: theme.spacing(1, 2),
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'baseline',
     },
     itemTitle: {
-      borderLeft: border,
-      marginLeft: theme.spacing(1),
-      paddingLeft: theme.spacing(1),
+      paddingLeft: theme.spacing(2),
       fontSize: 16,
+      fontWeight: 'bold',
       [md]: { fontSize: 22 },
     },
     itemText: {
-      padding: theme.spacing(1),
+      padding: theme.spacing(2),
     },
     itemLinks: {
       borderTop: border,
-      padding: theme.spacing(1),
+      padding: theme.spacing(1, 2, 2, 2),
     },
   };
 });

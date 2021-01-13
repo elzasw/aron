@@ -1,11 +1,11 @@
 import { createContext } from 'react';
-import { User } from './user-types';
 
-export interface UserContext {
-  user: User | undefined;
+export interface UserContext<USER> {
+  user: USER | undefined;
   hasPermission: (permission: string) => boolean;
   isLogedIn: () => boolean;
   reload: () => Promise<void>;
+  logout: (automatic?: boolean) => void;
 }
 
-export const UserContext = createContext<UserContext>(undefined as any);
+export const UserContext = createContext<UserContext<any>>(undefined as any);

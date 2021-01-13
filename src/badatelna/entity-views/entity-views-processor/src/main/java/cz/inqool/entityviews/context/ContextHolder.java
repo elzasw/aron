@@ -13,7 +13,7 @@ public class ContextHolder {
         return holder.get();
     }
 
-    public static void intended(Runnable runnable) {
+    public static void indented(Runnable runnable) {
         Context context = getContext();
         int tabs = context.getTabs();
 

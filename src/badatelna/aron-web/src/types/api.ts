@@ -17,6 +17,7 @@ export enum ApiFilterOperation {
   'NOT' = 'NOT',
   'CUSTOM' = 'CUSTOM',
   'IDS' = 'IDS',
+  'AKF' = 'AKF',
 }
 
 export interface Filter {

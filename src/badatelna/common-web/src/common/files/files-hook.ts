@@ -7,7 +7,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { FilesContext } from './files-context';
 import { callUploadFile } from './files-api';
 
-export function useFiles(url: string) {
+export function useFiles(url: string, maxUploadSize?: number) {
   const intl = useIntl();
   const { showSnackbar } = useContext(SnackbarContext);
 
@@ -16,6 +16,19 @@ export function useFiles(url: string) {
   const getFileUrl = useEventCallback((id: string) => `${url}/${id}`);
 
   const uploadFile = useEventCallback(async (file: File) => {
+    if (maxUploadSize !== undefined) {
+      if (file.size > maxUploadSize) {
+        const message = intl.formatMessage({
+          id: 'EAS_FILES_MSG_ERROR_UPLOAD_SIZE',
+          defaultMessage: 'Byla překročena maximální povolena velikost souboru',
+        });
+
+        showSnackbar(message, SnackbarVariant.ERROR);
+
+        throw new Error('Max file size error');
+      }
+    }
+
     try {
       const fileRef: FileRef = await callUploadFile(url, file).json();
 
@@ -40,6 +53,22 @@ export function useFiles(url: string) {
             id: 'EAS_FILES_MSG_ERROR_UPLOAD_SIZE',
             defaultMessage:
               'Byla překročena maximální povolena velikost souboru',
+          });
+        } else if (
+          err.exception === 'cz.inqool.eas.common.exception.VirusFoundException'
+        ) {
+          message = intl.formatMessage({
+            id: 'EAS_FILES_MSG_ERROR_VIRUS',
+            defaultMessage: 'Soubor nebyl nahrán protože obsahuje virus',
+          });
+        } else if (
+          err.exception ===
+          'cz.inqool.eas.common.exception.ExtensionNotAllowedException'
+        ) {
+          message = intl.formatMessage({
+            id: 'EAS_FILES_MSG_ERROR_NOT_ALLOWED',
+            defaultMessage:
+              'Soubor nebyl nahrán protože má nepovolenou příponu ',
           });
         } else {
           message = intl.formatMessage(

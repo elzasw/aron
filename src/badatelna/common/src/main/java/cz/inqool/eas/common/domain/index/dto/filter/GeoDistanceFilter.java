@@ -2,7 +2,6 @@ package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.field.IndexFieldGeoPointLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -35,7 +34,6 @@ public class GeoDistanceFilter extends GeoFilter {
         super(FilterOperation.GEO_DISTANCE);
     }
 
-    @Builder
     public GeoDistanceFilter(@NotNull String field, @NotNull GeoPoint point, @NotNull @PositiveOrZero double distance, @NotNull DistanceUnit distanceUnit) {
         super(FilterOperation.GEO_DISTANCE, field);
         this.point = point;

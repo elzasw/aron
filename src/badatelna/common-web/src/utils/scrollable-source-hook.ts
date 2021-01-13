@@ -15,7 +15,13 @@ import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
 
 export type Url = string | (() => string);
 
-export function useScrollableSource<TYPE>(url: Url) {
+export function useScrollableSource<TYPE>({
+  url,
+  params,
+}: {
+  url: Url;
+  params?: Params;
+}) {
   const fetch = useRef<AbortableFetch | null>(null);
   const paramsRef = useRef<Params>({ size: 30 });
   const dataRef = useRef<ResultDto<TYPE>>({
@@ -43,6 +49,7 @@ export function useScrollableSource<TYPE>(url: Url) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...params,
           ...(paramsRef.current ?? {}),
           searchAfter: isDataValidRef.current
             ? dataRef.current.searchAfter
@@ -98,6 +105,7 @@ export function useScrollableSource<TYPE>(url: Url) {
       loading,
       loadMore,
       setParams: (p) => (paramsRef.current = p),
+      getParams: () => paramsRef.current,
       reset: () => {
         fetch.current?.abort();
         hasNextPageRef.current = true;

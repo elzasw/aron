@@ -6,7 +6,8 @@ import cz.inqool.eas.common.authored.store.AuthoredStore;
 import cz.inqool.eas.common.dictionary.Dictionary;
 import cz.inqool.eas.common.exception.MissingObject;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
+import java.time.Instant;
 import java.util.Collection;
 
 import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
@@ -66,12 +67,17 @@ public class DictionaryStore<
      * @param code Code of object
      * @return Found object or null
      */
-    public PROJECTED findByCode(@Nonnull String code) {
+    public PROJECTED findByCode(@NotNull String code) {
+        Instant now = Instant.now();
 
         JPAQuery<PROJECTED> query = query().
                 select(metaModel).
                 from(metaModel)
-                .where(dictionaryMetaModel.code.eq(code));
+                .where(dictionaryMetaModel.code.eq(code))
+                .where(dictionaryMetaModel.deleted.isNull())
+                .where(dictionaryMetaModel.active.isTrue())
+                .where(dictionaryMetaModel.validFrom.isNull().or(dictionaryMetaModel.validFrom.loe(now)))
+                .where(dictionaryMetaModel.validTo.isNull().or(dictionaryMetaModel.validTo.gt(now)));
 
         PROJECTED projected = query.fetchFirst();
 

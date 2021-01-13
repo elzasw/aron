@@ -4,6 +4,8 @@ import cz.inqool.eas.common.dictionary.DictionaryRepository;
 import cz.inqool.eas.common.dictionary.index.DictionaryIndex;
 import cz.inqool.eas.common.dictionary.store.DictionaryStore;
 
+import java.util.List;
+
 
 public class TranslationRepository extends DictionaryRepository<
         Translation,
@@ -12,19 +14,20 @@ public class TranslationRepository extends DictionaryRepository<
         DictionaryStore<Translation, Translation, QTranslation>,
         DictionaryIndex<Translation, Translation, TranslationIndexedObject>> {
 
-    public Translation findFirstByLanguage(Language language) {
+    public List<Translation> findByLanguage(Language language) {
         QTranslation model = QTranslation.translation;
 
-        Translation translation = query().
+        List<Translation> translations = query().
                 select(model).
                 from(model).
                 where(model.deleted.isNull()).
+                where(model.active.isTrue()).
                 where(model.language.eq(language)).
                 orderBy(model.order.asc()).
-                fetchFirst();
+                fetch();
 
         detachAll();
 
-        return translation;
+        return translations;
     }
 }

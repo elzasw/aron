@@ -34,7 +34,7 @@ export interface TableFieldColumn<TObject> {
   /**
    * Label of the column shown in header component.
    */
-  name: string;
+  name: ReactNode;
 
   /**
    * Attribute of the RowData object.
@@ -106,7 +106,7 @@ export interface TableFieldFormFieldsProps<TObject> {
 }
 
 export interface TableFieldRemoveDialogProps {
-  index: number;
+  index?: number;
 }
 
 /**
@@ -133,6 +133,12 @@ export interface TableFieldDialogProps<TObject> {
 
 export interface TableFieldToolbarProps {
   selectedIndex: number | undefined;
+}
+
+export interface TableFieldHandle {
+  selectedIndex: number | undefined;
+
+  setSelectedIndex: (index: number) => void;
 }
 
 export interface TableFieldProps<TObject> {
@@ -248,7 +254,7 @@ export interface TableFieldProps<TObject> {
   /**
    * Select handler
    */
-  onSelect?: (row: TObject | null) => void;
+  onSelect?: (row: TObject | null, index: number) => void;
 
   /**
    * Condition handler for displaying radio in row.

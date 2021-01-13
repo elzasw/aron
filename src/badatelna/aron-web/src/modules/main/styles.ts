@@ -10,12 +10,7 @@ export const useStyles = makeStyles((theme) => {
     main: {
       position: 'relative',
       background: colorBlueVeryLight,
-    },
-    mainInner: {
       minHeight: `calc(100vh - ${appHeaderHeight})`,
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between"
     },
     mainBackgroundIcon: {
       transform: 'rotate(15deg)',
@@ -65,20 +60,30 @@ export const useStyles = makeStyles((theme) => {
       color: '#fff',
     },
     mainFooterLeft: {
-      minWidth: 'calc((100vw - 800px - 8rem) / 2)',
+      minWidth: 'calc((100vw - 800px - 64px) / 2)',
     },
     mainFooterSection: {
-      maxWidth: 600,
+      maxWidth: 1000,
     },
     mainFooterTitle: {
       fontSize: '0.8rem',
       textTransform: 'uppercase',
-      marginLeft: 0
+      marginLeft: 0,
     },
     mainFooterText: {
       color: colorBlueLight,
       fontSize: '0.75rem',
       lineHeight: '1.4rem',
+    },
+    mainSearchOptions: {
+      display: 'flex',
+      alignItems: 'center',
+      cursor: 'pointer',
+      width: 'fit-content',
+      marginBottom: theme.spacing(0.5),
+      '& :first-child': {
+        marginRight: theme.spacing(0.5),
+      },
     },
   };
 });

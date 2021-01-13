@@ -1,6 +1,9 @@
-import { useRef, ComponentType, useMemo, useState } from 'react';
+import { useRef, ComponentType, useMemo, useState, useContext } from 'react';
+import { UserSettingsContext } from 'common/settings/user/user-settings-context';
+import { TableSettings } from 'common/settings/user/user-settings-types';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { useEventCallback } from 'utils/event-callback-hook';
+import { useUpdateEffect } from 'utils/update-effect';
 import {
   TableFilter,
   TableColumn,
@@ -16,8 +19,12 @@ import { TimeCell } from '../cells/time-cell';
 import { TableFilterCells } from '../table-filter-cells';
 
 export function useTableFilters<OBJECT>({
+  tableId,
+  version,
   columns,
 }: {
+  tableId: string;
+  version: number;
   columns: TableColumn<OBJECT>[];
 }) {
   /**
@@ -25,11 +32,26 @@ export function useTableFilters<OBJECT>({
    */
   const filters = useMemo(() => deriveFilters(columns), [columns]);
 
+  const { getTableSettings, setTableSettings } = useContext(
+    UserSettingsContext
+  );
+
+  let settings: TableSettings | undefined;
+  let initFiltersState: TableFilterState[] = deriveFiltersState(filters);
+
+  if (tableId !== '') {
+    settings = getTableSettings(tableId, version);
+
+    if (settings?.filtersState !== undefined) {
+      initFiltersState = settings?.filtersState;
+    }
+  }
+
   /**
    * Filters state.
    */
   const [filtersState, setFiltersState] = useState<TableFilterState[]>(
-    deriveFiltersState(filters)
+    initFiltersState
   );
 
   const filterDialogRef = useRef<DialogHandle>(null);
@@ -39,6 +61,18 @@ export function useTableFilters<OBJECT>({
   const closeFilterDialog = useEventCallback(() =>
     filterDialogRef.current?.close()
   );
+
+  /**
+   * Updates user settings.
+   */
+  useUpdateEffect(() => {
+    const newSettings: TableSettings = {
+      ...(settings ?? {}),
+      filtersState,
+      version,
+    };
+    setTableSettings(tableId, newSettings);
+  }, [filtersState]);
 
   return {
     filterDialogRef,
@@ -83,7 +117,7 @@ function deriveOperation(CellComponent?: ComponentType<any>) {
     case NumberCell:
       return TableFilterOperation.AND;
     case TextCell:
-      return TableFilterOperation.START_WITH;
+      return TableFilterOperation.CONTAINS;
     case DateCell:
       return TableFilterOperation.AND;
     case DateTimeCell:

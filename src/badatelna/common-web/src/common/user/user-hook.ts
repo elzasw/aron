@@ -15,7 +15,11 @@ export function meCall(meUrl: string) {
   });
 }
 
-export function useUser(meUrl: string) {
+export function useUser(
+  meUrl: string,
+  logoutUrl: string,
+  checkPermission?: (user: any, permission: string) => boolean
+) {
   const [user, setUser] = useState<User | undefined>(undefined);
 
   const reload = useEventCallback(async () => {
@@ -31,9 +35,14 @@ export function useUser(meUrl: string) {
 
   const hasPermission = useEventCallback((permission: string) => {
     if (user !== undefined) {
-      return (
-        user.authorities.find((a) => a.authority === permission) !== undefined
-      );
+      if (checkPermission) {
+        return checkPermission(user, permission);
+      } else {
+        return (
+          user.authorities?.find((a) => a.authority === permission) !==
+          undefined
+        );
+      }
     } else {
       return false;
     }
@@ -43,14 +52,24 @@ export function useUser(meUrl: string) {
     return user !== undefined;
   });
 
-  const context: UserContext = useMemo(
+  const logout = useEventCallback(async (automatic = false) => {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `${logoutUrl}${automatic ? '?automatic' : ''}`;
+
+    document.body.appendChild(form);
+    form.submit();
+  });
+
+  const context: UserContext<User> = useMemo(
     () => ({
       user,
       hasPermission,
       isLogedIn,
       reload,
+      logout,
     }),
-    [user, hasPermission, isLogedIn, reload]
+    [user, hasPermission, isLogedIn, reload, logout]
   );
 
   return { user, context };

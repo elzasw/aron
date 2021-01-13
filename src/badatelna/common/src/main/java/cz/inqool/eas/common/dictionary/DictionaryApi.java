@@ -76,6 +76,15 @@ public abstract class DictionaryApi<
         return service.listAutocomplete(query, language, params);
     }
 
+    @Operation(summary = "List all objects satisfying given params and query string")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @PostMapping(value = "/autocomplete/all")
+    public Result<DictionaryAutocomplete> autocompleteAll(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                                       @RequestParam(value = "language", required = false) Language language,
+                                                       @Valid @RequestBody(required = false) Params params) {
+        return service.listAutocompleteAll(query, language, params);
+    }
+
     @Operation(summary = "List all active valid objects satisfying given params and query string")
     @ApiResponse(responseCode = "200", description = "OK")
     @PostMapping(value = "/autocomplete/full")
@@ -83,5 +92,14 @@ public abstract class DictionaryApi<
                                                          @RequestParam(value = "language", required = false) Language language,
                                                          @Valid @RequestBody(required = false) Params params) {
         return service.listAutocompleteFull(query, language, params);
+    }
+
+    @Operation(summary = "List all objects satisfying given params and query string")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @PostMapping(value = "/autocomplete/full/all")
+    public List<DictionaryAutocomplete> autocompleteFullAll(@RequestParam(value = "query", required = false, defaultValue = "") String query,
+                                                         @RequestParam(value = "language", required = false) Language language,
+                                                         @Valid @RequestBody(required = false) Params params) {
+        return service.listAutocompleteFullAll(query, language, params);
     }
 }

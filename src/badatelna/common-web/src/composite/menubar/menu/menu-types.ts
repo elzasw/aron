@@ -6,6 +6,7 @@ export interface MenuItem {
   icon?: ReactNode;
   items?: MenuItem[];
   keyShortcut?: string;
+  keyShortcutLabel?: ReactNode;
   onClick?: () => void;
 }
 

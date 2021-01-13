@@ -8,6 +8,7 @@ export const useSpacingStyles = makeStyles(({ spacing }) => {
   const big = spacing(BIG);
   const normal = spacing(NORMAL);
   const small = spacing(SMALL);
+
   return {
     padding: {
       padding: normal,
@@ -130,6 +131,25 @@ export const useSpacingStyles = makeStyles(({ spacing }) => {
     },
     marginRightSmall: {
       marginRight: small,
+    },
+
+    marginVertical: {
+      margin: spacing(NORMAL, 0),
+    },
+    marginHorizontal: {
+      margin: spacing(0, NORMAL),
+    },
+    marginVerticalBig: {
+      margin: spacing(BIG, 0),
+    },
+    marginHorizontalBig: {
+      margin: spacing(0, BIG),
+    },
+    marginVerticalSmall: {
+      margin: spacing(SMALL, 0),
+    },
+    marginHorizontalSmall: {
+      margin: spacing(0, SMALL),
     },
   };
 });

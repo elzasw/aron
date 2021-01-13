@@ -16,6 +16,12 @@ export const useLayoutStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  flexSpaceBetweenBottom: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
   flexEnd: {
     display: 'flex',
     flexDirection: 'row',
@@ -36,7 +42,20 @@ export const useLayoutStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  flexColumnSpaceBetween: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   flexWrap: {
     flexWrap: 'wrap',
+  },
+  flexColumnPhone: {
+    display: 'flex',
+    flexDirection: 'column',
+    [theme.breakpoints.up('md')]: {
+      flexDirection: 'row',
+    },
   },
 }));

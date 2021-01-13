@@ -40,4 +40,14 @@ public class ApuPart extends DomainObject<ApuPart> {
     @Fetch(FetchMode.SELECT)
     @BatchSize(size = 100)
     private List<ApuPartItem> items = new ArrayList<>();
+
+    public ApuEntity findRootApuEntity() {
+        if (apu != null) {
+            return apu;
+        }
+        if (parentPart != null) {
+            return parentPart.findRootApuEntity();
+        }
+        return null;
+    }
 }

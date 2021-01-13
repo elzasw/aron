@@ -16,4 +16,5 @@ export interface TooltipProps {
     | 'top-end'
     | 'top-start'
     | undefined;
+  type?: 'HOVER' | 'CLICKABLE';
 }

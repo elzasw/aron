@@ -1,12 +1,14 @@
 package cz.inqool.eas.common.domain.store;
 
 import cz.inqool.eas.common.domain.Domain;
+import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 /**
  * Caching for store instances for different projections.
  */
+@CacheConfig(cacheNames={"stores"})
 @Service
 public class StoreCache {
 

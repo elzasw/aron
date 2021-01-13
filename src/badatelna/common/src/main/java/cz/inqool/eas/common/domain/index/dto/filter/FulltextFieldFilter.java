@@ -3,7 +3,6 @@ package cz.inqool.eas.common.domain.index.dto.filter;
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
 import cz.inqool.eas.common.exception.InvalidAttribute;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +20,7 @@ import static cz.inqool.eas.common.exception.InvalidAttribute.ErrorCode.FIELD_NO
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class FulltextFieldFilter extends TextFilter {
+public class FulltextFieldFilter extends TextFilter<FulltextFieldFilter> {
 
     FulltextFieldFilter() {
         super(FilterOperation.FTXF);
@@ -31,17 +30,8 @@ public class FulltextFieldFilter extends TextFilter {
         this(field, value, null);
     }
 
-    public FulltextFieldFilter(@NotBlank String field, @NotBlank String value, boolean nestedQueryEnabled) {
-        this(field, value, null, nestedQueryEnabled);
-    }
-
     public FulltextFieldFilter(@NotBlank String field, @NotBlank String value, Modifier modifier) {
         super(FilterOperation.FTXF, field, value, modifier);
-    }
-
-    @Builder
-    public FulltextFieldFilter(@NotBlank String field, @NotBlank String value, Modifier modifier, boolean nestedQueryEnabled) {
-        super(FilterOperation.FTXF, field, value, modifier, nestedQueryEnabled);
     }
 
 

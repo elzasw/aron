@@ -2,7 +2,6 @@ package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -15,7 +14,7 @@ import javax.validation.constraints.NotNull;
  * Filter representing the 'equals' filter with folding condition on given {@link FieldFilter#field}.
  */
 @EqualsAndHashCode(callSuper = true)
-public class EqFoldedFilter extends FieldValueFilter {
+public class EqFoldedFilter extends FieldValueFilter<EqFoldedFilter> {
 
     EqFoldedFilter() {
         super(FilterOperation.EQF);
@@ -25,17 +24,8 @@ public class EqFoldedFilter extends FieldValueFilter {
         this(field, value.name());
     }
 
-    public EqFoldedFilter(@NotBlank String field, @NotBlank Enum<?> value, boolean nestedQueryEnabled) {
-        super(FilterOperation.EQF, field, value.name(), nestedQueryEnabled);
-    }
-
     public EqFoldedFilter(@NotBlank String field, @NotBlank String value) {
         super(FilterOperation.EQ, field, value);
-    }
-
-    @Builder
-    public EqFoldedFilter(@NotBlank String field, @NotBlank String value, boolean nestedQueryEnabled) {
-        super(FilterOperation.EQF, field, value, nestedQueryEnabled);
     }
 
 

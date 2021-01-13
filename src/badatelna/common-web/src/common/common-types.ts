@@ -113,7 +113,27 @@ export interface ScrollableSource<TYPE> extends Source<TYPE> {
   hasNextPage: () => boolean;
   isDataValid: () => boolean;
   setParams: (params: Params) => void;
+  getParams: () => Record<string, any>;
   loadMore: () => Promise<void>;
+}
+
+export interface CrudSourceProps {
+  url: string;
+
+  createMessages?: {
+    successMessage?: string;
+    errorMessage?: string;
+  };
+
+  updateMessages?: {
+    successMessage?: string;
+    errorMessage?: string;
+  };
+
+  delMessages?: {
+    successMessage?: string;
+    errorMessage?: string;
+  };
 }
 
 export interface CrudSource<TYPE extends DomainObject> {
@@ -133,4 +153,66 @@ export interface FileRef extends AuthoredObject {
   name: string;
   contentType: string;
   size: number;
+}
+
+export interface ReportTemplate extends DictionaryObject {
+  content?: FileRef;
+  provider?: string;
+  configuration?: string;
+  tags?: string[];
+  label?: string;
+}
+
+export enum ReportType {
+  DOCX = 'DOCX',
+  XLSX = 'XLSX',
+  PDF = 'PDF',
+  HTML = 'HTML',
+  XML = 'XML',
+  CSV = 'CSV',
+}
+
+export enum ReportRequestState {
+  /**
+   * State of a report request after creation
+   */
+  PENDING = 'PENDING',
+
+  /**
+   * State of a report request being processed
+   */
+  PROCESSING = 'PROCESSING',
+
+  /**
+   * State of a request successfully processed and corresponding report file was generated
+   */
+  PROCESSED = 'PROCESSED',
+
+  /**
+   * State of a report request whose processing failed
+   */
+  FAILED = 'FAILED',
+}
+
+export interface ReportRequest extends AuthoredObject {
+  template?: ReportTemplate;
+  configuration?: string;
+  type?: ReportType;
+  priority?: number;
+
+  state?: ReportRequestState;
+  result?: FileRef;
+
+  /**
+   * Message (e.g. error that occurred when processing this report request)
+   */
+  message?: string;
+
+  processingStart?: string;
+  processingEnd?: string;
+}
+
+export interface ReportProvider {
+  name: string;
+  id: string;
 }

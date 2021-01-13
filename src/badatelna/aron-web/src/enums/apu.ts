@@ -13,4 +13,14 @@ export enum ApuPartItemDataType {
   INTEGER = 'INTEGER',
   STRING = 'STRING',
   UNITDATE = 'UNITDATE',
+  LINK = 'LINK',
+}
+
+export enum ApuPartItemEnum {
+  ARCHDESC_ROOT_REF = 'ARCHDESC~ROOT~REF',
+}
+
+export enum ApuPartViewType {
+  GROUPED = 'GROUPED',
+  STANDALONE = 'STANDALONE',
 }

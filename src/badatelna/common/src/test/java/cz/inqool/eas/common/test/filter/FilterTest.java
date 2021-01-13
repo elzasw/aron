@@ -6,10 +6,10 @@ import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsIndexedObject.Inde
 import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsRepository;
 import cz.inqool.eas.common.domain.index.DomainIndexedObject;
 import cz.inqool.eas.common.domain.index.dto.Result;
-import cz.inqool.eas.common.domain.index.dto.sort.FieldSort;
 import cz.inqool.eas.common.domain.index.dto.filter.*;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
-import cz.inqool.eas.common.tstutil.TestBase;
+import cz.inqool.eas.common.domain.index.dto.sort.FieldSort;
+import cz.inqool.eas.common.tstutil.CommonTestBase;
 import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since : 05/10/2020, Mon
  **/
 @Transactional
-public class FilterTest extends TestBase {
+public class FilterTest extends CommonTestBase {
 
     @Autowired
     private MultipleFieldsRepository repository;

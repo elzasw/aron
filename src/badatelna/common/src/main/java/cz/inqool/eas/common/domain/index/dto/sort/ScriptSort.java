@@ -15,6 +15,8 @@ import org.elasticsearch.search.sort.SortOrder;
 
 import javax.validation.constraints.NotNull;
 
+import static cz.inqool.eas.common.domain.index.dto.sort.Sort.Type.SCRIPT;
+
 /**
  * Script Sort
  *
@@ -25,6 +27,13 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 public class ScriptSort extends AbstractSort<ScriptSortBuilder> {
+
+    /**
+     * Sort type
+     */
+    @NotNull
+    @Schema(allowableValues = {SCRIPT})
+    private final String type = SCRIPT;
 
     /**
      * Script
@@ -49,12 +58,11 @@ public class ScriptSort extends AbstractSort<ScriptSortBuilder> {
 
 
     ScriptSort() {
-        super(Type.SCRIPT);
     }
 
     @Builder
     public ScriptSort(@NotNull Script script, @NotNull ScriptSortType scriptSortType, @NotNull SortOrder order, @NotNull SortMode mode) {
-        super(Type.SCRIPT, order);
+        super(order);
         this.script = script;
         this.scriptSortType = scriptSortType;
         this.mode = mode;

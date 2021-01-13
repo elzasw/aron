@@ -16,16 +16,9 @@ public class AuthoredUtils {
         UserReference user = UserGenerator.generateValue();
 
         if (user != null) {
-            return EqFilter.
-                    builder().
-                    field("createdBy.id").
-                    value(user.getId()).
-                    build();
+            return new EqFilter("createdBy.id", user.getId());
         } else {
-            return IdsFilter.
-                    builder().
-                    ids(emptySet()).
-                    build();
+            return new IdsFilter(emptySet());
         }
     }
 
@@ -33,16 +26,9 @@ public class AuthoredUtils {
         TenantReference tenant = TenantGenerator.generateValue();
 
         if (tenant != null) {
-            return EqFilter.
-                    builder().
-                    field("createdByTenant.id").
-                    value(tenant.getId()).
-                    build();
+            return new EqFilter("createdByTenant.id", tenant.getId());
         } else {
-            return IdsFilter.
-                    builder().
-                    ids(emptySet()).
-                    build();
+            return new IdsFilter(emptySet());
         }
     }
 }

@@ -7,8 +7,13 @@ import { NavigationContext } from 'composite/navigation/navigation-context';
 import { AdminProviderProps } from './admin-provider-types';
 import { AdminReindex } from './admin-reindex';
 import { UserContext } from 'common/user/user-context';
+import { AdminContext } from './admin-context';
 
-export function AdminProvider({ permission, prefix }: AdminProviderProps) {
+export function AdminProvider({
+  permission,
+  prefix,
+  reindexUrl,
+}: AdminProviderProps) {
   const { modifyItems } = React.useContext(MenubarContext);
   const { navigate } = React.useContext(NavigationContext);
   const { hasPermission } = React.useContext(UserContext);
@@ -58,10 +63,12 @@ export function AdminProvider({ permission, prefix }: AdminProviderProps) {
   }, [menuItems, modifyItems, show]);
 
   return (
-    <Switch>
-      {show && (
-        <Route path={`${prefix}/admin/reindex`} component={AdminReindex} />
-      )}
-    </Switch>
+    <AdminContext.Provider value={{ reindexUrl }}>
+      <Switch>
+        {show && (
+          <Route path={`${prefix}/admin/reindex`} component={AdminReindex} />
+        )}
+      </Switch>
+    </AdminContext.Provider>
   );
 }

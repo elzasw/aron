@@ -1,4 +1,5 @@
-import React, { ChangeEvent, useMemo } from 'react';
+import React, { ChangeEvent, useMemo, useCallback } from 'react';
+import clsx from 'clsx';
 import { uniqBy } from 'lodash';
 import MuiSelect from '@material-ui/core/Select';
 import MuiMenuItem from '@material-ui/core/MenuItem';
@@ -11,8 +12,10 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { DomainObject } from 'common/common-types';
 import { SelectProps } from './select-types';
 import { useStyles } from './select-styles';
+import { TextField } from 'components/text-field/text-field';
 
 export function Select<OPTION extends DomainObject>({
+  form,
   disabled,
   source,
   value,
@@ -104,50 +107,104 @@ export function Select<OPTION extends DomainObject>({
     }
   }
 
-  const { root, input, list, item, adornment } = useStyles();
+  const {
+    root,
+    input,
+    list,
+    item,
+    adornment,
+    oneIconShown,
+    twoIconShown,
+  } = useStyles();
+
+  const showSelectAllButton = selectableAll && multiple && !disabled;
+  const showClearButton = clearable && !disabled && value !== null;
+  const showTwoIcon = showSelectAllButton && showClearButton;
+  const showOneIcon = !showTwoIcon && (showSelectAllButton || showClearButton);
+
+  const RenderFunc = useCallback(
+    (val: any) => {
+      let label = '';
+      if (multiple) {
+        const ids = val as string[];
+
+        label = ids
+          .map((id) => options.find((option) => option.id === id))
+          .map((option) => option && labelMapper(option))
+          .join(', ');
+      } else {
+        const id = val as string;
+        const option = options.find((option) => option.id === id);
+        label = option !== undefined ? labelMapper(option) : '';
+      }
+
+      return <TextField disabled={true} value={label} />;
+    },
+    [labelMapper, multiple, options]
+  );
 
   return (
-    <MuiSelect
-      endAdornment={
-        <InputAdornment position="end" classes={{ root: adornment }}>
-          {selectableAll && multiple && !disabled && (
-            <IconButton size="small" onClick={handleSelectAll}>
-              <LibraryAddCheckOutlinedIcon fontSize="small" />
-            </IconButton>
-          )}
-          {clearable && !disabled && value !== null && (
-            <IconButton size="small" onClick={handleClear}>
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          )}
-        </InputAdornment>
-      }
-      className={input}
-      classes={{ root }}
-      disabled={disabled}
-      multiple={multiple}
-      value={getLocalValue(value)}
-      onChange={handleChange}
-      autoWidth={true}
-      MenuProps={{
-        classes: { list },
-      }}
-    >
-      {options.map((option) => (
-        <MuiMenuItem
-          key={idMapper(option)}
-          value={idMapper(option)}
-          classes={{ root: item }}
+    <>
+      {disabled ? (
+        <>{RenderFunc(getLocalValue(value))}</>
+      ) : (
+        <MuiSelect
+          endAdornment={
+            <InputAdornment position="end" classes={{ root: adornment }}>
+              {showSelectAllButton && (
+                <IconButton size="small" onClick={handleSelectAll}>
+                  <LibraryAddCheckOutlinedIcon fontSize="small" />
+                </IconButton>
+              )}
+              {showClearButton && (
+                <IconButton size="small" onClick={handleClear}>
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              )}
+            </InputAdornment>
+          }
+          inputProps={{
+            form,
+          }}
+          className={input}
+          classes={{
+            root: clsx(root, {
+              [oneIconShown]: showOneIcon,
+              [twoIconShown]: showTwoIcon,
+            }),
+          }}
+          disabled={disabled}
+          multiple={multiple}
+          value={getLocalValue(value)}
+          onChange={handleChange}
+          autoWidth={true}
+          renderValue={RenderFunc}
+          MenuProps={{
+            classes: { list },
+            anchorOrigin: {
+              horizontal: 'left',
+              vertical: 'bottom',
+            },
+            getContentAnchorEl: null,
+          }}
         >
-          {showTooltip ? (
-            <MuiTooltip title={<>{tooltipMapper(option)}</>}>
-              <>{labelMapper(option)}</>
-            </MuiTooltip>
-          ) : (
-            labelMapper(option)
-          )}
-        </MuiMenuItem>
-      ))}
-    </MuiSelect>
+          {options.map((option) => (
+            <MuiMenuItem
+              key={idMapper(option)}
+              value={idMapper(option)}
+              classes={{ root: item }}
+            >
+              {showTooltip ? (
+                <MuiTooltip title={<>{tooltipMapper(option)}</>}>
+                  <>{labelMapper(option)}</>
+                </MuiTooltip>
+              ) : (
+                labelMapper(option)
+              )}
+            </MuiMenuItem>
+          ))}
+        </MuiSelect>
+      )}
+    </>
   );
 }

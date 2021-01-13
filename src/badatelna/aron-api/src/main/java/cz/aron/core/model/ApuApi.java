@@ -1,12 +1,10 @@
 package cz.aron.core.model;
 
 import cz.inqool.eas.common.domain.DomainApi;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * @author Lukas Jane (inQool) 03.11.2020.
@@ -27,6 +25,11 @@ public class ApuApi extends DomainApi<
     public ApuEntityTreeView getSimpleTree(@PathVariable("id") String apuId) {
         ApuEntityTreeView apuEntityTreeView = apuTreeViewStore.find(apuId);
         return apuEntityTreeView;
+    }
+
+    @GetMapping("/labels")
+    public List<IdLabelDto> mapNames(@RequestBody List<String> ids) {
+        return service.mapNames(ids);
     }
 }
 

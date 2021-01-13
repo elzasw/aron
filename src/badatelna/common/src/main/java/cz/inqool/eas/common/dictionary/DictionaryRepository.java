@@ -12,10 +12,12 @@ import cz.inqool.eas.common.domain.index.dto.filter.*;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
 import cz.inqool.eas.common.domain.index.dto.sort.FieldSort;
 import cz.inqool.eas.common.intl.Language;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.search.sort.SortOrder;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.List;
  * @param <STORE> Type of store
  * @param <INDEX> Type of index
  */
+@Slf4j
 public class DictionaryRepository<
         ROOT extends Dictionary<ROOT>,
         INDEX_PROJECTED extends Dictionary<ROOT>,
@@ -56,7 +59,7 @@ public class DictionaryRepository<
     /**
      * @see DictionaryStore#findByCode(String) (String)
      */
-    public <PROJECTED extends Dictionary<ROOT>> PROJECTED findByCode(Class<PROJECTED> type, @Nonnull String code) {
+    public <PROJECTED extends Dictionary<ROOT>> PROJECTED findByCode(Class<PROJECTED> type, @NotNull String code) {
         return getDictionaryStore(type).findByCode(code);
     }
 
@@ -78,8 +81,8 @@ public class DictionaryRepository<
      * @param query  Query string
      * @param params Default params
      */
-    public Result<DictionaryAutocomplete> listAutocomplete(@Nullable String query, @Nullable Language language, @Nullable Params params) {
-        params = prepareAutocompleteParams(params, language, query);
+    public Result<DictionaryAutocomplete> listAutocomplete(@Nullable String query, @Nullable Language language, @Nullable Params params, boolean all) {
+        params = prepareAutocompleteParams(params, language, query, all);
 
         return this.getIndex().listByParams(params, (builder) -> builder.fetchSource(new String[]{Fields.name, Fields.multiName, Fields.code}, null), (hit) -> {
             String value = (String) hit.getSourceAsMap().get(Fields.name);
@@ -100,8 +103,8 @@ public class DictionaryRepository<
      * @param query  Query string
      * @param params Default params
      */
-    public List<DictionaryAutocomplete> listAutocompleteFull(@Nullable String query, @Nullable Language language, @Nullable Params params) {
-        params = prepareAutocompleteParams(params, language, query);
+    public List<DictionaryAutocomplete> listAutocompleteFull(@Nullable String query, @Nullable Language language, @Nullable Params params, boolean all) {
+        params = prepareAutocompleteParams(params, language, query, all);
 
         return this.getIndex().listAllByParams(params, (builder) -> builder.fetchSource(new String[]{Fields.name, Fields.multiName, Fields.code}, null), (hit) -> {
             String value = (String) hit.getSourceAsMap().get(Fields.name);
@@ -114,12 +117,12 @@ public class DictionaryRepository<
         });
     }
 
-    private Params prepareAutocompleteParams(Params params, @Nullable Language language, @Nullable String query) {
+    private Params prepareAutocompleteParams(Params params, @Nullable Language language, @Nullable String query, boolean all) {
         if (params == null) {
             params = new Params();
         }
 
-        params.setSort(List.of(new FieldSort(Fields.order, SortOrder.ASC), new FieldSort(DictionaryIndexedObject.Fields.name, SortOrder.ASC)));
+        params.setSort(List.of(new FieldSort(Fields.order, SortOrder.ASC), new FieldSort(Fields.name, SortOrder.ASC)));
 
         // text filter
         if (query != null) {
@@ -130,13 +133,16 @@ public class DictionaryRepository<
             }
         }
 
-        // only active
-        params.addFilter(new EqFilter(Fields.active, "true"));
+        if (!all) {
+            // only active
+            params.addFilter(new EqFilter(Fields.active, "true"));
 
-        // only valid
-        String now = LocalDateTime.now().toString();
-        params.addFilter(new OrFilter(new NullFilter(Fields.validFrom), new LteFilter(Fields.validFrom, now)));
-        params.addFilter(new OrFilter(new NullFilter(Fields.validTo), new GteFilter(Fields.validTo, now)));
+            // only valid
+            String now = Instant.now().toString();
+
+            params.addFilter(new OrFilter(new NullFilter(Fields.validFrom), new LteFilter(Fields.validFrom, now)));
+            params.addFilter(new OrFilter(new NullFilter(Fields.validTo), new GteFilter(Fields.validTo, now)));
+        }
 
         return params;
     }

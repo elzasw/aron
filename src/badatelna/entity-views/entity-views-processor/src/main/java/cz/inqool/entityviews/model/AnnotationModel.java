@@ -30,10 +30,14 @@ public class AnnotationModel implements Viewable {
         String strAttributes = attributes.
                 entrySet().
                 stream().
-                map(entry -> entry.getKey() + " = " + entry.getValue()).
+                map(this::toString).
                 collect(Collectors.joining(", "));
 
         return "@" + type.getFullName() + "(" + strAttributes + ")";
+    }
+
+    protected String toString(Map.Entry<String, Object> entry) {
+        return entry.getKey() + " = " + entry.getValue();
     }
 
     public static String escapeString(String str) {

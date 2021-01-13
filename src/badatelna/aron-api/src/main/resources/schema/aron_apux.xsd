@@ -24,7 +24,7 @@
 			<xs:documentation>Druh digitálního svazku</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
-			<xs:enumeration value="HightResView"/>
+			<xs:enumeration value="HighResView"/>
 			<xs:enumeration value="Published"/>
 			<xs:enumeration value="Thumbnail"/>
 		</xs:restriction>
@@ -72,6 +72,7 @@
 				</xs:annotation>
 			</xs:element>
 			<xs:element name="attchs" type="s1:Attachment" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="daos" type="s1:Daos" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="type" use="required" type="s1:ApuType"/>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid"/>
@@ -142,6 +143,18 @@
 				<xs:documentation>UUID souboru/stránky</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="Daos">
+		<xs:annotation>
+			<xs:documentation>Seznam objektů DAO</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="uuid" type="s1:Uuid" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Identifikátor DAO</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="DescItems">
 		<xs:annotation>
@@ -255,8 +268,8 @@
 			<xs:documentation>Logická část APU</xs:documentation>
 		</xs:annotation>
 		<xs:sequence>
-			<xs:element name="itms" type="s1:DescItems" minOccurs="1" maxOccurs="1"/>
 			<xs:element name="value" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="itms" type="s1:DescItems" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="id" use="optional" type="xs:ID">
 			<xs:annotation>
@@ -292,6 +305,6 @@
 				<xs:documentation>Volitelný příznak určující, zda prvek popisu je pouze indexován, tj. není přímo uživateli viditelný a slouží jen pro dohledání jednotky popisu.</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
-		<xs:attribute name="type" use="optional" type="s1:String250"/>
+		<xs:attribute name="type" use="required" type="s1:String250"/>
 	</xs:attributeGroup>
 </xs:schema>

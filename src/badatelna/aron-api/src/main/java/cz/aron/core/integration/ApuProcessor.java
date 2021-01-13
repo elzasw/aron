@@ -6,6 +6,12 @@ import cz.aron.apux._2020.*;
 import cz.aron.core.model.ApuSource;
 import cz.aron.core.model.ApuType;
 import cz.aron.core.model.*;
+import cz.aron.core.model.types.TypesHolder;
+import cz.aron.core.model.types.dto.ItemType;
+import cz.aron.core.relation.Relation;
+import cz.aron.core.relation.RelationRepository;
+import cz.aron.core.relation.RelationStore;
+import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.springframework.stereotype.Service;
@@ -16,9 +22,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Lukas Jane (inQool) 26.10.2020.
@@ -28,21 +33,50 @@ import java.util.Map;
 public class ApuProcessor {
     @Inject private ApuSourceRepository apuSourceRepository;
     @Inject private ApuRepository apuRepository;
+    @Inject private ApuStore apuStore;
     @Inject private FileInputProcessor fileInputProcessor;
     @Inject private ObjectMapper objectMapper;
+    @Inject private RelationRepository relationRepository;
+    @Inject private TypesHolder typesHolder;
+    @Inject private ApuRequestQueue apuRequestQueue;
+    @Inject private RelationStore relationStore;
+
+    private Map<String, ApuEntity> saveCache = new HashMap<>();
+    private Set<String> apuIdsProcessed = new HashSet<>();
+
+    private int apuOrderCounter;
 
     public void processApuAndFiles(String metadata, Map<String, Path> filesMap) {
         cz.aron.apux._2020.ApuSource apuSource;
         try (StringReader reader = new StringReader(metadata)) {
             apuSource = JAXB.unmarshal(reader, cz.aron.apux._2020.ApuSource.class);
         }
-        ApuSource ourApuSource = new cz.aron.core.model.ApuSource();
-        ourApuSource.setId(apuSource.getUuid());
+        ApuSource ourApuSource = apuSourceRepository.find(apuSource.getUuid());
+        boolean create = false;
+        if (ourApuSource == null) {
+            create = true;
+            ourApuSource = new ApuSource();
+            ourApuSource.setId(apuSource.getUuid());
+        }
+        else {
+            List<String> apusToDelete = apuStore.findBySourceId(apuSource.getUuid());
+            apuRepository.delete(apusToDelete);
+        }
         ourApuSource.setData(metadata);
-        apuSourceRepository.create(ourApuSource);
+
+        if (create) {
+            apuSourceRepository.create(ourApuSource);
+        }
+        else {
+            apuSourceRepository.update(ourApuSource);
+        }
+        apuOrderCounter = 0;
         for (Apu apu : apuSource.getApus().getApu()) {
             processApu(apu, ourApuSource, filesMap);
         }
+        flush();
+        apuIdsProcessed.clear();
+        apuRequestQueue.sendRequests();
     }
 
     public void processTestingInputStream(InputStream path) throws IOException {
@@ -50,24 +84,45 @@ public class ApuProcessor {
         processApuAndFiles(data, null);
     }
 
-    public void processApu(Apu apu, cz.aron.core.model.ApuSource apuSource, Map<String, Path> filesMap) {
+    public void processApu(Apu apu, ApuSource apuSource, Map<String, Path> filesMap) {
         ApuEntity apuEntity = new ApuEntity();
         apuEntity.setId(apu.getUuid());
         apuEntity.setName(apu.getName());
+        apuEntity.setOrder(++apuOrderCounter);
         apuEntity.setDescription(apu.getDesc());
         apuEntity.setPermalink(apu.getPrmLnk());
         apuEntity.setType(ApuType.valueOf(apu.getType().name().toUpperCase())); //fixme names don't match
         if (apu.getPrnt() != null) {
-            ApuEntity parentApu = apuRepository.find(apu.getPrnt());
+            ApuEntity parentApu = saveCache.get(apu.getPrnt());
             if (parentApu == null) {
-                throw new RuntimeException("parent apu not found yet");
+                if (!apuIdsProcessed.contains(apu.getPrnt())) {
+                    throw new RuntimeException("parent apu not found yet");
+                }
+                parentApu = apuRepository.getRef(apu.getPrnt());
             }
             apuEntity.setParent(parentApu);
         }
         apuEntity.setSource(apuSource);
-        processParts(apu.getPrts().getPart(), apuEntity);
+        if (apu.getPrts() != null) {
+            processParts(apu.getPrts().getPart(), apuEntity);
+        }
         processAttachments(apu.getAttchs(), apuEntity, filesMap);
-        apuRepository.create(apuEntity);
+        if (apu.getDaos() != null) {
+            int i = 0;
+            for (String daoUuid : apu.getDaos().getUuid()) {
+                DigitalObject digitalObject = new DigitalObject();
+                digitalObject.setId(daoUuid);
+                digitalObject.setApu(apuEntity);
+                digitalObject.setOrder(++i);
+                apuEntity.getDigitalObjects().add(digitalObject);
+            }
+        }
+        saveCache.put(apuEntity.getId(), apuEntity);
+        if (saveCache.size() > 100) {
+            flush();
+        }
+        recordRelations(apuEntity);
+        apuRequestQueue.removeForApuId(apuEntity.getId());
     }
 
     private void processParts(List<Part> parts, ApuEntity apuEntity) {
@@ -125,6 +180,9 @@ public class ApuProcessor {
                 item.setType(itemRef.getType().replace("_", "~"));
                 item.setValue(itemRef.getValue());
                 item.setVisible(itemRef.isVisible() == null || itemRef.isVisible());
+                if (itemRef.getType().equals("ORIGINATOR_REF") || itemRef.getType().equals("AP_REF")) { //only archival entities
+                    apuRequestQueue.add(itemRef.getValue(), apuPart.findRootApuEntity().getId());
+                }
             }
             else if(o instanceof ItemDateRange) {
                 ItemDateRange itemDateRange = (ItemDateRange) o;
@@ -148,17 +206,49 @@ public class ApuProcessor {
     }
 
     private void processAttachments(List<Attachment> attchs, ApuEntity apuEntity, Map<String, Path> filesMap) {
-        for (Attachment attch : attchs) {
-            ApuAttachment apuAttachment = new ApuAttachment();
-            apuAttachment.setName(attch.getName());
-            fileInputProcessor.processFile(
-                    attch.getFile(),
-                    DigitalObjectType.ORIGINAL,
-                    apuAttachment,
-                    null,
-                    filesMap);
-            apuAttachment.setApu(apuEntity);
-            apuEntity.getAttachments().add(apuAttachment);
+        if (attchs != null) {
+            int i = 0;
+            for (Attachment attch : attchs) {
+                ApuAttachment apuAttachment = new ApuAttachment();
+                apuAttachment.setName(attch.getName());
+                apuAttachment.setOrder(++i);
+                fileInputProcessor.processFile(
+                        attch.getFile(),
+                        DigitalObjectType.PUBLISHED,
+                        apuAttachment,
+                        null,
+                        filesMap);
+                apuAttachment.setApu(apuEntity);
+                apuEntity.getAttachments().add(apuAttachment);
+            }
         }
+    }
+
+    private void recordRelations(ApuEntity apuEntity) {
+        List<String> existingIds = relationRepository.findExistingIds(apuEntity.getId());
+        relationRepository.delete(existingIds);
+        for (ApuPart part : apuEntity.getParts()) {
+            for (ApuPartItem item : part.getItems()) {
+                ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
+                if (itemType != null && itemType.getType() == DataType.APU_REF) {
+                    Relation relation = new Relation();
+                    relation.setSource(apuEntity.getId());
+                    relation.setRelation(item.getType());
+                    relation.setTarget(item.getValue());
+                    relationRepository.create(relation);
+                }
+            }
+        }
+    }
+
+    private void flush() {
+        apuRepository.create(saveCache.values());
+        apuIdsProcessed.addAll(saveCache.keySet());
+        //Now to reindex all apus that reference these apus, to update labels in them
+        List<String> updatedApusIds = saveCache.values().stream().map(DomainObject::getId).collect(Collectors.toList());
+        List<String> apuIdsTargetingUpdatedIds = relationStore.listIdsTargetingIds(updatedApusIds);
+        apuRepository.massIndex(apuIdsTargetingUpdatedIds);
+        //clear for next batch
+        saveCache.clear();
     }
 }

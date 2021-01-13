@@ -3,10 +3,13 @@ import { useFetch } from './fetch-hook';
 import { Params, ListSource } from 'common/common-types';
 import { useMemo } from 'react';
 
-export function useListSource<TYPE>(
-  url: string,
-  params?: Params
-): ListSource<TYPE> {
+export function useListSource<TYPE>({
+  url,
+  params,
+}: {
+  url: string;
+  params?: Params;
+}): ListSource<TYPE> {
   const [result, loading, reset] = useFetch<TYPE[]>(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

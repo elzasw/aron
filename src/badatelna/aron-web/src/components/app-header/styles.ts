@@ -9,7 +9,9 @@ export const useStyles = makeStyles((theme) => {
       minWidth: '100%',
       height: appHeaderHeight,
       background: theme.palette.primary.dark,
-      position: 'relative',
+      position: 'sticky',
+      top: 0,
+      zIndex: 20,
     },
     appHeaderInner: {
       height: '100%',
@@ -31,7 +33,7 @@ export const useStyles = makeStyles((theme) => {
       borderBottomLeftRadius: 4,
       display: 'flex',
       flexDirection: 'column',
-      zIndex: 10,
+      zIndex: 20,
       [lg]: {
         display: 'none',
       },
@@ -52,29 +54,24 @@ export const useStyles = makeStyles((theme) => {
     },
     appHeaderItemMobile: {
       padding: '0.8rem 1.2rem',
-      textDecoration: "none",
+      textDecoration: 'none',
       color: theme.palette.common.white,
+
       '&:last-child': {
         borderBottomLeftRadius: 4,
       },
-    },
-    appHeaderIcon: {
-      color: '#fff',
-      cursor: 'pointer',
 
       '&:hover': {
-        color: theme.palette.primary.main,
-      },
-
-      [lg]: {
-        display: 'none',
+        background: theme.palette.primary.main,
       },
     },
     toggleMenuButton: {
       color: theme.palette.common.white,
-      [lg] : {
-        display: "none"
-      }
-    }
+    },
+    mobileMenu: {
+      [lg]: {
+        display: 'none',
+      },
+    },
   };
 });

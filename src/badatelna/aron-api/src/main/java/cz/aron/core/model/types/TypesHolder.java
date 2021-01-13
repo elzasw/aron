@@ -4,6 +4,7 @@ import cz.aron.core.model.types.dto.ApuPartType;
 import cz.aron.core.model.types.dto.ItemType;
 import cz.aron.core.model.types.dto.MetadataType;
 import cz.aron.core.model.types.dto.TypesConfigDto;
+import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -23,10 +24,13 @@ public class TypesHolder {
     private Map<String, MetadataType> metadataTypeMap = new LinkedHashMap<>();
     private Map<String, ItemType> itemTypeMap = new LinkedHashMap<>();
 
+    @Getter
+    private Long currentConfigCrc;
+
     @PostConstruct
     private void loadData() {
         TypesConfigDto typesConfigDto = typesLoader.loadTypes();
-        for (ApuPartType apuPartType : typesConfigDto.getPartyTypes()) {
+        for (ApuPartType apuPartType : typesConfigDto.getPartTypes()) {
             apuPartTypeMap.put(apuPartType.getCode(), apuPartType);
         }
         for (ItemType itemType : typesConfigDto.getItemTypes()) {
@@ -35,6 +39,7 @@ public class TypesHolder {
         for (MetadataType metadataType : typesConfigDto.getMetaDataTypes()) {
             metadataTypeMap.put(metadataType.getCode(), metadataType);
         }
+        currentConfigCrc = typesConfigDto.getCurrentCrc();
     }
 
     public Collection<ApuPartType> getAllApuPartTypes() {

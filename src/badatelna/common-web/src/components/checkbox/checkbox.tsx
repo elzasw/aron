@@ -9,6 +9,7 @@ import { CheckboxProps } from './checkbox-types';
 import { useStyles } from './checkbox-styles';
 
 export function Checkbox({
+  form,
   value,
   onChange,
   disabled,
@@ -39,6 +40,9 @@ export function Checkbox({
       classes={{
         root: clsx(root, { [highlightedRoot]: highlighted }),
         ...classes,
+      }}
+      inputProps={{
+        form,
       }}
       indeterminate={indeterminate}
       disabled={disabled}

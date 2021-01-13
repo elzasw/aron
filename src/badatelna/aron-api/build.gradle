@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '2.3.4.RELEASE'
+    id 'org.springframework.boot' version '2.4.0'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 //    id 'org.unbroken-dome.xjc' version '2.0.0' /*generating java classes from xsd*/ /*now wsdl plugin does it because xsd is linked from there*/
     id 'no.nils.wsdl2java' version '0.12'   /*generating java classes from wsdl*/

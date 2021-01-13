@@ -9,7 +9,7 @@ import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsIndexedObject;
 import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsRepository;
 import cz.inqool.eas.common.domain.index.DomainIndexedObject;
 import cz.inqool.eas.common.domain.index.dto.Result;
-import cz.inqool.eas.common.tstutil.TestBase;
+import cz.inqool.eas.common.tstutil.CommonTestBase;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Transactional
-abstract public class IndexFilterTestBase extends TestBase {
+abstract public class IndexFilterTestBase extends CommonTestBase {
 
     @Autowired
     protected MultipleFieldsRepository repository;

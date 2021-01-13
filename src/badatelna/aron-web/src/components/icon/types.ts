@@ -1,4 +1,4 @@
-import { IconType } from "./enums";
+import { IconType } from '../../enums';
 
 export interface Props {
   type: IconType;

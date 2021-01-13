@@ -2,10 +2,14 @@ package cz.inqool.eas.common.exception.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import cz.inqool.eas.common.alog.event.EventBuilder;
+import cz.inqool.eas.common.alog.event.EventService;
+import cz.inqool.eas.common.authored.user.UserGenerator;
 import cz.inqool.eas.common.exception.*;
 import cz.inqool.eas.common.exception.dto.ObfuscatedException;
 import cz.inqool.eas.common.exception.dto.RestException;
 import cz.inqool.eas.common.exception.parser.ExceptionParser;
+import cz.inqool.eas.common.security.captcha.exception.ReCaptchaInvalidException;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.search.SearchParseException;
@@ -16,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.HttpMediaTypeException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -26,7 +31,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
-import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -42,6 +46,10 @@ import static cz.inqool.eas.common.exception.handler.RestExceptionHandler.Static
 public class RestExceptionHandler {
     private ExceptionParser exceptionParser;
 
+    private EventService eventService;
+
+    private EventBuilder eventBuilder;
+
     @ExceptionHandler({
             BadArgument.class,
             BindException.class,
@@ -54,7 +62,9 @@ public class RestExceptionHandler {
             MethodArgumentNotValidException.class,
             //DeletionException.class,
             JsonProcessingException.class,
-            ConstraintViolationException.class
+            ConstraintViolationException.class,
+            VirusFoundException.class,
+            ReCaptchaInvalidException.class
     })
     public ResponseEntity<RestException> badRequest(HttpServletRequest request, Exception e) {
         return defaultExceptionHandling(request, e, HttpStatus.BAD_REQUEST);
@@ -88,6 +98,10 @@ public class RestExceptionHandler {
             AccessDeniedException.class
     })
     public ResponseEntity<RestException> forbidden(HttpServletRequest request, Exception e) {
+        if (eventService != null) {
+            eventService.create(eventBuilder.forbiddenUrl(request.getRequestURI(), UserGenerator.generateValue()));
+        }
+
         return defaultExceptionHandling(request, e, HttpStatus.FORBIDDEN);
     }
 
@@ -144,6 +158,16 @@ public class RestExceptionHandler {
     @Autowired
     public void setExceptionParser(ExceptionParser parser) {
         this.exceptionParser = parser;
+    }
+
+    @Autowired(required = false)
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @Autowired(required = false)
+    public void setEventBuilder(EventBuilder eventBuilder) {
+        this.eventBuilder = eventBuilder;
     }
 
     /**

@@ -1,9 +1,9 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
-import com.google.common.annotations.Beta;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -15,7 +15,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Filter representing nested filter (to be able to query nested object fields).
  */
-@Beta // do not use yet - not fully tested
+@Getter
+@Setter
 @EqualsAndHashCode(callSuper = true)
 public class NestedFilter extends AbstractFilter {
 
@@ -48,7 +49,6 @@ public class NestedFilter extends AbstractFilter {
         this.filter = filter;
     }
 
-    @Builder
     public NestedFilter(@NotBlank String path, @Valid Filter filter, @NotNull ScoreMode scoreMode) {
         super(FilterOperation.NESTED);
         this.path = path;

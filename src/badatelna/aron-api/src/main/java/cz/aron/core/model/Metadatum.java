@@ -1,5 +1,6 @@
 package cz.aron.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,5 +23,6 @@ public class Metadatum extends DomainObject<Metadatum> {
 
     @ManyToOne
     @Fetch(FetchMode.SELECT)
+    @JsonIgnore
     private DigitalObjectFile file;
 }

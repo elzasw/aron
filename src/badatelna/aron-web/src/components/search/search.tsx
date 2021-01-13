@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import classNames from 'classnames';
 import SearchIcon from '@material-ui/icons/Search';
+import { useIntl } from 'react-intl';
 
 import { TextField } from '../text-field';
 
@@ -8,13 +9,19 @@ import { Props } from './types';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { Button } from '../button';
+import { ModulePath, Message } from '../../enums';
+import { NavigationContext } from '@eas/common-web';
 
 export function Search({ main, onSearch, value = '' }: Props) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
+  const { formatMessage } = useIntl();
+
   const [searchValue, setSearchValue] = useState<string>(value);
+
+  const { navigate } = useContext(NavigationContext);
 
   const handleInputChange = (
     value: string | React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
@@ -36,7 +43,9 @@ export function Search({ main, onSearch, value = '' }: Props) {
           className={classes.searchTextField}
           value={searchValue}
           onChange={handleInputChange}
-          placeholder="Vyhledávání"
+          placeholder={formatMessage({
+            id: Message.SEARCH,
+          })}
           InputProps={{
             startAdornment: (
               <SearchIcon className={classes.searchIcon} color="disabled" />
@@ -50,7 +59,7 @@ export function Search({ main, onSearch, value = '' }: Props) {
         />
         <Button
           className={classes.searchButton}
-          label="Hledat"
+          label={formatMessage({ id: Message.SEARCH_BTN })}
           color="primary"
           contained={true}
           onClick={handleSearch}
@@ -63,7 +72,12 @@ export function Search({ main, onSearch, value = '' }: Props) {
             spacingClasses.paddingTop
           )}
         >
-          <div className={classes.searchAdvanced}>Pokročilé vyhledávání</div>
+          <div
+            onClick={() => navigate(ModulePath.ARCH_DESC)}
+            className={classes.searchAdvanced}
+          >
+            {formatMessage({ id: Message.ADVANCED_SEARCH })}
+          </div>
         </div>
       ) : (
         <></>

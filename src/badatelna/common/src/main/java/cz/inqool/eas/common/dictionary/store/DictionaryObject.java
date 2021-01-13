@@ -46,7 +46,7 @@ abstract public class DictionaryObject<ROOT> extends AuthoredObject<ROOT> implem
     /**
      * Active flag
      */
-    @ViewableProperty(views = DEFAULT)
+    @ViewableProperty(views = {CREATE, DEFAULT})
     protected boolean active;
 
     /**

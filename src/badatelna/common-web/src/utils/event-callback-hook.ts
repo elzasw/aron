@@ -1,5 +1,11 @@
 import { useRef, useLayoutEffect, useCallback } from 'react';
 
+/**
+ * Aimed to be easier to use than useCallback and solve problems raised in this ticket.
+ *
+ * useEventCallback doesn't need any dependencies list. The returned function should not be used during rendering.
+ *
+ */
 export function useEventCallback<T extends (...args: any[]) => any>(fn: T): T {
   const ref: any = useRef(fn);
 

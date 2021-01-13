@@ -6,31 +6,18 @@ import MuiMenu from '@material-ui/core/Menu';
 import PersonIcon from '@material-ui/icons/Person';
 import { useStyles } from './user-btn-styles';
 import { UserBtnProps } from './user-btn-types';
-import { abortableFetch } from 'utils/abortable-fetch';
 import { UserContext } from 'common/user/user-context';
 import { UserBtnItem } from './user-btn-item';
 import { MenubarClassOverrides } from '../menubar-types';
-
-/**
- * Logout call
- *
- * @param logoutUrl Url of logout service
- */
-export function logout(logoutUrl: string) {
-  return abortableFetch(logoutUrl, {
-    method: 'POST',
-  });
-}
+import { FormattedMessage } from 'react-intl';
 
 export function UserBtn({
-  logoutSuccessUrl,
-  logoutUrl,
   actions = [],
   classOverrides,
 }: UserBtnProps & MenubarClassOverrides) {
   const classes = useStyles();
 
-  const { user } = useContext(UserContext);
+  const { user, logout } = useContext(UserContext);
 
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const [opened, setOpened] = useState<boolean>(false);
@@ -41,13 +28,6 @@ export function UserBtn({
 
   const closeMenu = useEventCallback(() => {
     setOpened(false);
-  });
-
-  const handleLogoutClick = useEventCallback(async () => {
-    const response = logout(logoutUrl);
-    await response.none();
-
-    window.location.href = logoutSuccessUrl;
   });
 
   return (
@@ -87,7 +67,15 @@ export function UserBtn({
           <UserBtnItem action={action} key={i} onClose={closeMenu} />
         ))}
         <UserBtnItem
-          action={{ label: 'Odhlásit', action: handleLogoutClick }}
+          action={{
+            label: (
+              <FormattedMessage
+                id="EAS_MENU_BTN_LOGOUT"
+                defaultMessage="Odhlásit"
+              />
+            ),
+            action: logout,
+          }}
           onClose={closeMenu}
         />
       </MuiMenu>

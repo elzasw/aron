@@ -1,7 +1,6 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -31,7 +30,6 @@ public class IdsFilter extends AbstractFilter {
         this.ids = Set.of(ids);
     }
 
-    @Builder
     public IdsFilter(@NotNull Set<@NotBlank String> ids) {
         super(FilterOperation.IDS);
         this.ids = ids;

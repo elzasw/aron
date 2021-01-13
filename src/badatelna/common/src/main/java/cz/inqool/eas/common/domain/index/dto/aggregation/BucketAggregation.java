@@ -31,6 +31,7 @@ import java.util.List;
         visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "FILTERS", value = FiltersAggregation.class),
+        @JsonSubTypes.Type(name = "FILTER", value = FilterAggregation.class),
         @JsonSubTypes.Type(name = "TERMS", value = TermsAggregation.class),
 })
 @Getter

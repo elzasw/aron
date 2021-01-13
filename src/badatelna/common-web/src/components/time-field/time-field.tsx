@@ -10,6 +10,7 @@ import { TimeFieldProps } from './time-field-types';
 import { useStyles } from './time-field-styles';
 
 export function TimeField({
+  form,
   disabled,
   minTime: minTimeString,
   maxTime: maxTimeString,
@@ -63,6 +64,9 @@ export function TimeField({
       <KeyboardTimePicker
         InputProps={{
           classes,
+        }}
+        inputProps={{
+          form,
         }}
         views={['hours', 'minutes', 'seconds']}
         disableToolbar

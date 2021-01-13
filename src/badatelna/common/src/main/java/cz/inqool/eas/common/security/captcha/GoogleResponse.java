@@ -2,6 +2,7 @@
 package cz.inqool.eas.common.security.captcha;
 
 import com.fasterxml.jackson.annotation.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,8 +27,9 @@ public class GoogleResponse {
     private ErrorCode[] errorCodes;
 
 
+    @Slf4j
     enum ErrorCode {
-        MissingSecret, InvalidSecret, MissingResponse, InvalidResponse, BadRequest, TimeoutOrDuplicate;
+        MissingSecret, InvalidSecret, MissingResponse, InvalidResponse, BadRequest, TimeoutOrDuplicate, InvalidKeys;
 
         private static Map<String, ErrorCode> errorsMap = new HashMap<>(6);
 
@@ -38,11 +40,19 @@ public class GoogleResponse {
             errorsMap.put("bad-request", InvalidResponse);
             errorsMap.put("invalid-input-response", BadRequest);
             errorsMap.put("timeout-or-duplicate", TimeoutOrDuplicate);
+            errorsMap.put("invalid-keys", InvalidKeys);
         }
 
         @JsonCreator
         public static ErrorCode forValue(final String value) {
-            return errorsMap.get(value.toLowerCase());
+            String lowerCaseValue = value.toLowerCase();
+
+            if (errorsMap.containsKey(lowerCaseValue)) {
+                return errorsMap.get(lowerCaseValue);
+            } else {
+                log.error("Error code '{}' not recognized.", value);
+                return null;
+            }
         }
     }
 
@@ -117,6 +127,7 @@ public class GoogleResponse {
                 case InvalidResponse:
                 case MissingResponse:
                 case BadRequest:
+                case InvalidKeys:
                     return true;
                 default:
                     break;

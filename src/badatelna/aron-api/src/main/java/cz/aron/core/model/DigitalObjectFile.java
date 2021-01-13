@@ -1,5 +1,6 @@
 package cz.aron.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import cz.inqool.eas.common.domain.store.DomainObject;
 import cz.inqool.eas.common.storage.file.File;
 import lombok.Getter;
@@ -35,9 +36,11 @@ public class DigitalObjectFile extends DomainObject<DigitalObjectFile> {
 
     @ManyToOne
     @Fetch(FetchMode.SELECT)
+    @JsonIgnore
     private DigitalObject digitalObject;
 
     @ManyToOne
     @Fetch(FetchMode.SELECT)
+    @JsonIgnore
     private ApuAttachment attachment;
 }

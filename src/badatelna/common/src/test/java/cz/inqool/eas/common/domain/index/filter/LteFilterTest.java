@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class LteFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new LteFilter(IndexFields.integerObject, 40);
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -34,7 +34,7 @@ class LteFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new LteFilter(IndexFields.integerObject, 40)
@@ -63,7 +63,7 @@ class LteFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"LTE\",\r\n" +
                 "  \"nestedQueryEnabled\" : true,\r\n" +
@@ -79,7 +79,7 @@ class LteFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

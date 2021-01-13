@@ -37,7 +37,7 @@ export function useDictionaryEvidence<OBJECT extends DictionaryObject>(
     [options.detailProps?.GeneralFieldsComponent]
   );
 
-  const toolbarProps: DetailToolbarProps = useMemo(
+  const toolbarProps: DetailToolbarProps<OBJECT> = useMemo(
     () => ({
       after: <DictionaryToolbar />,
       ...options.detailProps?.toolbarProps,

@@ -14,6 +14,6 @@ export const useStyles = makeStyles(() => ({
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
   buttonLabel: {
-    textTransform: 'capitalize',
+    textTransform: 'uppercase',
   },
 }));

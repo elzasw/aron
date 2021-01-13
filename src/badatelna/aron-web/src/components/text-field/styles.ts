@@ -7,4 +7,7 @@ export const useStyles = makeStyles((theme) => ({
       borderRadius: 5,
     },
   },
+  textFieldOutlined: {
+    borderRadius: 5,
+  },
 }));

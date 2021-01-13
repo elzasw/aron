@@ -7,7 +7,7 @@ import cz.inqool.eas.common.domain.store.DomainStore;
 import cz.inqool.eas.common.domain.store.list.QueryModifier;
 import cz.inqool.eas.common.exception.PersistenceException;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
@@ -44,26 +44,9 @@ public class DatedStore<
 
     /**
      * {@inheritDoc}
-     *
-     * Adds deleted check.
      */
     @Override
-    public boolean exist(@Nonnull String id) {
-        long count = query().
-                select(metaModel).
-                from(metaModel).
-                where(datedMetaModel.id.eq(id)).
-                where(datedMetaModel.deleted.isNull()).
-                fetchCount();
-
-        return count > 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PROJECTED create(@Nonnull PROJECTED entity) {
+    public PROJECTED create(@NotNull PROJECTED entity) {
         entity.setDeleted(null);
         return super.create(entity);
     }
@@ -72,7 +55,7 @@ public class DatedStore<
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends PROJECTED> create(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> create(@NotNull Collection<? extends PROJECTED> entities) {
         entities.forEach(entity -> entity.setDeleted(null));
         return super.create(entities);
     }
@@ -81,7 +64,7 @@ public class DatedStore<
      * {@inheritDoc}
      */
     @Override
-    public PROJECTED update(@Nonnull PROJECTED entity) {
+    public PROJECTED update(@NotNull PROJECTED entity) {
         if (isDeleted(entity.getId())) {
             throw new PersistenceException("Deleted entity can not be updated.");
         }
@@ -94,7 +77,7 @@ public class DatedStore<
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends PROJECTED> update(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> update(@NotNull Collection<? extends PROJECTED> entities) {
         List<String> entityIDs = entities.stream()
                 .map(Dated::getId)
                 .collect(Collectors.toList());
@@ -113,7 +96,7 @@ public class DatedStore<
      * {@inheritDoc}
      */
     @Override
-    public PROJECTED delete(@Nonnull String id) {
+    public PROJECTED delete(@NotNull String id) {
         PROJECTED entity = findConnected(id);
 
         if (entity != null) {
@@ -127,10 +110,21 @@ public class DatedStore<
     }
 
     /**
+     * Deletes an instance permanently (instead of keeping it with the deleted flag set). Non existing instance is
+     * silently skipped.
+     *
+     * @param id ID of instance to delete
+     * @return resultant instance (with uninitialized lazy collections) or {@code null} if the entity was not found
+     */
+    public PROJECTED deletePermanently(@NotNull String id) {
+        return super.delete(id);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
-    public Collection<PROJECTED> delete(@Nonnull Collection<String> ids) {
+    public Collection<PROJECTED> delete(@NotNull Collection<String> ids) {
         if (ids.isEmpty()) {
             return emptyList();
         }
@@ -147,6 +141,16 @@ public class DatedStore<
         detachAll();
 
         return deletedEntities;
+    }
+
+    /**
+     * Deletes instances permanently (instead of keeping them with the deleted flag set). Non existing instances are
+     * silently skipped.
+     *
+     * @see #deletePermanently(String)
+     */
+    public Collection<PROJECTED> deletePermanently(@NotNull Collection<String> ids) {
+        return super.delete(ids);
     }
 
     /**
@@ -169,7 +173,7 @@ public class DatedStore<
      * @param id Id of entity
      * @return deleted status
      */
-    public boolean isDeleted(@Nonnull String id) {
+    public boolean isDeleted(@NotNull String id) {
         return query().
                 select(metaModel).
                 from(metaModel).
@@ -184,7 +188,7 @@ public class DatedStore<
      * @param ids Collection of ids
      * @return deleted status
      */
-    public boolean isAnyDeleted(@Nonnull Collection<String> ids) {
+    public boolean isAnyDeleted(@NotNull Collection<String> ids) {
         return query().
                 select(metaModel).
                 from(metaModel).
@@ -200,7 +204,7 @@ public class DatedStore<
      *
      * @return restored entity
      */
-    public PROJECTED restore(@Nonnull String id) {
+    public PROJECTED restore(@NotNull String id) {
         PROJECTED entity = findConnected(id);
 
         if (entity != null) {

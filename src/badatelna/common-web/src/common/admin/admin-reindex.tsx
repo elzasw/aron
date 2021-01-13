@@ -15,12 +15,13 @@ import { Checkbox } from 'components/checkbox/checkbox';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
 import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
+import { AdminContext } from './admin-context';
 
 /**
  * Gets all stores.
  */
-export function getRepositories() {
-  return abortableFetch(`/api/ks/reindex`, {
+export function getRepositories(url: string) {
+  return abortableFetch(url, {
     headers: new Headers({
       'Content-Type': 'application/json',
     }),
@@ -31,8 +32,8 @@ export function getRepositories() {
 /**
  * Gets all stores.
  */
-export function reindexCall(names: string[]) {
-  return abortableFetch(`/api/ks/reindex`, {
+export function reindexCall(url: string, names: string[]) {
+  return abortableFetch(url, {
     headers: new Headers({
       'Content-Type': 'application/json',
     }),
@@ -49,6 +50,7 @@ interface RepositoryState {
 export function AdminReindex() {
   const intl = useIntl();
   const { showSnackbar } = useContext(SnackbarContext);
+  const { reindexUrl } = useContext(AdminContext);
   const [repositories, setRepositiories] = useState<RepositoryState[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -92,7 +94,7 @@ export function AdminReindex() {
     try {
       setLoading(true);
 
-      await reindexCall(names).none();
+      await reindexCall(reindexUrl, names).none();
 
       const message = intl.formatMessage({
         id: 'EAS_DEVTOOLS_REINDEX_MSG_SUCCESS',
@@ -134,7 +136,7 @@ export function AdminReindex() {
   });
 
   useEffect(() => {
-    getRepositories()
+    getRepositories(reindexUrl)
       .json()
       .then((repositiories: string[]) => {
         setRepositiories(
@@ -144,7 +146,7 @@ export function AdminReindex() {
           }))
         );
       });
-  }, []);
+  }, [reindexUrl]);
 
   return (
     <Grid container>

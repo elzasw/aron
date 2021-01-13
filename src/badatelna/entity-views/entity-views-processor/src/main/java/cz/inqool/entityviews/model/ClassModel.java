@@ -28,6 +28,8 @@ public class ClassModel implements Viewable {
 
     private RealTypeModel type;
     private TypeModel superClass;
+    private RealTypeModel viewLeaf;
+    private RealTypeModel[] viewSubClasses;
     private ImplementModel[] implementModels;
     private boolean isAbstract;
     private String[] views;
@@ -63,20 +65,43 @@ public class ClassModel implements Viewable {
             print(" {");
         });
 
-        intended(() -> {
+        indented(() -> {
             printFields();
             printMethods();
 
-            printToEntityAbstractMethod();
-            if (!isAbstract) {
-                printToEntityMethod();
+            if (isViewableLeafSuperclass()) {
+                printToEntityForLeafSuperclassAbstractMethods();
+                printToEntityForLeafSuperclassMethod();
+                printToEntitiesForLeafSuperclassMethod();
+
+                printToViewForSuperclassAbstractMethods();
+                printToViewForLeafSuperclassMethod();
+                printToViewsForLeafSuperclassMethod();
+            } else if (isViewableLeafSubclass()) {
+                printToEntityForLeafSubclassAbstractMethods();
+                if (!isAbstract) {
+                    printToEntityMethod();
+                }
+                printToEntityForLeafSubclassMethod();
+
+                printToViewForLeafSubclassAbstractMethods();
+                if (!isAbstract) {
+                    printToViewMethod();
+                }
+                printToViewForLeafSubclassMethod();
+            } else {
+                printToEntityAbstractMethod();
+                if (!isAbstract) {
+                    printToEntityMethod();
+                }
+                printToEntitiesMethod();
+
+                printToViewAbstractMethod();
+                if (!isAbstract) {
+                    printToViewMethod();
+                }
+                printToViewsMethod();
             }
-            printToEntitiesMethod();
-            printToViewAbstractMethod();
-            if (!isAbstract) {
-                printToViewMethod();
-            }
-            printToViewsMethod();
         });
 
         println("}");
@@ -88,7 +113,7 @@ public class ClassModel implements Viewable {
         println(embeddableAnnotation.toString());
         println("public class ", refClassName, "{");
 
-        intended(() -> {
+        indented(() -> {
             printRefIdField();
             printRefToEntityMethod();
             printRefToEntitiesMethod();
@@ -172,9 +197,9 @@ public class ClassModel implements Viewable {
             print("void toEntity(", parametrizedClassName, " entity, ", parametrizedViewClassName, " view) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (view == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return;");
             });
             println("}");
@@ -196,6 +221,164 @@ public class ClassModel implements Viewable {
         println();
     }
 
+    private void printToEntityForLeafSuperclassAbstractMethods() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        // shorthand method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toEntity(", parametrizedClassName, " entity, ", parametrizedViewClassName, " view) {");
+        });
+
+        indented(() -> {
+            println("toEntity(entity, view, true);");
+        });
+
+        println("}");
+        println();
+
+
+        // full method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toEntity(", parametrizedClassName, " entity, ", parametrizedViewClassName, " view, boolean callSub) {");
+        });
+
+        indented(() -> {
+            println("if (view == null) {");
+            indented(() -> {
+                println("return;");
+            });
+            println("}");
+
+            if (superClass != null) {
+                inView(getMappedView(), () -> {
+                    if (!superClass.isUsedView()) {
+                        return;
+                    }
+
+                    println(superClass.getFullViewName(), ".toEntity(entity, view);");
+                });
+            }
+
+            printToEntityFieldsAssignment();
+
+            println("if (callSub) {");
+            indented(() -> {
+                for (RealTypeModel viewSubClass : viewSubClasses) {
+                    println("if (view instanceof " + viewSubClass.getFullViewName() + ") {");
+                    indented(() -> {
+                        println(viewSubClass.getFullViewName() + ".toEntity(("+ viewSubClass.getClassName() +") entity, (" + viewSubClass.getFullViewName() + ") view, false);");
+                        println("return;");
+                    });
+                    println("}");
+                }
+                println("throw new " + IllegalArgumentException.class.getSimpleName() + "(" +
+                        "\"Type '\" + view.getClass() + \"' not recognized.\"" +
+                        ");");
+            });
+            println("}");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToEntityForLeafSubclassAbstractMethods() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        String leafFullName = viewLeaf.getFullName();
+        String leafViewFullName = viewLeaf.getFullViewName();
+
+        // shorthand method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toEntity(", parametrizedClassName, " entity, ", parametrizedViewClassName, " view) {");
+        });
+
+        indented(() -> {
+            println("toEntity(entity, view, true);");
+        });
+
+        println("}");
+        println();
+
+
+        // full method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toEntity(", parametrizedClassName, " entity, ", parametrizedViewClassName, " view, boolean callSuper) {");
+        });
+
+        indented(() -> {
+            println("if (view == null) {");
+            indented(() -> {
+                println("return;");
+            });
+            println("}");
+
+            if (superClass != null) {
+                inView(getMappedView(), () -> {
+                    if (!superClass.isUsedView()) {
+                        return;
+                    }
+
+                    println("if (callSuper) {");
+                    indented(() -> {
+                        println(superClass.getFullViewName(), ".toEntity(entity, view, false);");
+                    });
+                    println("}");
+                });
+            }
+
+            printToEntityFieldsAssignment();
+        });
+
+        println("}");
+        println();
+
+
+        // shorthand method for superclass context
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toEntity(", leafFullName, " entity, ", parametrizedViewClassName, " view) {");
+        });
+
+        indented(() -> {
+            println("toEntity((" + parametrizedClassName + ") entity, view);");
+        });
+
+        println("}");
+        println();
+    }
+
     private void printToEntityMethod() {
         String parametrizedClassName = type.getUsageOriginal();
         String parametrizedViewClassName = type.getUsage();
@@ -210,9 +393,9 @@ public class ClassModel implements Viewable {
             print(parametrizedClassName, " toEntity(", parametrizedViewClassName, " view) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (view == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
             println("}");
@@ -227,13 +410,83 @@ public class ClassModel implements Viewable {
         println();
     }
 
+    private void printToEntityForLeafSuperclassMethod() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print(parametrizedClassName, " toEntity(", parametrizedViewClassName, " view) {");
+        });
+
+        indented(() -> {
+            println("if (view == null) {");
+            indented(() -> {
+                println("return null;");
+            });
+            println("}");
+            println();
+
+            for (RealTypeModel viewSubClass : viewSubClasses) {
+                println("if (view instanceof " + viewSubClass.getFullViewName() + ") {");
+                indented(() -> {
+                    println("return " + viewSubClass.getFullViewName() + ".toEntity((" + viewSubClass.getFullViewName() + ") view);");
+                });
+                println("}");
+            }
+            println("throw new " + IllegalArgumentException.class.getSimpleName() + "(" +
+                    "\"Type '\" + view.getClass() + \"' not recognized.\"" +
+                    ");");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToEntityForLeafSubclassMethod() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        String leafFullName = viewLeaf.getFullName();
+        String leafViewFullName = viewLeaf.getFullViewName();
+
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print(leafFullName, " toEntity(", leafViewFullName, " view) {");
+        });
+
+        indented(() -> {
+            println("return toEntity((" + parametrizedViewClassName + ") view);");
+        });
+
+        println("}");
+        println();
+    }
+
     private void printToEntitiesMethod() {
         if (isAbstract) {
             return;
         }
 
-        String parametrizedClassName = type.getUsageOriginal();
-        String parametrizedViewClassName = type.getUsage();
+        String parametrizedClassName;
+        String parametrizedViewClassName;
+        if (viewLeaf != null && viewSubClasses == null) {
+            parametrizedClassName = viewLeaf.getFullName();
+            parametrizedViewClassName = viewLeaf.getFullViewName();
+        } else {
+            parametrizedClassName = type.getUsageOriginal();
+            parametrizedViewClassName = type.getUsage();
+        }
 
         println(() -> {
             print("public static <");
@@ -246,9 +499,47 @@ public class ClassModel implements Viewable {
             print("EVCollection toEntities(java.util.Collection<", parametrizedViewClassName, "> views, java.util.function.Supplier<EVCollection> supplier) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (views == null) {");
-            intended(() -> {
+            indented(() -> {
+                println("return null;");
+            });
+
+            println("}");
+            println();
+
+            println("return views.stream().map(view -> toEntity(view)).collect(java.util.stream.Collectors.toCollection(supplier));");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToEntitiesForLeafSuperclassMethod() {
+        String parametrizedClassName;
+        String parametrizedViewClassName;
+        if (viewLeaf != null && viewSubClasses == null) {
+            parametrizedClassName = viewLeaf.getFullName();
+            parametrizedViewClassName = viewLeaf.getFullViewName();
+        } else {
+            parametrizedClassName = type.getUsageOriginal();
+            parametrizedViewClassName = type.getUsage();
+        }
+
+        println(() -> {
+            print("public static <");
+
+            if (type.hasArguments()) {
+                print(type.getArgumentsDefinition(), ", ");
+            }
+
+            print("EVCollection extends java.util.Collection<", parametrizedClassName, ">>");
+            print("EVCollection toEntities(java.util.Collection<", parametrizedViewClassName, "> views, java.util.function.Supplier<EVCollection> supplier) {");
+        });
+
+        indented(() -> {
+            println("if (views == null) {");
+            indented(() -> {
                 println("return null;");
             });
 
@@ -281,9 +572,9 @@ public class ClassModel implements Viewable {
             print(parametrizedClassName, " toEntity(", refClassName, " ref", ") {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (ref == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
             println("}");
@@ -316,9 +607,9 @@ public class ClassModel implements Viewable {
             print("EVCollection toEntities(java.util.Collection<", refClassName, "> refs, java.util.function.Supplier<EVCollection> supplier) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (refs == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
 
@@ -354,9 +645,9 @@ public class ClassModel implements Viewable {
             print(refClassName, " toRef(", parametrizedClassName, " entity) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (entity == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
             println("}");
@@ -393,9 +684,9 @@ public class ClassModel implements Viewable {
             print("EVCollection toRefs(java.util.Collection<", parametrizedClassName, "> entities, java.util.function.Supplier<EVCollection> supplier) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (entities == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
 
@@ -432,9 +723,9 @@ public class ClassModel implements Viewable {
             print("void toView(", parametrizedViewClassName, " view, ", parametrizedClassName, " entity) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (entity == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return;");
             });
 
@@ -457,6 +748,166 @@ public class ClassModel implements Viewable {
         println();
     }
 
+    private void printToViewForSuperclassAbstractMethods() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        // shorthand method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toView(", parametrizedViewClassName, " view, ", parametrizedClassName, " entity) {");
+        });
+
+        indented(() -> {
+            println("toView(view, entity, true);");
+        });
+
+        println("}");
+        println();
+
+
+        // full method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toView(", parametrizedViewClassName, " view, ", parametrizedClassName, " entity, boolean callSub) {");
+        });
+
+        indented(() -> {
+            println("if (entity == null) {");
+            indented(() -> {
+                println("return;");
+            });
+
+            println("}");
+
+            if (superClass != null) {
+                inView(getMappedView(), () -> {
+                    if (!superClass.isUsedView()) {
+                        return;
+                    }
+
+                    println(superClass.getFullViewName(), ".toView(view, entity);");
+                });
+            }
+
+            printToViewFieldsAssignment();
+
+            println("if (callSub) {");
+            indented(() -> {
+                for (RealTypeModel viewSubClass : viewSubClasses) {
+                    println("if (entity instanceof " + viewSubClass.getClassName() + ") {");
+                    indented(() -> {
+                        println(viewSubClass.getFullViewName() + ".toView((" + viewSubClass.getFullViewName() + ") view, (" + viewSubClass.getClassName() + ") entity, false);");
+                        println("return;");
+                    });
+                    println("}");
+                }
+                println("throw new " + IllegalArgumentException.class.getSimpleName() + "(" +
+                        "\"Type '\" + entity.getClass() + \"' not recognized.\"" +
+                        ");");
+            });
+
+            println("}");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToViewForLeafSubclassAbstractMethods() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        String leafFullName = viewLeaf.getFullName();
+        String leafViewFullName = viewLeaf.getFullViewName();
+
+        // shorthand method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toView(", parametrizedViewClassName, " view, ", parametrizedClassName, " entity) {");
+        });
+
+        indented(() -> {
+            println("toView(view, entity, true);");
+        });
+
+        println("}");
+        println();
+
+
+        // full method
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toView(", parametrizedViewClassName, " view, ", parametrizedClassName, " entity, boolean callSuper) {");
+        });
+
+        indented(() -> {
+            println("if (entity == null) {");
+            indented(() -> {
+                println("return;");
+            });
+            println("}");
+
+            if (superClass != null) {
+                inView(getMappedView(), () -> {
+                    if (!superClass.isUsedView()) {
+                        return;
+                    }
+
+                    println("if (callSuper) {");
+                    indented(() -> {
+                        println(superClass.getFullViewName(), ".toView(view, entity, false);");
+                    });
+                    println("}");
+                });
+            }
+
+            printToViewFieldsAssignment();
+        });
+
+        println("}");
+        println();
+
+
+        // shorthand method for superclass context
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print("void toView(", leafViewFullName, " view, ", leafFullName, " entity) {");
+        });
+
+        indented(() -> {
+            println("toView((" + parametrizedViewClassName + ") view, (" + parametrizedClassName + ") entity);");
+        });
+
+        println("}");
+        println();
+    }
+
     private void printToViewMethod() {
         String parametrizedClassName = type.getUsageOriginal();
         String parametrizedViewClassName = type.getUsage();
@@ -471,9 +922,9 @@ public class ClassModel implements Viewable {
             print(parametrizedViewClassName, " toView(", parametrizedClassName, " entity) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (entity == null) {");
-            intended(() -> {
+            indented(() -> {
                 println("return null;");
             });
 
@@ -489,13 +940,83 @@ public class ClassModel implements Viewable {
         println();
     }
 
+    private void printToViewForLeafSuperclassMethod() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print(parametrizedViewClassName, " toView(", parametrizedClassName, " entity) {");
+        });
+
+        indented(() -> {
+            println("if (entity == null) {");
+            indented(() -> {
+                println("return null;");
+            });
+            println("}");
+            println();
+
+            for (RealTypeModel viewSubClass : viewSubClasses) {
+                println("if (entity instanceof " + viewSubClass.getClassName() + ") {");
+                indented(() -> {
+                    println("return " + viewSubClass.getFullViewName() + ".toView((" + viewSubClass.getClassName() + ") entity);");
+                });
+                println("}");
+            }
+            println("throw new " + IllegalArgumentException.class.getSimpleName() + "(" +
+                    "\"Type '\" + entity.getClass() + \"' not recognized.\"" +
+                    ");");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToViewForLeafSubclassMethod() {
+        String parametrizedClassName = type.getUsageOriginal();
+        String parametrizedViewClassName = type.getUsage();
+
+        String leafFullName = viewLeaf.getFullName();
+        String leafViewFullName = viewLeaf.getFullViewName();
+
+        println(() -> {
+            print("public static ");
+
+            if (type.hasArguments()) {
+                print("<", type.getArgumentsDefinition(), "> ");
+            }
+
+            print(leafViewFullName, " toView(", leafFullName, " entity) {");
+        });
+
+        indented(() -> {
+            println("return toView((" + parametrizedClassName + ") entity);");
+        });
+
+        println("}");
+        println();
+    }
+
     private void printToViewsMethod() {
         if (isAbstract) {
             return;
         }
 
-        String parametrizedClassName = type.getUsageOriginal();
-        String parametrizedViewClassName = type.getUsage();
+        String parametrizedClassName;
+        String parametrizedViewClassName;
+        if (viewLeaf != null && viewSubClasses == null) {
+            parametrizedClassName = viewLeaf.getFullName();
+            parametrizedViewClassName = viewLeaf.getFullViewName();
+        } else {
+            parametrizedClassName = type.getUsageOriginal();
+            parametrizedViewClassName = type.getUsage();
+        }
 
         println(() -> {
             print("public static ");
@@ -511,9 +1032,50 @@ public class ClassModel implements Viewable {
             print("EVCollection toViews(java.util.Collection<", parametrizedClassName, "> entities, java.util.function.Supplier<EVCollection> supplier) {");
         });
 
-        intended(() -> {
+        indented(() -> {
             println("if (entities == null) {");
-            intended(() -> {
+            indented(() -> {
+                println("return null;");
+            });
+
+            println("}");
+            println();
+
+            println("return entities.stream().map(entity -> toView(entity)).collect(java.util.stream.Collectors.toCollection(supplier));");
+        });
+
+        println("}");
+        println();
+    }
+
+    private void printToViewsForLeafSuperclassMethod() {
+        String parametrizedClassName;
+        String parametrizedViewClassName;
+        if (viewLeaf != null && viewSubClasses == null) {
+            parametrizedClassName = viewLeaf.getFullName();
+            parametrizedViewClassName = viewLeaf.getFullViewName();
+        } else {
+            parametrizedClassName = type.getUsageOriginal();
+            parametrizedViewClassName = type.getUsage();
+        }
+
+        println(() -> {
+            print("public static ");
+
+            print("<");
+
+            if (type.hasArguments()) {
+                print(type.getArgumentsDefinition(), ", ");
+            }
+
+            print("EVCollection extends java.util.Collection<", parametrizedViewClassName, ">>");
+
+            print("EVCollection toViews(java.util.Collection<", parametrizedClassName, "> entities, java.util.function.Supplier<EVCollection> supplier) {");
+        });
+
+        indented(() -> {
+            println("if (entities == null) {");
+            indented(() -> {
                 println("return null;");
             });
 
@@ -531,19 +1093,19 @@ public class ClassModel implements Viewable {
         for(FieldModel field : fields) {
             field.printToEntityAssignment();
         }
-
-        if (fields.length > 0) {
-            println();
-        }
     }
 
     private void printToViewFieldsAssignment() {
         for(FieldModel field : fields) {
             field.printToViewAssignment();
         }
+    }
 
-        if (fields.length > 0) {
-            println();
-        }
+    private boolean isViewableLeafSubclass() {
+        return viewLeaf != null && viewSubClasses == null;
+    }
+
+    private boolean isViewableLeafSuperclass() {
+        return viewLeaf != null && viewSubClasses != null;
     }
 }
