@@ -1,7 +1,6 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.QueryUtils;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.index.query.QueryBuilder;
 
@@ -22,7 +21,6 @@ public class AndFilter extends LogicalFilter {
         this(List.of(filters));
     }
 
-    @Builder
     public AndFilter(@Valid List<Filter> filters) {
         super(FilterOperation.AND, filters);
     }

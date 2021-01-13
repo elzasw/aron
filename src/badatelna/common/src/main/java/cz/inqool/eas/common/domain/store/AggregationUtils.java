@@ -4,6 +4,7 @@ import cz.inqool.eas.common.domain.index.dto.aggregation.AggregationResult;
 import cz.inqool.eas.common.domain.index.dto.aggregation.DefaultAggregationResult;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.elasticsearch.search.aggregations.bucket.filter.ParsedFilter;
 import org.elasticsearch.search.aggregations.metrics.InternalSum;
 
 import java.util.ArrayList;
@@ -42,6 +43,12 @@ public class AggregationUtils {
             DefaultAggregationResult aggregationResult = new DefaultAggregationResult();
             aggregationResult.setKey(sumAgg.getName());
             aggregationResult.setValue(String.valueOf(sumAgg.getValue()));
+            resultList.add(aggregationResult);
+        } else if (aggregation instanceof ParsedFilter) {   //filter aggregation
+            ParsedFilter parsedFilterAgg = (ParsedFilter) aggregation;
+            DefaultAggregationResult aggregationResult = new DefaultAggregationResult();
+            aggregationResult.setKey(parsedFilterAgg.getName());
+            aggregationResult.setAggregations(processAggregations(parsedFilterAgg.getAggregations()));
             resultList.add(aggregationResult);
         }
         return resultList;

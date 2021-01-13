@@ -3,8 +3,10 @@ package cz.inqool.eas.common.utils;
 import cz.inqool.eas.common.exception.GeneralException;
 import org.springframework.lang.Nullable;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -48,6 +50,24 @@ public class AssertionUtils {
     }
 
     /**
+     * @see AssertionUtils#gt(Integer, Integer, Supplier)
+     */
+    public static void gt(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) <= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#gt(Integer, Integer, Supplier)
+     */
+    public static void gt(Instant x, Instant y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) <= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
      * Checks if provided value is greater or equal as another and throw conditional exception if not.
      *
      * @param x Value to check
@@ -73,6 +93,24 @@ public class AssertionUtils {
      * @see AssertionUtils#gte(Integer, Integer, Supplier)
      */
     public static void gte(BigDecimal x, BigDecimal y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) < 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#gte(Integer, Integer, Supplier)
+     */
+    public static void gte(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) < 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#gte(Integer, Integer, Supplier)
+     */
+    public static void gte(Instant x, Instant y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) < 0) {
             throw supplier.get();
         }
@@ -110,6 +148,24 @@ public class AssertionUtils {
     }
 
     /**
+     * @see AssertionUtils#lt(Integer, Integer, Supplier)
+     */
+    public static void lt(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) >= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#lt(Integer, Integer, Supplier)
+     */
+    public static void lt(Instant x, Instant y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) >= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
      * Checks if provided value is less or equal as another and throw conditional exception if not.
      *
      * @param x Value to check
@@ -135,6 +191,24 @@ public class AssertionUtils {
      * @see AssertionUtils#lte(Integer, Integer, Supplier)
      */
     public static void lte(BigDecimal x, BigDecimal y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) > 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#lte(Integer, Integer, Supplier)
+     */
+    public static void lte(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) > 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#lte(Integer, Integer, Supplier)
+     */
+    public static void lte(Instant x, Instant y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) > 0) {
             throw supplier.get();
         }
@@ -240,7 +314,7 @@ public class AssertionUtils {
      * @param <C>      type of class that the object should be instance of
      * @see Class#isInstance(Object)
      */
-    public static <O, C extends O> void isInstance(@Nullable O o, @Nonnull Class<C> clazz, @Nonnull Supplier<RuntimeException> supplier) {
+    public static <O, C extends O> void isInstance(@Nullable O o, @NotNull Class<C> clazz, @NotNull Supplier<RuntimeException> supplier) {
         if (!clazz.isInstance(o)) {
             throw supplier.get();
         }
@@ -257,7 +331,7 @@ public class AssertionUtils {
      * @return casted object
      * @see Class#cast(Object)
      */
-    public static <O, C extends O> C cast(@Nullable O o, @Nonnull Class<C> clazz, @Nonnull Supplier<RuntimeException> supplier) {
+    public static <O, C extends O> C cast(@Nullable O o, @NotNull Class<C> clazz, @NotNull Supplier<RuntimeException> supplier) {
         isInstance(o, clazz, supplier);
         return clazz.cast(o);
     }

@@ -5,7 +5,7 @@ import { DomainObject } from 'common/common-types';
 
 export type EvidenceTableProps<OBJECT> = Omit<
   TableProps<OBJECT>,
-  'disabled' | 'source' | 'columns'
+  'disabled' | 'source' | 'columns' | 'tableId' | 'version'
 > &
   Partial<Pick<TableProps<OBJECT>, 'columns'>>;
 

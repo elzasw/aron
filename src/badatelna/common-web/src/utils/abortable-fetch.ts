@@ -1,6 +1,7 @@
 export interface AbortableFetch {
   response: Promise<Response>;
   json: () => Promise<any>;
+  text: () => Promise<any>;
   none: () => Promise<void>;
   abort: () => void;
 }
@@ -20,6 +21,15 @@ export function abortableFetch(
     json: async () => {
       const res = await response;
       const data = await res.json();
+      if (!res.ok) {
+        throw data;
+      }
+
+      return data;
+    },
+    text: async () => {
+      const res = await response;
+      const data = await res.text();
       if (!res.ok) {
         throw data;
       }

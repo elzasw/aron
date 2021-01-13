@@ -1,0 +1,82 @@
+# Konfigurace fazet a dialogu pro jejich zobrazeni
+# 
+# Každá fazeta se skládá z volitelné podmínky when, 
+# která určuje, kdy se fazeta zobrazí a vlastní definice
+# fazety.
+#
+# Podmínka when je vázána na typ apu a případně na sadu
+# prvků popisu a jejich hodnot vybraných v jiných fazetách.
+# Toto umožňuje zobrazit fazetu například pro určitý druh 
+# archiválie.
+#
+# Fazeta má definován typ (type). Dostupné typy fazet jsou:
+# - FULLTEXT - jednoduchý filter na textovou hodnotu
+# - ENUM - výběr z 0..n výčtových hodnot, funguje jako OR
+# - MULTI_REF - odkaz na více archivních entit, výběr pomocí našeptávače, funguje jako OR
+# - UNITDATE - datace, výběr z připravených intervalů nebo ruční zadání
+# - MULTI_REF_EXT - odkaz na více archivních entit, výběr pomocí našeptávače, funguje jako OR, 
+#   kombinace s podřízenými podmínkami, musí platit ve stejném partu
+#
+facets:
+  # Nazev AS
+  # Zdroj je text
+  - when:
+      apuType: FUND
+    # Druh fazety
+    type: FULLTEXT
+    # zdrojovy itemtype
+    source: NAME
+    # Kdy se zobrazi
+    display: ALWAYS
+    #ALWAYS | DETAIL
+    # Pokud bude nutne specializovat
+    #   title: Název AS ??
+
+  # Archiv kam patri AS
+  # je jich malo
+  - when:
+      apuType: FUND
+    # Druh fazety
+    # Lze mit vice vybranych polozke (OR)
+    type: ENUM
+    # zdrojovy itemtype
+    source: INST_REF
+    # Max pocet zobrazenych itemu
+    maxItems: 5
+  # Puvodce AS
+  # Zdroj je odkaz na APU
+  - when:
+      apuType: FUND
+    # Druh fazety
+    # Výběr více odkazovaných APU, funguje jako OR
+    type: MULTI_REF
+    # zdrojovy itemtype
+    source: ORIGINATOR_REF
+  - when:
+      apuType: FUND
+    # Druh fazety
+    type: UNITDATE
+    # zdrojovy itemtype
+    source: UNIT_DATE
+    intervals:
+       - from: 1801-01-01 00:00:00
+         fromText: 1801
+         to: 1900-12-31 23:59:59
+         toText: 1900
+       - from: 1901-01-01 00:00:00
+         fromText: 1901
+         to: 2000-12-31 23:59:59
+         toText: 2000
+
+  - when:
+      apuType: ENTITY
+    # Druh fazety
+    type: MULTI_REF_EXT
+    # zdrojovy itemtype
+    source: AP_REF
+    facets:
+      - type: ENUM
+        # zdrojovy itemtype
+        source: NEJAKY_TYP_S_ENUM
+        # Max pocet zobrazenych itemu
+        maxItems: 5

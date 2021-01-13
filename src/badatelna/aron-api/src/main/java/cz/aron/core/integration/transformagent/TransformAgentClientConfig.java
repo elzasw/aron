@@ -1,5 +1,6 @@
 package cz.aron.core.integration.transformagent;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
@@ -9,6 +10,10 @@ import org.springframework.oxm.jaxb.Jaxb2Marshaller;
  */
 @Configuration
 public class TransformAgentClientConfig {
+
+    @Value("${transformation-agent-url}")
+    private String transformationAgentUrl;
+
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
@@ -16,9 +21,9 @@ public class TransformAgentClientConfig {
         return marshaller;
     }
     @Bean
-    public TransformAgentClient countryClient(Jaxb2Marshaller marshaller) {
+    public TransformAgentClient transformAgentClient(Jaxb2Marshaller marshaller) {
         TransformAgentClient client = new TransformAgentClient();
-        client.setDefaultUri("http://www.aron.cz/transform-agent/v1/SamplePortSOAP");
+        client.setDefaultUri(transformationAgentUrl);
         client.setMarshaller(marshaller);
         client.setUnmarshaller(marshaller);
         return client;

@@ -76,7 +76,8 @@ public class AnnotationUtils {
                 ViewableImplement.class,
                 ViewableImplements.class,
                 ViewableAnnotation.class,
-                ViewableAnnotations.class
+                ViewableAnnotations.class,
+                ViewableLeaf.class
         );
 
         Stream<String> primaryNames = annotations.

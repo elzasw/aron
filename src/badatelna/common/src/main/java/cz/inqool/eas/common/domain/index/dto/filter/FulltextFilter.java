@@ -2,7 +2,6 @@ package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +32,6 @@ public class FulltextFilter extends AbstractFilter {
         super(FilterOperation.FTX);
     }
 
-    @Builder
     public FulltextFilter(@NotBlank String value) {
         super(FilterOperation.FTX);
         this.value = value;

@@ -26,7 +26,7 @@ public final class FilterOperation {
     /** Fulltext */
     public static final String FTX = "FTX";
 
-    /** All non-fulltext fields */
+    /** Match with any keyword field */
     public static final String AKF = "AKF";
 
     /** Fulltext field */

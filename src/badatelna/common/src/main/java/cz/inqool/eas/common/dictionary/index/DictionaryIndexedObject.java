@@ -44,10 +44,10 @@ abstract public class DictionaryIndexedObject<ROOT extends Dictionary<ROOT>, PRO
     @Field(type = FieldType.Boolean)
     protected boolean active;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     protected Instant validFrom;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     protected Instant validTo;
 
     @Field(type = FieldType.Integer)

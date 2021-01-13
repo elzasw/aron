@@ -58,6 +58,10 @@ export function useNavigation() {
   const promptConfirm = useEventCallback(() => {
     const callback = callbackRef.current!;
     callbackRef.current = undefined;
+
+    prompts.forEach(
+      (prompt) => prompt.clearCallback !== undefined && prompt.clearCallback()
+    );
     setPrompts([]);
     callback();
   });

@@ -13,12 +13,15 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Pair;
 import cz.inqool.entityviews.model.*;
-import cz.inqool.entityviews.model.type.TypeModel;
-import cz.inqool.entityviews.model.type.TemplateModel;
+import cz.inqool.entityviews.model.annotation.*;
 import cz.inqool.entityviews.model.type.RealTypeModel;
+import cz.inqool.entityviews.model.type.TemplateModel;
+import cz.inqool.entityviews.model.type.TypeModel;
 
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import java.util.*;
@@ -48,9 +51,11 @@ public class ModelParser {
         Map<String, ViewContext> viewsMappings = parseViewsMapping(clazz, superClass);
 
         boolean isAbstract = clazz.getModifiers().contains(Modifier.ABSTRACT);
+        RealTypeModel leafClass = findLeafClass(clazz);
+        RealTypeModel[] leafSubclasses = findLeafSubclasses(clazz);
 
-        ClassModel classModel = new ClassModel(type, superClass, implementModels, isAbstract, views, generateRef,
-                viewsMappings, annotations, fields, methods);
+        ClassModel classModel = new ClassModel(type, superClass, leafClass, leafSubclasses, implementModels, isAbstract, views,
+                generateRef, viewsMappings, annotations, fields, methods);
 
         Arrays.stream(methods).forEach(method -> method.setParent(classModel));
 
@@ -66,6 +71,46 @@ public class ModelParser {
         } else {
             return null;
         }
+    }
+
+    private RealTypeModel findLeafClass(ClassSymbol clazz) {
+        Type.ClassType type = (Type.ClassType) clazz.type;
+        while (true) {
+            ViewableLeaf viewableLeaf = AnnotationUtils.getAnnotation(type.tsym, ViewableLeaf.class);
+            if (viewableLeaf != null) {
+                return parseRealType(type);
+            }
+
+            if (type.supertype_field instanceof Type.ClassType) {
+                type = (Type.ClassType) type.supertype_field;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private RealTypeModel[] findLeafSubclasses(ClassSymbol clazz) {
+        Type.ClassType type = (Type.ClassType) clazz.type;
+        ViewableLeaf viewableLeaf = AnnotationUtils.getAnnotation(type.tsym, ViewableLeaf.class);
+        if (viewableLeaf != null) {
+            List<RealTypeModel> subClassTypeModels = new ArrayList<>();
+
+            try {
+                viewableLeaf.subClasses();
+            } catch (MirroredTypesException ex) {
+                for (TypeMirror mirror : ex.getTypeMirrors()) {
+                    try {
+                        RealTypeModel typeModel = parseRealType(((Type) mirror).tsym.type);
+                        subClassTypeModels.add(typeModel);
+                    } catch (MirroredTypesException ignored) {
+                    }
+                }
+            }
+
+            return subClassTypeModels.toArray(RealTypeModel[]::new);
+        }
+
+        return null;
     }
 
     private ImplementModel[] extractInterfaces(ClassSymbol clazz) {
@@ -196,7 +241,6 @@ public class ModelParser {
     private AnnotationModel parseAnnotation(Attribute.Compound annotation, String[] views) {
         TypeModel type = parseType(annotation.type);
 
-
         HashMap<String, Object> attributes = new LinkedHashMap<>();
         for(Pair<Symbol.MethodSymbol, Attribute> pair : annotation.values) {
             String attrName = pair.fst.name.toString();
@@ -213,7 +257,33 @@ public class ModelParser {
             attributes.put(attrName, attrValue);
         }
 
-        return new AnnotationModel(type, attributes, views);
+        return createAnnotationModel(type, annotation, attributes, views);
+    }
+
+    private AnnotationModel createAnnotationModel(TypeModel typeModel, Attribute.Compound annotation, Map<String, Object> attributes, String[] views) {
+        if (typeModel instanceof RealTypeModel) {
+            RealTypeModel realTypeModel = (RealTypeModel) typeModel;
+
+            Map<Symbol.MethodSymbol, Attribute> elementValues = elementUtils.getElementValuesWithDefaults(annotation);
+
+            if (realTypeModel.getPackageName().equals("com.fasterxml.jackson.annotation") && realTypeModel.getClassName().equals("JsonSubTypes.Type")) {
+                return JsonSubTypesTypeAnnotationModel.of(typeModel, attributes, elementValues, views);
+            }
+            if (realTypeModel.getPackageName().equals("io.swagger.v3.oas.annotations.media") && realTypeModel.getClassName().equals("DiscriminatorMapping")) {
+                return SwaggerDiscriminatorMappingAnnotationModel.of(typeModel, attributes, elementValues, views);
+            }
+            if (realTypeModel.getPackageName().equals("io.swagger.v3.oas.annotations.media") && realTypeModel.getClassName().equals("Schema")) {
+                return SwaggerSchemaAnnotationModel.of(typeModel, attributes, elementValues, views);
+            }
+            if (realTypeModel.getPackageName().equals("javax.persistence") && realTypeModel.getClassName().equals("ManyToOne")) {
+                return HibernateManyToOneAnnotationModel.of(typeModel, attributes, elementValues, views);
+            }
+            if (realTypeModel.getPackageName().equals("javax.persistence") && realTypeModel.getClassName().equals("OneToMany")) {
+                return HibernateOneToManyAnnotationModel.of(typeModel, attributes, elementValues, views);
+            }
+        }
+
+        return new AnnotationModel(typeModel, attributes, views);
     }
 
     private AnnotationArrayModel parseAnnotationArray(Attribute.Array array) {
@@ -283,7 +353,7 @@ public class ModelParser {
         Symbol.TypeSymbol symbol = type.tsym;
 
         String packageName = symbol.packge().fullname.toString();
-        String className = symbol.name.toString();
+        String className = getEnclosingClassName(symbol);
 
         if (Objects.equals(packageName, "")) {
             packageName = null;
@@ -296,6 +366,15 @@ public class ModelParser {
 
 
         return new RealTypeModel(packageName, className, arguments);
+    }
+
+    private String getEnclosingClassName(Symbol.TypeSymbol symbol) {
+        String enclosingPath = "";
+        if (symbol.getEnclosingElement() instanceof ClassSymbol) {
+            enclosingPath = getEnclosingClassName((Symbol.TypeSymbol) symbol.getEnclosingElement()) + ".";
+        }
+
+        return enclosingPath + symbol.name.toString();
     }
 
     private MethodModel[] extractMethods(ClassSymbol clazz) {
@@ -315,7 +394,10 @@ public class ModelParser {
         String[] modifiers = parseModifiers(method.getModifiers());
 
         JCTree.JCMethodDecl tree = getMethodDecl(method);
-        String content = tree.getBody().toString();
+        String content = null;
+        if (tree.getBody() != null) { // omit when abstract method
+            content = tree.getBody().toString();
+        }
         TypeModel type = parseType(method.getReturnType());
         ParamModel[] params = parseMethodParameters(method);
 
@@ -393,6 +475,9 @@ public class ModelParser {
         }
         if (modifiers.contains(Modifier.FINAL)) {
             modelModifiers.add("final");
+        }
+        if (modifiers.contains(Modifier.ABSTRACT)) {
+            modelModifiers.add("abstract");
         }
 
         return modelModifiers.toArray(String[]::new);

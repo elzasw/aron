@@ -1,6 +1,7 @@
 package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
+import cz.inqool.eas.common.domain.index.reindex.reference.IndexReferenceField;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
@@ -12,27 +13,29 @@ import java.util.Set;
  */
 public class IndexFieldInnerNode extends IndexFieldNode {
 
-    private final Field mainField;
+    private final IndexedFieldProps mainField;
 
     private Set<IndexFieldNode> children = Set.of();
 
+    public IndexFieldInnerNode(Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field javaField, Field mainField, IndexFieldInnerNode parent) {
+        super(rootClass, javaField, parent);
+        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.fielddata());
+    }
 
-    public IndexFieldInnerNode(Class<? extends DomainIndexed<?, ?>> rootClass, String javaFieldName, Field mainField, IndexFieldInnerNode parent) {
-        super(rootClass, javaFieldName, parent);
+    /**
+     * Used when indexed field does not really exist in Indexed object, but is added dynamically
+     */
+    public IndexFieldInnerNode(Class<? extends DomainIndexed<?, ?>> rootClass, String javaFieldName, Class<?> javaFieldClass, IndexedFieldProps mainField, IndexFieldInnerNode parent, Set<IndexReferenceField> indexReferenceFields) {
+        super(rootClass, javaFieldName, javaFieldClass, parent, indexReferenceFields);
         this.mainField = mainField;
     }
 
-
-    public Field getMainField() {
-        return mainField;
-    }
-
     public FieldType getType() {
-        return mainField.type();
+        return mainField.getFieldType();
     }
 
     public boolean isIndexed() {
-        return mainField.index();
+        return mainField.isIndexed();
     }
 
     void addChild(IndexFieldNode child) {

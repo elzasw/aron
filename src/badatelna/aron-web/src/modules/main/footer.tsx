@@ -1,9 +1,11 @@
 import React from 'react';
 import classNames from 'classnames';
+import { FormattedMessage } from 'react-intl';
 
 import { AppTitle } from '../../components';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
+import { Message } from '../../enums';
 
 export const Footer: React.FC = () => {
   const classes = useStyles();
@@ -26,14 +28,15 @@ export const Footer: React.FC = () => {
           <div className={layoutClasses.flex}>
             {[
               {
-                title: 'Základní informace',
+                title: Message.BASIC_INFORMATION,
                 content: [
-                  'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nam quis nulla. Aliquam erat volutpat. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nulla non lectus sed nisl molestie malesuada. Donec ipsum massa, ullamcorper in, auctor et, scelerisque sed, est.',
+                  'Archiv Online je webová aplikace Státního oblastního archivu v Zámrsku sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů. Do tohoto systému bude třeba převést přes deset tisíc starších archivních pomůcek a zhruba šest milionů již dříve pořízených snímků, a to včetně ošetření ochrany osobních údajů a dalších práv. Postupně budou tvořeny nové pomůcky, nové digitalizáty a přístupové body (zjednodušeně řečeno „rejstříková hesla“).',
+                  'Vzhledem k tomu, že na tuto činnost nemá archiv žádné specializované pracoviště ani pracovní síly, musí ji vykonávat archiváři vedle svých dalších povinností v podobě kontrolní činnosti u původců, skartačních řízení, výběru archiválií, obsluhy badatelen, odpovědí na badatelské dotazy atd. Věc tedy nepůjde tak rychle, jak bychom sami chtěli, budeme se však snažit maximálně zúročit naše nové technické prostředky a postupně zlepšovat služby veřejnosti.',
                 ],
               },
               {
-                title: 'Kontakt',
-                content: ['info@archivonline.cz', '+420 777 888 999'],
+                title: Message.CONTACT,
+                content: ['webmaster@ahapa.cz'],
               },
             ].map(({ title, content }) => (
               <div
@@ -46,10 +49,10 @@ export const Footer: React.FC = () => {
                 <p
                   className={classNames(
                     classes.mainFooterTitle,
-                    spacingClasses.marginSmall,
+                    spacingClasses.marginSmall
                   )}
                 >
-                  {title}
+                  <FormattedMessage id={title} />
                 </p>
                 {content.map((c) => (
                   <p

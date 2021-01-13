@@ -14,6 +14,7 @@ import { DetailContext } from './detail-context';
 import { useStyles } from './detail-styles';
 import { Form } from 'composite/form/form';
 import { FormPanel } from 'composite/form/fields/form-panel';
+import { FormattedMessage } from 'react-intl';
 
 // eslint-disable-next-line react/display-name
 export const Detail = memo(
@@ -53,7 +54,14 @@ export const Detail = memo(
               <ContainerComponent>
                 <FieldsComponent />
                 {GeneralFieldsComponent !== undefined && (
-                  <FormPanel label="Obecné">
+                  <FormPanel
+                    label={
+                      <FormattedMessage
+                        id="EAS_DETAIL_TITLE"
+                        defaultMessage="Obecné"
+                      />
+                    }
+                  >
                     <GeneralFieldsComponent />
                   </FormPanel>
                 )}

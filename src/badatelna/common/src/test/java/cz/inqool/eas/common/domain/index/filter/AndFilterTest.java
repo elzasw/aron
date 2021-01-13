@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class AndFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new AndFilter(
                 new EqFilter(IndexFields.shortString, entity_1.getShortString()),
                 new EqFilter(IndexFields.integerObject, entity_1.getIntegerObject().toString())
@@ -38,7 +38,7 @@ class AndFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new AndFilter(
@@ -77,7 +77,7 @@ class AndFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"AND\",\r\n" +
                 "  \"filters\" : [ {\r\n" +
@@ -103,7 +103,7 @@ class AndFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

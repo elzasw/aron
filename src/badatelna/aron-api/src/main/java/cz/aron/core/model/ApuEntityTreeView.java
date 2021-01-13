@@ -22,6 +22,7 @@ import java.util.List;
 @BatchSize(size = 100)
 public class ApuEntityTreeView extends DomainObject<ApuEntityTreeView> {
     private String name;
+    private int order;
 
     @Enumerated(EnumType.STRING)
     private ApuType type;
@@ -34,5 +35,6 @@ public class ApuEntityTreeView extends DomainObject<ApuEntityTreeView> {
     @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER)
     @Fetch(FetchMode.SELECT)
     @BatchSize(size = 100)
+    @OrderBy("order")
     private List<ApuEntityTreeView> children = new ArrayList<>();
 }

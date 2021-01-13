@@ -1,7 +1,12 @@
 package cz.inqool.eas.common.security;
 
+import cz.inqool.eas.common.alog.event.EventBuilder;
+import cz.inqool.eas.common.alog.event.EventService;
+import cz.inqool.eas.common.authored.user.UserReference;
+import cz.inqool.eas.common.security.internal.RedirectStrategy;
+import cz.inqool.eas.common.security.personal.PersonalEventService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -9,25 +14,71 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Slf4j
 @Order(50)
-@Configuration
-public class LogoutConfiguration extends WebSecurityConfigurerAdapter {
+public abstract class LogoutConfiguration extends WebSecurityConfigurerAdapter {
+    private PersonalEventService personalEventService;
+
+    private EventService eventService;
+
+    private EventBuilder eventBuilder;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        RedirectStrategy redirectStrategy = new RedirectStrategy();
+        redirectStrategy.setContextRelative(true);
+
         http
-                .requestMatcher(new AntPathRequestMatcher("/logout"))
+                .requestMatcher(new AntPathRequestMatcher(getLogoutUrl()))
                 .csrf().disable()
                 .authorizeRequests().anyRequest().permitAll().and()
-                .logout().defaultLogoutSuccessHandlerFor((request, response, authentication) -> {
-                    if (authentication != null) {
-                        Object principal = authentication.getPrincipal();
+                .logout()
+                    .logoutSuccessHandler((request, response, authentication) -> {
+                            if (authentication != null) {
+                                Object principal = authentication.getPrincipal();
+                                authentication.setAuthenticated(false);
 
-                        if (principal instanceof User) {
-                            User user = (User) principal;
-                            log.info("{} has logout.", user);
-                        }
-                    }
-                }, new AntPathRequestMatcher("/logout"));
+                                if (principal instanceof User) {
+                                    User user = (User) principal;
+                                    log.info("{} has logout.", user);
 
+                                    request.getSession().setAttribute("EAS_INVALID", true);
 
+                                    if (personalEventService != null) {
+                                        if (request.getParameterMap().containsKey("automatic")) {
+                                            personalEventService.saveLogoutAutomaticEvent(new UserReference(user.getId(), user.getName()));
+                                        } else {
+                                            personalEventService.saveLogoutEvent(new UserReference(user.getId(), user.getName()));
+                                        }
+                                    }
+                                    if (eventService != null) {
+                                        if (request.getParameterMap().containsKey("automatic")) {
+                                            eventService.create(eventBuilder.logoutAutomatic(user));
+                                        } else {
+                                            eventService.create(eventBuilder.logout(user));
+                                        }
+
+                                    }
+                                }
+                            }
+
+                            redirectStrategy.sendRedirect(request, response, getSuccessRedirectUrl());
+                    });
     }
+
+    @Autowired(required = false)
+    public void setPersonalEventService(PersonalEventService personalEventService) {
+        this.personalEventService = personalEventService;
+    }
+
+    @Autowired(required = false)
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @Autowired(required = false)
+    public void setEventBuilder(EventBuilder eventBuilder) {
+        this.eventBuilder = eventBuilder;
+    }
+
+    protected abstract String getLogoutUrl();
+    protected abstract String getSuccessRedirectUrl();
 }

@@ -14,7 +14,13 @@ export const useStyles = makeStyles(() => ({
     color: '#333',
     display: 'flex',
     justifyContent: 'flex-end',
-    marginRight: 8,
+  },
+  labelError: {
+    color: '#CD5360',
+  },
+  labelText: {
+    textAlign: 'right',
+    lineHeight: '22px',
   },
   labelDisabled: {
     color: '#333 !important',
@@ -24,5 +30,14 @@ export const useStyles = makeStyles(() => ({
   },
   labelItalic: {
     fontStyle: 'italic',
+  },
+  boxRoot: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginRight: '8px',
+  },
+  boxError: {
+    color: '#CD5360',
   },
 }));

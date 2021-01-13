@@ -7,7 +7,7 @@ import { useColumns } from './sequences-columns';
 import { useValidationSchema } from './sequences-schema';
 import { Sequence } from './sequences-types';
 
-export function sequencesFactory(url: string) {
+export function sequencesFactory(url: string, reportTag: string) {
   return function Sequences() {
     const validationSchema = useValidationSchema();
 
@@ -24,6 +24,7 @@ export function sequencesFactory(url: string) {
             defaultMessage="Číselné řady"
           />
         ),
+        reportTag,
       },
       detailProps: {
         FieldsComponent: SequencesFields,

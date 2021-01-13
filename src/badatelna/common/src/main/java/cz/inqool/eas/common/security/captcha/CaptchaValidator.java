@@ -12,14 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestOperations;
+import org.springframework.web.client.RestTemplate;
 
 
 @Slf4j
 public class CaptchaValidator {
     protected CaptchaAttemptService captchaAttemptService;
-
-    protected RestOperations restTemplate;
 
     protected String secretKey;
 
@@ -40,6 +38,7 @@ public class CaptchaValidator {
 
         final URI verifyUri = URI.create(String.format(RECAPTCHA_URL_TEMPLATE, secretKey, captcha, getClientIP(request)));
         try {
+            RestTemplate restTemplate = new RestTemplate();
             final GoogleResponse googleResponse = restTemplate.getForObject(verifyUri, GoogleResponse.class);
             log.debug("Google's captcha: {} ", googleResponse.toString());
 
@@ -82,10 +81,5 @@ public class CaptchaValidator {
     @Autowired
     public void setCaptchaAttemptService(CaptchaAttemptService captchaAttemptService) {
         this.captchaAttemptService = captchaAttemptService;
-    }
-
-    @Autowired
-    public void setRestTemplate(RestOperations restTemplate) {
-        this.restTemplate = restTemplate;
     }
 }

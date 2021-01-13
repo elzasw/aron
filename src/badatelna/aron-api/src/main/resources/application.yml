@@ -60,17 +60,24 @@ syslog:
   hostName: localhost
   appName: aron
 
+transformation-agent-url:  "http://www.aron.cz/transform-agent/v1/SamplePortSOAP"
+
+tile:
+  folder: /opt/aron/tiles
+  format: jpg
+
 files:
   storage: /opt/aron/fileStorage
   transfer:
     path: /tmp/aronFileTransfer
 
-tile:
-  tmp: /tmp/aronTile
-#  gm: "D:/ProgramsEternal/DCAP/vm2/graphicsmagick-1.3.20-q8"
-  folder: /opt/aron/tiles
-  size: 512
-  format: jpg
-
 news:
   file: "./news.json"
+
+favoriteQueries:
+  file: "./favoriteQueries.yaml"
+
+facet-config: "classpath:/search-config.yaml"
+types-config: "classpath:/types.yaml"
+
+environment: docker

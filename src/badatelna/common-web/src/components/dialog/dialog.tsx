@@ -6,7 +6,7 @@ import React, {
 } from 'react';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { FormattedMessage } from 'react-intl';
-import { noop } from 'lodash';
+import { noop, stubTrue } from 'lodash';
 import MuiDialogActions from '@material-ui/core/DialogActions';
 import MuiDialogContent from '@material-ui/core/DialogContent';
 import MuiDialog from '@material-ui/core/Dialog';
@@ -23,9 +23,10 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
   {
     title,
     children,
-    onConfirm,
+    onConfirm = stubTrue,
     onCancel = noop,
     onShow = noop,
+    onShown = noop,
     showConfirm = true,
     confirmLabel,
     showClose = true,
@@ -40,6 +41,11 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
 
   const open = useEventCallback(() => {
     onShow();
+
+    requestAnimationFrame(() => {
+      onShown();
+    });
+
     setOpened(true);
   });
   const close = useEventCallback(() => setOpened(false));
@@ -101,6 +107,10 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
               onClick={handleConfirm}
               variant="outlined"
               color="primary"
+              disabled={loading}
+              startIcon={
+                loading && <CircularProgress size="20px" color="inherit" />
+              }
             >
               <Typography classes={{ root: classes.buttonLabel }}>
                 {confirmLabel ?? (
@@ -113,13 +123,13 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
             </Button>
           )}
 
+          {actions}
+
           {showClose && (
             <Button
               variant="outlined"
               onClick={handleCancel}
-              startIcon={
-                loading && <CircularProgress size="20px" color="inherit" />
-              }
+              disabled={loading}
             >
               <Typography classes={{ root: classes.buttonLabel }}>
                 {closeLabel ?? (
@@ -131,8 +141,6 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
               </Typography>
             </Button>
           )}
-
-          {actions}
         </ButtonGroup>
       </MuiDialogActions>
     </MuiDialog>

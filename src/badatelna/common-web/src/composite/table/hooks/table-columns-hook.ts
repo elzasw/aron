@@ -1,25 +1,48 @@
-import { useState, useRef, useMemo, ComponentType } from 'react';
+import { useState, useRef, useMemo, ComponentType, useContext } from 'react';
+import { UserSettingsContext } from 'common/settings/user/user-settings-context';
+import { TableSettings } from 'common/settings/user/user-settings-types';
+import { DialogHandle } from 'components/dialog/dialog-types';
 import { useEventCallback } from 'utils/event-callback-hook';
+import { useUpdateEffect } from 'utils/update-effect';
 import {
   TableColumnState,
   TableColumn,
   TableColumnAlign,
 } from '../table-types';
-import { DialogHandle } from 'components/dialog/dialog-types';
 import { NumberCell } from '../cells/number-cell';
 import { BooleanCell } from '../cells/boolean-cell';
 
 export function useTableColumns<OBJECT>({
+  tableId,
+  version,
   columns: providedColumns,
 }: {
+  tableId: string;
+  version: number;
   columns: TableColumn<OBJECT>[];
 }) {
   const columns = useMemo(() => addDefaults(providedColumns), [
     providedColumns,
   ]);
 
+  const { getTableSettings, setTableSettings } = useContext(
+    UserSettingsContext
+  );
+
+  let settings: TableSettings | undefined;
+  const defaultColumnsState = deriveColumnsState(columns);
+  let initColumnsState: TableColumnState[] = defaultColumnsState;
+
+  if (tableId !== '') {
+    settings = getTableSettings(tableId, version);
+
+    if (settings?.columnsState !== undefined) {
+      initColumnsState = settings?.columnsState;
+    }
+  }
+
   const [columnsState, setColumnsState] = useState<TableColumnState[]>(
-    deriveColumnsState(columns)
+    initColumnsState
   );
 
   const columnDialogRef = useRef<DialogHandle>(null);
@@ -45,8 +68,21 @@ export function useTableColumns<OBJECT>({
     [columns, columnsState]
   );
 
+  /**
+   * Updates user settings.
+   */
+  useUpdateEffect(() => {
+    const newSettings: TableSettings = {
+      ...(settings ?? {}),
+      columnsState,
+      version,
+    };
+    setTableSettings(tableId, newSettings);
+  }, [columnsState]);
+
   return {
     columnsState,
+    defaultColumnsState,
     filteredColumns,
     setColumnsState,
     columnDialogRef,

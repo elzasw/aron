@@ -1,37 +1,23 @@
 package cz.inqool.eas.common.domain.index.dto.params;
 
 /**
- * Enum constants for search request modification. Can be used to specify to return items in a special state.
+ * Constants for search request modification. Can be used to specify to return items in a special state. Subprojects
+ * can extend this class to add their own constants.
  */
-public enum Include {
+public class Include {
 
     /**
      * Return deleted items
      */
-    DELETED,
-
-    /**
-     * Return replaced items (in case of dictionaries)
-     */
-    REPLACED,
-
-    /**
-     * Return duplicate items (in case of dictionaries)
-     */
-    DUPLICATES,
+    public static final String DELETED = "DELETED";
 
     /**
      * Return deactivated items (in case of dictionaries)
      */
-    DEACTIVATED,
+    public static final String DEACTIVATED = "DEACTIVATED";
 
     /**
      * Return items with invalid {@code validFrom} and/or {@code validTo} values (in case of dictionaries)
      */
-    INVALID,
-
-    /**
-     * Return items even from other institutions
-     */
-    OTHER_INSTITUTION
+    public static final String INVALID = "INVALID";
 }

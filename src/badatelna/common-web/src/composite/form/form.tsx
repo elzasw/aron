@@ -1,5 +1,4 @@
 import React, {
-  PropsWithChildren,
   useRef,
   useImperativeHandle,
   useMemo,
@@ -8,10 +7,15 @@ import React, {
   Ref,
   ReactElement,
   RefAttributes,
+  ReactNode,
+  useContext,
+  useState,
 } from 'react';
-import { reduce, merge } from 'lodash';
+import { v4 as uuidv4 } from 'uuid';
+import { reduce, merge, isFunction } from 'lodash';
 import { Formik, FormikProps, yupToFormErrors } from 'formik';
 import Grid from '@material-ui/core/Grid';
+import Portal from '@material-ui/core/Portal';
 import { FormProps, FormHandle, ValidationError } from './form-types';
 import { useSubscriptionContext } from './selectors/selector';
 import { Subscriber } from './selectors/subscriber';
@@ -19,14 +23,26 @@ import { SubscriptionContext } from './selectors/subscription-context';
 import { FormContext } from './form-context';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { useStyles } from './form-styles';
+import { FormAnchorContext } from './form-anchor-context';
+
+type ChildrenProps<DATA> =
+  | ((props: FormikProps<DATA> & { formId: string }) => ReactNode)
+  | ReactNode;
 
 // eslint-disable-next-line react/display-name
 export const Form = memo(
   forwardRef(function Form<DATA>(
-    props: PropsWithChildren<FormProps<DATA>>,
+    props: FormProps<DATA> & {
+      children?: ChildrenProps<DATA>;
+    },
     ref: Ref<FormHandle<DATA>>
   ) {
+    const formId = useRef(uuidv4());
+
     const propsRef = useRef<FormikProps<DATA>>();
+    const [errors, setErrors] = useState<ValidationError[]>([]);
+
+    const { formAnchorRef } = useContext(FormAnchorContext);
 
     const validateForm = useEventCallback(async () => {
       const values = propsRef.current!.values;
@@ -40,28 +56,38 @@ export const Form = memo(
             // settings: appSettings,
           },
         });
+
+        setErrors([]);
       } catch (e) {
         const yupErrors = yupToFormErrors<DATA>(e);
         const flattenedErrors = flattenObject(yupErrors);
 
-        return Object.keys(flattenedErrors).map((key) => {
+        const errors = Object.keys(flattenedErrors).map((key) => {
           const value = flattenedErrors[key];
-          const parsed = value.split('@@@', 3);
 
           return {
             key,
-            label: parsed[0],
-            value: parsed[1],
+            value,
           } as ValidationError;
         });
+
+        setErrors(errors);
+        return errors;
       }
 
       return [];
     });
 
+    const resetValidation = useEventCallback(() => {
+      setErrors([]);
+    });
+
     const context: FormContext<DATA> = useMemo(() => {
       return {
+        formId: formId.current,
         editing: props.editing,
+        errors,
+        setErrors,
         getFieldValues: () => propsRef.current!.values,
         setFieldValues: (values) => propsRef.current!.setValues(values),
         setFieldValue: (name, value) =>
@@ -69,8 +95,9 @@ export const Form = memo(
         submitForm: () => propsRef.current!.submitForm(),
         clearForm: () => propsRef.current?.resetForm(),
         validateForm,
+        resetValidation,
       };
-    }, [props.editing, validateForm]);
+    }, [props.editing, validateForm, resetValidation, errors]);
 
     useImperativeHandle(ref, () => context, [context]);
 
@@ -89,19 +116,28 @@ export const Form = memo(
             <FormContext.Provider value={context}>
               <SubscriptionContext.Provider value={subscriptionContext}>
                 <Subscriber fireSubscriptions={fireSubscriptions} />
-                <form
-                  className={classes.form}
-                  action={props.action}
-                  method={props.method}
-                  onReset={formikProps.handleReset}
-                  onSubmit={
-                    props.browserSubmit ? undefined : formikProps.handleSubmit
-                  }
-                >
+                {/* To prevent validateDOMNesting warning: <form> cannot appear as a descendant of <form> */}
+                <Portal container={formAnchorRef.current}>
+                  <form
+                    id={formId.current}
+                    action={props.action}
+                    method={props.method}
+                    onReset={formikProps.handleReset}
+                    onSubmit={
+                      props.browserSubmit ? undefined : formikProps.handleSubmit
+                    }
+                  />
+                </Portal>
+                <div className={classes.form}>
                   <Grid container spacing={0}>
-                    {props.children}
+                    {isFunction(props.children)
+                      ? props.children({
+                          ...formikProps,
+                          formId: formId.current,
+                        })
+                      : props.children}
                   </Grid>
-                </form>
+                </div>
               </SubscriptionContext.Provider>
             </FormContext.Provider>
           );
@@ -110,7 +146,9 @@ export const Form = memo(
     );
   })
 ) as <DATA>(
-  p: PropsWithChildren<FormProps<DATA>> & RefAttributes<FormHandle<DATA>>
+  p: FormProps<DATA> & {
+    children?: ChildrenProps<DATA>;
+  } & RefAttributes<FormHandle<DATA>>
 ) => ReactElement;
 
 /**

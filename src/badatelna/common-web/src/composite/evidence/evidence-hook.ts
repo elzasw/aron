@@ -9,14 +9,19 @@ import { TableHandle } from 'composite/table/table-types';
 import { DetailHandle } from 'composite/detail/detail-types';
 import { EvidenceProps, EvidenceStateAction } from './evidence-types';
 import { NavigationContext } from 'composite/navigation/navigation-context';
+import { useEvidenceItemRedirect } from './hook/item-redirect-hook';
 
 export function useEvidence<OBJECT extends DomainObject>({
   tableProps,
   detailProps,
   apiProps,
 }: EvidenceProps<OBJECT>) {
-  const tableSource = useScrollableSource<OBJECT>(apiProps.url + '/list');
-  const crudSource = useCrudSource<OBJECT>(apiProps.url);
+  useEvidenceItemRedirect();
+
+  const tableSource = useScrollableSource<OBJECT>({
+    url: apiProps.url + '/list',
+  });
+  const crudSource = useCrudSource<OBJECT>({ url: apiProps.url });
 
   const tableRef = useRef<TableHandle<OBJECT>>(null);
   const detailRef = useRef<DetailHandle<OBJECT>>(null);
@@ -39,6 +44,8 @@ export function useEvidence<OBJECT extends DomainObject>({
 
   const handleActiveRowChange = useEventCallback((id: string | null) => {
     detailRef.current?.setActive(id);
+
+    tableProps?.onActiveChange?.(id);
   });
 
   const [handleActiveRowChangeDebounced] = useDebouncedCallback(

@@ -15,11 +15,11 @@ import java.util.List;
 public class Person {
     @ViewableProperty(views = {"list"})
     @ViewableMapping(views = "list", mappedTo = "person_list")
-    @OneToMany(mappedBy = "person_id", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "person", fetch = FetchType.EAGER)
     public List<Address> addresses;
 
     @ViewableProperty(views = {"list"})
     @ViewableMapping(views = "list", mappedTo = "person_list", useOneWay = true)
-    @OneToMany(mappedBy = "person_id", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "person", fetch = FetchType.EAGER)
     public List<Passport> passports;
 }

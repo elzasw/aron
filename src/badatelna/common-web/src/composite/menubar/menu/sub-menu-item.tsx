@@ -20,14 +20,16 @@ export function SubMenuItem({
 }: SubmenuItemProps & MenubarClassOverrides) {
   const classes = useStyles();
 
-  const handleHover = useEventCallback(() => {
+  const handleMouseEnter = useEventCallback(() => {
     onHover(index);
   });
+
+  const keyShortcut = item.keyShortcutLabel ?? item.keyShortcut;
 
   return (
     <MuiMenuItem
       onClick={item.onClick}
-      onMouseEnter={handleHover}
+      onMouseEnter={handleMouseEnter}
       className={clsx(classOverrides?.subMenuItem)}
       classes={{ root: classes.subMenuItem }}
     >
@@ -51,7 +53,8 @@ export function SubMenuItem({
       <ListItemSecondaryAction
         className={clsx(classes.subMenuAction, classOverrides?.subMenuAction)}
       >
-        {item.keyShortcut && item.keyShortcut}
+        {keyShortcut && <span className={classes.shortcut}>{keyShortcut}</span>}
+
         {(item.items?.length ?? 0) > 0 && (
           <Icon
             className={clsx(classes.subMenuArrow, classOverrides?.subMenuArrow)}

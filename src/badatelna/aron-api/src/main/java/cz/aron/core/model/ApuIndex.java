@@ -6,6 +6,7 @@ import cz.inqool.eas.common.domain.index.DomainIndex;
 import cz.inqool.eas.common.domain.index.DynamicIndex;
 import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexFieldNode;
+import cz.inqool.eas.common.domain.index.field.IndexedFieldProps;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -14,6 +15,7 @@ import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import static org.springframework.data.elasticsearch.core.document.Document.parse;
@@ -73,11 +75,17 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
                 case UNITDATE:
                     dataType = "date";
                     break;
+                case LINK:
+                    dataType = "keyword";
+                    break;
                 default:
                     throw new RuntimeException("unknown type");
             }
             fieldProperties.put("type", dataType);
             customMapping.put(allItemType.getCode(), fieldProperties);
+            if (allItemType.getType() == DataType.APU_REF) {
+                customMapping.put(allItemType.getCode() + "~LABEL", fieldProperties);
+            }
         }
         return customMapping;
     }
@@ -87,42 +95,46 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
         Map<String, IndexFieldNode> dynamicFields = new HashMap<>();
         for (ItemType allItemType : typesHolder.getAllItemTypes()) {
             FieldType fieldType;
+            Class<?> javaType;
             switch (allItemType.getType()) {
                 case STRING:
                     fieldType = FieldType.Text;
+                    javaType = String.class;
                     break;
                 case ENUM:
+                case LINK:
+                case APU_REF:
                     fieldType = FieldType.Keyword;
+                    javaType = String.class;
                     break;
                 case INTEGER:
                     fieldType = FieldType.Integer;
-                    break;
-                case APU_REF:
-                    fieldType = FieldType.Keyword;
+                    javaType = Integer.class;
                     break;
                 case UNITDATE:
                     fieldType = FieldType.Date;
+                    javaType = String.class;
                     break;
                 default:
                     throw new RuntimeException("unknown type");
             }
-
-            FakeField field = new FakeField();
-            String fieldName = allItemType.getCode();
-            field.setName(fieldName);
-            field.setType(fieldType);
-            String elasticSearchPath = fieldName;
-            IndexFieldLeafNode indexFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, fieldName, field, null);
-            if (indexFieldLeafNode.getType() == FieldType.Text) {
-                try {
-                    java.lang.reflect.Field fulltext = indexFieldLeafNode.getClass().getDeclaredField("fulltext");
-                    fulltext.setAccessible(true);
-                    fulltext.setBoolean(indexFieldLeafNode, true);
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    throw new RuntimeException(e);
-                }
+            boolean fulltext = false;
+            if (fieldType == FieldType.Text) {
+                fulltext = true;
             }
-            dynamicFields.put(elasticSearchPath, indexFieldLeafNode);
+
+            String fieldName = allItemType.getCode();
+            IndexedFieldProps indexedFieldProps = new IndexedFieldProps(fieldType, true, false);
+
+            IndexFieldLeafNode indexFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, fieldName, javaType, indexedFieldProps, null, fulltext, 1.0f, new HashSet<>());
+            dynamicFields.put(fieldName, indexFieldLeafNode);
+
+            if (allItemType.getType() == DataType.APU_REF) {
+                String labelFieldName = fieldName + "~LABEL";
+                indexedFieldProps = new IndexedFieldProps(fieldType, true, false);
+                IndexFieldLeafNode indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, true, 1.0f, new HashSet<>());
+                dynamicFields.put(labelFieldName, indexLabelFieldLeafNode);
+            }
         }
         return dynamicFields;
     }

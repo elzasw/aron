@@ -4,7 +4,11 @@ import Draggable from 'react-draggable';
 
 export function DragablePaper(props: PaperProps) {
   return (
-    <Draggable cancel={'[class*="MuiDialogContent-root"]'}>
+    <Draggable
+      cancel={
+        '[class*="MuiDialogContent-root"], [class*="MuiDialogActions-root"]'
+      }
+    >
       <Paper {...props} />
     </Draggable>
   );

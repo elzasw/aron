@@ -10,10 +10,12 @@ import com.fasterxml.jackson.module.jsonSchema.JsonSchema;
 import com.fasterxml.jackson.module.jsonSchema.JsonSchemaGenerator;
 import com.fasterxml.jackson.module.jsonSchema.factories.VisitorContext;
 import com.fasterxml.jackson.module.jsonSchema.factories.WrapperFactory;
-import lombok.NonNull;
 import org.springframework.context.ApplicationContext;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import static cz.inqool.eas.common.exception.ExceptionUtils.checked;
 import static java.lang.String.format;
@@ -63,8 +65,20 @@ public class JsonUtils {
      * @param <T> Type of object
      * @return Object of provided type
      */
-    public static <T> T fromJsonString(@Nonnull String json, @Nonnull Class<T> type) {
+    public static <T> T fromJsonString(@NotNull String json, @NotNull Class<T> type) {
         return fromJsonString(json, typeFactory().constructType(type));
+    }
+
+    /**
+     * Converts JSON string to object using specified class.
+     *
+     * @param json JSON stream
+     * @param type Class to use
+     * @param <T> Type of object
+     * @return Object of provided type
+     */
+    public static <T> T fromJsonStream(@NotNull InputStream json, @NotNull Class<T> type) {
+        return fromJsonStream(json, typeFactory().constructType(type));
     }
 
     /**
@@ -75,11 +89,23 @@ public class JsonUtils {
      * @param <T> Type of object
      * @return Object of provided type
      */
-    public static <T> T fromJsonString(@Nonnull String json, @Nonnull TypeReference<T> type) {
+    public static <T> T fromJsonString(@NotNull String json, @NotNull TypeReference<T> type) {
         return fromJsonString(json, typeFactory().constructType(type));
     }
 
-    public static <T> T fromJsonString(@NonNull String json, @NonNull JavaType type) {
+    /**
+     * Converts JSON string to object using specified type reference.
+     *
+     * @param json JSON stream
+     * @param type Type reference to use
+     * @param <T> Type of object
+     * @return Object of provided type
+     */
+    public static <T> T fromJsonStream(@NotNull InputStream json, @NotNull TypeReference<T> type) {
+        return fromJsonStream(json, typeFactory().constructType(type));
+    }
+
+    public static <T> T fromJsonString(@NotNull String json, @NotNull JavaType type) {
         ensureObjectMapperInitialized();
 
         try {
@@ -89,11 +115,21 @@ public class JsonUtils {
         }
     }
 
-    public static <T> T fromJsonStringParametrized(@Nonnull String json, @Nonnull Class<T> parametrized, Class<?>... parameterTypes) {
+    public static <T> T fromJsonStream(@NotNull InputStream json, @NotNull JavaType type) {
+        ensureObjectMapperInitialized();
+
+        try {
+            return objectMapper.readValue(json, type);
+        } catch (IOException e) {
+            throw new RuntimeException(format("Failed to read JSON value as %s", type.getTypeName()), e);
+        }
+    }
+
+    public static <T> T fromJsonStringParametrized(@NotNull String json, @NotNull Class<T> parametrized, Class<?>... parameterTypes) {
         return fromJsonString(json, typeFactory().constructParametricType(parametrized, parameterTypes));
     }
 
-    public static <IN, OUT> OUT convert(IN input, @Nonnull Class<OUT> outputType) {
+    public static <IN, OUT> OUT convert(IN input, @NotNull Class<OUT> outputType) {
         ensureObjectMapperInitialized();
 
         try {
@@ -103,7 +139,7 @@ public class JsonUtils {
         }
     }
 
-    public static <IN, OUT> OUT convert(IN input, @Nonnull Class<OUT> outputType, Class<?>... parameterTypes) {
+    public static <IN, OUT> OUT convert(IN input, @NotNull Class<OUT> outputType, Class<?>... parameterTypes) {
         ensureObjectMapperInitialized();
 
         try {

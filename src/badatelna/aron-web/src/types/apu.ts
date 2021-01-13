@@ -1,15 +1,17 @@
-import { ApuPartItemDataType, ApuType } from '../enums';
+import { ApuPartItemDataType, ApuType, ApuPartViewType } from '../enums';
 import { Entity, LinkedEntity } from './basic';
+import { Dao } from './dao';
 
 export interface ApuEntity extends LinkedEntity {
   name: string;
   description: string;
   published: boolean;
   source: ApuSource;
+  type: ApuType;
   parent?: ApuEntity;
   parts?: ApuPart[];
   attachments?: ApuAttachment[];
-  type: ApuType;
+  digitalObjects?: Dao[];
 }
 
 export interface ApuPart extends Entity {
@@ -37,13 +39,18 @@ export interface ApuSource extends Entity {
 
 export interface ApuPartType extends Entity {
   code: string;
-  label: string;
-  order: number;
+  name: string;
+  viewType: ApuPartViewType;
 }
 
 export interface ApuPartItemType extends Entity {
   code: string;
-  label: string;
-  order: number;
-  dataType: ApuPartItemDataType;
+  name: string;
+  type: ApuPartItemDataType;
+}
+
+export interface ApuTree extends Entity {
+  name: string;
+  type: ApuType;
+  children: ApuTree[];
 }

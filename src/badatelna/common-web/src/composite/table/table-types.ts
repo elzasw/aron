@@ -2,6 +2,7 @@ import { ComponentType, ReactNode, RefAttributes } from 'react';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { ScrollableSource, Filter } from 'common/common-types';
 import { BulkAction } from './bulk-action-menu/bulk-action-types';
+import { ReportDialogProps } from 'composite/report-dialog/report-dialog-types';
 
 export interface TableToolbarProps {
   before?: ReactNode;
@@ -141,6 +142,13 @@ export interface TableColumn<OBJECT, FIELD = any> {
   filterable?: boolean;
 
   /**
+   * Is the column fixed. Can not be hidden.
+   *
+   * Default is false.
+   */
+  fixed?: boolean;
+
+  /**
    * React component for filtering.
    */
   FilterComponent?: ComponentType<FilterComponentProps>;
@@ -224,6 +232,13 @@ export interface TableToolbarButtonProps {
    * Default: false
    */
   primary?: boolean;
+
+  /**
+   * Use secondary color for the button.
+   *
+   * Default: false
+   */
+  secondary?: boolean;
 }
 
 export interface TableRowProps<OBJECT> {
@@ -244,6 +259,16 @@ export interface TableRowProps<OBJECT> {
 }
 
 export interface TableProps<OBJECT> {
+  /**
+   * Table ID used for settings storage.
+   */
+  tableId?: string;
+
+  /**
+   * Table version used for settings storage.
+   */
+  version?: number;
+
   /**
    * External data source.
    */
@@ -273,6 +298,13 @@ export interface TableProps<OBJECT> {
    * Custom column dialog component.
    */
   ColumnDialogComponent?: ComponentType<RefAttributes<DialogHandle>>;
+
+  /**
+   * Custom report dialog component.
+   */
+  ReportDialogComponent?: ComponentType<
+    ReportDialogProps & RefAttributes<DialogHandle>
+  >;
 
   /**
    * Custom filter dialog component.
@@ -322,14 +354,34 @@ export interface TableProps<OBJECT> {
   showBulkActionButton?: boolean;
 
   /**
+   * Show report button.
+   */
+  showReportButton?: boolean;
+
+  /**
+   * Show reset sorts button.
+   */
+  showResetSortsButton?: boolean;
+
+  /**
    * Show checkbox next to every row and in header.
    */
   showSelectBox?: boolean;
 
   /**
+   * Show searchbar component.
+   */
+  showSearchbar?: boolean;
+
+  /**
    * Bulk actions.
    */
   bulkActions?: BulkAction<any>[];
+
+  /**
+   * Report tag for location.
+   */
+  reportTag?: string | null;
 
   height?: number;
 
@@ -357,6 +409,11 @@ export interface TableHandle<OBJECT> {
   columnsState: TableColumnState[];
 
   /**
+   * Default columns states.
+   */
+  defaultColumnsState: TableColumnState[];
+
+  /**
    * Table is in read-only mode.
    */
   disabled: boolean;
@@ -382,6 +439,16 @@ export interface TableHandle<OBJECT> {
   disabledBulkActionButton: boolean;
 
   /**
+   * Disable reset sorts button.
+   */
+  disabledResetSortsButton: boolean;
+
+  /**
+   * Disable report action button.
+   */
+  disabledReportButton: boolean;
+
+  /**
    * Show refresh button.
    */
   showRefreshButton: boolean;
@@ -397,9 +464,19 @@ export interface TableHandle<OBJECT> {
   showFilterButton: boolean;
 
   /**
+   * Show report button.
+   */
+  showReportButton: boolean;
+
+  /**
    * Show bulk action button.
    */
   showBulkActionButton: boolean;
+
+  /**
+   * Show reset sorts action button.
+   */
+  showResetSortsButton: boolean;
 
   /**
    * Show checkbox next to every row and in header.
@@ -410,6 +487,11 @@ export interface TableHandle<OBJECT> {
    * Bulk actions.
    */
   bulkActions: BulkAction<any>[];
+
+  /**
+   * Tag for report location.
+   */
+  reportTag: string | null;
 
   /**
    * Number of loaded rows.
@@ -436,6 +518,8 @@ export interface TableHandle<OBJECT> {
 
   resetSelection: () => void;
 
+  activeRow: string | null;
+
   setActiveRow: (id: string | null) => void;
 
   setPrevRowActive: () => void;
@@ -451,6 +535,11 @@ export interface TableHandle<OBJECT> {
    * Opens column settings dialog.
    */
   openColumnDialog: () => void;
+
+  /**
+   * Opens report dialog.
+   */
+  openReportDialog: () => void;
 
   /**
    * Closes column settings dialog.
@@ -482,10 +571,17 @@ export interface TableHandle<OBJECT> {
    */
   toggleSortColumn: (datakey: string) => void;
 
+  searchQuery: string;
+
   /**
    * Debounced search query callback.
    */
   setSearchQuery: (q: string) => void;
+
+  /**
+   * Resets sorts to default
+   */
+  resetSorts: () => void;
 }
 
 export interface TableSort {

@@ -9,7 +9,7 @@ export function TextField({
   value,
   onChange,
   className,
-  variant,
+  variant = 'outlined',
   ...props
 }: Props) {
   const classes = useStyles();
@@ -22,9 +22,13 @@ export function TextField({
       {...{
         ...props,
         value,
-        variant: variant || 'outlined',
+        variant,
         onChange: handleChange,
-        className: classNames(classes.textField, className),
+        className: classNames(
+          classes.textField,
+          className,
+          variant === 'outlined' && classes.textFieldOutlined
+        ),
       }}
     />
   );

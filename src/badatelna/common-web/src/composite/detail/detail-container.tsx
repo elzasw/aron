@@ -2,14 +2,16 @@ import React, { ReactNode, useContext } from 'react';
 import Box from '@material-ui/core/Box';
 import { FormPanel } from 'composite/form/fields/form-panel';
 import { FormCustomField } from 'composite/form/fields/form-custom-field';
+import { FormContext } from 'composite/form/form-context';
 import { DetailContext } from './detail-context';
 
 export function DetailContainer({ children }: { children?: ReactNode }) {
-  const { errors } = useContext(DetailContext);
+  const { errors } = useContext(FormContext);
+  const { showErrorPanel } = useContext(DetailContext);
 
   return (
     <>
-      {errors.length > 0 && (
+      {showErrorPanel && errors.length > 0 && (
         <FormPanel
           label={
             <Box color="#CD5360" fontWeight="500">

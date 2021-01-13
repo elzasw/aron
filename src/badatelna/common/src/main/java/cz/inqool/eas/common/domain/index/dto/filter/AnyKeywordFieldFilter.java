@@ -44,7 +44,7 @@ public class AnyKeywordFieldFilter extends AbstractFilter {
         Map<String, Float> fields = indexedFields.values().stream()
                 .filter(indexField -> indexField instanceof IndexFieldLeafNode)
                 .map(indexField -> (IndexFieldLeafNode) indexField)
-                .filter(indexFieldLeafNode -> indexFieldLeafNode.getMainField().type() == FieldType.Keyword)
+                .filter(indexFieldLeafNode -> indexFieldLeafNode.getType() == FieldType.Keyword)
                 .collect(Collectors.toMap(IndexFieldLeafNode::getSearchable, IndexFieldLeafNode::getBoost));
 
         return QueryBuilders.multiMatchQuery(value)

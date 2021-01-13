@@ -9,6 +9,7 @@ import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.Entity;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 /**
  * @author Lukas Jane (inQool) 27.10.2020.
@@ -28,4 +29,8 @@ public class ApuPartItem extends DomainObject<ApuPartItem> {
     @Fetch(FetchMode.SELECT)
     @JsonIgnore
     private ApuPart apuPart;
+
+    @Transient
+    @JsonIgnore
+    private String targetLabel;   //for APU_REF types, we preload referred item's name here (before indexing)
 }

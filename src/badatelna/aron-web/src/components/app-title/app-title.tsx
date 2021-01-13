@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import classNames from 'classnames';
+import { FormattedMessage } from 'react-intl';
 
 import { NavigationContext } from '@eas/common-web';
 
-import { ModulePath } from '../../enums';
-import { Icon, IconType } from '..';
+import { ModulePath, IconType, Message } from '../../enums';
+import { Icon } from '..';
 import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles';
 
@@ -34,8 +35,11 @@ export function AppTitle() {
         color="#fff"
       />
       &nbsp;&nbsp;&nbsp;
-      <span className={classes.appTitleFirst}>Archiv</span>
-      &nbsp;Online
+      <span className={classes.appTitleFirst}>
+        <FormattedMessage id={Message.ARCHIVE} />
+      </span>
+      &nbsp;
+      <FormattedMessage id={Message.ONLINE} />
     </div>
   );
 }

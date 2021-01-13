@@ -11,7 +11,6 @@ import cz.inqool.eas.common.domain.index.dto.filter.Filter;
 import cz.inqool.eas.common.domain.index.dto.filter.LogicalFilter;
 import cz.inqool.eas.common.domain.index.dto.filter.custom.CustomFilterModel;
 import cz.inqool.eas.common.domain.index.dto.filter.custom.CustomFilterSpecificParameters;
-import cz.inqool.eas.common.domain.index.dto.sort.AbstractSort;
 import cz.inqool.eas.common.domain.index.dto.sort.Sort;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -111,7 +110,7 @@ public class Params {
      * Modifies the search to return items of specific state
      */
     @Schema(description = "Modifies the search to return items of specific state.")
-    protected Set<@NotNull Include> include = new LinkedHashSet<>();
+    protected Set<@NotNull String> include = new LinkedHashSet<>();
 
 
     public void setFields(String... fields) {
@@ -138,11 +137,17 @@ public class Params {
         this.filters.addAll(customLogicalFilters);
     }
 
-    public void addFilter(Filter filter) {
-        this.filters.add(filter);
+    /**
+     * Add given filters to filter list
+     */
+    public void addFilter(@NotNull Filter... filters) {
+        this.filters.addAll(List.of(filters));
     }
 
-    public void addSort(AbstractSort<?> sort) {
-        this.sort.add(sort);
+    /**
+     * Add given sortings to sorting list
+     */
+    public void addSort(@NotNull Sort<?>... sortings) {
+        this.sort.addAll(List.of(sortings));
     }
 }

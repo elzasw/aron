@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class NotNullFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new NotNullFilter(IndexFields.uuidId);
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -31,7 +31,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new NotNullFilter(IndexFields.uuidId)
@@ -58,7 +58,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"NOT_NULL\",\r\n" +
                 "  \"nestedQueryEnabled\" : true,\r\n" +
@@ -72,7 +72,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

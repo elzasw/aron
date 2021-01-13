@@ -1,14 +1,29 @@
 import React, { ComponentType } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { FormTextField } from 'composite/form/fields/form-text-field';
 import { FormNumberField } from 'composite/form/fields/form-number-field';
 import { FormCheckbox } from 'composite/form/fields/form-checkbox';
 import { FormDateTimeField } from 'composite/form/fields/form-date-time-field';
 
 export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
+  const intl = useIntl();
+
   return (
     <>
       {options.FieldsComponent && <options.FieldsComponent />}
+      <FormNumberField
+        name="order"
+        label={
+          <FormattedMessage
+            id="EAS_EVIDENCE_FIELD_LABEL_ORDER"
+            defaultMessage="Pořadí"
+          />
+        }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_ORDER',
+          defaultMessage: ' ',
+        })}
+      />
       <FormTextField
         name="name"
         required
@@ -18,15 +33,10 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
             defaultMessage="Název"
           />
         }
-      />
-      <FormNumberField
-        name="order"
-        label={
-          <FormattedMessage
-            id="EAS_EVIDENCE_FIELD_LABEL_ORDER"
-            defaultMessage="Pořadí"
-          />
-        }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_NAME',
+          defaultMessage: ' ',
+        })}
       />
       <FormCheckbox
         name="active"
@@ -36,6 +46,10 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
             defaultMessage="Aktivní"
           />
         }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_ACTIVE',
+          defaultMessage: ' ',
+        })}
         disabled={true}
       />
       <FormDateTimeField
@@ -46,6 +60,10 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
             defaultMessage="Platný od"
           />
         }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_VALID_FROM',
+          defaultMessage: ' ',
+        })}
       />
       <FormDateTimeField
         name="validTo"
@@ -55,6 +73,10 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
             defaultMessage="Platný do"
           />
         }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_VALID_TO',
+          defaultMessage: ' ',
+        })}
       />
       <FormTextField
         name="code"
@@ -64,6 +86,10 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
             defaultMessage="Kód"
           />
         }
+        helpLabel={intl.formatMessage({
+          id: 'EAS_EVIDENCE_FIELD_HELP_CODE',
+          defaultMessage: ' ',
+        })}
       />
     </>
   );

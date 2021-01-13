@@ -10,3 +10,6 @@
 [submodule "common-web"]
 	path = common-web
 	url = git@git.inqool.cz:eas/common-web.git
+[submodule "hotreload"]
+	path = hotreload
+	url = http://git.inqool.cz/eas/hotreload.git

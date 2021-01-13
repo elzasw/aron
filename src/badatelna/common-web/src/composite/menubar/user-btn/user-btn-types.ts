@@ -6,8 +6,6 @@ export interface UserBtnAction {
 }
 
 export interface UserBtnProps {
-  logoutUrl: string;
-  logoutSuccessUrl: string;
   actions?: UserBtnAction[];
 }
 

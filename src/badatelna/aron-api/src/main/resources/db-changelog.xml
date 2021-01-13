@@ -13,18 +13,11 @@
             <column name="published" type="datetime"/>
             <column name="data" type="nclob"/>
         </createTable>
-        <createTable tableName="digital_object">
-            <column name="id" type="${id}">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_digital_object"/>
-            </column>
-            <column name="permalink" type="nvarchar(255)"/>
-            <column name="name" type="nvarchar(255)"/>
-        </createTable>
         <createTable tableName="apu_entity">
             <column name="id" type="${id}">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_entity"/>
             </column>
-            <column name="name" type="nvarchar(255)"/>
+            <column name="name" type="nclob"/>
             <column name="description" type="nclob"/>
             <column name="permalink" type="nvarchar(255)"/>
             <column name="published" type="boolean"/>
@@ -43,6 +36,16 @@
             <column name="name" type="nvarchar(255)"/>
             <column name="apu_id" type="${id}">
                 <constraints referencedTableName="apu_entity" referencedColumnNames="id" foreignKeyName="FK_apu_attachment_apu"/>
+            </column>
+        </createTable>
+        <createTable tableName="digital_object">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_digital_object"/>
+            </column>
+            <column name="permalink" type="nvarchar(255)"/>
+            <column name="name" type="nvarchar(255)"/>
+            <column name="apu_id" type="${id}">
+                <constraints referencedTableName="apu_entity" referencedColumnNames="id" foreignKeyName="FK_digital_object_apu"/>
             </column>
         </createTable>
         <createTable tableName="apu_part">
@@ -99,6 +102,40 @@
                 <constraints referencedTableName="digital_object_file" referencedColumnNames="id" foreignKeyName="FK_metadatum_file"/>
             </column>
         </createTable>
+        <createTable tableName="relation">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_relation"/>
+            </column>
+            <column name="source" type="${id}"/>
+            <column name="relation" type="varchar(255)"/>
+            <column name="target" type="${id}"/>
+        </createTable>
     </changeSet>
-
+    <changeSet id="aron:2" author="jane">
+        <createTable tableName="queued_apu">
+            <column name="id" type="${id}">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_queued_apu"/>
+            </column>
+            <column name="created" type="datetime"/>
+            <column name="apu_id" type="${id}"/>
+            <column name="source_apu_id" type="${id}"/>
+            <column name="request_sent" type="boolean"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="aron:3" author="jane">
+        <addColumn tableName="apu_entity">
+            <column name="order" type="int" value="0"/>
+        </addColumn>
+    </changeSet>
+    <changeSet id="aron:4" author="jane">
+        <dropColumn tableName="digital_object_file" columnName="name"/>
+    </changeSet>
+    <changeSet id="aron:5" author="jane">
+        <addColumn tableName="apu_attachment">
+            <column name="order" type="int" value="0"/>
+        </addColumn>
+        <addColumn tableName="digital_object">
+            <column name="order" type="int" value="0"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -20,6 +20,8 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
+import static cz.inqool.eas.common.domain.index.dto.sort.Sort.Type.GEO_DISTANCE;
+
 /**
  * Geo Distance Sort
  *
@@ -30,6 +32,13 @@ import java.util.List;
 @Getter
 @Setter
 public class GeoDistanceSort extends AbstractSort<GeoDistanceSortBuilder> {
+
+    /**
+     * Sort type
+     */
+    @NotNull
+    @Schema(allowableValues = {GEO_DISTANCE})
+    private final String type = GEO_DISTANCE;
 
     /**
      * Attribute name to sort on.
@@ -68,13 +77,12 @@ public class GeoDistanceSort extends AbstractSort<GeoDistanceSortBuilder> {
 
 
     GeoDistanceSort() {
-        super(Type.GEO_DISTANCE);
     }
 
     @Builder
     public GeoDistanceSort(@NotBlank String field, @NotEmpty List<GeoPoint> points, @NotNull SortOrder order,
                            GeoDistance geoDistance, @NotNull SortMode sortMode, @NotNull DistanceUnit unit) {
-        super(Type.GEO_DISTANCE, order);
+        super(order);
         this.field = field;
         this.points = points;
         this.geoDistance = geoDistance;

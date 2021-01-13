@@ -65,7 +65,7 @@ public class ViewProjection<BASE extends Projectable<BASE>, PROJECTED extends Pr
             try {
                 return (PROJECTED) toView.invoke(null, o);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new GeneralException("Failed to call toView method");
+                throw new GeneralException("Failed to call toView method", e);
             }
         };
     }
@@ -79,7 +79,7 @@ public class ViewProjection<BASE extends Projectable<BASE>, PROJECTED extends Pr
                 toEntity.invoke(null, p, o);
                 return p;
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new GeneralException("Failed to call toEntity method");
+                throw new GeneralException("Failed to call toEntity method", e);
             }
         };
     }
@@ -91,7 +91,7 @@ public class ViewProjection<BASE extends Projectable<BASE>, PROJECTED extends Pr
             try {
                 return (BASE) toEntity.invoke(null, o);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                throw new GeneralException("Failed to call toEntity method");
+                throw new GeneralException("Failed to call toEntity method", e);
             }
         };
     }

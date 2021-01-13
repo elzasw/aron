@@ -28,7 +28,7 @@ public class ReindexApi {
     @ApiResponse(responseCode = "200", description = "Success")
     @PostMapping
     public void reindex(@Schema(description = "List of fully qualified class names of stores to reindex.")
-                        @RequestBody List<String> storeClasses) {
+                        @RequestBody(required = false) List<String> storeClasses) {
         service.reindex(storeClasses);
     }
 

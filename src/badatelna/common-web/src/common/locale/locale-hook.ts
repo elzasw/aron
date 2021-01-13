@@ -7,9 +7,13 @@ import skLocale from 'date-fns/locale/sk';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { LocaleContext } from './locale-context';
 import { callLoadTranslations } from './locale-api';
+import { useLocalStorage } from 'utils/local-storage-hook';
 
 export function useLocale(props: LocaleProviderProps) {
-  const [locale, setLocale] = useState<Locale>(localeMap[props.defaultLocale]);
+  const [locale, setLocale] = useLocalStorage<Locale>(
+    'locale',
+    localeMap[props.defaultLocale]
+  );
   const [messages, setMessages] = useState<Record<string, string>>({});
 
   const switchLocale = useEventCallback(async (localeName: LocaleName) => {
@@ -17,13 +21,20 @@ export function useLocale(props: LocaleProviderProps) {
   });
 
   const loadTranslations = useEventCallback(async (lang: string) => {
-    const fetch = callLoadTranslations(props.translationsUrl, lang);
+    if (props.messages && props.messages[lang]) {
+      setMessages(props.messages[lang]);
+    } else if (props.translationsUrl) {
+      const fetch = callLoadTranslations(props.translationsUrl, lang);
 
-    const response = await fetch.response;
+      const response = await fetch.response;
 
-    if (response.status === 200) {
-      const messages = await response.json();
-      setMessages(messages);
+      if (response.status === 200) {
+        const messages = await response.json();
+
+        setMessages(messages);
+      } else {
+        setMessages({});
+      }
     }
   });
 

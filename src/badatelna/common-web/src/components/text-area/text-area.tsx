@@ -8,6 +8,7 @@ import InputAdornment from '@material-ui/core/InputAdornment';
 export const TextArea = forwardRef<HTMLDivElement, TextAreaProps>(
   function TextArea(
     {
+      form,
       onChange,
       disabled,
       value,
@@ -57,6 +58,10 @@ export const TextArea = forwardRef<HTMLDivElement, TextAreaProps>(
           startAdornment,
           endAdornment,
         }}
+        inputProps={{
+          form,
+          spellCheck: 'true',
+        }}
         ref={ref}
         disabled={disabled}
         value={value}
@@ -64,7 +69,6 @@ export const TextArea = forwardRef<HTMLDivElement, TextAreaProps>(
         onBlur={onBlur}
         onFocus={onFocus}
         error={error}
-        spellCheck={true}
         fullWidth={true}
         lang="cs"
         multiline={true}

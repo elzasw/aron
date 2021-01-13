@@ -1,5 +1,5 @@
 # Druhy částí
-partyTypes:
+partTypes:
   - name: Název
     code: PT_NAME
     # STANDALONE | GROUPED
@@ -13,34 +13,32 @@ partyTypes:
   - name: Archivní popis
     code: PT_ARCH_DESC
     viewType: STANDALONE
-  - name: Původce
-    code: PT_ORIGINATOR
-    viewType: STANDALONE
-  - name: Narození
-    code: BIRTH
-    viewType: STANDALONE
-  - name: Úmrtí
-    code: DEATH
-    viewType: STANDALONE
-  - name: Další
-    code: OTHER
-    viewType: STANDALONE
+
+# Pridat: 
+#   hierarchical: true | false
 
 # Jednotlivé prvky popisu
 itemTypes:
+  # Obecné
   - code: NAME
     name: Název
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
-    type: STRING
-    indexed: true
-  - code: INST_CODE
-    name: Kód archivu
     type: STRING
     indexed: true
   - code: AP_REF
     name: Odkaz na entitu
     type: APU_REF
     indexed: true
+  # Archivy
+  - code: INST_CODE
+    name: Kód archivu
+    type: STRING
+    indexed: true
+  # Archivní soubory
+  - code: ARCHDESC_ROOT_REF
+    name: Odkaz na kořen archivního popisu
+    type: APU_REF
+    indexed: false
   - code: INST_REF
     name: Instituce
     type: APU_REF
@@ -48,44 +46,10 @@ itemTypes:
   - code: ORIGINATOR_REF
     name: Původce
     type: APU_REF
-  - code: SECOND_NAME
-    name: Příjmení
-    type: STRING
     indexed: true
-  - code: FIRST_NAME
-    name: Křestní jméno
-    type: STRING
-    indexed: true
-  - code: PLACE
-    name: Místo
-    type: STRING
-    indexed: true
-  - code: DATE
-    name: Datum
-    type: UNITDATE
-    indexed: true
-  - code: DESCRIPTION
-    name: Charakteristika
-    type: STRING
-    indexed: true
-  - code: ARCHIVE
-    name: Archiv
-    type: ENUM
-    indexed: true
-  - code: LANGUAGE
-    name: Jazyk
-    type: ENUM
-    indexed: true
-  - code: APU_REF
-    name: apu ref
-    type: APU_REF
-    indexed: true
-  - code: UNIT_DATE
-    name: unit date
-    type: STRING
-    indexed: true
+  # Archivní popis
   - code: UNIT_ID
-    name: unit id
+    name: Referenční označení
     type: ENUM
     indexed: true
   - code: ABSTRACT
@@ -104,6 +68,10 @@ itemTypes:
     name: Tematický popis jednotky popisu
     type: STRING
     indexed: true
+  - code: UNIT_DATE
+    name: Datace
+    type: UNITDATE
+    indexed: true
   - code: UNIT_SOURCE
     name: Přímý zdroj akvizice
     type: STRING
@@ -120,6 +88,10 @@ itemTypes:
     name: Fyzický stav
     type: STRING
     indexed: true
+  - code: ARRANGEMENT_INFO
+    name: Informace o zpracování
+    type: STRING
+    indexed: true
   - code: ARRANGE_RULES
     name: Pravidla zpracování
     type: STRING
@@ -130,6 +102,42 @@ itemTypes:
     indexed: true
   - code: SCALE
     name: Měřítko
+    type: STRING
+    indexed: true
+  - code: SIZE
+    name: Rozměry, velikost
+    type: STRING
+    indexed: true
+  - code: ITEM_MAT
+    name: Materiál
+    type: STRING
+    indexed: true
+  - code: INV_CISLO
+    name: Inventární číslo
+    type: STRING
+    indexed: true
+  - code: OTHER_ID
+    name: Jiný identifikátor
+    type: STRING
+    indexed: true
+  - code: EDITION
+    name: Edice
+    type: STRING
+    indexed: true
+  - code: UNIT_DATE_TEXT
+    name: Textová datace
+    type: STRING
+    indexed: true
+  - code: EXERQUE
+    name: Otisk
+    type: STRING
+    indexed: true
+  - code: PAINTING_CHAR
+    name: Malba
+    type: STRING
+    indexed: true
+  - code: EXISTING_COPY
+    name: Kopie
     type: STRING
     indexed: true
   - code: STORAGE_COND

@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 
 export interface AutocompleteSource<OPTION> extends ScrollableSource<OPTION> {
   setSearchQuery: (q: string) => void;
+  loadDetail: (item: OPTION) => Promise<OPTION>;
 }
 
 export interface AutocompleteProps<OPTION extends DomainObject> {

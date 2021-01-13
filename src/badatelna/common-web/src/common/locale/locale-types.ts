@@ -9,7 +9,8 @@ export enum LocaleName {
 
 export interface LocaleProviderProps {
   defaultLocale: LocaleName;
-  translationsUrl: string;
+  translationsUrl?: string;
+  messages?: Record<string, Record<string, string>>;
 }
 
 export interface Locale {

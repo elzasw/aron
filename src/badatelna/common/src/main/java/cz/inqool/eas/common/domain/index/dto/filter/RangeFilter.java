@@ -19,7 +19,7 @@ import javax.validation.constraints.NotNull;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-abstract public class RangeFilter extends FieldValueFilter {
+abstract public class RangeFilter<FILTER extends RangeFilter<FILTER>> extends FieldValueFilter<FILTER> {
 
     /**
      * Modifies the operation execution behaviour
@@ -35,11 +35,6 @@ abstract public class RangeFilter extends FieldValueFilter {
 
     protected RangeFilter(@NotNull String operation, @NotBlank String field, @NotBlank String value, ShapeRelation relation) {
         super(operation, field, value);
-        this.relation = relation;
-    }
-
-    protected RangeFilter(@NotNull String operation, @NotBlank String field, @NotBlank String value, ShapeRelation relation, boolean nestedQueryEnabled) {
-        super(operation, field, value, nestedQueryEnabled);
         this.relation = relation;
     }
 

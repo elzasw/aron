@@ -26,6 +26,8 @@ dependencies {
     implementation 'com.github.olivergondza:maven-jdk-tools-wrapper:0.1'
     testImplementation 'com.google.testing.compile:compile-testing:0.18'
     testImplementation 'org.hibernate:hibernate-core:5.4.12.Final'
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
+    testImplementation 'io.swagger.core.v3:swagger-annotations:2.1.6'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'

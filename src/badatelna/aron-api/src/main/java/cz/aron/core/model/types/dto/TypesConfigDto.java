@@ -12,7 +12,9 @@ import java.util.List;
 @Getter
 @Setter
 public class TypesConfigDto {
-    private List<ApuPartType> partyTypes = new ArrayList<>();
+    private List<ApuPartType> partTypes = new ArrayList<>();
     private List<ItemType> itemTypes = new ArrayList<>();
     private List<MetadataType> metaDataTypes = new ArrayList<>();
+
+    private Long currentCrc;
 }

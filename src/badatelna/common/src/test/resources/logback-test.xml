@@ -15,4 +15,7 @@
     <logger name="org.springframework.test" level="WARN"/>
 
     <logger name="cz.inqool.eas.common" level="INFO"/>
+
+    <!-- uncomment below to log ElasticSearch queries -->
+<!--    <logger name="cz.inqool.eas.common.domain.index" level="TRACE"/>-->
 </configuration>

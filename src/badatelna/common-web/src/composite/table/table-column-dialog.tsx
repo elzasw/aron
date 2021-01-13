@@ -1,5 +1,7 @@
 import React, { useState, useContext, forwardRef } from 'react';
 import { FormattedMessage } from 'react-intl';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { arrayMove } from 'utils/array-move';
 import {
@@ -13,16 +15,19 @@ import DragIndicatorIcon from '@material-ui/icons/DragIndicator';
 import { Dialog } from 'components/dialog/dialog';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { TableColumnState, TableColumn } from './table-types';
-import { useStyles } from './table-styles';
 import { TableContext } from './table-context';
+import { useStyles } from './table-styles';
 
 /**
  * Column dialog.
  */
 export const TableColumnDialog = forwardRef<DialogHandle, any>(
   function TableColumnDialog(props, ref) {
+    const classes = useStyles();
+
     const {
       setColumnsState: setProvidedFiltersState,
+      defaultColumnsState,
       columns,
       columnsState: providedColumnsState,
     } = useContext(TableContext);
@@ -75,6 +80,10 @@ export const TableColumnDialog = forwardRef<DialogHandle, any>(
       setColumnsState(providedColumnsState);
     });
 
+    const handleReset = useEventCallback(() => {
+      setColumnsState(defaultColumnsState);
+    });
+
     return (
       <Dialog
         ref={ref}
@@ -92,6 +101,16 @@ export const TableColumnDialog = forwardRef<DialogHandle, any>(
         }
         onConfirm={handleSave}
         onShow={handleShow}
+        actions={[
+          <Button key="removeAll" variant="outlined" onClick={handleReset}>
+            <Typography classes={{ root: classes.buttonLabel }}>
+              <FormattedMessage
+                id="EAS_TABLE_COLUMN_DIALOG_BTN_RESET"
+                defaultMessage="Obnovit"
+              />
+            </Typography>
+          </Button>,
+        ]}
       >
         {() => (
           <div>
@@ -174,6 +193,7 @@ const SortableColumnEntry = SortableElement(function ColumnEntry({
         label={column.name}
         control={
           <Checkbox
+            disabled={column.fixed}
             checked={columnState.visible}
             color="primary"
             onChange={() => onVisibleToggle(columnState.datakey)}

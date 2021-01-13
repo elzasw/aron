@@ -4,6 +4,9 @@
 # Ignore Gradle build output directory
 build
 
+# ignore generated files
+src/main/generated
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

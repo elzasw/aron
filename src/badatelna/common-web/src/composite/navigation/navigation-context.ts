@@ -3,6 +3,7 @@ import { createContext } from 'react';
 export interface Prompt {
   title: string;
   text: string;
+  clearCallback?: () => void;
 }
 
 export interface StateAction {

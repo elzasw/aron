@@ -4,7 +4,7 @@ import cz.inqool.eas.common.dao.simple.keyvalue.SimpleKeyValueEntity;
 import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsEntity;
 import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsEntity.Coordinates;
 import cz.inqool.eas.common.dao.simple.multiple.MultipleFieldsRepository;
-import cz.inqool.eas.common.tstutil.TestBase;
+import cz.inqool.eas.common.tstutil.CommonTestBase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @since : 05/10/2020, Mon
  **/
 @Transactional
-public class MultipleFieldEntityTest extends TestBase {
+public class MultipleFieldEntityTest extends CommonTestBase {
 
     @Autowired
     private MultipleFieldsRepository multipleFieldsRepository;

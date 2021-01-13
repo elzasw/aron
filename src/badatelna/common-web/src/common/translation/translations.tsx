@@ -7,7 +7,7 @@ import { Translation } from './translations-types';
 import { useColumns } from './translations-columns';
 import { TranslationsFields } from './translations-fields';
 
-export function translationsFactory(url: string) {
+export function translationsFactory(url: string, reportTag: string) {
   return function Translations() {
     const validationSchema = useValidationSchema();
 
@@ -24,6 +24,7 @@ export function translationsFactory(url: string) {
             defaultMessage="Překlady"
           />
         ),
+        reportTag,
       },
       detailProps: {
         FieldsComponent: TranslationsFields,

@@ -8,7 +8,7 @@ import cz.inqool.eas.common.authored.user.UserGenerator;
 import cz.inqool.eas.common.authored.user.UserReference;
 import cz.inqool.eas.common.dated.store.DatedStore;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
 /**
@@ -33,7 +33,7 @@ public class AuthoredStore<ROOT extends Authored<ROOT>, PROJECTED extends Author
      * {@inheritDoc}
      */
     @Override
-    public PROJECTED create(@Nonnull PROJECTED entity) {
+    public PROJECTED create(@NotNull PROJECTED entity) {
         entity.setDeletedBy(null);
         entity.setDeletedByTenant(null);
         return super.create(entity);
@@ -43,7 +43,7 @@ public class AuthoredStore<ROOT extends Authored<ROOT>, PROJECTED extends Author
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends PROJECTED> create(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> create(@NotNull Collection<? extends PROJECTED> entities) {
         entities.forEach(entity -> {
             entity.setDeletedBy(null);
             entity.setDeletedByTenant(null);
@@ -55,7 +55,7 @@ public class AuthoredStore<ROOT extends Authored<ROOT>, PROJECTED extends Author
      * {@inheritDoc}
      */
     @Override
-    public PROJECTED update(@Nonnull PROJECTED entity) {
+    public PROJECTED update(@NotNull PROJECTED entity) {
         entity.setUpdatedBy(null); // to force hibernate to auto-generate new value
         entity.setUpdatedByTenant(null); // to force hibernate to auto-generate new value
         entity.setDeletedBy(null);
@@ -67,7 +67,7 @@ public class AuthoredStore<ROOT extends Authored<ROOT>, PROJECTED extends Author
      * {@inheritDoc}
      */
     @Override
-    public Collection<? extends PROJECTED> update(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> update(@NotNull Collection<? extends PROJECTED> entities) {
         entities.forEach(entity -> {
             entity.setUpdatedBy(null); // to force hibernate to auto-generate new value
             entity.setUpdatedByTenant(null); // to force hibernate to auto-generate new value

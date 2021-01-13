@@ -45,7 +45,7 @@ public abstract class DomainApi<
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "400", description = "Wrong input was specified", content = @Content(schema = @Schema(implementation = RestException.class)))
     @PostMapping
-    public DETAIL_PROJECTION create(@RequestBody CREATE_PROJECTION view) {
+    public DETAIL_PROJECTION create(@Valid @RequestBody CREATE_PROJECTION view) {
         return service.create(view);
     }
 
@@ -54,7 +54,7 @@ public abstract class DomainApi<
     @ApiResponse(responseCode = "404", description = "Object was not found", content = @Content(schema = @Schema(implementation = RestException.class)))
     @ApiResponse(responseCode = "400", description = "Wrong input was specified", content = @Content(schema = @Schema(implementation = RestException.class)))
     @PutMapping("/{id}")
-    public DETAIL_PROJECTION update(@PathVariable("id") String id, @RequestBody UPDATE_PROJECTION view) {
+    public DETAIL_PROJECTION update(@PathVariable("id") String id, @Valid @RequestBody UPDATE_PROJECTION view) {
         return service.update(id, view);
     }
 

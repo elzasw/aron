@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { Props } from './types';
-import { IconType } from './enums';
+import { IconType } from '../../enums';
 import { Icons } from '../../assets';
 
 const getSrc = (type: IconType) => {

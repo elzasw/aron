@@ -12,7 +12,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.persistence.EntityManager;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -36,7 +36,7 @@ import static java.util.Collections.emptyList;
 public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROOT>, META_MODEL extends EntityPathBase<PROJECTED>> {
     protected EntityManager entityManager;
 
-    private JPAQueryFactory queryFactory;
+    protected JPAQueryFactory queryFactory;
 
     @Getter
     private final Class<? extends PROJECTED> type;
@@ -91,7 +91,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param entity object to create
      * @return created object in detached state
      */
-    public PROJECTED create(@Nonnull PROJECTED entity) {
+    public PROJECTED create(@NotNull PROJECTED entity) {
         entityManager.persist(entity);
         entityManager.flush();
         detachAll();
@@ -105,7 +105,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param entities collection of objects to create
      * @return collection of created objects
      */
-    public Collection<? extends PROJECTED> create(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> create(@NotNull Collection<? extends PROJECTED> entities) {
         if (entities.isEmpty()) {
             return emptyList();
         }
@@ -126,7 +126,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param entity object to update
      * @return saved object
      */
-    public PROJECTED update(@Nonnull PROJECTED entity) {
+    public PROJECTED update(@NotNull PROJECTED entity) {
         PROJECTED obj = entityManager.merge(entity);
 
         entityManager.flush();
@@ -141,7 +141,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param entities collection of objects to update
      * @return collection of updated objects
      */
-    public Collection<? extends PROJECTED> update(@Nonnull Collection<? extends PROJECTED> entities) {
+    public Collection<? extends PROJECTED> update(@NotNull Collection<? extends PROJECTED> entities) {
         if (entities.isEmpty()) {
             return emptyList();
         }
@@ -186,7 +186,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param id ID of object to return
      * @return found object or {@code null} if not found
      */
-    public PROJECTED find(@Nonnull String id) {
+    public PROJECTED find(@NotNull String id) {
         PROJECTED entity = findConnected(id);
 
         if (entity != null) {
@@ -202,7 +202,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param id ID of object
      * @return {@code true} if object exists, {@code false} otherwise
      */
-    public boolean exist(@Nonnull String id) {
+    public boolean exist(@NotNull String id) {
         long count = query().
                 select(domainMetaModel.id).
                 from(metaModel).
@@ -255,7 +255,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param ids list of IDs
      * @return collection of found instances
      */
-    public List<PROJECTED> listByIds(@Nonnull List<String> ids, ListFunction<ROOT, PROJECTED> listFunction) {
+    public List<PROJECTED> listByIds(@NotNull List<String> ids, ListFunction<ROOT, PROJECTED> listFunction) {
         if (ids.isEmpty()) {
             return emptyList();
         }
@@ -303,7 +303,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param ids list of IDs
      * @return collection of found objects
      */
-    public List<PROJECTED> listByIds(@Nonnull List<String> ids) {
+    public List<PROJECTED> listByIds(@NotNull List<String> ids) {
         return listByIds(ids, this::listDefault);
     }
 
@@ -333,7 +333,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param id id of instance to delete
      * @return resultant object or {@code null} if the object was not found
      */
-    public PROJECTED delete(@Nonnull String id) {
+    public PROJECTED delete(@NotNull String id) {
         PROJECTED entity = findConnected(id);
 
         if (entity != null) {
@@ -349,7 +349,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param ids collection of ids of objects to delete
      * @return collection of deleted objects
      */
-    public Collection<PROJECTED> delete(@Nonnull Collection<String> ids) {
+    public Collection<PROJECTED> delete(@NotNull Collection<String> ids) {
         if (ids.isEmpty()) {
             return emptyList();
         }
@@ -386,7 +386,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @param id ID of instance to be returned
      * @return found instance or {@code null} if not found
      */
-    protected PROJECTED findConnected(@Nonnull String id) {
+    protected PROJECTED findConnected(@NotNull String id) {
         JPAQuery<PROJECTED> query = query().
                 select(metaModel).
                 from(metaModel)

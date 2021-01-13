@@ -7,7 +7,6 @@ import cz.inqool.eas.common.domain.index.dto.params.Params;
 import cz.inqool.eas.common.intl.Language;
 import cz.inqool.eas.common.projection.Projectable;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.transaction.Transactional;
 import java.util.List;
@@ -38,12 +37,20 @@ public abstract class DictionaryService<
         UPDATE_PROJECTION,
         REPOSITORY> {
 
-    public Result<DictionaryAutocomplete> listAutocomplete(@Nonnull String query, @Nullable Language language, @Nullable Params params) {
-        return this.repository.listAutocomplete(query, language, params);
+    public Result<DictionaryAutocomplete> listAutocomplete(@Nullable String query, @Nullable Language language, @Nullable Params params) {
+        return this.repository.listAutocomplete(query, language, params, false);
     }
 
-    public List<DictionaryAutocomplete> listAutocompleteFull(@Nonnull String query, @Nullable Language language, @Nullable Params params) {
-        return this.repository.listAutocompleteFull(query, language, params);
+    public Result<DictionaryAutocomplete> listAutocompleteAll(@Nullable String query, @Nullable Language language, @Nullable Params params) {
+        return this.repository.listAutocomplete(query, language, params, true);
+    }
+
+    public List<DictionaryAutocomplete> listAutocompleteFull(@Nullable String query, @Nullable Language language, @Nullable Params params) {
+        return this.repository.listAutocompleteFull(query, language, params, false);
+    }
+
+    public List<DictionaryAutocomplete> listAutocompleteFullAll(@Nullable String query, @Nullable Language language, @Nullable Params params) {
+        return this.repository.listAutocompleteFull(query, language, params, true);
     }
 
     /**

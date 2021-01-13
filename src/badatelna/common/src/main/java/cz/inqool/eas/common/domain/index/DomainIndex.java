@@ -4,7 +4,6 @@ import cz.inqool.eas.common.domain.Domain;
 import cz.inqool.eas.common.domain.DomainIndexed;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.aggregation.Aggregation;
-import cz.inqool.eas.common.domain.index.dto.filter.FulltextFilter;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
 import cz.inqool.eas.common.domain.index.dto.sort.Sort;
 import cz.inqool.eas.common.domain.index.field.IndexFieldNode;
@@ -36,7 +35,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.ScoreSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +44,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 
-import javax.annotation.Nonnull;
-import javax.annotation.PostConstruct;
 import javax.validation.constraints.NotNull;
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -136,7 +133,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param <X>             Type of returned result class
      * @return Custom results wrapped by the {@link Result} class
      */
-    public <X> Result<X> listByParams(@Nonnull Params params, Function<SearchHit, X> searchHitMapper) {
+    public <X> Result<X> listByParams(@NotNull Params params, Function<SearchHit, X> searchHitMapper) {
         return listByParams(params, (builder) -> {}, searchHitMapper);
     }
 
@@ -153,7 +150,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param <X>             Type of returned result class
      * @return Custom results wrapped by the {@link Result} class
      */
-    public <X> Result<X> listByParams(@Nonnull Params params, Consumer<SearchSourceBuilder> queryModifier, Function<SearchHit, X> searchHitMapper) {
+    public <X> Result<X> listByParams(@NotNull Params params, Consumer<SearchSourceBuilder> queryModifier, Function<SearchHit, X> searchHitMapper) {
         return list((builder) -> {
             queryParamsModifier(builder, params);
             queryModifier.accept(builder);
@@ -173,7 +170,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param <X>             Type of returned result class
      * @return List of result objects
      */
-    public <X> List<X> listAllByParams(@Nonnull Params params, Function<SearchHit, X> searchHitMapper) {
+    public <X> List<X> listAllByParams(@NotNull Params params, Function<SearchHit, X> searchHitMapper) {
         return listAllByParams(params, (builder) -> {}, searchHitMapper);
     }
 
@@ -190,7 +187,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param <X>             Type of returned result class
      * @return List of result objects
      */
-    public <X> List<X> listAllByParams(@Nonnull Params params, Consumer<SearchSourceBuilder> queryModifier, Function<SearchHit, X> searchHitMapper) {
+    public <X> List<X> listAllByParams(@NotNull Params params, Consumer<SearchSourceBuilder> queryModifier, Function<SearchHit, X> searchHitMapper) {
         final int pageSize = 100;
 
         params.setSize(pageSize);
@@ -217,7 +214,8 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param params Parameters to comply with
      * @return Sorted list of object ids with total number
      */
-    public Result<String> listIdsByParams(@Nonnull Params params) {
+    public Result<String> listIdsByParams(@NotNull Params params) {
+        params.setFields(List.of());
         return listByParams(params, SearchHit::getId);
     }
 
@@ -231,7 +229,8 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      * @param params Parameters to comply with
      * @return List of result ids
      */
-    public List<String> listAllIdsByParams(@Nonnull Params params) {
+    public List<String> listAllIdsByParams(@NotNull Params params) {
+        params.setFields(List.of());
         return listAllByParams(params, SearchHit::getId);
     }
 
@@ -240,7 +239,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      *
      * @param obj Object to be indexed
      */
-    public void index(@Nonnull INDEXED obj) {
+    public void index(@NotNull INDEXED obj) {
         IndexRequest request = createIndexRequest(obj);
         execute(client -> client.index(request, RequestOptions.DEFAULT));
         refresh();
@@ -251,7 +250,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      *
      * @param objects Collection of objects to be indexed
      */
-    public void index(@Nonnull Collection<? extends INDEXED> objects) {
+    public void index(@NotNull Collection<? extends INDEXED> objects) {
         if (objects.isEmpty()) {
             return;
         }
@@ -266,7 +265,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      *
      * @param obj Object to remove
      */
-    public void delete(@Nonnull INDEXED obj) {
+    public void delete(@NotNull INDEXED obj) {
         DeleteRequest request = createDeleteRequest(obj);
 
         execute(client -> client.delete(request, RequestOptions.DEFAULT));
@@ -278,7 +277,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      *
      * @param objects Collection of objects
      */
-    public void delete(@Nonnull Collection<? extends INDEXED> objects) {
+    public void delete(@NotNull Collection<? extends INDEXED> objects) {
         if (objects.isEmpty()) {
             return;
         }
@@ -351,6 +350,7 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
     }
 
     private SearchRequest createSearchRequest(SearchSourceBuilder builder) {
+
         return new SearchRequest()
                 .indices(getIndexName())
                 .source(builder);
@@ -434,40 +434,31 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
      */
     private void queryParamsModifier(SearchSourceBuilder builder, Params params) {
         if (params.getSize() != null && params.getSize() != -1) {
-            gte(params.getSize(), 1, () -> new IllegalArgumentException("size"));
+            gte(params.getSize(), 0, () -> new IllegalArgumentException("size"));
         }
 
         int size = ((params.getSize() != null) && (params.getSize() != -1)) ? params.getSize() : ELASTIC_SIZE_LIMIT;
         builder.size(size);
+        builder.trackTotalHits(true);
 
-        boolean containsFtxFilter = false;
         if (params.getFilters() != null && !params.getFilters().isEmpty()) {
             List<QueryBuilder> filterList = params.getFilters().stream()
                     .map(filter -> filter.toQueryBuilder(indexObjectFields))
                     .collect(Collectors.toList());
 
             builder.query((filterList.size() > 1) ? andQuery(filterList) : filterList.get(0));
-
-            containsFtxFilter = params.getFilters()
-                    .stream()
-                    .anyMatch(filter -> filter instanceof FulltextFilter);
         }
 
-        if (containsFtxFilter) {
-            // in case of FTX filter ignore sorting and sort by score
-            builder.sort(ScoreSortBuilder.NAME);
-            builder.sort(SortBuilders.fieldSort("id").order(SortOrder.ASC));
-        } else if (params.getSort() != null) {
+        if (params.getSort() != null) {
             for (Sort sort : params.getSort()) {
                 if (params.getFlipDirection()) {
                     sort = sort.withReversedOrder();
                 }
                 builder.sort(sort.toSortBuilder(indexObjectFields));
             }
-            if (!params.getSort().isEmpty()) {
-                builder.sort(SortBuilders.fieldSort("id").order(SortOrder.ASC));
-            }
         }
+
+        builder.sort(SortBuilders.fieldSort("id").order(SortOrder.ASC));
 
         if (params.getSearchAfter() != null) {
             builder.searchAfter(params.getSearchAfter());

@@ -1,6 +1,8 @@
 import React, { forwardRef, useContext, useState } from 'react';
 import { findIndex } from 'lodash';
 import { FormattedMessage } from 'react-intl';
+import Button from '@material-ui/core/Button';
+import Typography from '@material-ui/core/Typography';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { Dialog } from 'components/dialog/dialog';
 import { DialogHandle } from 'components/dialog/dialog-types';
@@ -70,6 +72,12 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
       }
     );
 
+    const handleRemoveAllFilters = useEventCallback(() => {
+      setFiltersState(
+        filtersState.map((state) => ({ ...state, enabled: false }))
+      );
+    });
+
     /**
      * Split UI of filter dialog into columns depending on count of filters
      */
@@ -108,6 +116,20 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
         }
         onConfirm={handleSave}
         onShow={handleShow}
+        actions={[
+          <Button
+            key="removeAll"
+            variant="outlined"
+            onClick={handleRemoveAllFilters}
+          >
+            <Typography classes={{ root: classes.buttonLabel }}>
+              <FormattedMessage
+                id="EAS_TABLE_FILTER_DIALOG_BTN_REMOVE_ALL_FILTERS"
+                defaultMessage="Smazat filtry"
+              />
+            </Typography>
+          </Button>,
+        ]}
       >
         {() => (
           <div className={classes.filterDialogColumnsWrapper}>

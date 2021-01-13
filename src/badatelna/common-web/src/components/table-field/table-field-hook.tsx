@@ -41,7 +41,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
 
   const value = props.value ?? [];
 
-  const [selectedIndex, setSelecteIndex] = useState<number | undefined>();
+  const [selectedIndex, setSelectedIndex] = useState<number | undefined>();
   const [columnsState, setColumnsState] = useState<TableFieldColumnState[]>(
     deriveColumnsState(props.columns)
   );
@@ -50,19 +50,25 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
   const removeDialogRef = useRef<DialogHandle>(null);
 
   const showAddDialog = useEventCallback(() => {
-    setSelecteIndex(undefined);
+    setSelectedIndex(undefined);
     formDialogRef.current?.open();
   });
 
-  const showEditDialog = useEventCallback(() => {
+  const showEditDialog = useEventCallback((index: number) => {
+    setSelectedIndex(index);
+
     formDialogRef.current?.open();
   });
 
-  const showRemoveDialog = useEventCallback(() => {
+  const showRemoveDialog = useEventCallback((index: number) => {
+    setSelectedIndex(index);
+
     removeDialogRef.current?.open();
   });
 
-  const showDetailDialog = useEventCallback(() => {
+  const showDetailDialog = useEventCallback((index: number) => {
+    setSelectedIndex(index);
+
     formDialogRef.current?.open();
   });
 
@@ -86,11 +92,15 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
   const removeRow = useEventCallback((index: number) => {
     const newValue = value.filter((_, i) => i !== index);
     props.onChange(newValue);
-    setSelecteIndex(undefined);
+    setSelectedIndex(undefined);
   });
 
   const selectRow = useEventCallback((index: number) => {
-    setSelecteIndex(index);
+    setSelectedIndex(index);
+
+    if (props.value != null) {
+      props.onSelect(props.value[index], index);
+    }
   });
 
   const setColumnWidth = useEventCallback((datakey: string, width: number) => {
@@ -136,6 +146,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       visibleAdd: props.visibleAdd,
       visibleEdit: props.visibleEdit,
       visibleRemove: props.visibleRemove,
+      onSelect: props.onSelect,
       columnsState,
       filteredColumns,
       showAddDialog,
@@ -159,6 +170,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       props.disabledEdit,
       props.disabledRemove,
       props.initNewRow,
+      props.onSelect,
       props.showDetailBtnCond,
       props.showRadioCond,
       props.visibleAdd,
@@ -176,7 +188,14 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     ]
   );
 
-  return { props, context, selectedIndex, formDialogRef, removeDialogRef };
+  return {
+    props,
+    context,
+    selectedIndex,
+    setSelectedIndex,
+    formDialogRef,
+    removeDialogRef,
+  };
 }
 
 export function Empty() {

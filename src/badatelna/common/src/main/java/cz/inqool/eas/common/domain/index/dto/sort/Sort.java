@@ -3,13 +3,28 @@ package cz.inqool.eas.common.domain.index.dto.sort;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
+import io.swagger.v3.oas.annotations.media.DiscriminatorMapping;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.elasticsearch.search.sort.SortBuilder;
+
+import static cz.inqool.eas.common.domain.index.dto.sort.Sort.Type.*;
 
 /**
  * Represents a sorting specification for ElasticSearch queries.
  *
  * @param <SB> type of supported sort builder
  */
+@Schema(
+        title = "Sort",
+        oneOf = {FieldSort.class, GeoDistanceSort.class, ScoreSort.class, ScriptSort.class},
+        discriminatorProperty = "type",
+        discriminatorMapping = {
+                @DiscriminatorMapping(value = FIELD,        schema = FieldSort.class),
+                @DiscriminatorMapping(value = GEO_DISTANCE, schema = GeoDistanceSort.class),
+                @DiscriminatorMapping(value = SCORE,        schema = ScoreSort.class),
+                @DiscriminatorMapping(value = SCRIPT,       schema = ScriptSort.class)
+        }
+)
 @JsonDeserialize(using = SortDeserializer.class)
 @JsonIgnoreProperties // to disable ignore_unknown deserialization feature
 public interface Sort<SB extends SortBuilder<SB>> {

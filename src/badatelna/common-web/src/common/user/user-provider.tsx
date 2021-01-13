@@ -6,8 +6,10 @@ import { useUser } from './user-hook';
 export function UserProvider({
   children,
   meUrl,
+  logoutUrl,
+  checkPermission,
 }: React.PropsWithChildren<UserProviderProps>) {
-  const { context } = useUser(meUrl);
+  const { context } = useUser(meUrl, logoutUrl, checkPermission);
   const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {

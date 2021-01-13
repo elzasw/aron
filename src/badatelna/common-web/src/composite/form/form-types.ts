@@ -1,13 +1,17 @@
 import * as Yup from 'yup';
 
 export interface FormHandle<DATA = any> {
+  formId: string;
   editing: boolean;
+  errors: ValidationError[];
+  setErrors: (errors: ValidationError[]) => void;
   getFieldValues: () => DATA;
   setFieldValues: (values: DATA) => void;
   setFieldValue: (name: string, value: any) => void;
   submitForm: () => void;
   clearForm: () => void;
   validateForm: () => Promise<ValidationError[]>;
+  resetValidation: () => void;
 }
 
 export interface FormProps<DATA> {

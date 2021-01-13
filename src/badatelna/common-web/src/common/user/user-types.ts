@@ -18,6 +18,8 @@ export interface User {
 
 export interface UserProviderProps {
   meUrl: string;
+  logoutUrl: string;
+  checkPermission?: (user: any, permission: string) => boolean;
 }
 
 export interface AuthorizedProps {

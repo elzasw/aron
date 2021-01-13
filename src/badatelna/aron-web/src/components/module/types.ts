@@ -1,9 +1,24 @@
 import { ReactChild } from 'react';
-import { ModulePath } from '../../enums';
 
-export interface ModuleProps {
+interface Item {
+  path?: string;
+  label: ReactChild;
+}
+
+export interface Breadcrumb extends Item {
+  index: number;
+  allItems: Item[];
+  items?: Item[];
+  lastItemWidth: number;
+}
+
+export interface Breadcrumbs {
+  items: Item[];
+  toolbar?: ReactChild;
+}
+
+export interface ModuleProps extends Breadcrumbs {
   children: ReactChild;
-  items: { path?: ModulePath; label: string }[];
 }
 
 export interface Props extends ModuleProps {}

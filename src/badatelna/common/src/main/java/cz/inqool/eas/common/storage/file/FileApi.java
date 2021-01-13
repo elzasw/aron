@@ -1,5 +1,6 @@
 package cz.inqool.eas.common.storage.file;
 
+import com.google.common.net.UrlEscapers;
 import cz.inqool.eas.common.exception.ForbiddenObject;
 import cz.inqool.eas.common.exception.GeneralException;
 import cz.inqool.eas.common.exception.MissingAttribute;
@@ -70,8 +71,11 @@ public class FileApi {
         File file = openedFile.getDescriptor();
         InputStream stream = openedFile.getStream();
 
+        String fileName = "filename=\"" + file.getName() + "\"";
+        String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(file.getName());
+
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; filename=\"" + file.getName()+"\"")
+                .header("Content-Disposition", "attachment; " + fileName + "; " + fileNameAsterisk)
                 .header("Content-Length", String.valueOf(file.getSize()))
                 .contentType(MediaType.parseMediaType(file.getContentType()))
                 .body(new InputStreamResource(stream));

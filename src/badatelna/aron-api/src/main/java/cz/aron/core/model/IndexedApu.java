@@ -14,7 +14,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,8 +37,11 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
     @Field(type = FieldType.Keyword)
     private String type;
 
+    @Field(type = FieldType.Boolean)
+    private boolean containsDigitalObjects;
+
     @Transient
-    private Map<String, Object> additionalDataToIndex = new HashMap<>();
+    private Map<String, List<Object>> additionalDataToIndex = new HashMap<>();  //data are put here to be later inserted to dynamic ES fields
 
     @Override
     public void toIndexedObject(ApuEntity obj) {
@@ -44,6 +49,7 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
         name = obj.getName();
         description = obj.getDescription();
         type = obj.getType().name();
+        containsDigitalObjects = obj.getDigitalObjects().size() > 0;
 
         TypesHolder typesHolder = ApplicationContextUtils.getApplicationContext().getBean(TypesHolder.class);
         ObjectMapper objectMapper = ApplicationContextUtils.getApplicationContext().getBean(ObjectMapper.class);
@@ -77,10 +83,16 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
                             throw new RuntimeException(e);
                         }
                         break;
+                    case LINK:
+                        data = value;
+                        break;
                     default:
                         throw new RuntimeException("Unknown type");
                 }
-                additionalDataToIndex.put(itemType.getCode(), data);
+                additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
+                if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
+                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(item.getTargetLabel());
+                }
             }
         }
     }

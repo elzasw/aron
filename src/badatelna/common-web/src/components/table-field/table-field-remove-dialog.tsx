@@ -14,7 +14,9 @@ export const TableFieldRemoveDialog = forwardRef<
   const { removeRow } = useContext(TableFieldContext);
 
   const handleRemove = useEventCallback(() => {
-    removeRow(index);
+    if (index !== undefined) {
+      removeRow(index);
+    }
   });
 
   return (

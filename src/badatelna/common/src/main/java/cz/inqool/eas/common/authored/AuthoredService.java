@@ -10,7 +10,7 @@ import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
 import cz.inqool.eas.common.projection.Projectable;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
 import javax.transaction.Transactional;
 
@@ -99,7 +99,7 @@ public abstract class AuthoredService<
      * Adds checking for write access.
      */
     @Override
-    protected void preCreateHook(@Nonnull ROOT object) {
+    protected void preCreateHook(@NotNull ROOT object) {
         Access access = writeAccess();
 
         ne(access, Access.NONE, () -> new ForbiddenOperation(NOT_ALLOWED));
@@ -111,7 +111,7 @@ public abstract class AuthoredService<
      * Adds checking for write access.
      */
     @Override
-    protected void preUpdateHook(@Nonnull ROOT object) {
+    protected void preUpdateHook(@NotNull ROOT object) {
         String id = object.getId();
 
         Access access = writeAccess();
@@ -137,7 +137,7 @@ public abstract class AuthoredService<
      * Adds checking for write access.
      */
     @Override
-    protected void preDeleteHook(@Nonnull String id) {
+    protected void preDeleteHook(@NotNull String id) {
         Access access = writeAccess();
 
         if (access == Access.TENANT) {
@@ -161,7 +161,7 @@ public abstract class AuthoredService<
      * Adds checking for read access.
      */
     @Override
-    protected void preGetHook(@Nonnull String id) {
+    protected void preGetHook(@NotNull String id) {
         Access access = readAccess();
 
         if (access == Access.TENANT) {
@@ -185,7 +185,7 @@ public abstract class AuthoredService<
      * Based on access add none or own (user or tenant) filter.
      */
     @Override
-    protected void preListHook(@Nonnull Params params) {
+    protected void preListHook(@NotNull Params params) {
         Access access = readAccess();
 
         if (access == Access.TENANT) {

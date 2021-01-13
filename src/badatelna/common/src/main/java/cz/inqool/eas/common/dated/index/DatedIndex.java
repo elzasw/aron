@@ -2,6 +2,7 @@ package cz.inqool.eas.common.dated.index;
 
 import cz.inqool.eas.common.dated.DatedIndexed;
 import cz.inqool.eas.common.dated.store.DatedObject;
+import cz.inqool.eas.common.domain.DomainIndexed;
 import cz.inqool.eas.common.domain.index.DomainIndex;
 import cz.inqool.eas.common.projection.Projectable;
 import lombok.Setter;
@@ -14,7 +15,7 @@ import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -65,7 +66,7 @@ public class DatedIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Projec
      * Object is not removed on delete, rather a delete flag is set.
      */
     @Override
-    public void delete(@Nonnull INDEXED obj) {
+    public void delete(@NotNull INDEXED obj) {
         UpdateRequest request = createDeleteRequest(obj);
         execute(client -> client.update(request, RequestOptions.DEFAULT));
         refresh();
@@ -77,7 +78,7 @@ public class DatedIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Projec
      * Objects are not removed on delete, rather a delete flag is set.
      */
     @Override
-    public void delete(@Nonnull Collection<? extends INDEXED> objects) {
+    public void delete(@NotNull Collection<? extends INDEXED> objects) {
         if (objects.isEmpty()) {
             return;
         }
@@ -85,6 +86,24 @@ public class DatedIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Projec
         BulkRequest request = createBulkDeleteRequest(objects);
         execute(client -> client.bulk(request, RequestOptions.DEFAULT));
         refresh();
+    }
+
+    /**
+     * Removes object from index.
+     *
+     * @see DomainIndex#delete(DomainIndexed)
+     */
+    public void deletePermanently(@NotNull INDEXED obj) {
+        super.delete(obj);
+    }
+
+    /**
+     * Removes collection of objects from index.
+     *
+     * @see DomainIndex#delete(Collection)
+     */
+    public void deletePermanently(@NotNull Collection<? extends INDEXED> objects) {
+        super.delete(objects);
     }
 
     /**

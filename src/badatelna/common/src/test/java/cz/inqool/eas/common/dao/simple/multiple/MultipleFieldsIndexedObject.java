@@ -112,7 +112,7 @@ public class MultipleFieldsIndexedObject extends DomainIndexedObject<MultipleFie
     @Field(type = FieldType.Double)
     private BigDecimal bigDecimal;
 
-    @Field(type = FieldType.Date, format = DateFormat.date_hour_minute_second_fraction)
+    @Field(type = FieldType.Date, format = DateFormat.date_optional_time)
     private Instant instant;
     @Field(type = FieldType.Date, format = DateFormat.date)
     private LocalDate localDate;

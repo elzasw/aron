@@ -1,13 +1,25 @@
-import React, { ChangeEvent, forwardRef } from 'react';
+import React, {
+  ChangeEvent,
+  forwardRef,
+  useRef,
+  RefObject,
+  useLayoutEffect,
+  useState,
+} from 'react';
+import clsx from 'clsx';
 import MuiTextField from '@material-ui/core/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { TextFieldProps } from './text-field-types';
 import { useStyles } from './text-field-styles';
+import { Tooltip } from 'components/tooltip/tooltip';
+import { useComponentSize } from 'utils/component-size';
+import { useDebounce } from 'use-debounce/lib';
 
 export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
   function TextField(
     {
+      form,
       id,
       name,
       onChange,
@@ -46,6 +58,16 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
 
     const classes = useStyles();
 
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [useTooltip, setUseTooltip] = useState(false);
+
+    const { width } = useComponentSize(inputRef);
+    const [debouncedWidth] = useDebounce(width, 500);
+
+    useLayoutEffect(() => {
+      setUseTooltip(isEllipsisActive(inputRef));
+    }, [value, debouncedWidth]);
+
     startAdornment = startAdornment && (
       <InputAdornment position="start">{startAdornment}</InputAdornment>
     );
@@ -53,13 +75,18 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
       <InputAdornment position="end">{endAdornment}</InputAdornment>
     );
 
-    return (
+    const content = (
       <MuiTextField
         InputProps={{
           classes,
           startAdornment,
           endAdornment,
         }}
+        inputProps={{
+          form,
+          ref: inputRef,
+        }}
+        className={clsx({ [classes.disabled]: disabled })}
         id={id}
         name={name}
         ref={ref}
@@ -75,7 +102,20 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
         lang="cs"
         type={type}
         autoComplete={autocomplete}
-      ></MuiTextField>
+      />
+    );
+
+    return useTooltip ? (
+      <Tooltip title={value} placement="top-start" type="HOVER">
+        {content}
+      </Tooltip>
+    ) : (
+      <>{content}</>
     );
   }
 );
+
+function isEllipsisActive(e: RefObject<HTMLInputElement>) {
+  const current = e.current;
+  return current !== null ? current.offsetWidth < current.scrollWidth : false;
+}

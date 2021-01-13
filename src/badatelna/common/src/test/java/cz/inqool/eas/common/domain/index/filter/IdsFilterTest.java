@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class IdsFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new IdsFilter(entity_1.getId());
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -25,7 +25,7 @@ class IdsFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new IdsFilter(entity_1.getId())
@@ -51,7 +51,7 @@ class IdsFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"IDS\",\r\n" +
                 "  \"ids\" : [ \"" + entity_1.getId() + "\" ]\r\n" +
@@ -64,7 +64,7 @@ class IdsFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +

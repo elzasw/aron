@@ -1,9 +1,7 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
-import com.google.common.annotations.Beta;
 import cz.inqool.eas.common.domain.index.field.IndexFieldGeoPointLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.elasticsearch.common.geo.GeoPoint;
@@ -15,7 +13,6 @@ import javax.validation.constraints.NotNull;
 /**
  * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geo-bounding-box-query.html">Geo-bounding box query</a>
  */
-@Beta
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class GeoBoundingBoxFilter extends GeoFilter {
@@ -28,12 +25,11 @@ public class GeoBoundingBoxFilter extends GeoFilter {
 
 
     GeoBoundingBoxFilter() {
-        super(FilterOperation.GEO_DISTANCE);
+        super(FilterOperation.GEO_BOUNDING_BOX);
     }
 
-    @Builder
     public GeoBoundingBoxFilter(@NotNull String field, @NotNull GeoPoint topLeft, @NotNull GeoPoint bottomRight) {
-        super(FilterOperation.GEO_DISTANCE, field);
+        super(FilterOperation.GEO_BOUNDING_BOX, field);
         this.topLeft = topLeft;
         this.bottomRight = bottomRight;
     }

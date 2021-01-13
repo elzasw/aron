@@ -26,17 +26,17 @@ export function TableFilterDialogItem({
         label={filter.label}
         control={
           <Checkbox
-            checked={state.enabled}
+            checked={state?.enabled}
             color="primary"
             onChange={onToggle}
           />
         }
       />
-      {state.enabled && (
+      {state?.enabled && (
         <FilterComponent
           filter={filter}
           state={state}
-          disabled={!state.enabled}
+          disabled={!state?.enabled}
           value={state.value}
           onChange={onChangeValue}
           onChangeState={onChangeFilterState}

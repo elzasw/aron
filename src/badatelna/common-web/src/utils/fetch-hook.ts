@@ -6,7 +6,11 @@ import { abortableFetch, AbortableFetch } from './abortable-fetch';
 import { useEventCallback } from './event-callback-hook';
 import { useIntl } from 'react-intl';
 
-export function useFetch<RESULT>(request: RequestInfo, opts?: RequestInit) {
+interface Options extends RequestInit {
+  textResponse?: boolean;
+}
+
+export function useFetch<RESULT>(request: RequestInfo, opts?: Options) {
   const [result, setResult] = useState<RESULT>();
   const [loading, setLoading] = useState<boolean>(false);
   const [counter, setCounter] = useState(0);
@@ -24,7 +28,9 @@ export function useFetch<RESULT>(request: RequestInfo, opts?: RequestInit) {
         setLoading(true);
         fetch = abortableFetch(request, opts);
 
-        const data = await fetch.json();
+        const data = await (opts && opts.textResponse
+          ? fetch.text()
+          : fetch.json());
 
         unstable_batchedUpdates(() => {
           setResult(data);

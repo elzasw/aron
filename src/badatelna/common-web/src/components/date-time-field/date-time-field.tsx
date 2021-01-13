@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import DateFnsUtils from '@date-io/date-fns';
-import { formatISO, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
 import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import { KeyboardDateTimePicker } from '@material-ui/pickers/DateTimePicker';
 import { LocaleContext } from 'common/locale/locale-context';
@@ -9,7 +9,12 @@ import { parseISOSafe } from 'utils/date-utils';
 import { DateTimeFieldProps } from './date-time-field-types';
 import { useStyles } from './date-time-field-styles';
 
+/**
+ * Format data for java Instant, NOT LocalDateTime
+ * @param param0
+ */
 export function DateTimeField({
+  form,
   disabled,
   minDate: minDateString,
   maxDate: maxDateString,
@@ -52,7 +57,7 @@ export function DateTimeField({
     if (date == null) {
       onChange(null);
     } else if (!isError(date)) {
-      onChange(formatISO(date, { representation: 'complete' }));
+      onChange(date.toISOString());
     }
   });
 
@@ -63,6 +68,9 @@ export function DateTimeField({
       <KeyboardDateTimePicker
         InputProps={{
           classes,
+        }}
+        inputProps={{
+          form,
         }}
         views={['minutes', 'hours', 'date', 'month', 'year']}
         disableToolbar

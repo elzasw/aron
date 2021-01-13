@@ -8,6 +8,7 @@ import { appHeaderItems } from '../../enums';
 import { AppTitle } from '../app-title';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
+import { Language } from '../language';
 
 export function AppHeader() {
   const classes = useStyles();
@@ -42,14 +43,18 @@ export function AppHeader() {
               {label}
             </Link>
           ))}
+          <Language className={spacingClasses.marginLeft} />
         </div>
         <>
-          <IconButton
-            className={classes.toggleMenuButton}
-            onClick={() => setOpen((prev) => !prev)}
-          >
-            <MenuIcon />
-          </IconButton>
+          <div className={classNames(classes.mobileMenu, layoutClasses.flex)}>
+            <IconButton
+              className={classes.toggleMenuButton}
+              onClick={() => setOpen((prev) => !prev)}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Language className={spacingClasses.marginLeft} />
+          </div>
           {open ? (
             <div
               className={classes.appHeaderItemsMobile}

@@ -6,8 +6,9 @@ import { useFiles } from './files-hook';
 export function FilesProvider({
   children,
   url,
+  maxUploadSize,
 }: React.PropsWithChildren<FileProviderProps>) {
-  const { context } = useFiles(url);
+  const { context } = useFiles(url, maxUploadSize);
   return (
     <FilesContext.Provider value={context}>{children}</FilesContext.Provider>
   );

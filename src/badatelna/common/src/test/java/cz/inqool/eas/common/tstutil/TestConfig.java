@@ -1,22 +1,20 @@
 package cz.inqool.eas.common.tstutil;
 
+import cz.inqool.eas.common.TestBase;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import static cz.inqool.eas.common.tstutil.TestBase.ELASTICSEARCH_CONTAINER;
 
 @TestConfiguration
-@EnableTransactionManagement
+//@EnableTransactionManagement
 public class TestConfig {
 
     @Bean
     public RestHighLevelClient restHighLevelClient() {
         ClientConfiguration configuration = ClientConfiguration.builder()
-                .connectedTo("localhost:" + ELASTICSEARCH_CONTAINER.getMappedPort(9200))
+                .connectedTo("localhost:" + TestBase.getElasticsearchPort())
                 .build();
         return RestClients.create(configuration).rest();
     }

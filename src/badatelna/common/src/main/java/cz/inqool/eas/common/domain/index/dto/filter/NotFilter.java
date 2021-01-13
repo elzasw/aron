@@ -1,7 +1,6 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
 import cz.inqool.eas.common.domain.index.QueryUtils;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -23,7 +22,6 @@ public class NotFilter extends LogicalFilter {
         this(List.of(filters));
     }
 
-    @Builder
     public NotFilter(@Valid List<Filter> filters) {
         super(FilterOperation.NOT, filters);
     }

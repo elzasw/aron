@@ -1,11 +1,28 @@
 import { ComponentType, ReactNode } from 'react';
 import * as Yup from 'yup';
 import { CrudSource, DomainObject } from 'common/common-types';
-import { ValidationError } from 'composite/form/form-types';
+import { FormHandle } from 'composite/form/form-types';
 
-export interface DetailToolbarProps {
+export type DetailToolbarButtonName = 'NEW' | 'EDIT' | 'REMOVE';
+
+export interface DetailToolbarProps<OBJECT extends DomainObject> {
   before?: ReactNode;
   after?: ReactNode;
+
+  showButton?: ({
+    button,
+    source,
+  }: {
+    button: DetailToolbarButtonName;
+    source: CrudSource<OBJECT>;
+  }) => boolean;
+  disableButton?: ({
+    button,
+    source,
+  }: {
+    button: DetailToolbarButtonName;
+    source: CrudSource<OBJECT>;
+  }) => boolean;
 }
 
 export interface DetailProps<OBJECT extends DomainObject> {
@@ -14,7 +31,7 @@ export interface DetailProps<OBJECT extends DomainObject> {
    */
   source: CrudSource<OBJECT>;
 
-  ToolbarComponent?: ComponentType<DetailToolbarProps>;
+  ToolbarComponent?: ComponentType<DetailToolbarProps<OBJECT>>;
 
   ContainerComponent?: ComponentType;
   FieldsComponent?: ComponentType;
@@ -27,9 +44,16 @@ export interface DetailProps<OBJECT extends DomainObject> {
    */
   onPersisted?: (id: string | null) => void;
 
-  toolbarProps?: DetailToolbarProps;
+  toolbarProps?: DetailToolbarProps<OBJECT>;
 
   initNewItem?: () => OBJECT;
+
+  /**
+   * Shows error panel on top of form.
+   *
+   * Default: false
+   */
+  showErrorPanel?: boolean;
 }
 
 export type RefreshListener = () => void;
@@ -38,7 +62,8 @@ export interface DetailHandle<OBJECT extends DomainObject> {
   source: CrudSource<OBJECT>;
   isExisting: boolean;
   mode: DetailMode;
-  errors: ValidationError[];
+  formRef?: FormHandle<OBJECT> | null;
+  showErrorPanel: boolean;
 
   setActive: (id: string | null) => void;
   refresh: () => void;

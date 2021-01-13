@@ -23,10 +23,14 @@ export const TableFieldRow = memo(function TableFieldRow<OBJECT>({
     filteredColumns,
     showDetailBtnCond,
     showRadioCond,
+    onSelect,
   } = useContext<TableFieldContext<OBJECT>>(TableFieldContext);
 
   const handleSelectClick = useEventCallback(() => {
-    selectRow(index);
+    if (showRadioCond(value)) {
+      onSelect?.(value, index);
+      selectRow(index);
+    }
   });
 
   const handleDetailClick = useEventCallback(() => {

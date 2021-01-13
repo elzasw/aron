@@ -21,6 +21,7 @@ public class ApuEntity extends DomainObject<ApuEntity> {
     private String name;
     private String description;
     private String permalink;
+    private int order;
     private boolean published;
 
     @ManyToOne
@@ -36,11 +37,15 @@ public class ApuEntity extends DomainObject<ApuEntity> {
     @BatchSize(size = 100)
     private List<ApuPart> parts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "apu", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Fetch(FetchMode.SELECT)
+    @BatchSize(size = 100)
+    private List<ApuAttachment> attachments = new ArrayList<>();
 
     @OneToMany(mappedBy = "apu", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Fetch(FetchMode.SELECT)
     @BatchSize(size = 100)
-    private List<ApuAttachment> attachments;
+    private List<DigitalObject> digitalObjects = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     private ApuType type;

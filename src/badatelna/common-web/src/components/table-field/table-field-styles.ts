@@ -57,7 +57,7 @@ export const useStyles = makeStyles((theme) => ({
     width: 30,
     height: 20,
     verticalAlign: 'top',
-    display: 'inline-block',
+    display: 'inline-flex',
     padding: 0,
     overflow: 'hidden',
     '& svg': {
@@ -105,6 +105,7 @@ export const useStyles = makeStyles((theme) => ({
     boxSizing: 'border-box',
     borderBottom: '1px solid #cdcdcd',
     minWidth: '100%',
+    height: 30,
     '&:hover': {
       backgroundColor: theme.palette.highlight,
     },

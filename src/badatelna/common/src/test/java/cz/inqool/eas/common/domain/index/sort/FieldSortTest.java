@@ -24,8 +24,8 @@ class FieldSortTest extends IndexSortTestBase {
 
         String jsonSort = JsonUtils.toJsonString(sort, true);
         String expectedJsonSort = "{\r\n" +
-                "  \"type\" : \"FIELD\",\r\n" +
                 "  \"order\" : \"ASC\",\r\n" +
+                "  \"type\" : \"FIELD\",\r\n" +
                 "  \"field\" : \"uuidId\",\r\n" +
                 "  \"missing\" : \"LAST\",\r\n" +
                 "  \"sortMode\" : \"AVG\"\r\n" +
@@ -44,8 +44,8 @@ class FieldSortTest extends IndexSortTestBase {
         String jsonParams = JsonUtils.toJsonString(params, true);
         String expectedJsonParams = "{\r\n" +
                 "  \"sort\" : [ {\r\n" +
-                "    \"type\" : \"FIELD\",\r\n" +
                 "    \"order\" : \"ASC\",\r\n" +
+                "    \"type\" : \"FIELD\",\r\n" +
                 "    \"field\" : \"uuidId\",\r\n" +
                 "    \"missing\" : \"LAST\",\r\n" +
                 "    \"sortMode\" : \"AVG\"\r\n" +
@@ -66,8 +66,8 @@ class FieldSortTest extends IndexSortTestBase {
     @Test
     void deserialize() {
         String jsonSort = "{\r\n" +
-                "  \"type\" : \"FIELD\",\r\n" +
                 "  \"order\" : \"DESC\",\r\n" +
+                "  \"type\" : \"FIELD\",\r\n" +
                 "  \"field\" : \"instant\",\r\n" +
                 "  \"missing\" : \"FIRST\",\r\n" +
                 "  \"sortMode\" : \"SUM\"\r\n" +
@@ -98,8 +98,8 @@ class FieldSortTest extends IndexSortTestBase {
     void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ {\r\n" +
-                "    \"type\" : \"FIELD\",\r\n" +
                 "    \"order\" : \"DESC\",\r\n" +
+                "    \"type\" : \"FIELD\",\r\n" +
                 "    \"field\" : \"instant\",\r\n" +
                 "    \"missing\" : \"FIRST\",\r\n" +
                 "    \"sortMode\" : \"SUM\"\r\n" +

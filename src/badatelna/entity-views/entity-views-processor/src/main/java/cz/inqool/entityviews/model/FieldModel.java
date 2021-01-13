@@ -143,6 +143,9 @@ public class FieldModel implements Accessible, Viewable {
                     if (name.equals(ManyToOne.class.getCanonicalName())) {
                         continue;
                     }
+                    if (name.equals(OneToOne.class.getCanonicalName())) {
+                        continue;
+                    }
 
                     // replace
                     if (name.equals(JoinColumn.class.getCanonicalName())) {
@@ -176,6 +179,11 @@ public class FieldModel implements Accessible, Viewable {
                     if (name.equals(OneToMany.class.getCanonicalName())) {
                         Map<String, Object> attributes = new HashMap<>(annotation.getAttributes());
                         Object columnName = attributes.remove("mappedBy");
+
+                        if (columnName instanceof String) {
+                            String str = (String) columnName;
+                            columnName = str.substring(0, str.length() - 1) + "_id" + "\"";
+                        }
 
                         AnnotationModel oneToManyAnnotation = new AnnotationModel(oneToManyType, attributes, null);
                         println(oneToManyAnnotation.toString());

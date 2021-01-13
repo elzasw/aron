@@ -16,6 +16,7 @@
 
 package cz.inqool.eas.common.security.form.internal;
 
+import cz.inqool.eas.common.security.internal.RedirectStrategy;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -59,7 +60,7 @@ public class FormLoginEntryPoint implements AuthenticationEntryPoint,
 
     private boolean useForward = false;
 
-    private FormLoginRedirectStrategy redirectStrategy = new FormLoginRedirectStrategy();
+    private RedirectStrategy redirectStrategy = new RedirectStrategy();
 
     /**
      *
@@ -265,11 +266,11 @@ public class FormLoginEntryPoint implements AuthenticationEntryPoint,
         return useForward;
     }
 
-    public FormLoginRedirectStrategy getRedirectStrategy() {
+    public RedirectStrategy getRedirectStrategy() {
         return redirectStrategy;
     }
 
-    public void setRedirectStrategy(FormLoginRedirectStrategy redirectStrategy) {
+    public void setRedirectStrategy(RedirectStrategy redirectStrategy) {
         this.redirectStrategy = redirectStrategy;
     }
 }

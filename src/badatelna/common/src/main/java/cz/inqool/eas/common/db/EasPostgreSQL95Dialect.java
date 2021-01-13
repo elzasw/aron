@@ -20,6 +20,7 @@ public class EasPostgreSQL95Dialect extends PostgreSQL95Dialect {
         registerColumnType(Types.NCHAR,    "char(1)");
         registerColumnType(Types.NVARCHAR, "varchar($l)");
         registerColumnType(Types.NCLOB,    "text");
+        registerColumnType(Types.CLOB,    "text");
 
         registerFunction("add_years",   new SQLFunctionTemplate(LocalDateType.INSTANCE, "?1 + interval '1' year * ?2"));
         registerFunction("add_months",  new SQLFunctionTemplate(LocalDateType.INSTANCE, "?1 + interval '1' month * ?2"));

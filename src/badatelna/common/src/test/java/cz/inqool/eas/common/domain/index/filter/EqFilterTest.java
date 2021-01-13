@@ -10,6 +10,7 @@ import cz.inqool.eas.common.utils.JsonUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static cz.inqool.eas.common.dao.simple.keyvalue.SimpleKeyValueIndexedObject.IndexFields.key;
@@ -21,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class EqFilterTest extends IndexFilterTestBase {
 
     @Test
-    void serializeTest() {
+    void serialize() {
         Filter filter = new EqFilter(IndexFields.uuidId, entity_1.getUuidId().toString());
 
         String jsonFilter = JsonUtils.toJsonString(filter, true);
@@ -36,7 +37,7 @@ class EqFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void serializeWithParamsTest() {
+    void serializeWithParams() {
         Params params = new Params();
         params.addFilter(
                 new EqFilter(IndexFields.uuidId, entity_1.getUuidId().toString())
@@ -64,7 +65,7 @@ class EqFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeTest() {
+    void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"EQ\",\r\n" +
                 "  \"nestedQueryEnabled\" : true,\r\n" +
@@ -79,7 +80,7 @@ class EqFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void deserializeWithParamsTest() {
+    void deserializeWithParams() {
         String jsonParams = "{\r\n" +
                 "  \"sort\" : [ ],\r\n" +
                 "  \"offset\" : null,\r\n" +
@@ -259,7 +260,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void booleanEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.booleanObject, entity_1.getBooleanObject().toString())
+                new EqFilter(IndexFields.booleanObject, entity_1.getBooleanObject())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -269,7 +270,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void booleanEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.booleanObject, entity_2.getBooleanObject().toString())
+                new EqFilter(IndexFields.booleanObject, entity_2.getBooleanObject())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -282,7 +283,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.booleanObject, entity_1.getBooleanObject().toString())
+                new EqFilter(IndexFields.booleanObject, entity_1.getBooleanObject())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -296,7 +297,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.booleanObject, Boolean.TRUE.toString())
+                new EqFilter(IndexFields.booleanObject, Boolean.TRUE)
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -306,7 +307,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void integerEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.integerObject, entity_1.getIntegerObject().toString())
+                new EqFilter(IndexFields.integerObject, entity_1.getIntegerObject())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -316,7 +317,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void integerEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.integerObject, entity_2.getIntegerObject().toString())
+                new EqFilter(IndexFields.integerObject, entity_2.getIntegerObject())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -329,7 +330,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.integerObject, entity_1.getIntegerObject().toString())
+                new EqFilter(IndexFields.integerObject, entity_1.getIntegerObject())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -339,7 +340,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void integerEq_none() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.integerObject, "456")
+                new EqFilter(IndexFields.integerObject, 456)
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -349,7 +350,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void longEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.longObject, entity_1.getLongObject().toString())
+                new EqFilter(IndexFields.longObject, entity_1.getLongObject())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -359,7 +360,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void longEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.longObject, entity_2.getLongObject().toString())
+                new EqFilter(IndexFields.longObject, entity_2.getLongObject())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -372,7 +373,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.longObject, entity_1.getLongObject().toString())
+                new EqFilter(IndexFields.longObject, entity_1.getLongObject())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -382,7 +383,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void longEq_none() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.longObject, "84579531")
+                new EqFilter(IndexFields.longObject, 84579531)
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -392,7 +393,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void doubleEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.doubleObject, entity_1.getDoubleObject().toString())
+                new EqFilter(IndexFields.doubleObject, entity_1.getDoubleObject())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -402,7 +403,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void doubleEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.doubleObject, entity_2.getDoubleObject().toString())
+                new EqFilter(IndexFields.doubleObject, entity_2.getDoubleObject())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -415,7 +416,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.doubleObject, entity_1.getDoubleObject().toString())
+                new EqFilter(IndexFields.doubleObject, entity_1.getDoubleObject())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -425,7 +426,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void doubleEq_none() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.doubleObject, "17.695")
+                new EqFilter(IndexFields.doubleObject, 17.695)
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -435,7 +436,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void decimalEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.bigDecimal, entity_1.getBigDecimal().toString())
+                new EqFilter(IndexFields.bigDecimal, entity_1.getBigDecimal())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -445,7 +446,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void decimalEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.bigDecimal, entity_2.getBigDecimal().toString())
+                new EqFilter(IndexFields.bigDecimal, entity_2.getBigDecimal())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -458,7 +459,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.bigDecimal, entity_1.getBigDecimal().toString())
+                new EqFilter(IndexFields.bigDecimal, entity_1.getBigDecimal())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -468,7 +469,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void decimalEq_none() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.bigDecimal, "854.21")
+                new EqFilter(IndexFields.bigDecimal, new BigDecimal("854.21"))
         );
 
         assertMatchesNone(() -> repository.listByParams(params));

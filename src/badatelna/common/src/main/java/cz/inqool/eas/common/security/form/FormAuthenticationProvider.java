@@ -1,6 +1,5 @@
 package cz.inqool.eas.common.security.form;
 
-import cz.inqool.eas.common.exception.MissingObject;
 import cz.inqool.eas.common.security.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -24,13 +23,15 @@ public abstract class FormAuthenticationProvider extends AbstractUserDetailsAuth
 
         try {
             User user = this.findUser(username);
-            notNull(user, () -> new MissingObject(User.class, username));
+            notNull(user, () -> new BadCredentialsException("User not found"));
 
             boolean result = passwordEncoder.matches(password, user.getPassword());
 
             if (result != Boolean.TRUE) {
                 throw new BadCredentialsException("Invalid password supplied");
             }
+        } catch (BadCredentialsException e) {
+            throw e;
         } catch (Exception e) {
             throw new AuthenticationServiceException("Error communicating with auth db", e);
         }
@@ -44,7 +45,7 @@ public abstract class FormAuthenticationProvider extends AbstractUserDetailsAuth
         return user;
     }
 
-    protected abstract User findUser(String username);
+    public abstract User findUser(String username);
 
     @Autowired
     public void setPasswordEncoder(PasswordEncoder passwordEncoder) {

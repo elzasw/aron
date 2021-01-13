@@ -1,15 +1,18 @@
 import { useState, useRef, useContext } from 'react';
 import { unstable_batchedUpdates } from 'react-dom';
 import { useIntl } from 'react-intl';
-import { CrudSource, DomainObject } from 'common/common-types';
+import { CrudSource, DomainObject, CrudSourceProps } from 'common/common-types';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
 import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
 import { abortableFetch, AbortableFetch } from './abortable-fetch';
 import { useEventCallback } from './event-callback-hook';
 
-export function useCrudSource<TYPE extends DomainObject>(
-  url: string
-): CrudSource<TYPE> {
+export function useCrudSource<TYPE extends DomainObject>({
+  url,
+  createMessages,
+  updateMessages,
+  delMessages,
+}: CrudSourceProps): CrudSource<TYPE> {
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<TYPE | null>(null);
   const fetch = useRef<AbortableFetch | null>(null);
@@ -63,10 +66,12 @@ export function useCrudSource<TYPE extends DomainObject>(
 
       const data: TYPE = await fetch.current.json();
 
-      const message = intl.formatMessage({
-        id: 'EAS_CRUD_SOURCE_MSG_CREATE_SUCCESS',
-        defaultMessage: 'Záznam byl úspěšně vytvořen.',
-      });
+      const message =
+        createMessages?.successMessage ??
+        intl.formatMessage({
+          id: 'EAS_CRUD_SOURCE_MSG_CREATE_SUCCESS',
+          defaultMessage: 'Záznam byl úspěšně vytvořen.',
+        });
 
       unstable_batchedUpdates(() => {
         showSnackbar(message, SnackbarVariant.SUCCESS);
@@ -78,13 +83,15 @@ export function useCrudSource<TYPE extends DomainObject>(
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message = intl.formatMessage(
-          {
-            id: 'EAS_CRUD_SOURCE_MSG_CREATE_ERROR',
-            defaultMessage: 'Chyba uložení dat: {detail}',
-          },
-          { detail: err.message }
-        );
+        const message =
+          createMessages?.errorMessage ??
+          intl.formatMessage(
+            {
+              id: 'EAS_CRUD_SOURCE_MSG_CREATE_ERROR',
+              defaultMessage: 'Chyba uložení dat: {detail}',
+            },
+            { detail: err.message }
+          );
 
         showSnackbar(message, SnackbarVariant.ERROR);
 
@@ -105,10 +112,12 @@ export function useCrudSource<TYPE extends DomainObject>(
 
       const data: TYPE = await fetch.current.json();
 
-      const message = intl.formatMessage({
-        id: 'EAS_CRUD_SOURCE_MSG_UPDATE_SUCCESS',
-        defaultMessage: 'Záznam byl úspěšně upraven.',
-      });
+      const message =
+        updateMessages?.successMessage ??
+        intl.formatMessage({
+          id: 'EAS_CRUD_SOURCE_MSG_UPDATE_SUCCESS',
+          defaultMessage: 'Záznam byl úspěšně upraven.',
+        });
 
       unstable_batchedUpdates(() => {
         showSnackbar(message, SnackbarVariant.SUCCESS);
@@ -120,13 +129,15 @@ export function useCrudSource<TYPE extends DomainObject>(
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message = intl.formatMessage(
-          {
-            id: 'EAS_CRUD_SOURCE_MSG_UPDATE_ERROR',
-            defaultMessage: 'Chyba uložení dat: {detail}',
-          },
-          { detail: err.message }
-        );
+        const message =
+          updateMessages?.errorMessage ??
+          intl.formatMessage(
+            {
+              id: 'EAS_CRUD_SOURCE_MSG_UPDATE_ERROR',
+              defaultMessage: 'Chyba uložení dat: {detail}',
+            },
+            { detail: err.message }
+          );
 
         showSnackbar(message, SnackbarVariant.ERROR);
 
@@ -147,10 +158,12 @@ export function useCrudSource<TYPE extends DomainObject>(
 
       await fetch.current.none();
 
-      const message = intl.formatMessage({
-        id: 'EAS_CRUD_SOURCE_MSG_DELETE_SUCCESS',
-        defaultMessage: 'Záznam byl úspěšně smazán.',
-      });
+      const message =
+        delMessages?.successMessage ??
+        intl.formatMessage({
+          id: 'EAS_CRUD_SOURCE_MSG_DELETE_SUCCESS',
+          defaultMessage: 'Záznam byl úspěšně smazán.',
+        });
 
       unstable_batchedUpdates(() => {
         showSnackbar(message, SnackbarVariant.SUCCESS);
@@ -161,13 +174,15 @@ export function useCrudSource<TYPE extends DomainObject>(
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message = intl.formatMessage(
-          {
-            id: 'EAS_CRUD_SOURCE_MSG_DELETE_ERROR',
-            defaultMessage: 'Chyba mazání dat: {detail}',
-          },
-          { detail: err.message }
-        );
+        const message =
+          delMessages?.successMessage ??
+          intl.formatMessage(
+            {
+              id: 'EAS_CRUD_SOURCE_MSG_DELETE_ERROR',
+              defaultMessage: 'Chyba mazání dat: {detail}',
+            },
+            { detail: err.message }
+          );
 
         showSnackbar(message, SnackbarVariant.ERROR);
 

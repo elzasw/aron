@@ -12,4 +12,9 @@ export const useStyles = makeStyles(() => ({
   input: {
     padding: '2pt',
   },
+  disabled: {
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
+  },
 }));

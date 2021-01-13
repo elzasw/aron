@@ -13,7 +13,7 @@ import { noop } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { DomainObject } from 'common/common-types';
-import { FormHandle, ValidationError } from 'composite/form/form-types';
+import { FormHandle } from 'composite/form/form-types';
 import {
   NavigationContext,
   Prompt,
@@ -31,11 +31,14 @@ import { useIntl } from 'react-intl';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
 import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
 import { EmptyComponent } from 'utils/empty-component';
+import { EvidenceContext } from 'composite/evidence/evidence-context';
 
 export function useDetail<OBJECT extends DomainObject>(
   options: DetailProps<OBJECT>,
   ref: Ref<DetailHandle<OBJECT>>
 ) {
+  const formRef = useRef<FormHandle<OBJECT>>(null);
+
   const props: Required<DetailProps<OBJECT>> = {
     ToolbarComponent: DetailToolbar,
     ContainerComponent: DetailContainer,
@@ -43,9 +46,12 @@ export function useDetail<OBJECT extends DomainObject>(
     GeneralFieldsComponent: EmptyComponent,
     onPersisted: noop,
     initNewItem: defaultInitNewItem,
-    toolbarProps: {},
+    showErrorPanel: false,
     validationSchema: Yup.object<OBJECT>(),
     ...options,
+    toolbarProps: {
+      ...options.toolbarProps,
+    },
   };
 
   const intl = useIntl();
@@ -60,17 +66,21 @@ export function useDetail<OBJECT extends DomainObject>(
     defaultMessage: 'Skutečně chcete opustit rozpracované změny?',
   });
   const prompt: Prompt = useMemo(
-    () => ({ title: confirmTitle, text: confirmText }),
+    () => ({
+      title: confirmTitle,
+      text: confirmText,
+      clearCallback: () => {
+        formRef.current?.resetValidation();
+      },
+    }),
     [confirmTitle, confirmText]
   );
 
   const { registerPrompt, unregisterPrompt } = useContext(NavigationContext);
+  const { tableRef, detailRef } = useContext(EvidenceContext);
 
   const [mode, setMode] = useState<DetailMode>(DetailMode.NONE);
-  const [errors, setErrors] = useState<ValidationError[]>([]);
   const refreshListeners = useRef<RefreshListener[]>([]);
-
-  const formRef = useRef<FormHandle<OBJECT>>(null);
 
   const setActive = useEventCallback(async (id: string | null) => {
     if (id !== null) {
@@ -91,7 +101,7 @@ export function useDetail<OBJECT extends DomainObject>(
     options.source.refresh();
 
     refreshListeners.current.forEach((l) => l());
-    setErrors([]);
+    formRef.current?.resetValidation();
   });
 
   const refreshAll = useEventCallback(() => {
@@ -99,7 +109,7 @@ export function useDetail<OBJECT extends DomainObject>(
       options.source.refresh();
       refreshListeners.current.forEach((l) => l());
 
-      setErrors([]);
+      formRef.current?.resetValidation();
       props.onPersisted(options.source.data?.id ?? null);
     }
   });
@@ -109,11 +119,14 @@ export function useDetail<OBJECT extends DomainObject>(
       options.source.reset();
     }
 
-    formRef.current?.setFieldValues({ ...props.initNewItem(), ...data });
+    // needs to do the form initialization in next frame, because the data source reset will trigger form load of empty data
+    requestAnimationFrame(() => {
+      formRef.current?.setFieldValues({ ...props.initNewItem(), ...data });
 
-    setMode(DetailMode.NEW);
-    setErrors([]);
-    registerPrompt(prompt);
+      setMode(DetailMode.NEW);
+      formRef.current?.resetValidation();
+      registerPrompt(prompt);
+    });
   });
 
   const startEditing = useEventCallback(() => {
@@ -124,10 +137,20 @@ export function useDetail<OBJECT extends DomainObject>(
   });
 
   const cancelEditing = useEventCallback(() => {
+    formRef.current?.resetValidation();
+
     if (mode === DetailMode.NEW) {
-      setMode(DetailMode.NONE);
+      const id = tableRef.current?.activeRow;
+
+      if (id) {
+        setMode(DetailMode.VIEW);
+        detailRef.current?.setActive(id);
+      } else {
+        setMode(DetailMode.NONE);
+        formRef.current?.clearForm();
+      }
+
       unregisterPrompt(prompt);
-      formRef.current?.clearForm();
     } else if (mode === DetailMode.EDIT) {
       setMode(DetailMode.VIEW);
       unregisterPrompt(prompt);
@@ -174,7 +197,7 @@ export function useDetail<OBJECT extends DomainObject>(
       await options.source.del(options.source.data.id);
 
       options.source.reset();
-      setErrors([]);
+      formRef.current?.resetValidation();
       setMode(DetailMode.NONE);
       props.onPersisted(null);
     }
@@ -185,8 +208,6 @@ export function useDetail<OBJECT extends DomainObject>(
       const errors = await formRef.current.validateForm();
 
       const isValid = errors.length === 0;
-
-      setErrors(errors);
 
       if (isValid) {
         const message = intl.formatMessage({
@@ -222,12 +243,13 @@ export function useDetail<OBJECT extends DomainObject>(
 
   const context: DetailContext<OBJECT> = useMemo(
     () => ({
-      errors,
+      formRef: formRef.current,
       source: props.source,
       FieldsComponent: props.FieldsComponent,
       onPersisted: props.onPersisted,
       isExisting: mode === DetailMode.VIEW || mode === DetailMode.EDIT,
       mode,
+      showErrorPanel: props.showErrorPanel,
       refresh,
       refreshAll,
       setActive,
@@ -241,10 +263,11 @@ export function useDetail<OBJECT extends DomainObject>(
       removeRefreshListener,
     }),
     [
-      errors,
+      formRef,
       props.source,
       props.FieldsComponent,
       props.onPersisted,
+      props.showErrorPanel,
       mode,
       refresh,
       refreshAll,

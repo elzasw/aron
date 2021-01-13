@@ -11,6 +11,7 @@ import InfoIcon from '@material-ui/icons/Info';
 import WarningIcon from '@material-ui/icons/Warning';
 import { SnackbarVariant, SnackbarHandle } from './snackbar-types';
 import { useStyles } from './snackbar-styles';
+import { useTimeout } from 'utils/timeout-hook';
 
 /**
  * Internal snackbar state.
@@ -33,6 +34,7 @@ export const SnackbarComponent = forwardRef<
   { timeout: number }
 >(function SnackbarComponent({ timeout }, ref) {
   const classes = useStyles();
+  const [triggerTimeout, cancelTimeout] = useTimeout();
 
   const [snackbar, setSnackbar] = useState<SnackbarState>({
     message: '',
@@ -52,6 +54,8 @@ export const SnackbarComponent = forwardRef<
 
   const showSnackbar = useEventCallback(
     (message: string, variant: SnackbarVariant) => {
+      cancelTimeout();
+
       setSnackbar({ message, variant, open: true });
 
       if (
@@ -59,7 +63,7 @@ export const SnackbarComponent = forwardRef<
         (variant === SnackbarVariant.SUCCESS ||
           variant === SnackbarVariant.INFO)
       ) {
-        setTimeout(() => {
+        triggerTimeout(() => {
           hideSnackbar();
         }, timeout);
       }

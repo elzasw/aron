@@ -11,11 +11,11 @@ import { useEventCallback } from 'utils/event-callback-hook';
 export function TableSearchbar() {
   const classes = useStyles();
 
-  const { disabled, setSearchQuery } = useContext(TableContext);
+  const { disabled, setSearchQuery, searchQuery } = useContext(TableContext);
 
   const intl = useIntl();
 
-  const [searchText, setSearchTextChange] = useState('');
+  const [searchText, setSearchTextChange] = useState(searchQuery);
 
   const handleSearchTextChange = useEventCallback(
     (e: ChangeEvent<HTMLInputElement>) => {

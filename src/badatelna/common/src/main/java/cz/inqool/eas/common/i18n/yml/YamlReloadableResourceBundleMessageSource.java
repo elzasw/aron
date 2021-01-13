@@ -8,7 +8,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Properties;
@@ -51,7 +51,7 @@ public class YamlReloadableResourceBundleMessageSource extends ReloadableResourc
      * Overrides the parent method to support yml-defined resource bundles
      */
     @Override
-    protected PropertiesHolder refreshProperties(@Nonnull String filename, @Nullable PropertiesHolder propHolder) {
+    protected PropertiesHolder refreshProperties(@NotNull String filename, @Nullable PropertiesHolder propHolder) {
         long refreshTimestamp = (getCacheMillis() < 0 ? -1 : System.currentTimeMillis());
 
         Resource resource = this.resourceLoader.getResource(filename + YML_SUFFIX);
@@ -98,7 +98,7 @@ public class YamlReloadableResourceBundleMessageSource extends ReloadableResourc
      * Overrides the parent method to support yml-defined resource bundles
      */
     @Override
-    protected Properties loadProperties(@Nonnull Resource resource, @Nonnull String filename) {
+    protected Properties loadProperties(@NotNull Resource resource, @NotNull String filename) {
         if (logger.isDebugEnabled()) {
             logger.debug("Loading properties [" + resource.getFilename() + "]");
         }

@@ -1,5 +1,11 @@
 package cz.inqool.eas.common.storage.file;
 
+import cz.inqool.eas.common.alog.event.EventBuilder;
+import cz.inqool.eas.common.alog.event.EventService;
+import cz.inqool.eas.common.antivirus.Scanner;
+import cz.inqool.eas.common.antivirus.scan.ScanResult;
+import cz.inqool.eas.common.authored.user.UserGenerator;
+import cz.inqool.eas.common.authored.user.UserReference;
 import cz.inqool.eas.common.domain.Domain;
 import cz.inqool.eas.common.domain.DomainService;
 import cz.inqool.eas.common.exception.*;
@@ -10,13 +16,15 @@ import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Function;
 
@@ -44,6 +52,18 @@ public class FileManager {
     @Setter
     private int hierarchicalLevel;
 
+    private Scanner scanner;
+
+    private EventService eventService;
+
+    private EventBuilder eventBuilder;
+
+    @Setter
+    private String[] allowedExtensions;
+
+    @Setter
+    private String[] forbiddenExtensions;
+
     /**
      * Stores a new file to the file system storage temporarily from provided Multipart.
      *
@@ -53,10 +73,25 @@ public class FileManager {
      * @throws GeneralException if any other I/O exception occurs
      */
     @Transactional
-    public File upload(@Nonnull MultipartFile multipart) {
+    public File upload(@NotNull MultipartFile multipart) {
         lte(multipart.getSize(), fileSizeLimit, () -> new InvalidArgument(multipart.getName(), SIZE_TOO_BIG));
 
         String name = getFileName(multipart);
+
+        if (allowedExtensions != null) {
+            boolean fail = Arrays.stream(allowedExtensions).noneMatch(name::endsWith);
+
+            if (fail) {
+                throw new ExtensionNotAllowedException(name);
+            }
+        }
+        if (forbiddenExtensions != null) {
+            boolean fail = Arrays.stream(forbiddenExtensions).anyMatch(name::endsWith);
+
+            if (fail) {
+                throw new ExtensionNotAllowedException(name);
+            }
+        }
 
         File file = new File();
         file.setName(name);
@@ -71,7 +106,31 @@ public class FileManager {
             copy(multipart.getInputStream(), path);
         });
 
-        return store.create(file);
+        File storedFile = store.create(file);
+
+        if (scanner != null) {
+            OpenedFile openedFile = open(storedFile.getId());
+
+            try (InputStream stream = openedFile.getStream()) {
+                ScanResult result = scanner.scanFile(storedFile, stream);
+                if (result == ScanResult.VIRUS_FOUND) {
+                    store.delete(storedFile.getId());
+
+                    if (eventService != null) {
+                        UserReference userReference = UserGenerator.generateValue();
+                        eventService.create(eventBuilder.foundVirus(storedFile, userReference));
+                    }
+
+                    throw new VirusFoundException("Found virus in uploaded file");
+                }
+            } catch (IOException e) {
+                log.error("Error closing stream.", e);
+                return storedFile;
+            }
+
+        }
+
+        return storedFile;
     }
 
     /**
@@ -136,7 +195,7 @@ public class FileManager {
     }
 
     @Transactional
-    public File discardUpload(@Nonnull String id) {
+    public File discardUpload(@NotNull String id) {
         File file = store.delete(id);
         notNull(file, () -> new MissingObject(File.class, id));
         eq(file.permanent, false, () -> new ForbiddenOperation(file, WRONG_STATE));
@@ -368,5 +427,20 @@ public class FileManager {
                 this.remove(file.getId());
             });
         }
+    }
+
+    @Autowired(required = false)
+    public void setScanner(Scanner scanner) {
+        this.scanner = scanner;
+    }
+
+    @Autowired(required = false)
+    public void setEventService(EventService eventService) {
+        this.eventService = eventService;
+    }
+
+    @Autowired(required = false)
+    public void setEventBuilder(EventBuilder eventBuilder) {
+        this.eventBuilder = eventBuilder;
     }
 }

@@ -1,2 +1,1 @@
-export * from "./icon";
-export { IconType } from "./enums";
+export * from './icon';

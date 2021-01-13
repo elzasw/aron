@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { DomainObject, ListSource } from 'common/common-types';
 
 export interface SelectProps<OPTION extends DomainObject> {
+  form?: string;
   disabled?: boolean;
   value: string | string[] | OPTION | OPTION[] | null | undefined;
   onChange: (value: string | string[] | OPTION | OPTION[] | null) => void;
@@ -27,6 +28,6 @@ export interface SelectProps<OPTION extends DomainObject> {
   selectableAll?: boolean;
 
   idMapper?: (option: OPTION) => string;
-  labelMapper?: (option: OPTION) => ReactNode;
+  labelMapper?: (option: OPTION) => string;
   tooltipMapper?: (option: OPTION) => ReactNode;
 }

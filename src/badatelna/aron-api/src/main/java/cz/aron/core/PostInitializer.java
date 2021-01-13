@@ -1,27 +1,28 @@
 package cz.aron.core;
 
-import cz.aron.core.image.ImageProcessor;
 import cz.aron.core.integration.ApuProcessor;
 import cz.aron.core.model.ApuEntity;
 import cz.aron.core.model.ApuSource;
 import cz.aron.core.model.ApuSourceRepository;
 import cz.aron.core.model.ApuStore;
+import cz.aron.core.model.types.TypesHolder;
+import cz.aron.core.util.SimpleProfiler;
 import cz.inqool.eas.common.domain.index.reindex.ReindexService;
-import cz.inqool.eas.common.storage.file.File;
 import cz.inqool.eas.common.storage.file.FileManager;
 import cz.inqool.eas.common.storage.file.FileStore;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.MimeTypeUtils;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 
 /**
@@ -36,9 +37,12 @@ public class PostInitializer implements ApplicationListener<ApplicationReadyEven
     @Inject private ApuSourceRepository apuSourceRepository;
     @Inject private ApuStore apuStore;
     @Inject private ReindexService reindexService;
-    @Inject private ImageProcessor imageProcessor;
     @Inject private FileManager fileManager;
     @Inject private FileStore fileStore;
+    @Inject private TypesHolder typesHolder;
+
+    @Value("${environment}")
+    private String environment;
 
     @Override
     @Transactional
@@ -46,23 +50,43 @@ public class PostInitializer implements ApplicationListener<ApplicationReadyEven
         log.info("Running PostInitializer");
         try {
 //            wipe();
-            loadSampleImage();
             if (apuSourceRepository.countAll() > 0) {
                 log.info("Data already exists in db, not loading samples...");
+                checkCrcOrReindex(typesHolder.getCurrentConfigCrc());
             }
             else {
-                try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/apux-00.xml").getInputStream()) {
-                    apuProcessor.processTestingInputStream(inputStream);
+                reindexService.reindex(null);
+                log.info("Loading example data...");
+                if (environment.startsWith("docker")) {
+                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutions.xml").getInputStream()) {
+                        apuProcessor.processTestingInputStream(inputStream);
+                    }
+                    log.info("next file...");
+                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutionEntities.xml").getInputStream()) {
+                        apuProcessor.processTestingInputStream(inputStream);
+                    }
+                    log.info("next file...");
+                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/archdesc-1820.xml").getInputStream()) {
+                        apuProcessor.processTestingInputStream(inputStream);
+                    }
+                    log.info("next file...");
+                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/fund-1820.xml").getInputStream()) {
+                        apuProcessor.processTestingInputStream(inputStream);
+                    }
                 }
-                try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutions.xml").getInputStream()) {
-                    apuProcessor.processTestingInputStream(inputStream);
+                else if (Files.exists(Path.of("./sample"))) {
+                    Files.list(Path.of("./sample")).forEach(
+                            path -> {
+                                log.info(" - " + path.getFileName().toString() + "...");
+                                try (InputStream inputStream = Files.newInputStream(path)) {
+                                    apuProcessor.processTestingInputStream(inputStream);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                    );
                 }
-                try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutionEntities.xml").getInputStream()) {
-                    apuProcessor.processTestingInputStream(inputStream);
-                }
-                try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/archdesc-1820.xml").getInputStream()) {
-                    apuProcessor.processTestingInputStream(inputStream);
-                }
+                SimpleProfiler.dump();
             }
         } catch (Exception e) {
             log.error("boo boo", e);
@@ -70,14 +94,19 @@ public class PostInitializer implements ApplicationListener<ApplicationReadyEven
         log.info("PostInitializer complete");
     }
 
-    private void loadSampleImage() throws IOException {
-        if (fileStore.countAll() == 0) {
-            Resource resource = resourceLoader.getResource("classpath:/cell.jpg");
-            try (InputStream is = resource.getInputStream()) {
-                File imageFile = fileManager.store("cell.jpg", 3244914, MimeTypeUtils.IMAGE_JPEG_VALUE, is);
-                imageProcessor.process(imageFile.getId());
-                log.info("Created tile testing image with id " + imageFile.getId());
+    private void checkCrcOrReindex(Long currentCrc) {
+        try {
+            Path crcPath = Path.of("./lastConfigCrc.txt");
+            Long previousCrc = null;
+            if (Files.exists(crcPath)) {
+                previousCrc = Long.valueOf(Files.readString(crcPath));
             }
+            if (!currentCrc.equals(previousCrc)) {
+                reindexService.reindex(null);
+                Files.writeString(crcPath, String.valueOf(currentCrc));
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

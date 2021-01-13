@@ -5,20 +5,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 
+import java.lang.reflect.Field;
+
 /**
  * Represents a field in ElasticSearch mapping, annotated with {@link GeoPointField}.
  */
 @Slf4j
 public class IndexFieldGeoPointLeafNode extends IndexFieldNode {
 
-    private final GeoPointField mainField;
+    private final IndexedFieldProps mainField;
 
-
-    public IndexFieldGeoPointLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, String javaFieldName, GeoPointField mainField, IndexFieldInnerNode parent) {
-        super(rootClass, javaFieldName, parent);
-        this.mainField = mainField;
+    public IndexFieldGeoPointLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, Field javaField, GeoPointField mainField, IndexFieldInnerNode parent) {
+        super(rootClass, javaField, parent);
+        //not implemented
+        this.mainField = new IndexedFieldProps(FieldType.Auto);
     }
-
 
     @Override
     public FieldType getType() {
