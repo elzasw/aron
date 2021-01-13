@@ -157,7 +157,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			if(daos!=null&&daos.getDao().size()>0) {
 				apusBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
 				for(DigitalArchivalObject dao: daos.getDao()) {
-					apusBuilder.addDao(activeApu, dao.getId());
+					apusBuilder.addDao(activeApu, dao.getDoid());
 				}
 			}
 			deactivatePart(apu);

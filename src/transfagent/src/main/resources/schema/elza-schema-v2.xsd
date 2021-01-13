@@ -362,7 +362,7 @@ Item ID</xs:documentation>
 	</xs:complexType>
 	<xs:complexType name="DigitalArchivalObject">
 		<xs:sequence>
-			<xs:element name="Id" type="e:Id" minOccurs="1" maxOccurs="1"/>
+			<xs:element name="doid" type="e:Id" minOccurs="1" maxOccurs="1"/>
 		</xs:sequence>
 	</xs:complexType>
 	<xs:complexType name="DigitalArchivalObjects">
