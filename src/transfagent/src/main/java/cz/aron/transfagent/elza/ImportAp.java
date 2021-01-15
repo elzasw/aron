@@ -127,7 +127,10 @@ public class ImportAp {
 		}
 		
 		// oznaceni
-		Fragments frgs = ap.getFrgs();		
+		Fragments frgs = ap.getFrgs();
+		if(frgs==null) {
+		    throw new IllegalStateException("AP without fragments, uuid: "+apUuid + ", elzaId: "+elzaId);
+		}
 		for(Fragment frg: frgs.getFrg()) {
 			switch(frg.getT()) {
 			case "PT_NAME":

@@ -79,7 +79,8 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
             + "ORDER BY depth")
 	List<UUID> findByUUIDWithParents(UUID uuid);
 
-    @Query("update ArchivalEntity ae set ae.download = true where ae.id in :ids")
+    @Modifying
+	@Query("update ArchivalEntity ae set ae.download = true where ae.elzaId in :ids")
     void setDownloadTrueByIds(@Param("ids") List<Integer> ids);
 
 }

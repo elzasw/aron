@@ -52,14 +52,18 @@ public class FileImportService implements SmartLifecycle {
      */
     private void importData(ImportContext ic) throws IOException {    	    	
     	for(var importProcessor: importProcessors) {
+    	    log.debug("Starting import, processor: {}", importProcessor.getClass().getName());
     		importProcessor.importData(ic);
-            if(ic.isFailed()||ic.getNumProcessed()>0) {
+    		log.debug("Final processor state: failed={}, processedItems={}", ic.isFailed(), ic.getNumProcessed());
+            if(ic.isFailed()||ic.getNumProcessed()>0) {                
             	return;
             }
     	}
     }
 
     public void run() {
+        log.info("Import service is running.");
+        
         while (status == ThreadStatus.RUNNING) {
             try {
             	ImportContext ic = new ImportContext();
@@ -77,6 +81,7 @@ public class FileImportService implements SmartLifecycle {
 				}
             }
         }
+        log.info("Import service stopped.");
         status = ThreadStatus.STOPPED;
     }
 
