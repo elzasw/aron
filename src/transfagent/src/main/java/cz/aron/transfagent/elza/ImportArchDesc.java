@@ -16,6 +16,7 @@ import java.util.UUID;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.Validate;
+import org.eclipse.jetty.util.StringUtil;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
@@ -147,6 +148,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				}
 				apu.setPrnt(parentApu.getUuid());
 				apuParentMap.put(apu, parentApu);
+
+                if(StringUtil.isEmpty(apu.getName())) {
+                    apu.setName(parentApu.getName());
+                }
 			}
 			apuMap.put(lvl.getId(), apu);
 
@@ -216,7 +221,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
         if(activePart==null) {
             activePart = apusBuilder.addPart(apu, partName);
-        }       
+        }
     }
 
     private void addItem(Apu apu, DescriptionItem item) {
@@ -298,7 +303,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			return;
 		}
 
-		throw new RuntimeException("Unsupported item type: " + item.getT());		
+		throw new RuntimeException("Unsupported item type: " + item.getT());
 	}
 
 	private String getName(Section sect, Level lvl) {
@@ -340,7 +345,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	@Override
 	public void addArchEntityRef(UUID uuid) {
-		apRefs.add(uuid);		
+		apRefs.add(uuid);
 	}
 
 	@Override
