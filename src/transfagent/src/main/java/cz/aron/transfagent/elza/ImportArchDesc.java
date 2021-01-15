@@ -6,9 +6,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +31,7 @@ import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
+import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -50,7 +48,7 @@ import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportArchDesc implements EdxItemCovertContext {
 
-	ElzaXmlReader elzaXmlReader;	
+	ElzaXmlReader elzaXmlReader;
 
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 
@@ -71,8 +69,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		ImportArchDesc iad = new ImportArchDesc();
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
-			Path ouputPath = Paths.get(args[2]);
-			try(OutputStream fos = Files.newOutputStream(ouputPath)) {
+			Path outputPath = Path.of(args[2]);
+			try(OutputStream fos = Files.newOutputStream(outputPath)) {
 				apusrcBuilder.build(fos);
 			}
 		} catch(Exception e) {
@@ -93,19 +91,18 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		return institutionCode;
 	}
 
-	private ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
+	public ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
 		Validate.isTrue(propFile!=null&&propFile.length()>0);
-		
+
 		PropertiesDataProvider pdp = new PropertiesDataProvider();
 		Path propPath = Paths.get(propFile);
 		pdp.load(propPath);
 		return importArchDesc(inputFile, pdp);
 	}
 
-    public ApuSourceBuilder importArchDesc(Path inputFile,
-											final ContextDataProvider cdp) throws IOException, JAXBException {
+    public ApuSourceBuilder importArchDesc(Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
 		this.dataProvider = cdp;
-		
+
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importArchDesc();
@@ -306,23 +303,23 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private String getName(Section sect, Level lvl) {
 		String parentId = lvl.getPid();
-		
+
 		StringBuilder sb = new StringBuilder();
-		
-		for(DescriptionItem item :lvl.getDdOrDoOrDp()) {
+
+		for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
 			if(item.getT().equals("ZP2015_TITLE")) {
 				DescriptionItemString title = (DescriptionItemString)item;
 				sb.append(title.getV());
 			}
 		}
-		
+
 		// koren -> jmeno AS
-		if(sb.length()==0) {
+		if(sb.length() == 0) {
 			if(parentId == null) {
 				sb.append(sect.getFi().getN());
 			}
 		}
-		
+
 		return sb.toString();
 	}
 

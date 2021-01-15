@@ -1,8 +1,5 @@
-package cz.aron.transfagent.elza;
+package cz.aron.transfagent.elza.datace;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -24,8 +21,8 @@ public class ItemDateRangeAppender {
     }
 
     public void appendTo(Apu apu) {
-        List<ItemDateRange> items = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
-        ItemDateRange item = getCrossingItem(items);
+        var items = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        var item = getCrossingItem(items);
         while (item != null) {
             itemDateRange = mergeItemDateRangeTo(item);
             dateRange = new LocalDateTimeRange(itemDateRange);
@@ -59,10 +56,10 @@ public class ItemDateRangeAppender {
     private void removeItemDateRange(Apu apu, List<ItemDateRange> items, ItemDateRange removeItem) {
         items.remove(removeItem);
         for(Part part : apu.getPrts().getPart()) {
-            List<Object> objects = part.getItms().getStrOrLnkOrEnm();
+            var objects = part.getItms().getStrOrLnkOrEnm();
             for(Object obj : objects) {
                 if(obj instanceof ItemDateRange) {
-                    ItemDateRange item = (ItemDateRange) obj;
+                    var item = (ItemDateRange) obj;
                     if(removeItem.equals(item)) {
                         objects.remove(obj);
                         break;
@@ -79,36 +76,4 @@ public class ItemDateRangeAppender {
             }
         }
     }
-
-    class LocalDateTimeRange {
-        private final LocalDateTime from;
-        private final LocalDateTime to;
-
-        public LocalDateTimeRange(ItemDateRange dateRange) {
-            from = LocalDateTime.parse(dateRange.getF(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            to = LocalDateTime.parse(dateRange.getTo(), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        }
-
-        public LocalDateTime getFrom() {
-            return from;
-        }
-
-        public LocalDateTime getTo() {
-            return to;
-        }
-
-        public boolean isRangeCrossing(LocalDateTimeRange range) {
-            return !(to.isBefore(range.getFrom()) || from.isAfter(range.getTo()));
-        }
-
-        public boolean isBefore(LocalDateTimeRange range) {
-            return from.isBefore(range.getFrom());
-        }
-
-        public boolean isAfter(LocalDateTimeRange range) {
-            return to.isAfter(range.getTo());
-        }
-
-    }
-
 }
