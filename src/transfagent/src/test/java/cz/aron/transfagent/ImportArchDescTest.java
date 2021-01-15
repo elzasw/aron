@@ -30,6 +30,14 @@ public class ImportArchDescTest {
 
     private final static String APUSRC_XML = "apusrc.xml";
 
+    private final int Y_1810 = 1810;
+    private final int Y_1820 = 1820;
+    private final int Y_1830 = 1830;
+    private final int Y_1840 = 1840;
+    private final int Y_1850 = 1850;
+    private final int Y_1855 = 1855;
+    private final int Y_1860 = 1860;
+
     @Test
     public void testImportArchDesc() throws IOException, JAXBException {
         Path inputFile = Path.of(ARCHDESC_DIR, ARCHDESC_FILE);
@@ -48,8 +56,8 @@ public class ImportArchDescTest {
         assertTrue(ranges.size() == 1);
         
         LocalDateTimeRange idra = new LocalDateTimeRange(ranges.get(0));
-        assertTrue(idra.getFrom().getYear() == 1810);
-        assertTrue(idra.getTo().getYear() == 1860);
+        assertTrue(idra.getFrom().getYear() == Y_1810);
+        assertTrue(idra.getTo().getYear() == Y_1860);
 
         // testing s1
         apu = getApuByName(builder, "s1");
@@ -57,12 +65,12 @@ public class ImportArchDescTest {
         assertTrue(ranges.size() == 2);
 
         idra = new LocalDateTimeRange(ranges.get(0));
-        assertTrue(idra.getFrom().getYear() == 1820);
-        assertTrue(idra.getTo().getYear() == 1830);
+        assertTrue(idra.getFrom().getYear() == Y_1820);
+        assertTrue(idra.getTo().getYear() == Y_1830);
 
         idra = new LocalDateTimeRange(ranges.get(1));
-        assertTrue(idra.getFrom().getYear() == 1840);
-        assertTrue(idra.getTo().getYear() == 1855);
+        assertTrue(idra.getFrom().getYear() == Y_1840);
+        assertTrue(idra.getTo().getYear() == Y_1855);
 
         // testing s2
         apu = getApuByName(builder, "s2");
@@ -70,8 +78,35 @@ public class ImportArchDescTest {
         assertTrue(ranges.size() == 1);
 
         idra = new LocalDateTimeRange(ranges.get(0));
-        assertTrue(idra.getFrom().getYear() == 1810);
-        assertTrue(idra.getTo().getYear() == 1860);
+        assertTrue(idra.getFrom().getYear() == Y_1810);
+        assertTrue(idra.getTo().getYear() == Y_1860);
+
+        // testing P1
+        apu = getApuByName(builder, "P1");
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        assertTrue(ranges.size() == 1);
+
+        idra = new LocalDateTimeRange(ranges.get(0));
+        assertTrue(idra.getFrom().getYear() == Y_1820);
+        assertTrue(idra.getTo().getYear() == Y_1830);
+
+        // testing P2
+        apu = getApuByName(builder, "P2");
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        assertTrue(ranges.size() == 1);
+
+        idra = new LocalDateTimeRange(ranges.get(0));
+        assertTrue(idra.getFrom().getYear() == Y_1840);
+        assertTrue(idra.getTo().getYear() == Y_1850);
+
+        // testing P3
+        apu = getApuByName(builder, "P3");
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        assertTrue(ranges.size() == 1);
+
+        idra = new LocalDateTimeRange(ranges.get(0));
+        assertTrue(idra.getFrom().getYear() == Y_1840);
+        assertTrue(idra.getTo().getYear() == Y_1850);
     }
 
     @AfterAll

@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -104,7 +105,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
     public ApuSourceBuilder importArchDesc(Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
 		this.dataProvider = cdp;
 
-		try(InputStream is = Files.newInputStream(inputFile);) {
+		try(InputStream is = Files.newInputStream(inputFile)) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importArchDesc();
 		}
@@ -178,7 +179,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             deactivatePart(apu);
 
             // add date to parent(s)
-            List<ItemDateRange> itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+            var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
             for(ItemDateRange item : itemDateRanges) {
                 ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
                 Apu apuParent = apuParentMap.get(apu);
@@ -188,7 +189,34 @@ public class ImportArchDesc implements EdxItemCovertContext {
                 }
             }
         }
+
+        // checking datace
+        boolean repeat = false;
+        do {
+            for(Entry<String, Apu> item : apuMap.entrySet()) {
+                var apu = item.getValue();
+                var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+                if(ranges.isEmpty()) {
+                    var apuParent = apuParentMap.get(apu);
+                    var rangesParent = apusBuilder.getItemDateRanges(apuParent, CoreTypes.PT_ARCH_DESC);
+                    if(rangesParent.isEmpty()) {
+                        repeat = true;
+                    } else {
+                        addItemDateRanges(apu, rangesParent);
+                    }
+                }
+            }
+        } while(repeat);
+
         return apusBuilder;
+    }
+
+    private void addItemDateRanges(Apu apu, List<ItemDateRange> items) {
+        for(Part part : apu.getPrts().getPart()) {
+            if (part.getType().equals(CoreTypes.PT_ARCH_DESC)) {
+                part.getItms().getStrOrLnkOrEnm().addAll(items);
+            }
+        }
     }
 
     private void deactivatePart(Apu apu) {
