@@ -22,7 +22,7 @@ import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ImportArchDescTest {
 
-    private final static String ARCHDESC_DIR = "src/test/resources/files/archdesc/archdesc-testdate";
+    private final static String ARCHDESC_DIR = "src/test/resources/files/archdesc/archdesc-CR2303";
 
     private final String ARCHDESC_FILE = "archdesc-CR2303.xml";
 
