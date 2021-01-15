@@ -45,5 +45,15 @@ public class CoreTypes {
     public static final String IMPRINT_ORDER = "IMPRINT_ORDER";
     public static final String LEGEND = "LEGEND";
     public static final String MOVIE_LENGTH = "MOVIE_LENGTH";
-    public static final String RECORD_LENGTH = "RECORD_LENGTH";    
+    public static final String RECORD_LENGTH = "RECORD_LENGTH";
+
+    public static final String CRC_BIRTH_DATE = "CRC_BIRTH_DATE";
+    public static final String CRC_RISE_DATE = "CRC_RISE_DATE";
+    public static final String CRC_BEGINSCOPE_DATE = "CRC_BEGINSCOPE_DATE";
+    public static final String CRC_FIRSTMBIRTH_DATE = "CRC_FIRSTMBIRTH_DATE";
+    public static final String CRC_FIRSTWMENTION_DATE = "CRC_FIRSTWMENTION_DATE";
+    public static final String CRC_ORIGIN_DATE = "CRC_ORIGIN_DATE";
+    public static final String CRC_BEGINVALIDNESS_DATE = "CRC_BEGINVALIDNESS_DATE";
+
+    public static final String CRE_TYPE = "CRE_TYPE";    
 }

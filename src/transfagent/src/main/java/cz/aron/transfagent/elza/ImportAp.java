@@ -6,7 +6,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,6 +22,11 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
+import cz.aron.transfagent.elza.convertor.EdxEnumConvertor;
+import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
+import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
+import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
+import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -28,7 +35,7 @@ import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 
-public class ImportAp {
+public class ImportAp implements EdxItemCovertContext {
 	ElzaXmlReader elzaXmlReader;	
 	
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
@@ -47,6 +54,10 @@ public class ImportAp {
 	 * ElzaIds which needs to be requested
 	 */
 	private Set<Integer> requiredEntities = new HashSet<>();
+
+    private Part activePart;
+
+    private Apu apu;
 	
 	public UUID getApUuid() {
 		return apUuid;
@@ -111,7 +122,7 @@ public class ImportAp {
 		this.apUuid = UUID.fromString(ap.getApe().getUuid());
 		this.elzaId = Integer.valueOf(ap.getApe().getId());
 
-		Apu apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);		
+		apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);		
 		
 		// extrakce dat
 		// entity info
@@ -145,6 +156,9 @@ public class ImportAp {
 			case "PT_REL":
 				importRel(apu, frg);
 				break;
+			case "PT_EVENT":
+                importEvent(apu, frg);
+                break;
 			case "PT_CRE":
 			    importCre(apu, frg);
 			    break;
@@ -158,16 +172,67 @@ public class ImportAp {
 		if(apu.getName()==null) {
 			throw new IllegalStateException("AP without name: "+apUuid);
 		}
+		apu = null;
 		
 		return apusBuilder;
 	}
 
-	private void importCre(Apu apu, Fragment frg) {
-        // TODO Auto-generated method stub
+	private void importEvent(Apu apu, Fragment frg) {
+        // TODO Auto-generated method stub        
+    }
+
+    private void importCre(Apu apu, Fragment frg) {
+        String creClass = ElzaXmlReader.getEnumValue(frg, ElzaTypes.CRE_CLASS);
+        if(creClass==null) {
+            // TODO: warning - missing creation class
+            return ;
+        }
+        Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
+        stringTypeMap.put("NOTE",new EdxStringConvertor(CoreTypes.NOTE));
+        stringTypeMap.put(ElzaTypes.CRE_TYPE,new EdxEnumConvertor(CoreTypes.CRE_TYPE, ElzaTypes.creTypeMap));
+        switch(creClass) {
+        case "CRC_BIRTH":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_BIRTH_DATE));
+            break;
+        case "CRC_RISE":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_RISE_DATE));
+            break;
+        case "CRC_BEGINSCOPE":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_BEGINSCOPE_DATE));
+            break;
+        case "CRC_FIRSTMBIRTH":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_FIRSTMBIRTH_DATE));
+            break;
+        case "CRC_FIRSTWMENTION":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_FIRSTWMENTION_DATE));
+            break;
+        case "CRC_ORIGIN":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_ORIGIN_DATE));
+            break;
+        case "CRC_BEGINVALIDNESS":
+            stringTypeMap.put(ElzaTypes.CRE_DATE, new EdxUnitDateConvertor(CoreTypes.CRC_BEGINVALIDNESS_DATE));
+            break;
+        default:
+            throw new IllegalStateException("Unknown creation class: "+creClass);
+        }
+        
         // PT_AE_CRE
-	    // CRE_DATE
-	    // CRE_TYPE
-	    // CRE_CLASS
+        activePart = this.apusBuilder.addPart(apu, "PT_AE_CRE");
+        
+        for(var item: frg.getDdOrDoOrDp()) {
+            EdxItemConvertor convertor = stringTypeMap.get(item.getT());
+            if(convertor==null) {
+                // TODO: add warning
+                continue;
+            }
+            convertor.convert(this, item);
+        }
+        // remove empty part
+        if(activePart.getItms()==null||activePart.getItms().getStrOrLnkOrEnm().size()==0) {
+            apu.getPrts().getPart().remove(activePart);
+        }
+        
+        activePart = null;
     }
 	
 	private void importExt(Apu apu, Fragment frg) {
@@ -307,4 +372,28 @@ public class ImportAp {
 	public Integer getElzaId() {
 		return elzaId;
 	}
+
+    @Override
+    public ApuSourceBuilder getApusBuilder() {
+        return apusBuilder;
+    }
+
+    @Override
+    public Part getActivePart() {
+        return activePart;
+    }
+
+    @Override
+    public ElzaXmlReader getElzaXmlReader() {
+        return this.elzaXmlReader;
+    }
+
+    @Override
+    public void addArchEntityRef(UUID uuid) {        
+    }
+
+    @Override
+    public Apu getActiveApu() {
+        return apu;
+    }
 }

@@ -46,6 +46,23 @@ public abstract class ElzaTypes {
     public static final String SOURCE_INFO = "SOURCE_INFO";
 
     public static final String REL_ENTITY = "REL_ENTITY";
+    
+    public static final String CRE_CLASS = "CRE_CLASS";
+    public static final String CRE_TYPE = "CRE_TYPE";
+    public static final String CRE_DATE = "CRE_DATE";
+    public static final Map<String, String> creTypeMap = new HashMap<>();
+    static {
+        creTypeMap.put("CRT_ESTAB", "vznik zřízením/založením");
+        creTypeMap.put("CRT_COMMENCEMENT", "vznik zahájením činnosti");
+        creTypeMap.put("CRT_PREDECESSOR", "vznik změnou předchůdce");
+        creTypeMap.put("CRT_RECORDSENTRY", "vznik zápisem do evidence");
+        creTypeMap.put("CRT_UNSPECIFIED", "nespecifikovaný vznik");
+        creTypeMap.put("CRT_CREATION", "vytvoření");
+        creTypeMap.put("CRT_EDITION", "vydání");
+        creTypeMap.put("CRT_FIRSTREALIZATION", "první realizace");
+        creTypeMap.put("CRT_VALIDITYBEGIN", "počátek platnosti");
+    }
+    
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
 
     public static final String ZP2015_POSITION = "ZP2015_POSITION";

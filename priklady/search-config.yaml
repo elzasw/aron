@@ -41,7 +41,15 @@ facets:
     # zdrojovy itemtype
     source: INST_REF
     # Max pocet zobrazenych itemu
-    maxItems: 5
+    maxItems: 10
+  - when:
+      apuType: FUND
+    type: FULLTEXT
+    source: CISLO_NAD
+  - when:
+      apuType: FUND
+    type: FULLTEXT
+    source: FUND_MARK
   # Puvodce AS
   # Zdroj je odkaz na APU
   - when:
@@ -57,17 +65,41 @@ facets:
     type: UNITDATE
     # zdrojovy itemtype
     source: UNIT_DATE
+
+# 
+# Archivalie
+#
+
+# Druh archivalie
   - when:
       apuType: ARCH_DESC
     type: ENUM
     source: UNIT_TYPE
-    maxItems: 10
+    display: ALWAYS
+    maxItems: 30
+
+# Datace
   - when:
       apuType: ARCH_DESC
-    # Druh fazety
     type: UNITDATE
-    # zdrojovy itemtype
     source: UNIT_DATE
+    display: ALWAYS
+
+# Identifikace archiválie
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: OTHER_ID
+    display: DETAIL
+
+# Instituce
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: FUND_INST_REF
+    display: ALWAYS
+
+# Role entit
   - when:
       apuType: ARCH_DESC
     # Druh fazety
@@ -79,14 +111,15 @@ facets:
         # zdrojovy itemtype
         source: ROLE
         # Max pocet zobrazenych itemu
-        maxItems: 8
+        maxItems: 30
+
   - when:
       apuType: ENTITY
     type: ENUM
     source: AE_CLASS
     display: ALWAYS
     # Max pocet zobrazenych itemu
-    maxItems: 8
+    maxItems: 30
   - when:
       apuType: ENTITY
     # Druh fazety
