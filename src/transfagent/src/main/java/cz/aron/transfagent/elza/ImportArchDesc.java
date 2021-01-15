@@ -6,8 +6,12 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +23,7 @@ import org.apache.commons.lang3.Validate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -59,8 +64,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private String institutionCode;
 
-	private Apu activeApu; 
-	
+	private Apu activeApu;
+
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
 		ImportArchDesc iad = new ImportArchDesc();
@@ -74,8 +79,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			System.err.println("Failed to process input file: "+inputFile);
 			e.printStackTrace();
 		}
+		System.out.println(args[2] + " is done.");
 	}
-	
+
 	public ImportArchDesc() {
 	}
 
@@ -103,7 +109,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		try(InputStream is = Files.newInputStream(inputFile);) {
 			elzaXmlReader = ElzaXmlReader.read(is);
 			return importArchDesc();
-		}		
+		}
 	}
 
 	private ApuSourceBuilder importArchDesc() {
@@ -135,6 +141,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			String name = getName(sect, lvl);
 			Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
 			apu.setUuid(lvl.getUuid());
+
 			// set parent
 			if(lvl.getPid()!=null) {
 				Apu parentApu = apuMap.get(lvl.getPid());
@@ -142,16 +149,16 @@ public class ImportArchDesc implements EdxItemCovertContext {
 					throw new RuntimeException("Missing parent for level: "+lvl.getPid());
 				}
 				apu.setPrnt(parentApu.getUuid());
-				apuParentMap.put(apu,  parentApu);
+				apuParentMap.put(apu, parentApu);
 			}
 			apuMap.put(lvl.getId(), apu);
-			
+
 			activateArchDescPart(apu);
-			// add items	
+			// add items
 			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
 				addItem(apu, item);
 			}
-			
+
 			// daos
 			DigitalArchivalObjects daos = lvl.getDaos();
 			if(daos!=null&&daos.getDao().size()>0) {
@@ -161,17 +168,28 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				}
 			}
 			deactivatePart(apu);
-			
-			// Add static values
-			activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+
+            // add static values
+            activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
             apusBuilder.addApuRef(activePart, "FUND_REF", fundApu);
             apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApu);
             deactivatePart(apu);
-		}		
-		return apusBuilder;
-	}
-	
-	private void deactivatePart(Apu apu) {
+
+            // add date to parent(s)
+            List<ItemDateRange> itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+            for(ItemDateRange item : itemDateRanges) {
+                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
+                Apu apuParent = apuParentMap.get(apu);
+                while(apuParent != null) {
+                    dateRangeAppender.appendTo(apuParent);
+                    apuParent = apuParentMap.get(apuParent);
+                }
+            }
+        }
+        return apusBuilder;
+    }
+
+    private void deactivatePart(Apu apu) {
         if(activePart!=null) {
             // delete empty part
             if(activePart.getItms()==null&&activePart.getValue()==null) {
@@ -179,7 +197,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
             }
             activePart = null;
         }
-        
     }
 
     /**
@@ -189,12 +206,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	    activatePart(apu, CoreTypes.PT_ARCH_DESC);
 	}
 
-    void activatePart(Apu apu, String partName) {        
+    void activatePart(Apu apu, String partName) {
         activeApu = apu;
         activePart = null;
         if(apu.getPrts()!=null) {
-            for (Part p : apu.getPrts().getPart()) {
-                if (p.getType().equals(partName)) {
+            for(Part p : apu.getPrts().getPart()) {
+                if(p.getType().equals(partName)) {
                     activePart = p;
                     break;
                 }
@@ -209,7 +226,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         if(item instanceof DescriptionItemUndefined ) {
             return;
         }
-        
+
 		final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
 				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
 				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
@@ -222,14 +239,14 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// TODO: k zapracovani				
 				"ZP2015_DATE_OTHER"
 		};
-		
+
 		// check ignored items
 		for(String ignoredType: ignoredTypes) {
 			if(ignoredType.equals(item.getT())) {
 				return;
 			}
 		}
-		
+
 		Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
 		stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));
 		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor("UNIT_TYPE", ElzaTypes.unitTypeMap));
@@ -269,7 +286,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put(ElzaTypes.ZP2015_MOVIE_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.MOVIE_LENGTH));
 		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.RECORD_LENGTH));
 		stringTypeMap.put(ElzaTypes.ZP2015_WRITING, new EdxStringConvertor(CoreTypes.WRITING));
-		
+
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
 		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider, 
@@ -277,13 +294,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
 		stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));
-		
+
 		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
 		if(convertor!=null) {
 			convertor.convert(this, item);
 			return;
-		}		
-		
+		}
+
 		throw new RuntimeException("Unsupported item type: " + item.getT());		
 	}
 

@@ -189,4 +189,18 @@ public class ApuSourceBuilder {
 		daos.getUuid().add(daoId);
 	}
 
+    public List<ItemDateRange> getItemDateRanges(Apu apu, String partType) {
+        List<ItemDateRange> items = new ArrayList<>();
+        for(Part part : apu.getPrts().getPart()) {
+            if(part.getType().equals(partType)) {
+                for(Object obj : part.getItms().getStrOrLnkOrEnm()) {
+                    if(obj instanceof ItemDateRange) {
+                        items.add((ItemDateRange) obj);
+                    }
+                }
+            }
+        }
+        return items;
+    }
+
 }

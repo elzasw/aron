@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns2:edx xmlns:ns2="http://elza.tacr.cz/schema/v2">
+    <fs>
+        <s rule="ZP2015">
+            <fi c="CR2303" ic="225201010" n="Test datace"/>
+            <lvls>
+                <lvl id="6406" uuid="752288f9-6c89-4a04-aa3c-906efc294250">
+                    <de s="ZP2015_ARRANGEMENT_MAN" t="ZP2015_ARRANGEMENT_TYPE"/>
+                    <de s="ZP2015_LEVEL_ROOT" t="ZP2015_LEVEL_TYPE"/>
+                </lvl>
+                <lvl id="6407" pid="6406" uuid="c38cf3ea-a651-4266-bd23-da1b46571ce5">
+                    <de s="ZP2015_LEVEL_SERIES" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>s1</v>
+                    </ds>
+                </lvl>
+                <lvl id="6411" pid="6406" uuid="4c932002-ed61-426c-a4de-0b487a056f2b">
+                    <de s="ZP2015_LEVEL_SERIES" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>s2</v>
+                    </ds>
+                </lvl>
+                <lvl id="6408" pid="6407" uuid="1f414a83-f5cf-4be6-8e00-d14401013dcf">
+                    <de s="ZP2015_LEVEL_ITEM" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_UKN" t="ZP2015_UNIT_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Kniha 1</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1820-01-01T00:00:00" fe="false" fmt="Y-Y" to="1830-12-31T23:59:59" toe="false"/>
+                    </dt>
+                </lvl>
+                <lvl id="6409" pid="6407" uuid="4f39c1d0-1cf5-48c7-b63c-08a6ad0596ad">
+                    <de s="ZP2015_LEVEL_ITEM" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_UKN" t="ZP2015_UNIT_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Kniha 2</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1840-01-01T00:00:00" fe="false" fmt="Y-Y" to="1850-12-31T23:59:59" toe="false"/>
+                    </dt>
+                </lvl>
+                <lvl id="6410" pid="6407" uuid="d129172f-9e84-4fcb-ad39-c282e94fd12e">
+                    <de s="ZP2015_LEVEL_ITEM" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_UKN" t="ZP2015_UNIT_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Kniha 3</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1845-01-01T00:00:00" fe="false" fmt="Y-Y" to="1855-12-31T23:59:59" toe="false"/>
+                    </dt>
+                </lvl>
+                <lvl id="6412" pid="6411" uuid="7af7c6b3-16e2-4b6c-a77e-1fa186de3650">
+                    <de s="ZP2015_LEVEL_ITEM" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_UKN" t="ZP2015_UNIT_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Kniha 4</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1810-01-01T00:00:00" fe="false" fmt="Y-Y" to="1860-12-31T23:59:59" toe="false"/>
+                    </dt>
+                </lvl>
+                <lvl id="6413" pid="6408" uuid="3193bc3d-471c-4b12-86ba-feac2dbb5c50">
+                    <de s="ZP2015_LEVEL_PART" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_POH" t="ZP2015_UNIT_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>P1</v>
+                    </ds>
+                </lvl>
+                <lvl id="6414" pid="6409" uuid="3a416afb-b67a-455a-90b4-338f757d3b5e">
+                    <de s="ZP2015_LEVEL_PART" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>P2</v>
+                    </ds>
+                </lvl>
+                <lvl id="6415" pid="6409" uuid="0c0ed3bc-9097-481a-ae03-bc2ebc1d8f68">
+                    <de s="ZP2015_LEVEL_PART" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>P3</v>
+                    </ds>
+                </lvl>
+            </lvls>
+        </s>
+    </fs>
+</ns2:edx>
