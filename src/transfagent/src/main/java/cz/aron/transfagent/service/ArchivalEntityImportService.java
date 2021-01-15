@@ -409,49 +409,62 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
 	}
 	
+	private void downloadEntity(ArchivalEntity ae, Path dir) throws IOException {
+	    log.debug("Downloading entity from Elza, uuid: {}, elzaId: {}", ae.getUuid(), ae.getElzaId());
+
+	    var identifierList = new IdentifierList();
+        String ident;
+        if(ae.getUuid()!=null) {
+            ident = ae.getUuid().toString();
+        } else 
+        if(ae.getElzaId()!=null) {
+            ident = ae.getElzaId().toString();
+        } else {
+            log.error("Missing identifier for archivale entity, id: {}", ae.getId());
+            throw new RuntimeException("Failed to import archival entity: "+ae.getId());
+        }
+        identifierList.getIdentifier().add(ident);
+        var entitiesRequest = new EntitiesRequest();
+        entitiesRequest.setIdentifiers(identifierList);
+        var exportRequest = new ExportRequest();
+        exportRequest.setRequiredFormat("http://elza.tacr.cz/schema/v2");
+        exportRequest.setEntities(entitiesRequest);
+        var exportService = elzaExportService.get();
+        var response = exportService.exportData(exportRequest);
+
+        var dataHandler = response.getBinData();
+        
+        var targetApPath = dir.resolve("ap.xml");
+        if(Files.exists(targetApPath)) {
+            var prevApPath = dir.resolve("apPrev.xml");
+            Files.deleteIfExists(prevApPath);
+            Files.move(targetApPath, prevApPath);
+        }
+        try(var os = Files.newOutputStream(targetApPath)) {
+            dataHandler.writeTo(os);
+        } catch (IOException e) {
+            log.error("Fail to write downloaded ap",e);
+            throw new IllegalStateException(e);
+        }
+}
+	
 	private Path downloadEntity(ArchivalEntity ae) {
-
-		var exportService = elzaExportService.get();
-		var identifierList = new IdentifierList();
-		String ident;
-		if(ae.getUuid()!=null) {
-			ident = ae.getUuid().toString();
-		} else 
-		if(ae.getElzaId()!=null) {
-			ident = ae.getElzaId().toString();
-		} else {
-			log.error("Missing identifier for archivale entity, id: {}", ae.getId());
-			throw new RuntimeException("Failed to import archival entity: "+ae.getId());
-		}
-		identifierList.getIdentifier().add(ident);
-		var entitiesRequest = new EntitiesRequest();
-		entitiesRequest.setIdentifiers(identifierList);
-		var exportRequest = new ExportRequest();
-		exportRequest.setRequiredFormat("http://elza.tacr.cz/schema/v2");
-		exportRequest.setEntities(entitiesRequest);
-		var response = exportService.exportData(exportRequest);
-
-		Path tempDir;
+	    Path tempDir = null;
 		try {
 			tempDir = storageService.createTempDir("ae-"+ae.getId().toString());
+			downloadEntity(ae, tempDir);
+			return tempDir;
 		} catch (IOException e) {
-			log.error("Fail to create temp directory",e);
+            try {
+                if(tempDir!=null) {
+                    FileSystemUtils.deleteRecursively(tempDir);
+                }
+            } catch (IOException e1) {
+                log.error("Fail to delete directory",e1);
+            }
+			log.error("Fail to download entity",e);
 			throw new IllegalStateException(e);
 		}
-
-		var dataHandler = response.getBinData();
-		try(var os = Files.newOutputStream(tempDir.resolve("ap.xml"))) {
-			dataHandler.writeTo(os);	
-		} catch (IOException e) {
-			log.error("Fail to write downloaded ap",e);
-			try {
-				FileSystemUtils.deleteRecursively(tempDir);
-			} catch (IOException e1) {
-				log.error("Fail to delete directory",e1);
-			}
-			throw new IllegalStateException(e);
-		}
-		return tempDir;
 	}
 
 	/*
@@ -513,7 +526,12 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
         Path apuDir = storageService.getApuDataDir(apuSource.getDataDir());
         if(archEntity.isDownload()) {
-            apuDir = downloadEntity(archEntity);
+            try {
+                downloadEntity(archEntity, apuDir);
+            } catch(IOException e) {
+                log.error("Failed to download entity, targetDir: {}", apuDir.toString(), e);
+                return Result.FAILED;
+            }
             archEntity.setDownload(false);
             archivalEntityRepository.save(archEntity);
         }
