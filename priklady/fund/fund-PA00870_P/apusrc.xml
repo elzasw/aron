@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="44bb57e2-b3c1-44db-8d9a-81b02f2a9bda">
+    <apus>
+        <apu type="Fund" uuid="1d124f6d-2435-4136-a2fa-5f0c5c103d95">
+            <name>Místní školní rada Bělečko</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Místní školní rada Bělečko</value>
+                    <itms>
+                        <str type="NAME">Místní školní rada Bělečko</str>
+                    </itms>
+                </part>
+                <part type="PT_FUND_INFO">
+                    <itms>
+                        <ref type="INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                        <ref type="ARCHDESC_ROOT_REF">fe4530af-a327-4056-9058-fce8c11f3825</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

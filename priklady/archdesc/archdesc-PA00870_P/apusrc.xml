@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="4912d348-98eb-47b1-aeea-07155fb0aa27">
+    <apus>
+        <apu type="ArchDesc" uuid="fe4530af-a327-4056-9058-fce8c11f3825">
+            <name>Místní školní rada Bělečko</name>
+            <prts>
+                <part type="PT_ARCH_DESC">
+                    <itms>
+                        <str type="HISTORY">
+Písemností místních školní rad byly do Okresního archivu většinou předány současně s písemnostmi škol nebo obecních úřadů a národních výborů. Všechny fondy školních rad byly postupně podchyceny do přírůstkového katalogu. Při stěhování písemností z jednotlivých pracovišť byly archiválie místních školních rad soustředěny do jedné skupiny, uspořádány a byl k nim v roce 1967 vypracován sdružený inventář. 
+Po přestěhování depozitáře, který byl umístěn na zámku v Pardubicích, do depozitáře ve Chvaleticích, byly do inventáře zapracovány nové přírůstky jednotlivých fondů a provedena reinventarizace</str>
+                        <str type="UNIT_ARR">Archiválie místních školních rad byly soustředěny do jedné skupiny, uspořádány a byl k nim v roce 1967 vypracován sdružený inventář. Postupováno bylo podle tehdy platné metodiky z roku 1958.
+Po přestěhování depozitáře, který byl umístěn na zámku v Pardubicích, do depozitáře ve Chvaleticích, byly do inventáře zapracovány nové přírůstky jednotlivých fondů a provedena reinventarizace. Poslední změny byly provedeny v roce 2013, při generální inventuře, kdy byl inventář ponížen na sdružený soupis
+</str>
+                        <str type="UNIT_CONTENT">Fond obsahuje pouze jednací protokol a jeden fascikl korespondence</str>
+                        <str type="UNIT_SOURCE">Přírůstek č. 928/65</str>
+                        <str type="FUTURE_UNITS">Neočekávají se</str>
+                        <str type="UNIT_CURRENT_STATUS">Dobrý</str>
+                        <str type="ARRANGEMENT_INFO">Ke zpracování archiválií došlo v roce 1967, kdy byl vypracován sdružený inventář, do kterého byla začleněna i Místní školní rada Bělečko pod č. archivní pomůcky 3/3. Bylo postupováno podle tehdy platné metodiky z roku 1958. V roce 1981 došlo k přijetí dalších archiválií, proto došlo k reinventarizaci sdruženého inventáře.Na zpracování fondů školních rad se podíleli tito pracovníci: E. Žandová, F. Nešpor, E. Frajdlová, M. Voltrová, E. Halbrštátová a F. Ottmar.
+ Při generální inventuře v roce 2013 byla pomůcka ponížena na sdružený soupis</str>
+                        <str type="ARRANGE_RULES">Základní pravidla 1958</str>
+                        <enm visible="true" type="LANGUAGE">čeština</enm>
+                        <str type="DESCRIPTION_DATE">1967, 1981</str>
+                    </itms>
+                </part>
+                <part type="PT_ARCH_DESC_FUND">
+                    <itms>
+                        <ref type="FUND_REF">1d124f6d-2435-4136-a2fa-5f0c5c103d95</ref>
+                        <ref type="FUND_INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+        <apu type="ArchDesc" uuid="099dd2ab-ff0f-402a-ba1b-b1eb9137ad77">
+            <name>Knihy</name>
+            <prts>
+                <part type="PT_ARCH_DESC">
+                    <itms>
+                        <str type="ABSTRACT">Knihy</str>
+                    </itms>
+                </part>
+                <part type="PT_ARCH_DESC_FUND">
+                    <itms>
+                        <ref type="FUND_REF">1d124f6d-2435-4136-a2fa-5f0c5c103d95</ref>
+                        <ref type="FUND_INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                    </itms>
+                </part>
+            </prts>
+            <prnt>fe4530af-a327-4056-9058-fce8c11f3825</prnt>
+        </apu>
+        <apu type="ArchDesc" uuid="945b4275-542f-4184-ab1e-dabef6e96863">
+            <name>Spisy</name>
+            <prts>
+                <part type="PT_ARCH_DESC">
+                    <itms>
+                        <str type="ABSTRACT">Spisy</str>
+                    </itms>
+                </part>
+                <part type="PT_ARCH_DESC_FUND">
+                    <itms>
+                        <ref type="FUND_REF">1d124f6d-2435-4136-a2fa-5f0c5c103d95</ref>
+                        <ref type="FUND_INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                    </itms>
+                </part>
+            </prts>
+            <prnt>fe4530af-a327-4056-9058-fce8c11f3825</prnt>
+        </apu>
+        <apu type="ArchDesc" uuid="9e95d733-9a63-4cf1-8b0a-43fe695f7134">
+            <name>Jednací protokol</name>
+            <prts>
+                <part type="PT_ARCH_DESC">
+                    <itms>
+                        <enm visible="true" type="UNIT_TYPE">Úřední kniha</enm>
+                        <str type="ABSTRACT">Jednací protokol</str>
+                        <drng f="1886-01-01T00:00:00" fe="false" fmt="Y-Y" to="1905-12-31T23:59:59" toe="false" type="UNIT_DATE"/>
+                        <str type="INV_CISLO">1</str>
+                    </itms>
+                </part>
+                <part type="PT_ARCH_DESC_FUND">
+                    <itms>
+                        <ref type="FUND_REF">1d124f6d-2435-4136-a2fa-5f0c5c103d95</ref>
+                        <ref type="FUND_INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                    </itms>
+                </part>
+            </prts>
+            <prnt>099dd2ab-ff0f-402a-ba1b-b1eb9137ad77</prnt>
+        </apu>
+        <apu type="ArchDesc" uuid="87959775-b096-4e4b-95c6-2fc7e4b00025">
+            <name>Korespondence</name>
+            <prts>
+                <part type="PT_ARCH_DESC">
+                    <itms>
+                        <str type="ABSTRACT">Korespondence</str>
+                        <drng f="1874-01-01T00:00:00" fe="false" fmt="Y-Y" to="1914-12-31T23:59:59" toe="false" type="UNIT_DATE"/>
+                        <str type="INV_CISLO">2</str>
+                    </itms>
+                </part>
+                <part type="PT_ARCH_DESC_FUND">
+                    <itms>
+                        <ref type="FUND_REF">1d124f6d-2435-4136-a2fa-5f0c5c103d95</ref>
+                        <ref type="FUND_INST_REF">ac22dbd4-1d37-4052-a5a6-4d2e1cce080b</ref>
+                    </itms>
+                </part>
+            </prts>
+            <prnt>945b4275-542f-4184-ab1e-dabef6e96863</prnt>
+        </apu>
+    </apus>
+</apusrc>

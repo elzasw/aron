@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns2:edx xmlns:ns2="http://elza.tacr.cz/schema/v2">
+    <aps>
+        <ap>
+            <ape id="23815" t="PERSON_INDIVIDUAL" uuid="c2e922c8-104e-4d89-9a5b-c94ad6d1d8cb"/>
+            <frgs>
+                <frg fid="45265" t="PT_NAME">
+                    <de s="NT_ACCEPTED" t="NM_TYPE"/>
+                    <ds t="NM_MAIN">
+                        <v>Frajdlová</v>
+                    </ds>
+                    <ds t="NM_MINOR">
+                        <v>Emilie</v>
+                    </ds>
+                    <ds t="NM_DEGREE_POST">
+                        <v>promovaná historička</v>
+                    </ds>
+                </frg>
+                <frg fid="45264" t="PT_BODY">
+                    <ds t="BRIEF_DESC">
+                        <v>archivářka</v>
+                    </ds>
+                </frg>
+            </frgs>
+        </ap>
+        <ap>
+            <ape id="23816" t="PERSON_INDIVIDUAL" uuid="49c03803-71c4-412c-a540-2f9239f30ea8"/>
+            <frgs>
+                <frg fid="45266" t="PT_BODY">
+                    <ds t="BRIEF_DESC">
+                        <v>archivářka</v>
+                    </ds>
+                </frg>
+                <frg fid="45267" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Žandová</v>
+                    </ds>
+                    <ds t="NM_MINOR">
+                        <v>Elvia</v>
+                    </ds>
+                </frg>
+            </frgs>
+        </ap>
+    </aps>
+    <fs>
+        <s rule="ZP2015">
+            <fi c="PA00870_P" ic="225202010" n="Místní školní rada Bělečko"/>
+            <sts>
+                <st c="ZP2015_PACKET">
+                    <sos>
+                        <so id="16764">
+                            <de s="ZP2015_PACKET_TYPE_SAMOST" t="ZP2015_PACKET_TYPE"/>
+                            <di v="1" t="ZP2015_PACKET_NUMBER"/>
+                            <ds t="ZP2015_PACKET_POSTFIX">
+                                <v>kniha</v>
+                            </ds>
+                        </so>
+                        <so id="16768">
+                            <de s="ZP2015_PACKET_TYPE_FAS" t="ZP2015_PACKET_TYPE"/>
+                            <di v="1" t="ZP2015_PACKET_NUMBER"/>
+                            <ds t="ZP2015_PACKET_POSTFIX">
+                                <v>fascikl</v>
+                            </ds>
+                        </so>
+                    </sos>
+                </st>
+            </sts>
+            <lvls>
+                <lvl id="163528" uuid="fe4530af-a327-4056-9058-fce8c11f3825">
+                    <de s="ZP2015_ARRANGEMENT_OTHER" t="ZP2015_ARRANGEMENT_TYPE"/>
+                    <de s="ZP2015_LEVEL_ROOT" t="ZP2015_LEVEL_TYPE"/>
+                    <dt t="ZP2015_UNIT_DATE_BULK">
+                        <d f="1868-01-01T00:00:00" fe="false" fmt="Y-Y" to="1949-12-31T23:59:59" toe="false"/>
+                    </dt>
+                    <di v="870" t="ZP2015_NAD"/>
+                    <ds t="ZP2015_ZNACKA_FONDU">
+                        <v>MŠR Bělečko</v>
+                    </ds>
+                    <ds t="ZP2015_UNIT_HIST">
+                        <v>
+Písemností místních školní rad byly do Okresního archivu většinou předány současně s písemnostmi škol nebo obecních úřadů a národních výborů. Všechny fondy školních rad byly postupně podchyceny do přírůstkového katalogu. Při stěhování písemností z jednotlivých pracovišť byly archiválie místních školních rad soustředěny do jedné skupiny, uspořádány a byl k nim v roce 1967 vypracován sdružený inventář. 
+Po přestěhování depozitáře, který byl umístěn na zámku v Pardubicích, do depozitáře ve Chvaleticích, byly do inventáře zapracovány nové přírůstky jednotlivých fondů a provedena reinventarizace</v>
+                    </ds>
+                    <ds t="ZP2015_UNIT_ARR">
+                        <v>Archiválie místních školních rad byly soustředěny do jedné skupiny, uspořádány a byl k nim v roce 1967 vypracován sdružený inventář. Postupováno bylo podle tehdy platné metodiky z roku 1958.
+Po přestěhování depozitáře, který byl umístěn na zámku v Pardubicích, do depozitáře ve Chvaleticích, byly do inventáře zapracovány nové přírůstky jednotlivých fondů a provedena reinventarizace. Poslední změny byly provedeny v roce 2013, při generální inventuře, kdy byl inventář ponížen na sdružený soupis
+</v>
+                    </ds>
+                    <ds t="ZP2015_UNIT_CONTENT">
+                        <v>Fond obsahuje pouze jednací protokol a jeden fascikl korespondence</v>
+                    </ds>
+                    <ds t="ZP2015_UNIT_SOURCE">
+                        <v>Přírůstek č. 928/65</v>
+                    </ds>
+                    <ds t="ZP2015_FUTURE_UNITS">
+                        <v>Neočekávají se</v>
+                    </ds>
+                    <ds t="ZP2015_UNIT_CURRENT_STATUS">
+                        <v>Dobrý</v>
+                    </ds>
+                    <ds t="ZP2015_INTERNAL_NOTE">
+                        <v>Reedice: Renata Klčová, 2020</v>
+                    </ds>
+                    <da apid="23815" t="ZP2015_ARRANGER"/>
+                    <da apid="23816" t="ZP2015_ARRANGER"/>
+                    <ds t="ZP2015_ARRANGEMENT_INFO">
+                        <v>Ke zpracování archiválií došlo v roce 1967, kdy byl vypracován sdružený inventář, do kterého byla začleněna i Místní školní rada Bělečko pod č. archivní pomůcky 3/3. Bylo postupováno podle tehdy platné metodiky z roku 1958. V roce 1981 došlo k přijetí dalších archiválií, proto došlo k reinventarizaci sdruženého inventáře.Na zpracování fondů školních rad se podíleli tito pracovníci: E. Žandová, F. Nešpor, E. Frajdlová, M. Voltrová, E. Halbrštátová a F. Ottmar.
+ Při generální inventuře v roce 2013 byla pomůcka ponížena na sdružený soupis</v>
+                    </ds>
+                    <ds t="ZP2015_ARRANGE_RULES">
+                        <v>Základní pravidla 1958</v>
+                    </ds>
+                    <de s="ZP2015_LANGUAGE_43" t="ZP2015_LANGUAGE"/>
+                    <ds t="ZP2015_DESCRIPTION_DATE">
+                        <v>1967, 1981</v>
+                    </ds>
+                </lvl>
+                <lvl id="186915" pid="163528" uuid="099dd2ab-ff0f-402a-ba1b-b1eb9137ad77">
+                    <de s="ZP2015_LEVEL_SERIES" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Knihy</v>
+                    </ds>
+                </lvl>
+                <lvl id="186916" pid="163528" uuid="945b4275-542f-4184-ab1e-dabef6e96863">
+                    <de s="ZP2015_LEVEL_SERIES" t="ZP2015_LEVEL_TYPE"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Spisy</v>
+                    </ds>
+                </lvl>
+                <lvl id="186918" pid="186915" uuid="9e95d733-9a63-4cf1-8b0a-43fe695f7134">
+                    <de s="ZP2015_LEVEL_ITEM" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_UNIT_TYPE_UKN" t="ZP2015_UNIT_TYPE"/>
+                    <do soid="16764" t="ZP2015_STORAGE_ID"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Jednací protokol</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1886-01-01T00:00:00" fe="false" fmt="Y-Y" to="1905-12-31T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="ZP2015_INV_CISLO">
+                        <v>1</v>
+                    </ds>
+                </lvl>
+                <lvl id="186922" pid="186916" uuid="87959775-b096-4e4b-95c6-2fc7e4b00025">
+                    <de s="ZP2015_LEVEL_FOLDER" t="ZP2015_LEVEL_TYPE"/>
+                    <de s="ZP2015_FOLDER_UNITS" t="ZP2015_FOLDER_TYPE"/>
+                    <do soid="16768" t="ZP2015_STORAGE_ID"/>
+                    <ds t="ZP2015_TITLE">
+                        <v>Korespondence</v>
+                    </ds>
+                    <dt t="ZP2015_UNIT_DATE">
+                        <d f="1874-01-01T00:00:00" fe="false" fmt="Y-Y" to="1914-12-31T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="ZP2015_INV_CISLO">
+                        <v>2</v>
+                    </ds>
+                </lvl>
+            </lvls>
+        </s>
+    </fs>
+</ns2:edx>

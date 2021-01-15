@@ -558,9 +558,19 @@ Each file has name and its content - binary data.</xs:documentation>
 				<xs:documentation>Institution code</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
+		<xs:attribute name="mrk" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Fund identification mark</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 		<xs:attribute name="n" use="required" type="xs:string">
 			<xs:annotation>
 				<xs:documentation>Fund name</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="num" use="optional" type="xs:integer">
+			<xs:annotation>
+				<xs:documentation>fund number</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 		<xs:attribute name="tr" use="optional" type="xs:string">

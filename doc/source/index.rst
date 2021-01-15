@@ -9,5 +9,6 @@ ArchivOnline
    :glob:
    :caption: Obsah
 
+   transfagent/transfagent.rst
    api/api.rst
 
