@@ -30,9 +30,9 @@ public abstract class AbstractCommonTest {
 
     final static String DIR_TEST_RESOURCES = "target/test-resources";
 
-    final String DIR_DATA = DIR_TEST_RESOURCES + "/data";
+    final static String DIR_DATA = DIR_TEST_RESOURCES + "/data";
 
-    final String DIR_ERROR = DIR_TEST_RESOURCES + "/error";
+    final static String DIR_ERROR = DIR_TEST_RESOURCES + "/error";
 
     final String DIR_FROM_INSTITUTION = "src/test/resources/files/institutions";
 
@@ -119,6 +119,12 @@ public abstract class AbstractCommonTest {
         fundRepository.deleteAll();
         institutionRepository.deleteAll();
         apuSourceRepository.deleteAll();
+    }
+
+    @AfterAll
+    public static void deleteApusrcXml() throws IOException {
+        FileSystemUtils.deleteRecursively(Path.of(DIR_DATA));
+        FileSystemUtils.deleteRecursively(Path.of(DIR_ERROR));
     }
 
     /**

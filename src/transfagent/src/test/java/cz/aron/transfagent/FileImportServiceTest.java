@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.FileSystemUtils;
@@ -21,7 +22,8 @@ public class FileImportServiceTest extends AbstractCommonTest {
 
     @Test
     public void testImportDirectDirSuccess() throws IOException, InterruptedException {
-        processXmlFile(DIR_FROM_DIRECT, DIR_TO_DIRECT);
+        FileUtils.copyDirectory(new File(DIR_FROM_DIRECT), new File(DIR_TO_DIRECT));
+        importDirectService.processDirectory(Path.of(DIR_TO_DIRECT, DIRECT_DIR));
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.size() == 1);
@@ -36,7 +38,8 @@ public class FileImportServiceTest extends AbstractCommonTest {
     @Test
     public void testImportDirectDirError() throws IOException, InterruptedException {
         FileSystemUtils.deleteRecursively(new File(DIR_ERROR));
-        processXmlFile(DIR_FROM_DIRECT_ERR, DIR_TO_DIRECT);
+        FileUtils.copyDirectory(new File(DIR_FROM_DIRECT_ERR), new File(DIR_TO_DIRECT));
+        importDirectService.processDirectory(Path.of(DIR_TO_DIRECT, DIRECT_ERR));
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.isEmpty());
