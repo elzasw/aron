@@ -189,18 +189,63 @@ public class ApuSourceBuilder {
 		daos.getUuid().add(daoId);
 	}
 
-    public List<ItemDateRange> getItemDateRanges(Apu apu, String partType) {
+    public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {
             if(part.getType().equals(partType)) {
                 for(Object obj : part.getItms().getStrOrLnkOrEnm()) {
                     if(obj instanceof ItemDateRange) {
-                        items.add((ItemDateRange) obj);
+                        ItemDateRange idr = (ItemDateRange) obj;
+                        if(idr.getType().equals(itemType)) {
+                            items.add(idr);
+                        }
                     }
                 }
             }
         }
         return items;
+    }
+
+    /**
+     * Return first part of given type
+     * @param apu
+     * @param partType
+     * @return
+     */
+    public Part getFirstPart(Apu apu, String partType) {
+        for(Part part : apu.getPrts().getPart()) {
+            if (part.getType().equals(partType)) {
+                return part;
+            }
+        }
+        return null;
+    }
+
+    public void copyDateRanges(Part part, List<ItemDateRange> ranges) {
+        for(var dateRange: ranges) {
+            ItemDateRange idr = copyItem(dateRange);
+            addDateRange(part, idr);
+        }
+        
+    }
+
+    public ItemDateRange copyItem(ItemDateRange dateRange) {
+        return this.createDateRange(dateRange.getType(), 
+                             dateRange.getF(), dateRange.isFe(), 
+                             dateRange.getTo(), dateRange.isToe(), 
+                             dateRange.getFmt());
+    }
+
+    public void removeItem(Apu apu, Object item) {
+        for (Part part : apu.getPrts().getPart()) {
+            var objects = part.getItms().getStrOrLnkOrEnm();
+            for (Object obj : objects) {
+                if (obj == item) {
+                    objects.remove(obj);
+                    break;
+                }
+            }
+        }
     }
 
 }

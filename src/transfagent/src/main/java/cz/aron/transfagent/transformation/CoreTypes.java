@@ -33,7 +33,8 @@ public class CoreTypes {
 	public final static String PT_ARCH_DESC = "PT_ARCH_DESC";
 	public final static String PT_ENTITY_ROLE = "PT_ENTITY_ROLE";
 	public final static String PT_ARCH_DESC_FUND = "PT_ARCH_DESC_FUND";
-	
+
+	public final static String UNIT_DATE = "UNIT_DATE";
 	public final static String ROLE = "ROLE";
 	
 	public static final String ORIENTATION = "ORIENTATION";

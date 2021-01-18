@@ -5,7 +5,6 @@ import java.util.List;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ItemDateRange;
-import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ItemDateRangeAppender {
@@ -21,7 +20,7 @@ public class ItemDateRangeAppender {
     }
 
     public void appendTo(Apu apu) {
-        var items = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        var items = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         var item = getCrossingItem(items);
         while (item != null) {
             itemDateRange = mergeItemDateRangeTo(item);
@@ -42,7 +41,7 @@ public class ItemDateRangeAppender {
     }
 
     private ItemDateRange mergeItemDateRangeTo(ItemDateRange item) {
-        var result = builder.createDateRange(item.getType(), item.getF(), item.isFe(), item.getTo(), item.isToe(), item.getFmt());
+        var result = builder.copyItem(item);
         var itemRange = new LocalDateTimeRange(result);
         if(dateRange.isBefore(itemRange)) {
             result.setF(itemDateRange.getF());
@@ -55,25 +54,14 @@ public class ItemDateRangeAppender {
 
     private void removeItemDateRange(Apu apu, List<ItemDateRange> items, ItemDateRange removeItem) {
         items.remove(removeItem);
-        for(Part part : apu.getPrts().getPart()) {
-            var objects = part.getItms().getStrOrLnkOrEnm();
-            for(Object obj : objects) {
-                if(obj instanceof ItemDateRange) {
-                    var item = (ItemDateRange) obj;
-                    if(removeItem.equals(item)) {
-                        objects.remove(obj);
-                        break;
-                    }
-                }
-            }
-        }
+        builder.removeItem(apu, removeItem);
     }
 
     private void addItemDateRange(Apu apu, ItemDateRange item) {
-        for(Part part : apu.getPrts().getPart()) {
-            if (part.getType().equals(CoreTypes.PT_ARCH_DESC)) {
-                part.getItms().getStrOrLnkOrEnm().add(item);
-            }
+        var part = builder.getFirstPart(apu, CoreTypes.PT_ARCH_DESC);
+        if (part == null) {
+            part = builder.addPart(apu, CoreTypes.PT_ARCH_DESC);
         }
+        builder.addDateRange(part, item);
     }
 }

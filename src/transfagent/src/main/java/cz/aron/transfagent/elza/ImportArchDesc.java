@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -179,7 +178,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             deactivatePart(apu);
 
             // add date to parent(s)
-            var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+            var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             for(ItemDateRange item : itemDateRanges) {
                 ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
                 Apu apuParent = apuParentMap.get(apu);
@@ -190,31 +189,29 @@ public class ImportArchDesc implements EdxItemCovertContext {
             }
         }
 
-        // checking datace
-        boolean repeat = false;
-        do {
-            for(Entry<String, Apu> item : apuMap.entrySet()) {
-                var apu = item.getValue();
-                var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
-                if(ranges.isEmpty()) {
-                    var apuParent = apuParentMap.get(apu);
-                    var rangesParent = apusBuilder.getItemDateRanges(apuParent, CoreTypes.PT_ARCH_DESC);
-                    if(rangesParent.isEmpty()) {
-                        repeat = true;
-                    } else {
-                        addItemDateRanges(apu, rangesParent);
-                    }
-                }
+        // add dates to siblings
+        for (Entry<String, Apu> item : apuMap.entrySet()) {
+            var apu = item.getValue();
+            var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+            if (ranges.isEmpty()) {
+                copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             }
-        } while(repeat);
+        }
 
         return apusBuilder;
     }
 
-    private void addItemDateRanges(Apu apu, List<ItemDateRange> items) {
-        for(Part part : apu.getPrts().getPart()) {
-            if (part.getType().equals(CoreTypes.PT_ARCH_DESC)) {
-                part.getItms().getStrOrLnkOrEnm().addAll(items);
+    private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
+        var apuParent = apuParentMap.get(apu);
+        while(apuParent!=null) {
+            var rangesParent = apusBuilder.getItemDateRanges(apuParent, partType, CoreTypes.UNIT_DATE);
+            if(rangesParent.size()>0) {
+                Part part = apusBuilder.getFirstPart(apu, partType);
+                if(part==null) {
+                    part = apusBuilder.addPart(apu, partType);
+                }
+                apusBuilder.copyDateRanges(part, rangesParent);
+                return;
             }
         }
     }
@@ -300,7 +297,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	    stringTypeMap.put(ElzaTypes.ZP2015_PART, new EdxStringConvertor(CoreTypes.PART));
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
 		stringTypeMap.put("ZP2015_RELATED_UNITS",new EdxStringConvertor("RELATED_UNITS"));
-		stringTypeMap.put("ZP2015_UNIT_DATE",new EdxUnitDateConvertor("UNIT_DATE"));
+		stringTypeMap.put("ZP2015_UNIT_DATE",new EdxUnitDateConvertor(CoreTypes.UNIT_DATE));
 		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
 		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
 		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO"));

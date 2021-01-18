@@ -52,7 +52,7 @@ public class ImportArchDescTest {
 
         // testing root: Test datace
         Apu apu = getApuByName(builder, "Test datace");
-        List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
         
         LocalDateTimeRange idra = new LocalDateTimeRange(ranges.get(0));
@@ -61,7 +61,7 @@ public class ImportArchDescTest {
 
         // testing s1
         apu = getApuByName(builder, "s1");
-        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 2);
 
         idra = new LocalDateTimeRange(ranges.get(0));
@@ -74,7 +74,7 @@ public class ImportArchDescTest {
 
         // testing s2
         apu = getApuByName(builder, "s2");
-        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
         idra = new LocalDateTimeRange(ranges.get(0));
@@ -83,7 +83,7 @@ public class ImportArchDescTest {
 
         // testing P1
         apu = getApuByName(builder, "P1");
-        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
         idra = new LocalDateTimeRange(ranges.get(0));
@@ -92,7 +92,7 @@ public class ImportArchDescTest {
 
         // testing P2
         apu = getApuByName(builder, "P2");
-        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
         idra = new LocalDateTimeRange(ranges.get(0));
@@ -101,7 +101,7 @@ public class ImportArchDescTest {
 
         // testing P3
         apu = getApuByName(builder, "P3");
-        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC);
+        ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
         idra = new LocalDateTimeRange(ranges.get(0));
