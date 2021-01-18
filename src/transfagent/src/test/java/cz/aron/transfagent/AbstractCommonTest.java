@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
@@ -157,4 +158,14 @@ public abstract class AbstractCommonTest {
         }
         return false;
     }
+
+    /**
+     * Aktuální datum jako řetězec znaků
+     * 
+     * @return YYYYMMDD
+     */
+    protected String getDateDir() {
+        return String.format("%1$tY%1$tm%1$td", new Date()); 
+    }
+
 }

@@ -34,6 +34,7 @@ import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
+import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -67,10 +68,12 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
     private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
-    
-    final FileImportService fileImportService;
 
-    final private String INSTITUTIONS_DIR = "institutions";
+    private final FileImportService fileImportService;
+
+    private final String INSTITUTIONS_DIR = "institutions";
+
+    private ImportProtocol protocol;
 
     public ImportInstitutionService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
             ArchivalEntityRepository archivalEntityRepository, EntitySourceRepository entitySourceRepository,
@@ -132,6 +135,9 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			return false;
 		}
 
+        protocol = new ImportProtocol(dir);
+        protocol.add("Zahájení importu");
+
 		var fileName = inst.get().getFileName().toString();
 		var tmp = fileName.substring("institution-".length());
 		var code = tmp.substring(0,tmp.length()-".xml".length());
@@ -139,13 +145,15 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		var ii = new ImportInstitution();
 		ApuSourceBuilder apusrcBuilder;
 
-		try {
-			apusrcBuilder = ii.importInstitution(inst.get(), code, null);
-		} catch (IOException e1) {
-			throw new UncheckedIOException(e1);
-		} catch (JAXBException e1) {
-			throw new IllegalStateException(e1);
-		}
+        try {
+            apusrcBuilder = ii.importInstitution(inst.get(), code, null);
+        } catch (IOException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new UncheckedIOException(e);
+        } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new IllegalStateException(e);
+        }
 
 		var institution = institutionRepository.findByCode(code);
 		if (institution!=null) {
@@ -153,28 +161,34 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(institution.getUuid().toString());
 		}
 
-		try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-			apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
-		} catch (IOException ioEx) {
-			throw new UncheckedIOException(ioEx);
-		} catch (JAXBException e) {
-			throw new IllegalStateException(e);
-		}
-		
-		Path dataDir;
-	    try {
-	        dataDir = storageService.moveToDataDir(dir);
-	    } catch (IOException e) {
-	        throw new IllegalStateException(e);
-	    }
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+        } catch (IOException ioEx) {
+            protocol.add("Chyba " + ioEx.getMessage());
+            throw new UncheckedIOException(ioEx);
+        } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new IllegalStateException(e);
+        }
+
+        Path dataDir;
+        try {
+            dataDir = storageService.moveToDataDir(dir);
+            protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
+        } catch (IOException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new IllegalStateException(e);
+        }
 
 		if (institution == null) {
 			createInstitution(dataDir, dir, apusrcBuilder, code, ii);
 		} else {
 			updateInstitution(institution, dataDir, dir, apusrcBuilder, code, ii);
 		}
-		return true;
-	}
+
+        protocol.add("Import byl úspěšně dokončen");
+        return true;
+    }
 
 	private void createInstitution(Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String institutionCode,
 			ImportInstitution ii) {
@@ -211,27 +225,26 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 
 		var origData = institution.getApuSource().getDataDir();
 
-		transactionTemplate.execute(t -> {			
+		transactionTemplate.execute(t -> {
 			// aktualizace, pouze zmenim datovy adresar
 			var apuSource = institution.getApuSource();
 			apuSource.setDataDir(dataDir.toString());
 			apuSource.setOrigDir(origDir.getFileName().toString());
 			
-			if (ii.getApRefUuid() != null) {					
-				var apUuid = ii.getApRefUuid();						
+			if (ii.getApRefUuid() != null) {
+				var apUuid = ii.getApRefUuid();
 				createArchivalEntityIfNotExist(apUuid, apuSource, institutionCode, true);
 			}
 
 			var coreQueue = new CoreQueue();
 			coreQueue.setApuSource(apuSource);
-			
+
 			apuSourceRepository.save(apuSource);
 			institutionRepository.save(institution);
 			coreQueueRepository.save(coreQueue);
 			return null;
 		});
-		log.info("Institution updated code={}, uuid={}, original data dir {}", institutionCode, institution.getUuid(),
-				origData);
+		log.info("Institution updated code={}, uuid={}, original data dir {}", institutionCode, institution.getUuid(), origData);
 	}
 
 	private void createArchivalEntityIfNotExist(UUID apUuid, cz.aron.transfagent.domain.ApuSource apuSource,
@@ -272,6 +285,10 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         String fileName = "institution-"+institution.getCode()+".xml";
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+
+        protocol = new ImportProtocol(apuDir);
+        protocol.add("Zahájení reimportu");
+
         ApuSourceBuilder apuSourceBuilder;
         final var ii = new ImportInstitution();
         try {
@@ -282,8 +299,10 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
             }
         } catch (Exception e) {
             log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
+            protocol.add("Chyba " + e.getMessage());
             return Result.FAILED;
         }
+        protocol.add("Reimport byl úspěšně dokončen");
         return Result.REIMPORTED;
     }
 
