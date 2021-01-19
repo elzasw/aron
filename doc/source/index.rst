@@ -10,5 +10,6 @@ ArchivOnline
    :caption: Obsah
 
    transfagent/transfagent.rst
+   aron/aron.rst
    api/api.rst
 
