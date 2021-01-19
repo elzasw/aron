@@ -44,8 +44,7 @@ public class FileImportServiceTest extends AbstractCommonTest {
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.isEmpty());
 
-        String dirDate = String.format("%1$tY%1$tm%1$td", new Date());
-        assertTrue(Files.exists(Path.of(DIR_ERROR, dirDate, DIRECT_ERR, FILE_DIRECT_EMPTY)));
+        assertTrue(Files.exists(Path.of(DIR_ERROR, getDateDir(), DIRECT_ERR, FILE_DIRECT_EMPTY)));
     }
 
 }

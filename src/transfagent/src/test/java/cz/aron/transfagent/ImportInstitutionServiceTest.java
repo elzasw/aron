@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -28,6 +30,9 @@ public class ImportInstitutionServiceTest extends AbstractCommonTest {
     public void testImportInstitutionService() throws IOException, InterruptedException {
         FileUtils.copyDirectory(new File(DIR_FROM_INSTITUTION), new File(DIR_TO_INSTITUTION));
         importInstitutionService.processDirectory(Path.of(DIR_TO_INSTITUTION, INSTITUTION_DIR));
+
+        // byl vytvořen soubor protokolu?
+        assertTrue(Files.exists(Path.of(DIR_DATA, getDateDir(), INSTITUTION_DIR, "protokol.txt")));
 
         List<ApuSource> apuSources = apuSourceRepository.findAll();
         assertTrue(apuSources.size() == 1);
