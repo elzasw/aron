@@ -8,12 +8,18 @@ package cz.aron.transfagent.transformation;
 public class CoreTypes {
 	// Obecne typy
 	public final static String PT_NAME = "PT_NAME";
+	public final static String PT_TITLE = "PT_TITLE";
 	
 	public final static String NAME = "NAME";
+	public final static String TITLE = "TITLE";
 	public final static String AP_REF = "AP_REF";
 	// poznámka
 	public static final String NOTE = "NOTE";
 	public static final String LANGUAGE = "LANGUAGE";
+	public static final String ORIGINATOR_REF = "ORIGINATOR_REF";
+	
+	// Informace o fondu
+	public final static String PT_FUND_INFO = "PT_FUND_INFO";
 	
 	// Informace o archivní entitě
 	public final static String PT_AE_INFO = "PT_AE_INFO";

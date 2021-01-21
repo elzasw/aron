@@ -4,6 +4,9 @@ partTypes:
     code: PT_NAME
     # STANDALONE | GROUPED
     viewType: GROUPED
+  - name: Název
+    code: PT_TITLE
+    viewType: GROUPED
   - name: Informace o archivu
     code: PT_INST_INFO
     viewType: STANDALONE
@@ -46,18 +49,13 @@ itemTypes:
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
     type: STRING
     indexed: true
+  - code: TITLE
+    name: Název
+    type: STRING
+    indexed: true
   - code: URL
     name: Odkaz
     type: LINK
-    indexed: true
-  - code: AP_REF
-    name: Odkaz na entitu
-    type: APU_REF
-    indexed: true
-  - code: NOTE
-    name: Poznámka
-    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
-    type: STRING
     indexed: true
   # Archivy
   - code: INST_CODE
@@ -133,6 +131,38 @@ itemTypes:
     name: Popis
     type: STRING
     indexed: true
+  - code: CRC_BIRTH_DATE
+    name: narození
+    type: UNITDATE
+    indexed: true
+  - code: CRC_RISE_DATE
+    name: vznik
+    type: UNITDATE
+    indexed: true
+  - code: CRC_BEGINSCOPE_DATE
+    name: působnost od
+    type: UNITDATE
+    indexed: true
+  - code: CRC_FIRSTMBIRTH_DATE
+    name: narození prvního známého člena rodu/rodiny
+    type: UNITDATE
+    indexed: true
+  - code: CRC_FIRSTWMENTION_DATE
+    name: první písemná zmínka
+    type: UNITDATE
+    indexed: true
+  - code: CRC_ORIGIN_DATE
+    name: začátek
+    type: UNITDATE
+    indexed: true
+  - code: CRC_BEGINVALIDNESS_DATE
+    name: začátek platnosti
+    type: UNITDATE
+    indexed: true
+  - code: CRE_TYPE
+    name: typ vzniku
+    type: ENUM
+    indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru
@@ -146,6 +176,14 @@ itemTypes:
     name: Původce
     type: APU_REF
     indexed: true
+  - code: CISLO_NAD
+    name: Číslo archivního souboru
+    type: STRING
+    indexed: true
+  - code: FUND_MARK
+    name: Značka archivního souboru
+    type: STRING
+    indexed: true
   # Archivní popis
   - code: UNIT_ID
     name: Referenční označení
@@ -157,6 +195,10 @@ itemTypes:
     indexed: true
   - code: UNIT_TYPE
     name: Druh archiválie
+    type: ENUM
+    indexed: true
+  - code: RECORD_TYPE
+    name: Druh záznamu
     type: ENUM
     indexed: true
   - code: HISTORY
@@ -319,6 +361,15 @@ itemTypes:
   - code: DIGITAL
     name: Digitální podoba
     type: ENUM
+    indexed: true
+  # Obecné s nejnižší prioritou
+  - code: AP_REF
+    name: Odkaz na entitu
+    type: APU_REF
+    indexed: true
+  - code: NOTE
+    name: Poznámka
+    type: STRING
     indexed: true
 
 # Metadata a jejich popis

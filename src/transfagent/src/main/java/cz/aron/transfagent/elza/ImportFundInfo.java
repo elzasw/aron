@@ -23,6 +23,7 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.transformation.ContextDataProvider;
+import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
@@ -96,26 +97,32 @@ public class ImportFundInfo {
 		FundInfo fi = sect.getFi();
 		String fundName = fi.getN();
 		Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, uuid);
-		Part partName = apusBuilder.addPart(apu, "PT_NAME");
+		Part partName = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
 		partName.setValue(fundName);
-		apusBuilder.addString(partName, "NAME", fundName);
+		apusBuilder.addString(partName, CoreTypes.TITLE, fundName);
 		
 		institutionCode = fi.getIc();
 		var instApu = dataProvider.getInstitutionApu(institutionCode);
 		if(instApu==null) {
             throw new RuntimeException("Missing institution: " + institutionCode);
 		}
-		Part partFundInfo = apusBuilder.addPart(apu, "PT_FUND_INFO");
+		Part partFundInfo = apusBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
 		var rootLvlUuid = getRootLevelUuid(sect.getLvls());
 		if(rootLvlUuid!=null) {
 			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", rootLvlUuid);
 		}
+        if(fi.getNum()!=null) {
+            apusBuilder.addString(partFundInfo, "CISLO_NAD", fi.getNum().toString());
+        }
+        if(fi.getMrk()!=null) {
+            apusBuilder.addString(partFundInfo, "FUND_MARK", fi.getMrk());
+        }
 		
 		// Puvodce
 		var puvodci = getPuvodci(sect.getLvls());
 		for(var puvodceUuid: puvodci) {
-			apusBuilder.addApuRef(partFundInfo, "ORIGINATOR_REF", puvodceUuid);
+			apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, puvodceUuid);
 		}
 		
 		return apusBuilder;
@@ -141,7 +148,7 @@ public class ImportFundInfo {
 		Set<String> found = new HashSet<>();
 		for(Level lvl: lvls.getLvl()) {
 			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
-				if(item.getT().equals("ZP2015_ORIGINATOR")) {
+				if(item.getT().equals(ElzaTypes.ZP2015_ORIGINATOR)) {
 					DescriptionItemAPRef apRef = (DescriptionItemAPRef)item;
 					if(!found.contains(apRef.getApid())) {
 						found.add(apRef.getApid());

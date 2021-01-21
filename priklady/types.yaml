@@ -49,6 +49,10 @@ itemTypes:
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
     type: STRING
     indexed: true
+  - code: TITLE
+    name: Název
+    type: STRING
+    indexed: true
   - code: URL
     name: Odkaz
     type: LINK

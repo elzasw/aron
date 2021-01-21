@@ -67,7 +67,9 @@ public abstract class ElzaTypes {
     public static final String ZP2015_UNIT_SUBTYPE = "ZP2015_UNIT_SUBTYPE";
     public static final String ZP2015_RECORD_TYPE = "ZP2015_RECORD_TYPE";
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
+    public static final String ZP2015_UNIT_DATE = "ZP2015_UNIT_DATE";
 
+    public static final String ZP2015_ORIGINATOR = "ZP2015_ORIGINATOR";
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
     public static final String ZP2015_ORIENTATION = "ZP2015_ORIENTATION";
     public static final String ZP2015_ITEM_MAT = "ZP2015_ITEM_MAT";

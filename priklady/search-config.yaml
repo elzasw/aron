@@ -25,7 +25,7 @@ facets:
     # Druh fazety
     type: FULLTEXT
     # zdrojovy itemtype
-    source: NAME
+    source: TITLE
     # Kdy se zobrazi ALWAYS | DETAIL
     display: ALWAYS
     # Pokud bude nutne specializovat
@@ -84,9 +84,9 @@ facets:
 # Druh zaznamu
   - when:
       all:
-       - apuType: ARCH_DESC
-       - filter: UNIT_TYPE
-         value: matrika
+        - apuType: ARCH_DESC
+        - filter: UNIT_TYPE
+          value: matrika
     type: ENUM
     source: RECORD_TYPE
     display: ALWAYS

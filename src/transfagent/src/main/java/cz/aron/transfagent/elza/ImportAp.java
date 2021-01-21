@@ -254,15 +254,15 @@ public class ImportAp implements EdxItemCovertContext {
 	        throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
 	    }
         Integer apElzaId = Integer.valueOf(apRef.getApid());
-        var apUuid = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
-        if(CollectionUtils.isEmpty(apUuid)) {
+        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        if(CollectionUtils.isEmpty(apUuids)) {
             this.requiredEntities.add(apElzaId);
             return;
         }
 
         // entity exists -> we can create link
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
-        this.apusBuilder.addApuRefsFirstVisible(part, "AE_REL_REF", apUuid);
+        this.apusBuilder.addApuRefsFirstVisible(part, "AE_REL_REF", apUuids);
         this.apusBuilder.addEnum(part, "AE_REL_TYPE", relType, true);
 	    //
     }
