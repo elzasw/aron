@@ -193,6 +193,10 @@ itemTypes:
     name: Druh archiválie
     type: ENUM
     indexed: true
+  - code: RECORD_TYPE
+    name: Druh záznamu
+    type: ENUM
+    indexed: true
   - code: HISTORY
     name: Historie
     type: STRING

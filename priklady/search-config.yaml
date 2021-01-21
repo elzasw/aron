@@ -77,6 +77,20 @@ facets:
     source: UNIT_TYPE
     display: ALWAYS
     maxItems: 30
+    order:
+      - matrika
+      - kniha
+
+# Druh zaznamu
+  - when:
+      all:
+       - apuType: ARCH_DESC
+       - filter: UNIT_TYPE
+         value: matrika
+    type: ENUM
+    source: RECORD_TYPE
+    display: ALWAYS
+    maxItems: 30
 
 # Datace
   - when:
