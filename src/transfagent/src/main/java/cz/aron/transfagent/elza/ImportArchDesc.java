@@ -288,6 +288,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				"ZP2015_UNIT_COUNT_ITEM",
 				"ZP2015_INTERNAL_NOTE",
 				"ZP2015_AIP_ID",
+				"ZP2015_RESTRICTION_ACCESS_SHARED",
 				// geo souradnice - neumime prevest
 				ElzaTypes.ZP2015_POSITION,
 		// TODO: k zapracovani				
@@ -306,7 +307,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.unitTypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_EXTRA_UNITS, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.extraUnitTypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
-		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor("RECORD_TYPE", ElzaTypes.recordTypeMap));		
+		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor(CoreTypes.RECORD_TYPE, ElzaTypes.recordTypeMap));		
 		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID"));
 		stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
 		stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));

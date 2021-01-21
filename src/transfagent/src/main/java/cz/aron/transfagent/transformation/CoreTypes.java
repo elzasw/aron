@@ -36,6 +36,7 @@ public class CoreTypes {
 
 	public final static String UNIT_DATE = "UNIT_DATE";
 	public static final String UNIT_TYPE = "UNIT_TYPE";
+	public static final String RECORD_TYPE = "RECORD_TYPE";
 	public final static String ROLE = "ROLE";
 	
 	public static final String ORIENTATION = "ORIENTATION";
