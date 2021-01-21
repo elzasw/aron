@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -42,8 +43,10 @@ import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
+import cz.tacr.elza.ws.core.v1.ExportRequestException;
 import cz.tacr.elza.ws.types.v1.EntitiesRequest;
 import cz.tacr.elza.ws.types.v1.ExportRequest;
+import cz.tacr.elza.ws.types.v1.ExportResponseData;
 import cz.tacr.elza.ws.types.v1.IdentifierList;
 
 @Service
@@ -152,17 +155,31 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	}
 	
 	private void importEntity(final ArchivalEntity ae) {
-		Path tmpDir = downloadEntity(ae);
+		Path tmpDir;
+        try {
+            tmpDir = downloadEntity(ae);
+        } catch (NotAvailableException e) {
+            transactionTemplate.executeWithoutResult(t-> {
+                markEntityAsNotAvailable(ae); 
+            });            
+            return;
+        }
 		
 		transactionTemplate.execute(t -> {
 		    importEntityTrans(t, tmpDir, ae);
 		    return null;
 		});
-		
-		
 	}
 
-	private List<EntitySource> storeReqEnts(ApuSource apuSource, Set<Integer> reqEnts) {
+	private void markEntityAsNotAvailable(ArchivalEntity ae) {
+	    log.info("Marking entit as not available, id={}", ae.getId());
+	    
+        ArchivalEntity dbEntity = archivalEntityRepository.getOne(ae.getId());
+        dbEntity.setStatus(EntityStatus.NOT_AVAILABLE);
+        archivalEntityRepository.save(dbEntity);
+    }
+
+    private List<EntitySource> storeReqEnts(ApuSource apuSource, Set<Integer> reqEnts) {
 	    List<EntitySource> storedEntSources = new ArrayList<>();
 	    BulkOperation.run(reqEnts, 1000, batch -> storedEntSources.addAll(storeReqEntsInternal(apuSource, batch)));
 	    return storedEntSources;
@@ -391,6 +408,17 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
                               }
                           });
 	    }
+	    // mark as inaccessible any unreferenced archival entities
+	    entitySourceRepository.flush();
+	    List<ArchivalEntity> ents = this.archivalEntityRepository.findNewlyUnaccesibleEntities();
+	    if(CollectionUtils.isNotEmpty(ents)) {
+	        log.debug("New unaccessible entities detected, count: {}", ents.size());
+	        for(var ent: ents) {
+	            log.debug("Marking entity as not available, id = {}, elzaId = {}, uuid = {}", ent.getId(), ent.getElzaId(), ent.getUuid());
+	            ent.setStatus(EntityStatus.NOT_AVAILABLE);
+	            this.archivalEntityRepository.save(ent);
+	        }
+	    }
     }
 
     private ArchivalEntity addAccessibleByElzaId(Integer elzaId) {
@@ -417,7 +445,21 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
 	}
 	
-	private void downloadEntity(ArchivalEntity ae, Path dir) throws IOException {
+	static class NotAvailableException extends Exception {
+
+        private ArchivalEntity entity;
+
+        public NotAvailableException(final ArchivalEntity entity) {
+            this.entity = entity;
+        }
+
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+	};
+	
+	private void downloadEntity(ArchivalEntity ae, Path dir) throws IOException, NotAvailableException {
 	    log.debug("Downloading entity from Elza, uuid: {}, elzaId: {}", ae.getUuid(), ae.getElzaId());
 
 	    var identifierList = new IdentifierList();
@@ -438,7 +480,17 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         exportRequest.setRequiredFormat("http://elza.tacr.cz/schema/v2");
         exportRequest.setEntities(entitiesRequest);
         var exportService = elzaExportService.get();
-        var response = exportService.exportData(exportRequest);
+        
+        ExportResponseData response;
+        try {        
+            response = exportService.exportData(exportRequest);
+        } catch( ExportRequestException ere ) {
+            // Elza was called but entity was not exported
+            // -> entity is not available for download
+            log.info("Entity is not available in the Elza, id={}, elzaId={}, uuid={}", 
+                     ae.getId(), ae.getElzaId(), ae.getUuid());
+            throw new NotAvailableException(ae);
+        }
 
         var dataHandler = response.getBinData();
         
@@ -456,13 +508,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         }
 }
 	
-	private Path downloadEntity(ArchivalEntity ae) {
+	private Path downloadEntity(ArchivalEntity ae) throws NotAvailableException {
 	    Path tempDir = null;
 		try {
 			tempDir = storageService.createTempDir("ae-"+ae.getId().toString());
 			downloadEntity(ae, tempDir);
 			return tempDir;
-		} catch (IOException e) {
+		} catch (Exception e) {
             try {
                 if(tempDir!=null) {
                     FileSystemUtils.deleteRecursively(tempDir);
@@ -470,7 +522,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
             } catch (IOException e1) {
                 log.error("Fail to delete directory",e1);
             }
-			log.error("Fail to download entity",e);
+			log.error("Fail to download entity, id={}", ae.getId() ,e);
+			if(e instanceof NotAvailableException) {
+			    throw (NotAvailableException)e;
+			} else 
+			if(e instanceof RuntimeException) {
+			    throw (RuntimeException)e;
+			}
 			throw new IllegalStateException(e);
 		}
 	}
@@ -539,6 +597,9 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
             } catch(IOException e) {
                 log.error("Failed to download entity, targetDir: {}", apuDir.toString(), e);
                 return Result.FAILED;
+            } catch (NotAvailableException e) {
+                markEntityAsNotAvailable(archEntity);
+                return Result.NOCHANGES;
             }
             archEntity.setDownload(false);
             archivalEntityRepository.save(archEntity);

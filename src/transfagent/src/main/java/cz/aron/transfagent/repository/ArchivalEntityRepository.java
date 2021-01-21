@@ -83,4 +83,7 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 	@Query("update ArchivalEntity ae set ae.download = true where ae.elzaId in :ids")
     void setDownloadTrueByIds(@Param("ids") List<Integer> ids);
 
+    @Query("SELECT ae FROM ArchivalEntity ae WHERE ae NOT IN (SELECT DISTINCT es.archivalEntity FROM EntitySource es)")
+    List<ArchivalEntity> findNewlyUnaccesibleEntities();
+
 }
