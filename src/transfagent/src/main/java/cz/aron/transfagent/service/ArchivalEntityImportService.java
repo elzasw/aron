@@ -240,6 +240,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			UUID uuid = importAp.getApUuid();
 			var archivalEntity = archivalEntityRepository.findByUuid(uuid);
 			if (archivalEntity.isPresent()) {
+			    // update current db record with parent and elzaId
 				ArchivalEntity dbArchEntity = archivalEntity.get(); 
 				dbArchEntity.setElzaId(srcArchivalEntity.getElzaId());
 				dbArchEntity.setParentEntity(parentEntity);
@@ -250,6 +251,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 				for(EntitySource es: ess) {
 					es.setArchivalEntity(dbArchEntity);
 					entitySourceRepository.save(es);
+				}
+				
+				// correct parent in connected entities
+				var connectedEntities = archivalEntityRepository.findAllByParentEntity(srcArchivalEntity);
+				for(var ce: connectedEntities) {
+				    ce.setParentEntity(dbArchEntity);
+				    archivalEntityRepository.save(ce);
 				}
 				
 				// drop redundant
