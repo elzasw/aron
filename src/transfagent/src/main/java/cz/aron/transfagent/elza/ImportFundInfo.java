@@ -102,6 +102,9 @@ public class ImportFundInfo {
 		
 		institutionCode = fi.getIc();
 		var instApu = dataProvider.getInstitutionApu(institutionCode);
+		if(instApu==null) {
+            throw new RuntimeException("Missing institution: " + institutionCode);
+		}
 		Part partFundInfo = apusBuilder.addPart(apu, "PT_FUND_INFO");
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
 		var rootLvlUuid = getRootLevelUuid(sect.getLvls());

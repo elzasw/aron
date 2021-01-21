@@ -116,8 +116,13 @@ public class ElzaUpdateEntityProcessor implements ImportProcessor {
                 for(var ent: ents) {
                     log.debug("Found modified entity, id={}, uuid={}, elzaId={}", ent.getId(),
                               ent.getUuid(), ent.getElzaId());
-                    ent.setDownload(true);
                     ApuSource apusrc = ent.getApuSource();
+                    if(apusrc==null) {
+                        log.debug("Entity not yet downloaded.");
+                        continue;
+                    }
+                    // mark for fresh download and reimport
+                    ent.setDownload(true);
                     archivalEntityRepository.save(ent);
                     apusrc.setReimport(true);
                     apuSourceRepository.save(apusrc);
