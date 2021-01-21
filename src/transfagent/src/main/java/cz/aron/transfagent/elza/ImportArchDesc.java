@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.eclipse.jetty.util.StringUtil;
 
@@ -22,6 +24,7 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.ItemDateRange;
+import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -56,8 +59,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	ContextDataProvider dataProvider;
 
 	Map<Apu, Apu> apuParentMap = new HashMap<>();
+	
+	Map<String, Apu> apuMap = new HashMap<>();
 
 	final Set<UUID> apRefs = new HashSet<>();
+	
+	UUID instApuUuid;
+	UUID fundApuUuid;
 
 	private Part activePart;
 
@@ -126,67 +134,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// read fund info
 		FundInfo fi = sect.getFi();
 		institutionCode = fi.getIc();
-		var instApu = dataProvider.getInstitutionApu(institutionCode);
-		Validate.notNull(instApu, "Missing institution, code: %s", institutionCode);
+		instApuUuid = dataProvider.getInstitutionApu(institutionCode);
+		Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
 
-		var fundApu = dataProvider.getFundApu(institutionCode, fi.getC());
-		Validate.notNull(fundApu, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);
-
-		Map<String, Apu> apuMap = new HashMap<>();
+		fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
+		Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);		
 
 		Levels lvls = sect.getLvls();
 		for(Level lvl: lvls.getLvl()) {
-			String name = getName(sect, lvl);
-			Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
-			apu.setUuid(lvl.getUuid());
-
-			// set parent
-			if(lvl.getPid()!=null) {
-				Apu parentApu = apuMap.get(lvl.getPid());
-				if(parentApu==null) {
-					throw new RuntimeException("Missing parent for level: "+lvl.getPid());
-				}
-				apu.setPrnt(parentApu.getUuid());
-				apuParentMap.put(apu, parentApu);
-
-                if(StringUtil.isEmpty(apu.getName())) {
-                    apu.setName(parentApu.getName());
-                }
-			}
-			apuMap.put(lvl.getId(), apu);
-
-			activateArchDescPart(apu);
-			// add items
-			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
-				addItem(apu, item);
-			}
-
-			// daos
-			DigitalArchivalObjects daos = lvl.getDaos();
-			if(daos!=null&&daos.getDao().size()>0) {
-				apusBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
-				for(DigitalArchivalObject dao: daos.getDao()) {
-					apusBuilder.addDao(activeApu, dao.getDoid());
-				}
-			}
-			deactivatePart(apu);
-
-            // add static values
-            activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-            apusBuilder.addApuRef(activePart, "FUND_REF", fundApu);
-            apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApu);
-            deactivatePart(apu);
-
-            // add date to parent(s)
-            var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
-            for(ItemDateRange item : itemDateRanges) {
-                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
-                Apu apuParent = apuParentMap.get(apu);
-                while(apuParent != null) {
-                    dateRangeAppender.appendTo(apuParent);
-                    apuParent = apuParentMap.get(apuParent);
-                }
-            }
+		    processLevel(sect, lvl);
         }
 
         // add dates to siblings
@@ -199,6 +155,76 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
 
         return apusBuilder;
+    }
+
+	/**
+	 * Process one level
+	 * 
+	 * @param sect
+	 * @param lvl
+	 */
+    private void processLevel(Section sect, Level lvl) {
+        String name = getName(sect, lvl);
+        Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
+        apu.setUuid(lvl.getUuid());
+
+        // set parent
+        Apu parentApu = null;
+        if(lvl.getPid()!=null) {
+            parentApu = apuMap.get(lvl.getPid());
+            if(parentApu==null) {
+                throw new RuntimeException("Missing parent for level: "+lvl.getPid());
+            }
+            apu.setPrnt(parentApu.getUuid());
+            apuParentMap.put(apu, parentApu);
+
+            // add name from parent if empty
+            if(StringUtil.isEmpty(apu.getName())) {
+                apu.setName(parentApu.getName());
+            }
+        }
+        apuMap.put(lvl.getId(), apu);
+
+        activateArchDescPart(apu);
+        // add items
+        for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
+            addItem(apu, item);
+        }
+
+        // daos
+        DigitalArchivalObjects daos = lvl.getDaos();
+        if(daos!=null&&daos.getDao().size()>0) {
+            apusBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
+            for(DigitalArchivalObject dao: daos.getDao()) {
+                apusBuilder.addDao(activeApu, dao.getDoid());
+            }
+        }
+        // copy values from parent
+        if(parentApu!=null) {
+            List<ItemEnum> itemEnums = apusBuilder.getItemEnums(parentApu, ApuType.ARCH_DESC, CoreTypes.UNIT_TYPE);
+            if(CollectionUtils.isNotEmpty(itemEnums)) {
+                apusBuilder.copyEnums(activePart, itemEnums);
+            }
+        }
+        
+        deactivatePart(apu);
+
+        // add static values
+        activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+        apusBuilder.addApuRef(activePart, "FUND_REF", fundApuUuid);
+        apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApuUuid);
+        deactivatePart(apu);
+
+        // add date to parent(s)
+        var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+        for(ItemDateRange item : itemDateRanges) {
+            ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
+            Apu apuParent = parentApu;
+            while(apuParent != null) {
+                dateRangeAppender.appendTo(apuParent);
+                apuParent = apuParentMap.get(apuParent);
+            }
+        }        
     }
 
     private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
@@ -261,6 +287,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				"ZP2015_STORAGE_ID", "ZP2015_ITEM_ORDER",
 				"ZP2015_UNIT_COUNT_ITEM",
 				"ZP2015_INTERNAL_NOTE",
+				"ZP2015_AIP_ID",
 				// geo souradnice - neumime prevest
 				ElzaTypes.ZP2015_POSITION,
 		// TODO: k zapracovani				
@@ -276,9 +303,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
 		stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));
-		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor("UNIT_TYPE", ElzaTypes.unitTypeMap));
-		stringTypeMap.put(ElzaTypes.ZP2015_EXTRA_UNITS, new EdxEnumConvertor("UNIT_TYPE", ElzaTypes.extraUnitTypeMap));
-		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor("UNIT_TYPE", ElzaTypes.subtypeMap));
+		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.unitTypeMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_EXTRA_UNITS, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.extraUnitTypeMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor("RECORD_TYPE", ElzaTypes.recordTypeMap));		
 		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID"));
 		stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
 		stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));

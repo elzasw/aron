@@ -35,6 +35,7 @@ public class CoreTypes {
 	public final static String PT_ARCH_DESC_FUND = "PT_ARCH_DESC_FUND";
 
 	public final static String UNIT_DATE = "UNIT_DATE";
+	public static final String UNIT_TYPE = "UNIT_TYPE";
 	public final static String ROLE = "ROLE";
 	
 	public static final String ORIENTATION = "ORIENTATION";
@@ -56,5 +57,6 @@ public class CoreTypes {
     public static final String CRC_ORIGIN_DATE = "CRC_ORIGIN_DATE";
     public static final String CRC_BEGINVALIDNESS_DATE = "CRC_BEGINVALIDNESS_DATE";
 
-    public static final String CRE_TYPE = "CRE_TYPE";    
+    public static final String CRE_TYPE = "CRE_TYPE";
+
 }

@@ -65,6 +65,7 @@ public abstract class ElzaTypes {
 
     public static final String ZP2015_EXTRA_UNITS = "ZP2015_EXTRA_UNITS";
     public static final String ZP2015_UNIT_SUBTYPE = "ZP2015_UNIT_SUBTYPE";
+    public static final String ZP2015_RECORD_TYPE = "ZP2015_RECORD_TYPE";
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
 
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
@@ -210,6 +211,16 @@ public abstract class ElzaTypes {
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_PA", "právní akt");
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_STVR", "udělení / propůjčení vyznamenání / ceny");
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_JMF", "jmenování / ustanovení do funkce</name");        
+    }
+    
+    public static Map<String, String> recordTypeMap = new HashMap<>();
+    static {
+        recordTypeMap.put("ZP2015_RECORD_TYPE_BORN", "Záznamy narozených");
+        recordTypeMap.put("ZP2015_RECORD_TYPE_DIED", "Záznamy zemřelých");
+        recordTypeMap.put("ZP2015_RECORD_TYPE_MARRIED", "Záznamy oddaných");
+        recordTypeMap.put("ZP2015_RECORD_TYPE_INDEX_BORN", "Rejstřík narozených");
+        recordTypeMap.put("ZP2015_RECORD_TYPE_INDEX_DIED", "Rejstřík zemřelých");
+        recordTypeMap.put("ZP2015_RECORD_TYPE_INDEX_MARRIED", "Rejstřík oddaných");
     }
 
     public static Map<String, String> roleSpecMap = new HashMap<>();

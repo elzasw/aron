@@ -175,11 +175,15 @@ public class ApuSourceBuilder {
 		return ie;
 	}
 
-	public ItemEnum addEnum(Part aeInfoPart, String targetType, String value, boolean visible) {
+	public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
 		ItemEnum ie = createEnum(targetType, value, visible);
-		aeInfoPart.getItms().getStrOrLnkOrEnm().add(ie);
+		addEnum(part, ie);
 		return ie;
 	}
+	
+	public void addEnum(Part part, ItemEnum ie) {
+        part.getItms().getStrOrLnkOrEnm().add(ie);        
+	}	
 
 	public void addDao(Apu apu, String daoId) {
 		Daos daos = apu.getDaos();
@@ -205,6 +209,24 @@ public class ApuSourceBuilder {
         }
         return items;
     }
+    
+    public List<ItemEnum> getItemEnums(Apu apu, ApuType partType, String itemType) {
+        List<ItemEnum> items = new ArrayList<>();
+        for(Part part : apu.getPrts().getPart()) {
+            if(part.getType().equals(partType)) {
+                for(Object obj : part.getItms().getStrOrLnkOrEnm()) {
+                    if(obj instanceof ItemEnum) {
+                        ItemEnum ie = (ItemEnum) obj;
+                        if(ie.getType().equals(itemType)) {
+                            items.add(ie);
+                        }
+                    }
+                }
+            }
+        }
+        return items;
+    }
+    
 
     /**
      * Return first part of given type
@@ -227,6 +249,21 @@ public class ApuSourceBuilder {
             addDateRange(part, idr);
         }
         
+    }
+
+    public void copyEnums(Part part, List<ItemEnum> itemEnums) {
+        for(var itemEnum: itemEnums) {
+            var ie = copyItem(itemEnum);
+            addEnum(part, ie);
+        }
+        
+    }    
+
+    private ItemEnum copyItem(ItemEnum itemEnum) {
+        ItemEnum ie = createEnum(itemEnum.getType(), 
+                                 itemEnum.getValue(), 
+                                 itemEnum.isVisible());
+        return ie;
     }
 
     public ItemDateRange copyItem(ItemDateRange dateRange) {
