@@ -32,6 +32,12 @@ elza:
   username: vyber
   password: vyber
 
+dspace:
+  url: http://10.2.0.27/dspace
+  user: x
+  password: x
+  disabled: true
+
 dao:
   dir:
     path: /opt/daos
