@@ -5,6 +5,7 @@ import java.util.Map;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemEnum;
+import cz.tacr.elza.schema.v2.DescriptionItemInteger;
 
 public class EdxEnumConvertor implements EdxItemConvertor {
 
@@ -19,9 +20,18 @@ public class EdxEnumConvertor implements EdxItemConvertor {
 
 	@Override
 	public void convert(EdxItemCovertContext ctx, DescriptionItem item) {
-		DescriptionItemEnum itemEnum = (DescriptionItemEnum)item;
+	    
+	    String specCode = null;
+	    if(item instanceof DescriptionItemEnum) {
+	        DescriptionItemEnum itemEnum = (DescriptionItemEnum)item;
+	        specCode = itemEnum.getS();
+	    } else
+	    if(item instanceof DescriptionItemInteger) {
+	        DescriptionItemInteger dii = (DescriptionItemInteger)item;
+	        specCode = dii.getS();
+	    }
 		
-		String value = enumMap.get(itemEnum.getS());
+		String value = enumMap.get(specCode);
 		// skip values without mapping
 		if(value==null) {
 			return;

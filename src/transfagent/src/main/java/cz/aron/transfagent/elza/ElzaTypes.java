@@ -46,7 +46,7 @@ public abstract class ElzaTypes {
     public static final String SOURCE_INFO = "SOURCE_INFO";
 
     public static final String REL_ENTITY = "REL_ENTITY";
-    
+
     public static final String CRE_CLASS = "CRE_CLASS";
     public static final String CRE_TYPE = "CRE_TYPE";
     public static final String CRE_DATE = "CRE_DATE";
@@ -62,7 +62,9 @@ public abstract class ElzaTypes {
         creTypeMap.put("CRT_FIRSTREALIZATION", "první realizace");
         creTypeMap.put("CRT_VALIDITYBEGIN", "počátek platnosti");
     }
-    
+
+    public static final String ZP2015_EXTRA_UNITS = "ZP2015_EXTRA_UNITS";
+    public static final String ZP2015_UNIT_SUBTYPE = "ZP2015_UNIT_SUBTYPE";
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
 
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
@@ -120,6 +122,94 @@ public abstract class ElzaTypes {
         unitTypeMap.put("ZP2015_UNIT_TYPE_JIN", "Jiná");
         unitTypeMap.put("ZP2015_UNIT_TYPE_KTT_BOX", "Kartotéční zásuvka");
         unitTypeMap.put("ZP2015_UNIT_TYPE_KTT_ITEM", "Kartotéční lístek");
+    }
+
+    public static final Map<String, String> extraUnitTypeMap = new HashMap<>();
+    static {
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LIO",
+                             "Listiny do roku 1850");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LIP",
+                             "Listiny po roce 1850");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_UKN",
+                             "Úřední knihy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_RKP",
+                             "Rukopisy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PPR",
+                             "Podací protokoly");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_IND",
+                             "Indexy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ELE",
+                             "Elenchy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_REP",
+                             "Repertáře");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KTT",
+                             "Kartotéky");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PEC",
+                             "Pečetidla");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_RAZ",
+                             "Razítka");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_OTD",
+                             "Samostatné pečetě, odlitky pečetí a otisky typářů");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MAP",
+                             "Mapy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ATL",
+                             "Atlasy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TVY",
+                             "Technické výkresy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_GLI",
+                             "Grafické listy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KRE",
+                             "Kresby");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSN",
+                             "Fotografie na papírové podložce");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSD",
+                             "Fotografické desky");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LFI",
+                             "Listové filmy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_SFI",
+                             "Svitkové filmy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KIN",
+                             "Kinofilmy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MF",
+                             "Mikrofilmy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MFS",
+                             "Mikrofiše");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FAL",
+                             "Fotoalba");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_DFO",
+                             "Digitální fotografie");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KZA",
+                             "Kinematografické záznamy (díla) v analogové i digitální podobě");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ZZA",
+                             "Zvukové záznamy (díla) v analogové i digitální podobě");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIO",
+                             "Tisky do roku 1800");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIP",
+                             "Tisky po roce 1800");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_POH",
+                             "Pohlednice");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PKT",
+                             "Plakáty");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_CPA",
+                             "Cenné papíry");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_STO",
+                             "Štočky");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PNP",
+                             "Předměty numizmatické povahy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PFP",
+                             "Předměty faleristické povahy");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_JIN",
+                             "Jiné");
+    }
+    
+    public static Map<String, String> subtypeMap = new HashMap<>();
+    static {
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_MTR", "matrika");
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_HDB", "hudebnina");
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_STV", "vyznamenání / cena");
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_PA", "právní akt");
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_STVR", "udělení / propůjčení vyznamenání / ceny");
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_JMF", "jmenování / ustanovení do funkce</name");        
     }
 
     public static Map<String, String> roleSpecMap = new HashMap<>();
