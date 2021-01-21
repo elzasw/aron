@@ -31,6 +31,7 @@ import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.DescriptionItemEnum;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
+import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Institution;
@@ -107,6 +108,9 @@ public class ElzaXmlReader {
 	public static DescriptionItemAPRef getApRef(Fragment frg, String itemType) {
         for (DescriptionItem item : frg.getDdOrDoOrDp()) {
             if (item.getT().equals(itemType)) {
+                if(item instanceof DescriptionItemUndefined) {
+                    continue;
+                } else
                 if (item instanceof DescriptionItemAPRef) {
                     return (DescriptionItemAPRef) item;
                 } else {

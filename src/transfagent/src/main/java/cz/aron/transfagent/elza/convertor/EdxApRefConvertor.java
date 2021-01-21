@@ -11,6 +11,7 @@ import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
+import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 
 public class EdxApRefConvertor implements EdxItemConvertor {
 
@@ -25,6 +26,9 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 
 	@Override
 	public void convert(EdxItemCovertContext ctx, DescriptionItem item) {
+	    if(item instanceof DescriptionItemUndefined) {
+	        return;
+	    }
 		DescriptionItemAPRef apRef = (DescriptionItemAPRef)item;
 		
 		ElzaXmlReader elzaXmlReader = ctx.getElzaXmlReader();

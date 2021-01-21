@@ -28,6 +28,7 @@ import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
+import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 import cz.tacr.elza.schema.v2.FundInfo;
 import cz.tacr.elza.schema.v2.Level;
 import cz.tacr.elza.schema.v2.Levels;
@@ -149,6 +150,9 @@ public class ImportFundInfo {
 		for(Level lvl: lvls.getLvl()) {
 			for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
 				if(item.getT().equals(ElzaTypes.ZP2015_ORIGINATOR)) {
+			        if(item instanceof DescriptionItemUndefined) {
+			            continue;
+			        }				    
 					DescriptionItemAPRef apRef = (DescriptionItemAPRef)item;
 					if(!found.contains(apRef.getApid())) {
 						found.add(apRef.getApid());
