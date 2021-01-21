@@ -132,9 +132,9 @@ public class ApuSourceBuilder {
 	    var first = true;
 	    for(var uuid:uuids) {
 	        var itemRef = addApuRef(part,itemType,uuid);
+	        itemRef.setVisible(first);
 	        if (first) {
 	            first = false;
-	            itemRef.setVisible(true);
 	        }
 	    }
 	    return itemRefs;

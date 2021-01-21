@@ -414,8 +414,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 	    if(CollectionUtils.isNotEmpty(ents)) {
 	        log.debug("New unaccessible entities detected, count: {}", ents.size());
 	        for(var ent: ents) {
-	            log.debug("Marking entity as not available, id = {}, elzaId = {}, uuid = {}", ent.getId(), ent.getElzaId(), ent.getUuid());
-	            ent.setStatus(EntityStatus.NOT_AVAILABLE);
+	            log.debug("Marking entity as not accessible, id = {}, elzaId = {}, uuid = {}", ent.getId(), ent.getElzaId(), ent.getUuid());
+	            ent.setStatus(EntityStatus.NOT_ACCESSIBLE);
 	            this.archivalEntityRepository.save(ent);
 	        }
 	    }
@@ -594,12 +594,12 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         if(archEntity.isDownload()) {
             try {
                 downloadEntity(archEntity, apuDir);
-            } catch(IOException e) {
-                log.error("Failed to download entity, targetDir: {}", apuDir.toString(), e);
-                return Result.FAILED;
             } catch (NotAvailableException e) {
                 markEntityAsNotAvailable(archEntity);
                 return Result.NOCHANGES;
+            } catch(IOException e) {
+                log.error("Failed to download entity, targetDir: {}", apuDir.toString(), e);
+                return Result.FAILED;
             }
             archEntity.setDownload(false);
             archivalEntityRepository.save(archEntity);
