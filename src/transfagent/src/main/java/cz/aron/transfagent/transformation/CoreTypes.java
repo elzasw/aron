@@ -25,6 +25,7 @@ public class CoreTypes {
 	public final static String PT_AE_INFO = "PT_AE_INFO";
 	
 	public final static String AE_CLASS = "AE_CLASS";
+	public final static String AE_SUBCLASS = "AE_SUBCLASS";
     public static final String CORP_PURPOSE = "CORP_PURPOSE";
     public static final String FOUNDING_NORMS = "FOUNDING_NORMS";
     public static final String HISTORY = "HISTORY";

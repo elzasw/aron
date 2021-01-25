@@ -130,7 +130,7 @@ public class ImportAp implements EdxItemCovertContext {
 		String ecName = apTypeService.getTypeName(entityClass);
 		Validate.notNull(ecName, "Entity class name not found, code: %s", entityClass);
 		Part aeInfoPart = apusBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
-		apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_CLASS, ecName, true);
+		apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_SUBCLASS, ecName, true);
 		
 		String parentEcName = apTypeService.getParentName(entityClass);
 		if(parentEcName!=null) {

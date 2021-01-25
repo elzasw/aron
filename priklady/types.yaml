@@ -64,7 +64,11 @@ itemTypes:
     indexed: true
   # Archivní entity
   - code: AE_CLASS
-    name: Druh entity
+    name: Třída entity
+    type: ENUM
+    indexed: true
+  - code: AE_SUBCLASS
+    name: Podtřída entity
     type: ENUM
     indexed: true
   - code: AE_IDENT_TYPE
