@@ -218,73 +218,78 @@ itemTypes:
     type: STRING
     indexed: true
   - code: UNIT_DATE
-    name: Datace
+    name: Datace vzniku
     type: UNITDATE
     indexed: true
   - code: DATE_OF_CONTENT
-    name: datace obsahu
+    name: Datace obsahu
+    type: UNITDATE
+    indexed: true
+  # Slouží pro zachycení ostatních druhů datace
+  - code: DATE_OTHER
+    name: Jiná datace
     type: UNITDATE
     indexed: true    
   - code: DATE_DECLARED
     name: datace deklarovaná
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_ORIG
     name: datace vzniku předlohy
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_OF_COPY
     name: datace vzniku kopie
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_SEALING
     name: datace zpečetění
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_ACT_PUBLISHING
     name: datace vydání listiny
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_INSERT
     name: datace insertu/transeptu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_MOLD_CREATION
     name: datace vzniku matrice
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: DATE_USAGE
     name: datace užívání typáře
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_PUBLISHING
     name: datace vydání dokumentu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_MAP_UPDATE
     name: datace reambulace mapy
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_CAPTURING
     name: datace pořízení obrazového záznamu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_RECORDING
     name: datace pořízení filmového / zvukového záznamu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_AWARDING
     name: datace udělení / propůjčení faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_AWARD_CER
     name: datace předání faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_WITHDRAWAL
     name: datace odnětí / vrácení faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: UNIT_SOURCE
     name: Přímý zdroj akvizice
     type: STRING

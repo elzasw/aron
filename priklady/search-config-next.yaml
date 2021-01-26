@@ -29,9 +29,9 @@ facets:
     # Kdy se zobrazi ALWAYS | DETAIL
     display: ALWAYS
     # Nastavení tooltipu k celé fazetě
-    # tooltip: zobrazovaná nápověda
+    tooltip: zobrazovaná nápověda
     # Podrobný popis fazety v části filtrů
-    # description: popis filtru....
+    description: popis filtru....
     # Pokud bude nutne specializovat
     #   title: Název AS ??
 
@@ -45,15 +45,15 @@ facets:
     # zdrojovy itemtype
     source: INST_REF
     # Počet standardně zobrazených itemů - sbalená varianta
-    # displayedItems: 5
+    displayedItems: 5
     # Max pocet zobrazenych itemu - při rozbalení
     # 0 nebo nenastaveno, znamena bez limitu
-    # maxDisplayedItems: 10
+    maxDisplayedItems: 10
     # Způsob řazení položek (těch, které nejsou uvedeny explicitně)
     # orderBy: FREQ | ASC
     #   FREQ - dle počtu, více jsou první
     #   ASC - dle abecedy
-    # orderBy: FREQ
+    orderBy: FREQ
   - when:
       apuType: FUND
     type: FULLTEXT
@@ -92,9 +92,9 @@ facets:
     maxItems: 30
     # Volitelná nápověda k položkám ve fazetách
     # Zobrazuje se při najetí na položku
-    #tooltips:
-    #  - value: matrika
-    #    tooltip: Popis co je matrika
+    tooltips:
+      - value: matrika
+        tooltip: Popis co je matrika
     order:
       - matrika
       - kroniky
