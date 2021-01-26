@@ -1,5 +1,6 @@
 package cz.aron.transfagent;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -55,9 +56,11 @@ public class ImportArchDescTest {
         List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
         
-        LocalDateTimeRange idra = new LocalDateTimeRange(ranges.get(0));
+        var dr0 = ranges.get(0);
+        LocalDateTimeRange idra = new LocalDateTimeRange(dr0);
         assertTrue(idra.getFrom().getYear() == Y_1810);
         assertTrue(idra.getTo().getYear() == Y_1860);
+        assertFalse(dr0.isVisible());
 
         // testing s1
         apu = getApuByName(builder, "s1");
@@ -68,9 +71,11 @@ public class ImportArchDescTest {
         assertTrue(idra.getFrom().getYear() == Y_1820);
         assertTrue(idra.getTo().getYear() == Y_1830);
 
-        idra = new LocalDateTimeRange(ranges.get(1));
+        var dr1 = ranges.get(1);
+        idra = new LocalDateTimeRange(dr1);
         assertTrue(idra.getFrom().getYear() == Y_1840);
         assertTrue(idra.getTo().getYear() == Y_1855);
+        assertFalse(dr1.isVisible());
 
         // testing s2
         apu = getApuByName(builder, "s2");

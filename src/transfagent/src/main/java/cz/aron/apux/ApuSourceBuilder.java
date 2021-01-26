@@ -267,10 +267,12 @@ public class ApuSourceBuilder {
     }
 
     static public ItemDateRange copyItem(ItemDateRange dateRange) {
-        return createDateRange(dateRange.getType(), 
+        var ret = createDateRange(dateRange.getType(), 
                              dateRange.getF(), dateRange.isFe(), 
                              dateRange.getTo(), dateRange.isToe(), 
                              dateRange.getFmt());
+        ret.setVisible(dateRange.isVisible());
+        return ret;
     }
 
     static public void removeItem(Apu apu, Object item) {
