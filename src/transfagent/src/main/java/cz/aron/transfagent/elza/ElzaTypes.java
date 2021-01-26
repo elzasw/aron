@@ -68,6 +68,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_RECORD_TYPE = "ZP2015_RECORD_TYPE";
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
     public static final String ZP2015_UNIT_DATE = "ZP2015_UNIT_DATE";
+    public static final String ZP2015_DATE_OTHER = "ZP2015_DATE_OTHER";
 
     public static final String ZP2015_ORIGINATOR = "ZP2015_ORIGINATOR";
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
@@ -188,7 +189,7 @@ public abstract class ElzaTypes {
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PFP", "předmět faleristické povahy");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_JIN", "jiná");
     }
-    
+
     public static Map<String, String> subtypeMap = new HashMap<>();
     static {
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_MTR", "matrika");
@@ -196,9 +197,9 @@ public abstract class ElzaTypes {
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_STV", "vyznamenání / cena");
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_PA", "právní akt");
         subtypeMap.put("ZP2015_UNIT_SUBTYPE_STVR", "udělení / propůjčení vyznamenání / ceny");
-        subtypeMap.put("ZP2015_UNIT_SUBTYPE_JMF", "jmenování / ustanovení do funkce</name");        
+        subtypeMap.put("ZP2015_UNIT_SUBTYPE_JMF", "jmenování / ustanovení do funkce</name");
     }
-    
+
     public static Map<String, String> recordTypeMap = new HashMap<>();
     static {
         recordTypeMap.put("ZP2015_RECORD_TYPE_BORN", "záznamy narozených");
@@ -330,6 +331,26 @@ public abstract class ElzaTypes {
         roleSpecMap.put("ZP2015_ENTITY_ROLE_70", "dílo/výtvor zachycené/ý jednotkou popisu");
         roleSpecMap.put("ZP2015_ENTITY_ROLE_71", "geografický objekt zachycený jednotkou popisu");
         roleSpecMap.put("ZP2015_ENTITY_ROLE_72", "obecný pojem vztahující se k jednotce popisu");
+    }
+
+    public static Map<String, String> dateOtherMap = new HashMap<>();
+    static {
+        dateOtherMap.put("ZP2015_DATE_OF_CONTENT", "DATE_OF_CONTENT");
+        dateOtherMap.put("ZP2015_DATE_DECLARED", "DATE_DECLARED");
+        dateOtherMap.put("ZP2015_DATE_ORIG", "DATE_ORIG");
+        dateOtherMap.put("ZP2015_DATE_OF_COPY", "DATE_OF_COPY");
+        dateOtherMap.put("ZP2015_DATE_SEALING", "DATE_SEALING");
+        dateOtherMap.put("ZP2015_DATE_ACT_PUBLISHING", "DATE_ACT_PUBLISHING");
+        dateOtherMap.put("ZP2015_DATE_INSERT", "DATE_INSERT");
+        dateOtherMap.put("ZP2015_DATE_MOLD_CREATION", "DATE_MOLD_CREATION");
+        dateOtherMap.put("ZP2015_DATE_USAGE", "DATE_USAGE");
+        dateOtherMap.put("ZP2015_DATE_PUBLISHING", "DATE_PUBLISHING");
+        dateOtherMap.put("ZP2015_DATE_MAP_UPDATE", "DATE_MAP_UPDATE");
+        dateOtherMap.put("ZP2015_DATE_CAPTURING", "DATE_CAPTURING");
+        dateOtherMap.put("ZP2015_DATE_RECORDING", "DATE_RECORDING");
+        dateOtherMap.put("ZP2015_DATE_AWARDING", "DATE_AWARDING");
+        dateOtherMap.put("ZP2015_DATE_AWARD_CER", "DATE_AWARD_CER");
+        dateOtherMap.put("ZP2015_DATE_WITHDRAWAL", "DATE_WITHDRAWAL");
     }
 
     public static Map<String, String> languageTypeMap = new HashMap<>();

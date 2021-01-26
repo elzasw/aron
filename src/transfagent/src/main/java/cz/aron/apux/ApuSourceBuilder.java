@@ -26,7 +26,7 @@ import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ApuSourceBuilder {
 		
-	private ApuSource apusrc = ApuxFactory.getObjFactory().createApuSource();
+	static private ApuSource apusrc = ApuxFactory.getObjFactory().createApuSource();
 	
     /**
      * Collection of referenced entities
@@ -87,7 +87,7 @@ public class ApuSourceBuilder {
         return apu;
     }
 
-    public void addPart(Apu apu, Part part) {
+    static public void addPart(Apu apu, Part part) {
 		Parts prts = apu.getPrts();
 		if(prts==null) {
 			prts = ApuxFactory.getObjFactory().createParts();
@@ -97,7 +97,7 @@ public class ApuSourceBuilder {
 		prts.getPart().add(part);
 	}
 	
-	public Part addPart(Apu apu, String partType) {
+	static public Part addPart(Apu apu, String partType) {
 		Part part = ApuxFactory.getObjFactory().createPart();
 		part.setType(partType);
 		part.setItms(ApuxFactory.getObjFactory().createDescItems());
@@ -107,7 +107,7 @@ public class ApuSourceBuilder {
 		return part;
 	}
 
-	public ItemString addString(Part part, String itemType, String value) {
+	static public ItemString addString(Part part, String itemType, String value) {
 		ItemString itmStr = ApuxFactory.getObjFactory().createItemString();
 		itmStr.setType(itemType);
 		itmStr.setValue(value);
@@ -151,11 +151,11 @@ public class ApuSourceBuilder {
 		return part;
 	}
 
-	public void addDateRange(Part part, ItemDateRange idr) {
+	static public void addDateRange(Part part, ItemDateRange idr) {
 		part.getItms().getStrOrLnkOrEnm().add(idr);		
 	}
 
-	public ItemDateRange createDateRange(String targetType, 
+	static public ItemDateRange createDateRange(String targetType, 
 			String from, Boolean fromEst, String to, Boolean toEst, String format) {
 		ItemDateRange idr = ApuxFactory.getObjFactory().createItemDateRange();
 		idr.setType(targetType);
@@ -167,7 +167,7 @@ public class ApuSourceBuilder {
 		return idr;
 	}
 	
-	public ItemEnum createEnum(String targetType, String value, boolean visible) {
+	static public ItemEnum createEnum(String targetType, String value, boolean visible) {
 		ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
 		ie.setType(targetType);
 		ie.setValue(value);
@@ -175,17 +175,17 @@ public class ApuSourceBuilder {
 		return ie;
 	}
 
-	public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
+	static public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
 		ItemEnum ie = createEnum(targetType, value, visible);
 		addEnum(part, ie);
 		return ie;
 	}
 	
-	public void addEnum(Part part, ItemEnum ie) {
+	static public void addEnum(Part part, ItemEnum ie) {
         part.getItms().getStrOrLnkOrEnm().add(ie);        
 	}	
 
-	public void addDao(Apu apu, String daoId) {
+	static public void addDao(Apu apu, String daoId) {
 		Daos daos = apu.getDaos();
 		if(daos==null) {
 			daos = ApuxFactory.getObjFactory().createDaos();
@@ -193,7 +193,7 @@ public class ApuSourceBuilder {
 		daos.getUuid().add(daoId);
 	}
 
-    public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
+    static public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {
             if(part.getType().equals(partType)) {
@@ -210,7 +210,7 @@ public class ApuSourceBuilder {
         return items;
     }
     
-    public List<ItemEnum> getItemEnums(Apu apu, ApuType partType, String itemType) {
+    static public List<ItemEnum> getItemEnums(Apu apu, ApuType partType, String itemType) {
         List<ItemEnum> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {
             if(part.getType().equals(partType)) {
@@ -234,7 +234,7 @@ public class ApuSourceBuilder {
      * @param partType
      * @return
      */
-    public Part getFirstPart(Apu apu, String partType) {
+    static public Part getFirstPart(Apu apu, String partType) {
         for(Part part : apu.getPrts().getPart()) {
             if (part.getType().equals(partType)) {
                 return part;
@@ -243,7 +243,7 @@ public class ApuSourceBuilder {
         return null;
     }
 
-    public void copyDateRanges(Part part, List<ItemDateRange> ranges) {
+    static public void copyDateRanges(Part part, List<ItemDateRange> ranges) {
         for(var dateRange: ranges) {
             ItemDateRange idr = copyItem(dateRange);
             addDateRange(part, idr);
@@ -251,7 +251,7 @@ public class ApuSourceBuilder {
         
     }
 
-    public void copyEnums(Part part, List<ItemEnum> itemEnums) {
+    static public void copyEnums(Part part, List<ItemEnum> itemEnums) {
         for(var itemEnum: itemEnums) {
             var ie = copyItem(itemEnum);
             addEnum(part, ie);
@@ -259,21 +259,21 @@ public class ApuSourceBuilder {
         
     }    
 
-    private ItemEnum copyItem(ItemEnum itemEnum) {
+    static private ItemEnum copyItem(ItemEnum itemEnum) {
         ItemEnum ie = createEnum(itemEnum.getType(), 
                                  itemEnum.getValue(), 
                                  itemEnum.isVisible());
         return ie;
     }
 
-    public ItemDateRange copyItem(ItemDateRange dateRange) {
-        return this.createDateRange(dateRange.getType(), 
+    static public ItemDateRange copyItem(ItemDateRange dateRange) {
+        return createDateRange(dateRange.getType(), 
                              dateRange.getF(), dateRange.isFe(), 
                              dateRange.getTo(), dateRange.isToe(), 
                              dateRange.getFmt());
     }
 
-    public void removeItem(Apu apu, Object item) {
+    static public void removeItem(Apu apu, Object item) {
         for (Part part : apu.getPrts().getPart()) {
             var objects = part.getItms().getStrOrLnkOrEnm();
             for (Object obj : objects) {

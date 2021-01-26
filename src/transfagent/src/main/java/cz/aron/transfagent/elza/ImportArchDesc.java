@@ -35,6 +35,7 @@ import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
+import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
@@ -217,10 +218,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         // add date to parent(s)
         var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
-        for(ItemDateRange item : itemDateRanges) {
-            ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
+        for(ItemDateRange item : itemDateRanges) {            
             Apu apuParent = parentApu;
             while(apuParent != null) {
+                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
                 dateRangeAppender.appendTo(apuParent);
                 apuParent = apuParentMap.get(apuParent);
             }
@@ -293,9 +294,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				"ZP2015_RESTRICTED_ACCESS_REASON",
 				"ZP2015_RESTRICTED_ACCESS_TYPE",
 				// geo souradnice - neumime prevest
-				ElzaTypes.ZP2015_POSITION,
-		// TODO: k zapracovani				
-				"ZP2015_DATE_OTHER"				
+				ElzaTypes.ZP2015_POSITION
+		// TODO: k zapracovani:
 		};
 
 		// check ignored items
@@ -306,7 +306,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 
 		Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
-		stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));
+		// TITLE is used as default APU name, it is not converted as separate ABSTRACT
+		//stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));		
+		stringTypeMap.put("ZP2015_TITLE",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_UNIT_TYPE", new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.unitTypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_EXTRA_UNITS, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.extraUnitTypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
@@ -332,6 +334,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
 		stringTypeMap.put("ZP2015_RELATED_UNITS",new EdxStringConvertor("RELATED_UNITS"));
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_DATE,new EdxUnitDateConvertor(CoreTypes.UNIT_DATE));
+		stringTypeMap.put(ElzaTypes.ZP2015_DATE_OTHER,new EdxUnitDateConvertorEnum(ElzaTypes.dateOtherMap));
 		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
 		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
 		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO"));

@@ -1,5 +1,6 @@
 package cz.aron.transfagent.service;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class ReimportService implements ImportProcessor {
 				if(result==Result.REIMPORTED||result==Result.NOCHANGES) {
 					log.info("Reimported apuSource: {}", apuSource.getId());
 					apuSource.setReimport(false);
+					apuSource.setDateImported(ZonedDateTime.now());
 					apuSourceRepository.save(apuSource);
 					
 					if(result==Result.REIMPORTED) {

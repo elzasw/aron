@@ -46,6 +46,7 @@ facets:
       apuType: FUND
     type: FULLTEXT
     source: CISLO_NAD
+    display: DETAIL
   - when:
       apuType: FUND
     type: FULLTEXT

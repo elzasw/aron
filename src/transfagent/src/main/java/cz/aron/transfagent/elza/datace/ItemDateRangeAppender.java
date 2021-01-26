@@ -8,60 +8,64 @@ import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ItemDateRangeAppender {
-
-    private ItemDateRange itemDateRange;
+    
+    /**
+     * Normalized from and to, this interval will be merged
+     */    
     private LocalDateTimeRange dateRange;
-    private ApuSourceBuilder builder;
-
-    public ItemDateRangeAppender(ItemDateRange itemDateRange) {
-        this.itemDateRange = itemDateRange;
-        dateRange = new LocalDateTimeRange(itemDateRange);
-        builder = new ApuSourceBuilder();
+        
+    public ItemDateRangeAppender(final ItemDateRange itemDateRange) {
+        // Copy source item
+        var copied = ApuSourceBuilder.copyItem(itemDateRange);
+        // appended is invisible by default
+        copied.setVisible(false);
+        dateRange = new LocalDateTimeRange(copied);
     }
+    
 
     public void appendTo(Apu apu) {
-        var items = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+        var items = ApuSourceBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         var item = getCrossingItem(items);
         while (item != null) {
-            itemDateRange = mergeItemDateRangeTo(item);
-            dateRange = new LocalDateTimeRange(itemDateRange);
-            removeItemDateRange(apu, items, item);
+            // if merged item is visible then
+            //    whole new item is also visible
+            if(item.isVisible()) {
+                dateRange.getDateRange().setVisible(true);
+            }
+            removeItemDateRange(apu, items, item.getDateRange());
+            
+            dateRange = dateRange.merge(item);
+            
             item = getCrossingItem(items);
         }
-        addItemDateRange(apu, itemDateRange);
+        addItemDateRange(apu, dateRange.getDateRange());
     }
 
-    private ItemDateRange getCrossingItem(List<ItemDateRange> items) {
+    /**
+     * Return first crossing item
+     * @param items
+     * @return
+     */
+    private LocalDateTimeRange getCrossingItem(List<ItemDateRange> items) {
         for(ItemDateRange item : items) {
-            if(dateRange.isRangeCrossing(new LocalDateTimeRange(item))) {
-                return item;
+            var ldtr = new LocalDateTimeRange(item);
+            if(dateRange.isRangeCrossing(ldtr)) {
+                return ldtr;
             }
         }
         return null;
     }
 
-    private ItemDateRange mergeItemDateRangeTo(ItemDateRange item) {
-        var result = builder.copyItem(item);
-        var itemRange = new LocalDateTimeRange(result);
-        if(dateRange.isBefore(itemRange)) {
-            result.setF(itemDateRange.getF());
-        }
-        if(dateRange.isAfter(itemRange)) {
-            result.setTo(itemDateRange.getTo());
-        }
-        return result;
-    }
-
     private void removeItemDateRange(Apu apu, List<ItemDateRange> items, ItemDateRange removeItem) {
         items.remove(removeItem);
-        builder.removeItem(apu, removeItem);
+        ApuSourceBuilder.removeItem(apu, removeItem);
     }
 
     private void addItemDateRange(Apu apu, ItemDateRange item) {
-        var part = builder.getFirstPart(apu, CoreTypes.PT_ARCH_DESC);
+        var part = ApuSourceBuilder.getFirstPart(apu, CoreTypes.PT_ARCH_DESC);
         if (part == null) {
-            part = builder.addPart(apu, CoreTypes.PT_ARCH_DESC);
+            part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC);
         }
-        builder.addDateRange(part, item);
+        ApuSourceBuilder.addDateRange(part, item);
     }
 }
