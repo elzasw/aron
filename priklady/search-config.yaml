@@ -28,6 +28,10 @@ facets:
     source: TITLE
     # Kdy se zobrazi ALWAYS | DETAIL
     display: ALWAYS
+    # Nastavení tooltipu k celé fazetě
+    tooltip: zobrazovaná nápověda
+    # Podrobný popis fazety v části filtrů
+    description: popis filtru....
     # Pokud bude nutne specializovat
     #   title: Název AS ??
 
@@ -40,8 +44,16 @@ facets:
     type: ENUM
     # zdrojovy itemtype
     source: INST_REF
-    # Max pocet zobrazenych itemu
-    maxItems: 10
+    # Počet standardně zobrazených itemů - sbalená varianta
+    displayedItems: 5
+    # Max pocet zobrazenych itemu - při rozbalení
+    # 0 nebo nenastaveno, znamena bez limitu
+    maxDisplayedItems: 10
+    # Způsob řazení položek (těch, které nejsou uvedeny explicitně)
+    # orderBy: FREQ | ASC
+    #   FREQ - dle počtu, více jsou první
+    #   ASC - dle abecedy
+    orderBy: FREQ
   - when:
       apuType: FUND
     type: FULLTEXT
@@ -78,9 +90,22 @@ facets:
     source: UNIT_TYPE
     display: ALWAYS
     maxItems: 30
+    # Volitelná nápověda k položkám ve fazetách
+    # Zobrazuje se při najetí na položku
+    tooltips:
+      - value: matrika
+        tooltip: Popis co je matrika
     order:
       - matrika
-      - kniha
+      - kroniky
+      - stavební dokumentace
+      - evidence nemovitostí
+      - evidence obyvatel
+      - evidence školní docházky
+      - mapa
+      - fotografie na papírové podložce
+      - fotografická deska
+      - technický výkres
 
 # Druh zaznamu
   - when:
@@ -99,6 +124,12 @@ facets:
     type: UNITDATE
     source: UNIT_DATE
     display: ALWAYS
+
+  - when:
+      apuType: DATE_OF_CONTENT
+    type: UNITDATE
+    source: DATE_OF_CONTENT
+    display: DETAIL
 
 # Identifikace archiválie
   - when:
