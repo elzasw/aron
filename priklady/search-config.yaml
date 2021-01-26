@@ -151,6 +151,12 @@ facets:
     type: ENUM
     source: FUND_INST_REF
     display: ALWAYS
+# Archivní soubor
+  - when:
+      apuType: ARCH_DESC
+    type: MULTI_REF
+    source: FUND_REF
+    display: ALWAYS
 
 # Role entit
   - when:

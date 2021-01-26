@@ -615,18 +615,30 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			}
 			
 			// update parent ref
+			boolean parentChanged = false;
+			
 			ArchivalEntity parentEntity = archEntity.getParentEntity();
 			if(importAp.getParentElzaId()!=null) {			    
 			    if(parentEntity==null||!importAp.getParentElzaId().equals(parentEntity.getElzaId())) {
 			        parentEntity = addAccessibleByElzaId(importAp.getParentElzaId());
 			        archEntity.setParentEntity(parentEntity);
 			        archivalEntityRepository.save(archEntity);
+			        
+			        parentChanged = true;
 			    }
 			} else {
 			    if(parentEntity!=null) {
                     archEntity.setParentEntity(null);
-                    archivalEntityRepository.save(archEntity);			        
+                    archivalEntityRepository.save(archEntity);
+                    
+                    parentChanged = true;
 			    }
+			}
+			
+			// TODO: spustit reimport pripojenych APU v pripade zmeny 
+			//       napojeni rodice
+			if(parentChanged) {
+			    // not finished
 			}
 			
 			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());

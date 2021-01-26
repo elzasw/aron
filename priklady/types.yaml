@@ -426,11 +426,11 @@ itemTypes:
   - code: FUND_REF
     name: Archivní soubor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: FUND_INST_REF
     name: Instituce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: DIGITAL
     name: Digitální podoba
     type: ENUM
