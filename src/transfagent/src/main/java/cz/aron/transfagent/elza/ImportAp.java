@@ -254,7 +254,14 @@ public class ImportAp implements EdxItemCovertContext {
 	        throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
 	    }
         Integer apElzaId = Integer.valueOf(apRef.getApid());
-        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        // Set parent relation for taxonomical categories
+        if(apRef.getS().equals("RT_CATEGORY")) {
+            Validate.isTrue(this.parentElzaId==null);
+            
+            parentElzaId = apElzaId;            
+        }
+        
+        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);                
         if(CollectionUtils.isEmpty(apUuids)) {
             this.requiredEntities.add(apElzaId);
             return;
@@ -264,7 +271,7 @@ public class ImportAp implements EdxItemCovertContext {
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
         this.apusBuilder.addApuRefsFirstVisible(part, "AE_REL_REF", apUuids);
         this.apusBuilder.addEnum(part, "AE_REL_TYPE", relType, true);
-	    //
+        
     }
 
     private void importIdent(Apu apu, Fragment frg) {

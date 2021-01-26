@@ -11,9 +11,12 @@ import cz.tacr.elza.schema.v2.TimeInterval;
 public class EdxUnitDateConvertorEnum implements EdxItemConvertor {
 
     final private Map<String, String> dateSpecMap;
+    private Map<String, String> dateOtherMapIndex;
 
-    public EdxUnitDateConvertorEnum(final Map<String, String> dateSpecMap) {
+    public EdxUnitDateConvertorEnum(final Map<String, String> dateSpecMap, 
+                                    final Map<String, String> dateOtherMapIndex) {
         this.dateSpecMap = dateSpecMap;
+        this.dateOtherMapIndex = dateOtherMapIndex;
     }
 
     @Override
@@ -33,7 +36,18 @@ public class EdxUnitDateConvertorEnum implements EdxItemConvertor {
         TimeInterval ti = unitDate.getD();
         ItemDateRange idr = apusBuilder.createDateRange(targetType, ti.getF(), ti.isFe(), 
                 ti.getTo(), ti.isToe(), ti.getFmt());
-        apusBuilder.addDateRange(ctx.getActivePart(), idr);        
+        apusBuilder.addDateRange(ctx.getActivePart(), idr);
+        
+        // skryta indexace
+        if(dateOtherMapIndex!=null) {
+            String indexType = dateOtherMapIndex.get(unitDate.getS());
+            if(indexType!=null) {
+                var indexItem = apusBuilder.copyItem(idr);
+                indexItem.setVisible(false);
+                indexItem.setType(indexType);
+                apusBuilder.addDateRange(ctx.getActivePart(), indexItem);
+            }
+        }
     }
 
 }

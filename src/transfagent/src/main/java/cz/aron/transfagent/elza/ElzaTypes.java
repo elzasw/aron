@@ -69,6 +69,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_LANGUAGE = "ZP2015_LANGUAGE";
     public static final String ZP2015_UNIT_DATE = "ZP2015_UNIT_DATE";
     public static final String ZP2015_DATE_OTHER = "ZP2015_DATE_OTHER";
+    public static final String ZP2015_ENTITY_ROLE = "ZP2015_ENTITY_ROLE";
 
     public static final String ZP2015_ORIGINATOR = "ZP2015_ORIGINATOR";
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
@@ -83,6 +84,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_LEGEND = "ZP2015_LEGEND";
     public static final String ZP2015_MOVIE_LENGTH = "ZP2015_MOVIE_LENGTH";
     public static final String ZP2015_RECORD_LENGTH = "ZP2015_RECORD_LENGTH";
+        
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {
@@ -113,8 +115,8 @@ public abstract class ElzaTypes {
         unitTypeMap.put("ZP2015_UNIT_TYPE_MFS", "mikrofiš");
         unitTypeMap.put("ZP2015_UNIT_TYPE_FAL", "fotoalbum");
         unitTypeMap.put("ZP2015_UNIT_TYPE_DFO", "digitální fotografie");
-        unitTypeMap.put("ZP2015_UNIT_TYPE_KZA", "kinematografický záznam (dílo) v analogové i digitální podobě");
-        unitTypeMap.put("ZP2015_UNIT_TYPE_ZZA", "zvukový záznam (dílo) v analogové i digitální podobě");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_KZA", "kinematografický záznam (dílo)");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_ZZA", "zvukový záznam (dílo)");
         unitTypeMap.put("ZP2015_UNIT_TYPE_TIO", "tisk do roku 1800");
         unitTypeMap.put("ZP2015_UNIT_TYPE_TIP", "tisk po roce 1800");
         unitTypeMap.put("ZP2015_UNIT_TYPE_POH", "pohlednice");
@@ -135,7 +137,7 @@ public abstract class ElzaTypes {
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LIP",
                              "listina po roce 1850");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_UKN",
-                             "úřední knia");
+                             "úřední kniha");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_RKP",
                              "rukopis");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_PPR",
@@ -177,8 +179,8 @@ public abstract class ElzaTypes {
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MFS", "mikrofiš");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FAL", "fotoalbum");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_DFO", "digitální fotografie");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KZA", "kinematografický záznam (dílo) v analogové i digitální podobě");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ZZA", "zvukový záznam (dílo) v analogové i digitální podobě");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KZA", "kinematografický záznam (dílo)");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ZZA", "zvukový záznam (dílo)");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIO", "tisk do roku 1800");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIP", "tisky po roce 1800");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_POH", "pohlednice");
@@ -351,6 +353,28 @@ public abstract class ElzaTypes {
         dateOtherMap.put("ZP2015_DATE_AWARDING", "DATE_AWARDING");
         dateOtherMap.put("ZP2015_DATE_AWARD_CER", "DATE_AWARD_CER");
         dateOtherMap.put("ZP2015_DATE_WITHDRAWAL", "DATE_WITHDRAWAL");
+    }
+    
+    /**
+     * Zjednodussene indexovani jine datace
+     */
+    public static Map<String, String> dateOtherMapIndex = new HashMap<>();    
+    static {
+        dateOtherMapIndex.put("ZP2015_DATE_DECLARED", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_ORIG", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_OF_COPY", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_SEALING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_ACT_PUBLISHING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_INSERT", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_MOLD_CREATION", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_USAGE", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_PUBLISHING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_MAP_UPDATE", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_CAPTURING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_RECORDING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_AWARDING", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_AWARD_CER", "DATE_OTHER");
+        dateOtherMapIndex.put("ZP2015_DATE_WITHDRAWAL", "DATE_OTHER");
     }
 
     public static Map<String, String> languageTypeMap = new HashMap<>();

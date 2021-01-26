@@ -334,7 +334,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_STORAGE_COND",new EdxStringConvertor("STORAGE_COND"));
 		stringTypeMap.put("ZP2015_RELATED_UNITS",new EdxStringConvertor("RELATED_UNITS"));
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_DATE,new EdxUnitDateConvertor(CoreTypes.UNIT_DATE));
-		stringTypeMap.put(ElzaTypes.ZP2015_DATE_OTHER,new EdxUnitDateConvertorEnum(ElzaTypes.dateOtherMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_DATE_OTHER,new EdxUnitDateConvertorEnum(ElzaTypes.dateOtherMap, ElzaTypes.dateOtherMapIndex));
 		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
 		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
 		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO"));
@@ -353,7 +353,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-		stringTypeMap.put("ZP2015_ENTITY_ROLE",new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider, 
+		stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE,new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider, 
 		                                                            ElzaTypes.roleSpecMap));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));

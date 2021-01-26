@@ -613,6 +613,22 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
 			}
+			
+			// update parent ref
+			ArchivalEntity parentEntity = archEntity.getParentEntity();
+			if(importAp.getParentElzaId()!=null) {			    
+			    if(parentEntity==null||!importAp.getParentElzaId().equals(parentEntity.getElzaId())) {
+			        parentEntity = addAccessibleByElzaId(importAp.getParentElzaId());
+			        archEntity.setParentEntity(parentEntity);
+			        archivalEntityRepository.save(archEntity);
+			    }
+			} else {
+			    if(parentEntity!=null) {
+                    archEntity.setParentEntity(null);
+                    archivalEntityRepository.save(archEntity);			        
+			    }
+			}
+			
 			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());
 			this.updateSourceEntityLinks(apuSource, apuSourceBuilder.getReferencedEntities(), ess);
 		} catch (Exception e) {

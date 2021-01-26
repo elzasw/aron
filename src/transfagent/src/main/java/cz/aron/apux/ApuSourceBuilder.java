@@ -26,7 +26,7 @@ import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ApuSourceBuilder {
 		
-	static private ApuSource apusrc = ApuxFactory.getObjFactory().createApuSource();
+	private ApuSource apusrc = ApuxFactory.getObjFactory().createApuSource();
 	
     /**
      * Collection of referenced entities
@@ -35,7 +35,7 @@ public class ApuSourceBuilder {
     
     public void setUuid(UUID uuid) {
         if(apusrc.getUuid()!=null) {
-            throw new IllegalStateException("UUID alredy set");
+            throw new IllegalStateException("UUID alredy set, current uuid: "+apusrc.getUuid()+", new uuid: "+uuid.toString());
         }
         apusrc.setUuid(uuid.toString());
     }
