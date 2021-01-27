@@ -33,7 +33,7 @@ elza:
   password: vyber
 
 dspace:
-  url: http://10.2.0.27/dspace
+  url: url: http://10.2.0.27:8088/rest
   user: x
   password: x
   disabled: true
