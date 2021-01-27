@@ -29,9 +29,9 @@ facets:
     # Kdy se zobrazi ALWAYS | DETAIL
     display: ALWAYS
     # Nastavení tooltipu k celé fazetě
-    # tooltip: zobrazovaná nápověda
+    tooltip: Zadejte název nebo část názvu archivního souboru
     # Podrobný popis fazety v části filtrů
-    # description: popis filtru....
+    description: Filter dle názvu archivního souboru. Je možné zadat část názvu archivního souboru.
     # Pokud bude nutne specializovat
     #   title: Název AS ??
 
@@ -45,15 +45,15 @@ facets:
     # zdrojovy itemtype
     source: INST_REF
     # Počet standardně zobrazených itemů - sbalená varianta
-    # displayedItems: 5
+    # displayedItems: 10
     # Max pocet zobrazenych itemu - při rozbalení
     # 0 nebo nenastaveno, znamena bez limitu
-    # maxDisplayedItems: 10
+    # maxDisplayedItems: 4
     # Způsob řazení položek (těch, které nejsou uvedeny explicitně)
     # orderBy: FREQ | ASC
     #   FREQ - dle počtu, více jsou první
     #   ASC - dle abecedy
-    # orderBy: FREQ
+    orderBy: ASC
   - when:
       apuType: FUND
     type: FULLTEXT
@@ -89,12 +89,15 @@ facets:
     type: ENUM
     source: UNIT_TYPE
     display: ALWAYS
-    maxItems: 30
+    description: Výběr druhu archivního materiálu
+    displayedItems: 10
+    maxDisplayedItems: 100
     # Volitelná nápověda k položkám ve fazetách
     # Zobrazuje se při najetí na položku
-    #tooltips:
-    #  - value: matrika
-    #    tooltip: Popis co je matrika
+    orderBy: FREQ
+    tooltips:
+      - value: matrika
+        tooltip: Popis co je matrika
     order:
       - matrika
       - kroniky
@@ -116,7 +119,7 @@ facets:
     type: ENUM
     source: RECORD_TYPE
     display: ALWAYS
-    maxItems: 30
+    orderBy: ASC
 
 # Datace
   - when:
@@ -181,7 +184,7 @@ facets:
     source: AE_CLASS
     display: ALWAYS
     # Max pocet zobrazenych itemu
-    maxItems: 30
+    displayedItems: 30
     order:
      - "korporace"
      - "osoba / bytost"
@@ -196,7 +199,9 @@ facets:
     source: AE_SUBCLASS
     display: ALWAYS
     # Max pocet zobrazenych itemu
-    maxItems: 30
+    displayedItems: 10
+    maxDisplayedItems: 40
+    orderBy: FREQ
   - when:
       apuType: ENTITY
     # Druh fazety

@@ -31,6 +31,7 @@ import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
 import cz.aron.transfagent.elza.convertor.EdxEnumConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
+import cz.aron.transfagent.elza.convertor.EdxLinkConvertor;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
@@ -350,6 +351,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put(ElzaTypes.ZP2015_MOVIE_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.MOVIE_LENGTH));
 		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.RECORD_LENGTH));
 		stringTypeMap.put(ElzaTypes.ZP2015_WRITING, new EdxStringConvertor(CoreTypes.WRITING));
+		stringTypeMap.put(ElzaTypes.ZP2015_ITEM_LINK, new EdxLinkConvertor(CoreTypes.ARCH_DESC_REF, CoreTypes.SOURCE_LINK));
 
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));

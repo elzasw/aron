@@ -44,6 +44,7 @@ public abstract class ElzaTypes {
     public static final String SCOPE_NORMS = "SCOPE_NORMS";
     public static final String CORP_STRUCTURE = "CORP_STRUCTURE";
     public static final String SOURCE_INFO = "SOURCE_INFO";
+    public static final String SOURCE_LINK = "SOURCE_LINK";
 
     public static final String REL_ENTITY = "REL_ENTITY";
 
@@ -84,6 +85,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_LEGEND = "ZP2015_LEGEND";
     public static final String ZP2015_MOVIE_LENGTH = "ZP2015_MOVIE_LENGTH";
     public static final String ZP2015_RECORD_LENGTH = "ZP2015_RECORD_LENGTH";
+    public static final String ZP2015_ITEM_LINK = "ZP2015_ITEM_LINK";
         
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();

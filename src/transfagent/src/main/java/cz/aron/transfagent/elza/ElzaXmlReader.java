@@ -32,6 +32,7 @@ import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.DescriptionItemEnum;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
 import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
+import cz.tacr.elza.schema.v2.DescriptionItemUriRef;
 import cz.tacr.elza.schema.v2.ElzaDataExchange;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Institution;
@@ -105,22 +106,32 @@ public class ElzaXmlReader {
 		return null;
 	}
 	
-	public static DescriptionItemAPRef getApRef(Fragment frg, String itemType) {
+	public static <T> T getItem(Fragment frg, String itemType, Class<T> tc) {
         for (DescriptionItem item : frg.getDdOrDoOrDp()) {
             if (item.getT().equals(itemType)) {
                 if(item instanceof DescriptionItemUndefined) {
                     continue;
                 } else
-                if (item instanceof DescriptionItemAPRef) {
-                    return (DescriptionItemAPRef) item;
+                if (tc.isAssignableFrom(item.getClass())) {
+                    T result = tc.cast(item);
+                    return result;
                 } else {
                     throw new RuntimeException(
-                            "Failed to extract ap ref value from: " + itemType + ", real type is: " + item);
+                            "Failed to extract: " + itemType + 
+                            ", expected class: " + tc + ", real type is: " + item);
                 }
             }
         }
         return null;
 	    
+	}
+	
+    public static DescriptionItemUriRef getLink(Fragment frg, String itemType) {
+        return getItem(frg, itemType, DescriptionItemUriRef.class);
+    }
+
+    public static DescriptionItemAPRef getApRef(Fragment frg, String itemType) {
+        return getItem(frg, itemType, DescriptionItemAPRef.class);	    
 	}
 
 	public static String getApRefId(Fragment frg, String itemType) {

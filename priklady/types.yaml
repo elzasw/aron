@@ -57,6 +57,10 @@ itemTypes:
     name: Odkaz
     type: LINK
     indexed: true
+  - code: SOURCE_LINK
+    name: Zdroj informací
+    type: LINK
+    indexed: true
   # Archivy
   - code: INST_CODE
     name: Kód archivu
@@ -422,6 +426,11 @@ itemTypes:
     name: Role
     type: ENUM
     indexed: true
+  # Odkaz z archivniho popisu na jiný archivní popis (pevné spojení)
+  - code: ARCH_DESC_REF
+    name: Pevně spojeno s
+    type: APU_REF
+    indexed: false
   # Odkaz z archivniho popisu na archivni soubor
   - code: FUND_REF
     name: Archivní soubor

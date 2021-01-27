@@ -32,6 +32,7 @@ import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
+import cz.tacr.elza.schema.v2.DescriptionItemUriRef;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 
@@ -350,15 +351,23 @@ public class ImportAp implements EdxItemCovertContext {
 		addStringIfExists(frg, ElzaTypes.HISTORY, part, CoreTypes.HISTORY);
 	    addStringIfExists(frg, ElzaTypes.GENEALOGY, part, CoreTypes.GENEALOGY);
 	    addStringIfExists(frg, ElzaTypes.BIOGRAPHY, part, CoreTypes.BIOGRAPHY);
-	    addStringIfExists(frg, ElzaTypes.DESCRIPTION, part, CoreTypes.DESCRIPTION);	    	    
+	    addStringIfExists(frg, ElzaTypes.DESCRIPTION, part, CoreTypes.DESCRIPTION);
+	    addLinkIfExists(frg, ElzaTypes.SOURCE_LINK, part, CoreTypes.SOURCE_LINK);
 	    
 	    // TODO: Add warning for all non processed elements
 	}
 
-	private void addStringIfExists(Fragment frg, String srcType, Part part, String trgType) {
+	private void addLinkIfExists(Fragment frg, String srcType, Part part, String trgType) {
+	    DescriptionItemUriRef item = ElzaXmlReader.getLink(frg, srcType);
+        if(item!=null) {
+            ApuSourceBuilder.addLink(part, trgType, item.getUri(), item.getLbl());
+        }        
+    }
+
+    private void addStringIfExists(Fragment frg, String srcType, Part part, String trgType) {
         String value = ElzaXmlReader.getStringType(frg, srcType);
         if(StringUtils.isNotBlank(value)) {
-            this.apusBuilder.addString(part, trgType, value);
+            ApuSourceBuilder.addString(part, trgType, value);
         }
     }
 

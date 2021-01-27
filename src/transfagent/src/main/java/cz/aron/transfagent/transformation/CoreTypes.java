@@ -56,6 +56,9 @@ public class CoreTypes {
     public static final String LEGEND = "LEGEND";
     public static final String MOVIE_LENGTH = "MOVIE_LENGTH";
     public static final String RECORD_LENGTH = "RECORD_LENGTH";
+    public static final String ARCH_DESC_REF = "ARCH_DESC_REF";
+    // LINK
+    public static final String SOURCE_LINK = "SOURCE_LINK";
 
     public static final String CRC_BIRTH_DATE = "CRC_BIRTH_DATE";
     public static final String CRC_RISE_DATE = "CRC_RISE_DATE";

@@ -18,6 +18,7 @@ import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
+import cz.aron.apux._2020.ItemLink;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
@@ -125,6 +126,17 @@ public class ApuSourceBuilder {
 		
 		referencedEntities.add(value);
 		return item;
+	}
+	
+	static public ItemLink addLink(Part part, String itemType, String url, String lbl) {
+	    ItemLink item = ApuxFactory.getObjFactory().createItemLink();
+	    item.setType(itemType);
+	    item.setName(lbl);
+	    item.setLink(url);
+	    
+	    part.getItms().getStrOrLnkOrEnm().add(item);
+	    
+	    return item;
 	}
 
 	public List<ItemRef> addApuRefsFirstVisible(Part part, String itemType, List<UUID> uuids) {	    
