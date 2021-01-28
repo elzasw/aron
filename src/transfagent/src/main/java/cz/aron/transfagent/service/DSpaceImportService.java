@@ -69,8 +69,8 @@ public class DSpaceImportService implements ImportProcessor {
         DSpaceImportService service = new DSpaceImportService();
 
         service.configDspace = new ConfigDspace();
-        //service.configDspace.setUrl("http://10.2.0.27:8088");
-        service.configDspace.setUrl("https://demo.dspace.org");
+        //service.configDspace.setUrl("https://demo.dspace.org");
+        service.configDspace.setUrl("http://10.2.0.27:8088");
         service.configDspace.setUser("admin@lightcomp.cz");
         service.configDspace.setPassword("admin");
         service.configDspace.setDisabled(false);
@@ -78,14 +78,16 @@ public class DSpaceImportService implements ImportProcessor {
         service.configDao = new ConfigDao();
         service.configDao.setPath("C:/temp/transfagent/daos");
 
-        String uuid = "155e6999-1aae-4849-9788-b8a5fed87635";
+        String uuid = "539a0fda-c785-413b-a636-9006192fb538";
         String saveDir = service.configDao.getPath() + "/" + uuid;
         if (!Files.exists(Path.of(saveDir))) {
              Files.createDirectories(Path.of(saveDir));
         }
 
-        DspaceFile file = service.getDspaceFile(uuid);
-        service.saveDspaceFile(saveDir, file);
+        List<DspaceFile> files = service.getDspaceFiles(uuid);
+        for (DspaceFile file : files) {
+            service.saveDspaceFile(saveDir, file);
+        }
     }
 
     @Override
@@ -97,7 +99,7 @@ public class DSpaceImportService implements ImportProcessor {
         var daos = daoFileRepository.findTop1000ByStatusOrderById(DaoState.ACCESSIBLE);
         for (var dao: daos) {
             try {
-                importDaoFile(dao);
+                importDaoFiles(dao);
             } catch(Exception e) {
                 ic.setFailed(true);
                 log.error("Dao file not imported: {}", dao.getId(), e);
@@ -107,7 +109,7 @@ public class DSpaceImportService implements ImportProcessor {
         }
     }
 
-    private void importDaoFile(DaoFile dao) {
+    private void importDaoFiles(DaoFile dao) {
         String uuid = dao.getUuid().toString();
 
         String saveDir = configDao.getPath() + "/" + uuid;
@@ -120,14 +122,17 @@ public class DSpaceImportService implements ImportProcessor {
             }
         }
 
-        DspaceFile file = getDspaceFile(uuid);
-        saveDspaceFile(saveDir, file);
+        List<DspaceFile> files = getDspaceFiles(uuid);
+        for (DspaceFile file : files) {
+            saveDspaceFile(saveDir, file);
+        }
         dao.setState(DaoState.READY);
         daoFileRepository.save(dao);
     }
 
-    private DspaceFile getDspaceFile(String uuid) {
-        String restUrl = configDspace.getUrl() + "/rest/bitstreams/" + uuid;
+    private List<DspaceFile> getDspaceFiles(String uuid) {
+        List<DspaceFile> files = new ArrayList<>();
+        String restUrl = configDspace.getUrl() + "/rest/items/" + uuid + "/bitstreams";
         String responce;
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -138,16 +143,21 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         JsonReader jsonReader = Json.createReader(new StringReader(responce));
-        JsonObject object = jsonReader.readObject();
+        JsonArray jsonArray = jsonReader.readArray();
 
-        String name = object.getString("name");
-        String retrieveLink = object.getString("retrieveLink");
-        int size = object.getInt("sizeBytes");
+        for (JsonValue value : jsonArray) {
+            JsonObject object = value.asJsonObject();
 
-        Validate.notNull(name, "Název souboru nesmí být prázdný");
-        Validate.notNull(retrieveLink, "Odkaz pro dotaz nesmí být prázdný");
+            String name = object.getString("name");
+            String retrieveLink = object.getString("retrieveLink");
+            int size = object.getInt("sizeBytes");
 
-        return new DspaceFile(name, retrieveLink, size);
+            Validate.notNull(name, "Název souboru nesmí být prázdný");
+            Validate.notNull(retrieveLink, "Odkaz pro dotaz nesmí být prázdný");
+
+            files.add(new DspaceFile(name, retrieveLink, size));
+        }
+        return files;
     }
 
     private void saveDspaceFile(String saveDir, DspaceFile file) {
@@ -162,22 +172,6 @@ public class DSpaceImportService implements ImportProcessor {
             log.error("File {} transfer error from {}.", file.getName(), file.getRetrieveLink(), e);
             throw new RuntimeException("File transfer error."); 
         }
-    }
-
-    private List<DspaceFile> getDspaceFiles(String item) {
-        List<DspaceFile> files = new ArrayList<>();
-        String items = "/rest/items/" + item + "/bitstreams";
-        RestTemplate restTemplate = new RestTemplate();
-        String responce = restTemplate.getForObject(configDspace.getUrl() + items, String.class);
-
-        JsonReader jsonReader = Json.createReader(new StringReader(responce));
-        JsonArray jsonArray = jsonReader.readArray();
-
-        for (JsonValue value : jsonArray) {
-            JsonObject object = value.asJsonObject();
-            files.add(new DspaceFile(object.getString("name"), object.getString("retrieveLink"), object.getInt("sizeBytes")));
-        }
-        return files;
     }
 
     private String getJSessionId() {
