@@ -15,15 +15,18 @@ import cz.aron.transfagent.domain.IdProjection;
 public interface DaoFileRepository extends JpaRepository<DaoFile, Integer> {
 
 	List<IdProjection> findTop1000ByStateAndTransferredOrderById(DaoState state, boolean transfered);
-	
+
 	@EntityGraph(attributePaths = { "apuSource" })
 	Optional<DaoFile> findById(int id);
-	
+
 	@EntityGraph(attributePaths = { "apuSource" })
 	Optional<DaoFile> findByUuid(UUID uuid);
-	
+
 	@EntityGraph(attributePaths = { "apuSource" })
 	List<DaoFile> findAllByUuidIn(List<UUID> uuids);
 
 	List<DaoFile> findByApuSource(ApuSource apuSource);
+
+    List<DaoFile> findTop1000ByStatusOrderById(DaoState status);
+
 }
