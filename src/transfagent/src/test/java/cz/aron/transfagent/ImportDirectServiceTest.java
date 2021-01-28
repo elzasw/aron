@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.DaoFile;
+import cz.aron.transfagent.domain.DaoFiles;
 import cz.aron.transfagent.domain.SourceType;
 
 @SpringBootTest
@@ -29,7 +29,7 @@ public class ImportDirectServiceTest extends AbstractCommonTest {
         ApuSource apuSource = apuSources.get(0);
         assertTrue(apuSource.getSourceType() == SourceType.DIRECT);
 
-        List<DaoFile> daoFiles = daoFileRepository.findByApuSource(apuSource);
+        List<DaoFiles> daoFiles = daoFileRepository.findByApuSource(apuSource);
         assertTrue(daoFiles.size() > 0);
 
         // kontrola reimportu

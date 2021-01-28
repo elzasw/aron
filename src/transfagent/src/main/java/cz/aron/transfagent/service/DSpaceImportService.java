@@ -43,7 +43,7 @@ import org.springframework.web.client.RestTemplate;
 
 import cz.aron.transfagent.config.ConfigDao;
 import cz.aron.transfagent.config.ConfigDspace;
-import cz.aron.transfagent.domain.DaoFile;
+import cz.aron.transfagent.domain.DaoFiles;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.repository.DaoFileRepository;
@@ -100,7 +100,7 @@ public class DSpaceImportService implements ImportProcessor {
             return;
         }
 
-        var daos = daoFileRepository.findTop1000ByStatusOrderById(DaoState.ACCESSIBLE);
+        var daos = daoFileRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
         for (var dao: daos) {
             try {
                 importDaoFiles(dao);
@@ -114,7 +114,7 @@ public class DSpaceImportService implements ImportProcessor {
         }
     }
 
-    private void importDaoFiles(DaoFile dao) {
+    private void importDaoFiles(DaoFiles dao) {
         String uuid = dao.getUuid().toString();
 
         String saveDir = configDao.getPath() + "/" + uuid;

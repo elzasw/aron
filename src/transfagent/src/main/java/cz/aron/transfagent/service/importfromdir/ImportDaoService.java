@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.transfagent.domain.DaoFile;
+import cz.aron.transfagent.domain.DaoFiles;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.FileImportService;
@@ -86,7 +86,7 @@ public class ImportDaoService extends ImportDirProcessor {
 		return true;
 	}
 
-	private void importCompleteDao(DaoFile daoFile, Path path) {
+	private void importCompleteDao(DaoFiles daoFile, Path path) {
 		
 		Path dataPath;
 		try {
@@ -106,7 +106,7 @@ public class ImportDaoService extends ImportDirProcessor {
 		log.info("Imported dao {}", path.getFileName());
 	}
 	
-	private void transformAndImportDao(DaoFile daoFile, Path path) {	    
+	private void transformAndImportDao(DaoFiles daoFile, Path path) {	    
 	    try {
             transformService.transform(path);
         } catch (Exception e) {

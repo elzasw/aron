@@ -30,7 +30,7 @@ import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.Daos;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.domain.DaoFile;
+import cz.aron.transfagent.domain.DaoFiles;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.ApuSourceRepository;
@@ -217,7 +217,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             var storedApuSource = apuSourceRepository.save(apuSource);
 
             daoUuids.forEach(daoUuid -> {
-                DaoFile daoFile = new DaoFile();
+                DaoFiles daoFile = new DaoFiles();
                 daoFile.setApuSource(storedApuSource);
                 daoFile.setDataDir("");
                 daoFile.setState(DaoState.ACCESSIBLE);
@@ -235,12 +235,12 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
     }
 
     private void updateApuSource(cz.aron.transfagent.domain.ApuSource existingApuSource, Path dataDir, String origDir,
-                                 ApuSource apux, List<UUID> daoUuids, List<DaoFile> existingDaos) {
+                                 ApuSource apux, List<UUID> daoUuids, List<DaoFiles> existingDaos) {
 
         var daoUuidsSet = new HashSet<UUID>(daoUuids);
-        var toDelete = new ArrayList<DaoFile>();
-        var toUpdate = new ArrayList<DaoFile>();
-        for (DaoFile existingDao : existingDaos) {
+        var toDelete = new ArrayList<DaoFiles>();
+        var toUpdate = new ArrayList<DaoFiles>();
+        for (DaoFiles existingDao : existingDaos) {
             if (daoUuidsSet.remove(existingDao.getUuid())) {
                 toUpdate.add(existingDao);
             } else {
@@ -254,7 +254,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             var updatedApuSource = apuSourceRepository.save(existingApuSource);
 
             daoUuidsSet.stream().forEach(daoUuid -> {
-                DaoFile daoFile = new DaoFile();
+                DaoFiles daoFile = new DaoFiles();
                 daoFile.setApuSource(updatedApuSource);                
                 daoFile.setState(DaoState.ACCESSIBLE);
                 daoFile.setTransferred(false);
@@ -286,12 +286,12 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
         if (apuSource.getSourceType() != SourceType.DIRECT)
             return Result.UNSUPPORTED;
 
-        List<DaoFile> daoFiles = daoFileRepository.findByApuSource(apuSource);
+        List<DaoFiles> daoFiles = daoFileRepository.findByApuSource(apuSource);
         if (daoFiles.isEmpty()) {
             log.error("Missing dao file(s): {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        for (DaoFile daoFile: daoFiles) {
+        for (DaoFiles daoFile: daoFiles) {
             if (daoFile.getState() != DaoState.ACCESSIBLE) {
                 log.warn("Dao file(s) {} cannot be reimported, status: {}", apuSource.getId(), daoFile.getState());
                 return Result.UNSUPPORTED;
@@ -308,7 +308,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             List<UUID> daosUuids = daos.getUuid().stream()
                     .map(uuidStr -> UUID.fromString(uuidStr))
                     .collect(Collectors.toList());;
-            List<DaoFile> dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
+            List<DaoFiles> dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
 
             updateApuSource(apuSource, dataDir, fileName, apux, daosUuids, dbDaos);
         } catch (Exception e) {

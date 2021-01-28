@@ -16,7 +16,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "dao_file")
-public class DaoFile {
+public class DaoFiles {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
