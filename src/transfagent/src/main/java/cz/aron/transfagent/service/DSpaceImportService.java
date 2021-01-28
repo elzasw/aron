@@ -49,6 +49,7 @@ import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
+import cz.aron.transfagent.service.importfromdir.TransformService;
 import liquibase.util.Validate;
 
 @Service
@@ -58,6 +59,9 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     DaoFileRepository daoFileRepository;
+
+    @Autowired
+    TransformService transformService;
 
     @Autowired
     ConfigDspace configDspace;
@@ -100,6 +104,7 @@ public class DSpaceImportService implements ImportProcessor {
         for (var dao: daos) {
             try {
                 importDaoFiles(dao);
+                
             } catch(Exception e) {
                 ic.setFailed(true);
                 log.error("Dao file not imported: {}", dao.getId(), e);
@@ -126,6 +131,12 @@ public class DSpaceImportService implements ImportProcessor {
         for (DspaceFile file : files) {
             saveDspaceFile(saveDir, file);
         }
+        try {
+            transformService.transform(Path.of(saveDir));
+        } catch (Exception e) {
+            log.error("Error in transform path={}.", saveDir, e);
+            throw new RuntimeException("Error in transform path.");
+        }
         dao.setState(DaoState.READY);
         daoFileRepository.save(dao);
     }
@@ -139,7 +150,7 @@ public class DSpaceImportService implements ImportProcessor {
             responce = restTemplate.getForObject(restUrl, String.class);
         } catch (Exception e) {
             log.error("Error while accessing dspace {}.", restUrl, e);
-            throw new RuntimeException("Error while accessing dspace."); 
+            throw new RuntimeException("Error while accessing dspace.");
         }
 
         JsonReader jsonReader = Json.createReader(new StringReader(responce));
