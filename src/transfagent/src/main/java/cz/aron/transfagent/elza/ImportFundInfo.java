@@ -64,7 +64,7 @@ public class ImportFundInfo {
 
 	}
 
-	private ApuSourceBuilder importFundInfo(Path inputFile, String propFile) throws IOException, JAXBException {
+	public ApuSourceBuilder importFundInfo(Path inputFile, String propFile) throws IOException, JAXBException {
 		Validate.isTrue(propFile!=null&&propFile.length()>0);
 		
 		PropertiesDataProvider pdp = new PropertiesDataProvider();

@@ -164,7 +164,7 @@ public class ApuSourceBuilder {
 	}
 
 	static public void addDateRange(Part part, ItemDateRange idr) {
-		part.getItms().getStrOrLnkOrEnm().add(idr);		
+		part.getItms().getStrOrLnkOrEnm().add(idr);
 	}
 
 	static public ItemDateRange createDateRange(String targetType, 
@@ -204,6 +204,15 @@ public class ApuSourceBuilder {
 		}
 		daos.getUuid().add(daoId);
 	}
+
+    public Apu getApuByName(String apuName) {
+        for(Apu apu : apusrc.getApus().getApu()) {
+            if(apu.getName().equals(apuName)) {
+                return apu;
+            }
+        }
+        return null;
+    }
 
     static public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
