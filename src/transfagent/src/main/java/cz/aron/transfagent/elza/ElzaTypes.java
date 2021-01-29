@@ -63,6 +63,7 @@ public abstract class ElzaTypes {
         creTypeMap.put("CRT_FIRSTREALIZATION", "první realizace");
         creTypeMap.put("CRT_VALIDITYBEGIN", "počátek platnosti");
     }
+    public static final String EXT_CLASS = "EXT_CLASS";
 
     public static final String ZP2015_EXTRA_UNITS = "ZP2015_EXTRA_UNITS";
     public static final String ZP2015_UNIT_SUBTYPE = "ZP2015_UNIT_SUBTYPE";
@@ -898,26 +899,26 @@ public abstract class ElzaTypes {
     
     public static Map<String, String> otherIdIndexMap = new HashMap<>();
     static {    
-        otherIdMap.put("ZP2015_OTHERID_SIG_ORIG", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_SIG", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_STORAGE_ID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_CJ", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_DOCID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_FORMAL_DOCID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_ADDID", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_OLDSIG", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_OLDSIG2", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_OLDID", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_INVALID_UNITID", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_INVALID_REFNO", "UNIT_ID_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_PRINTID", "OTHER_ID_PROC_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_PICID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_NEGID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_CDID", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_ISBN", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_ISSN", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_ISMN", "OTHER_ID_ORIG_INDEX");
-        otherIdMap.put("ZP2015_OTHERID_MATRIXID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_SIG_ORIG", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_SIG", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_STORAGE_ID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_CJ", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_DOCID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_FORMAL_DOCID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_ADDID", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_OLDSIG", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_OLDSIG2", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_OLDID", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_INVALID_UNITID", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_INVALID_REFNO", "UNIT_ID_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_PRINTID", "OTHER_ID_PROC_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_PICID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_NEGID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_CDID", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_ISBN", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_ISSN", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_ISMN", "OTHER_ID_ORIG_INDEX");
+        otherIdIndexMap.put("ZP2015_OTHERID_MATRIXID", "OTHER_ID_ORIG_INDEX");
     }
     
     public static Map<String, String> relEntityMap = new HashMap<>();    
