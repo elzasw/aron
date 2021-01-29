@@ -48,6 +48,15 @@ itemTypes:
     name: Jméno
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
     type: STRING
+    # indexBoost: 1.1
+    # 
+    # Odstraneni diakritiky (folding, velka mala pismena apod.)
+    # Vychozi hodnoty:
+    #  - enum: false
+    #  - string: true
+    # indexFolding: true | false
+    #
+    # Moznost vypnuti indexaxe hodnoty
     indexed: true
   - code: TITLE
     name: Název
@@ -202,7 +211,7 @@ itemTypes:
     type: STRING
     indexed: false
   - code: UNIT_ID_INDEX
-    name: Referenční označení
+    name: Referenční označení přidělené archivem
     type: STRING
     indexed: true
   - code: ABSTRACT
@@ -355,11 +364,11 @@ itemTypes:
     type: STRING
     indexed: true
   - code: OTHER_ID_PROC_INDEX
-    name: Označení přidělené archivem
+    name: Ostatní označení přidělená archivem
     type: STRING
     indexed: true
   - code: OTHER_ID_ORIG_INDEX
-    name: Označení přidělené původcem
+    name: Označení přidělená původcem
     type: STRING
     indexed: true
   - code: OTHERID_SIG_ORIG
