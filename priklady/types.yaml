@@ -192,8 +192,16 @@ itemTypes:
     name: Značka archivního souboru
     type: STRING
     indexed: true
+  - code: ORIG_PLACES_REF
+    name: Místa vzniku
+    type: APU_REF
+    indexed: true
   # Archivní popis
   - code: UNIT_ID
+    name: Referenční označení
+    type: STRING
+    indexed: false
+  - code: UNIT_ID_INDEX
     name: Referenční označení
     type: STRING
     indexed: true
@@ -346,10 +354,94 @@ itemTypes:
     name: Inventární číslo
     type: STRING
     indexed: true
-  - code: OTHER_ID
-    name: Jiný identifikátor
+  - code: OTHER_ID_PROC_INDEX
+    name: Označení přidělené archivem
     type: STRING
     indexed: true
+  - code: OTHER_ID_ORIG_INDEX
+    name: Označení přidělené původcem
+    type: STRING
+    indexed: true
+  - code: OTHERID_SIG_ORIG
+    name: signatura přidělená původcem
+    type: STRING
+    indexed: false
+  - code: OTHERID_SIG
+    name: signatura přidělená při zpracování archiválie
+    type: STRING
+    indexed: false
+  - code: OTHERID_STORAGE_ID
+    name: ukládací znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_CJ
+    name: číslo jednací
+    type: STRING
+    indexed: false
+  - code: OTHERID_DOCID
+    name: značka spisu
+    type: STRING
+    indexed: false
+  - code: OTHERID_FORMAL_DOCID
+    name: číslo vložky úřední knihy
+    type: STRING
+    indexed: false
+  - code: OTHERID_ADDID
+    name: přírůstkové číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG
+    name: signatura přidělená při předchozím zpracování
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG2
+    name: spisový znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDID
+    name: neplatné inventární číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_UNITID
+    name: neplatné ukládací číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_REFNO
+    name: neplatné referenční označení
+    type: STRING
+    indexed: false
+  - code: OTHERID_PRINTID
+    name: pořadové číslo pro tisk
+    type: STRING
+    indexed: false
+  - code: OTHERID_PICID
+    name: nakladatelské číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_NEGID
+    name: číslo negativu
+    type: STRING
+    indexed: false
+  - code: OTHERID_CDID
+    name: číslo produkce CD
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISBN
+    name: kód ISBN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISSN
+    name: kód ISSN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISMN
+    name: kód ISMN
+    type: STRING
+    indexed: false
+  - code: OTHERID_MATRIXID
+    name: matriční číslo
+    type: STRING
+    indexed: false
   - code: EDITION
     name: Edice
     type: STRING

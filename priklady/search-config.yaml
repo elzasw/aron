@@ -78,6 +78,13 @@ facets:
     type: UNITDATE
     # zdrojovy itemtype
     source: UNIT_DATE
+  - when:
+      apuType: FUND
+    # Druh fazety
+    # Výběr více odkazovaných APU, funguje jako OR
+    type: MULTI_REF
+    # zdrojovy itemtype
+    source: ORIG_PLACES_REF
 
 # 
 # Archivalie
@@ -96,8 +103,28 @@ facets:
     # Zobrazuje se při najetí na položku
     orderBy: FREQ
     tooltips:
-      - value: matrika
-        tooltip: Popis co je matrika
+      - value: technický výkres
+        tooltip: technické výkresy staveb a výrobků
+      - value: pohlednice
+        tooltip: pohlednice vzniklé tiskovou technikou
+      - value: pohlednice
+        tooltip: pohlednice vzniklé tiskovou technikou
+      - value: kinematografický záznam
+        tooltip: kinematografická díla v analogové i digitální podobě
+      - value: zvukový záznam
+        tooltip: zvuková díla v analogové i digitální podobě
+      - value: úřední kniha
+        tooltip: vč. úředních kronik
+      - value: rukopis
+        tooltip: vč. neúředních kronik
+      - value: listina do roku 1850
+        tooltip: listiny a listy
+      - value: listina po roce 1850
+        tooltip: listiny a listy
+      - value: plakát
+        tooltip: tištěné plakáty
+      - value: předmět faleristické povahy
+        tooltip: odznaky apod.
     order:
       - matrika
       - kroniky
@@ -124,6 +151,8 @@ facets:
 # Datace
   - when:
       apuType: ARCH_DESC
+    tooltip: Datace fyzického vzniku
+    description: Datace fyzického vzniku
     type: UNITDATE
     source: UNIT_DATE
     display: ALWAYS
@@ -136,16 +165,44 @@ facets:
 
   - when:
       apuType: ARCH_DESC
+    description: "zarhnuje datace: deklarovaná, vzniku předlohy, vzniku kopie, zpečetění, vydání listiny, insertu/transeptu, vzniku matrice, užívání typáře, vydání dokumentu, reambulace mapy, pořízení obrazového záznamu, pořízení filmového / zvukového záznamu, udělení / propůjčení faleristického předmětu, předání faleristického předmětu, odnětí / vrácení faleristického předmětu"
     type: UNITDATE
     source: DATE_OTHER
     display: DETAIL
-
 
 # Identifikace archiválie
   - when:
       apuType: ARCH_DESC
     type: FULLTEXT
-    source: OTHER_ID
+    source: UNIT_ID_INDEX
+    description: "Referenční označení a neplatné referenční označení"
+    display: DETAIL
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    description: pořadové číslo, signatura přidělená při zpracování archiválie, přidělená při předchozím zpracování archiválie, přírůstkové číslo, neplatné inventární číslo, neplatné ukládací číslo, pořadové číslo pro tisk, uložení v digitálním archivu
+    source: OTHER_ID_PROC_INDEX
+    display: DETAIL
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    description: signatura přidělená původcem, číslo jednací, značka spisu, spisový znak, ukládací znak, číslo vložky úřední knihy, díl, část, pořadí vydání jednotky popisu, matriční číslo propůjčeného vyznamenání, nakladatelské číslo, číslo negativu, číslo produkce CD, kód ISBN, ISSN, ISMN
+    source: OTHER_ID_ORIG_INDEX
+    display: DETAIL
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: LANGUAGE
+    display: DETAIL
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: STORAGE_COND
+    display: DETAIL
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: SCALE
     display: DETAIL
 
 # Instituce
@@ -174,6 +231,19 @@ facets:
         source: ROLE
         # Max pocet zobrazenych itemu
         maxItems: 30
+
+  # technika, adjustace, nosič a látka záznamu
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: ITEM_MAT
+    display: DETAIL
+  # písmo
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: WRITING
+    display: DETAIL
 
 #
 # Archivní entity

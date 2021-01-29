@@ -43,9 +43,11 @@ public class CoreTypes {
 
 	public final static String UNIT_DATE = "UNIT_DATE";
 	public static final String UNIT_TYPE = "UNIT_TYPE";
-	public static final String RECORD_TYPE = "RECORD_TYPE";
+	public static final String RECORD_TYPE = "RECORD_TYPE";	
 	public final static String ROLE = "ROLE";
 	
+	// ArchDescs
+	public static final String UNIT_ID_INDEX = "UNIT_ID_INDEX";
 	public static final String ORIENTATION = "ORIENTATION";
 	public static final String ITEM_MAT = "ITEM_MAT";
 	public static final String PART = "PART";
@@ -68,6 +70,6 @@ public class CoreTypes {
     public static final String CRC_ORIGIN_DATE = "CRC_ORIGIN_DATE";
     public static final String CRC_BEGINVALIDNESS_DATE = "CRC_BEGINVALIDNESS_DATE";
 
-    public static final String CRE_TYPE = "CRE_TYPE";
+    public static final String CRE_TYPE = "CRE_TYPE";    
 
 }

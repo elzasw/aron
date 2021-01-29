@@ -34,6 +34,7 @@ import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxLinkConvertor;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
+import cz.aron.transfagent.elza.convertor.EdxStringSpecConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
@@ -314,7 +315,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put(ElzaTypes.ZP2015_EXTRA_UNITS, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.extraUnitTypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor(CoreTypes.RECORD_TYPE, ElzaTypes.recordTypeMap));		
-		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID"));
+		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID").addIndexedItem(CoreTypes.UNIT_ID_INDEX));
 		stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
 		stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));
 		stringTypeMap.put("ZP2015_UNIT_CONTENT",new EdxStringConvertor("UNIT_CONTENT"));
@@ -338,8 +339,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put(ElzaTypes.ZP2015_DATE_OTHER,new EdxUnitDateConvertorEnum(ElzaTypes.dateOtherMap, ElzaTypes.dateOtherMapIndex));
 		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
 		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
-		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO"));
-		stringTypeMap.put("ZP2015_OTHER_ID",new EdxStringConvertor("OTHER_ID"));
+		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO").addIndexedItem("OTHER_ID_PROC_INDEX"));
+		stringTypeMap.put("ZP2015_OTHER_ID",new EdxStringSpecConvertor(ElzaTypes.otherIdMap).addIndexedItem(ElzaTypes.otherIdIndexMap));
 		stringTypeMap.put("ZP2015_EDITION",new EdxStringConvertor("EDITION"));
 		stringTypeMap.put("ZP2015_UNIT_DATE_TEXT",new EdxStringConvertor("UNIT_DATE_TEXT"));
 		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));

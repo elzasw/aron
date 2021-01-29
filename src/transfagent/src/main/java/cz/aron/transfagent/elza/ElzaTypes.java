@@ -117,8 +117,8 @@ public abstract class ElzaTypes {
         unitTypeMap.put("ZP2015_UNIT_TYPE_MFS", "mikrofiš");
         unitTypeMap.put("ZP2015_UNIT_TYPE_FAL", "fotoalbum");
         unitTypeMap.put("ZP2015_UNIT_TYPE_DFO", "digitální fotografie");
-        unitTypeMap.put("ZP2015_UNIT_TYPE_KZA", "kinematografický záznam (dílo)");
-        unitTypeMap.put("ZP2015_UNIT_TYPE_ZZA", "zvukový záznam (dílo)");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_KZA", "kinematografický záznam");
+        unitTypeMap.put("ZP2015_UNIT_TYPE_ZZA", "zvukový záznam");
         unitTypeMap.put("ZP2015_UNIT_TYPE_TIO", "tisk do roku 1800");
         unitTypeMap.put("ZP2015_UNIT_TYPE_TIP", "tisk po roce 1800");
         unitTypeMap.put("ZP2015_UNIT_TYPE_POH", "pohlednice");
@@ -158,31 +158,22 @@ public abstract class ElzaTypes {
                              "razítko");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_OTD",
                              "samostatné pečeť, odlitek pečeti a otisk typáře");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MAP",
-                             "mapa");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ATL",
-                             "atlas");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TVY",
-                             "technický výkres");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_GLI",
-                             "grafický list");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KRE",
-                             "kresba");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSN",
-                             "fotografie na papírové podložce");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSD",
-                             "fotografická deska");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LFI",
-                             "listový film");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_SFI",
-                             "svitkový film");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MAP", "mapa");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ATL", "atlas");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TVY", "technický výkres");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_GLI", "grafický list");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KRE", "kresba");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSN", "fotografie na papírové podložce");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FSD", "fotografická deska");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_LFI", "listový film");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_SFI", "svitkový film");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KIN", "kinofilm");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MF", "mikrofilm");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_MFS", "mikrofiš");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_FAL", "fotoalbum");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_DFO", "digitální fotografie");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KZA", "kinematografický záznam (dílo)");
-        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ZZA", "zvukový záznam (dílo)");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_KZA", "kinematografický záznam");
+        extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_ZZA", "zvukový záznam");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIO", "tisk do roku 1800");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_TIP", "tisky po roce 1800");
         extraUnitTypeMap.put("ZP2015_EXTRA_UNITS_POH", "pohlednice");
@@ -880,8 +871,56 @@ public abstract class ElzaTypes {
                             "slovio");
 
     }
-
-    public static Map<String, String> relEntityMap = new HashMap<>();
+    
+    public static Map<String, String> otherIdMap = new HashMap<>();
+    static {
+        otherIdMap.put("ZP2015_OTHERID_SIG_ORIG", "signatura přidělená původcem");
+        otherIdMap.put("ZP2015_OTHERID_SIG", "signatura přidělená při zpracování archiválie");
+        otherIdMap.put("ZP2015_OTHERID_STORAGE_ID", "ukládací znak");
+        otherIdMap.put("ZP2015_OTHERID_CJ", "číslo jednací");
+        otherIdMap.put("ZP2015_OTHERID_DOCID", "značka spisu");
+        otherIdMap.put("ZP2015_OTHERID_FORMAL_DOCID", "číslo vložky úřední knihy");
+        otherIdMap.put("ZP2015_OTHERID_ADDID", "přírůstkové číslo");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG", "signatura přidělená při předchozím zpracování");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG2", "spisový znak");
+        otherIdMap.put("ZP2015_OTHERID_OLDID", "neplatné inventární číslo");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_UNITID", "neplatné ukládací číslo");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_REFNO", "neplatné referenční označení");
+        otherIdMap.put("ZP2015_OTHERID_PRINTID", "pořadové číslo pro tisk");
+        otherIdMap.put("ZP2015_OTHERID_PICID", "nakladatelské číslo");
+        otherIdMap.put("ZP2015_OTHERID_NEGID", "číslo negativu");
+        otherIdMap.put("ZP2015_OTHERID_CDID", "číslo produkce CD");
+        otherIdMap.put("ZP2015_OTHERID_ISBN", "kód ISBN");
+        otherIdMap.put("ZP2015_OTHERID_ISSN", "kód ISSN");
+        otherIdMap.put("ZP2015_OTHERID_ISMN", "kód ISMN");
+        otherIdMap.put("ZP2015_OTHERID_MATRIXID", "matriční číslo");
+    }
+    
+    public static Map<String, String> otherIdIndexMap = new HashMap<>();
+    static {    
+        otherIdMap.put("ZP2015_OTHERID_SIG_ORIG", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_SIG", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_STORAGE_ID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_CJ", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_DOCID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_FORMAL_DOCID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_ADDID", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG2", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_OLDID", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_UNITID", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_REFNO", "UNIT_ID_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_PRINTID", "OTHER_ID_PROC_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_PICID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_NEGID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_CDID", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_ISBN", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_ISSN", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_ISMN", "OTHER_ID_ORIG_INDEX");
+        otherIdMap.put("ZP2015_OTHERID_MATRIXID", "OTHER_ID_ORIG_INDEX");
+    }
+    
+    public static Map<String, String> relEntityMap = new HashMap<>();    
     static {
         relEntityMap.put("RT_AUTHOR", "autor/tvůrce");
         relEntityMap.put("RT_AUTHOROFCHANGE",
