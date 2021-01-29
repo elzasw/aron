@@ -52,7 +52,7 @@ public class ImportArchDescTest {
         }
 
         // testing root: Test datace
-        Apu apu = getApuByName(builder, "Test datace");
+        Apu apu = builder.getApuByName("Test datace");
         List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
         
@@ -63,7 +63,7 @@ public class ImportArchDescTest {
         assertFalse(dr0.isVisible());
 
         // testing s1
-        apu = getApuByName(builder, "s1");
+        apu = builder.getApuByName("s1");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 2);
 
@@ -78,7 +78,7 @@ public class ImportArchDescTest {
         assertFalse(dr1.isVisible());
 
         // testing s2
-        apu = getApuByName(builder, "s2");
+        apu = builder.getApuByName("s2");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -87,7 +87,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1860);
 
         // testing P1
-        apu = getApuByName(builder, "P1");
+        apu = builder.getApuByName("P1");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -96,7 +96,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1830);
 
         // testing P2
-        apu = getApuByName(builder, "P2");
+        apu = builder.getApuByName("P2");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -105,7 +105,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1850);
 
         // testing P3
-        apu = getApuByName(builder, "P3");
+        apu = builder.getApuByName("P3");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -117,14 +117,5 @@ public class ImportArchDescTest {
     @AfterAll
     public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(ARCHDESC_DIR, APUSRC_XML));
-    }
-
-    private Apu getApuByName(ApuSourceBuilder builder, String apuName) {
-        for(Apu apu : builder.getApusrc().getApus().getApu()) {
-            if(apu.getName().equals(apuName)) {
-                return apu;
-            }
-        }
-        return null;
     }
 }
