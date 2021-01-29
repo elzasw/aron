@@ -21,7 +21,9 @@ import org.apache.commons.lang3.Validate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.Part;
+import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -29,6 +31,7 @@ import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
+import cz.tacr.elza.schema.v2.DescriptionItemUnitDate;
 import cz.tacr.elza.schema.v2.FundInfo;
 import cz.tacr.elza.schema.v2.Level;
 import cz.tacr.elza.schema.v2.Levels;
@@ -94,19 +97,22 @@ public class ImportFundInfo {
 		if(sections.getS().size()>1) {
 			throw new RuntimeException("Exports with one section are supported");
 		}
+
 		Section sect = sections.getS().get(0);
 		FundInfo fi = sect.getFi();
 		String fundName = fi.getN();
+
 		Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, uuid);
 		Part partName = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
 		partName.setValue(fundName);
 		apusBuilder.addString(partName, CoreTypes.TITLE, fundName);
-		
+
 		institutionCode = fi.getIc();
 		var instApu = dataProvider.getInstitutionApu(institutionCode);
 		if(instApu==null) {
             throw new RuntimeException("Missing institution: " + institutionCode);
 		}
+
 		Part partFundInfo = apusBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
 		var rootLvlUuid = getRootLevelUuid(sect.getLvls());
@@ -119,15 +125,46 @@ public class ImportFundInfo {
         if(fi.getMrk()!=null) {
             apusBuilder.addString(partFundInfo, "FUND_MARK", fi.getMrk());
         }
-		
+
 		// Puvodce
 		var puvodci = getPuvodci(sect.getLvls());
 		for(var puvodceUuid: puvodci) {
 			apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, puvodceUuid);
 		}
-		
-		return apusBuilder;
-	}
+
+        // collect all date intervals
+        for(Level lvl : sect.getLvls().getLvl()) {
+            var ranges = getItemDateRanges(lvl);
+            for(ItemDateRange range : ranges) {
+                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(range);
+                dateRangeAppender.appendTo(apu);
+            }
+        }
+
+        return apusBuilder;
+    }
+
+    private List<ItemDateRange> getItemDateRanges(Level lvl) {
+        List<ItemDateRange> items = new ArrayList<>();
+        for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
+            if(item.getT().equals("ZP2015_UNIT_DATE")) {
+                items.add(fromDescriptionItemUnitDate((DescriptionItemUnitDate) item));
+            }
+        }
+        return items;
+    }
+
+    private ItemDateRange fromDescriptionItemUnitDate(DescriptionItemUnitDate date) {
+        var idr = new ItemDateRange();
+        idr.setF(date.getD().getF());
+        idr.setFe(date.getD().isFe());
+        idr.setTo(date.getD().getTo());
+        idr.setToe(date.getD().isToe());
+        idr.setFmt(date.getD().getFmt());
+        idr.setVisible(false);
+        idr.setType("UNIT_DATE");
+        return idr;
+    }
 
 	private UUID getRootLevelUuid(Levels lvls) {
 		if(lvls==null) {
@@ -164,9 +201,9 @@ public class ImportFundInfo {
 		if(found.size()==0) {
 			return Collections.emptyList();
 		}
-		
+
 		Map<String, AccessPoint> apMap = elzaXmlReader.getApMap();
-		
+
 		List<UUID> puvodci = new ArrayList<>(puvodciXmlId.size());
 		for(String xmlId: puvodciXmlId) {
 			AccessPoint ap = apMap.get(xmlId);
