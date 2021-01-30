@@ -881,26 +881,26 @@ public abstract class ElzaTypes {
     
     public static Map<String, String> otherIdMap = new HashMap<>();
     static {
-        otherIdMap.put("ZP2015_OTHERID_SIG_ORIG", "signatura přidělená původcem");
-        otherIdMap.put("ZP2015_OTHERID_SIG", "signatura přidělená při zpracování archiválie");
-        otherIdMap.put("ZP2015_OTHERID_STORAGE_ID", "ukládací znak");
-        otherIdMap.put("ZP2015_OTHERID_CJ", "číslo jednací");
-        otherIdMap.put("ZP2015_OTHERID_DOCID", "značka spisu");
-        otherIdMap.put("ZP2015_OTHERID_FORMAL_DOCID", "číslo vložky úřední knihy");
-        otherIdMap.put("ZP2015_OTHERID_ADDID", "přírůstkové číslo");
-        otherIdMap.put("ZP2015_OTHERID_OLDSIG", "signatura přidělená při předchozím zpracování");
-        otherIdMap.put("ZP2015_OTHERID_OLDSIG2", "spisový znak");
-        otherIdMap.put("ZP2015_OTHERID_OLDID", "neplatné inventární číslo");
-        otherIdMap.put("ZP2015_OTHERID_INVALID_UNITID", "neplatné ukládací číslo");
-        otherIdMap.put("ZP2015_OTHERID_INVALID_REFNO", "neplatné referenční označení");
-        otherIdMap.put("ZP2015_OTHERID_PRINTID", "pořadové číslo pro tisk");
-        otherIdMap.put("ZP2015_OTHERID_PICID", "nakladatelské číslo");
-        otherIdMap.put("ZP2015_OTHERID_NEGID", "číslo negativu");
-        otherIdMap.put("ZP2015_OTHERID_CDID", "číslo produkce CD");
-        otherIdMap.put("ZP2015_OTHERID_ISBN", "kód ISBN");
-        otherIdMap.put("ZP2015_OTHERID_ISSN", "kód ISSN");
-        otherIdMap.put("ZP2015_OTHERID_ISMN", "kód ISMN");
-        otherIdMap.put("ZP2015_OTHERID_MATRIXID", "matriční číslo");
+        otherIdMap.put("ZP2015_OTHERID_SIG_ORIG", "OTHERID_SIG_ORIG");
+        otherIdMap.put("ZP2015_OTHERID_SIG", "OTHERID_SIG");
+        otherIdMap.put("ZP2015_OTHERID_STORAGE_ID", "OTHERID_STORAGE_ID");
+        otherIdMap.put("ZP2015_OTHERID_CJ", "OTHERID_CJ");
+        otherIdMap.put("ZP2015_OTHERID_DOCID", "OTHERID_DOCID");
+        otherIdMap.put("ZP2015_OTHERID_FORMAL_DOCID", "OTHERID_FORMAL_DOCID");
+        otherIdMap.put("ZP2015_OTHERID_ADDID", "OTHERID_ADDID");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG", "OTHERID_OLDSIG");
+        otherIdMap.put("ZP2015_OTHERID_OLDSIG2", "OTHERID_OLDSIG2");
+        otherIdMap.put("ZP2015_OTHERID_OLDID", "OTHERID_OLDID");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_UNITID", "OTHERID_INVALID_UNITID");
+        otherIdMap.put("ZP2015_OTHERID_INVALID_REFNO", "OTHERID_INVALID_REFNO");
+        otherIdMap.put("ZP2015_OTHERID_PRINTID", "OTHERID_PRINTID");
+        otherIdMap.put("ZP2015_OTHERID_PICID", "OTHERID_PICID");
+        otherIdMap.put("ZP2015_OTHERID_NEGID", "OTHERID_NEGID");
+        otherIdMap.put("ZP2015_OTHERID_CDID", "OTHERID_CDID");
+        otherIdMap.put("ZP2015_OTHERID_ISBN", "OTHERID_ISBN");
+        otherIdMap.put("ZP2015_OTHERID_ISSN", "OTHERID_ISSN");
+        otherIdMap.put("ZP2015_OTHERID_ISMN", "OTHERID_ISMN");
+        otherIdMap.put("ZP2015_OTHERID_MATRIXID", "OTHERID_MATRIXID");
     }
     
     public static Map<String, String> otherIdIndexMap = new HashMap<>();
