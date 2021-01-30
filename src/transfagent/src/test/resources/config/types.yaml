@@ -48,6 +48,15 @@ itemTypes:
     name: Jméno
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
     type: STRING
+    # indexBoost: 1.1
+    # 
+    # Odstraneni diakritiky (folding, velka mala pismena apod.)
+    # Vychozi hodnoty:
+    #  - enum: false
+    #  - string: true
+    # indexFolding: true | false
+    #
+    # Moznost vypnuti indexaxe hodnoty
     indexed: true
   - code: TITLE
     name: Název
@@ -55,6 +64,10 @@ itemTypes:
     indexed: true
   - code: URL
     name: Odkaz
+    type: LINK
+    indexed: true
+  - code: SOURCE_LINK
+    name: Zdroj informací
     type: LINK
     indexed: true
   # Archivy
@@ -126,11 +139,11 @@ itemTypes:
   - code: GENEALOGY
     name: Genealogie
     type: STRING
-    indexed: true
+    indexed: false
   - code: BIOGRAPHY
     name: Životopis
     type: STRING
-    indexed: true
+    indexed: false
   - code: DESCRIPTION
     name: Popis
     type: STRING
@@ -138,35 +151,67 @@ itemTypes:
   - code: CRC_BIRTH_DATE
     name: narození
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_RISE_DATE
     name: vznik
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_BEGINSCOPE_DATE
     name: působnost od
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_FIRSTMBIRTH_DATE
     name: narození prvního známého člena rodu/rodiny
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_FIRSTWMENTION_DATE
     name: první písemná zmínka
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_ORIGIN_DATE
     name: začátek
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_BEGINVALIDNESS_DATE
     name: začátek platnosti
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRE_TYPE
     name: typ vzniku
     type: ENUM
-    indexed: true
+    indexed: false
+  - code: EXC_DEATH
+    name: úmrtí
+    type: UNITDATE
+    indexed: false
+  - code: EXC_EXTINCTION
+    name: zánik
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDSCOPE
+    name: působnost do
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTMDEATH
+    name: úmrtí posledního známého člena rodu/rodiny
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTWMENTION
+    name: poslední písemná zmínka
+    type: UNITDATE
+    indexed: false
+  - code: EXC_END
+    name: konec
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDVALIDNESS
+    name: konec platnosti
+    type: UNITDATE
+    indexed: false
+  - code: EXT_TYPE
+    name: typ zániku
+    type: ENUM
+    indexed: false
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru
@@ -188,9 +233,17 @@ itemTypes:
     name: Značka archivního souboru
     type: STRING
     indexed: true
+  - code: ORIG_PLACES_REF
+    name: Místa vzniku
+    type: APU_REF
+    indexed: true
   # Archivní popis
   - code: UNIT_ID
     name: Referenční označení
+    type: STRING
+    indexed: false
+  - code: UNIT_ID_INDEX
+    name: Referenční označení přidělené archivem
     type: STRING
     indexed: true
   - code: ABSTRACT
@@ -218,73 +271,78 @@ itemTypes:
     type: STRING
     indexed: true
   - code: UNIT_DATE
-    name: Datace
+    name: Datace vzniku
     type: UNITDATE
     indexed: true
   - code: DATE_OF_CONTENT
-    name: datace obsahu
+    name: Datace obsahu
+    type: UNITDATE
+    indexed: true
+  # Slouží pro zachycení ostatních druhů datace
+  - code: DATE_OTHER
+    name: Jiná datace
     type: UNITDATE
     indexed: true    
   - code: DATE_DECLARED
     name: datace deklarovaná
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_ORIG
     name: datace vzniku předlohy
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_OF_COPY
     name: datace vzniku kopie
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_SEALING
     name: datace zpečetění
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_ACT_PUBLISHING
     name: datace vydání listiny
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_INSERT
     name: datace insertu/transeptu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_MOLD_CREATION
     name: datace vzniku matrice
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: DATE_USAGE
     name: datace užívání typáře
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_PUBLISHING
     name: datace vydání dokumentu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_MAP_UPDATE
     name: datace reambulace mapy
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_CAPTURING
     name: datace pořízení obrazového záznamu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_RECORDING
     name: datace pořízení filmového / zvukového záznamu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_AWARDING
     name: datace udělení / propůjčení faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_AWARD_CER
     name: datace předání faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: DATE_WITHDRAWAL
     name: datace odnětí / vrácení faleristického předmětu
     type: UNITDATE
-    indexed: true    
+    indexed: false
   - code: UNIT_SOURCE
     name: Přímý zdroj akvizice
     type: STRING
@@ -337,10 +395,94 @@ itemTypes:
     name: Inventární číslo
     type: STRING
     indexed: true
-  - code: OTHER_ID
-    name: Jiný identifikátor
+  - code: OTHER_ID_PROC_INDEX
+    name: Ostatní označení přidělená archivem
     type: STRING
     indexed: true
+  - code: OTHER_ID_ORIG_INDEX
+    name: Označení přidělená původcem
+    type: STRING
+    indexed: true
+  - code: OTHERID_SIG_ORIG
+    name: signatura přidělená původcem
+    type: STRING
+    indexed: false
+  - code: OTHERID_SIG
+    name: signatura přidělená při zpracování archiválie
+    type: STRING
+    indexed: false
+  - code: OTHERID_STORAGE_ID
+    name: ukládací znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_CJ
+    name: číslo jednací
+    type: STRING
+    indexed: false
+  - code: OTHERID_DOCID
+    name: značka spisu
+    type: STRING
+    indexed: false
+  - code: OTHERID_FORMAL_DOCID
+    name: číslo vložky úřední knihy
+    type: STRING
+    indexed: false
+  - code: OTHERID_ADDID
+    name: přírůstkové číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG
+    name: signatura přidělená při předchozím zpracování
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG2
+    name: spisový znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDID
+    name: neplatné inventární číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_UNITID
+    name: neplatné ukládací číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_REFNO
+    name: neplatné referenční označení
+    type: STRING
+    indexed: false
+  - code: OTHERID_PRINTID
+    name: pořadové číslo pro tisk
+    type: STRING
+    indexed: false
+  - code: OTHERID_PICID
+    name: nakladatelské číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_NEGID
+    name: číslo negativu
+    type: STRING
+    indexed: false
+  - code: OTHERID_CDID
+    name: číslo produkce CD
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISBN
+    name: kód ISBN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISSN
+    name: kód ISSN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISMN
+    name: kód ISMN
+    type: STRING
+    indexed: false
+  - code: OTHERID_MATRIXID
+    name: matriční číslo
+    type: STRING
+    indexed: false
   - code: EDITION
     name: Edice
     type: STRING
@@ -417,15 +559,20 @@ itemTypes:
     name: Role
     type: ENUM
     indexed: true
+  # Odkaz z archivniho popisu na jiný archivní popis (pevné spojení)
+  - code: ARCH_DESC_REF
+    name: Pevně spojeno s
+    type: APU_REF
+    indexed: false
   # Odkaz z archivniho popisu na archivni soubor
   - code: FUND_REF
     name: Archivní soubor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: FUND_INST_REF
     name: Instituce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: DIGITAL
     name: Digitální podoba
     type: ENUM

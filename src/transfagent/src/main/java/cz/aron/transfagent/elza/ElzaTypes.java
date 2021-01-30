@@ -49,8 +49,8 @@ public abstract class ElzaTypes {
     public static final String REL_ENTITY = "REL_ENTITY";
 
     public static final String CRE_CLASS = "CRE_CLASS";
-    public static final String CRE_TYPE = "CRE_TYPE";
     public static final String CRE_DATE = "CRE_DATE";
+    public static final String CRE_TYPE = "CRE_TYPE";    
     public static final Map<String, String> creTypeMap = new HashMap<>();
     static {
         creTypeMap.put("CRT_ESTAB", "vznik zřízením/založením");
@@ -64,6 +64,12 @@ public abstract class ElzaTypes {
         creTypeMap.put("CRT_VALIDITYBEGIN", "počátek platnosti");
     }
     public static final String EXT_CLASS = "EXT_CLASS";
+    public static final String EXT_DATE = "EXT_DATE";
+    public static final String EXT_TYPE = "EXT_TYPE";
+    public static final Map<String, String> extTypeMap = new HashMap<>();
+    static {
+        // extTypeMap
+    }
 
     public static final String ZP2015_EXTRA_UNITS = "ZP2015_EXTRA_UNITS";
     public static final String ZP2015_UNIT_SUBTYPE = "ZP2015_UNIT_SUBTYPE";

@@ -17,6 +17,7 @@ import java.util.UUID;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.eclipse.jetty.util.StringUtil;
 
@@ -43,6 +44,7 @@ import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 import cz.tacr.elza.schema.v2.DescriptionItem;
+import cz.tacr.elza.schema.v2.DescriptionItemInteger;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
 import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 import cz.tacr.elza.schema.v2.DigitalArchivalObject;
@@ -168,7 +170,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	 */
     private void processLevel(Section sect, Level lvl) {
         String name = getName(sect, lvl);
+        String desc = getDesc(sect, lvl);
         Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
+        apu.setDesc(desc);
         apu.setUuid(lvl.getUuid());
 
         // set parent
@@ -184,6 +188,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
             // add name from parent if empty
             if(StringUtil.isEmpty(apu.getName())) {
                 apu.setName(parentApu.getName());
+            }
+            if(StringUtil.isEmpty(apu.getDesc())) {
+                apu.setDesc(parentApu.getDesc());
             }
         }
         apuMap.put(lvl.getId(), apu);
@@ -371,22 +378,59 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		throw new RuntimeException("Unsupported item type: " + item.getT());
 	}
 
-	private String getName(Section sect, Level lvl) {
-		String parentId = lvl.getPid();
+    private String getName(Section sect, Level lvl) {
+        String parentId = lvl.getPid();
 
+        StringBuilder sb = new StringBuilder();
+        sb.append(institutionCode).append(": ");
+        sb.append(sect.getFi().getN()).append(": ");
+
+        String refOzn = null;
+        String invCislo = null;
+        String poradoveCislo = null;
+        for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
+            if(item.getT().equals("ZP2015_UNIT_ID")) {
+                DescriptionItemString title = (DescriptionItemString)item;
+                refOzn = title.getV();
+            } else 
+            if(item.getT().equals("ZP2015_INV_CISLO")) {
+                DescriptionItemString title = (DescriptionItemString)item;
+                invCislo = title.getV();                
+            } else 
+            if(item.getT().equals("ZP2015_SERIAL_NUMBER")) {
+                DescriptionItemInteger serNum = (DescriptionItemInteger)item;
+                poradoveCislo = serNum.getV().toString();
+            }
+        }
+        
+        if(StringUtils.isNotEmpty(refOzn)) {
+            sb.append(refOzn);
+        } else 
+        if(StringUtils.isNotEmpty(invCislo)) {
+            sb.append(invCislo);
+        } else 
+        if(StringUtils.isNotEmpty(poradoveCislo)) {
+            sb.append(poradoveCislo);
+        } else {
+            sb.append(lvl.getUuid().toString());
+        }
+        // koren -> jmeno AS
+        if(sb.length() == 0) {
+            if(parentId == null) {
+                sb.append(sect.getFi().getN());
+            }
+        }
+
+        return sb.toString();
+    }
+    
+	private String getDesc(Section sect, Level lvl) {
 		StringBuilder sb = new StringBuilder();
 
 		for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
 			if(item.getT().equals("ZP2015_TITLE")) {
 				DescriptionItemString title = (DescriptionItemString)item;
 				sb.append(title.getV());
-			}
-		}
-
-		// koren -> jmeno AS
-		if(sb.length() == 0) {
-			if(parentId == null) {
-				sb.append(sect.getFi().getN());
 			}
 		}
 

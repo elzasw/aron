@@ -10,6 +10,15 @@ public class ItemTypeConfig {
     private String name;
     private Types type;
     private boolean indexed;
+    private Boolean indexFolding;
+
+    public Boolean getIndexFolding() {
+        return indexFolding;
+    }
+
+    public void setIndexFolding(Boolean indexFolding) {
+        this.indexFolding = indexFolding;
+    }
 
     public ItemTypeConfig() {
     }

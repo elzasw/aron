@@ -237,12 +237,58 @@ public class ImportAp implements EdxItemCovertContext {
     }
 	
 	private void importExt(Apu apu, Fragment frg) {
-        // TODO Auto-generated method stub
-        // PT_AE_CRE
-        // CRE_DATE
-        // CRE_TYPE
-        // CRE_CLASS
-    }
+        String extClass = ElzaXmlReader.getEnumValue(frg, ElzaTypes.EXT_CLASS);
+        if(extClass==null) {
+            // TODO: warning - missing creation class
+            return ;
+        }
+        Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
+        stringTypeMap.put("NOTE",new EdxStringConvertor(CoreTypes.NOTE));
+        stringTypeMap.put(ElzaTypes.EXT_TYPE,new EdxEnumConvertor(CoreTypes.EXT_TYPE, ElzaTypes.extTypeMap));
+        switch(extClass) {
+        case "EXC_DEATH":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_DEATH"));
+            break;
+        case "EXC_EXTINCTION":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_EXTINCTION"));
+            break;
+        case "EXC_ENDSCOPE":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_ENDSCOPE"));
+            break;
+        case "EXC_LASTMDEATH":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_LASTMDEATH"));
+            break;
+        case "EXC_LASTWMENTION":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_LASTWMENTION"));
+            break;
+        case "EXC_END":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_END"));
+            break;
+        case "EXC_ENDVALIDNESS":
+            stringTypeMap.put(ElzaTypes.EXT_DATE, new EdxUnitDateConvertor("EXC_ENDVALIDNESS"));
+            break;
+        default:            
+            throw new IllegalStateException("Unknown extinction class: "+extClass);        
+        }
+
+        // PT_AE_EXT
+        activePart = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_EXT);
+        
+        for(var item: frg.getDdOrDoOrDp()) {
+            EdxItemConvertor convertor = stringTypeMap.get(item.getT());
+            if(convertor==null) {
+                // TODO: add warning
+                continue;
+            }
+            convertor.convert(this, item);
+        }
+        // remove empty part
+        if(activePart.getItms()==null||activePart.getItms().getStrOrLnkOrEnm().size()==0) {
+            apu.getPrts().getPart().remove(activePart);
+        }
+        
+        activePart = null;
+	}
 
     private void importRel(Apu apu, Fragment frg) {
 

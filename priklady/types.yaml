@@ -139,11 +139,11 @@ itemTypes:
   - code: GENEALOGY
     name: Genealogie
     type: STRING
-    indexed: true
+    indexed: false
   - code: BIOGRAPHY
     name: Životopis
     type: STRING
-    indexed: true
+    indexed: false
   - code: DESCRIPTION
     name: Popis
     type: STRING
@@ -151,35 +151,67 @@ itemTypes:
   - code: CRC_BIRTH_DATE
     name: narození
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_RISE_DATE
     name: vznik
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_BEGINSCOPE_DATE
     name: působnost od
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_FIRSTMBIRTH_DATE
     name: narození prvního známého člena rodu/rodiny
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_FIRSTWMENTION_DATE
     name: první písemná zmínka
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_ORIGIN_DATE
     name: začátek
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRC_BEGINVALIDNESS_DATE
     name: začátek platnosti
     type: UNITDATE
-    indexed: true
+    indexed: false
   - code: CRE_TYPE
     name: typ vzniku
     type: ENUM
-    indexed: true
+    indexed: false
+  - code: EXC_DEATH
+    name: úmrtí
+    type: UNITDATE
+    indexed: false
+  - code: EXC_EXTINCTION
+    name: zánik
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDSCOPE
+    name: působnost do
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTMDEATH
+    name: úmrtí posledního známého člena rodu/rodiny
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTWMENTION
+    name: poslední písemná zmínka
+    type: UNITDATE
+    indexed: false
+  - code: EXC_END
+    name: konec
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDVALIDNESS
+    name: konec platnosti
+    type: UNITDATE
+    indexed: false
+  - code: EXT_TYPE
+    name: typ zániku
+    type: ENUM
+    indexed: false
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru
@@ -213,6 +245,8 @@ itemTypes:
   - code: UNIT_ID_INDEX
     name: Referenční označení přidělené archivem
     type: STRING
+    # Referenční označení se hledá na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: ABSTRACT
     name: Obsah
@@ -362,14 +396,18 @@ itemTypes:
   - code: INV_CISLO
     name: Inventární číslo
     type: STRING
-    indexed: true
+    indexed: false
   - code: OTHER_ID_PROC_INDEX
     name: Ostatní označení přidělená archivem
     type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: OTHER_ID_ORIG_INDEX
     name: Označení přidělená původcem
     type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: OTHERID_SIG_ORIG
     name: signatura přidělená původcem
