@@ -214,6 +214,15 @@ public class ApuSourceBuilder {
         return null;
     }
 
+    public Apu getApuByDesk(String desk) {
+        for(Apu apu : apusrc.getApus().getApu()) {
+            if(apu.getDesc().equals(desk)) {
+                return apu;
+            }
+        }
+        return null;
+    }
+
     static public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {
