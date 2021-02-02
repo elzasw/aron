@@ -218,6 +218,342 @@ itemTypes:
     name: typ zániku
     type: ENUM
     indexed: false
+  - code: RT_AUTHOR
+    name: autor/tvůrce
+    type: APU_REF
+    indexed: false
+  - code: RT_AUTHOROFCHANGE
+    name: autor změny / tvůrce změny
+    type: APU_REF
+    indexed: false
+  - code: RT_GRANDMOTHER
+    name: babička
+    type: APU_REF
+    indexed: false
+  - code: RT_BROTHER
+    name: bratr
+    type: APU_REF
+    indexed: false
+  - code: RT_HECOUSIN
+    name: bratranec
+    type: APU_REF
+    indexed: false
+  - code: RT_WHOLE
+    name: celek
+    type: APU_REF
+    indexed: false
+  - code: RT_CEREMONY
+    name: ceremoniál ocenění
+    type: APU_REF
+    indexed: false
+  - code: RT_MEMBERORG
+    name: členská organizace
+    type: APU_REF
+    indexed: false
+  - code: RT_RELATIONS
+    name: další rodinné vztahy
+    type: APU_REF
+    indexed: false
+  - code: RT_GRANDFATHER
+    name: dědeček
+    type: APU_REF
+    indexed: false
+  - code: RT_DOCUMENT
+    name: dokument
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYEND
+    name: entita související s koncem
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYBIRTH
+    name: entita související s narozením
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYDEATH
+    name: entita související s úmrtím
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYRISE
+    name: entita související se vznikem
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYORIGIN
+    name: entita související se začátkem
+    type: APU_REF
+    indexed: false
+  - code: RT_ENTITYEXTINCTION
+    name: entita související se zánikem
+    type: APU_REF
+    indexed: false
+  - code: RT_FUNCTION
+    name: funkce/činnost
+    type: APU_REF
+    indexed: false
+  - code: RT_GEOSCOPE
+    name: geografická působnost
+    type: APU_REF
+    indexed: false
+  - code: RT_MILESTONE
+    name: historický milník
+    type: APU_REF
+    indexed: false
+  - code: RT_ISPART
+    name: je část
+    type: APU_REF
+    indexed: false
+  - code: RT_ISMEMBER
+    name: je členem
+    type: APU_REF
+    indexed: false
+  - code: RT_GENUSMEMBER
+    name: je členem rodiny/rodu
+    type: APU_REF
+    indexed: false
+  - code: RT_OTHERNAME
+    name: jiná entita reprezentující tutéž osobu
+    type: APU_REF
+    indexed: false
+  - code: RT_ANCESTOR
+    name: jiný předek
+    type: APU_REF
+    indexed: false
+  - code: RT_ACTIVITYCORP
+    name: korporace veřejného působení
+    type: APU_REF
+    indexed: false
+  - code: RT_LIQUIDATOR
+    name: likvidátor
+    type: APU_REF
+    indexed: false
+  - code: RT_OWNER
+    name: majitel
+    type: APU_REF
+    indexed: false
+  - code: RT_HOLDER
+    name: majitel, držitel
+    type: APU_REF
+    indexed: false
+  - code: RT_HUSBAND
+    name: manžel
+    type: APU_REF
+    indexed: false
+  - code: RT_WIFE
+    name: manželka
+    type: APU_REF
+    indexed: false
+  - code: RT_MOTHER
+    name: matka
+    type: APU_REF
+    indexed: false
+  - code: RT_PLACE
+    name: místo
+    type: APU_REF
+    indexed: false
+  - code: RT_VENUE
+    name: místo konání
+    type: APU_REF
+    indexed: false
+  - code: RT_PLACEEND
+    name: místo ukončení
+    type: APU_REF
+    indexed: false
+  - code: RT_PLACESTART
+    name: místo uzavření
+    type: APU_REF
+    indexed: false
+  - code: RT_SUPCORP
+    name: nadřazená korporace
+    type: APU_REF
+    indexed: false
+  - code: RT_SUPTERM
+    name: nadřazený pojem
+    type: APU_REF
+    indexed: false
+  - code: RT_SENIOR
+    name: nadřízený
+    type: APU_REF
+    indexed: false
+  - code: RT_SUCCESSOR
+    name: nástupce
+    type: APU_REF
+    indexed: false
+  - code: RT_ACTIVITYFIELD
+    name: obor činnosti
+    type: APU_REF
+    indexed: false
+  - code: RT_STUDYFIELD
+    name: obor studia
+    type: APU_REF
+    indexed: false
+  - code: RT_AWARD
+    name: ocenění
+    type: APU_REF
+    indexed: false
+  - code: RT_ORGANIZER
+    name: organizátor, svolavatel
+    type: APU_REF
+    indexed: false
+  - code: RT_FATHER
+    name: otec
+    type: APU_REF
+    indexed: false
+  - code: RT_PARTNER
+    name: partner
+    type: APU_REF
+    indexed: false
+  - code: RT_SHEPARTNER
+    name: partnerka
+    type: APU_REF
+    indexed: false
+  - code: RT_SUBTERM
+    name: podřazený pojem
+    type: APU_REF
+    indexed: false
+  - code: RT_NAMEDAFTER
+    name: pojmenováno po
+    type: APU_REF
+    indexed: false
+  - code: RT_LASTKMEMBER
+    name: poslední známý člen rodu/rodiny
+    type: APU_REF
+    indexed: false
+  - code: RT_FIRSTKMEMBER
+    name: první známý člen rodu/rodiny
+    type: APU_REF
+    indexed: false
+  - code: RT_PREDECESSOR
+    name: předchůdce
+    type: APU_REF
+    indexed: false
+  - code: RT_AFFILIATION
+    name: příslušnost k
+    type: APU_REF
+    indexed: false
+  - code: RT_SISTER
+    name: sestra
+    type: APU_REF
+    indexed: false
+  - code: RT_SHECOUSIN
+    name: sestřenice
+    type: APU_REF
+    indexed: false
+  - code: RT_RESIDENCE
+    name: sídlo
+    type: APU_REF
+    indexed: false
+  - code: RT_COMPEVENT
+    name: souborná událost, celek
+    type: APU_REF
+    indexed: false
+  - code: RT_RELATED
+    name: související entita
+    type: APU_REF
+    indexed: false
+  - code: RT_RELATEDTERM
+    name: související pojem
+    type: APU_REF
+    indexed: false
+  - code: RT_COLLABORATOR
+    name: spolupracovník
+    type: APU_REF
+    indexed: false
+  - code: RT_SCHOOLMATE
+    name: spolužák
+    type: APU_REF
+    indexed: false
+  - code: RT_UNCLE
+    name: strýc
+    type: APU_REF
+    indexed: false
+  - code: RT_SCHOOL
+    name: škola
+    type: APU_REF
+    indexed: false
+  - code: RT_BROTHERINLAW
+    name: švagr
+    type: APU_REF
+    indexed: false
+  - code: RT_SISTERINLAW
+    name: švagrová
+    type: APU_REF
+    indexed: false
+  - code: RT_CATEGORY
+    name: taxonomická kategorie
+    type: APU_REF
+    indexed: false
+  - code: RT_THEME
+    name: tematický celek
+    type: APU_REF
+    indexed: false
+  - code: RT_AUNT
+    name: teta
+    type: APU_REF
+    indexed: false
+  - code: RT_FATHERINLAW
+    name: tchán
+    type: APU_REF
+    indexed: false
+  - code: RT_MOTHERINLAW
+    name: tchyně
+    type: APU_REF
+    indexed: false
+  - code: RT_TEACHER
+    name: učitel
+    type: APU_REF
+    indexed: false
+  - code: RT_GRANTAUTH
+    name: udělovatel
+    type: APU_REF
+    indexed: false
+  - code: RT_STORAGE
+    name: uložení
+    type: APU_REF
+    indexed: false
+  - code: RT_LOCATION
+    name: umístění
+    type: APU_REF
+    indexed: false
+  - code: RT_OBJECT
+    name: vazba na objekt
+    type: APU_REF
+    indexed: false
+  - code: RT_ACTIVITIES
+    name: významné aktivity
+    type: APU_REF
+    indexed: false
+  - code: RT_FOUNDER
+    name: zakladatel/zřizovatel
+    type: APU_REF
+    indexed: false
+  - code: RT_EMPLOYER
+    name: zaměstnavatel
+    type: APU_REF
+    indexed: false
+  - code: RT_ROOF
+    name: zjednodušená podniková entita
+    type: APU_REF
+    indexed: false
+  - code: RT_REPRESENT
+    name: zástupce
+    type: APU_REF
+    indexed: false
+  - code: RT_NAMECHANGE
+    name: změna jména/identity
+    type: APU_REF
+    indexed: false
+  - code: RT_MENTION
+    name: zmínka o existenci
+    type: APU_REF
+    indexed: false
+  - code: RT_ORIGINATOR
+    name: zřizovatel
+    type: APU_REF
+    indexed: false
+  - code: RT_GEOPARTNER
+    name: partner
+    type: APU_REF
+    indexed: false
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru

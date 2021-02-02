@@ -316,9 +316,7 @@ public class ImportAp implements EdxItemCovertContext {
 
         // entity exists -> we can create link
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
-        this.apusBuilder.addApuRefsFirstVisible(part, "AE_REL_REF", apUuids);
-        this.apusBuilder.addEnum(part, "AE_REL_TYPE", relType, true);
-        
+        this.apusBuilder.addApuRefsFirstVisible(part, relType, apUuids);        
     }
 
     private void importIdent(Apu apu, Fragment frg) {
