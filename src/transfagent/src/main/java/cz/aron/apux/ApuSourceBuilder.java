@@ -214,7 +214,7 @@ public class ApuSourceBuilder {
         return null;
     }
 
-    public Apu getApuByDesk(String desk) {
+    public Apu getApuByDesc(String desk) {
         for(Apu apu : apusrc.getApus().getApu()) {
             if(apu.getDesc().equals(desk)) {
                 return apu;

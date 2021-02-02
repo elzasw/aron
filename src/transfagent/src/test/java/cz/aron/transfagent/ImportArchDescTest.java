@@ -52,7 +52,7 @@ public class ImportArchDescTest {
         }
 
         // testing root: Test datace
-        Apu apu = builder.getApuByDesk("");
+        Apu apu = builder.getApuByDesc("");
         List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
         
@@ -63,7 +63,7 @@ public class ImportArchDescTest {
         assertFalse(dr0.isVisible());
 
         // testing s1
-        apu = builder.getApuByDesk("s1");
+        apu = builder.getApuByDesc("s1");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 2);
 
@@ -78,7 +78,7 @@ public class ImportArchDescTest {
         assertFalse(dr1.isVisible());
 
         // testing s2
-        apu = builder.getApuByDesk("s2");
+        apu = builder.getApuByDesc("s2");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -87,7 +87,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1860);
 
         // testing P1
-        apu = builder.getApuByDesk("P1");
+        apu = builder.getApuByDesc("P1");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -96,7 +96,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1830);
 
         // testing P2
-        apu = builder.getApuByDesk("P2");
+        apu = builder.getApuByDesc("P2");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
@@ -105,7 +105,7 @@ public class ImportArchDescTest {
         assertTrue(idra.getTo().getYear() == Y_1850);
 
         // testing P3
-        apu = builder.getApuByDesk("P3");
+        apu = builder.getApuByDesc("P3");
         ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 

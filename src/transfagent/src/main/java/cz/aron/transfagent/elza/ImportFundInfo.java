@@ -134,7 +134,7 @@ public class ImportFundInfo {
 
         // collect all date intervals
         for(Level lvl : sect.getLvls().getLvl()) {
-            if(!isLevelRoot(lvl)) {
+            if(lvl.getPid() != null) {
                 var ranges = getItemDateRanges(lvl);
                 for(ItemDateRange range : ranges) {
                     ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(range);
@@ -144,15 +144,6 @@ public class ImportFundInfo {
         }
 
         return apusBuilder;
-    }
-
-    private boolean isLevelRoot(Level lvl) {
-        for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
-            if(item.getT().equals("ZP2015_LEVEL_TYPE") && item.getS().equals("ZP2015_LEVEL_ROOT")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private List<ItemDateRange> getItemDateRanges(Level lvl) {
