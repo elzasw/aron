@@ -273,7 +273,7 @@
   <xs:complexType name="languagedeclaration">
     <xs:sequence>
       <xs:element name="language" type="language"/>
-      <!--<xs:element name="script" type="script"/>-->
+      <xs:element name="script" type="script"/>
       <xs:element name="descriptivenote" type="descriptivenote" minOccurs="0"/>
     </xs:sequence>
     <xs:attributeGroup ref="am.common"/>
@@ -1688,7 +1688,7 @@
   <xs:complexType name="languageset">
     <xs:sequence>
       <xs:element name="language" type="language" maxOccurs="unbounded"/>
-      <!--<xs:element name="script" type="script" maxOccurs="unbounded"/>-->
+      <xs:element name="script" type="script" maxOccurs="unbounded"/>
       <xs:element name="descriptivenote" type="descriptivenote" minOccurs="0"/>
     </xs:sequence>
     <xs:attributeGroup ref="am.common"/>
