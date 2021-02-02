@@ -363,8 +363,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
 		stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-		stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE,new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, CoreTypes.ROLE, CoreTypes.AP_REF,this.dataProvider, 
-		                                                            ElzaTypes.roleSpecMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE,
+		                  new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap));
 		stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
 		stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
 		stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));

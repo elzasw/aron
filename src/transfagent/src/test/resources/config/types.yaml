@@ -42,11 +42,21 @@ partTypes:
 #   hierarchical: true | false
 
 # Jednotlivé prvky popisu
+#
+# Druhy prvků popisu, uvádí se jako type: ....
+# - ENUM - výčet hodnot
+# - APU_REF - odkaz na jinou APU
+# - INTEGER - číselná hodnota
+# - STRING - textová hodnota
+# - UNITDATE - datace
+# - LINK - hypertextový odkaz
+# - ITEM_AGGREG - agregace více prvků popisu, obvykle vztahy
+#
 itemTypes:
   # Obecné
   - code: NAME
     name: Jméno
-    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK | ITEM_AGGREG
     type: STRING
     # indexBoost: 1.1
     # 
@@ -104,14 +114,10 @@ itemTypes:
     name: Administrativní zařazení
     type: APU_REF
     indexed: true
-  - code: AE_REL_REF
-    name: Vztah k
-    type: APU_REF
-    indexed: true
-  - code: AE_REL_TYPE
-    name: Druh vztahu
-    type: ENUM
-    indexed: true
+#  - code: AE_REL_TYPE
+#    name: Druh vztahu
+#    type: ENUM
+#    indexed: true
   - code: CORP_PURPOSE
     name: Funkce korporace
     type: STRING
@@ -245,6 +251,8 @@ itemTypes:
   - code: UNIT_ID_INDEX
     name: Referenční označení přidělené archivem
     type: STRING
+    # Referenční označení se hledá na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: ABSTRACT
     name: Obsah
@@ -394,14 +402,18 @@ itemTypes:
   - code: INV_CISLO
     name: Inventární číslo
     type: STRING
-    indexed: true
+    indexed: false
   - code: OTHER_ID_PROC_INDEX
     name: Ostatní označení přidělená archivem
     type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: OTHER_ID_ORIG_INDEX
     name: Označení přidělená původcem
     type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
     indexed: true
   - code: OTHERID_SIG_ORIG
     name: signatura přidělená původcem
@@ -555,6 +567,294 @@ itemTypes:
     name: Datum popisu
     type: STRING
     indexed: false
+  - code: ENTITY_ROLE_1
+    name: autor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_2
+    name: autor dialogu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_4
+    name: autor fotografií
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_5
+    name: skladatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_10
+    name: autor textové složky/textař
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_6
+    name: autor hudby/skladatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_7
+    name: autor choreografie/choreograf
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_8
+    name: autor komentáře
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_9
+    name: autor námětu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_11
+    name: autor textu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_3
+    name: autor doprovodnéno textu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_12
+    name: autor triků a speciálních efektů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_13
+    name: autor výtvarné a obrazové stránky
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_14
+    name: autor výtvarné stránky
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_15
+    name: vydavatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_16
+    name: vydavatel / nakladatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_17
+    name: pečetitel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_18
+    name: produkční společnost/producent
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_19
+    name: objednatel / příjemce
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_20
+    name: distributor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_21
+    name: příjemce
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_22
+    name: žadatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_23
+    name: držitel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_24
+    name: odesilatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_25
+    name: schvalovatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_26
+    name: stavitel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_27
+    name: režisér
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_28
+    name: scénárista
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_29
+    name: kameraman
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_30
+    name: interpret hudby
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_31
+    name: fotograf
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_32
+    name: redaktor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_33
+    name: kartograf
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_34
+    name: editor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_35
+    name: editor / redaktor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_36
+    name: kreslič
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_37
+    name: majitel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_38
+    name: tvůrce technického zpracování
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_39
+    name: tvůrce výtvarné stránky
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_40
+    name: dramaturg
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_41
+    name: střih/střihač
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_42
+    name: zvuk/zvukař
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_43
+    name: účinkující
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_44
+    name: překladatel
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_45
+    name: lektor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_46
+    name: svědek
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_47
+    name: ručitel (rukojmě)
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_48
+    name: písař
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_49
+    name: zpracovatel nosičů záznamů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_50
+    name: výrobce nosičů záznamů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_51
+    name: tiskárna
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_52
+    name: tiskárna/tiskař
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_53
+    name: výrobce
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_54
+    name: výrobce typářů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_55
+    name: výrobce odlitků otisků / otisků typářů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_56
+    name: místo natáčení
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_57
+    name: místo vydavatele
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_58
+    name: místo vydání
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_59
+    name: místo vydání dokumentů
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_60
+    name: místo výroby
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_61
+    name: místo vzniku jednotky popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_62
+    name: místo vzniku předlohy popisované kopie
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_63
+    name: typové označení a název výrobku a typové stavby
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_64
+    name: entita zachycená jednotkami popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_65
+    name: ostatní entita zachycená jednotkami popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_66
+    name: osoba/bytost zachycená jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_67
+    name: rod/rodina zachycený/á jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_68
+    name: korporace zachycená jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_69
+    name: událost zachycená jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_70
+    name: dílo/výtvor zachycené/ý jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_71
+    name: geografický objekt zachycený jednotkou popisu
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_72
+    name: obecný pojem vztahující se k jednotce popisu
+    type: APU_REF
+    indexed: false
   - code: ROLE
     name: Role
     type: ENUM
@@ -585,6 +885,16 @@ itemTypes:
   - code: NOTE
     name: Poznámka
     type: STRING
+    indexed: true
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    name: Přístupový bod
+    type: ITEM_AGGREG
+    indexed: true
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    name: Vztah k entitě
+    type: ITEM_AGGREG
     indexed: true
 
 # Metadata a jejich popis
