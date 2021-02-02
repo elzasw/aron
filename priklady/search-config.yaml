@@ -224,13 +224,11 @@ facets:
     # Druh fazety
     type: MULTI_REF_EXT
     # zdrojovy itemtype
-    source: AP_REF
-    facets:
-      - type: ENUM
-        # zdrojovy itemtype
-        source: ROLE
-        # Max pocet zobrazenych itemu
-        maxItems: 30
+    source: AP_VIRT_REF
+    maxItems: 30
+    #includeItems:
+    #   - ROLE_AUTHOR_X_REF
+    #  - ROLE_PUBLICATION_REF
 
   # technika, adjustace, nosič a látka záznamu
   - when:
@@ -277,10 +275,7 @@ facets:
     # Druh fazety
     type: MULTI_REF_EXT
     # zdrojovy itemtype
-    source: AE_REL_REF
-    facets:
-      - type: ENUM
-        # zdrojovy itemtype
-        source: AE_REL_TYPE
-        # Max pocet zobrazenych itemu
-        maxItems: 5
+    source: AE_VIRT_REF
+    #includeItems:
+    #   - ROLE_AUTHOR_X_REF
+    #  - ROLE_PUBLICATION_REF

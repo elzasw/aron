@@ -42,11 +42,21 @@ partTypes:
 #   hierarchical: true | false
 
 # Jednotlivé prvky popisu
+#
+# Druhy prvků popisu, uvádí se jako type: ....
+# - ENUM - výčet hodnot
+# - APU_REF - odkaz na jinou APU
+# - INTEGER - číselná hodnota
+# - STRING - textová hodnota
+# - UNITDATE - datace
+# - LINK - hypertextový odkaz
+# - ITEM_AGGREG - agregace více prvků popisu, obvykle vztahy
+#
 itemTypes:
   # Obecné
   - code: NAME
     name: Jméno
-    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK | ITEM_AGGREG
     type: STRING
     # indexBoost: 1.1
     # 
@@ -104,14 +114,10 @@ itemTypes:
     name: Administrativní zařazení
     type: APU_REF
     indexed: true
-  - code: AE_REL_REF
-    name: Vztah k
-    type: APU_REF
-    indexed: true
-  - code: AE_REL_TYPE
-    name: Druh vztahu
-    type: ENUM
-    indexed: true
+#  - code: AE_REL_TYPE
+#    name: Druh vztahu
+#    type: ENUM
+#    indexed: true
   - code: CORP_PURPOSE
     name: Funkce korporace
     type: STRING
@@ -591,6 +597,16 @@ itemTypes:
   - code: NOTE
     name: Poznámka
     type: STRING
+    indexed: true
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    název: Přístupový bod
+    type: ITEM_AGGREG
+    indexed: true
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    název: Vztah k entitě
+    type: ITEM_AGGREG
     indexed: true
 
 # Metadata a jejich popis
