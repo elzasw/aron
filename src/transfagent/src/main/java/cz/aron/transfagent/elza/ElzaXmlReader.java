@@ -63,6 +63,14 @@ public class ElzaXmlReader {
 
 	final ElzaDataExchange edx;
 
+    public ElzaXmlReader(final ElzaDataExchange edx) {
+        this.edx = edx;
+    }
+
+    public ElzaDataExchange getEdx() {
+        return edx;
+    }
+
 	public static ElzaXmlReader read(InputStream is) throws JAXBException {
 		JAXBElement<ElzaDataExchange> edxElem = read(is, ElzaDataExchange.class);
 		ElzaDataExchange edx = edxElem.getValue();
@@ -253,10 +261,6 @@ public class ElzaXmlReader {
 		return sb.toString();
 	}
 
-	public ElzaXmlReader(final ElzaDataExchange edx) {
-		this.edx = edx;
-	}
-
 	public Map<String, AccessPoint> getApMap() {
 		if (apMap == null) {
 			AccessPoints aps = edx.getAps();
@@ -272,10 +276,6 @@ public class ElzaXmlReader {
 		}
 
 		return apMap;
-	}
-
-	public ElzaDataExchange getEdx() {
-		return edx;
 	}
 
 	public AccessPoint findAccessPointByUUID(String apUuid) {
