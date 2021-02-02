@@ -242,7 +242,7 @@
 							</schemaIncludes>
 							<bindingDirectory>${project.basedir}/src/main/resources/schema</bindingDirectory>
 							<bindingIncludes>
-								<include>ead3-bindinds.xml</include>
+								<include>ead3-bindings.xml</include>
 							</bindingIncludes>
 							<plugins>
 								<plugin>
