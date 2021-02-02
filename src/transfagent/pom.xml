@@ -105,16 +105,16 @@
 			<artifactId>jaxws-api</artifactId>
 		</dependency>
 
-        <dependency>
-            <groupId>javax.json</groupId>
-            <artifactId>javax.json-api</artifactId>
-            <version>1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.json</artifactId>
-            <version>1.1</version>
-        </dependency>
+		<dependency>
+			<groupId>javax.json</groupId>
+			<artifactId>javax.json-api</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.json</artifactId>
+			<version>1.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>gov.nist.isg</groupId>
@@ -199,47 +199,60 @@
 					</execution>
 				</executions>
 			</plugin>
-            <plugin>
-                <groupId>org.jvnet.jaxb2.maven2</groupId>
-                <artifactId>maven-jaxb2-plugin</artifactId>
-                <version>0.14.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-ead3</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>generate-sources</phase>
-                        <configuration>
-                            <extension>true</extension>
-                            <args>
-                                <arg>-Xinheritance</arg>
-                            </args>
-                            <generateDirectory>${project.build.directory}/generated-sources/jaxb</generateDirectory>
-                            <schemaDirectory>${project.basedir}/src/main/resources/schema</schemaDirectory>
-                            <schemaIncludes>
-                                <include>ead3.xsd</include>
-                            </schemaIncludes>
-                            <bindingDirectory>${project.basedir}/src/main/resources/schema</bindingDirectory>
-                            <bindingIncludes>
-                                <include>ead3-bindinds.xml</include>
-                            </bindingIncludes>
-                            <plugins>
-                                <plugin>
-                                    <groupId>org.jvnet.jaxb2_commons</groupId>
-                                    <artifactId>jaxb2-basics</artifactId>
-                                    <version>1.11.1</version>
-                                </plugin>
-                            </plugins>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-gen-sources</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-sources/cxf</source>
+								<source>${project.build.directory}/generated-sources/jaxb</source>
+								<source>${project.build.directory}/generated-sources/ead3</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.jvnet.jaxb2.maven2</groupId>
 				<artifactId>maven-jaxb2-plugin</artifactId>
 				<version>0.14.0</version>
 				<executions>
+					<execution>
+						<id>generate-ead3</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<extension>true</extension>
+							<args>
+								<arg>-Xinheritance</arg>
+							</args>
+							<generateDirectory>${project.build.directory}/generated-sources/ead3</generateDirectory>
+							<schemaDirectory>${project.basedir}/src/main/resources/schema</schemaDirectory>
+							<schemaIncludes>
+								<include>ead3.xsd</include>
+							</schemaIncludes>
+							<bindingDirectory>${project.basedir}/src/main/resources/schema</bindingDirectory>
+							<bindingIncludes>
+								<include>ead3-bindinds.xml</include>
+							</bindingIncludes>
+							<plugins>
+								<plugin>
+									<groupId>org.jvnet.jaxb2_commons</groupId>
+									<artifactId>jaxb2-basics</artifactId>
+									<version>1.11.1</version>
+								</plugin>
+							</plugins>
+						</configuration>
+					</execution>
 					<execution>
 						<id>generate-elza-schema</id>
 						<goals>
@@ -322,25 +335,6 @@
 						<goals>
 							<goal>wsdl2java</goal>
 						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>add-gen-sources</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>${project.build.directory}/generated-sources/cxf</source>
-								<source>${project.build.directory}/generated-sources/jaxb</source>
-							</sources>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
