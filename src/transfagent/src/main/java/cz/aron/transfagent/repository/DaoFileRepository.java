@@ -8,25 +8,25 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.DaoFiles;
+import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.IdProjection;
 
-public interface DaoFileRepository extends JpaRepository<DaoFiles, Integer> {
+public interface DaoFileRepository extends JpaRepository<Dao, Integer> {
 
 	List<IdProjection> findTop1000ByStateAndTransferredOrderById(DaoState state, boolean transfered);
 
 	@EntityGraph(attributePaths = { "apuSource" })
-	Optional<DaoFiles> findById(int id);
+	Optional<Dao> findById(int id);
 
 	@EntityGraph(attributePaths = { "apuSource" })
-	Optional<DaoFiles> findByUuid(UUID uuid);
+	Optional<Dao> findByUuid(UUID uuid);
 
 	@EntityGraph(attributePaths = { "apuSource" })
-	List<DaoFiles> findAllByUuidIn(List<UUID> uuids);
+	List<Dao> findAllByUuidIn(List<UUID> uuids);
 
-	List<DaoFiles> findByApuSource(ApuSource apuSource);
+	List<Dao> findByApuSource(ApuSource apuSource);
 
-    List<DaoFiles> findTop1000ByStateOrderById(DaoState state);
+    List<Dao> findTop1000ByStateOrderById(DaoState state);
 
 }

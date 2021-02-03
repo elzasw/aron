@@ -214,13 +214,14 @@
       </column>
     </createTable>
 
-    <createTable tableName="dao_file">
-      <column name="dao_file_id" type="int" autoIncrement="true">
+    <createTable tableName="dao">
+      <column name="dao_id" type="int" autoIncrement="true">
         <constraints primaryKey="true" />
       </column>
       <column name="uuid" type="uuid">
-        <constraints nullable="false" />
       </column>
+      <column name="handle" type="varchar(255)">        
+      </column>      
       <column name="apusource_id" type="int">
         <constraints nullable="false" />
       </column>
@@ -231,6 +232,9 @@
         <constraints nullable="false" />
       </column>
       <column name="data_dir" type="varchar(255)">
+      </column>
+      <column name="download" type="boolean">
+        <constraints nullable="false" />
       </column>
     </createTable>
 
@@ -281,8 +285,8 @@
       referencedColumnNames="apusource_id" />
 
     <addForeignKeyConstraint
-      baseTableName="dao_file" baseColumnNames="apusource_id"
-      constraintName="dao_file_apusource_id"
+      baseTableName="dao" baseColumnNames="apusource_id"
+      constraintName="dao_apusource_id"
       referencedTableName="apu_source"
       referencedColumnNames="apusource_id" />
 

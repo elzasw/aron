@@ -69,6 +69,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	final Set<UUID> apRefs = new HashSet<>();
 	
+	final Set<String> daoRefs = new HashSet<>();
+	
 	UUID instApuUuid;
 	UUID fundApuUuid;
 
@@ -99,6 +101,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public Set<UUID> getApRefs() {
 		return apRefs;
+	}
+	
+	public Set<String> getDaoRefs() {
+	    return daoRefs;
 	}
 
 	public String getInstitutionCode() {
@@ -204,9 +210,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
         // daos
         DigitalArchivalObjects daos = lvl.getDaos();
         if(daos!=null&&daos.getDao().size()>0) {
-            apusBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
+            ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
             for(DigitalArchivalObject dao: daos.getDao()) {
-                apusBuilder.addDao(activeApu, dao.getDoid());
+                ApuSourceBuilder.addDao(activeApu, dao.getDoid());
+                daoRefs.add(dao.getDoid());
             }
         }
         // copy values from parent

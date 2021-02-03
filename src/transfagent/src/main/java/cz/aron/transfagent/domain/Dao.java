@@ -15,15 +15,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "dao_file")
-public class DaoFiles {
+@Table(name = "dao")
+public class Dao {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "dao_file_id")
+    @Column(name = "dao_id")
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private UUID uuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,11 +31,25 @@ public class DaoFiles {
     private ApuSource apuSource;
 
     @Column(length = 255)
+    private String handle;
+
+    @Column(length = 255)
     private String dataDir;
 
     @Column(nullable = false)
     private boolean transferred;
     
+    @Column(nullable = false)
+    private boolean download;
+
+    public boolean isDownload() {
+        return download;
+    }
+
+    public void setDownload(boolean download) {
+        this.download = download;
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private DaoState state;
@@ -88,4 +102,11 @@ public class DaoFiles {
 		this.state = state;
 	}
 
+    public String getHandle() {
+        return handle;
+    }
+
+    public void setHandle(String handle) {
+        this.handle = handle;
+    }
 }

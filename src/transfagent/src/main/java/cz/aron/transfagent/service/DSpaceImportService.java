@@ -3,15 +3,15 @@ package cz.aron.transfagent.service;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.json.Json;
@@ -19,33 +19,27 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
-import javax.json.stream.JsonParser;
-import javax.json.stream.JsonParser.Event;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpInputMessage;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpOutputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import cz.aron.transfagent.config.ConfigDao;
 import cz.aron.transfagent.config.ConfigDspace;
-import cz.aron.transfagent.domain.DaoFiles;
+import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
@@ -68,6 +62,9 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     ConfigDao configDao;
+    
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     public static void main(String[] args) throws IOException {
         DSpaceImportService service = new DSpaceImportService();
@@ -114,9 +111,17 @@ public class DSpaceImportService implements ImportProcessor {
         }
     }
 
-    private void importDaoFiles(DaoFiles dao) {
-        String uuid = dao.getUuid().toString();
+    private void importDaoFiles(Dao dao) {
+        // check or get uuid
+        String uuid;
+        if(dao.getUuid()==null) {
+            uuid = getItemIdFromHandle(dao.getHandle());
+            dao.setUuid(UUID.fromString(uuid));
+        } else {
+            uuid = dao.getUuid().toString();
+        }
 
+        // TODO: use dates in path to split in multiple dirs 
         String saveDir = configDao.getPath() + "/" + uuid;
         if (!Files.exists(Path.of(saveDir))) {
             try {
@@ -137,8 +142,61 @@ public class DSpaceImportService implements ImportProcessor {
             log.error("Error in transform path={}.", saveDir, e);
             throw new RuntimeException("Error in transform path.");
         }
+        
+        // save to db
         dao.setState(DaoState.READY);
-        daoFileRepository.save(dao);
+        dao.setDownload(false);
+        transactionTemplate.executeWithoutResult(t -> saveDao(t, dao));
+    }
+
+    /**
+     * Read item from handle
+     * 
+     * @param handle
+     * @return Return content of element <UUID>...</UUID>
+     */
+    private String getItemIdFromHandle(String handle) {
+        log.debug("DSpace: Reading item for handle: {}", handle);
+        String restUrl = configDspace.getUrl() + "/handle/" + handle;
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String response = restTemplate.getForObject(restUrl, String.class);
+            log.debug("DSpace response: {}", response);
+            
+            var i = response.indexOf("<UUID>");
+            var j = response.indexOf("</UUID>"); 
+            var uuid = response.substring(i+6, j);
+            
+            log.info("Received uuid for handle {} is ", handle, uuid);
+            
+            return uuid;
+        } catch (Exception e) {
+            log.error("Error while accessing dspace {}.", restUrl, e);
+            throw new RuntimeException("Error while accessing dspace.");
+        }
+    }
+
+    /**
+     * Save Dao to DB
+     * @param t active transaction
+     * @param dao Dao to be saved
+     */
+    private void saveDao(TransactionStatus t, Dao dao) {
+        log.debug("Saving Dao to DB, daoId: {}", dao.getId());
+        
+        var dbDao = daoFileRepository.findById(dao.getId())
+                .orElseThrow(
+                    ()-> {
+                        log.error("Dao not exists in DB, id: {}", dao.getId());
+                        return new RuntimeException("Dao not exists");
+                    }
+                );
+        dbDao.setDataDir(dao.getDataDir());
+        dbDao.setUuid(dao.getUuid());
+        dbDao.setState(dao.getState());
+        dbDao.setTransferred(false);
+        dbDao.setDownload(dao.isDownload());
+        daoFileRepository.save(dbDao);
     }
 
     private List<DspaceFile> getDspaceFiles(String uuid) {
@@ -230,6 +288,40 @@ public class DSpaceImportService implements ImportProcessor {
 
         public int getSize() {
             return size;
+        }
+    }
+
+    public void updateDaos(ApuSource apuSource, Set<String> daoRefs) {
+        var daos = daoFileRepository.findByApuSource(apuSource);
+        Map<String, Dao> daoLookup = new HashMap<>();
+        for(var dao: daos) {
+            if(StringUtils.isNotBlank(dao.getHandle())) {
+                daoLookup.put(dao.getHandle(), dao);
+            }
+        }
+        
+        for(String daoHandle: daoRefs) {
+            var dao = daoLookup.get(daoHandle);
+            if(dao!=null) {
+                if(dao.getState()==DaoState.INACCESSIBLE) {
+                    dao.setState(DaoState.ACCESSIBLE);
+                    daoFileRepository.save(dao);
+                }
+                daoLookup.remove(dao);
+            } else {
+                // store new dao
+                dao = new Dao();
+                dao.setHandle(daoHandle);
+                dao.setApuSource(apuSource);
+                dao.setTransferred(false);
+                dao.setState(DaoState.ACCESSIBLE);
+                daoFileRepository.save(dao);
+            }
+        }
+        // zbyle objekty musi byt zneplatneny
+        for(var dao: daoLookup.values()) {
+            dao.setState(DaoState.INACCESSIBLE);
+            daoFileRepository.save(dao);
         }
     }
 

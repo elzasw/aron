@@ -34,6 +34,7 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.ArchivalEntityImportService;
+import cz.aron.transfagent.service.DSpaceImportService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
@@ -69,6 +70,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     private final ArchivalEntityImportService archivalEntityImportService;
     
     private final FileImportService fileImportService;
+    
+    private final DSpaceImportService dSpaceImportService;
 
     final private String ARCHDESC_DIR = "archdesc";
 
@@ -79,7 +82,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
             ConfigurationLoader configurationLoader,
             final ArchivalEntityImportService archivalEntityImportService,
-            final FileImportService fileImportService) {
+            final FileImportService fileImportService,
+            final DSpaceImportService dSpaceImportService) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
@@ -93,6 +97,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.configurationLoader = configurationLoader;
         this.archivalEntityImportService = archivalEntityImportService;
         this.fileImportService = fileImportService;
+        this.dSpaceImportService = dSpaceImportService;
     }
 
     @PostConstruct
@@ -180,7 +185,14 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             throw new NullPointerException("The entry Fund code={" + fundCode + "} must exist.");
         }
 
-        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+        var archDesc = archDescRepository.findByFund(fund);
+
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {            
+            if(archDesc!=null) {
+                // set UUID from previous version
+                var apuSource = archDesc.getApuSource();
+                apusrcBuilder.setUuid(apuSource.getUuid());
+            }
             apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
         } catch (IOException ioEx) {
             throw new UncheckedIOException(ioEx);
@@ -195,7 +207,6 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             throw new IllegalStateException(e);
         }
 
-        var archDesc = archDescRepository.findByFund(fund);
         if (archDesc == null) {
             archDesc = createArchDesc(fund, dataDir, dir, apusrcBuilder);
         } else {
@@ -204,7 +215,9 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         // Request entities and store refs
         Set<UUID> uuids = iad.getApRefs();        
-        archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
+        archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
+        
+        dSpaceImportService.updateDaos(archDesc.getApuSource(), iad.getDaoRefs());
     }
 
     private ArchDesc createArchDesc(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
