@@ -28,8 +28,8 @@ public class FindingAid {
     private String code;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "apusource_id", nullable = false)
-    private ApuSource apuSource;
+    @JoinColumn(name = "institution_id", nullable = false)
+    private Institution institution;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fund_id", nullable = false)
@@ -59,12 +59,12 @@ public class FindingAid {
         this.code = code;
     }
 
-    public ApuSource getApuSource() {
-        return apuSource;
+    public Institution getInstitution() {
+        return institution;
     }
 
-    public void setApuSource(ApuSource apuSource) {
-        this.apuSource = apuSource;
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 
     public Fund getFund() {
