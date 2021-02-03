@@ -21,10 +21,15 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
+import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
+import cz.aron.transfagent.elza.ImportFundInfo;
+import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -32,20 +37,29 @@ import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
-public class ImportFindingAidService extends ImportDirProcessor {
+public class ImportFindingAidService extends ImportDirProcessor implements ReimportProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportFindingAidService.class);
 
-    private final StorageService storageService;
+    private final ApuSourceService apuSourceService;
 
     private final FileImportService fileImportService;
+
+    private final ReimportService reimportService;
+
+    private final StorageService storageService;
 
     private final InstitutionRepository institutionRepository;
 
     private final FindingAidRepository findingAidRepository;
+
+    private final ApuSourceRepository apuSourceRepository;
+
+    private final CoreQueueRepository coreQueueRepository;
 
     private final FundRepository fundRepository;
 
@@ -61,13 +75,20 @@ public class ImportFindingAidService extends ImportDirProcessor {
 
     final private String FINDING_AIDS_DIR = FINDING_AID + "s";
 
-    public ImportFindingAidService(StorageService storageService, FileImportService fileImportService, InstitutionRepository institutionRepository,
-            FindingAidRepository findingAidRepository, FundRepository fundRepository, DatabaseDataProvider databaseDataProvider,
-            TransactionTemplate transactionTemplate, ConfigurationLoader configurationLoader) {
-        this.storageService = storageService;
+    public ImportFindingAidService(ApuSourceService apuSourceService, FileImportService fileImportService,
+            ReimportService reimportService, StorageService storageService, InstitutionRepository institutionRepository,
+            FindingAidRepository findingAidRepository, ApuSourceRepository apuSourceRepository,
+            CoreQueueRepository coreQueueRepository, FundRepository fundRepository,
+            DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
+            ConfigurationLoader configurationLoader) {
+        this.apuSourceService = apuSourceService;
         this.fileImportService = fileImportService;
+        this.reimportService = reimportService;
+        this.storageService = storageService;
         this.institutionRepository = institutionRepository;
         this.findingAidRepository = findingAidRepository;
+        this.apuSourceRepository = apuSourceRepository;
+        this.coreQueueRepository = coreQueueRepository;
         this.fundRepository = fundRepository;
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
@@ -77,6 +98,7 @@ public class ImportFindingAidService extends ImportDirProcessor {
     @PostConstruct
     void register() {
         fileImportService.registerImportProcessor(this);
+        reimportService.registerReimportProcessor(this);
     }
 
     @Override
@@ -90,7 +112,7 @@ public class ImportFindingAidService extends ImportDirProcessor {
      * @param dir zpracovavany adresar
      */
     @Override
-    protected boolean processDirectory(Path dir) {
+    public boolean processDirectory(Path dir) {
 
         List<Path> xmls;
         try (var stream = Files.list(dir)) {
@@ -157,39 +179,87 @@ public class ImportFindingAidService extends ImportDirProcessor {
         }
 
         if (findingAid == null) {
-            createFindingAid(findingaidCode, fund, institution, apusrcBuilder);
+            createFindingAid(findingaidCode, fund, institution, dataDir, dir, apusrcBuilder);
         } else {
-            updateFindingAid(findingAid, fund, institution);
+            updateFindingAid(findingAid, dataDir, dir);
         }
         return true;
     }
 
-    private void createFindingAid(String findingaidCode, Fund fund, Institution institution, ApuSourceBuilder apusrcBuilder) {
+    private void createFindingAid(String findingaidCode, Fund fund, Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
 
         var findingaidUuid = apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid();
         Validate.notNull(findingaidUuid, "FindingAid UUID is null");
 
+        var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
+        var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
+
         transactionTemplate.execute(t -> {
+            var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FINDING_AID, 
+                    dataDir, origDir.getFileName().toString());
+
             var findingAid = new FindingAid();
             findingAid.setCode(findingaidCode);
             findingAid.setUuid(UUID.fromString(findingaidUuid));
+            findingAid.setApuSource(apuSource);
             findingAid.setInstitution(institution);
             findingAid.setFund(fund);
-            findingAidRepository.save(findingAid);
+            findingAid = findingAidRepository.save(findingAid);
+
+            var coreQueue = new CoreQueue();
+            coreQueue.setApuSource(apuSource);
+            coreQueueRepository.save(coreQueue);
             return null;
         });
-        log.info("FindingAid created fund={}, institution={}", fund.getCode(), institution.getCode());
+        log.info("FindingAid created code={}, uuid={}", findingaidCode, findingaidUuid);
     }
 
-    private void updateFindingAid(FindingAid findingAid, Fund fund, Institution institution) {
+    private void updateFindingAid(FindingAid findingAid, Path dataDir, Path origDir) {
+
+        var oldDir = findingAid.getApuSource().getDataDir();
 
         transactionTemplate.execute(t -> {
-            findingAid.setInstitution(institution);
-            findingAid.setFund(fund);
-            findingAidRepository.save(findingAid);
+            var apuSource = findingAid.getApuSource();
+            apuSource.setDataDir(dataDir.toString());
+            apuSource.setOrigDir(origDir.getFileName().toString());
+
+            var coreQueue = new CoreQueue();
+            coreQueue.setApuSource(apuSource);
+
+            apuSourceRepository.save(apuSource);
+            coreQueueRepository.save(coreQueue);
             return null;
         });
-        log.info("FindingAid updated fund={}, institution={}", fund.getCode(), institution.getCode());
+        log.info("FindingAid updated code={}, uuid={}, original data dir {}", findingAid.getCode(), findingAid.getUuid(), oldDir);
+    }
+
+    @Override
+    public Result reimport(ApuSource apuSource) {
+        if (apuSource.getSourceType() != SourceType.FINDING_AID)
+            return Result.UNSUPPORTED;
+
+        var findingAid = findingAidRepository.findByApuSource(apuSource);
+        if (findingAid == null) {
+            log.error("Missing findingAid: {}", apuSource.getId());
+            return Result.UNSUPPORTED;
+        }
+        String fileName = FINDING_AID_DASH + findingAid.getCode() + ".xml";
+
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        var ifai = new ImportFindingAidInfo(findingAid.getCode());
+        ApuSourceBuilder builder;
+        try {
+            builder = ifai.importFindingAidInfo(apuDir.resolve(fileName), findingAid.getUuid(), databaseDataProvider);
+            builder.setUuid(apuSource.getUuid());
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                builder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
+            return Result.FAILED;
+        }
+
+        return Result.REIMPORTED;
     }
 
 }
