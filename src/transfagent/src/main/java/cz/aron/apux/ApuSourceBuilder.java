@@ -223,6 +223,22 @@ public class ApuSourceBuilder {
         return null;
     }
 
+    public ItemRef getApuRef(Apu apu, String partType, String refType) {
+        for(Part part : apu.getPrts().getPart()) {
+            if(part.getType().equals(partType)) {
+                for(Object obj : part.getItms().getStrOrLnkOrEnm()) {
+                    if(obj instanceof ItemRef) {
+                        ItemRef itemRef = (ItemRef) obj;
+                        if(itemRef.getType().equals(refType)) {
+                            return itemRef;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     static public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {

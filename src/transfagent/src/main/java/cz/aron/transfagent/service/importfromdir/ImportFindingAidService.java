@@ -147,10 +147,10 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         var findingaidUuid = findingAid != null? findingAid.getUuid() : null;
 
         var ifai = new ImportFindingAidInfo(findingaidCode);
-        ApuSourceBuilder apusrcBuilder;
+        ApuSourceBuilder builder;
 
         try {
-            apusrcBuilder = ifai.importFindingAidInfo(findingaidXml.get(), findingaidUuid, databaseDataProvider);
+            builder = ifai.importFindingAidInfo(findingaidXml.get(), findingaidUuid, databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -164,7 +164,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         }
 
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+            builder.build(fos, new ApuValidator(configurationLoader.getConfig()));
         } catch (IOException ioEx) {
             throw new UncheckedIOException(ioEx);
         } catch (JAXBException e) {
@@ -179,19 +179,19 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         }
 
         if (findingAid == null) {
-            createFindingAid(findingaidCode, fund, institution, dataDir, dir, apusrcBuilder);
+            createFindingAid(findingaidCode, fund, institution, dataDir, dir, builder);
         } else {
             updateFindingAid(findingAid, dataDir, dir);
         }
         return true;
     }
 
-    private void createFindingAid(String findingaidCode, Fund fund, Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
+    private void createFindingAid(String findingaidCode, Fund fund, Institution institution, Path dataDir, Path origDir, ApuSourceBuilder builder) {
 
-        var findingaidUuid = apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid();
+        var findingaidUuid = builder.getApusrc().getApus().getApu().get(0).getUuid();
         Validate.notNull(findingaidUuid, "FindingAid UUID is null");
 
-        var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
+        var apuSourceUuidStr = builder.getApusrc().getUuid();
         var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
