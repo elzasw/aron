@@ -85,6 +85,30 @@ facets:
     type: MULTI_REF
     # zdrojovy itemtype
     source: ORIG_PLACES_REF
+  - when:
+      apuType: FUND
+    type: MULTI_REF
+    source: FUND_AP_REF
+
+#
+# Archivni pomucka
+#
+  - when:
+      apuType: FINDING_AID
+    type: FULLTEXT
+    source: FINDINGAID_ID
+    display: DETAIL
+  - when:
+      apuType: FINDING_AID
+    type: ENUM
+    source: FUND_INST_REF
+    display: ALWAYS
+# Archivní soubor
+  - when:
+      apuType: FINDING_AID
+    type: MULTI_REF
+    source: FUND_REF
+    display: ALWAYS
 
 # 
 # Archivalie

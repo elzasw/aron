@@ -78,6 +78,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_UNIT_DATE = "ZP2015_UNIT_DATE";
     public static final String ZP2015_DATE_OTHER = "ZP2015_DATE_OTHER";
     public static final String ZP2015_ENTITY_ROLE = "ZP2015_ENTITY_ROLE";
+    public static final String ZP2015_OTHER_ID = "ZP2015_OTHER_ID";
 
     public static final String ZP2015_ORIGINATOR = "ZP2015_ORIGINATOR";
     public static final String ZP2015_POSITION = "ZP2015_POSITION";
@@ -371,196 +372,69 @@ public abstract class ElzaTypes {
         languageTypeMap.put("ZP2015_LANGUAGE_38", "španělština");
         languageTypeMap.put("ZP2015_LANGUAGE_39", "blíže neurčený slovanský jazyk");
         languageTypeMap.put("ZP2015_LANGUAGE_40", "běloruština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_41",
-                            "bosenština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_42",
-                            "bulharština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_43",
-                            "čeština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_44",
-                            "chorvatština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_45",
-                            "kašubština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_46",
-                            "lužická srbština dolní (dolnolužičtina)");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_47",
-                            "lužická srbština horní (hornolužičtina)");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_48",
-                            "makedonština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_49",
-                            "polština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_50",
-                            "rusínština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_51",
-                            "ruština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_52",
-                            "slovenština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_53",
-                            "slovinština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_54",
-                            "srbochorvatština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_55",
-                            "srbština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_56",
-                            "staroslověnština, církevní slovanština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_57",
-                            "ukrajinština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_58",
-                            "blíže neurčený indoevropský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_59",
-                            "albánština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_60",
-                            "arménština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_61",
-                            "řečtina");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_62",
-                            "blíže neurčený uralský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_63",
-                            "estonština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_64",
-                            "finština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_65",
-                            "maďarština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_66",
-                            "livština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_67",
-                            "baskičtina");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_68",
-                            "blíže neurčený afroasijský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_69",
-                            "blíže neurčený semitský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_70",
-                            "(novo)hebrejština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_71",
-                            "amharština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_72",
-                            "arabština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_73",
-                            "aramejština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_74",
-                            "hauština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_75",
-                            "maltština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_76",
-                            "stará hebrejština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_77",
-                            "akkadština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_78",
-                            "assyrština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_79",
-                            "babylonština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_80",
-                            "chetitština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_81",
-                            "sumerština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_82",
-                            "egyptština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_83",
-                            "koptština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_84",
-                            "blíže neurčený nigerokonžský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_85",
-                            "svahilština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_86",
-                            "blíže neurčený altajský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_87",
-                            "japonština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_88",
-                            "korejština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_89",
-                            "blíže neurčený mongolský jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_90",
-                            "mongolština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_91",
-                            "blíže neurčený turkický jazyk");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_92",
-                            "azerbajdžánština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_93",
-                            "baškirština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_94",
-                            "gagauzština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_95",
-                            "hazarština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_96",
-                            "kyrgyzština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_97",
-                            "krymská tatarština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_98",
-                            "tatarština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_99",
-                            "turečtina");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_100",
-                            "turkménština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_101",
-                            "ujgurština");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_102",
-                            "uzbečtina");
-
-        languageTypeMap.put("ZP2015_LANGUAGE_103",
-                            "blíže neurčený austroasijský jazyk");
-
+        languageTypeMap.put("ZP2015_LANGUAGE_41", "bosenština");
+        languageTypeMap.put("ZP2015_LANGUAGE_42", "bulharština");
+        languageTypeMap.put("ZP2015_LANGUAGE_43", "čeština");
+        languageTypeMap.put("ZP2015_LANGUAGE_44", "chorvatština");
+        languageTypeMap.put("ZP2015_LANGUAGE_45", "kašubština");
+        languageTypeMap.put("ZP2015_LANGUAGE_46", "lužická srbština dolní (dolnolužičtina)");
+        languageTypeMap.put("ZP2015_LANGUAGE_47", "lužická srbština horní (hornolužičtina)");
+        languageTypeMap.put("ZP2015_LANGUAGE_48", "makedonština");
+        languageTypeMap.put("ZP2015_LANGUAGE_49", "polština");
+        languageTypeMap.put("ZP2015_LANGUAGE_50", "rusínština");
+        languageTypeMap.put("ZP2015_LANGUAGE_51", "ruština");
+        languageTypeMap.put("ZP2015_LANGUAGE_52", "slovenština");
+        languageTypeMap.put("ZP2015_LANGUAGE_53", "slovinština");
+        languageTypeMap.put("ZP2015_LANGUAGE_54", "srbochorvatština");
+        languageTypeMap.put("ZP2015_LANGUAGE_55", "srbština");
+        languageTypeMap.put("ZP2015_LANGUAGE_56", "staroslověnština, církevní slovanština");
+        languageTypeMap.put("ZP2015_LANGUAGE_57", "ukrajinština");
+        languageTypeMap.put("ZP2015_LANGUAGE_58", "blíže neurčený indoevropský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_59", "albánština");
+        languageTypeMap.put("ZP2015_LANGUAGE_60", "arménština");
+        languageTypeMap.put("ZP2015_LANGUAGE_61", "řečtina");
+        languageTypeMap.put("ZP2015_LANGUAGE_62", "blíže neurčený uralský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_63", "estonština");
+        languageTypeMap.put("ZP2015_LANGUAGE_64", "finština");
+        languageTypeMap.put("ZP2015_LANGUAGE_65", "maďarština");
+        languageTypeMap.put("ZP2015_LANGUAGE_66", "livština");
+        languageTypeMap.put("ZP2015_LANGUAGE_67", "baskičtina");
+        languageTypeMap.put("ZP2015_LANGUAGE_68", "blíže neurčený afroasijský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_69", "blíže neurčený semitský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_70", "(novo)hebrejština");
+        languageTypeMap.put("ZP2015_LANGUAGE_71", "amharština");
+        languageTypeMap.put("ZP2015_LANGUAGE_72", "arabština");
+        languageTypeMap.put("ZP2015_LANGUAGE_73", "aramejština");
+        languageTypeMap.put("ZP2015_LANGUAGE_74", "hauština");
+        languageTypeMap.put("ZP2015_LANGUAGE_75", "maltština");
+        languageTypeMap.put("ZP2015_LANGUAGE_76", "stará hebrejština");
+        languageTypeMap.put("ZP2015_LANGUAGE_77", "akkadština");
+        languageTypeMap.put("ZP2015_LANGUAGE_78", "assyrština");
+        languageTypeMap.put("ZP2015_LANGUAGE_79", "babylonština");
+        languageTypeMap.put("ZP2015_LANGUAGE_80", "chetitština");
+        languageTypeMap.put("ZP2015_LANGUAGE_81", "sumerština");
+        languageTypeMap.put("ZP2015_LANGUAGE_82", "egyptština");
+        languageTypeMap.put("ZP2015_LANGUAGE_83", "koptština");
+        languageTypeMap.put("ZP2015_LANGUAGE_84", "blíže neurčený nigerokonžský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_85", "svahilština");
+        languageTypeMap.put("ZP2015_LANGUAGE_86", "blíže neurčený altajský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_87", "japonština");
+        languageTypeMap.put("ZP2015_LANGUAGE_88", "korejština");
+        languageTypeMap.put("ZP2015_LANGUAGE_89", "blíže neurčený mongolský jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_90", "mongolština");
+        languageTypeMap.put("ZP2015_LANGUAGE_91", "blíže neurčený turkický jazyk");
+        languageTypeMap.put("ZP2015_LANGUAGE_92", "azerbajdžánština");
+        languageTypeMap.put("ZP2015_LANGUAGE_93", "baškirština");
+        languageTypeMap.put("ZP2015_LANGUAGE_94", "gagauzština");
+        languageTypeMap.put("ZP2015_LANGUAGE_95", "hazarština");
+        languageTypeMap.put("ZP2015_LANGUAGE_96", "kyrgyzština");
+        languageTypeMap.put("ZP2015_LANGUAGE_97", "krymská tatarština");
+        languageTypeMap.put("ZP2015_LANGUAGE_98", "tatarština");
+        languageTypeMap.put("ZP2015_LANGUAGE_99", "turečtina");
+        languageTypeMap.put("ZP2015_LANGUAGE_100", "turkménština");
+        languageTypeMap.put("ZP2015_LANGUAGE_101", "ujgurština");
+        languageTypeMap.put("ZP2015_LANGUAGE_102", "uzbečtina");
+        languageTypeMap.put("ZP2015_LANGUAGE_103", "blíže neurčený austroasijský jazyk");
         languageTypeMap.put("ZP2015_LANGUAGE_104", "santalština");
         languageTypeMap.put("ZP2015_LANGUAGE_105", "khmérština");
         languageTypeMap.put("ZP2015_LANGUAGE_106", "vietnamština");
@@ -647,6 +521,29 @@ public abstract class ElzaTypes {
         otherIdMap.put("ZP2015_OTHERID_ISSN", "OTHERID_ISSN");
         otherIdMap.put("ZP2015_OTHERID_ISMN", "OTHERID_ISMN");
         otherIdMap.put("ZP2015_OTHERID_MATRIXID", "OTHERID_MATRIXID");
+    }
+    public static Map<String, String> otherIdNameMap = new HashMap<>();
+    static {
+        otherIdNameMap.put("ZP2015_OTHERID_SIG_ORIG", "sign. pův.");
+        otherIdNameMap.put("ZP2015_OTHERID_SIG", "sign.");
+        otherIdNameMap.put("ZP2015_OTHERID_STORAGE_ID", "ukl. znak");
+        otherIdNameMap.put("ZP2015_OTHERID_CJ", "č. j.");
+        otherIdNameMap.put("ZP2015_OTHERID_DOCID", "zn. sp.");
+        otherIdNameMap.put("ZP2015_OTHERID_FORMAL_DOCID", "č. vl.");
+        otherIdNameMap.put("ZP2015_OTHERID_ADDID", "č. př.");
+        otherIdNameMap.put("ZP2015_OTHERID_OLDSIG", "nepl. sign.");
+        otherIdNameMap.put("ZP2015_OTHERID_OLDSIG2", "sp. znak");
+        otherIdNameMap.put("ZP2015_OTHERID_OLDID", "nepl. inv. č.");
+        otherIdNameMap.put("ZP2015_OTHERID_INVALID_UNITID", "neplatné ukládací číslo");
+        otherIdNameMap.put("ZP2015_OTHERID_INVALID_REFNO", "nepl. ref. ozn.");
+        otherIdNameMap.put("ZP2015_OTHERID_PRINTID", "poř. č.");
+        otherIdNameMap.put("ZP2015_OTHERID_PICID", "nakl. č.");
+        otherIdNameMap.put("ZP2015_OTHERID_NEGID", "č. neg.");
+        otherIdNameMap.put("ZP2015_OTHERID_CDID", "č. prod.");
+        otherIdNameMap.put("ZP2015_OTHERID_ISBN", "ISBN");
+        otherIdNameMap.put("ZP2015_OTHERID_ISSN", "ISSN");
+        otherIdNameMap.put("ZP2015_OTHERID_ISMN", "ISMN");
+        otherIdNameMap.put("ZP2015_OTHERID_MATRIXID", "matriční číslo");
     }
 
     public static Map<String, String> otherIdIndexMap = new HashMap<>();

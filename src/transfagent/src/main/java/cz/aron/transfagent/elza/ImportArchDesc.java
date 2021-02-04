@@ -364,7 +364,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put("ZP2015_SIZE",new EdxStringConvertor("SIZE"));
 		stringTypeMap.put("ZP2015_ITEM_MAT",new EdxStringConvertor("ITEM_MAT"));
 		stringTypeMap.put("ZP2015_INV_CISLO",new EdxStringConvertor("INV_CISLO").addIndexedItem("OTHER_ID_PROC_INDEX"));
-		stringTypeMap.put("ZP2015_OTHER_ID",new EdxStringSpecConvertor(ElzaTypes.otherIdMap).addIndexedItem(ElzaTypes.otherIdIndexMap));
+		stringTypeMap.put(ElzaTypes.ZP2015_OTHER_ID, new EdxStringSpecConvertor(ElzaTypes.otherIdMap).addIndexedItem(ElzaTypes.otherIdIndexMap));
 		stringTypeMap.put("ZP2015_EDITION",new EdxStringConvertor("EDITION"));
 		stringTypeMap.put("ZP2015_UNIT_DATE_TEXT",new EdxStringConvertor("UNIT_DATE_TEXT"));
 		stringTypeMap.put("ZP2015_EXERQUE",new EdxStringConvertor("EXERQUE"));
@@ -400,48 +400,72 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         StringBuilder sb = new StringBuilder();
         sb.append(institutionCode).append(": ");
-        sb.append(sect.getFi().getN()).append(": ");
+        sb.append(sect.getFi().getN());
+        
+        if(parentId == null) {
+            // Koren AS je bez dalsich identifikatoru
+            return sb.toString();
+        }
 
         String refOzn = null;
         String invCislo = null;
         String poradoveCislo = null;
+        String otherIdent = null;
+        String otherIdentType = null;
         for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
-            if(item.getT().equals("ZP2015_UNIT_ID")) {
+            if(item.getT().equals("ZP2015_UNIT_ID")&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString title = (DescriptionItemString)item;
                 refOzn = title.getV();
             } else 
-            if(item.getT().equals("ZP2015_INV_CISLO")) {
+            if(item.getT().equals("ZP2015_INV_CISLO")&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString title = (DescriptionItemString)item;
                 invCislo = title.getV();                
             } else 
-            if(item.getT().equals("ZP2015_SERIAL_NUMBER")) {
+            if(item.getT().equals("ZP2015_SERIAL_NUMBER")&&(item instanceof DescriptionItemInteger)) {
                 DescriptionItemInteger serNum = (DescriptionItemInteger)item;
                 poradoveCislo = serNum.getV().toString();
+            } else 
+            if(item.getT().equals(ElzaTypes.ZP2015_OTHER_ID)&&(item instanceof DescriptionItemString)) {
+                DescriptionItemString otherId = (DescriptionItemString) item;
+                otherIdentType = otherId.getS();
+                otherIdent = otherId.getV();
             }
         }
         
         if(StringUtils.isNotEmpty(refOzn)) {
-            sb.append(refOzn);
+            sb.append(", ").append(refOzn);
         } else 
         if(StringUtils.isNotEmpty(invCislo)) {
-            sb.append(invCislo);
+            sb.append(", inv.č.: ").append(invCislo);
         } else 
         if(StringUtils.isNotEmpty(poradoveCislo)) {
-            sb.append(poradoveCislo);
-        } else {
-            sb.append(lvl.getUuid().toString());
-        }
-        // koren -> jmeno AS
-        if(sb.length() == 0) {
-            if(parentId == null) {
-                sb.append(sect.getFi().getN());
+            sb.append(", poř.č.: ").append(poradoveCislo);
+        } else 
+        if(StringUtils.isNotEmpty(otherIdent)) {
+            if(otherIdentType!=null) {
+                sb.append(", ").append(otherIdentType);                
             }
+            sb.append(": ").append(otherIdent);
+        } else {
+            // TODO: stanoveni cesty pomoci hierarchie
+            // var parentApu = this.apuMap.get(lvl.getPid());
+            // while(parentApu!=null) {
+            //    apuPosMap.get()
+            // }
+            
+            // Variantne lze pridat UUID jako ident
+            //sb.append(lvl.getUuid().toString());
         }
 
         return sb.toString();
     }
     
 	private String getDesc(Section sect, Level lvl) {
+	    if(lvl.getPid()==null) {
+	        // for root use name of Fund
+	        return sect.getFi().getN();
+	    }
+	    
 		StringBuilder sb = new StringBuilder();
 
 		for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
@@ -451,6 +475,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			}
 		}
 
+		if(sb.length()==0) {
+		    return null;
+		}
 		return sb.toString();
 	}
 
