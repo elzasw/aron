@@ -28,6 +28,9 @@ partTypes:
   - name: Informace o archivním souboru
     code: PT_FUND_INFO
     viewType: STANDALONE
+  - name: Informace o archivní pomůcce
+    code: PT_FINDINGAID_INFO
+    viewType: STANDALONE
   - name: Archivní popis
     code: PT_ARCH_DESC
     viewType: STANDALONE
@@ -85,6 +88,7 @@ itemTypes:
     name: Kód archivu
     type: STRING
     indexed: true
+
   # Archivní entity
   - code: AE_CLASS
     name: Třída entity
@@ -554,7 +558,10 @@ itemTypes:
     name: partner
     type: APU_REF
     indexed: true
+
+  #
   # Archivní soubory
+  #
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru
     type: APU_REF
@@ -579,7 +586,38 @@ itemTypes:
     name: Místa vzniku
     type: APU_REF
     indexed: true
+
+  #
+  # Archivní pomucka
+  #
+  - code: FINDINGAID_ID
+    name: Číslo archivní pomůcky
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_RELEASE_DATE_PLACE
+    name: Datum a místo vydání
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_DATE
+    name: Datum zachyceného stavu
+    type: STRING
+    indexed: true    
+  - code: FINDINGAID_TYPE
+    name: Druh pomůcky
+    type: ENUM
+    indexed: true    
+  - code: FINDINGAID_DATE_RANGE
+    name: Časové rozmezí
+    type: String
+    indexed: true
+  - code: FINDINGAID_UNITS_AMOUNT
+    name: Rozsah zpřístupněných archiválií
+    type: String
+    indexed: true
+
+  #
   # Archivní popis
+  #
   - code: UNIT_ID
     name: Referenční označení
     type: STRING
