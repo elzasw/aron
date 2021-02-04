@@ -197,12 +197,13 @@ public class ApuSourceBuilder {
         part.getItms().getStrOrLnkOrEnm().add(ie);        
 	}	
 
-	static public void addDao(Apu apu, String daoId) {
+	static public void addDao(Apu apu, UUID daoUuid) {
 		Daos daos = apu.getDaos();
 		if(daos==null) {
 			daos = ApuxFactory.getObjFactory().createDaos();
+			apu.setDaos(daos);
 		}
-		daos.getUuid().add(daoId);
+		daos.getUuid().add(daoUuid.toString());
 	}
 
     public Apu getApuByName(String apuName) {

@@ -210,10 +210,20 @@ public class ImportArchDesc implements EdxItemCovertContext {
         // daos
         DigitalArchivalObjects daos = lvl.getDaos();
         if(daos!=null&&daos.getDao().size()>0) {
-            ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
+            int numExistingDaos = 0;
+            
             for(DigitalArchivalObject dao: daos.getDao()) {
-                ApuSourceBuilder.addDao(activeApu, dao.getDoid());
-                daoRefs.add(dao.getDoid());
+                var daoHandle = dao.getDoid();
+                daoRefs.add(daoHandle);
+                
+                UUID daoUuid = dataProvider.getDao(daoHandle);
+                if(daoUuid!=null) {
+                    ApuSourceBuilder.addDao(activeApu, daoUuid);
+                    numExistingDaos++;
+                }
+            }
+            if(numExistingDaos>0) {
+                ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
             }
         }
         // copy values from parent

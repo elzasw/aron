@@ -49,4 +49,9 @@ public class PropertiesDataProvider implements ContextDataProvider {
     public List<UUID> findByUUIDWithParents(UUID apUuid) {
         return Collections.emptyList();
     }
+
+    @Override
+    public UUID getDao(String daoHandle) {
+        return null;
+    }
 }

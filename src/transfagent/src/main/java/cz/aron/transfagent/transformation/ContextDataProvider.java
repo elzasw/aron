@@ -17,4 +17,6 @@ public interface ContextDataProvider {
 
     List<UUID> findByUUIDWithParents(UUID apUuid);
 
+    UUID getDao(String daoHandle);
+
 }
