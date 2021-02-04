@@ -2,7 +2,9 @@ package cz.aron.transfagent.service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.file.Files;
@@ -27,8 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -87,15 +91,19 @@ public class DSpaceImportService implements ImportProcessor {
         service.configDao = new ConfigDao();
         service.configDao.setPath("C:/temp/transfagent/daos");
 
-        String uuid = "539a0fda-c785-413b-a636-9006192fb538";
-        var saveDir = Path.of(service.configDao.getPath()).resolve(uuid);
+        // http://10.2.0.27:8088/rest/collections
+
+        String itemUuid = "61259486-3786-4877-85b5-f845ee038132";
+        var saveDir = Path.of(service.configDao.getPath()).resolve(itemUuid);
         if (!Files.exists(saveDir)) {
              Files.createDirectories(saveDir);
         }
 
-        List<DspaceFile> files = service.getDspaceFiles(uuid);
+        String sessionId = service.getJSessionId();
+
+        List<DspaceFile> files = service.getDspaceFiles(itemUuid, sessionId);
         for (DspaceFile file : files) {
-            service.saveDspaceFile(saveDir, file);
+            service.saveDspaceFile(saveDir, file, sessionId);
         }
     }
 
@@ -135,6 +143,9 @@ public class DSpaceImportService implements ImportProcessor {
             uuid = dao.getUuid().toString();
         }
 
+        // get authentication cookie
+        String sessionId = getJSessionId();
+
         // TODO: use dates in path to split in multiple dirs
         var saveDir = Path.of(configDao.getPath()).resolve(uuid);
         if (!Files.exists(saveDir)) {
@@ -147,17 +158,18 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         dao.setDataDir(uuid);
-        List<DspaceFile> files = getDspaceFiles(uuid);
+        List<DspaceFile> files = getDspaceFiles(uuid, sessionId); 
         for (DspaceFile file : files) {
-            saveDspaceFile(saveDir, file);
+            saveDspaceFile(saveDir, file, sessionId);
         }
+
         try {
             transformService.transform(saveDir);
         } catch (Exception e) {
             log.error("Error in transform path={}.", saveDir, e);
             throw new RuntimeException("Error in transform path.");
         }
-        
+
         // save to db
         dao.setState(DaoState.READY);
         dao.setDownload(false);
@@ -197,6 +209,7 @@ public class DSpaceImportService implements ImportProcessor {
 
     /**
      * Save Dao to DB
+     * 
      * @param t active transaction
      * @param dao Dao to be saved
      */
@@ -224,21 +237,31 @@ public class DSpaceImportService implements ImportProcessor {
         daoFileRepository.save(dbDao);
     }
 
-    private List<DspaceFile> getDspaceFiles(String uuid) {
+    /**
+     * Get data about all files (bitstreams) by Item UUID
+     * 
+     * @param uuid of item
+     * @param sessionId authentication cookie
+     * @return List<DspaceFile>
+     */
+    private List<DspaceFile> getDspaceFiles(String uuid, String sessionId) {
         log.debug("Getting bistreams from DSpace uuid: {}", uuid);
-        
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cookie", sessionId);
+
         List<DspaceFile> files = new ArrayList<>();
         String restUrl = configDspace.getUrl() + "/rest/items/" + uuid + "/bitstreams";
-        String responce;
+        ResponseEntity<String> responce;
         try {
             RestTemplate restTemplate = new RestTemplate();
-            responce = restTemplate.getForObject(restUrl, String.class);
+            responce = restTemplate.exchange(restUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
         } catch (Exception e) {
             log.error("Error while accessing dspace {}.", restUrl, e);
             throw new RuntimeException("Error while accessing dspace.");
         }
 
-        JsonReader jsonReader = Json.createReader(new StringReader(responce));
+        JsonReader jsonReader = Json.createReader(new StringReader(responce.getBody()));
         JsonArray jsonArray = jsonReader.readArray();
 
         for (JsonValue value : jsonArray) {
@@ -256,24 +279,35 @@ public class DSpaceImportService implements ImportProcessor {
         return files;
     }
 
-    private void saveDspaceFile(Path saveDir, DspaceFile file) {
+    /**
+     * Save file, reading from Http authenticated requests
+     * 
+     * @param saveDir folder for saving
+     * @param file name and link to the file
+     * @param sessionId authentication cookie
+     */
+    private void saveDspaceFile(Path saveDir, DspaceFile file, String sessionId) {
         Path filePath = saveDir.resolve(file.getName());
-        
-        log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), filePath.toString());
-        
-        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
-            URL url = new URL(configDspace.getUrl() + file.getRetrieveLink());
-            fileOutputStream
-                .getChannel()
-                .transferFrom(Channels.newChannel(url.openStream()), 0, Long.MAX_VALUE);
 
-            log.info("File {} successfully transferred from {}.", file.getName(), file.getRetrieveLink());
+        log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), filePath.toString());
+
+        HttpURLConnection connect;
+        try (OutputStream output = new FileOutputStream(filePath.toFile())) {
+            connect = (HttpURLConnection) new URL(configDspace.getUrl() + file.getRetrieveLink()).openConnection();
+            connect.setRequestMethod("GET");
+            connect.addRequestProperty("Cookie", sessionId);
+            connect.getInputStream().transferTo(output);
         } catch (IOException e) {
-            log.error("File {} transfer error from {}.", file.getName(), file.getRetrieveLink(), e);
+            log.error("File transfer error, link: {}, targetFile: {}", file.getRetrieveLink(), file.getName(), e);
             throw new RuntimeException("File transfer error."); 
         }
     }
 
+    /**
+     * Returns a JSESSIONID cookie, that can be used for authenticated requests
+     * 
+     * @return authentication cookie
+     */
     private String getJSessionId() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -298,6 +332,9 @@ public class DSpaceImportService implements ImportProcessor {
         return jsessionId[0];
     }
 
+    /**
+     * Class for saving information about a file
+     */
     public class DspaceFile {
         final String name;
         final String retrieveLink;
