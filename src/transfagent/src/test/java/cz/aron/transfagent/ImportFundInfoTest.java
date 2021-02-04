@@ -52,11 +52,11 @@ public class ImportFundInfoTest {
         List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
 
-        var dr0 = ranges.get(0);
-        LocalDateTimeRange idra = new LocalDateTimeRange(dr0);
+        var dateRange = ranges.get(0);
+        LocalDateTimeRange idra = new LocalDateTimeRange(dateRange);
         assertTrue(idra.getFrom().getYear() == Y_1855);
         assertTrue(idra.getTo().getYear() == Y_2013);
-        assertFalse(dr0.isVisible());
+        assertFalse(dateRange.isVisible());
     }
 
     @AfterAll

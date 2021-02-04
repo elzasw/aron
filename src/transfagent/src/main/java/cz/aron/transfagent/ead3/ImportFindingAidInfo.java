@@ -66,6 +66,10 @@ public class ImportFindingAidInfo {
         var contents = subtitules.get(0).getContent();
         String findingAidName = contents.get(0).toString();
 
+        if (uuid == null) {
+            uuid = UUID.randomUUID();
+        }
+
         Apu apu = apusBuilder.createApu(findingAidName, ApuType.FINDING_AID, uuid);
 
         // add title part

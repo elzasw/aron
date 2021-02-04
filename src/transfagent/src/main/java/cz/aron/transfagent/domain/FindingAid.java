@@ -32,6 +32,10 @@ public class FindingAid {
     private ApuSource apuSource;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "institution_id", nullable = false)
+    private Institution institution;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fund_id", nullable = false)
     private Fund fund;
 
@@ -65,6 +69,14 @@ public class FindingAid {
 
     public void setApuSource(ApuSource apuSource) {
         this.apuSource = apuSource;
+    }
+
+    public Institution getInstitution() {
+        return institution;
+    }
+
+    public void setInstitution(Institution institution) {
+        this.institution = institution;
     }
 
     public Fund getFund() {
