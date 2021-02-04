@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
+import cz.aron.transfagent.config.ConfigAronFileImport;
 import cz.aron.transfagent.service.importfromdir.FileHelper;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
@@ -19,17 +20,18 @@ public class FileImportService implements SmartLifecycle {
     private static final Logger log = LoggerFactory.getLogger(FileImportService.class);        
 
     private final StorageService storageService;
-    
+
+    private final ConfigAronFileImport configAronFileImport;
+
     List<ImportProcessor> importProcessors = new ArrayList<>();
-    
+
     private long importInterval = 5000;
 
     private ThreadStatus status;
 
-    public FileImportService(StorageService storageService
-            ) throws IOException {
+    public FileImportService(StorageService storageService, ConfigAronFileImport configAronFileImport) throws IOException {
         this.storageService = storageService;
-                
+        this.configAronFileImport = configAronFileImport;
         initDirs();
     }
 
@@ -87,6 +89,10 @@ public class FileImportService implements SmartLifecycle {
 
     @Override
     public void start() {
+        if(configAronFileImport.getDisabled() != null && configAronFileImport.getDisabled().booleanValue()) {
+            status = ThreadStatus.STOPPED;
+            return;
+        }
         status = ThreadStatus.RUNNING;
         new Thread(() -> {
             run();
