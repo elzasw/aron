@@ -16,7 +16,7 @@ spring:
 aron:
   workDir: target/test-resources
   typesConfig: src/test/resources/config/types.yaml
-  disabled: true
+  fileImportDisabled: true
 
 dao:
   dir:

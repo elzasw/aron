@@ -7,14 +7,14 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "aron")
 public class ConfigAronFileImport {
 
-    Boolean disabled = false;
+    boolean fileImportDisabled = false;
 
-    public Boolean getDisabled() {
-        return disabled;
+    public boolean isFileImportDisabled() {
+        return fileImportDisabled;
     }
 
-    public void setDisabled(Boolean disabled) {
-        this.disabled = disabled;
+    public void setFileImportDisabled(boolean fileImportDisabled) {
+        this.fileImportDisabled = fileImportDisabled;
     }
 
 }

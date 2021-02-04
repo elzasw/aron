@@ -89,7 +89,7 @@ public class FileImportService implements SmartLifecycle {
 
     @Override
     public void start() {
-        if(configAronFileImport.getDisabled() != null && configAronFileImport.getDisabled().booleanValue()) {
+        if(configAronFileImport.isFileImportDisabled()) {
             status = ThreadStatus.STOPPED;
             return;
         }
