@@ -132,14 +132,39 @@ public class ImportFundInfo {
 			apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, puvodceUuid);
 		}
 
-        // collect all date intervals
+        Set<String> apRefs = new HashSet<>();
         for(Level lvl : sect.getLvls().getLvl()) {
+            // collect all date intervals
             if(lvl.getPid() != null) {
                 var ranges = getItemDateRanges(lvl);
                 for(ItemDateRange range : ranges) {
                     ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(range);
                     dateRangeAppender.appendTo(apu);
                 }
+            }
+            
+            // zjisteni rejstrikovych hesel
+            for(var item: lvl.getDdOrDoOrDp()) {
+                if(item instanceof DescriptionItemAPRef) {
+                    DescriptionItemAPRef apRef = (DescriptionItemAPRef)item;
+                    
+                    String apid = apRef.getApid();
+                    if(apRef.getT().equals(ElzaTypes.ZP2015_ORIGINATOR)) {
+                        apRefs.add(apid);
+                    } else
+                    if(apRef.getT().equals(ElzaTypes.ZP2015_ENTITY_ROLE)) {
+                        apRefs.add(apid);
+                    }
+                }
+            }
+        }
+        // add refs
+        Map<String, AccessPoint> apMap = elzaXmlReader.getApMap();
+        for(String apid: apRefs) {
+            var ap = apMap.get(apid);
+            if(ap!=null) {
+                UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+                apusBuilder.addApuRef(partFundInfo, CoreTypes.FUND_AP_REF, apUuid, false);
             }
         }
 

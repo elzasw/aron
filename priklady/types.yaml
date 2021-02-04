@@ -586,6 +586,11 @@ itemTypes:
     name: Místa vzniku
     type: APU_REF
     indexed: true
+  # Přístupové body pro fond
+  - code: FUND_AP_REF
+    name: Rejstříkové heslo
+    type: APU_REF
+    indexed: true
 
   #
   # Archivní pomucka

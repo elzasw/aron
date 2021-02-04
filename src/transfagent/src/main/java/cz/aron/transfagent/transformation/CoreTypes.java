@@ -20,6 +20,7 @@ public class CoreTypes {
 	
 	// Informace o fondu
 	public final static String PT_FUND_INFO = "PT_FUND_INFO";
+	public final static String FUND_AP_REF = "FUND_AP_REF";
 	
 	// Informace o archivní entitě
 	public final static String PT_AE_INFO = "PT_AE_INFO";
