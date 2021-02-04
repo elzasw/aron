@@ -613,11 +613,11 @@ itemTypes:
     indexed: true    
   - code: FINDINGAID_DATE_RANGE
     name: Časové rozmezí
-    type: String
+    type: STRING
     indexed: true
   - code: FINDINGAID_UNITS_AMOUNT
     name: Rozsah zpřístupněných archiválií
-    type: String
+    type: STRING
     indexed: true
 
   #

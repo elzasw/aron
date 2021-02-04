@@ -6,6 +6,7 @@ public class TypesConfiguration {
 
     private List<PartTypeConfig> partTypes;
     private List<ItemTypeConfig> itemTypes;
+    private List<ItemGroup> itemGroups;
     private List<MetaDataConfig> metaDataTypes;
 
     public TypesConfiguration() {
@@ -19,6 +20,10 @@ public class TypesConfiguration {
         this.itemTypes = itemTypes;
     }
 
+    public void setItemGroups(List<ItemGroup> itemGroups) {
+        this.itemGroups = itemGroups;
+    }
+
     public void setMetaDataTypes(List<MetaDataConfig> metaDataTypes) {
         this.metaDataTypes = metaDataTypes;
     }
@@ -29,6 +34,10 @@ public class TypesConfiguration {
 
     public List<ItemTypeConfig> getItemTypes() {
         return itemTypes;
+    }
+
+    public List<ItemGroup> getItemGroups() {
+        return itemGroups;
     }
 
     public List<MetaDataConfig> getMetaDataTypes() {
