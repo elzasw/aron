@@ -58,25 +58,25 @@ public class DSpaceImportService implements ImportProcessor {
     private static Logger log = LoggerFactory.getLogger(DSpaceImportService.class);
 
     @Autowired
-    DaoFileRepository daoFileRepository;
-    
-    @Autowired
     ApuSourceRepository apuSourceRepository;
 
     @Autowired
+    DaoFileRepository daoFileRepository;
+    
+    @Autowired
+    private FileImportService importService;
+
+    @Autowired
     TransformService transformService;
+
+    @Autowired
+    TransactionTemplate transactionTemplate;
 
     @Autowired
     ConfigDspace configDspace;
 
     @Autowired
     ConfigDao configDao;
-    
-    @Autowired
-    private FileImportService importService;
-    
-    @Autowired
-    TransactionTemplate transactionTemplate;
 
     public static void main(String[] args) throws IOException {
         DSpaceImportService service = new DSpaceImportService();
@@ -134,17 +134,19 @@ public class DSpaceImportService implements ImportProcessor {
 
     private void importDaoFiles(Dao dao) {
         log.info("Importing DAO, daoId: {} (handle: {}, uuid: {})", dao.getId(), dao.getHandle(), dao.getUuid());
+
+        // get authentication cookie
+        String sessionId = getJSessionId();
+
         // check or get uuid
         String uuid;
         if(dao.getUuid()==null) {
-            uuid = getItemIdFromHandle(dao.getHandle());
+            uuid = getItemIdFromHandle(dao.getHandle(), sessionId);
             dao.setUuid(UUID.fromString(uuid));
         } else {
             uuid = dao.getUuid().toString();
         }
 
-        // get authentication cookie
-        String sessionId = getJSessionId();
 
         // TODO: use dates in path to split in multiple dirs
         var saveDir = Path.of(configDao.getPath()).resolve(uuid);
@@ -182,24 +184,27 @@ public class DSpaceImportService implements ImportProcessor {
      * @param handle
      * @return Return content of property uuid:
      */
-    private String getItemIdFromHandle(String handle) {
+    private String getItemIdFromHandle(String handle, String sessionId) {
         log.debug("DSpace: Reading item for handle: {}", handle);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cookie", sessionId);
         String restUrl = configDspace.getUrl() + "/rest/handle/" + handle;
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String response = restTemplate.getForObject(restUrl, String.class);
-            log.debug("DSpace response: {}", response);
-            
-            JsonReader jsonReader = Json.createReader(new StringReader(response));
+            ResponseEntity<String> response = restTemplate.exchange(restUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
+            log.debug("DSpace response: {}", response.getBody());
+
+            JsonReader jsonReader = Json.createReader(new StringReader(response.getBody()));
             var jsonObj = jsonReader.readObject();
             var uuid = jsonObj.getString("uuid");
-            
+
             /*var i = response.indexOf("<UUID>");
             var j = response.indexOf("</UUID>"); 
             var uuid = response.substring(i+6, j);
             */
             log.info("Received uuid for handle {} is ", handle, uuid);
-            
+
             return uuid;
         } catch (Exception e) {
             log.error("Error while accessing dspace {}.", restUrl, e);
@@ -327,9 +332,8 @@ public class DSpaceImportService implements ImportProcessor {
         }
         headers = response.getHeaders();
         String cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
-        String[] jsessionId = cookie.split(";");
 
-        return jsessionId[0];
+        return cookie.split(";")[0];
     }
 
     /**
