@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.PostConstruct;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
@@ -40,6 +41,7 @@ import cz.aron.transfagent.config.ConfigDspace;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
+import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
@@ -53,6 +55,9 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     DaoFileRepository daoFileRepository;
+    
+    @Autowired
+    ApuSourceRepository apuSourceRepository;
 
     @Autowired
     TransformService transformService;
@@ -62,6 +67,9 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     ConfigDao configDao;
+    
+    @Autowired
+    private FileImportService importService;
     
     @Autowired
     TransactionTemplate transactionTemplate;
@@ -91,6 +99,11 @@ public class DSpaceImportService implements ImportProcessor {
         }
     }
 
+    @PostConstruct
+    void init() {
+        importService.registerImportProcessor(this);
+    }
+    
     @Override
     public void importData(ImportContext ic) {
         if (configDspace.isDisabled()) {
@@ -112,6 +125,7 @@ public class DSpaceImportService implements ImportProcessor {
     }
 
     private void importDaoFiles(Dao dao) {
+        log.info("Importing DAO, daoId: {} (handle: {}, uuid: {})", dao.getId(), dao.getHandle(), dao.getUuid());
         // check or get uuid
         String uuid;
         if(dao.getUuid()==null) {
@@ -121,7 +135,8 @@ public class DSpaceImportService implements ImportProcessor {
             uuid = dao.getUuid().toString();
         }
 
-        // TODO: use dates in path to split in multiple dirs 
+        // TODO: use dates in path to split in multiple dirs
+        // TODO: use Path instead of String for saveDir
         String saveDir = configDao.getPath() + "/" + uuid;
         if (!Files.exists(Path.of(saveDir))) {
             try {
@@ -192,6 +207,12 @@ public class DSpaceImportService implements ImportProcessor {
                     }
                 );
         dbDao.setDataDir(dao.getDataDir());
+        if(dbDao.getUuid()==null) {
+            // Dao has no uuid -> connected apusource have to be reindexed
+            var apuSource = dbDao.getApuSource();
+            apuSource.setReimport(true);
+            apuSourceRepository.save(apuSource);
+        }
         dbDao.setUuid(dao.getUuid());
         dbDao.setState(dao.getState());
         dbDao.setTransferred(false);
@@ -200,6 +221,8 @@ public class DSpaceImportService implements ImportProcessor {
     }
 
     private List<DspaceFile> getDspaceFiles(String uuid) {
+        log.debug("Getting bistreams from DSpace uuid: {}", uuid);
+        
         List<DspaceFile> files = new ArrayList<>();
         String restUrl = configDspace.getUrl() + "/rest/items/" + uuid + "/bitstreams";
         String responce;
@@ -230,6 +253,8 @@ public class DSpaceImportService implements ImportProcessor {
     }
 
     private void saveDspaceFile(String saveDir, DspaceFile file) {
+        log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), saveDir + "/" + file.getName());
+        
         try (FileOutputStream fileOutputStream = new FileOutputStream(saveDir + "/" + file.getName())) {
             URL url = new URL(configDspace.getUrl() + file.getRetrieveLink());
             fileOutputStream
