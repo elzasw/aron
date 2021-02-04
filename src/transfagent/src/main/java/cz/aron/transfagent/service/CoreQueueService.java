@@ -140,8 +140,10 @@ public class CoreQueueService implements SmartLifecycle {
     		return createSourceItemsSimple(item);
     	case ARCH_DESCS:
     		return createSourceItemsSimple(item);
+    	case FINDING_AID:
+    	    return createSourceItemsSimple(item);
     	default:
-    		throw new IllegalStateException("Unsupprted source type: "+item.getApuSource().getSourceType());
+    		throw new IllegalStateException("Unsupported source type: "+item.getApuSource().getSourceType());
     	}
     }
 

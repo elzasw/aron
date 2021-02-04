@@ -129,9 +129,9 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         ApuSourceBuilder apuSourceBuilder;
         final var importAp = new ImportAp();
         Path dataDir;
-        try {                       
+        try {
             apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
-                    (ae.getUuid()!=null)?ae.getUuid():null,
+                                                 ae.getUuid(),
                             databaseDataProvider);
             try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
                 apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
@@ -307,6 +307,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         }
         if(srcArchivalEntity.getUuid()!=null) {
             dbArchEntity.setUuid(srcArchivalEntity.getUuid());
+            // reset UUID in old entity (avoid conflicts)
+            srcArchivalEntity.setUuid(null);
         }
         dbArchEntity.setParentEntity(parentEntity);
         archivalEntityRepository.save(dbArchEntity);
