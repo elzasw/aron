@@ -257,30 +257,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			UUID uuid = importAp.getApUuid();
 			var archivalEntity = archivalEntityRepository.findByUuid(uuid);
 			if (archivalEntity.isPresent()) {
-			    // update current db record with parent and elzaId
-				ArchivalEntity dbArchEntity = archivalEntity.get(); 
-				dbArchEntity.setElzaId(srcArchivalEntity.getElzaId());
-				dbArchEntity.setParentEntity(parentEntity);
-				archivalEntityRepository.save(dbArchEntity);
-				
-				// move all links from this entity to new ae
-				List<EntitySource> ess = entitySourceRepository.findByArchivalEntity(srcArchivalEntity);
-				for(EntitySource es: ess) {
-					es.setArchivalEntity(dbArchEntity);
-					entitySourceRepository.save(es);
-				}
-				
-				// correct parent in connected entities
-				var connectedEntities = archivalEntityRepository.findAllByParentEntity(srcArchivalEntity);
-				for(var ce: connectedEntities) {
-				    ce.setParentEntity(dbArchEntity);
-				    archivalEntityRepository.save(ce);
-				}
-				
-				// drop redundant
-				archivalEntityRepository.delete(srcArchivalEntity);
-				
-				reindexAfterEntityChanged(ae);
+			    ArchivalEntity dbArchEntity = archivalEntity.get();
+			    mergeEntities(dbArchEntity, srcArchivalEntity, parentEntity);
 				return;
 			} else {
 				srcArchivalEntity.setUuid(uuid);
@@ -290,6 +268,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		// update elza id
 		if (srcArchivalEntity.getElzaId() == null) {
 			srcArchivalEntity.setElzaId(importAp.getElzaId());
+			// check if elzaId not present with other record
+			var archivalEntity = archivalEntityRepository.findByElzaId(importAp.getElzaId());
+			if(archivalEntity.isPresent()) {
+			    ArchivalEntity dbArchEntity = archivalEntity.get();
+                mergeEntities(dbArchEntity, srcArchivalEntity, parentEntity);
+                return;
+			}
 		}
 		srcArchivalEntity.setParentEntity(parentEntity);
 		if(srcArchivalEntity.getStatus()!=EntityStatus.AVAILABLE) {
@@ -303,6 +288,41 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			reindexAfterEntityChanged(srcArchivalEntity);
 		}
 	}
+
+    private void mergeEntities(ArchivalEntity dbArchEntity, ArchivalEntity srcArchivalEntity, 
+                               ArchivalEntity parentEntity) {
+        // update current db record with parent and elzaId
+        if(srcArchivalEntity.getElzaId()!=null) {
+            dbArchEntity.setElzaId(srcArchivalEntity.getElzaId());
+        }
+        if(srcArchivalEntity.getUuid()!=null) {
+            dbArchEntity.setUuid(srcArchivalEntity.getUuid());
+        }
+        dbArchEntity.setParentEntity(parentEntity);
+        archivalEntityRepository.save(dbArchEntity);
+        
+        // move all links from this entity to new ae
+        List<EntitySource> ess = entitySourceRepository.findByArchivalEntity(srcArchivalEntity);
+        for(EntitySource es: ess) {
+            es.setArchivalEntity(dbArchEntity);
+            entitySourceRepository.save(es);
+        }
+        
+        // correct parent in connected entities
+        var connectedEntities = archivalEntityRepository.findAllByParentEntity(srcArchivalEntity);
+        for(var ce: connectedEntities) {
+            ce.setParentEntity(dbArchEntity);
+            archivalEntityRepository.save(ce);
+        }
+        
+        // drop redundant
+        archivalEntityRepository.delete(srcArchivalEntity);
+        
+        if(dbArchEntity.getStatus()!=EntityStatus.ACCESSIBLE) {
+            // reindex if already downloaded
+            reindexAfterEntityChanged(srcArchivalEntity);
+        }
+    }
 
     private void reindexAfterEntityChanged(ArchivalEntity archivalEntity) {
 		// reindex directly connected items
