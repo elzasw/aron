@@ -213,7 +213,7 @@ itemTypes:
   - code: EXC_ENDVALIDNESS
     name: konec platnosti
     type: UNITDATE
-    indexed: false
+    indexed: true
   - code: EXT_TYPE
     name: typ zániku
     type: ENUM
@@ -221,344 +221,344 @@ itemTypes:
   - code: RT_AUTHOR
     name: autor/tvůrce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_AUTHOROFCHANGE
     name: autor změny / tvůrce změny
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GRANDMOTHER
     name: babička
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_BROTHER
     name: bratr
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_HECOUSIN
     name: bratranec
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_WHOLE
     name: celek
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_CEREMONY
     name: ceremoniál ocenění
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_MEMBERORG
     name: členská organizace
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_RELATIONS
     name: další rodinné vztahy
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GRANDFATHER
     name: dědeček
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_DOCUMENT
     name: dokument
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYEND
     name: entita související s koncem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYBIRTH
     name: entita související s narozením
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYDEATH
     name: entita související s úmrtím
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYRISE
     name: entita související se vznikem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYORIGIN
     name: entita související se začátkem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ENTITYEXTINCTION
     name: entita související se zánikem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_FUNCTION
     name: funkce/činnost
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GEOSCOPE
     name: geografická působnost
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_MILESTONE
     name: historický milník
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ISPART
     name: je část
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ISMEMBER
     name: je členem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GENUSMEMBER
     name: je členem rodiny/rodu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_OTHERNAME
     name: jiná entita reprezentující tutéž osobu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ANCESTOR
     name: jiný předek
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ACTIVITYCORP
     name: korporace veřejného působení
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_LIQUIDATOR
     name: likvidátor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_OWNER
     name: majitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_HOLDER
     name: majitel, držitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_HUSBAND
     name: manžel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_WIFE
     name: manželka
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_MOTHER
     name: matka
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_PLACE
     name: místo
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_VENUE
     name: místo konání
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_PLACEEND
     name: místo ukončení
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_PLACESTART
     name: místo uzavření
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SUPCORP
     name: nadřazená korporace
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SUPTERM
     name: nadřazený pojem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SENIOR
     name: nadřízený
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SUCCESSOR
     name: nástupce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ACTIVITYFIELD
     name: obor činnosti
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_STUDYFIELD
     name: obor studia
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_AWARD
     name: ocenění
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ORGANIZER
     name: organizátor, svolavatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_FATHER
     name: otec
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_PARTNER
     name: partner
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SHEPARTNER
     name: partnerka
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SUBTERM
     name: podřazený pojem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_NAMEDAFTER
     name: pojmenováno po
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_LASTKMEMBER
     name: poslední známý člen rodu/rodiny
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_FIRSTKMEMBER
     name: první známý člen rodu/rodiny
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_PREDECESSOR
     name: předchůdce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_AFFILIATION
     name: příslušnost k
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SISTER
     name: sestra
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SHECOUSIN
     name: sestřenice
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_RESIDENCE
     name: sídlo
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_COMPEVENT
     name: souborná událost, celek
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_RELATED
     name: související entita
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_RELATEDTERM
     name: související pojem
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_COLLABORATOR
     name: spolupracovník
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SCHOOLMATE
     name: spolužák
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_UNCLE
     name: strýc
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SCHOOL
     name: škola
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_BROTHERINLAW
     name: švagr
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_SISTERINLAW
     name: švagrová
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_CATEGORY
     name: taxonomická kategorie
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_THEME
     name: tematický celek
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_AUNT
     name: teta
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_FATHERINLAW
     name: tchán
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_MOTHERINLAW
     name: tchyně
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_TEACHER
     name: učitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GRANTAUTH
     name: udělovatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_STORAGE
     name: uložení
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_LOCATION
     name: umístění
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_OBJECT
     name: vazba na objekt
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ACTIVITIES
     name: významné aktivity
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_FOUNDER
     name: zakladatel/zřizovatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_EMPLOYER
     name: zaměstnavatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ROOF
     name: zjednodušená podniková entita
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_REPRESENT
     name: zástupce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_NAMECHANGE
     name: změna jména/identity
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_MENTION
     name: zmínka o existenci
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_ORIGINATOR
     name: zřizovatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: RT_GEOPARTNER
     name: partner
     type: APU_REF
-    indexed: false
+    indexed: true
   # Archivní soubory
   - code: ARCHDESC_ROOT_REF
     name: Seznam archiválií v archivním souboru
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: INST_REF
     name: Instituce
     type: APU_REF
@@ -910,287 +910,287 @@ itemTypes:
   - code: ENTITY_ROLE_2
     name: autor dialogu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_4
     name: autor fotografií
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_5
     name: skladatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_10
     name: autor textové složky/textař
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_6
     name: autor hudby/skladatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_7
     name: autor choreografie/choreograf
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_8
     name: autor komentáře
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_9
     name: autor námětu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_11
     name: autor textu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_3
     name: autor doprovodnéno textu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_12
     name: autor triků a speciálních efektů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_13
     name: autor výtvarné a obrazové stránky
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_14
     name: autor výtvarné stránky
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_15
     name: vydavatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_16
     name: vydavatel / nakladatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_17
     name: pečetitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_18
     name: produkční společnost/producent
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_19
     name: objednatel / příjemce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_20
     name: distributor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_21
     name: příjemce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_22
     name: žadatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_23
     name: držitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_24
     name: odesilatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_25
     name: schvalovatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_26
     name: stavitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_27
     name: režisér
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_28
     name: scénárista
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_29
     name: kameraman
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_30
     name: interpret hudby
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_31
     name: fotograf
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_32
     name: redaktor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_33
     name: kartograf
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_34
     name: editor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_35
     name: editor / redaktor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_36
     name: kreslič
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_37
     name: majitel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_38
     name: tvůrce technického zpracování
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_39
     name: tvůrce výtvarné stránky
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_40
     name: dramaturg
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_41
     name: střih/střihač
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_42
     name: zvuk/zvukař
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_43
     name: účinkující
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_44
     name: překladatel
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_45
     name: lektor
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_46
     name: svědek
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_47
     name: ručitel (rukojmě)
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_48
     name: písař
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_49
     name: zpracovatel nosičů záznamů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_50
     name: výrobce nosičů záznamů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_51
     name: tiskárna
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_52
     name: tiskárna/tiskař
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_53
     name: výrobce
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_54
     name: výrobce typářů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_55
     name: výrobce odlitků otisků / otisků typářů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_56
     name: místo natáčení
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_57
     name: místo vydavatele
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_58
     name: místo vydání
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_59
     name: místo vydání dokumentů
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_60
     name: místo výroby
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_61
     name: místo vzniku jednotky popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_62
     name: místo vzniku předlohy popisované kopie
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_63
     name: typové označení a název výrobku a typové stavby
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_64
     name: entita zachycená jednotkami popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_65
     name: ostatní entita zachycená jednotkami popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_66
     name: osoba/bytost zachycená jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_67
     name: rod/rodina zachycený/á jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_68
     name: korporace zachycená jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_69
     name: událost zachycená jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_70
     name: dílo/výtvor zachycené/ý jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_71
     name: geografický objekt zachycený jednotkou popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ENTITY_ROLE_72
     name: obecný pojem vztahující se k jednotce popisu
     type: APU_REF
-    indexed: false
+    indexed: true
   - code: ROLE
     name: Role
     type: ENUM
@@ -1199,7 +1199,7 @@ itemTypes:
   - code: ARCH_DESC_REF
     name: Pevně spojeno s
     type: APU_REF
-    indexed: false
+    indexed: true
   # Odkaz z archivniho popisu na archivni soubor
   - code: FUND_REF
     name: Archivní soubor

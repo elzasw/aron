@@ -88,9 +88,9 @@ public class DSpaceImportService implements ImportProcessor {
         service.configDao.setPath("C:/temp/transfagent/daos");
 
         String uuid = "539a0fda-c785-413b-a636-9006192fb538";
-        String saveDir = service.configDao.getPath() + "/" + uuid;
-        if (!Files.exists(Path.of(saveDir))) {
-             Files.createDirectories(Path.of(saveDir));
+        var saveDir = Path.of(service.configDao.getPath()).resolve(uuid);
+        if (!Files.exists(saveDir)) {
+             Files.createDirectories(saveDir);
         }
 
         List<DspaceFile> files = service.getDspaceFiles(uuid);
@@ -136,23 +136,23 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         // TODO: use dates in path to split in multiple dirs
-        // TODO: use Path instead of String for saveDir
-        String saveDir = configDao.getPath() + "/" + uuid;
-        if (!Files.exists(Path.of(saveDir))) {
+        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
+        if (!Files.exists(saveDir)) {
             try {
-                Files.createDirectories(Path.of(saveDir));
+                Files.createDirectories(saveDir);
             } catch (IOException e) {
-                log.error("Error creating directory {}.", saveDir, e);
+                log.error("Error creating directory {}.", saveDir.toString(), e);
                 throw new RuntimeException("Error creating directory."); 
             }
         }
 
+        dao.setDataDir(uuid);
         List<DspaceFile> files = getDspaceFiles(uuid);
         for (DspaceFile file : files) {
             saveDspaceFile(saveDir, file);
         }
         try {
-            transformService.transform(Path.of(saveDir));
+            transformService.transform(saveDir);
         } catch (Exception e) {
             log.error("Error in transform path={}.", saveDir, e);
             throw new RuntimeException("Error in transform path.");
@@ -168,20 +168,24 @@ public class DSpaceImportService implements ImportProcessor {
      * Read item from handle
      * 
      * @param handle
-     * @return Return content of element <UUID>...</UUID>
+     * @return Return content of property uuid:
      */
     private String getItemIdFromHandle(String handle) {
         log.debug("DSpace: Reading item for handle: {}", handle);
-        String restUrl = configDspace.getUrl() + "/handle/" + handle;
+        String restUrl = configDspace.getUrl() + "/rest/handle/" + handle;
         try {
             RestTemplate restTemplate = new RestTemplate();
             String response = restTemplate.getForObject(restUrl, String.class);
             log.debug("DSpace response: {}", response);
             
-            var i = response.indexOf("<UUID>");
+            JsonReader jsonReader = Json.createReader(new StringReader(response));
+            var jsonObj = jsonReader.readObject();
+            var uuid = jsonObj.getString("uuid");
+            
+            /*var i = response.indexOf("<UUID>");
             var j = response.indexOf("</UUID>"); 
             var uuid = response.substring(i+6, j);
-            
+            */
             log.info("Received uuid for handle {} is ", handle, uuid);
             
             return uuid;
@@ -252,10 +256,12 @@ public class DSpaceImportService implements ImportProcessor {
         return files;
     }
 
-    private void saveDspaceFile(String saveDir, DspaceFile file) {
-        log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), saveDir + "/" + file.getName());
+    private void saveDspaceFile(Path saveDir, DspaceFile file) {
+        Path filePath = saveDir.resolve(file.getName());
         
-        try (FileOutputStream fileOutputStream = new FileOutputStream(saveDir + "/" + file.getName())) {
+        log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), filePath.toString());
+        
+        try (FileOutputStream fileOutputStream = new FileOutputStream(filePath.toFile())) {
             URL url = new URL(configDspace.getUrl() + file.getRetrieveLink());
             fileOutputStream
                 .getChannel()
