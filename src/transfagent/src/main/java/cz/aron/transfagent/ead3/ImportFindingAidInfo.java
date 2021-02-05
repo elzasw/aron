@@ -78,8 +78,8 @@ public class ImportFindingAidInfo {
         apusBuilder.addString(partTitle, CoreTypes.TITLE, findingAidName);
 
         institutionCode = ctrl.getMaintenanceagency().getAgencycode().getContent();
-        var instApuUuid = dataProvider.getInstitutionApu(institutionCode);
-        Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
+        var instInfo = dataProvider.getInstitutionApu(institutionCode);
+        Validate.notNull(instInfo, "Missing institution, code: %s", institutionCode);
 
         var fundApuUuid = dataProvider.getFundApu(institutionCode, fundCode);
         Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fundCode, institutionCode);
@@ -87,7 +87,7 @@ public class ImportFindingAidInfo {
         // add references part
         Part partRef = apusBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
         apusBuilder.addApuRef(partRef, "FUND_REF", fundApuUuid);
-        apusBuilder.addApuRef(partRef, "FUND_INST_REF", instApuUuid);
+        apusBuilder.addApuRef(partRef, "FUND_INST_REF", instInfo.getUuid());
 
         return apusBuilder;
     }

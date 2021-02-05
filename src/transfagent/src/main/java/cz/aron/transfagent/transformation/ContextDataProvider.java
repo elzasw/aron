@@ -9,11 +9,11 @@ import java.util.UUID;
  */
 public interface ContextDataProvider {
 
-	UUID getInstitutionApu(String instCode);
-	
-	List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId);
+    InstitutionInfo getInstitutionApu(String instCode);
 
-	UUID getFundApu(String institutionCode, String fundCode);
+    List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId);
+
+    UUID getFundApu(String institutionCode, String fundCode);
 
     List<UUID> findByUUIDWithParents(UUID apUuid);
 

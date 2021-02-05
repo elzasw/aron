@@ -108,13 +108,13 @@ public class ImportFundInfo {
 		apusBuilder.addString(partName, CoreTypes.TITLE, fundName);
 
 		institutionCode = fi.getIc();
-		var instApu = dataProvider.getInstitutionApu(institutionCode);
-		if(instApu==null) {
+		var instIndo = dataProvider.getInstitutionApu(institutionCode);
+		if(instIndo==null) {
             throw new RuntimeException("Missing institution: " + institutionCode);
 		}
 
 		Part partFundInfo = apusBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
-		apusBuilder.addApuRef(partFundInfo, "INST_REF", instApu);
+		apusBuilder.addApuRef(partFundInfo, "INST_REF", instIndo.getUuid());
 		var rootLvlUuid = getRootLevelUuid(sect.getLvls());
 		if(rootLvlUuid!=null) {
 			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", rootLvlUuid);
