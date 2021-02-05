@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -63,7 +65,12 @@ public class ImportFindingAidServiceTest extends AbstractCommonTest {
         assertTrue(findingAid.getFund().equals(fund));
 
         // kontrola reimportu
+        Path filePdf = storageService.getDataPath().resolve(apuSource.getDataDir()).resolve(apuSource.getOrigDir() + ".pdf");
+        Files.delete(filePdf);
         importFindingAidService.reimport(apuSource);
+
+        attachments = attachmentRepository.findAll();
+        assertTrue(attachments.isEmpty());
     }
 
 }

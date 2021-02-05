@@ -24,6 +24,7 @@ import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.FileImportService;
+import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportArchDescService;
 import cz.aron.transfagent.service.importfromdir.ImportDirectService;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService;
@@ -97,6 +98,9 @@ public abstract class AbstractCommonTest {
 
     @Autowired
     FileImportService fileImportService;
+
+    @Autowired
+    StorageService storageService;
 
     @Autowired
     ArchivalEntityRepository archivalEntityRepository;
