@@ -21,6 +21,7 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Attachment;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
@@ -29,6 +30,7 @@ import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
 import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
+import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -57,6 +59,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
 
     private final FindingAidRepository findingAidRepository;
 
+    private final AttachmentRepository attachmentRepository;
+
     private final ApuSourceRepository apuSourceRepository;
 
     private final CoreQueueRepository coreQueueRepository;
@@ -77,7 +81,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
 
     public ImportFindingAidService(ApuSourceService apuSourceService, FileImportService fileImportService,
             ReimportService reimportService, StorageService storageService, InstitutionRepository institutionRepository,
-            FindingAidRepository findingAidRepository, ApuSourceRepository apuSourceRepository,
+            FindingAidRepository findingAidRepository, AttachmentRepository attachmentRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, FundRepository fundRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader) {
@@ -87,6 +91,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         this.storageService = storageService;
         this.institutionRepository = institutionRepository;
         this.findingAidRepository = findingAidRepository;
+        this.attachmentRepository = attachmentRepository;
         this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
         this.fundRepository = fundRepository;
@@ -206,6 +211,14 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             findingAid.setFund(fund);
             findingAid = findingAidRepository.save(findingAid);
 
+            if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(FINDING_AID_DASH + findingaidCode + ".xml"))) {
+                var attacment = new Attachment();
+                attacment.setApuSource(apuSource);
+                attacment.setFileName("Archivní pomůcka v PDF");
+                attacment.setUuid(UUID.randomUUID());
+                attacment = attachmentRepository.save(attacment); 
+            }
+
             var coreQueue = new CoreQueue();
             coreQueue.setApuSource(apuSource);
             coreQueueRepository.save(coreQueue);
@@ -222,6 +235,21 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             var apuSource = findingAid.getApuSource();
             apuSource.setDataDir(dataDir.toString());
             apuSource.setOrigDir(origDir.getFileName().toString());
+
+            var attacment = attachmentRepository.findByApuSource(apuSource);
+            if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(FINDING_AID_DASH + findingAid.getCode() + ".xml"))) {
+                if(attacment == null) {
+                    attacment = new Attachment();
+                    attacment.setApuSource(apuSource);
+                    attacment.setFileName("Archivní pomůcka v PDF");
+                    attacment.setUuid(UUID.randomUUID());
+                    attacment = attachmentRepository.save(attacment); 
+                }
+            } else {
+                if(attacment != null) {
+                    attachmentRepository.delete(attacment);
+                }
+            }
 
             var coreQueue = new CoreQueue();
             coreQueue.setApuSource(apuSource);
@@ -243,19 +271,35 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             log.error("Missing findingAid: {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        String fileName = FINDING_AID_DASH + findingAid.getCode() + ".xml";
+        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";
+        String filePdf = FINDING_AID_DASH + findingAid.getCode() + ".pdf";
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        var attacment = attachmentRepository.findByApuSource(apuSource);
+        if (Files.exists(apuDir.resolve(filePdf))) {
+            if(attacment == null) {
+                attacment = new Attachment();
+                attacment.setApuSource(apuSource);
+                attacment.setFileName("Archivní pomůcka v PDF");
+                attacment.setUuid(UUID.randomUUID());
+                attacment = attachmentRepository.save(attacment); 
+            }
+        } else {
+            if(attacment != null) {
+                attachmentRepository.delete(attacment);
+            }
+        }
+
         var ifai = new ImportFindingAidInfo(findingAid.getCode());
         ApuSourceBuilder builder;
         try {
-            builder = ifai.importFindingAidInfo(apuDir.resolve(fileName), findingAid.getUuid(), databaseDataProvider);
+            builder = ifai.importFindingAidInfo(apuDir.resolve(fileXml), findingAid.getUuid(), databaseDataProvider);
             builder.setUuid(apuSource.getUuid());
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 builder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
         } catch (Exception e) {
-            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
+            log.error("Fail to process downloaded {}, dir={}", fileXml, apuDir, e);
             return Result.FAILED;
         }
 

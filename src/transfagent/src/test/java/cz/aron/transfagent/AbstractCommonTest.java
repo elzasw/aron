@@ -16,6 +16,7 @@ import org.springframework.util.FileSystemUtils;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
+import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
@@ -108,6 +109,9 @@ public abstract class AbstractCommonTest {
 
     @Autowired
     FindingAidRepository findingAidRepository;
+
+    @Autowired
+    AttachmentRepository attachmentRepository;
 
     @Autowired
     ApuSourceRepository apuSourceRepository;
