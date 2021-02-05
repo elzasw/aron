@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Attachment;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
@@ -48,6 +49,9 @@ public class ImportFindingAidServiceTest extends AbstractCommonTest {
 
         List<FindingAid> findingAids = findingAidRepository.findAll();
         assertTrue(funds.size() == 1);
+
+        List<Attachment> attachments = attachmentRepository.findAll();
+        assertTrue(attachments.size() == 1);
 
         Institution institution = institutions.get(0);
         Fund fund = funds.get(0);
