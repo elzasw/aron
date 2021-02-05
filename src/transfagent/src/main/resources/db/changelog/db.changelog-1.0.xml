@@ -128,6 +128,21 @@
       </column>
     </createTable>
 
+    <createTable tableName="attachment">
+      <column name="attachment_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="apusource_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="file_name" type="varchar(250)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
     <addForeignKeyConstraint
       baseTableName="institution" baseColumnNames="apusource_id"
       constraintName="institution_apusource_id"
@@ -188,8 +203,14 @@
       referencedTableName="fund"
       referencedColumnNames="fund_id" />
 
+    <addForeignKeyConstraint
+      baseTableName="attachment" baseColumnNames="apusource_id"
+      constraintName="attachment_apusource_id"
+      referencedTableName="apu_source"
+      referencedColumnNames="apusource_id" />
+
     <!-- Jádro a komunikace s ním -->
-    
+
     <createTable tableName="archival_entity">
       <column name="entity_id" type="int" autoIncrement="true">
         <constraints primaryKey="true" />
