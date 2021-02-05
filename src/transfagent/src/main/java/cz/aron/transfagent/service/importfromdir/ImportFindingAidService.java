@@ -212,11 +212,11 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             findingAid = findingAidRepository.save(findingAid);
 
             if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(FINDING_AID_DASH + findingaidCode + ".xml"))) {
-                var attacment = new Attachment();
-                attacment.setApuSource(apuSource);
-                attacment.setFileName("Archivní pomůcka v PDF");
-                attacment.setUuid(UUID.randomUUID());
-                attacment = attachmentRepository.save(attacment); 
+                var attachment = new Attachment();
+                attachment.setApuSource(apuSource);
+                attachment.setFileName("Archivní pomůcka v PDF");
+                attachment.setUuid(UUID.randomUUID());
+                attachment = attachmentRepository.save(attachment); 
             }
 
             var coreQueue = new CoreQueue();
@@ -236,18 +236,18 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             apuSource.setDataDir(dataDir.toString());
             apuSource.setOrigDir(origDir.getFileName().toString());
 
-            var attacment = attachmentRepository.findByApuSource(apuSource);
+            var attachment = attachmentRepository.findByApuSource(apuSource);
             if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(FINDING_AID_DASH + findingAid.getCode() + ".xml"))) {
-                if(attacment == null) {
-                    attacment = new Attachment();
-                    attacment.setApuSource(apuSource);
-                    attacment.setFileName("Archivní pomůcka v PDF");
-                    attacment.setUuid(UUID.randomUUID());
-                    attacment = attachmentRepository.save(attacment); 
+                if(attachment == null) {
+                    attachment = new Attachment();
+                    attachment.setApuSource(apuSource);
+                    attachment.setFileName("Archivní pomůcka v PDF");
+                    attachment.setUuid(UUID.randomUUID());
+                    attachment = attachmentRepository.save(attachment); 
                 }
             } else {
-                if(attacment != null) {
-                    attachmentRepository.delete(attacment);
+                if(attachment != null) {
+                    attachmentRepository.delete(attachment);
                 }
             }
 
@@ -275,18 +275,18 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         String filePdf = FINDING_AID_DASH + findingAid.getCode() + ".pdf";
 
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
-        var attacment = attachmentRepository.findByApuSource(apuSource);
+        var attachment = attachmentRepository.findByApuSource(apuSource);
         if (Files.exists(apuDir.resolve(filePdf))) {
-            if(attacment == null) {
-                attacment = new Attachment();
-                attacment.setApuSource(apuSource);
-                attacment.setFileName("Archivní pomůcka v PDF");
-                attacment.setUuid(UUID.randomUUID());
-                attacment = attachmentRepository.save(attacment); 
+            if(attachment == null) {
+                attachment = new Attachment();
+                attachment.setApuSource(apuSource);
+                attachment.setFileName("Archivní pomůcka v PDF");
+                attachment.setUuid(UUID.randomUUID());
+                attachment = attachmentRepository.save(attachment); 
             }
         } else {
-            if(attacment != null) {
-                attachmentRepository.delete(attacment);
+            if(attachment != null) {
+                attachmentRepository.delete(attachment);
             }
         }
 
