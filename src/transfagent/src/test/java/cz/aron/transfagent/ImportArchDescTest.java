@@ -52,15 +52,15 @@ public class ImportArchDescTest {
         }
 
         // testing root: Test datace
-        Apu apu = builder.getApuByDesc("");
+        Apu apu = builder.getApuByDesc(null);
         List<ItemDateRange> ranges = builder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         assertTrue(ranges.size() == 1);
-        
-        var dr0 = ranges.get(0);
-        LocalDateTimeRange idra = new LocalDateTimeRange(dr0);
+
+        var drRoot = ranges.get(0);
+        LocalDateTimeRange idra = new LocalDateTimeRange(drRoot);
         assertTrue(idra.getFrom().getYear() == Y_1810);
         assertTrue(idra.getTo().getYear() == Y_1860);
-        assertFalse(dr0.isVisible());
+        assertFalse(drRoot.isVisible());
 
         // testing s1
         apu = builder.getApuByDesc("s1");
