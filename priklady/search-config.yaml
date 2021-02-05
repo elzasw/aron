@@ -254,6 +254,7 @@ facets:
       apuType: ARCH_DESC
     # Druh fazety
     type: MULTI_REF_EXT
+    source: AP_VIRT_REF
     # zdrojovy itemtype
     group: AP_VIRT_REF
     maxItems: 30
@@ -303,4 +304,5 @@ facets:
     # Druh fazety
     type: MULTI_REF_EXT
     # zdrojovy itemtype
+    source: AE_VIRT_REF
     group: AE_VIRT_REF

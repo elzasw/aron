@@ -1265,6 +1265,16 @@ itemTypes:
     name: Poznámka
     type: STRING
     indexed: true
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    name: Přístupový bod
+    type: ITEM_AGGREG
+    indexed: true
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    name: Vztah k entitě
+    type: ITEM_AGGREG
+    indexed: true
 
 itemGroups:
   # vztahy u archivního popisu
