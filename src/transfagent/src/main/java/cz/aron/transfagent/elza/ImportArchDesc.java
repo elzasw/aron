@@ -427,7 +427,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             } else 
             if(item.getT().equals(ElzaTypes.ZP2015_OTHER_ID)&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString otherId = (DescriptionItemString) item;
-                otherIdentType = otherId.getS();
+                otherIdentType = ElzaTypes.otherIdNameMap.get(otherId.getS());
                 otherIdent = otherId.getV();
             }
         }
@@ -462,8 +462,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
     
 	private String getDesc(Section sect, Level lvl) {
 	    if(lvl.getPid()==null) {
-	        // for root use name of Fund
-	        return sect.getFi().getN();
+	        // for root no description
+	        return null;
 	    }
 	    
 		StringBuilder sb = new StringBuilder();
