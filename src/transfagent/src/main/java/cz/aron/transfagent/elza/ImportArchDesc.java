@@ -58,7 +58,7 @@ import cz.tacr.elza.schema.v2.Section;
 import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportArchDesc implements EdxItemCovertContext {
-    
+
     private final static Logger log = LoggerFactory.getLogger(ImportArchDesc.class); 
 
 	ElzaXmlReader elzaXmlReader;
@@ -75,12 +75,14 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	
 	final Set<String> daoRefs = new HashSet<>();
 	
-	UUID instApuUuid;
-	UUID fundApuUuid;
+	private UUID instApuUuid;
+	private UUID fundApuUuid;
 
 	private Part activePart;
 
 	private String institutionCode;
+
+	private String institutionName;
 
 	private Apu activeApu;
 
@@ -149,7 +151,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// read fund info
 		FundInfo fi = sect.getFi();
 		institutionCode = fi.getIc();
-		instApuUuid = dataProvider.getInstitutionApu(institutionCode).getUuid();
+		var institutionInfo = dataProvider.getInstitutionApu(institutionCode);
+		instApuUuid = institutionInfo.getUuid();
+		institutionName = institutionInfo.getName();
 		Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
 
 		fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
@@ -405,9 +409,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
         String parentId = lvl.getPid();
 
         StringBuilder sb = new StringBuilder();
-        sb.append(institutionCode).append(": ");
+        sb.append(institutionName).append(": ");
         sb.append(sect.getFi().getN());
-        
+
         if(parentId == null) {
             // Koren AS je bez dalsich identifikatoru
             return sb.toString();
@@ -437,17 +441,14 @@ public class ImportArchDesc implements EdxItemCovertContext {
                 otherIdent = otherId.getV();
             }
         }
-        
+
         if(StringUtils.isNotEmpty(refOzn)) {
             sb.append(", ").append(refOzn);
-        } else 
-        if(StringUtils.isNotEmpty(invCislo)) {
+        } else if(StringUtils.isNotEmpty(invCislo)) {
             sb.append(", inv.č.: ").append(invCislo);
-        } else 
-        if(StringUtils.isNotEmpty(poradoveCislo)) {
+        } else if(StringUtils.isNotEmpty(poradoveCislo)) {
             sb.append(", poř.č.: ").append(poradoveCislo);
-        } else 
-        if(StringUtils.isNotEmpty(otherIdent)) {
+        } else if(StringUtils.isNotEmpty(otherIdent)) {
             if(otherIdentType!=null) {
                 sb.append(", ").append(otherIdentType);                
             }
@@ -465,7 +466,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         return sb.toString();
     }
-    
+
 	private String getDesc(Section sect, Level lvl) {
 	    if(lvl.getPid()==null) {
 	        // for root no description

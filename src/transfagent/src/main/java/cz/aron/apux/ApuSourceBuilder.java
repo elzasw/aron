@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -222,7 +223,7 @@ public class ApuSourceBuilder {
 
     public Apu getApuByDesc(String desk) {
         for(Apu apu : apusrc.getApus().getApu()) {
-            if(apu.getDesc().equals(desk)) {
+            if(Objects.equals(apu.getDesc(), desk)) {
                 return apu;
             }
         }
