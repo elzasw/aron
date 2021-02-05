@@ -121,7 +121,7 @@ facets:
     source: UNIT_TYPE
     display: ALWAYS
     description: Výběr druhu archivního materiálu
-    displayedItems: 10
+    displayedItems: 8
     maxDisplayedItems: 100
     # Volitelná nápověda k položkám ve fazetách
     # Zobrazuje se při najetí na položku
@@ -180,6 +180,13 @@ facets:
     type: UNITDATE
     source: UNIT_DATE
     display: ALWAYS
+
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: DIGITAL
+    display: ALWAYS
+    description: Výběr archiválií jen s digitalizáty
 
   - when:
       apuType: ARCH_DESC

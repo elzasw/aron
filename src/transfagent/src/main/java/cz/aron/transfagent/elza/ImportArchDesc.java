@@ -20,6 +20,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.eclipse.jetty.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
@@ -56,6 +58,8 @@ import cz.tacr.elza.schema.v2.Section;
 import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportArchDesc implements EdxItemCovertContext {
+    
+    private final static Logger log = LoggerFactory.getLogger(ImportArchDesc.class); 
 
 	ElzaXmlReader elzaXmlReader;
 
@@ -175,6 +179,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	 * @param lvl
 	 */
     private void processLevel(Section sect, Level lvl) {
+        log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
+        
         String name = getName(sect, lvl);
         String desc = getDesc(sect, lvl);
         Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
