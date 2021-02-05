@@ -149,7 +149,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		// read fund info
 		FundInfo fi = sect.getFi();
 		institutionCode = fi.getIc();
-		instApuUuid = dataProvider.getInstitutionApu(institutionCode);
+		instApuUuid = dataProvider.getInstitutionApu(institutionCode).getUuid();
 		Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
 
 		fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());

@@ -16,13 +16,13 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	public void load(Path propPath) throws IOException {
 		try(InputStream is = Files.newInputStream(propPath);) {
 			props.load(is);
-		}		
+		}
 	}
 
 	@Override
-	public UUID getInstitutionApu(String instCode) {
+	public InstitutionInfo getInstitutionApu(String instCode) {
 		String propName = "institution."+instCode;
-		return UUID.fromString(getProperty(propName));
+		return new InstitutionInfo(UUID.fromString(getProperty(propName)), getProperty(propName));
 	}
 
 	private String getProperty(String propName) {
