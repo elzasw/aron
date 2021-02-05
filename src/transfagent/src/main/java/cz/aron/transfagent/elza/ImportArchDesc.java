@@ -404,6 +404,31 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		throw new RuntimeException("Unsupported item type: " + item.getT());
 	}
+    
+    public static Map<String, Integer> otherIdPriorityMap = new HashMap<>();
+    static {
+        otherIdPriorityMap.put("ZP2015_OTHERID_SIG_ORIG", 99);
+        otherIdPriorityMap.put("ZP2015_OTHERID_SIG", 100);
+        otherIdPriorityMap.put("ZP2015_OTHERID_STORAGE_ID", 96);
+        otherIdPriorityMap.put("ZP2015_OTHERID_CJ", 95);
+        otherIdPriorityMap.put("ZP2015_OTHERID_DOCID", 94);
+        otherIdPriorityMap.put("ZP2015_OTHERID_FORMAL_DOCID", 92);
+        otherIdPriorityMap.put("ZP2015_OTHERID_ADDID", 98);
+        otherIdPriorityMap.put("ZP2015_OTHERID_OLDSIG", 83);
+        otherIdPriorityMap.put("ZP2015_OTHERID_OLDSIG2", 93);
+        otherIdPriorityMap.put("ZP2015_OTHERID_OLDID", 97);
+        otherIdPriorityMap.put("ZP2015_OTHERID_INVALID_UNITID", 81);
+        otherIdPriorityMap.put("ZP2015_OTHERID_INVALID_REFNO", 82);
+        otherIdPriorityMap.put("ZP2015_OTHERID_PRINTID", 84);
+        otherIdPriorityMap.put("ZP2015_OTHERID_PICID", 91);
+        otherIdPriorityMap.put("ZP2015_OTHERID_NEGID", 90);
+        otherIdPriorityMap.put("ZP2015_OTHERID_CDID", 89);
+        otherIdPriorityMap.put("ZP2015_OTHERID_ISBN", 88);
+        otherIdPriorityMap.put("ZP2015_OTHERID_ISSN", 87);
+        otherIdPriorityMap.put("ZP2015_OTHERID_ISMN", 86);
+        otherIdPriorityMap.put("ZP2015_OTHERID_MATRIXID", 85);
+    }
+    
 
     private String getName(Section sect, Level lvl) {
         String parentId = lvl.getPid();
@@ -422,6 +447,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         String poradoveCislo = null;
         String otherIdent = null;
         String otherIdentType = null;
+        int otherIdentPriority = -1;
         for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
             if(item.getT().equals("ZP2015_UNIT_ID")&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString title = (DescriptionItemString)item;
@@ -437,8 +463,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
             } else 
             if(item.getT().equals(ElzaTypes.ZP2015_OTHER_ID)&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString otherId = (DescriptionItemString) item;
-                otherIdentType = ElzaTypes.otherIdNameMap.get(otherId.getS());
-                otherIdent = otherId.getV();
+                if(otherIdPriorityMap.get(otherId.getS())>otherIdentPriority) {
+                    otherIdentPriority = otherIdPriorityMap.get(otherId.getS());
+                    otherIdentType = ElzaTypes.otherIdNameMap.get(otherId.getS());
+                    otherIdent = otherId.getV();
+                }
             }
         }
 
