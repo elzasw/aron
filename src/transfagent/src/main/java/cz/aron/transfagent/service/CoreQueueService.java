@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import com.lightcomp.ft.FileTransfer;
 import com.lightcomp.ft.client.Client;
 import com.lightcomp.ft.client.ClientConfig;
+import com.lightcomp.ft.core.send.items.BaseDir;
 import com.lightcomp.ft.core.send.items.ListReader;
 import com.lightcomp.ft.core.send.items.SimpleFile;
 import com.lightcomp.ft.core.send.items.SourceItem;
@@ -23,8 +24,8 @@ import cz.aron.management.v1.ApuManagementPort;
 import cz.aron.transfagent.config.ConfigAronCore;
 import cz.aron.transfagent.domain.Attachment;
 import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.AttachmentRepository;
+import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.service.client.CoreAronClient;
 
 @Service
@@ -146,7 +147,7 @@ public class CoreQueueService implements SmartLifecycle {
     	case ARCH_DESCS:
     		return createSourceItemsSimple(item);
     	case FINDING_AID:
-    	    return createSourceItemsFindingAid(item);
+    	    return createSourceItemsSimple(item);
     	default:
     		throw new IllegalStateException("Unsupported source type: "+item.getApuSource().getSourceType());
     	}
@@ -169,29 +170,24 @@ public class CoreQueueService implements SmartLifecycle {
         return sourceItems;
     }
 
-    private List<SourceItem> createSourceItemsFindingAid(CoreQueue item) {
-        Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
-        Path file = dataDir.resolve("apusrc.xml");
-        List<SourceItem> sourceItems = new ArrayList<>();
-        SimpleFile simpleFile = new SimpleFile(file, "apusrc-"+item.getApuSource().getUuid()+".xml");
-        sourceItems.add(simpleFile);
-
-        List<Attachment> attachments = attachmentRepository.findByApuSource(item.getApuSource());
-        if(!attachments.isEmpty()) {
-            for(Attachment attachment : attachments) {
-                simpleFile = new SimpleFile(dataDir.resolve(attachment.getFileName()), "files-"+attachment.getUuid()+".xml");
-                sourceItems.add(simpleFile);
-            }
-        }
-        return sourceItems;
-    }
-
     private List<SourceItem> createSourceItemsSimple(CoreQueue item) {
     	Path dataDir = storageService.getApuDataDir(item.getApuSource().getDataDir());
     	Path file = dataDir.resolve("apusrc.xml");
         List<SourceItem> sourceItems = new ArrayList<>();
         SimpleFile simpleFile = new SimpleFile(file, "apusrc-"+item.getApuSource().getUuid()+".xml");
         sourceItems.add(simpleFile);
+
+        // add attachments
+        List<Attachment> attachments = attachmentRepository.findByApuSource(item.getApuSource());
+        if(!attachments.isEmpty()) {
+            var listReader = new ListReader();
+            for(Attachment attachment : attachments) {
+                simpleFile = new SimpleFile(dataDir.resolve(attachment.getFileName()), attachment.getUuid().toString());
+                listReader.addItem(simpleFile);
+            }
+            var dir = new BaseDir("files", listReader );
+            sourceItems.add(dir);
+        }
         return sourceItems;
     }
 
