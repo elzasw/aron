@@ -186,24 +186,30 @@ public class ApuSourceBuilder {
 		idr.setFmt(format);
 		return idr;
 	}
-	
-	static public ItemEnum createEnum(String targetType, String value, boolean visible) {
-		ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
-		ie.setType(targetType);
-		ie.setValue(value);
-		ie.setVisible(visible);
-		return ie;
-	}
 
-	static public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
-		ItemEnum ie = createEnum(targetType, value, visible);
-		addEnum(part, ie);
-		return ie;
-	}
-	
-	static public void addEnum(Part part, ItemEnum ie) {
-        part.getItms().getStrOrLnkOrEnm().add(ie);        
-	}	
+    static public ItemEnum createEnum(String targetType, String value, boolean visible) {
+        ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
+        ie.setType(targetType);
+        ie.setValue(value);
+        ie.setVisible(visible);
+        return ie;
+    }
+
+    static public void addEnum(Part part, ItemEnum ie) {
+        part.getItms().getStrOrLnkOrEnm().add(ie);
+    }
+
+    static public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
+        ItemEnum ie = createEnum(targetType, value, visible);
+        addEnum(part, ie);
+        return ie;
+    }
+
+    static public ItemEnum addEnum(Part part, String targetType, String value) {
+        ItemEnum ie = createEnum(targetType, value, true);
+        addEnum(part, ie);
+        return ie;
+    }
 
 	static public void addDao(Apu apu, UUID daoUuid) {
 		Daos daos = apu.getDaos();
@@ -248,6 +254,24 @@ public class ApuSourceBuilder {
         return null;
     }
 
+    public String getItemByPartAndType(Part part, String itemType) {
+        for(Object obj : part.getItms().getStrOrLnkOrEnm()) {
+            if(obj instanceof ItemString) {
+                ItemString item = (ItemString) obj;
+                if(item.getType().equals(itemType)) {
+                    return item.getValue();
+                }
+            }
+            if(obj instanceof ItemEnum) {
+                ItemEnum item = (ItemEnum) obj;
+                if(item.getType().equals(itemType)) {
+                    return item.getValue();
+                }
+            }
+        }
+        return null;
+    }
+
     static public List<ItemDateRange> getItemDateRanges(Apu apu, String partType, String itemType) {
         List<ItemDateRange> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {
@@ -264,7 +288,7 @@ public class ApuSourceBuilder {
         }
         return items;
     }
-    
+
     static public List<ItemEnum> getItemEnums(Apu apu, ApuType partType, String itemType) {
         List<ItemEnum> items = new ArrayList<>();
         for(Part part : apu.getPrts().getPart()) {

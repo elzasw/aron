@@ -13,6 +13,8 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.Validate;
 import org.archivists.ead3.schema.Control;
+import org.archivists.ead3.schema.Date;
+import org.archivists.ead3.schema.Localcontrol;
 import org.archivists.ead3.schema.Subtitle;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -28,7 +30,7 @@ public class ImportFindingAidInfo {
 
     private Ead3XmlReader ead3XmlReader;
 
-    private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+    private ApuSourceBuilder builder = new ApuSourceBuilder();
 
     private ContextDataProvider dataProvider;
 
@@ -60,36 +62,39 @@ public class ImportFindingAidInfo {
     }
 
     public ApuSourceBuilder importFindingAidInfo(UUID uuid) {
-        var ctrl = ead3XmlReader.getEad().getControl();
-
-        var subtitules = ctrl.getFiledesc().getTitlestmt().getSubtitle();
-        var contents = subtitules.get(0).getContent();
-        String findingAidName = contents.get(0).toString();
-
         if (uuid == null) {
             uuid = UUID.randomUUID();
         }
 
-        Apu apu = apusBuilder.createApu(findingAidName, ApuType.FINDING_AID, uuid);
+        String findingAidName = ead3XmlReader.getSubtitle();
+        Apu apu = builder.createApu(findingAidName, ApuType.FINDING_AID, uuid);
 
         // add title part
-        Part partTitle = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
+        Part partTitle = builder.addPart(apu, CoreTypes.PT_TITLE);
         partTitle.setValue(findingAidName);
-        apusBuilder.addString(partTitle, CoreTypes.TITLE, findingAidName);
+        builder.addString(partTitle, CoreTypes.TITLE, findingAidName);
 
-        institutionCode = ctrl.getMaintenanceagency().getAgencycode().getContent();
+        institutionCode = ead3XmlReader.getInstitutionCode();
         var instInfo = dataProvider.getInstitutionApu(institutionCode);
         Validate.notNull(instInfo, "Missing institution, code: %s", institutionCode);
 
         var fundApuUuid = dataProvider.getFundApu(institutionCode, fundCode);
         Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fundCode, institutionCode);
 
-        // add references part
-        Part partRef = apusBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-        apusBuilder.addApuRef(partRef, "FUND_REF", fundApuUuid);
-        apusBuilder.addApuRef(partRef, "FUND_INST_REF", instInfo.getUuid());
+        // add info part
+        Part partInfo = builder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
+        builder.addString(partInfo, CoreTypes.FINDINGAID_ID, ead3XmlReader.getRecordId());
+        builder.addString(partInfo, CoreTypes.FINDINGAID_RELEASE_DATE_PLACE, ead3XmlReader.getReleaseDatePlace());
+        builder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, ead3XmlReader.getLocalionControlByType("FINDING_AID_TYPE"));
+        builder.addString(partInfo, CoreTypes.FINDINGAID_DATE_RANGE, ead3XmlReader.getLocalionControlByType("DATE_RANGE"));
+        builder.addString(partInfo, CoreTypes.FINDINGAID_UNITS_AMOUNT, ead3XmlReader.getLocalionControlByType("UNITS_AMOUNT"));
 
-        return apusBuilder;
+        // add references part
+        Part partRef = builder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+        builder.addApuRef(partRef, "FUND_REF", fundApuUuid);
+        builder.addApuRef(partRef, "FUND_INST_REF", instInfo.getUuid());
+
+        return builder;
     }
 
     public String getInstitutionCode() {
