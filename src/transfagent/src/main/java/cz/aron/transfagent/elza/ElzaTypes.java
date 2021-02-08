@@ -79,6 +79,7 @@ public abstract class ElzaTypes {
     public static final String ZP2015_DATE_OTHER = "ZP2015_DATE_OTHER";
     public static final String ZP2015_ENTITY_ROLE = "ZP2015_ENTITY_ROLE";
     public static final String ZP2015_OTHER_ID = "ZP2015_OTHER_ID";
+    public static final String ZP2015_STORAGE_ID = "ZP2015_STORAGE_ID";
 
     public static final String ZP2015_ORIGINATOR = "ZP2015_ORIGINATOR";
     public static final String ZP2015_POSITION = "ZP2015_POSITION";

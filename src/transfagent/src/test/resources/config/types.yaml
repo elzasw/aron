@@ -874,6 +874,11 @@ itemTypes:
     name: matriční číslo
     type: STRING
     indexed: false
+  - code: STORAGE_ID
+    name: Ukládací číslo
+    type: STRING
+    indexed: true
+    indexFolding: false
   - code: EDITION
     name: Edice
     type: STRING
@@ -1264,6 +1269,16 @@ itemTypes:
   - code: NOTE
     name: Poznámka
     type: STRING
+    indexed: true
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    name: Přístupový bod
+    type: ITEM_AGGREG
+    indexed: true
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    name: Vztah k entitě
+    type: ITEM_AGGREG
     indexed: true
 
 itemGroups:

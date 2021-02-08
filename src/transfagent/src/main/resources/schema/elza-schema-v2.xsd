@@ -1120,9 +1120,29 @@ This is ID of the created party</xs:documentation>
 				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
 			</xs:choice>
 		</xs:sequence>
+		<xs:attribute name="asgn" use="optional" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation>Flag if structured object is assignable</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="cmpl" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>Optional text complement</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
 		<xs:attribute name="id" use="required" type="e:Id">
 			<xs:annotation>
 				<xs:documentation>Structured Object ID, used for referencing structured object inside XML</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="uuid" use="optional" type="e:Uuid">
+			<xs:annotation>
+				<xs:documentation>UUID of structured object</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="v" use="optional" type="xs:string">
+			<xs:annotation>
+				<xs:documentation>text representation of structured object</xs:documentation>
 			</xs:annotation>
 		</xs:attribute>
 	</xs:complexType>

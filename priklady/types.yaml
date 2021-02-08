@@ -874,6 +874,11 @@ itemTypes:
     name: matriční číslo
     type: STRING
     indexed: false
+  - code: STORAGE_ID
+    name: Ukládací číslo
+    type: STRING
+    indexed: true
+    indexFolding: false
   - code: EDITION
     name: Edice
     type: STRING

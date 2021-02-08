@@ -38,6 +38,7 @@ import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Institution;
 import cz.tacr.elza.schema.v2.Institutions;
 import cz.tacr.elza.schema.v2.ObjectFactory;
+import cz.tacr.elza.schema.v2.StructuredObject;
 
 public class ElzaXmlReader {
 	
@@ -60,6 +61,8 @@ public class ElzaXmlReader {
 	}
 
 	Map<String, AccessPoint> apMap = null;
+	
+	Map<String, StructuredObject> soMap = null;
 
 	final ElzaDataExchange edx;
 
@@ -276,6 +279,26 @@ public class ElzaXmlReader {
 		}
 
 		return apMap;
+	}
+	
+	public Map<String, StructuredObject> getSoMap() {
+	    if(soMap==null) {
+	        soMap = new HashMap<>();
+	        if(edx.getFs()!=null) {
+	            for(var s:edx.getFs().getS() ) {
+	                if(s.getSts()!=null) {
+	                    for(var st: s.getSts().getSt()) {
+	                        if(st.getSos()!=null) {
+	                            for(var so: st.getSos().getSo()) {
+	                                soMap.put(so.getId(), so);
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	    }
+	    return soMap;
 	}
 
 	public AccessPoint findAccessPointByUUID(String apUuid) {

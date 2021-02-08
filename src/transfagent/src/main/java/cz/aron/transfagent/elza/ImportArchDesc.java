@@ -38,6 +38,7 @@ import cz.aron.transfagent.elza.convertor.EdxLinkConvertor;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringSpecConvertor;
+import cz.aron.transfagent.elza.convertor.EdxStructureConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
@@ -321,7 +322,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				"ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
 				"ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
 				"ZP2015_UNIT_DATE_BULK","ZP2015_FOLDER_TYPE",
-				"ZP2015_STORAGE_ID", "ZP2015_ITEM_ORDER",
+				 "ZP2015_ITEM_ORDER",
 				"ZP2015_UNIT_COUNT_ITEM",
 				"ZP2015_INTERNAL_NOTE",
 				"ZP2015_AIP_ID",
@@ -350,6 +351,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
 		stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor(CoreTypes.RECORD_TYPE, ElzaTypes.recordTypeMap));		
 		stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID").addIndexedItem(CoreTypes.UNIT_ID_INDEX));
+		stringTypeMap.put(ElzaTypes.ZP2015_STORAGE_ID, new EdxStructureConvertor(CoreTypes.STORAGE_ID, elzaXmlReader.getSoMap()));
 		stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
 		stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));
 		stringTypeMap.put("ZP2015_UNIT_CONTENT",new EdxStringConvertor("UNIT_CONTENT"));
