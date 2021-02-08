@@ -10,7 +10,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -24,12 +23,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuxFactory;
-import cz.aron.apux._2020.Dao;
+import cz.aron.apux.DaoBuilder;
 import cz.aron.apux._2020.DaoBundle;
 import cz.aron.apux._2020.DaoBundleType;
-import cz.aron.apux._2020.DaoFile;
-import cz.aron.apux._2020.Metadata;
-import cz.aron.apux._2020.MetadataItem;
 import cz.aron.transfagent.service.StorageService;
 import gov.nist.isg.archiver.DirectoryArchiver;
 import gov.nist.isg.archiver.FilesArchiver;
@@ -64,20 +60,12 @@ public class TransformService {
 
         var daoUuid = dir.getFileName().toString();
 
-        var dao = new Dao();
-        dao.setUuid(daoUuid);
+        DaoBuilder daoBuilder = new DaoBuilder();
+        daoBuilder.setUuid(daoUuid);
 
-        var published = new DaoBundle();
-        published.setType(DaoBundleType.PUBLISHED);
-        dao.getBndl().add(published);
-        
-        var hiResView = new DaoBundle();
-        hiResView.setType(DaoBundleType.HIGH_RES_VIEW);
-        dao.getBndl().add(hiResView);
-        
-        var thumbnail = new DaoBundle();
-        thumbnail.setType(DaoBundleType.THUMBNAIL);
-        dao.getBndl().add(thumbnail);
+        DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
+        DaoBundle hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+        DaoBundle thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
         
         // originalni soubory k presunu, klic je novy nazev 
         var filesToMove = new HashMap<String, Path>();
@@ -97,7 +85,7 @@ public class TransformService {
         // vytvoreni dao-uuid.xml
         Marshaller marshaller = ApuxFactory.createMarshaller();
         try (OutputStream os = Files.newOutputStream(dir.resolve("dao-" + daoUuid + ".xml"))) {
-            marshaller.marshal(ApuxFactory.getObjFactory().createDao(dao), os);
+            marshaller.marshal(daoBuilder.build(), os);
         }
         
         // move original files
@@ -108,11 +96,10 @@ public class TransformService {
     }
     
     private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
-        var uuid = UUID.randomUUID().toString();
-        var daoFile = new DaoFile();
-        daoFile.setPos(pos);
-        daoFile.setUuid(uuid);
-        addMimeTypeToDaoFile(daoFile, "image/jpeg");
+        
+        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");        
+        var uuid = daoFile.getUuid();        
+        
         thumbnails.getFile().add(daoFile);
         try (OutputStream os = Files.newOutputStream(filesDir.resolve("file-" + uuid))) {
             Thumbnails.of(file.toFile())
@@ -123,32 +110,20 @@ public class TransformService {
     }
     
     private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) throws IOException {
-        var uuid = UUID.randomUUID().toString();
-        var daoFile = new DaoFile();
-        daoFile.setPos(pos);
-        daoFile.setUuid(uuid);
-        addMimeTypeToDaoFile(daoFile,"image/jpeg");
+        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
+        var uuid = daoFile.getUuid();
+
         hiResView.getFile().add(daoFile);
         createDzi(file, filesDir.resolve("file-"+uuid));
     }
     
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove) {
-        var uuid = UUID.randomUUID().toString();
-        var daoFile = new DaoFile();
-        daoFile.setPos(pos);
-        daoFile.setUuid(uuid);
-        addMimeTypeToDaoFile(daoFile,"image/jpeg");
+        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
+        var uuid = daoFile.getUuid();
+
+        DaoBuilder.addMimeType(daoFile,"image/jpeg");
         filesToMove.put("file-" + uuid, file);
         published.getFile().add(daoFile);
-    }
-    
-    private void addMimeTypeToDaoFile(DaoFile daoFile, String mimeType) {
-        var metadata = new Metadata();
-        var metadataItem = new MetadataItem();
-        metadataItem.setCode("mimeType");
-        metadataItem.setValue(mimeType);
-        metadata.getItms().add(metadataItem);
-        daoFile.setMtdt(metadata);
     }
     
     

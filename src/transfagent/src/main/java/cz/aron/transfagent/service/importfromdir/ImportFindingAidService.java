@@ -208,7 +208,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         if(Files.exists(filePdf)) {
             String name = "Archivní pomůcka - "+findingaidCode+" (PDF)";
             
-            var att = builder.addAttachment(apu, name);
+            var att = builder.addAttachment(apu, name, "application/pdf");
             
             attachments.add(filePdf);
         }

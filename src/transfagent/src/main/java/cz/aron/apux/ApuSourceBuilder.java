@@ -354,10 +354,9 @@ public class ApuSourceBuilder {
         return apuList.get(0);
     }
 
-    public Attachment addAttachment(Apu apu, String name) {
-        DaoFile daoFile = ApuxFactory.getObjFactory().createDaoFile();
-        daoFile.setUuid(UUID.randomUUID().toString());
-        
+    public Attachment addAttachment(Apu apu, String name, String mimetype) {
+        DaoFile daoFile = DaoBuilder.createDaoFile(1, mimetype);
+                
         var attList = apu.getAttchs();
         Attachment att = ApuxFactory.getObjFactory().createAttachment();
         att.setName(name);        
