@@ -290,7 +290,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         return parentPath.resolve(filePdf);
     }
 
-    private void updateFindingAid(FindingAid currFindingAid, Path dataDir, Path origDir, 
+    private void updateFindingAid(FindingAid currFindingAid, Path dataDir, 
+                                  Path origDir, 
                                   ApuSourceBuilder builder, List<Path> attachments) {
 
         transactionTemplate.execute(t -> {
@@ -310,7 +311,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             coreQueueRepository.save(coreQueue);
             return null;
         });
-        log.info("FindingAid updated code={}, uuid={}, original data dir {}", findingAid.getCode(), findingAid.getUuid(), oldDir);
+        log.info("FindingAid updated code={}, uuid={}, data dir: {}", 
+                 currFindingAid.getCode(), currFindingAid.getUuid(), dataDir.toString());
     }
 
     @Override
