@@ -186,24 +186,30 @@ public class ApuSourceBuilder {
 		idr.setFmt(format);
 		return idr;
 	}
-	
-	static public ItemEnum createEnum(String targetType, String value, boolean visible) {
-		ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
-		ie.setType(targetType);
-		ie.setValue(value);
-		ie.setVisible(visible);
-		return ie;
-	}
 
-	static public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
-		ItemEnum ie = createEnum(targetType, value, visible);
-		addEnum(part, ie);
-		return ie;
-	}
-	
-	static public void addEnum(Part part, ItemEnum ie) {
-        part.getItms().getStrOrLnkOrEnm().add(ie);        
-	}	
+    static public ItemEnum createEnum(String targetType, String value, boolean visible) {
+        ItemEnum ie = ApuxFactory.getObjFactory().createItemEnum();
+        ie.setType(targetType);
+        ie.setValue(value);
+        ie.setVisible(visible);
+        return ie;
+    }
+
+    static public void addEnum(Part part, ItemEnum ie) {
+        part.getItms().getStrOrLnkOrEnm().add(ie);
+    }
+
+    static public ItemEnum addEnum(Part part, String targetType, String value, boolean visible) {
+        ItemEnum ie = createEnum(targetType, value, visible);
+        addEnum(part, ie);
+        return ie;
+    }
+
+    static public ItemEnum addEnum(Part part, String targetType, String value) {
+        ItemEnum ie = createEnum(targetType, value, true);
+        addEnum(part, ie);
+        return ie;
+    }
 
 	static public void addDao(Apu apu, UUID daoUuid) {
 		Daos daos = apu.getDaos();

@@ -11,7 +11,9 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.archivists.ead3.schema.Date;
 import org.archivists.ead3.schema.Ead;
+import org.archivists.ead3.schema.Localcontrol;
 import org.archivists.ead3.schema.ObjectFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +62,41 @@ public class Ead3XmlReader {
         unm.setSchema(schemaEad3);
         Source source = new StreamSource(is);
         return unm.unmarshal(source, declaredType);
+    }
+
+    public String getRecordId() {
+        return ead.getControl().getRecordid().getContent();
+    }
+
+    public String getSubtitle() {
+        var subtitules = ead.getControl().getFiledesc().getTitlestmt().getSubtitle();
+        var contents = subtitules.get(0).getContent();
+        return contents.get(0).toString();
+    }
+
+    public String getInstitutionCode() {
+        return ead.getControl().getMaintenanceagency().getAgencycode().getContent();
+    }
+
+    public String getReleaseDatePlace() {
+        for (Object obj : ead.getControl().getFiledesc().getPublicationstmt().getPublisherOrDateOrAddress()) {
+            if (obj instanceof Date) {
+                Date item = (Date) obj;
+                if (item.getLocaltype().equals("RELEASE_DATE_PLACE")) {
+                    return item.getContent().get(0).toString();
+                }
+            }
+        }
+        return null;
+    }
+
+    public String getLocalionControlByType(String localType) {
+        for (Localcontrol lc : ead.getControl().getLocalcontrol()) {
+            if (lc.getLocaltype().equals(localType)) {
+                return lc.getTerm().getContent();
+            }
+        }
+        return null;
     }
 
 }
