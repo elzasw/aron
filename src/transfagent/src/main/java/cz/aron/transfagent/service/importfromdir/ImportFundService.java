@@ -179,7 +179,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
 
     private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
 
-        var fundUuid = apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid();
+        var fundUuid = apusrcBuilder.getMainApu().getUuid();
         Validate.notNull(fundUuid, "Fund UUID is null");
         
         var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();

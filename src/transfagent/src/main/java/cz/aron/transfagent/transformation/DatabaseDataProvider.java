@@ -21,7 +21,6 @@ import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
-import cz.aron.transfagent.service.DSpaceImportService;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
@@ -67,7 +66,7 @@ public class DatabaseDataProvider implements ContextDataProvider {
                 log.error("Error processing file={} institution code={}", fileXml, instCode, e);
                 throw new RuntimeException(e);
             }
-            name = builder.getApusrc().getApus().getApu().get(0).getName();
+            name = builder.getMainApu().getName();
             return new InstitutionInfo(uuid, name);
         }
         return null;

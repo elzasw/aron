@@ -158,7 +158,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		var institution = institutionRepository.findByCode(code);
 		if (institution!=null) {
 			apusrcBuilder.getApusrc().setUuid(institution.getApuSource().getUuid().toString());
-			apusrcBuilder.getApusrc().getApus().getApu().get(0).setUuid(institution.getUuid().toString());
+			apusrcBuilder.getMainApu().setUuid(institution.getUuid().toString());
 		}
 
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
@@ -193,7 +193,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 	private void createInstitution(Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String institutionCode,
 			ImportInstitution ii) {
 
-		var institutionUuid = UUID.fromString(apusrcBuilder.getApusrc().getApus().getApu().get(0).getUuid());
+		var institutionUuid = UUID.fromString(apusrcBuilder.getMainApu().getUuid());
 
 		transactionTemplate.execute(t -> {
 			UUID apusrcUuid = UUID.fromString(apusrcBuilder.getApusrc().getUuid());

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,6 +12,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +30,6 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
-import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
@@ -39,7 +40,6 @@ import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
-import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -138,7 +138,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             log.warn("Directory is empty {}", dir);
             return false;
         }
-
+        
         var fileName = findingaidXml.get().getFileName().toString();
         var tmp = fileName.substring(FINDING_AID_DASH.length());
         var findingaidCode = tmp.substring(0, tmp.length() - ".xml".length());
@@ -165,9 +165,11 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         var institutionCode = ifai.getInstitutionCode();
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
-            throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
+            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
+        List<Path> attachments = readAttachments(dir, findingaidCode, builder);
+        
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
             builder.build(fos, new ApuValidator(configurationLoader.getConfig()));
         } catch (IOException ioEx) {
@@ -179,25 +181,50 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         Path dataDir;
         try {
             dataDir = storageService.moveToDataDir(dir);
+            // change directory of attachments
+            if(attachments!=null) {
+                attachments = attachments.stream().map(p -> dataDir.resolve(p.getFileName()))
+                        .collect(Collectors.toList());
+            }
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-
+        
         if (findingAid == null) {
-            createFindingAid(findingaidCode, fund, institution, dataDir, dir, builder);
+            createFindingAid(findingaidCode, fund, institution, dataDir, dir, builder, attachments);
         } else {
-            updateFindingAid(findingAid, dataDir, dir);
+            updateFindingAid(findingAid, dataDir, dir, builder, attachments);
         }
         return true;
     }
 
-    private void createFindingAid(String findingaidCode, Fund fund, Institution institution, Path dataDir, Path origDir, ApuSourceBuilder builder) {
+    private List<Path> readAttachments(Path dir, String findingaidCode, ApuSourceBuilder builder) {
+        // get root apu
+        var apu = builder.getMainApu();
 
-        var findingaidUuid = builder.getApusrc().getApus().getApu().get(0).getUuid();
+        List<Path> attachments = new ArrayList<>();
+        
+        var filePdf = this.getPdfPath(dir, findingaidCode);
+        if(Files.exists(filePdf)) {
+            String name = "Archivní pomůcka - "+findingaidCode+" (PDF)";
+            
+            var att = builder.addAttachment(apu, name);
+            
+            attachments.add(filePdf);
+        }
+        return attachments;
+    }
+
+    private void createFindingAid(String findingaidCode, Fund fund, 
+                                  Institution institution, 
+                                  Path dataDir, Path origDir, ApuSourceBuilder builder, 
+                                  List<Path> attachments) {
+
+        var findingaidUuid = builder.getMainApu().getUuid();
         Validate.notNull(findingaidUuid, "FindingAid UUID is null");
 
         var apuSourceUuidStr = builder.getApusrc().getUuid();
-        var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
+        var apuSourceUuid = UUID.fromString(apuSourceUuidStr); 
 
         transactionTemplate.execute(t -> {
             var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FINDING_AID, 
@@ -211,11 +238,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             findingAid.setFund(fund);
             findingAid = findingAidRepository.save(findingAid);
 
-            var filePdf = FINDING_AID_DASH + findingAid.getCode() + ".pdf";
-            if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(filePdf))) {
-                createAttachment(apuSource, filePdf);
-            }
-
+            updateAttachments(findingAid, builder, attachments);
+            
             var coreQueue = new CoreQueue();
             coreQueue.setApuSource(apuSource);
             coreQueueRepository.save(coreQueue);
@@ -223,27 +247,61 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         });
         log.info("FindingAid created code={}, uuid={}", findingaidCode, findingaidUuid);
     }
+    
+    private void updateAttachments(FindingAid findingAid, 
+                                   ApuSourceBuilder builder, List<Path> attachments) {
+        var dbAttachments = attachmentRepository.findByApuSource(findingAid.getApuSource());
+        if(dbAttachments.size()>0) {
+            // drop old attachment
+            attachmentRepository.deleteInBatch(dbAttachments);
+        }
 
-    private void updateFindingAid(FindingAid findingAid, Path dataDir, Path origDir) {
+        if(CollectionUtils.isNotEmpty(attachments)) {
+            var mainApu = builder.getMainApu();
+            Validate.isTrue(attachments.size()==mainApu.getAttchs().size(), 
+                    "Attachment size does not match, attachments: %i, xml: %i",
+                    attachments.size(),
+                    mainApu.getAttchs().size());
+            
+            var attIt = mainApu.getAttchs().iterator();                        
+            var fileIt = attachments.iterator();
+            while(attIt.hasNext()&&fileIt.hasNext()) {
+                var att = attIt.next();
+                var attPath = fileIt.next();
+                
+                Validate.notNull(att.getFile(), "DaoFile is null");
+                Validate.notNull(att.getFile().getUuid(), "DaoFile without UUID");
+                
+                createAttachment(findingAid.getApuSource(), 
+                                 attPath.getFileName().toString(),
+                                 UUID.fromString(att.getFile().getUuid()));
+            }
+        }
+   
+    }
 
-        var oldDir = findingAid.getApuSource().getDataDir();
+    /**
+     * Return standard name of PDF
+     * @param findingAidCode
+     * @return
+     */
+    private Path getPdfPath(Path parentPath, String findingAidCode) {
+        var filePdf = FINDING_AID_DASH + findingAidCode + ".pdf";
+        return parentPath.resolve(filePdf);
+    }
+
+    private void updateFindingAid(FindingAid currFindingAid, Path dataDir, Path origDir, 
+                                  ApuSourceBuilder builder, List<Path> attachments) {
 
         transactionTemplate.execute(t -> {
-            var apuSource = findingAid.getApuSource();
+            var dbFindingAid = findingAidRepository.findById(currFindingAid.getId())
+                    .orElseThrow();
+            
+            var apuSource = dbFindingAid.getApuSource();
             apuSource.setDataDir(dataDir.toString());
             apuSource.setOrigDir(origDir.getFileName().toString());
-
-            var filePdf = FINDING_AID_DASH + findingAid.getCode() + ".pdf";
-            var attachments = attachmentRepository.findByApuSource(apuSource);
-            if(Files.exists(storageService.getDataPath().resolve(dataDir).resolve(filePdf))) {
-                if(attachments.isEmpty()) {
-                    createAttachment(apuSource, filePdf);
-                }
-            } else {
-                if(!attachments.isEmpty()) {
-                    attachmentRepository.delete(attachments.get(0));
-                }
-            }
+            
+            updateAttachments(dbFindingAid, builder, attachments);
 
             var coreQueue = new CoreQueue();
             coreQueue.setApuSource(apuSource);
@@ -265,20 +323,9 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             log.error("Missing findingAid: {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";
-        String filePdf = FINDING_AID_DASH + findingAid.getCode() + ".pdf";
-
+        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";        
+        
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
-        var attachments = attachmentRepository.findByApuSource(apuSource);
-        if (Files.exists(apuDir.resolve(filePdf))) {
-            if(attachments.isEmpty()) {
-                createAttachment(apuSource, filePdf);
-            }
-        } else {
-            if(!attachments.isEmpty()) {
-                attachmentRepository.delete(attachments.get(0));
-            }
-        }
 
         var ifai = new ImportFindingAidInfo(findingAid.getCode());
         ApuSourceBuilder builder;
@@ -288,6 +335,10 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
                 builder.build(os, new ApuValidator(configurationLoader.getConfig()));
             }
+            
+            var attachments = readAttachments(apuDir, findingAid.getCode(), builder);
+            updateAttachments(findingAid, builder, attachments);
+            
         } catch (Exception e) {
             log.error("Fail to process downloaded {}, dir={}", fileXml, apuDir, e);
             return Result.FAILED;
@@ -296,11 +347,11 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         return Result.REIMPORTED;
     }
 
-    private void createAttachment(ApuSource apuSource, String fileName) {
+    private void createAttachment(ApuSource apuSource, String fileName, UUID uuid) {
         var attachment = new Attachment();
         attachment.setApuSource(apuSource);
         attachment.setFileName(fileName);
-        attachment.setUuid(UUID.randomUUID());
+        attachment.setUuid(uuid);
         attachment = attachmentRepository.save(attachment); 
     }
 

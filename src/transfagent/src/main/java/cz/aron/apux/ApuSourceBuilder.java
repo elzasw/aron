@@ -16,6 +16,8 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuList;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.Attachment;
+import cz.aron.apux._2020.DaoFile;
 import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
@@ -221,9 +223,9 @@ public class ApuSourceBuilder {
         return null;
     }
 
-    public Apu getApuByDesc(String desk) {
+    public Apu getApuByDesc(String desc) {
         for(Apu apu : apusrc.getApus().getApu()) {
-            if(Objects.equals(apu.getDesc(), desk)) {
+            if(Objects.equals(apu.getDesc(), desc)) {
                 return apu;
             }
         }
@@ -338,6 +340,30 @@ public class ApuSourceBuilder {
                 }
             }
         }
+    }
+
+    public Apu getMainApu() {
+        var apus = getApusrc().getApus();
+        if(apus==null) {
+            return null;
+        }
+        var apuList = apus.getApu();
+        if(apuList.size()==0) {
+            return null;
+        }
+        return apuList.get(0);
+    }
+
+    public Attachment addAttachment(Apu apu, String name) {
+        DaoFile daoFile = ApuxFactory.getObjFactory().createDaoFile();
+        daoFile.setUuid(UUID.randomUUID().toString());
+        
+        var attList = apu.getAttchs();
+        Attachment att = ApuxFactory.getObjFactory().createAttachment();
+        att.setName(name);        
+        att.setFile(daoFile);
+        attList.add(att);
+        return att;
     }
 
 }
