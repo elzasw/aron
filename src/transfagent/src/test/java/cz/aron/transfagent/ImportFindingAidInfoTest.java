@@ -16,7 +16,9 @@ import org.junit.jupiter.api.Test;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
+import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
+import cz.aron.transfagent.transformation.CoreTypes;
 
 public class ImportFindingAidInfoTest {
 
@@ -50,6 +52,20 @@ public class ImportFindingAidInfoTest {
 
         Apu apu = builder.getApuByName(APU_NAME);
         assertNotNull(apu);
+
+        Part part = builder.getFirstPart(apu, CoreTypes.PT_FINDINGAID_INFO);
+        assertNotNull(part);
+
+        String id = builder.getItemByPartAndType(part, CoreTypes.FINDINGAID_ID);
+        String rdp = builder.getItemByPartAndType(part, CoreTypes.FINDINGAID_RELEASE_DATE_PLACE);
+        String dr = builder.getItemByPartAndType(part, CoreTypes.FINDINGAID_DATE_RANGE);
+        String ua = builder.getItemByPartAndType(part, CoreTypes.FINDINGAID_UNITS_AMOUNT);
+        String type = builder.getItemByPartAndType(part, CoreTypes.FINDINGAID_TYPE);
+        assertTrue(id.equals("1820"));
+        assertTrue(rdp.equals("Hradec Králové 2018"));
+        assertTrue(dr.equals("1734-1949 (1958)"));
+        assertTrue(ua.equals("7,5 bm"));
+        assertTrue(type.equals("Inventář"));
 
         Properties properties = new Properties();
         properties.load(Files.newInputStream(Path.of(FINDING_AID_DIR, PROPERTIES_FILE)));
