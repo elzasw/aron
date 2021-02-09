@@ -38,17 +38,9 @@ public class Dao {
 
     @Column(nullable = false)
     private boolean transferred;
-    
+
     @Column(nullable = false)
     private boolean download;
-
-    public boolean isDownload() {
-        return download;
-    }
-
-    public void setDownload(boolean download) {
-        this.download = download;
-    }
 
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
@@ -78,6 +70,14 @@ public class Dao {
         this.apuSource = apuSource;
     }
 
+    public String getHandle() {
+        return handle;
+    }
+
+    public void setHandle(String handle) {
+        this.handle = handle;
+    }
+
     public String getDataDir() {
         return dataDir;
     }
@@ -94,19 +94,20 @@ public class Dao {
         this.transferred = transferred;
     }
 
-	public DaoState getState() {
-		return state;
-	}
-
-	public void setState(DaoState state) {
-		this.state = state;
-	}
-
-    public String getHandle() {
-        return handle;
+    public boolean isDownload() {
+        return download;
     }
 
-    public void setHandle(String handle) {
-        this.handle = handle;
+    public void setDownload(boolean download) {
+        this.download = download;
     }
+
+    public DaoState getState() {
+        return state;
+    }
+
+    public void setState(DaoState state) {
+        this.state = state;
+    }
+
 }

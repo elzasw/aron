@@ -36,7 +36,7 @@ import net.coobird.thumbnailator.Thumbnails;
 
 @Service
 public class TransformService {
-    
+
     private static final Logger log = LoggerFactory.getLogger(TransformService.class);
 
     private final StorageService storageService;
@@ -47,35 +47,41 @@ public class TransformService {
 
     public void transform(Path dir) throws Exception {
 
-        // TODO otestovat jestli jsou v adresari jenom soubory
-
+        var daoUuid = dir.getFileName().toString();
+        var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
         var filesDir = dir.resolve("files");
+
+        // mazání předchozích souborů
+        FileSystemUtils.deleteRecursively(filesDir);
+        Files.deleteIfExists(daoUuidXmlFile);
         Files.createDirectories(filesDir);
 
         List<Path> files;
         try (Stream<Path> stream = Files.list(dir)) {
             files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
         }
-        files.sort((p1,p2)->p1.getFileName().compareTo(p2.getFileName()));
-
-        var daoUuid = dir.getFileName().toString();
+        files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
 
         DaoBuilder daoBuilder = new DaoBuilder();
         daoBuilder.setUuid(daoUuid);
 
         DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
-        DaoBundle hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
-        DaoBundle thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
-        
+        DaoBundle hiResView = null;
+        DaoBundle thumbnail = null;
+
         // originalni soubory k presunu, klic je novy nazev 
         var filesToMove = new HashMap<String, Path>();
-        
+
         var pos = 1;
-        for (Path file : files) {            
-            String mimeType = Files.probeContentType(file);                        
+        for (Path file : files) {
+            String mimeType = Files.probeContentType(file);
             processPublished(file, published, pos, filesToMove);
             if (mimeType!=null&&mimeType.startsWith("image/")) {
-                log.info("Generating dzi and thumbnail for {}",file);
+                log.info("Generating dzi and thumbnail for {}", file);
+                if (hiResView == null) {
+                    hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+                    thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
+                }
                 processHiResView(file, filesDir, hiResView, pos);
                 processThumbNail(file, filesDir, thumbnail, pos);
             }
@@ -84,22 +90,20 @@ public class TransformService {
 
         // vytvoreni dao-uuid.xml
         Marshaller marshaller = ApuxFactory.createMarshaller();
-        try (OutputStream os = Files.newOutputStream(dir.resolve("dao-" + daoUuid + ".xml"))) {
+        try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
             marshaller.marshal(daoBuilder.build(), os);
         }
-        
+
         // move original files
-        for(var entry:filesToMove.entrySet()) {
+        for(var entry : filesToMove.entrySet()) {
             Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
         }
-
     }
-    
+
     private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
-        
-        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");        
-        var uuid = daoFile.getUuid();        
-        
+        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
+        var uuid = daoFile.getUuid();
+
         thumbnails.getFile().add(daoFile);
         try (OutputStream os = Files.newOutputStream(filesDir.resolve("file-" + uuid))) {
             Thumbnails.of(file.toFile())
@@ -108,7 +112,7 @@ public class TransformService {
                     .toOutputStream(os);
         }
     }
-    
+
     private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) throws IOException {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
@@ -116,7 +120,7 @@ public class TransformService {
         hiResView.getFile().add(daoFile);
         createDzi(file, filesDir.resolve("file-"+uuid));
     }
-    
+
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove) {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
@@ -125,10 +129,8 @@ public class TransformService {
         filesToMove.put("file-" + uuid, file);
         published.getFile().add(daoFile);
     }
-    
-    
-    private void createDzi(Path sourceImage, Path targetFile) throws IOException {
 
+    private void createDzi(Path sourceImage, Path targetFile) throws IOException {
         Path tempDir = storageService.createTempDir("dzi_" + sourceImage.getFileName().toString() + "_");
         boolean deleteCreated = true;
         try {
@@ -161,7 +163,6 @@ public class TransformService {
                 Files.deleteIfExists(targetFile);
             }
         }
-
     }
-    
+
 }
