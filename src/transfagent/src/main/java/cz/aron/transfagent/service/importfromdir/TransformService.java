@@ -17,6 +17,7 @@ import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.Marshaller;
 
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,8 @@ public class TransformService {
     }
 
     public void transform(Path dir) throws Exception {
+        
+        Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
         var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
@@ -73,8 +76,8 @@ public class TransformService {
         var filesToMove = new HashMap<String, Path>();
 
         var pos = 1;
-        for (Path file : files) {
-            String mimeType = Files.probeContentType(file);
+        for (Path file : files) {            
+            String mimeType = tika.detect(file);
             processPublished(file, published, pos, filesToMove);
             if (mimeType!=null&&mimeType.startsWith("image/")) {
                 log.info("Generating dzi and thumbnail for {}", file);
@@ -135,7 +138,7 @@ public class TransformService {
         boolean deleteCreated = true;
         try {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
-            FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
+            FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());            
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, 1);
             try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
