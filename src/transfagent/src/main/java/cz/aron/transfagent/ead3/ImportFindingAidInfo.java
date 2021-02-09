@@ -5,23 +5,17 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.UUID;
 
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.archivists.ead3.schema.Control;
-import org.archivists.ead3.schema.Date;
-import org.archivists.ead3.schema.Localcontrol;
-import org.archivists.ead3.schema.Subtitle;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
-import cz.aron.transfagent.elza.ElzaXmlReader;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -84,10 +78,22 @@ public class ImportFindingAidInfo {
         // add info part
         Part partInfo = builder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
         builder.addString(partInfo, CoreTypes.FINDINGAID_ID, ead3XmlReader.getRecordId());
-        builder.addString(partInfo, CoreTypes.FINDINGAID_RELEASE_DATE_PLACE, ead3XmlReader.getReleaseDatePlace());
-        builder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, ead3XmlReader.getLocalionControlByType("FINDING_AID_TYPE"));
-        builder.addString(partInfo, CoreTypes.FINDINGAID_DATE_RANGE, ead3XmlReader.getLocalionControlByType("DATE_RANGE"));
-        builder.addString(partInfo, CoreTypes.FINDINGAID_UNITS_AMOUNT, ead3XmlReader.getLocalionControlByType("UNITS_AMOUNT"));
+        var releaseDatePlace = ead3XmlReader.getReleaseDatePlace();
+        if(StringUtils.isNotEmpty(releaseDatePlace)) {
+            builder.addString(partInfo, CoreTypes.FINDINGAID_RELEASE_DATE_PLACE, releaseDatePlace);
+        }
+        var findingAidType = ead3XmlReader.getLocalionControlByType("FINDING_AID_TYPE");
+        if(StringUtils.isNotEmpty(findingAidType)) {
+            builder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, findingAidType);
+        }    
+        var dateRange = ead3XmlReader.getLocalionControlByType("DATE_RANGE");
+        if(StringUtils.isNotEmpty(dateRange)) {
+            builder.addString(partInfo, CoreTypes.FINDINGAID_DATE_RANGE, dateRange);
+        }
+        var unitsAmount = ead3XmlReader.getLocalionControlByType("UNITS_AMOUNT");
+        if(StringUtils.isNotEmpty(unitsAmount)) {
+            builder.addString(partInfo, CoreTypes.FINDINGAID_UNITS_AMOUNT, unitsAmount);
+        }
 
         // add references part
         Part partRef = builder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);

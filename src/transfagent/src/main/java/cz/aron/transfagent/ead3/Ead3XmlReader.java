@@ -13,8 +13,11 @@ import javax.xml.validation.SchemaFactory;
 
 import org.archivists.ead3.schema.Date;
 import org.archivists.ead3.schema.Ead;
+import org.archivists.ead3.schema.Filedesc;
 import org.archivists.ead3.schema.Localcontrol;
+import org.archivists.ead3.schema.Maintenanceagency;
 import org.archivists.ead3.schema.ObjectFactory;
+import org.archivists.ead3.schema.Publicationstmt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -65,24 +68,71 @@ public class Ead3XmlReader {
     }
 
     public String getRecordId() {
-        return ead.getControl().getRecordid().getContent();
+        var control = ead.getControl(); 
+        if(control==null) {
+            return null;
+        }
+        return control.getRecordid().getContent();
     }
 
     public String getSubtitle() {
-        var subtitules = ead.getControl().getFiledesc().getTitlestmt().getSubtitle();
+        Filedesc filedesc = getFiledesc();
+        if(filedesc==null) {
+            return null;
+        }
+        var titlestm = filedesc.getTitlestmt();
+        if(titlestm==null) {
+            return null;
+        }
+        var subtitules = titlestm.getSubtitle();
+        if(subtitules.size()==0) {
+            return null;
+        }
         var contents = subtitules.get(0).getContent();
         return contents.get(0).toString();
     }
+    
+    public Maintenanceagency getMaintenanceagency() {
+        var control = ead.getControl(); 
+        if(control==null) {
+            return null;
+        }
+        return control.getMaintenanceagency();
+    }
 
     public String getInstitutionCode() {
-        return ead.getControl().getMaintenanceagency().getAgencycode().getContent();
+        var maintenanceagency = getMaintenanceagency();
+        if(maintenanceagency==null) {
+            return null;
+        }
+        return maintenanceagency.getAgencycode().getContent();
+    }
+    
+    public Filedesc getFiledesc() {
+        var control = ead.getControl(); 
+        if(control==null) {
+            return null;
+        }
+        return control.getFiledesc();
+    }
+    
+    public Publicationstmt getFiledescPublicationstmt() {
+        var filedesc = getFiledesc();
+        if(filedesc==null) {
+            return null;
+        }
+        return filedesc.getPublicationstmt();
     }
 
     public String getReleaseDatePlace() {
-        for (Object obj : ead.getControl().getFiledesc().getPublicationstmt().getPublisherOrDateOrAddress()) {
+        var publstmt = getFiledescPublicationstmt();
+        if(publstmt==null) {
+            return null;
+        }
+        for (Object obj : publstmt.getPublisherOrDateOrAddress()) {
             if (obj instanceof Date) {
                 Date item = (Date) obj;
-                if (item.getLocaltype().equals("RELEASE_DATE_PLACE")) {
+                if (item.getLocaltype()!=null&&item.getLocaltype().equals("RELEASE_DATE_PLACE")) {
                     return item.getContent().get(0).toString();
                 }
             }
@@ -91,8 +141,12 @@ public class Ead3XmlReader {
     }
 
     public String getLocalionControlByType(String localType) {
-        for (Localcontrol lc : ead.getControl().getLocalcontrol()) {
-            if (lc.getLocaltype().equals(localType)) {
+        var control = ead.getControl(); 
+        if(control==null) {
+            return null;
+        }
+        for (Localcontrol lc : control.getLocalcontrol()) {
+            if (lc.getLocaltype()!=null&&lc.getLocaltype().equals(localType)) {
                 return lc.getTerm().getContent();
             }
         }
