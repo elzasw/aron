@@ -276,18 +276,18 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         if (apuSource.getSourceType() != SourceType.INSTITUTION) {
             return Result.UNSUPPORTED;
         }
-
-        var institution = institutionRepository.findByApuSource(apuSource);
-        if (institution == null) {
-            log.error("Missing institution: {}", apuSource.getId());
-            return Result.UNSUPPORTED;
-        }
-        String fileName = "institution-"+institution.getCode()+".xml";
-
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
 
         protocol = new ImportProtocol(apuDir);
         protocol.add("Zahájení reimportu");
+
+        var institution = institutionRepository.findByApuSource(apuSource);
+        if (institution == null) {
+            log.error("Missing institution: {}", apuSource.getId());
+            protocol.add("Missing institution: " + apuSource.getId());
+            return Result.UNSUPPORTED;
+        }
+        String fileName = "institution-"+institution.getCode()+".xml";
 
         ApuSourceBuilder apuSourceBuilder;
         final var ii = new ImportInstitution();

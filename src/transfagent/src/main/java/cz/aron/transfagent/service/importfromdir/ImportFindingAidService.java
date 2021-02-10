@@ -39,6 +39,7 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
+import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -80,6 +81,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
 
     final private String FINDING_AIDS_DIR = FINDING_AID + "s";
 
+    private ImportProtocol protocol;
+
     public ImportFindingAidService(ApuSourceService apuSourceService, FileImportService fileImportService,
             ReimportService reimportService, StorageService storageService, InstitutionRepository institutionRepository,
             FindingAidRepository findingAidRepository, AttachmentRepository attachmentRepository, ApuSourceRepository apuSourceRepository,
@@ -119,7 +122,6 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
      */
     @Override
     public boolean processDirectory(Path dir) {
-
         List<Path> xmls;
         try (var stream = Files.list(dir)) {
             xmls = stream
@@ -133,76 +135,87 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         var findingaidXml = xmls.stream()
                 .filter(p -> p.getFileName().toString().startsWith(FINDING_AID_DASH)
                         && p.getFileName().toString().endsWith(".xml"))
-                .findFirst();                
+                .findFirst();
 
         if (findingaidXml.isEmpty()) {
             log.warn("Directory is empty {}", dir);
             return false;
         }
+
+        protocol = new ImportProtocol(dir);
+        protocol.add("Zahájení importu");
+
         var findingaidXmlPath = findingaidXml.get();
-        
         var fileName = findingaidXmlPath.getFileName().toString();
         var tmp = fileName.substring(FINDING_AID_DASH.length());
         var findingaidCode = tmp.substring(0, tmp.length() - ".xml".length());
-        
-        boolean result = transactionTemplate.execute(t -> importFindingAid(t, dir, findingaidCode, findingaidXmlPath) );
-        
-        return result;
 
+        boolean result = transactionTemplate.execute(t -> importFindingAid(t, dir, findingaidCode, findingaidXmlPath));
+
+        protocol.add("Import byl úspěšně dokončen");
+        return result;
     }
-    
+
     private boolean importFindingAid(TransactionStatus t, 
                                   Path dir, String findingAidCode, 
                                   Path findingAidXmlPath) {
         var fund = fundRepository.findByCode(findingAidCode);
         if (fund == null) {
+            protocol.add("The entry Fund code={" + findingAidCode + "} must exist.");
             throw new IllegalStateException("The entry Fund code={" + findingAidCode + "} must exist.");
         }
 
-        var findingAid = findingAidRepository.findByCode(findingAidCode);        
-        UUID findingaidUuid, apusourceUuid;    
-        if(findingAid != null) {
+        var findingAid = findingAidRepository.findByCode(findingAidCode);
+        UUID findingaidUuid, apusourceUuid;
+        if (findingAid != null) {
             findingaidUuid = findingAid.getUuid();
             apusourceUuid = findingAid.getApuSource().getUuid();
         } else {
             findingaidUuid = UUID.randomUUID();
             apusourceUuid = UUID.randomUUID();
         }
-        
+
         var ifai = new ImportFindingAidInfo(findingAidCode);
         ApuSourceBuilder builder;
 
         try {
             builder = ifai.importFindingAidInfo(findingAidXmlPath, findingaidUuid, databaseDataProvider);
         } catch (IOException e) {
+            protocol.add("Chyba " + e.getMessage());
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
             throw new IllegalStateException(e);
         }
 
         var institutionCode = ifai.getInstitutionCode();
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
+            protocol.add("The entry Institution code={" + institutionCode + "} must exist.");
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
         List<Path> attachments = readAttachments(dir, findingAidCode, builder);
-        
+
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
             builder.setUuid(apusourceUuid);
             builder.build(fos, new ApuValidator(configurationLoader.getConfig()));
         } catch (IOException ioEx) {
+            protocol.add("Chyba " + ioEx.getMessage());
             throw new UncheckedIOException(ioEx);
         } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
             throw new IllegalStateException(e);
         }
 
         Path dataDir;
         try {
             dataDir = storageService.moveToDataDir(dir);
+            protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
             // change directory of attachments
             if(attachments!=null) {
-                attachments = attachments.stream().map(p -> dataDir.resolve(p.getFileName()))
+                attachments = attachments.stream()
+                        .map(p -> dataDir.resolve(p.getFileName()))
                         .collect(Collectors.toList());
             }
         } catch (IOException e) {
@@ -214,7 +227,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         } else {
             updateFindingAid(findingAid, dataDir, dir, builder, attachments);
         }
-        return true;        
+        return true;
     }
 
     private List<Path> readAttachments(Path dir, String findingaidCode, ApuSourceBuilder builder) {
@@ -226,9 +239,9 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         var filePdf = this.getPdfPath(dir, findingaidCode);
         if(Files.exists(filePdf)) {
             String name = "Archivní pomůcka - "+findingaidCode+".pdf";
-            
+
             var att = builder.addAttachment(apu, name, "application/pdf");
-            
+
             attachments.add(filePdf);
         }
         return attachments;
@@ -263,10 +276,10 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         coreQueueRepository.save(coreQueue);
 
         log.info("FindingAid created code={}, uuid={}", findingaidCode, findingaidUuid);
-        
+
         return findingAid;
     }
-    
+
     private void updateAttachments(FindingAid findingAid, 
                                    ApuSourceBuilder builder, List<Path> attachments) {
         var dbAttachments = attachmentRepository.findByApuSource(findingAid.getApuSource());
@@ -296,13 +309,13 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
                                  UUID.fromString(att.getFile().getUuid()));
             }
         }
-   
     }
 
     /**
      * Return standard name of PDF
+     * @param parentPath
      * @param findingAidCode
-     * @return
+     * @return Path
      */
     private Path getPdfPath(Path parentPath, String findingAidCode) {
         var filePdf = FINDING_AID_DASH + findingAidCode + ".pdf";
@@ -331,20 +344,24 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
 
     @Override
     public Result reimport(ApuSource apuSource) {
-        if (apuSource.getSourceType() != SourceType.FINDING_AID)
+        if (apuSource.getSourceType() != SourceType.FINDING_AID) {
             return Result.UNSUPPORTED;
+        }
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+
+        protocol = new ImportProtocol(apuDir);
+        protocol.add("Zahájení reimportu");
 
         var findingAid = findingAidRepository.findByApuSource(apuSource);
         if (findingAid == null) {
             log.error("Missing findingAid: {}", apuSource.getId());
+            protocol.add("Missing findingAid: " + apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";        
-        
-        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";
 
-        var ifai = new ImportFindingAidInfo(findingAid.getCode());
         ApuSourceBuilder builder;
+        var ifai = new ImportFindingAidInfo(findingAid.getCode());
         try {
             builder = ifai.importFindingAidInfo(apuDir.resolve(fileXml), findingAid.getUuid(), databaseDataProvider);
             builder.setUuid(apuSource.getUuid());
@@ -357,9 +374,11 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             
         } catch (Exception e) {
             log.error("Fail to process downloaded {}, dir={}", fileXml, apuDir, e);
+            protocol.add("Chyba " + e.getMessage());
             return Result.FAILED;
         }
 
+        protocol.add("Reimport byl úspěšně dokončen");
         return Result.REIMPORTED;
     }
 
