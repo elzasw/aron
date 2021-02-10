@@ -211,10 +211,10 @@ public class CoreQueueService implements SmartLifecycle {
 
     @Override
     public void start() {
-    	if(configAronCore.getDisabled()!=null&&configAronCore.getDisabled().booleanValue()) {
-    		status = ThreadStatus.STOPPED;
-    		return;
-    	}
+        if (configAronCore.isDisabled()) {
+            status = ThreadStatus.STOPPED;
+            return;
+        }
         status = ThreadStatus.RUNNING;
         new Thread(() -> {
             run();

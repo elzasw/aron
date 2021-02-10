@@ -106,13 +106,17 @@ public class DaoSendService implements SmartLifecycle {
     }
 
 
-	@Override
-	public void start() {
+    @Override
+    public void start() {
+        if (configAronCore.isDisabled()) {
+            status = ThreadStatus.STOPPED;
+            return;
+        }
         status = ThreadStatus.RUNNING;
         new Thread(() -> {
-            run();            
+            run();
         }).start();
-	}
+    }
 
 	@Override
 	public void stop() {
