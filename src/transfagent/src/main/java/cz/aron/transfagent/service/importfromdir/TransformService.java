@@ -78,7 +78,7 @@ public class TransformService {
         var pos = 1;
         for (Path file : files) {            
             String mimeType = tika.detect(file);
-            processPublished(file, published, pos, filesToMove);
+            processPublished(file, published, pos, filesToMove, mimeType);
             if (mimeType!=null&&mimeType.startsWith("image/")) {
                 log.info("Generating dzi and thumbnail for {}", file);
                 if (hiResView == null) {
@@ -117,18 +117,18 @@ public class TransformService {
     }
 
     private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) throws IOException {
-        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
+        var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream");
         var uuid = daoFile.getUuid();
 
         hiResView.getFile().add(daoFile);
         createDzi(file, filesDir.resolve("file-"+uuid));
     }
 
-    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove) {
-        var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
+    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove,
+                                  String mimeType) {
+        var daoFile = DaoBuilder.createDaoFile(pos, mimeType);
         var uuid = daoFile.getUuid();
 
-        DaoBuilder.addMimeType(daoFile,"image/jpeg");
         filesToMove.put("file-" + uuid, file);
         published.getFile().add(daoFile);
     }
