@@ -36,6 +36,8 @@ dspace:
   url: url: http://10.2.0.27:8088/rest
   user: x
   password: x
+  # vybrat pouze soubory se zadaným bundle
+  #bundleName: ORIGINAL
   disabled: true
 
 dao:

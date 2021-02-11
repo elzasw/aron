@@ -13,6 +13,8 @@ public class ConfigDspace {
 
     private String password;
 
+    private String bundleName;
+
     private boolean disabled = false;
 
     public String getUrl() {
@@ -37,6 +39,14 @@ public class ConfigDspace {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getBundleName() {
+        return bundleName;
+    }
+
+    public void setBundleName(String bundleName) {
+        this.bundleName = bundleName;
     }
 
     public boolean isDisabled() {

@@ -75,6 +75,14 @@ public class DSpaceImportService implements ImportProcessor {
 
     private String BITSTREAM_JSON = "bitstreams.json";
 
+    private String BUNDLE_NAME = "bundleName";
+
+    private String NAME = "name";
+
+    private String RETRIEVE_LINK= "retrieveLink"; 
+
+    private String SIZE_BYTES= "sizeBytes"; 
+
     public static void main(String[] args) throws IOException {
         var service = new DSpaceImportService();
 
@@ -110,7 +118,6 @@ public class DSpaceImportService implements ImportProcessor {
         for (var dao : daos) {
             try {
                 importDaoFiles(dao);
-                
             } catch(Exception e) {
                 ic.setFailed(true);
                 log.error("Dao file not imported: {}.", dao.getId(), e);
@@ -284,17 +291,20 @@ public class DSpaceImportService implements ImportProcessor {
      */
     private List<DspaceFile> getDspaceFiles(JsonValue jsonValue) {
         List<DspaceFile> files = new ArrayList<>();
+        var filterBundle = configDspace.getBundleName();
         for (var value : jsonValue.asJsonArray()) {
             var object = value.asJsonObject();
 
-            var name = object.getString("name");
-            var retrieveLink = object.getString("retrieveLink");
-            int size = object.getInt("sizeBytes");
+            if (filterBundle == null || object.getString(BUNDLE_NAME).equals(filterBundle)) {
+                var name = object.getString(NAME);
+                var retrieveLink = object.getString(RETRIEVE_LINK);
+                int size = object.getInt(SIZE_BYTES);
 
-            Validate.notNull(name, "Název souboru nesmí být prázdný");
-            Validate.notNull(retrieveLink, "Odkaz pro dotaz nesmí být prázdný");
+                Validate.notNull(name, "Název souboru nesmí být prázdný");
+                Validate.notNull(retrieveLink, "Odkaz pro dotaz nesmí být prázdný");
 
-            files.add(new DspaceFile(name, retrieveLink, size));
+                files.add(new DspaceFile(name, retrieveLink, size));
+            }
         }
         return files;
     }
@@ -390,7 +400,7 @@ public class DSpaceImportService implements ImportProcessor {
         for (String daoHandle : daoRefs) {
             var dao = daoLookup.get(daoHandle);
             if (dao != null) {
-                if(dao.getState()==DaoState.INACCESSIBLE) {
+                if (dao.getState() == DaoState.INACCESSIBLE) {
                     dao.setState(DaoState.ACCESSIBLE);
                     daoFileRepository.save(dao);
                 }
