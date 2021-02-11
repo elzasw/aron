@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,10 +17,10 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.json.Json;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+import javax.json.JsonWriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,7 +31,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -101,10 +99,17 @@ public class DSpaceImportService implements ImportProcessor {
 
         String sessionId = service.getJSessionId();
 
-        List<DspaceFile> files = service.getDspaceFiles(itemUuid, sessionId);
+        JsonValue jsonValue = service.getBitstreamsJsonValue(itemUuid, sessionId);
+        try (OutputStream output = new FileOutputStream(saveDir.resolve("bitstreams.json").toFile())) {
+           JsonWriter jsonWriter = Json.createWriter(output);
+           jsonWriter.write(jsonValue);
+        }
+
+        List<DspaceFile> files = service.getDspaceFiles(jsonValue);
         for (DspaceFile file : files) {
             service.saveDspaceFile(saveDir, file, sessionId);
         }
+        System.out.println(jsonValue.toString());
     }
 
     @PostConstruct
@@ -147,7 +152,6 @@ public class DSpaceImportService implements ImportProcessor {
             uuid = dao.getUuid().toString();
         }
 
-
         // TODO: use dates in path to split in multiple dirs
         var saveDir = Path.of(configDao.getPath()).resolve(uuid);
         if (!Files.exists(saveDir)) {
@@ -160,8 +164,16 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         dao.setDataDir(uuid);
-        List<DspaceFile> files = getDspaceFiles(uuid, sessionId); 
-        for (DspaceFile file : files) {
+        JsonValue jsonValue = getBitstreamsJsonValue(uuid, sessionId);
+        try (OutputStream output = new FileOutputStream(saveDir.resolve("bitstreams.json").toFile())) {
+           JsonWriter jsonWriter = Json.createWriter(output);
+           jsonWriter.write(jsonValue);
+        } catch (IOException e) {
+            log.error("Error writing file={}.", saveDir.resolve("bitstreams.json"), e);
+            throw new RuntimeException("Error writing file bitstreams.json.", e);
+        }
+
+        for (DspaceFile file : getDspaceFiles(jsonValue)) {
             saveDspaceFile(saveDir, file, sessionId);
         }
 
@@ -169,7 +181,7 @@ public class DSpaceImportService implements ImportProcessor {
             transformService.transform(saveDir);
         } catch (Exception e) {
             log.error("Error in transform path={}.", saveDir, e);
-            throw new RuntimeException("Error in transform path.");
+            throw new RuntimeException("Error in transform path.", e);
         }
 
         // save to db
@@ -243,13 +255,13 @@ public class DSpaceImportService implements ImportProcessor {
     }
 
     /**
-     * Get data about all files (bitstreams) by Item UUID
+     * Get json data of bitstreams by Item UUID
      * 
      * @param uuid of item
      * @param sessionId authentication cookie
-     * @return List<DspaceFile>
+     * @return JsonValue
      */
-    private List<DspaceFile> getDspaceFiles(String uuid, String sessionId) {
+    private JsonValue getBitstreamsJsonValue(String uuid, String sessionId) {
         log.debug("Getting bistreams from DSpace uuid: {}", uuid);
 
         HttpHeaders headers = new HttpHeaders();
@@ -267,9 +279,17 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         JsonReader jsonReader = Json.createReader(new StringReader(responce.getBody()));
-        JsonArray jsonArray = jsonReader.readArray();
+        return jsonReader.readValue();
+    }
 
-        for (JsonValue value : jsonArray) {
+    /**
+     * Get data of all files (bitstreams) by Item UUID
+     * @param jsonValue
+     * @return
+     */
+    private List<DspaceFile> getDspaceFiles(JsonValue jsonValue) {
+        List<DspaceFile> files = new ArrayList<>();
+        for (JsonValue value : jsonValue.asJsonArray()) {
             JsonObject object = value.asJsonObject();
 
             String name = object.getString("name");
