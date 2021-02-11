@@ -17,10 +17,7 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 import javax.json.JsonValue;
-import javax.json.JsonWriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -60,9 +57,9 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     DaoFileRepository daoFileRepository;
-    
+
     @Autowired
-    private FileImportService importService;
+    FileImportService importService;
 
     @Autowired
     TransformService transformService;
@@ -76,11 +73,12 @@ public class DSpaceImportService implements ImportProcessor {
     @Autowired
     ConfigDao configDao;
 
+    private String BITSTREAM_JSON = "bitstreams.json";
+
     public static void main(String[] args) throws IOException {
-        DSpaceImportService service = new DSpaceImportService();
+        var service = new DSpaceImportService();
 
         service.configDspace = new ConfigDspace();
-        //service.configDspace.setUrl("https://demo.dspace.org");
         service.configDspace.setUrl("http://10.2.0.27:8088");
         service.configDspace.setUser("admin@lightcomp.cz");
         service.configDspace.setPassword("admin");
@@ -89,27 +87,12 @@ public class DSpaceImportService implements ImportProcessor {
         service.configDao = new ConfigDao();
         service.configDao.setPath("C:/temp/transfagent/daos");
 
-        // http://10.2.0.27:8088/rest/collections
+        // http://10.2.0.27:8088/rest/handle/<handle>
+        // http://10.2.0.27:8088/rest/items/<uuid>/bitstreams
 
-        String itemUuid = "61259486-3786-4877-85b5-f845ee038132";
-        var saveDir = Path.of(service.configDao.getPath()).resolve(itemUuid);
-        if (!Files.exists(saveDir)) {
-             Files.createDirectories(saveDir);
-        }
-
-        String sessionId = service.getJSessionId();
-
-        JsonValue jsonValue = service.getBitstreamsJsonValue(itemUuid, sessionId);
-        try (OutputStream output = new FileOutputStream(saveDir.resolve("bitstreams.json").toFile())) {
-           JsonWriter jsonWriter = Json.createWriter(output);
-           jsonWriter.write(jsonValue);
-        }
-
-        List<DspaceFile> files = service.getDspaceFiles(jsonValue);
-        for (DspaceFile file : files) {
-            service.saveDspaceFile(saveDir, file, sessionId);
-        }
-        System.out.println(jsonValue.toString());
+        var itemUuid = "61259486-3786-4877-85b5-f845ee038132";
+        var sessionId = service.getJSessionId();
+        service.saveFilesFromDSpace(itemUuid, sessionId);
     }
 
     @PostConstruct
@@ -124,13 +107,13 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         var daos = daoFileRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
-        for (var dao: daos) {
+        for (var dao : daos) {
             try {
                 importDaoFiles(dao);
                 
             } catch(Exception e) {
                 ic.setFailed(true);
-                log.error("Dao file not imported: {}", dao.getId(), e);
+                log.error("Dao file not imported: {}.", dao.getId(), e);
                 return;
             }
             ic.addProcessed();
@@ -141,41 +124,18 @@ public class DSpaceImportService implements ImportProcessor {
         log.info("Importing DAO, daoId: {} (handle: {}, uuid: {})", dao.getId(), dao.getHandle(), dao.getUuid());
 
         // get authentication cookie
-        String sessionId = getJSessionId();
+        var sessionId = getJSessionId();
 
         // check or get uuid
         String uuid;
-        if(dao.getUuid()==null) {
+        if (dao.getUuid() == null) {
             uuid = getItemIdFromHandle(dao.getHandle(), sessionId);
             dao.setUuid(UUID.fromString(uuid));
         } else {
             uuid = dao.getUuid().toString();
         }
 
-        // TODO: use dates in path to split in multiple dirs
-        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
-        if (!Files.exists(saveDir)) {
-            try {
-                Files.createDirectories(saveDir);
-            } catch (IOException e) {
-                log.error("Error creating directory {}.", saveDir.toString(), e);
-                throw new RuntimeException("Error creating directory."); 
-            }
-        }
-
-        dao.setDataDir(uuid);
-        JsonValue jsonValue = getBitstreamsJsonValue(uuid, sessionId);
-        try (OutputStream output = new FileOutputStream(saveDir.resolve("bitstreams.json").toFile())) {
-           JsonWriter jsonWriter = Json.createWriter(output);
-           jsonWriter.write(jsonValue);
-        } catch (IOException e) {
-            log.error("Error writing file={}.", saveDir.resolve("bitstreams.json"), e);
-            throw new RuntimeException("Error writing file bitstreams.json.", e);
-        }
-
-        for (DspaceFile file : getDspaceFiles(jsonValue)) {
-            saveDspaceFile(saveDir, file, sessionId);
-        }
+        var saveDir = saveFilesFromDSpace(uuid, sessionId);
 
         try {
             transformService.transform(saveDir);
@@ -185,9 +145,44 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         // save to db
+        dao.setDataDir(uuid);
         dao.setState(DaoState.READY);
         dao.setDownload(false);
         transactionTemplate.executeWithoutResult(t -> saveDao(t, dao));
+    }
+
+    /**
+     * Saving files received from DSpace
+     * 
+     * @param uuid
+     * @param sessionId
+     * @return Path
+     */
+    private Path saveFilesFromDSpace(String uuid, String sessionId) {
+        // TODO: use dates in path to split in multiple dirs
+        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
+        if (!Files.exists(saveDir)) {
+            try {
+                Files.createDirectories(saveDir);
+            } catch (IOException e) {
+                log.error("Error creating directory {}.", saveDir, e);
+                throw new RuntimeException("Error creating directory."); 
+            }
+        }
+
+        var jsonValue = getBitstreamsJsonValue(uuid, sessionId);
+        try (OutputStream output = new FileOutputStream(saveDir.resolve(BITSTREAM_JSON).toFile())) {
+           var jsonWriter = Json.createWriter(output);
+           jsonWriter.write(jsonValue);
+        } catch (IOException e) {
+            log.error("Error writing file={}.", saveDir.resolve(BITSTREAM_JSON), e);
+            throw new RuntimeException("Error writing file " + BITSTREAM_JSON, e);
+        }
+
+        for (var file : getDspaceFiles(jsonValue)) {
+            saveDspaceFile(saveDir, file, sessionId);
+        }
+        return saveDir;
     }
 
     /**
@@ -201,13 +196,13 @@ public class DSpaceImportService implements ImportProcessor {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Cookie", sessionId);
-        String restUrl = configDspace.getUrl() + "/rest/handle/" + handle;
+        var restTemplate = new RestTemplate();
+        var restUrl = configDspace.getUrl() + "/rest/handle/" + handle;
         try {
-            RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.exchange(restUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
             log.debug("DSpace response: {}", response.getBody());
 
-            JsonReader jsonReader = Json.createReader(new StringReader(response.getBody()));
+            var jsonReader = Json.createReader(new StringReader(response.getBody()));
             var jsonObj = jsonReader.readObject();
             var uuid = jsonObj.getString("uuid");
 
@@ -232,7 +227,7 @@ public class DSpaceImportService implements ImportProcessor {
      */
     private void saveDao(TransactionStatus t, Dao dao) {
         log.debug("Saving Dao to DB, daoId: {}", dao.getId());
-        
+
         var dbDao = daoFileRepository.findById(dao.getId())
                 .orElseThrow(
                     ()-> {
@@ -241,7 +236,7 @@ public class DSpaceImportService implements ImportProcessor {
                     }
                 );
         dbDao.setDataDir(dao.getDataDir());
-        if(dbDao.getUuid()==null) {
+        if (dbDao.getUuid() == null) {
             // Dao has no uuid -> connected apusource have to be reindexed
             var apuSource = dbDao.getApuSource();
             apuSource.setReimport(true);
@@ -268,17 +263,17 @@ public class DSpaceImportService implements ImportProcessor {
         headers.add("Cookie", sessionId);
 
         List<DspaceFile> files = new ArrayList<>();
-        String restUrl = configDspace.getUrl() + "/rest/items/" + uuid + "/bitstreams";
+        var restUrl = configDspace.getUrl() + "/rest/items/" + uuid + "/bitstreams";
+        var restTemplate = new RestTemplate();
         ResponseEntity<String> responce;
         try {
-            RestTemplate restTemplate = new RestTemplate();
             responce = restTemplate.exchange(restUrl, HttpMethod.GET, new HttpEntity<String>(headers), String.class);
         } catch (Exception e) {
             log.error("Error while accessing dspace {}.", restUrl, e);
             throw new RuntimeException("Error while accessing dspace.");
         }
 
-        JsonReader jsonReader = Json.createReader(new StringReader(responce.getBody()));
+        var jsonReader = Json.createReader(new StringReader(responce.getBody()));
         return jsonReader.readValue();
     }
 
@@ -289,11 +284,11 @@ public class DSpaceImportService implements ImportProcessor {
      */
     private List<DspaceFile> getDspaceFiles(JsonValue jsonValue) {
         List<DspaceFile> files = new ArrayList<>();
-        for (JsonValue value : jsonValue.asJsonArray()) {
-            JsonObject object = value.asJsonObject();
+        for (var value : jsonValue.asJsonArray()) {
+            var object = value.asJsonObject();
 
-            String name = object.getString("name");
-            String retrieveLink = object.getString("retrieveLink");
+            var name = object.getString("name");
+            var retrieveLink = object.getString("retrieveLink");
             int size = object.getInt("sizeBytes");
 
             Validate.notNull(name, "Název souboru nesmí být prázdný");
@@ -312,7 +307,7 @@ public class DSpaceImportService implements ImportProcessor {
      * @param sessionId authentication cookie
      */
     private void saveDspaceFile(Path saveDir, DspaceFile file, String sessionId) {
-        Path filePath = saveDir.resolve(file.getName());
+        var filePath = saveDir.resolve(file.getName());
 
         log.debug("Downloading file from DSpace, link: {}, targetFile: {}", file.getRetrieveLink(), filePath.toString());
 
@@ -334,7 +329,7 @@ public class DSpaceImportService implements ImportProcessor {
      * @return authentication cookie
      */
     private String getJSessionId() {
-        HttpHeaders headers = new HttpHeaders();
+        var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
         MultiValueMap<String, String> map = new LinkedMultiValueMap<>();
@@ -342,7 +337,7 @@ public class DSpaceImportService implements ImportProcessor {
         map.add("password", configDspace.getPassword());
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
 
-        RestTemplate restTemplate = new RestTemplate();
+        var restTemplate = new RestTemplate();
         ResponseEntity<String> response;
         try {
             response = restTemplate.postForEntity(configDspace.getUrl() + "/rest/login", request, String.class);
@@ -351,7 +346,7 @@ public class DSpaceImportService implements ImportProcessor {
             throw new RuntimeException("Error while accessing DSpace."); 
         }
         headers = response.getHeaders();
-        String cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
+        var cookie = headers.getFirst(HttpHeaders.SET_COOKIE);
 
         return cookie.split(";")[0];
     }
@@ -386,15 +381,15 @@ public class DSpaceImportService implements ImportProcessor {
     public void updateDaos(ApuSource apuSource, Set<String> daoRefs) {
         var daos = daoFileRepository.findByApuSource(apuSource);
         Map<String, Dao> daoLookup = new HashMap<>();
-        for(var dao: daos) {
+        for (var dao : daos) {
             if(StringUtils.isNotBlank(dao.getHandle())) {
                 daoLookup.put(dao.getHandle(), dao);
             }
         }
-        
-        for(String daoHandle: daoRefs) {
+
+        for (String daoHandle : daoRefs) {
             var dao = daoLookup.get(daoHandle);
-            if(dao!=null) {
+            if (dao != null) {
                 if(dao.getState()==DaoState.INACCESSIBLE) {
                     dao.setState(DaoState.ACCESSIBLE);
                     daoFileRepository.save(dao);
@@ -411,7 +406,7 @@ public class DSpaceImportService implements ImportProcessor {
             }
         }
         // zbyle objekty musi byt zneplatneny
-        for(var dao: daoLookup.values()) {
+        for (var dao : daoLookup.values()) {
             dao.setState(DaoState.INACCESSIBLE);
             daoFileRepository.save(dao);
         }
