@@ -177,12 +177,12 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         var institution = institutionRepository.findByCode(iad.getInstitutionCode());
         if (institution == null) {
-            throw new NullPointerException("The entry Institution code={" + iad.getInstitutionCode() + "} must exist.");
+            throw new IllegalStateException("The entry Institution code={" + iad.getInstitutionCode() + "} must exist.");
         }
 
         var fund = fundRepository.findByCodeAndInstitution(fundCode, institution);
         if (fund == null) {
-            throw new NullPointerException("The entry Fund code={" + fundCode + "} must exist.");
+            throw new IllegalStateException("The entry Fund code={" + fundCode + "} must exist.");
         }
 
         var archDesc = archDescRepository.findByFund(fund);

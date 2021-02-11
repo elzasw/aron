@@ -151,7 +151,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         var institutionCode = ifi.getInstitutionCode();
         var institution = institutionRepository.findByCode(institutionCode);
         if (institution == null) {
-            throw new NullPointerException("The entry Institution code={" + institutionCode + "} must exist.");
+            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
