@@ -17,6 +17,14 @@ samostatný databázový účet a samostatný systémový
 předpokládá použití databázového účtu **transfagent**
 a systémového účtu **transfagentapp**.
 
+Podporované možnosti instalace jsou:
+ * Linux/Unix - init.d služba (System V)
+ * Linux/Unix - systemd služba
+ * služba systému Windows
+
+Podrobný seznam možností konfigurace zde: 
+`Dokumentace Spring Boot <https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-install>`_.
+
 
 Umístění
 ================
@@ -69,8 +77,8 @@ Následně provedena její úprava.
 
 .. _ta_install_svc:
 
-Příprava služby
----------------
+Příprava služby (systemd)
+---------------------------
 
 Přidání souboru služby :file:`/etc/systemd/system/transfagent.service`.
 

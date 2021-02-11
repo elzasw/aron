@@ -19,6 +19,15 @@ samostatný databázový účet a samostatný systémový
 předpokládá použití databázového účtu **aron**
 a systémového účtu **aronapp**.
 
+Podporované možnosti instalace jsou:
+ * Linux/Unix - init.d služba (System V)
+ * Linux/Unix - systemd služba
+ * služba systému Windows
+
+Podrobný seznam možností konfigurace zde: 
+`Dokumentace Spring Boot <https://docs.spring.io/spring-boot/docs/current/reference/html/deployment.html#deployment-install>`_.
+
+
 Příklady skriptů jsou pro distribuci Debian.
 
 Databáze
@@ -86,6 +95,7 @@ Povolení konfigurace a rekonfigurace Apache HTTPD:
     a2ensite aron
     systemctl reload apache2
 
+
 Instalace Java
 ========================
 
@@ -100,7 +110,7 @@ Instalace služby Aron
 - nakopírovat api data do :file:`/opt/aron/api`
 - přidat execute práva na jar
 
-Vytvoření služby
+Vytvoření služby (systemd)
 -----------------------------
 
 Definice služby v souboru :file:`/etc/systemd/system/aron.service`:

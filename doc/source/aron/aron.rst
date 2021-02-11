@@ -1,7 +1,7 @@
 .. _ar:
 
 =================================
-ARON - Jádro publikace
+ARON (jádro publikace)
 =================================
 
 Jádro publikace zajišťuje provádění indexace obsahu
