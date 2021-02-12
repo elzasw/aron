@@ -1,5 +1,6 @@
 package cz.aron.transfagent.service.importfromdir;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
@@ -111,30 +112,12 @@ public class TransformService {
 
     private List<Path> prepareFileList(Path dir) throws IOException {
         List<Path> files;
-        var filterBundle = configDspace.getBundleName();
         var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
         if (Files.exists(bitstreamJson)) {
-            Map<Integer, Path> filesMap = new HashMap<>();
-            var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
-            var jsonValue = jsonReader.readValue();
-            for (var value : jsonValue.asJsonArray()) {
-                var object = value.asJsonObject();
-
-                if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
-                    var name = object.getString(DSpaceConsts.NAME);
-                    var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
-
-                    Validate.notNull(name, "Název souboru nesmí být prázdný");
-                    Validate.notNull(id, "SequenceId nesmí být prázdný");
-
-                    filesMap.put(id, dir.resolve(name));
-                }
+            files = readBitstreamJson(dir, bitstreamJson);
+            try (Stream<Path> stream = Files.list(dir)) {
+                stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
             }
-            files = filesMap.entrySet().stream()
-                    .sorted(Comparator.comparing(Map.Entry::getKey))
-                    .map(Map.Entry::getValue)
-                    .collect(Collectors.toList());
-            Files.delete(bitstreamJson);
         } else {
             try (Stream<Path> stream = Files.list(dir)) {
                 files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
@@ -142,6 +125,31 @@ public class TransformService {
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
+    }
+
+    private List<Path> readBitstreamJson(Path dir, Path bitstreamJson) throws IOException {
+        var filterBundle = configDspace.getBundleName();
+        Map<Integer, Path> filesMap = new HashMap<>();
+        var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
+        var jsonValue = jsonReader.readValue();
+        for (var value : jsonValue.asJsonArray()) {
+            var object = value.asJsonObject();
+
+            if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
+                var name = object.getString(DSpaceConsts.NAME);
+                var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
+
+                Validate.notNull(name, "Název souboru nesmí být prázdný");
+                Validate.notNull(id, "SequenceId nesmí být prázdný");
+
+                filesMap.put(id, dir.resolve(name));
+            }
+        }
+        return filesMap.entrySet()
+                .stream()
+                .sorted(Comparator.comparing(Map.Entry::getKey))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
     }
 
     private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {

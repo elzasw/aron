@@ -169,12 +169,13 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         var jsonValue = getBitstreamsJsonValue(uuid, sessionId);
-        try (OutputStream output = new FileOutputStream(saveDir.resolve(DSpaceConsts.BITSTREAM_JSON).toFile())) {
+        var bitstreamJsonPath = saveDir.resolve(DSpaceConsts.BITSTREAM_JSON);
+        try (OutputStream output = new FileOutputStream(bitstreamJsonPath.toFile())) {
            var jsonWriter = Json.createWriter(output);
            jsonWriter.write(jsonValue);
         } catch (IOException e) {
-            log.error("Error writing file={}.", saveDir.resolve(DSpaceConsts.BITSTREAM_JSON), e);
-            throw new RuntimeException("Error writing file " + DSpaceConsts.BITSTREAM_JSON, e);
+            log.error("Error writing file={}.", bitstreamJsonPath, e);
+            throw new RuntimeException("Error writing file " + bitstreamJsonPath.toString(), e);
         }
 
         for (var file : getDspaceFiles(jsonValue)) {
