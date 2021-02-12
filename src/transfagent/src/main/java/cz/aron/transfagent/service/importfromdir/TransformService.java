@@ -8,13 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -58,7 +55,7 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public void transform(Path dir) throws Exception {
+    public boolean transform(Path dir) throws Exception {
 
         Tika tika = new Tika();
 
@@ -69,45 +66,52 @@ public class TransformService {
         // mazání předchozích souborů
         FileSystemUtils.deleteRecursively(filesDir);
         Files.deleteIfExists(daoUuidXmlFile);
-        Files.createDirectories(filesDir);
 
         List<Path> files = prepareFileList(dir);
-        DaoBuilder daoBuilder = new DaoBuilder();
-        daoBuilder.setUuid(daoUuid);
+        if (!files.isEmpty()) {
+            Files.createDirectories(filesDir);
 
-        DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
-        DaoBundle hiResView = null;
-        DaoBundle thumbnail = null;
+            DaoBuilder daoBuilder = new DaoBuilder();
+            daoBuilder.setUuid(daoUuid);
 
-        // originalni soubory k presunu, klic je novy nazev 
-        var filesToMove = new HashMap<String, Path>();
+            DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
+            DaoBundle hiResView = null;
+            DaoBundle thumbnail = null;
 
-        var pos = 1;
-        for (Path file : files) {
-            String mimeType = tika.detect(file);
-            processPublished(file, published, pos, filesToMove, mimeType);
-            if (mimeType!=null&&mimeType.startsWith("image/")) {
-                log.info("Generating dzi and thumbnail for {}", file);
-                if (hiResView == null) {
-                    hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
-                    thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
+            // originalni soubory k presunu, klic je novy nazev 
+            var filesToMove = new HashMap<String, Path>();
+
+            var pos = 1;
+            for (Path file : files) {
+                String mimeType = tika.detect(file);
+                processPublished(file, published, pos, filesToMove, mimeType);
+                if (mimeType!=null&&mimeType.startsWith("image/")) {
+                    log.info("Generating dzi and thumbnail for {}", file);
+                    if (hiResView == null) {
+                        hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+                        thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
+                    }
+                    processHiResView(file, filesDir, hiResView, pos);
+                    processThumbNail(file, filesDir, thumbnail, pos);
                 }
-                processHiResView(file, filesDir, hiResView, pos);
-                processThumbNail(file, filesDir, thumbnail, pos);
+                pos++;
             }
-            pos++;
+
+            // vytvoreni dao-uuid.xml
+            Marshaller marshaller = ApuxFactory.createMarshaller();
+            try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
+                marshaller.marshal(daoBuilder.build(), os);
+            }
+    
+            // move original files
+            for(var entry : filesToMove.entrySet()) {
+                Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
+            }
+            return true;
         }
 
-        // vytvoreni dao-uuid.xml
-        Marshaller marshaller = ApuxFactory.createMarshaller();
-        try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
-            marshaller.marshal(daoBuilder.build(), os);
-        }
-
-        // move original files
-        for(var entry : filesToMove.entrySet()) {
-            Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
-        }
+        Files.delete(dir);
+        return false;
     }
 
     private List<Path> prepareFileList(Path dir) throws IOException {

@@ -21,21 +21,21 @@ import cz.aron.transfagent.service.StorageService;
 
 @Service
 public class ImportDaoService extends ImportDirProcessor {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(ImportDaoService.class);
-	
+
 	private final StorageService storageService;
-	
+
 	private final DaoFileRepository daoFileRepository;
-	
+
 	private final TransactionTemplate transactionTemplate;
-	
+
 	private final TransformService transformService;
-	
+
 	private final FileImportService fileImportService;
-	
+
 	final private String DAO_DIR = "dao";
-	
+
     public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository,
             TransactionTemplate transactionTemplate, TransformService transformService,
             final FileImportService fileImportService) {
@@ -45,7 +45,7 @@ public class ImportDaoService extends ImportDirProcessor {
         this.transformService = transformService;
         this.fileImportService = fileImportService;
     }
-    
+
     @PostConstruct
     void register() {
         fileImportService.registerImportProcessor(this);
@@ -53,16 +53,15 @@ public class ImportDaoService extends ImportDirProcessor {
 
     @Override
     public int getPriority() { return 0; }
-    
-    
+
 	@Override
 	protected Path getInputDir() {
 		return storageService.getInputPath().resolve(DAO_DIR);
-	}        
+	}
 	
     @Override
 	public boolean processDirectory(Path dir) {
-		
+
 		var uuidStr = dir.getFileName().toString();
 		var uuid = UUID.fromString(dir.getFileName().toString());
 		
@@ -75,8 +74,8 @@ public class ImportDaoService extends ImportDirProcessor {
 				throw new UncheckedIOException(e);
 			}
 		}
-		
-		var daoFile = daoFileOpt.get();		
+
+		var daoFile = daoFileOpt.get();
 		var daoUuidXml = dir.resolve("dao-"+uuidStr+".xml");
 		if (Files.isRegularFile(daoUuidXml)) {
 			importCompleteDao(daoFile,dir);
@@ -87,7 +86,6 @@ public class ImportDaoService extends ImportDirProcessor {
 	}
 
 	private void importCompleteDao(Dao daoFile, Path path) {
-		
 		Path dataPath;
 		try {
 			dataPath = storageService.moveToDataDir(path);
@@ -95,8 +93,8 @@ public class ImportDaoService extends ImportDirProcessor {
 			log.error("Fail to move {} to data dir.",path,e);
 			throw new UncheckedIOException(e);
 		}
-		
-		transactionTemplate.execute(t->{			
+
+		transactionTemplate.execute(t -> {
 			daoFile.setDataDir(dataPath.toString());
 			daoFile.setState(DaoState.READY);
 			daoFile.setTransferred(false);
@@ -105,16 +103,16 @@ public class ImportDaoService extends ImportDirProcessor {
 		});
 		log.info("Imported dao {}", path.getFileName());
 	}
-	
-	private void transformAndImportDao(Dao daoFile, Path path) {	    
-	    try {
-            transformService.transform(path);
+
+    private void transformAndImportDao(Dao daoFile, Path path) {	    
+        try {
+            if (transformService.transform(path)) {
+                importCompleteDao(daoFile, path);
+            }
         } catch (Exception e) {
             log.error("Fail to move {} to data dir.",path,e);
             throw new IllegalStateException(e);
         }
-	    
-	    importCompleteDao(daoFile,path);		
-	}
-	
+    }
+
 }
