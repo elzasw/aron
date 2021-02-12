@@ -1,0 +1,19 @@
+[{
+  "name": "file_1.txt",
+  "bundleName": "ORIGINAL",
+  "sequenceId": 3,
+  "sizeBytes": 6
+  },
+{
+  "name": "file_2.txt",
+  "bundleName": "ORIGINAL",
+  "sequenceId": 2,
+  "sizeBytes": 6
+  },
+{
+  "name": "file_3.txt",
+  "bundleName": "ORIGINAL",
+  "sequenceId": 1,
+  "sizeBytes": 6
+  }
+]

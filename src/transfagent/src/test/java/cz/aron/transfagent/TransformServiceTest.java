@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.Dao;
 import cz.aron.apux._2020.DaoBundle;
+import cz.aron.transfagent.config.ConfigDspace;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.TransformService;
 
@@ -28,7 +29,7 @@ public class TransformServiceTest {
     @Test
     public void testTransformService() throws Exception {
         StorageService storageService = new StorageService("target/test-resources", "target/test-resources/daos");
-        TransformService service = new TransformService(storageService);
+        TransformService service = new TransformService(storageService, new ConfigDspace());
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());

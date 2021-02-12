@@ -45,6 +45,7 @@ import cz.aron.transfagent.repository.DaoFileRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 import cz.aron.transfagent.service.importfromdir.TransformService;
+import cz.aron.transfagent.transformation.DSpaceConsts;
 import liquibase.util.Validate;
 
 @Service
@@ -72,16 +73,6 @@ public class DSpaceImportService implements ImportProcessor {
 
     @Autowired
     ConfigDao configDao;
-
-    private String BITSTREAM_JSON = "bitstreams.json";
-
-    private String BUNDLE_NAME = "bundleName";
-
-    private String NAME = "name";
-
-    private String RETRIEVE_LINK= "retrieveLink"; 
-
-    private String SIZE_BYTES= "sizeBytes"; 
 
     public static void main(String[] args) throws IOException {
         var service = new DSpaceImportService();
@@ -178,12 +169,12 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         var jsonValue = getBitstreamsJsonValue(uuid, sessionId);
-        try (OutputStream output = new FileOutputStream(saveDir.resolve(BITSTREAM_JSON).toFile())) {
+        try (OutputStream output = new FileOutputStream(saveDir.resolve(DSpaceConsts.BITSTREAM_JSON).toFile())) {
            var jsonWriter = Json.createWriter(output);
            jsonWriter.write(jsonValue);
         } catch (IOException e) {
-            log.error("Error writing file={}.", saveDir.resolve(BITSTREAM_JSON), e);
-            throw new RuntimeException("Error writing file " + BITSTREAM_JSON, e);
+            log.error("Error writing file={}.", saveDir.resolve(DSpaceConsts.BITSTREAM_JSON), e);
+            throw new RuntimeException("Error writing file " + DSpaceConsts.BITSTREAM_JSON, e);
         }
 
         for (var file : getDspaceFiles(jsonValue)) {
@@ -295,10 +286,10 @@ public class DSpaceImportService implements ImportProcessor {
         for (var value : jsonValue.asJsonArray()) {
             var object = value.asJsonObject();
 
-            if (filterBundle == null || object.getString(BUNDLE_NAME).equals(filterBundle)) {
-                var name = object.getString(NAME);
-                var retrieveLink = object.getString(RETRIEVE_LINK);
-                int size = object.getInt(SIZE_BYTES);
+            if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
+                var name = object.getString(DSpaceConsts.NAME);
+                var retrieveLink = object.getString(DSpaceConsts.RETRIEVE_LINK);
+                int size = object.getInt(DSpaceConsts.SIZE_BYTES);
 
                 Validate.notNull(name, "Název souboru nesmí být prázdný");
                 Validate.notNull(retrieveLink, "Odkaz pro dotaz nesmí být prázdný");

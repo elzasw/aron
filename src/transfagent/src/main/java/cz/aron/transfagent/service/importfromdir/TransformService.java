@@ -7,17 +7,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.json.Json;
 import javax.xml.bind.Marshaller;
 
 import org.apache.tika.Tika;
+import org.jsoup.helper.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,7 +33,9 @@ import cz.aron.apux.ApuxFactory;
 import cz.aron.apux.DaoBuilder;
 import cz.aron.apux._2020.DaoBundle;
 import cz.aron.apux._2020.DaoBundleType;
+import cz.aron.transfagent.config.ConfigDspace;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.transformation.DSpaceConsts;
 import gov.nist.isg.archiver.DirectoryArchiver;
 import gov.nist.isg.archiver.FilesArchiver;
 import gov.nist.isg.pyramidio.BufferedImageReader;
@@ -42,12 +50,15 @@ public class TransformService {
 
     private final StorageService storageService;
 
-    public TransformService(StorageService storageService) {
+    private final ConfigDspace configDspace;
+
+    public TransformService(StorageService storageService, ConfigDspace configDspace) {
         this.storageService = storageService;
+        this.configDspace = configDspace;
     }
 
     public void transform(Path dir) throws Exception {
-        
+
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
@@ -59,12 +70,7 @@ public class TransformService {
         Files.deleteIfExists(daoUuidXmlFile);
         Files.createDirectories(filesDir);
 
-        List<Path> files;
-        try (Stream<Path> stream = Files.list(dir)) {
-            files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
-        }
-        files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
-
+        List<Path> files = prepareFileList(dir);
         DaoBuilder daoBuilder = new DaoBuilder();
         daoBuilder.setUuid(daoUuid);
 
@@ -76,7 +82,7 @@ public class TransformService {
         var filesToMove = new HashMap<String, Path>();
 
         var pos = 1;
-        for (Path file : files) {            
+        for (Path file : files) {
             String mimeType = tika.detect(file);
             processPublished(file, published, pos, filesToMove, mimeType);
             if (mimeType!=null&&mimeType.startsWith("image/")) {
@@ -103,6 +109,41 @@ public class TransformService {
         }
     }
 
+    private List<Path> prepareFileList(Path dir) throws IOException {
+        List<Path> files;
+        var filterBundle = configDspace.getBundleName();
+        var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
+        if (Files.exists(bitstreamJson)) {
+            Map<Integer, Path> filesMap = new HashMap<>();
+            var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
+            var jsonValue = jsonReader.readValue();
+            for (var value : jsonValue.asJsonArray()) {
+                var object = value.asJsonObject();
+
+                if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
+                    var name = object.getString(DSpaceConsts.NAME);
+                    var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
+
+                    Validate.notNull(name, "Název souboru nesmí být prázdný");
+                    Validate.notNull(id, "SequenceId nesmí být prázdný");
+
+                    filesMap.put(id, dir.resolve(name));
+                }
+            }
+            files = filesMap.entrySet().stream()
+                    .sorted(Comparator.comparing(Map.Entry::getKey))
+                    .map(Map.Entry::getValue)
+                    .collect(Collectors.toList());
+            Files.delete(bitstreamJson);
+        } else {
+            try (Stream<Path> stream = Files.list(dir)) {
+                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+            }
+            files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
+        }
+        return files;
+    }
+
     private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
@@ -124,8 +165,7 @@ public class TransformService {
         createDzi(file, filesDir.resolve("file-"+uuid));
     }
 
-    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove,
-                                  String mimeType) {
+    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
         var daoFile = DaoBuilder.createDaoFile(pos, mimeType);
         var uuid = daoFile.getUuid();
 
@@ -138,7 +178,7 @@ public class TransformService {
         boolean deleteCreated = true;
         try {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
-            FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());            
+            FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, 1);
             try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
