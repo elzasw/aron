@@ -177,8 +177,10 @@ public class TransformService {
         createDzi(file, filesDir.resolve("file-"+uuid));
     }
 
-    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
-        var daoFile = DaoBuilder.createDaoFile(pos, mimeType);
+    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) throws IOException {
+        var fileName = file.getFileName().toString();
+        var fileSize = Files.size(file);
+        var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType);
         var uuid = daoFile.getUuid();
 
         filesToMove.put("file-" + uuid, file);

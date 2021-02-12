@@ -8,13 +8,15 @@ import cz.aron.apux._2020.Dao;
 import cz.aron.apux._2020.DaoBundle;
 import cz.aron.apux._2020.DaoBundleType;
 import cz.aron.apux._2020.DaoFile;
+import cz.aron.apux._2020.Metadata;
+import cz.aron.apux._2020.MetadataItem;
 
 public class DaoBuilder {
 
     private Dao dao = ApuxFactory.getObjFactory().createDao();
 
     public void setUuid(String daoUuid) {
-        dao.setUuid(daoUuid);        
+        dao.setUuid(daoUuid);
     }
 
     public DaoBundle createDaoBundle(DaoBundleType bundleType) {
@@ -23,34 +25,59 @@ public class DaoBuilder {
         dao.getBndl().add(daoBundle);
         return daoBundle;
     }
-    
+
     public JAXBElement<Dao> build() {
         JAXBElement<Dao> result = ApuxFactory.getObjFactory().createDao(dao);
         return result;
     }
 
-    public static void addMimeType(DaoFile daoFile, String mimeType) {                
-        var metadataItem = ApuxFactory.getObjFactory().createMetadataItem();        
-        metadataItem.setCode("mimeType");
-        metadataItem.setValue(mimeType);
-        
+    public static Metadata getMetadata(DaoFile daoFile) {
         var metadata = daoFile.getMtdt();
-        if(metadata==null) {
+        if (metadata == null) {
             metadata = ApuxFactory.getObjFactory().createMetadata();
             daoFile.setMtdt(metadata);
         }
-        
-        metadata.getItms().add(metadataItem);        
+        return metadata;
+    }
+
+    public static MetadataItem createMetadataItem(String code, String value) {
+        var metadataItem = ApuxFactory.getObjFactory().createMetadataItem();
+        metadataItem.setCode(code);
+        metadataItem.setValue(value);
+
+        return metadataItem;
+    }
+
+    public static void addFileName(DaoFile daoFile, String name) {
+        getMetadata(daoFile).getItms().add(createMetadataItem("name", name));
+    }
+
+    public static void addFileSize(DaoFile daoFile, long size) {
+        getMetadata(daoFile).getItms().add(createMetadataItem("size", String.valueOf(size)));
+    }
+
+    public static void addMimeType(DaoFile daoFile, String mimeType) {
+        getMetadata(daoFile).getItms().add(createMetadataItem("mimeType", mimeType));
     }
 
     public static DaoFile createDaoFile(int pos, String mimetype) {
+        return createDaoFile(null, null, pos, mimetype);
+    }
+
+    public static DaoFile createDaoFile(String name, Long size, int pos, String mimetype) {
         DaoFile daoFile = ApuxFactory.getObjFactory().createDaoFile();
         daoFile.setUuid(UUID.randomUUID().toString());
         daoFile.setPos(pos);
-        
-        DaoBuilder.addMimeType(daoFile, mimetype);
-        
+
+        if (name != null) {
+            addFileName(daoFile, name);
+        }
+        if (size != null) {
+            addFileSize(daoFile, size);
+        }
+        addMimeType(daoFile, mimetype);
+
         return daoFile;
     }
-    
+
 }
