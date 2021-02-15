@@ -56,15 +56,13 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public boolean transform(Path dir) throws JAXBException {
+    public boolean transform(Path dir) throws JAXBException, IOException {
 
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
         var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
         var filesDir = dir.resolve("files");
-
-        try {
 
         // mazání předchozích souborů
         FileSystemUtils.deleteRecursively(filesDir);
@@ -114,15 +112,13 @@ public class TransformService {
         }
 
         Files.delete(dir);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return false;
     }
 
-    private List<Path> prepareFileList(Path dir) throws IOException {
+    private List<Path> prepareFileList(Path dir) {
         List<Path> files;
+        try {
+
         var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
         if (Files.exists(bitstreamJson)) {
             files = readBitstreamJson(dir, bitstreamJson);
@@ -134,6 +130,10 @@ public class TransformService {
                 files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
             }
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
+        }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
         return files;
     }
