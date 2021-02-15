@@ -18,6 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.json.Json;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.tika.Tika;
@@ -55,13 +56,15 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public boolean transform(Path dir) throws Exception {
+    public boolean transform(Path dir) throws JAXBException {
 
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
         var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
         var filesDir = dir.resolve("files");
+
+        try {
 
         // mazání předchozích souborů
         FileSystemUtils.deleteRecursively(filesDir);
@@ -111,6 +114,10 @@ public class TransformService {
         }
 
         Files.delete(dir);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
@@ -174,7 +181,7 @@ public class TransformService {
         var uuid = daoFile.getUuid();
 
         hiResView.getFile().add(daoFile);
-        createDzi(file, filesDir.resolve("file-"+uuid));
+        createDzi(file, filesDir.resolve("file-" + uuid));
     }
 
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) throws IOException {
