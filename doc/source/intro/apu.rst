@@ -42,6 +42,8 @@ Součástí předaných dat mohou také být přílohy - návazné datové soubo
 ty jsou uloženy formou příloh v úložišti.
 U zdroje je uveden čas publikace.
 
+.. _ar_apu_part:
+
 ApuPart
 ===============
 Část jednotky publikace. Slouží pro logické rozdělení atributů 
@@ -55,6 +57,8 @@ textovou reprezentaci.
 Část je přímo vázána na Apu nebo může být vázána na nadřízenou část. 
 Zde je možná jen jedna úroveň vnoření, tj. část se může skládat z 0..n podčástí. 
 Hlubší zanoření není přípustné.
+
+.. _ar_apu_item:
 
 DescItem
 =============

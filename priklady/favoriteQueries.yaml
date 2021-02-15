@@ -1,0 +1,48 @@
+---
+- icon: fas fa-user-edit
+  label: Matriky
+  type: ARCH_DESC
+#  query: Sbírky
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - matrika
+- icon: fas fa-book
+  label: Kroniky
+  type: ARCH_DESC
+  filters:
+    - field: UNIT_TYPE
+      value:
+        - kronika
+- icon: fas fa-building
+  label: Stavební dokumentace
+  tooltip: stavební spisy, technická dokumentace, technické výkresy staveb
+  type: ARCH_DESC
+  filters:
+    - field: UNIT_TYPE
+      value:
+        - stavební dokumentace
+- icon: fas fa-laptop-house
+  label: Evidence nemovitostí
+  tooltip: pozemkové knihy, gruntovní knihy
+  type: ARCH_DESC
+  filters:
+    - field: UNIT_TYPE
+      value:
+        - evidence nemovitostí
+- icon: fas fa-address-card
+  label: Evidence obyvatel
+  tooltip: seznamy obyvatel, zpovědní rejstříky, soupisy duší, sčítací operáty, urbáře, matriční doklady (snubní protokoly, úmrtní lístky)
+  type: ARCH_DESC
+  filters:
+    - field: UNIT_TYPE
+      value:
+        - evidence obyvatel
+- icon: fas fa-user-graduate
+  label: Evidence školní docházky
+  tooltip: seznamy žáků a studentů, třídní katalogy, třídní výkazy, spisy žáků, protokoly o závěrečných zkouškách
+  type: ARCH_DESC
+  filters:
+    - field: UNIT_TYPE
+      value:
+        - evidence školní docházky

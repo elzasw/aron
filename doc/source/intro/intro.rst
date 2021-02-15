@@ -13,3 +13,4 @@ a přílohy jednotek publikace.
    
    overview.rst
    apu.rst
+   types.rst

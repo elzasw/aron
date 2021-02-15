@@ -41,9 +41,7 @@ partTypes:
     code: PT_ARCH_DESC_FUND
     viewType: STANDALONE
 
-# Pridat: 
-#   hierarchical: true | false
-
+#
 # Jednotlivé prvky popisu
 #
 # Druhy prvků popisu, uvádí se jako type: ....

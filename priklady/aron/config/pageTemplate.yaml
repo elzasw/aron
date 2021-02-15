@@ -1,0 +1,19 @@
+#
+# Seznam dostupnych prekladu
+#
+# V pripade jednoho nebo zadneho jazyku
+# se nezobrazi vyber
+#
+localizations:
+  - cs_CZ
+  - en_US
+
+# Nazev systemu
+# Lze pouzit pro pojmenovani zalozky,
+# zobrazuje vpravo od ikony systému
+name: ARchiv ONline
+
+homepage:
+  # Obsah elementu na uvodni strance
+  footerCenter: '<p>Základní informace</p><p>ARchiv ONline je webová aplikace <a href="https://vychodoceskearchivy.cz/">Státního oblastního archivu v Zámrsku</a> sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů.</p><p>Copyright &copy; 2021 Státní oblastní archiv v Zámrsku</p>'
+  footerRight: "<p>KONTAKT</p><p>webmaster@ahapa.cz</p>"

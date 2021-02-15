@@ -1,0 +1,55 @@
+server:
+  servlet:
+    contextPath: /api/aron
+  port: 8080
+
+spring:
+  # Nastavení dostupnosti elasticsearch
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+  # Nastavení připojení k databází
+  datasource:
+    url: jdbc:postgresql://localhost:5432/aron
+    username: aron
+    password: pass
+
+# URL transformačního agenta
+# slouží pro příjem požadavků na archivní entity
+transformation-agent-url:  "http://127.0.0.1:8082/ws/ApuTransformManager"
+
+# Složka obsaující data pro zobrazení
+tile:
+  folder: /opt/aron/data/tiles
+
+files:
+  storage: /opt/aron/data/fileStorage
+  transfer:
+    path: /opt/aron/data/aronFileTransfer
+
+# Dílčí konfigurace pro webové rozhraní
+webResources:
+  # Konfigurace header a footer
+  pageTemplate: ./config/pageTemplate.yaml
+  # Konfigurace novinek
+  news: ./config/news.yaml
+  # Oblibene dotazy
+  favoriteQueries: ./config/favoriteQueries.yaml
+  # Fazety pro vyhledavani
+  facets: "./config/searchConfig.yaml"
+  # Logo Archivu Online
+  #
+  # Kliknuti na logo vede na Homepage
+  logo: ./images/logo.svg
+  # Volitelný obrázek zobrazovaný vpravo od názvu
+  # Není klikatelný
+  # 
+  topImage: ./images/book.png
+
+# Definice typů
+types-config: "/opt/aron/api/config/types.yaml"
+
+# Nastavení URL s uživatelskou nápovědou k aplikaci
+help-url: "https://vychodoceskearchivy.cz/home/prezentace-archivu/e-vystava-archivalii/archiv-online-napoveda"
+
+environment: zamrsk-test
