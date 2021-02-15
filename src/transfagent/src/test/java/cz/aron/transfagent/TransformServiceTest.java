@@ -32,6 +32,7 @@ public class TransformServiceTest {
         TransformService service = new TransformService(storageService, new ConfigDspace());
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
+        Files.createDirectories(daoInputDir);
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
         service.transform(daoInputDir);
 
