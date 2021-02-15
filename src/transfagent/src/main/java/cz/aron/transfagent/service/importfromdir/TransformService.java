@@ -56,13 +56,15 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public boolean transform(Path dir) throws IOException, JAXBException {
+    public boolean transform(Path dir) throws JAXBException {
 
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
         var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
         var filesDir = dir.resolve("files");
+
+        try {
 
         // mazání předchozích souborů
         FileSystemUtils.deleteRecursively(filesDir);
@@ -112,6 +114,10 @@ public class TransformService {
         }
 
         Files.delete(dir);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return false;
     }
 
