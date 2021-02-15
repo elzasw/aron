@@ -56,15 +56,13 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public boolean transform(Path dir) throws JAXBException {
+    public boolean transform(Path dir) throws JAXBException, IOException {
 
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
         var daoUuidXmlFile = dir.resolve("dao-" + daoUuid + ".xml");
         var filesDir = dir.resolve("files");
-
-        try {
 
         // mazání předchozích souborů
         FileSystemUtils.deleteRecursively(filesDir);
@@ -114,10 +112,6 @@ public class TransformService {
         }
 
         Files.delete(dir);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return false;
     }
 
@@ -130,9 +124,11 @@ public class TransformService {
                 stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
             }
         } else {
-            try (Stream<Path> stream = Files.list(dir)) {
-                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
-            }
+//            try (Stream<Path> stream = Files.list(dir)) {
+//                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+//            }
+            File[] stream = dir.toFile().listFiles();
+            files = Stream.of(stream).map(f -> f.toPath()).collect(Collectors.toList());
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
