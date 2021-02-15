@@ -117,23 +117,30 @@ public class TransformService {
 
     private List<Path> prepareFileList(Path dir) {
         List<Path> files;
-        try {
-
         var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
         if (Files.exists(bitstreamJson)) {
-            files = readBitstreamJson(dir, bitstreamJson);
+            try {
+                files = readBitstreamJson(dir, bitstreamJson);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
             try (Stream<Path> stream = Files.list(dir)) {
                 stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                return null;
             }
         } else {
             try (Stream<Path> stream = Files.list(dir)) {
                 files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
             }
-            files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
-        }
-        } catch (IOException e) {
+        catch (IOException e) {
             e.printStackTrace();
             return null;
+        }
+            files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
     }
