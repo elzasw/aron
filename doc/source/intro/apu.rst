@@ -1,7 +1,7 @@
 .. _ar_apu:
 
 =================================
-APU
+Jednotky publikace
 =================================
 
 APU je zkratka z **Archival Publication Unit** a představuje
@@ -14,11 +14,9 @@ pro odkazování z jiných entit. Tento stav je identifikován chybějícím
 odkazem na zdroj (Source).
 
 Každá APU musí mít své pojmenování. Toto je preferované označení 
-dané APU a používá se při referencování APU z jiné APU. Toto označení
+dané APU a používá se při odkazování z jiné APU. Toto označení
 je předáno jako součást APU. V případě změny preferovaného označení 
 dojde k aktualizaci APU odkazujících na tuto APU.
-Permalink má obvykle také označení, které slouží pro reprezentaci
-Apu v případě, že je na něj odkazováno.
 
 Apu má definován svůj zdroj odkazem na Source.
 Apu může mít nadřízenou jinou jednotku publikace. Případem užití 

@@ -1,5 +1,7 @@
+.. _intro:
+
 =============================
-Seznámení s ARchiv Online
+Seznámení
 =============================
 
 ARchiv ONline je publikační systém pro zpřístupňování
@@ -10,3 +12,4 @@ a přílohy jednotek publikace.
 .. toctree::
    
    overview.rst
+   apu.rst
