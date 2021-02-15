@@ -18,6 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.json.Json;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 
 import org.apache.tika.Tika;
@@ -55,7 +56,7 @@ public class TransformService {
         this.configDspace = configDspace;
     }
 
-    public boolean transform(Path dir) throws Exception {
+    public boolean transform(Path dir) throws IOException, JAXBException {
 
         Tika tika = new Tika();
 
@@ -174,7 +175,7 @@ public class TransformService {
         var uuid = daoFile.getUuid();
 
         hiResView.getFile().add(daoFile);
-        createDzi(file, filesDir.resolve("file-"+uuid));
+        createDzi(file, filesDir.resolve("file-" + uuid));
     }
 
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) throws IOException {

@@ -3,15 +3,19 @@ package cz.aron.transfagent;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.Dao;
@@ -26,13 +30,14 @@ public class TransformServiceTest {
 
     private final static String DAO_DIR = "src/test/resources/files/dao/" + DAO_UUID;
 
+    private final static String TEST_RESOURCES_DIR = "target/test-resources";
+
     @Test
-    public void testTransformService() throws Exception {
-        StorageService storageService = new StorageService("target/test-resources", "target/test-resources/daos");
+    public void testTransformService() throws IOException, JAXBException {
+        StorageService storageService = new StorageService(TEST_RESOURCES_DIR, TEST_RESOURCES_DIR + "/daos");
         TransformService service = new TransformService(storageService, new ConfigDspace());
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
-        Files.createDirectories(daoInputDir);
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
         service.transform(daoInputDir);
 
@@ -60,7 +65,10 @@ public class TransformServiceTest {
             }
             assertTrue(bundle.getFile().size() == size);
         }
-
     }
 
+    @AfterAll
+    public static void deleteApusrcXml() throws IOException {
+        FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
+    }
 }
