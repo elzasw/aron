@@ -207,11 +207,15 @@ public class TransformService {
                             Files.copy(file, outputStream);
                             outputStream.closeEntry();
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            log.error("Error in copying file ", e);
+                            throw new RuntimeException(e);
                         }
                         return FileVisitResult.CONTINUE;
                     }
                 });
+            } catch (IOException e) {
+                log.error("Error in creating file ", e);
+                throw new RuntimeException(e);
             }
             deleteCreated = false;
         } finally {
