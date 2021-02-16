@@ -157,7 +157,7 @@ public class TransformService {
                 .collect(Collectors.toList());
     }
 
-    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) {
+    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
 
@@ -167,8 +167,6 @@ public class TransformService {
                     .outputFormat("jpg")
                     .size(120, 120)
                     .toOutputStream(os);
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -191,6 +189,7 @@ public class TransformService {
     }
 
     private void createDzi(Path sourceImage, Path targetFile) throws IOException {
+        log.info("Creating file {}", targetFile);
         Path tempDir = storageService.createTempDir("dzi_" + sourceImage.getFileName().toString() + "_");
         boolean deleteCreated = true;
         try {
