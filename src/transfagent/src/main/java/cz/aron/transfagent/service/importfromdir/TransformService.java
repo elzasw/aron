@@ -197,7 +197,7 @@ public class TransformService {
         }
     }
 
-    private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) throws IOException {
+    private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream");
         var uuid = daoFile.getUuid();
 
@@ -205,9 +205,15 @@ public class TransformService {
         createDzi(file, filesDir.resolve("file-" + uuid));
     }
 
-    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) throws IOException {
+    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
         var fileName = file.getFileName().toString();
-        var fileSize = Files.size(file);
+        long fileSize;
+        try {
+            fileSize = Files.size(file);
+        } catch (IOException e) {
+            log.error("Error defining size file {} ", file, e);
+            throw new RuntimeException(e);
+        }
         var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType);
         var uuid = daoFile.getUuid();
 
@@ -215,8 +221,16 @@ public class TransformService {
         published.getFile().add(daoFile);
     }
 
-    private void createDzi(Path sourceImage, Path targetFile) throws IOException {
-        Path tempDir = storageService.createTempDir("dzi_" + sourceImage.getFileName().toString() + "_");
+    private void createDzi(Path sourceImage, Path targetFile) {
+        var prefix = "dzi_" + sourceImage.getFileName().toString() + "_";
+        Path tempDir;
+        try {
+            tempDir = storageService.createTempDir(prefix);
+        } catch (IOException e) {
+            log.error("Error creating tempDir prefix={} ", prefix, e);
+            throw new RuntimeException(e);
+        }
+
         boolean deleteCreated = true;
         try {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
@@ -239,17 +253,22 @@ public class TransformService {
                         return FileVisitResult.CONTINUE;
                     }
                 });
-            } catch (IOException e) {
-                log.error("Error in creating file ", e);
-                throw new RuntimeException(e);
             }
             deleteCreated = false;
+        } catch (IOException e) {
+            log.error("Error in creating file ", e);
+            throw new RuntimeException(e);
         } finally {
-            if (!FileSystemUtils.deleteRecursively(tempDir)) {
-                log.warn("Fail to delete temp directory");
-            }
-            if (deleteCreated) {
-                Files.deleteIfExists(targetFile);
+            try {
+                if (!FileSystemUtils.deleteRecursively(tempDir)) {
+                    log.warn("Fail to delete temp directory");
+                }
+                if (deleteCreated) {
+                    Files.deleteIfExists(targetFile);
+                }
+            } catch (IOException e) {
+                log.error("Error deleting unused files ", e);
+                throw new RuntimeException(e);
             }
         }
     }
