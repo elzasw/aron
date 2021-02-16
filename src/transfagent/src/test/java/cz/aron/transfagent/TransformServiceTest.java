@@ -78,6 +78,6 @@ public class TransformServiceTest {
 
     @AfterAll
     public static void deleteApusrcXml() throws IOException {
-        FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
+        //FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
     }
 }

@@ -186,6 +186,9 @@ public class TransformService {
 
         thumbnails.getFile().add(daoFile);
         var thumbnailsFile = filesDir.resolve("file-" + uuid);
+
+        log.debug("Creating thumbnails file {}", thumbnailsFile);
+
         try (OutputStream os = Files.newOutputStream(thumbnailsFile)) {
             Thumbnails.of(file.toFile())
                     .outputFormat("jpg")
@@ -222,6 +225,8 @@ public class TransformService {
     }
 
     private void createDzi(Path sourceImage, Path targetFile) {
+        log.debug("Creating hiResView file {}", targetFile);
+
         var prefix = "dzi_" + sourceImage.getFileName().toString() + "_";
         Path tempDir;
         try {
@@ -260,14 +265,16 @@ public class TransformService {
             throw new RuntimeException(e);
         } finally {
             try {
+                log.debug("Deleting directory {}", tempDir);
                 if (!FileSystemUtils.deleteRecursively(tempDir)) {
                     log.warn("Fail to delete temp directory");
                 }
                 if (deleteCreated) {
+                    log.debug("Deleting file {}", tempDir);
                     Files.deleteIfExists(targetFile);
                 }
             } catch (IOException e) {
-                log.error("Error deleting unused files ", e);
+                log.error("Error deleting unused file(s) ", e);
                 throw new RuntimeException(e);
             }
         }
