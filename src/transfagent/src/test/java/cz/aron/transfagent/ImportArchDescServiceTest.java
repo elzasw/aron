@@ -10,6 +10,7 @@ import java.util.List;
 import javax.transaction.Transactional;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -18,6 +19,7 @@ import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
 
+@Disabled
 @SpringBootTest
 public class ImportArchDescServiceTest extends AbstractCommonTest {
 

@@ -28,7 +28,7 @@ import cz.aron.transfagent.config.ConfigDspace;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.TransformService;
 
-@Disabled
+//@Disabled
 public class TransformServiceTest {
 
     private final static String DAO_UUID = "61259486-3786-4877-85b5-f845ee038132";

@@ -12,6 +12,7 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -21,6 +22,7 @@ import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.elza.datace.LocalDateTimeRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
+@Disabled
 public class ImportArchDescTest {
 
     private final static String ARCHDESC_DIR = "src/test/resources/files/archdesc/archdesc-CR2303";

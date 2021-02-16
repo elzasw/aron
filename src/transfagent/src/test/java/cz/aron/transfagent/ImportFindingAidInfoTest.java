@@ -12,6 +12,7 @@ import java.util.Properties;
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -20,6 +21,7 @@ import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
 import cz.aron.transfagent.transformation.CoreTypes;
 
+@Disabled
 public class ImportFindingAidInfoTest {
 
     private final static String FINDING_AID_DIR = "src/test/resources/files/findingaids/findingaid-CR2303";

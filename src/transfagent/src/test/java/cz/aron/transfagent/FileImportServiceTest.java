@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.FileSystemUtils;
@@ -17,6 +18,7 @@ import org.springframework.util.FileSystemUtils;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.SourceType;
 
+@Disabled
 @SpringBootTest
 public class FileImportServiceTest extends AbstractCommonTest {
 
