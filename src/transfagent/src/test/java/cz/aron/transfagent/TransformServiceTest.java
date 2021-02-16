@@ -17,6 +17,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.FileSystemUtils;
 
@@ -27,6 +28,7 @@ import cz.aron.transfagent.config.ConfigDspace;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.TransformService;
 
+@Disabled
 public class TransformServiceTest {
 
     private final static String DAO_UUID = "61259486-3786-4877-85b5-f845ee038132";
@@ -47,32 +49,32 @@ public class TransformServiceTest {
             assertTrue(files.size() == 5);
         }
 
-//        service.transform(daoInputDir);
-//
-//        Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
-//
-//        Dao dao;
-//        Unmarshaller unmarshaller = ApuxFactory.createUnmarshaller();
-//        try (InputStream is = Files.newInputStream(daoUuidXml)) {
-//            dao = ((JAXBElement<Dao>) unmarshaller.unmarshal(is)).getValue();
-//        }
-//        assertTrue(dao.getUuid().equals(DAO_UUID));
-//
-//        int size;
-//        for (DaoBundle bundle : dao.getBndl()) {
-//            switch (bundle.getType().value()) {
-//            case "Published":
-//                size = 5;
-//                break;
-//            case "HighResView":
-//            case "Thumbnail":
-//                size = 4;
-//                break;
-//            default:
-//                size = 0;
-//            }
-//            assertTrue(bundle.getFile().size() == size);
-//        }
+        service.transform(daoInputDir);
+
+        Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
+
+        Dao dao;
+        Unmarshaller unmarshaller = ApuxFactory.createUnmarshaller();
+        try (InputStream is = Files.newInputStream(daoUuidXml)) {
+            dao = ((JAXBElement<Dao>) unmarshaller.unmarshal(is)).getValue();
+        }
+        assertTrue(dao.getUuid().equals(DAO_UUID));
+
+        int size;
+        for (DaoBundle bundle : dao.getBndl()) {
+            switch (bundle.getType().value()) {
+            case "Published":
+                size = 5;
+                break;
+            case "HighResView":
+            case "Thumbnail":
+                size = 4;
+                break;
+            default:
+                size = 0;
+            }
+            assertTrue(bundle.getFile().size() == size);
+        }
     }
 
     @AfterAll
