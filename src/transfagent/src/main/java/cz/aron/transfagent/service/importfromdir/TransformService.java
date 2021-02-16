@@ -121,40 +121,51 @@ public class TransformService {
         return false;
     }
 
-    private List<Path> prepareFileList(Path dir) throws IOException {
+    private List<Path> prepareFileList(Path dir) {
         List<Path> files;
         var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
         if (Files.exists(bitstreamJson)) {
             files = readBitstreamJson(dir, bitstreamJson);
             try (Stream<Path> stream = Files.list(dir)) {
                 stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
+            } catch (IOException e) {
+                log.error("Error getting file list from {} ", dir, e);
+                throw new RuntimeException(e);
             }
         } else {
             try (Stream<Path> stream = Files.list(dir)) {
                 files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+            } catch (IOException e) {
+                log.error("Error getting file list from {} ", dir, e);
+                throw new RuntimeException(e);
             }
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
     }
 
-    private List<Path> readBitstreamJson(Path dir, Path bitstreamJson) throws IOException {
+    private List<Path> readBitstreamJson(Path dir, Path bitstreamJson) {
         var filterBundle = configDspace.getBundleName();
         Map<Integer, Path> filesMap = new HashMap<>();
-        var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
-        var jsonValue = jsonReader.readValue();
-        for (var value : jsonValue.asJsonArray()) {
-            var object = value.asJsonObject();
-
-            if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
-                var name = object.getString(DSpaceConsts.NAME);
-                var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
-
-                Validate.notNull(name, "Název souboru nesmí být prázdný");
-                Validate.notNull(id, "SequenceId nesmí být prázdný");
-
-                filesMap.put(id, dir.resolve(name));
+        try {
+            var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
+            var jsonValue = jsonReader.readValue();
+            for (var value : jsonValue.asJsonArray()) {
+                var object = value.asJsonObject();
+    
+                if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
+                    var name = object.getString(DSpaceConsts.NAME);
+                    var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
+    
+                    Validate.notNull(name, "Název souboru nesmí být prázdný");
+                    Validate.notNull(id, "SequenceId nesmí být prázdný");
+    
+                    filesMap.put(id, dir.resolve(name));
+                }
             }
+        } catch (IOException e) {
+            log.error("Error reading file {} ", bitstreamJson, e);
+            throw new RuntimeException(e);
         }
         return filesMap.entrySet()
                 .stream()
@@ -163,16 +174,20 @@ public class TransformService {
                 .collect(Collectors.toList());
     }
 
-    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
+    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
 
         thumbnails.getFile().add(daoFile);
-        try (OutputStream os = Files.newOutputStream(filesDir.resolve("file-" + uuid))) {
+        var thumbnailsFile = filesDir.resolve("file-" + uuid);
+        try (OutputStream os = Files.newOutputStream(thumbnailsFile)) {
             Thumbnails.of(file.toFile())
                     .outputFormat("jpg")
                     .size(120, 120)
                     .toOutputStream(os);
+        } catch (IOException e) {
+            log.error("Error creating thumbnails {} ", thumbnailsFile, e);
+            throw new RuntimeException(e);
         }
     }
 
