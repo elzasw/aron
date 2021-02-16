@@ -66,9 +66,11 @@ public class TransformService {
         var filesDir = dir.resolve("files");
 
         // mazání předchozích souborů
+        log.debug("Deleting files and folders in a directory {}", dir);
         FileSystemUtils.deleteRecursively(filesDir);
         Files.deleteIfExists(daoUuidXmlFile);
 
+        log.debug("Preparing files list in directory {}", dir);
         List<Path> files = prepareFileList(dir);
         if (!files.isEmpty()) {
             Files.createDirectories(filesDir);
@@ -86,8 +88,9 @@ public class TransformService {
             var pos = 1;
             for (Path file : files) {
                 String mimeType = tika.detect(file);
+                log.debug("Processing {} file {}", mimeType, file);
                 processPublished(file, published, pos, filesToMove, mimeType);
-                if (mimeType!=null&&mimeType.startsWith("image/")) {
+                if (mimeType != null && mimeType.startsWith("image/")) {
                     log.info("Generating dzi and thumbnail for {}", file);
                     if (hiResView == null) {
                         hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
@@ -100,12 +103,14 @@ public class TransformService {
             }
 
             // vytvoreni dao-uuid.xml
+            log.debug("Creating file {}", daoUuidXmlFile);
             Marshaller marshaller = ApuxFactory.createMarshaller();
             try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
                 marshaller.marshal(daoBuilder.build(), os);
             }
-    
+
             // move original files
+            log.debug("Moving all files to {}", filesDir);
             for (var entry : filesToMove.entrySet()) {
                 Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
             }
