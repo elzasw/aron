@@ -157,7 +157,7 @@ public class TransformService {
                 .collect(Collectors.toList());
     }
 
-    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
+    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
 
@@ -167,6 +167,8 @@ public class TransformService {
                     .outputFormat("jpg")
                     .size(120, 120)
                     .toOutputStream(os);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -213,6 +215,8 @@ public class TransformService {
                 });
             }
             deleteCreated = false;
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
             if (!FileSystemUtils.deleteRecursively(tempDir)) {
                 log.warn("Fail to delete temp directory");

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -40,9 +39,6 @@ public class TransformServiceTest {
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
-        try (Stream<Path> stream = Files.list(daoInputDir)) { // TODO test
-            stream.forEach(System.out::println);
-        }
         service.transform(daoInputDir);
 
         Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
