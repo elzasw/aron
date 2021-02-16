@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -48,36 +47,36 @@ public class TransformServiceTest {
             assertTrue(files.size() == 5);
         }
 
-        service.transform(daoInputDir);
-
-        Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
-
-        Dao dao;
-        Unmarshaller unmarshaller = ApuxFactory.createUnmarshaller();
-        try (InputStream is = Files.newInputStream(daoUuidXml)) {
-            dao = ((JAXBElement<Dao>) unmarshaller.unmarshal(is)).getValue();
-        }
-        assertTrue(dao.getUuid().equals(DAO_UUID));
-
-        int size;
-        for (DaoBundle bundle : dao.getBndl()) {
-            switch (bundle.getType().value()) {
-            case "Published":
-                size = 5;
-                break;
-            case "HighResView":
-            case "Thumbnail":
-                size = 4;
-                break;
-            default:
-                size = 0;
-            }
-            assertTrue(bundle.getFile().size() == size);
-        }
+//        service.transform(daoInputDir);
+//
+//        Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
+//
+//        Dao dao;
+//        Unmarshaller unmarshaller = ApuxFactory.createUnmarshaller();
+//        try (InputStream is = Files.newInputStream(daoUuidXml)) {
+//            dao = ((JAXBElement<Dao>) unmarshaller.unmarshal(is)).getValue();
+//        }
+//        assertTrue(dao.getUuid().equals(DAO_UUID));
+//
+//        int size;
+//        for (DaoBundle bundle : dao.getBndl()) {
+//            switch (bundle.getType().value()) {
+//            case "Published":
+//                size = 5;
+//                break;
+//            case "HighResView":
+//            case "Thumbnail":
+//                size = 4;
+//                break;
+//            default:
+//                size = 0;
+//            }
+//            assertTrue(bundle.getFile().size() == size);
+//        }
     }
 
     @AfterAll
     public static void deleteApusrcXml() throws IOException {
-        //FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
+        FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
     }
 }
