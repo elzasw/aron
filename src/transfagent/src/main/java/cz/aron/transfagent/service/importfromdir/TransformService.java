@@ -7,6 +7,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -189,7 +190,6 @@ public class TransformService {
     }
 
     private void createDzi(Path sourceImage, Path targetFile) throws IOException {
-        log.info("Creating file {}", targetFile);
         Path tempDir = storageService.createTempDir("dzi_" + sourceImage.getFileName().toString() + "_");
         boolean deleteCreated = true;
         try {
@@ -197,7 +197,7 @@ public class TransformService {
             FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, 1);
-            try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
+            try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE_NEW))) {
                 Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
@@ -214,8 +214,6 @@ public class TransformService {
                 });
             }
             deleteCreated = false;
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             if (!FileSystemUtils.deleteRecursively(tempDir)) {
                 log.warn("Fail to delete temp directory");
