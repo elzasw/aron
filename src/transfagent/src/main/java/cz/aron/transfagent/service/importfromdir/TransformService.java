@@ -61,6 +61,11 @@ public class TransformService {
 
         log.debug("Transforming data, path: {}", dir);
 
+        if (!Files.isDirectory(dir)) {
+            log.error("Directory does not exist {}", dir);
+            throw new IOException();
+        }
+
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
@@ -68,7 +73,7 @@ public class TransformService {
         var filesDir = dir.resolve("files");
 
         // mazání předchozích souborů
-        log.debug("Deleting files and folders in a directory {}", dir);
+        log.debug("Deleting old files and folders in a directory {}", dir);
         FileSystemUtils.deleteRecursively(filesDir);
         Files.deleteIfExists(daoUuidXmlFile);
 
