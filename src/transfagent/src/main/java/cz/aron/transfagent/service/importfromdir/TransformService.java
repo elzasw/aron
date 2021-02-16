@@ -105,7 +105,7 @@ public class TransformService {
             }
     
             // move original files
-            for(var entry : filesToMove.entrySet()) {
+            for (var entry : filesToMove.entrySet()) {
                 Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
             }
             return true;
@@ -124,11 +124,9 @@ public class TransformService {
                 stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
             }
         } else {
-//            try (Stream<Path> stream = Files.list(dir)) {
-//                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
-//            }
-            File[] stream = dir.toFile().listFiles();
-            files = Stream.of(stream).map(f -> f.toPath()).collect(Collectors.toList());
+            try (Stream<Path> stream = Files.list(dir)) {
+                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+            }
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
