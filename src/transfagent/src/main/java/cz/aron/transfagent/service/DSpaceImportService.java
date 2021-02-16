@@ -90,8 +90,9 @@ public class DSpaceImportService implements ImportProcessor {
         // http://10.2.0.27:8088/rest/items/<uuid>/bitstreams
 
         var itemUuid = "61259486-3786-4877-85b5-f845ee038132";
+        var saveDir = Files.createDirectories(Path.of(service.configDao.getPath()).resolve(itemUuid));
         var sessionId = service.getJSessionId();
-        service.saveFilesFromDSpace(itemUuid, sessionId);
+        service.downloadBitstreamInfo(saveDir, sessionId);
     }
 
     @PostConstruct
@@ -133,10 +134,23 @@ public class DSpaceImportService implements ImportProcessor {
             uuid = dao.getUuid().toString();
         }
 
-        var saveDir = saveFilesFromDSpace(uuid, sessionId);
+        // TODO: use dates in path to split in multiple dirs
+        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
+        if (!Files.exists(saveDir)) {
+            try {
+                Files.createDirectories(saveDir);
+            } catch (IOException e) {
+                log.error("Error creating directory {}.", saveDir, e);
+                throw new RuntimeException("Error creating directory."); 
+            }
+        }
+
+        downloadBitstreamInfo(saveDir, sessionId);
 
         try {
-            transformService.transform(saveDir);
+            if(!transformService.transform(saveDir)) {
+                // delete empty dir
+            }
         } catch (Exception e) {
             log.error("Error in transform path={}.", saveDir, e);
             throw new RuntimeException("Error in transform path.", e);
@@ -152,23 +166,11 @@ public class DSpaceImportService implements ImportProcessor {
     /**
      * Saving files received from DSpace
      * 
-     * @param uuid
+     * @param saveDir
      * @param sessionId
-     * @return Path
      */
-    private Path saveFilesFromDSpace(String uuid, String sessionId) {
-        // TODO: use dates in path to split in multiple dirs
-        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
-        if (!Files.exists(saveDir)) {
-            try {
-                Files.createDirectories(saveDir);
-            } catch (IOException e) {
-                log.error("Error creating directory {}.", saveDir, e);
-                throw new RuntimeException("Error creating directory."); 
-            }
-        }
-
-        var jsonValue = getBitstreamsJsonValue(uuid, sessionId);
+    private void downloadBitstreamInfo(Path saveDir, String sessionId) {
+        var jsonValue = getBitstreamsJsonValue(saveDir.getFileName().toString(), sessionId);
         var bitstreamJsonPath = saveDir.resolve(DSpaceConsts.BITSTREAM_JSON);
         try (OutputStream output = new FileOutputStream(bitstreamJsonPath.toFile())) {
            var jsonWriter = Json.createWriter(output);
@@ -181,7 +183,6 @@ public class DSpaceImportService implements ImportProcessor {
         for (var file : getDspaceFiles(jsonValue)) {
             saveDspaceFile(saveDir, file, sessionId);
         }
-        return saveDir;
     }
 
     /**
