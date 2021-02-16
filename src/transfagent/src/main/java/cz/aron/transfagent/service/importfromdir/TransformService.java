@@ -237,7 +237,7 @@ public class TransformService {
             FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, 1);
-            try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE_NEW))) {
+            try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE))) {
                 Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
@@ -247,7 +247,7 @@ public class TransformService {
                             Files.copy(file, outputStream);
                             outputStream.closeEntry();
                         } catch (IOException e) {
-                            log.error("Error in copying file ", e);
+                            log.error("Error in copying file, source: {}", file, e);
                             throw new RuntimeException(e);
                         }
                         return FileVisitResult.CONTINUE;
@@ -256,7 +256,7 @@ public class TransformService {
             }
             deleteCreated = false;
         } catch (IOException e) {
-            log.error("Error in creating file ", e);
+            log.error("Error in creating ZIP file {}", targetFile, e);
             throw new RuntimeException(e);
         } finally {
             try {

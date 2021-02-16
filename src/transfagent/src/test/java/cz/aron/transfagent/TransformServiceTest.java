@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -39,6 +43,11 @@ public class TransformServiceTest {
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
+        try (Stream<Path> stream = Files.list(daoInputDir)) {
+            List<Path> files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+            assertTrue(files.size() == 5);
+        }
+
         service.transform(daoInputDir);
 
         Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
