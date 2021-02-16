@@ -59,6 +59,8 @@ public class TransformService {
 
     public boolean transform(Path dir) throws JAXBException, IOException {
 
+        log.debug("Transforming data, path: {}", dir);
+
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
@@ -72,53 +74,52 @@ public class TransformService {
 
         log.debug("Preparing files list in directory {}", dir);
         List<Path> files = prepareFileList(dir);
-        if (!files.isEmpty()) {
-            Files.createDirectories(filesDir);
-
-            DaoBuilder daoBuilder = new DaoBuilder();
-            daoBuilder.setUuid(daoUuid);
-
-            DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
-            DaoBundle hiResView = null;
-            DaoBundle thumbnail = null;
-
-            // originalni soubory k presunu, klic je novy nazev 
-            var filesToMove = new HashMap<String, Path>();
-
-            var pos = 1;
-            for (Path file : files) {
-                String mimeType = tika.detect(file);
-                log.debug("Processing {} file {}", mimeType, file);
-                processPublished(file, published, pos, filesToMove, mimeType);
-                if (mimeType != null && mimeType.startsWith("image/")) {
-                    log.info("Generating dzi and thumbnail for {}", file);
-                    if (hiResView == null) {
-                        hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
-                        thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
-                    }
-                    processHiResView(file, filesDir, hiResView, pos);
-                    processThumbNail(file, filesDir, thumbnail, pos);
-                }
-                pos++;
-            }
-
-            // vytvoreni dao-uuid.xml
-            log.debug("Creating file {}", daoUuidXmlFile);
-            Marshaller marshaller = ApuxFactory.createMarshaller();
-            try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
-                marshaller.marshal(daoBuilder.build(), os);
-            }
-
-            // move original files
-            log.debug("Moving all files to {}", filesDir);
-            for (var entry : filesToMove.entrySet()) {
-                Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
-            }
-            return true;
+        if (files.isEmpty()) {
+            return false;
         }
 
-        Files.delete(dir);
-        return false;
+        Files.createDirectories(filesDir);
+
+        DaoBuilder daoBuilder = new DaoBuilder();
+        daoBuilder.setUuid(daoUuid);
+
+        DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
+        DaoBundle hiResView = null;
+        DaoBundle thumbnail = null;
+
+        // originalni soubory k presunu, klic je novy nazev 
+        var filesToMove = new HashMap<String, Path>();
+
+        var pos = 1;
+        for (Path file : files) {
+            String mimeType = tika.detect(file);
+            log.debug("Processing {} file {}", mimeType, file);
+            processPublished(file, published, pos, filesToMove, mimeType);
+            if (mimeType != null && mimeType.startsWith("image/")) {
+                log.info("Generating dzi and thumbnail for {}", file);
+                if (hiResView == null) {
+                    hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+                    thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
+                }
+                processHiResView(file, filesDir, hiResView, pos);
+                processThumbNail(file, filesDir, thumbnail, pos);
+            }
+            pos++;
+        }
+
+        // vytvoreni dao-uuid.xml
+        log.debug("Creating file {}", daoUuidXmlFile);
+        Marshaller marshaller = ApuxFactory.createMarshaller();
+        try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
+            marshaller.marshal(daoBuilder.build(), os);
+        }
+
+        // move original files
+        log.debug("Moving all files to {}", filesDir);
+        for (var entry : filesToMove.entrySet()) {
+            Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
+        }
+        return true;
     }
 
     private List<Path> prepareFileList(Path dir) {
