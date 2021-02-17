@@ -19,7 +19,7 @@ import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
 
-@Disabled
+//@Disabled
 @SpringBootTest
 public class ImportArchDescServiceTest extends AbstractCommonTest {
 

@@ -20,7 +20,7 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.elza.ImportInstitution;
 
-@Disabled
+//@Disabled
 @SpringBootTest
 public class ApuValidatorTest {
 

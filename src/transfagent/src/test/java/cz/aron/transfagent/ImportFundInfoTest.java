@@ -22,7 +22,7 @@ import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.elza.datace.LocalDateTimeRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
-@Disabled
+//@Disabled
 public class ImportFundInfoTest {
 
     private final static String FUND_DIR = "src/test/resources/files/fund/fund-CR2303";

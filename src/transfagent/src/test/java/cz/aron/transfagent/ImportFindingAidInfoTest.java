@@ -21,7 +21,7 @@ import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
 import cz.aron.transfagent.transformation.CoreTypes;
 
-@Disabled
+//@Disabled
 public class ImportFindingAidInfoTest {
 
     private final static String FINDING_AID_DIR = "src/test/resources/files/findingaids/findingaid-CR2303";

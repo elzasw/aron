@@ -30,6 +30,7 @@ import cz.aron.transfagent.service.importfromdir.ImportDirectService;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService;
 import cz.aron.transfagent.service.importfromdir.ImportInstitutionService;
+import cz.aron.transfagent.service.importfromdir.TransformService;
 
 public abstract class AbstractCommonTest {
 
@@ -39,29 +40,33 @@ public abstract class AbstractCommonTest {
 
     final static String DIR_ERROR = DIR_TEST_RESOURCES + "/error";
 
-    final String DIR_FROM_INSTITUTION = "src/test/resources/files/institutions";
+    final static String SRC_TEST_RESOURCES_FILES = "src/test/resources/files";
+
+    final String DIR_FROM_INSTITUTION = SRC_TEST_RESOURCES_FILES + "/institutions";
 
     final String DIR_TO_INSTITUTION = DIR_TEST_RESOURCES + "/input/institutions";
 
-    final String DIR_FROM_FUND = "src/test/resources/files/fund";
+    final String DIR_FROM_FUND = SRC_TEST_RESOURCES_FILES + "/fund";
 
     final String DIR_TO_FUND = DIR_TEST_RESOURCES + "/input/fund";
 
-    final String DIR_FROM_ARCH_DESC = "src/test/resources/files/archdesc";
+    final String DIR_FROM_ARCH_DESC = SRC_TEST_RESOURCES_FILES + "/archdesc";
 
     final String DIR_TO_ARCH_DESC = DIR_TEST_RESOURCES + "/input/archdesc";
 
-    final String DIR_FROM_FINDING_AID = "src/test/resources/files/findingaids";
+    final String DIR_FROM_FINDING_AID = SRC_TEST_RESOURCES_FILES + "/findingaids";
 
     final String DIR_TO_FINDING_AID = DIR_TEST_RESOURCES + "/input/findingaids";
 
-    final String DIR_FROM_DIRECT = "src/test/resources/files/direct";
+    final String DIR_FROM_DIRECT = SRC_TEST_RESOURCES_FILES + "/direct";
 
     final String DIRECT_ERR = "direct-err";
 
-    final String DIR_FROM_DIRECT_ERR = "src/test/resources/files/" + DIRECT_ERR;
+    final String DIR_FROM_DIRECT_ERR = SRC_TEST_RESOURCES_FILES + "/" + DIRECT_ERR;
 
     final String DIR_TO_DIRECT = DIR_TEST_RESOURCES + "/input/direct";
+
+    final String DIR_TO_DAO = SRC_TEST_RESOURCES_FILES + "/dao";
 
     final static String INSTITUTION_CODE = "225201010";
 
@@ -98,6 +103,9 @@ public abstract class AbstractCommonTest {
 
     @Autowired
     FileImportService fileImportService;
+
+    @Autowired
+    TransformService transformService;
 
     @Autowired
     StorageService storageService;

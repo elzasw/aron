@@ -22,7 +22,7 @@ import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.elza.datace.LocalDateTimeRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
-@Disabled
+//@Disabled
 public class ImportArchDescTest {
 
     private final static String ARCHDESC_DIR = "src/test/resources/files/archdesc/archdesc-CR2303";

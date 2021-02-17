@@ -18,7 +18,7 @@ import org.springframework.util.FileSystemUtils;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.SourceType;
 
-@Disabled
+//@Disabled
 @SpringBootTest
 public class FileImportServiceTest extends AbstractCommonTest {
 

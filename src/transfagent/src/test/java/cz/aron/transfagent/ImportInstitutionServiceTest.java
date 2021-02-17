@@ -23,7 +23,7 @@ import cz.aron.transfagent.domain.EntitySource;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 
-@Disabled
+//@Disabled
 @SpringBootTest
 public class ImportInstitutionServiceTest extends AbstractCommonTest {
 

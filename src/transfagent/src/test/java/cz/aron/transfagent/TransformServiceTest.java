@@ -19,6 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuxFactory;
@@ -29,27 +30,19 @@ import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.TransformService;
 
 //@Disabled
-public class TransformServiceTest {
+@SpringBootTest
+public class TransformServiceTest extends AbstractCommonTest {
 
     private final static String DAO_UUID = "61259486-3786-4877-85b5-f845ee038132";
 
-    private final static String DAO_DIR = "src/test/resources/files/dao/" + DAO_UUID;
-
-    private final static String TEST_RESOURCES_DIR = "target/test-resources";
+    private final String DAO_DIR = DIR_TO_DAO + "/" + DAO_UUID;
 
     @Test
     public void testTransformService() throws IOException, JAXBException {
-        StorageService storageService = new StorageService(TEST_RESOURCES_DIR, TEST_RESOURCES_DIR + "/daos");
-        TransformService service = new TransformService(storageService, new ConfigDspace());
         Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
-        try (Stream<Path> stream = Files.list(daoInputDir)) {
-            List<Path> files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
-            assertTrue(files.size() == 5);
-        }
-
-        service.transform(daoInputDir);
+        transformService.transform(daoInputDir);
 
         Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
 
@@ -79,6 +72,6 @@ public class TransformServiceTest {
 
     @AfterAll
     public static void deleteApusrcXml() throws IOException {
-        FileSystemUtils.deleteRecursively(Path.of(TEST_RESOURCES_DIR, "input/dao", DAO_UUID));
+        FileSystemUtils.deleteRecursively(Path.of(DIR_TEST_RESOURCES, "input/dao", DAO_UUID));
     }
 }

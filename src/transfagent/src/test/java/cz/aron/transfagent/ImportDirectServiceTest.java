@@ -16,7 +16,7 @@ import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.SourceType;
 
-@Disabled
+//@Disabled
 @SpringBootTest
 public class ImportDirectServiceTest extends AbstractCommonTest {
 
