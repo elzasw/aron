@@ -154,8 +154,8 @@ public abstract class AbstractCommonTest {
 
     @AfterAll
     public static void deleteApusrcXml() throws IOException {
-        FileSystemUtils.deleteRecursively(Path.of(DIR_DATA));
-        FileSystemUtils.deleteRecursively(Path.of(DIR_ERROR));
+        FileUtils.deleteDirectory(new File(DIR_DATA));
+        FileUtils.deleteDirectory(new File(DIR_ERROR));
     }
 
     /**

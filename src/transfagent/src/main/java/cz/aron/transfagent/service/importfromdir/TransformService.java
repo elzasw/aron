@@ -214,7 +214,7 @@ public class TransformService {
         try {
             fileSize = Files.size(file);
         } catch (IOException e) {
-            log.error("Error defining size file {} ", file, e);
+            log.error("Failed to read file size, path: {} ", file, e);
             throw new RuntimeException(e);
         }
         var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType);
@@ -242,7 +242,6 @@ public class TransformService {
             FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, 1);
-            Files.createFile(targetFile);
             try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
                 Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
                     @Override
