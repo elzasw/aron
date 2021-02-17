@@ -39,7 +39,7 @@ public class TransformServiceTest extends AbstractCommonTest {
 
     @Test
     public void testTransformService() throws IOException, JAXBException {
-        Path daoInputDir = storageService.getInputPath().resolve("dao").resolve(DAO_UUID);
+        Path daoInputDir = Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
         transformService.transform(daoInputDir);
@@ -71,7 +71,7 @@ public class TransformServiceTest extends AbstractCommonTest {
     }
 
     @AfterAll
-    public static void deleteApusrcXml() throws IOException {
-        FileSystemUtils.deleteRecursively(Path.of(DIR_TEST_RESOURCES, "input/dao", DAO_UUID));
+    public static void deleteDirectory() throws IOException {
+        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
     }
 }

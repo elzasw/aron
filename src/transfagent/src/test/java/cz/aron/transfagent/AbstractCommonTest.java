@@ -102,13 +102,7 @@ public abstract class AbstractCommonTest {
     ImportFundService importFundService;
 
     @Autowired
-    FileImportService fileImportService;
-
-    @Autowired
     TransformService transformService;
-
-    @Autowired
-    StorageService storageService;
 
     @Autowired
     ArchivalEntityRepository archivalEntityRepository;

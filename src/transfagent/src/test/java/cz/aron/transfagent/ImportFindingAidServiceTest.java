@@ -67,7 +67,7 @@ public class ImportFindingAidServiceTest extends AbstractCommonTest {
         assertTrue(findingAid.getFund().equals(fund));
 
         // kontrola reimportu
-        Path filePdf = storageService.getDataPath().resolve(apuSource.getDataDir()).resolve(apuSource.getOrigDir() + ".pdf");
+        Path filePdf = Path.of(DIR_DATA, apuSource.getDataDir(), apuSource.getOrigDir() + ".pdf");
         Files.delete(filePdf);
         importFindingAidService.reimport(apuSource);
 
