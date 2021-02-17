@@ -72,6 +72,6 @@ public class TransformServiceTest extends AbstractCommonTest {
 
     @AfterAll
     public static void deleteDirectory() throws IOException {
-        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
+        //FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
     }
 }
