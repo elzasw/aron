@@ -25,6 +25,30 @@ partTypes:
   - name: Vztah
     code: PT_AE_REL
     viewType: STANDALONE
+  - name: členství
+    code: PT_AE_MEMBERSHIP
+    viewType: STANDALONE
+  - name: historické milníky
+    code: PT_AE_MILESTONES
+    viewType: STANDALONE
+  - name: manželství
+    code: PT_AE_MARRIAGE
+    viewType: STANDALONE
+  - name: přeřazení
+    code: PT_AE_REASSIGN
+    viewType: STANDALONE
+  - name: studium
+    code: PT_AE_STUDY
+    viewType: STANDALONE
+  - name: udělení ocenění
+    code: PT_AE_AWARD
+    viewType: STANDALONE
+  - name: záliba
+    code: PT_AE_HOBBY
+    viewType: STANDALONE
+  - name: zaměstnání / veřejná funkce
+    code: PT_AE_JOB
+    viewType: STANDALONE
   - name: Informace o archivním souboru
     code: PT_FUND_INFO
     viewType: STANDALONE
