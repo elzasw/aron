@@ -40,6 +40,8 @@ public abstract class AbstractCommonTest {
 
     final static String DIR_ERROR = DIR_TEST_RESOURCES + "/error";
 
+    final static String DIR_TMP = DIR_TEST_RESOURCES + "/tmp";
+
     final static String SRC_TEST_RESOURCES_FILES = "src/test/resources/files";
 
     final String DIR_FROM_INSTITUTION = SRC_TEST_RESOURCES_FILES + "/institutions";
@@ -147,9 +149,10 @@ public abstract class AbstractCommonTest {
     }
 
     @AfterAll
-    public static void deleteApusrcXml() throws IOException {
+    public static void deleteDirectory() throws IOException {
         FileUtils.deleteDirectory(new File(DIR_DATA));
         FileUtils.deleteDirectory(new File(DIR_ERROR));
+        FileUtils.deleteDirectory(new File(DIR_TMP));
     }
 
     /**
