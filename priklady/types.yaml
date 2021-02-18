@@ -244,6 +244,14 @@ itemTypes:
     name: typ zániku
     type: ENUM
     indexed: false
+  - code: EV_BEGIN
+    name: datace od
+    type: UNITDATE
+    indexed: true
+  - code: EV_END
+    name: datace do
+    type: UNITDATE
+    indexed: true
   - code: RT_AUTHOR
     name: autor/tvůrce
     type: APU_REF
