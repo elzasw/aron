@@ -77,10 +77,8 @@ public class ImportFindingAidInfoTest {
 
         assertTrue(instUuid.equals(properties.get(PROPERTY_INST_KEY)));
         assertTrue(fundUuid.equals(properties.get(PROPERTY_FUND_KEY)));
-    }
 
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(FINDING_AID_DIR, APUSRC_XML));
     }
+
 }

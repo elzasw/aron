@@ -114,10 +114,8 @@ public class ImportArchDescTest {
         idra = new LocalDateTimeRange(ranges.get(0));
         assertTrue(idra.getFrom().getYear() == Y_1840);
         assertTrue(idra.getTo().getYear() == Y_1850);
-    }
 
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(ARCHDESC_DIR, APUSRC_XML));
     }
+
 }

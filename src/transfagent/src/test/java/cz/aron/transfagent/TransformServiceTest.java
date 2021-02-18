@@ -68,10 +68,8 @@ public class TransformServiceTest extends AbstractCommonTest {
             }
             assertTrue(bundle.getFile().size() == size);
         }
+
+        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
     }
 
-    @AfterAll
-    public static void deleteDirectory() throws IOException {
-        //FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
-    }
 }

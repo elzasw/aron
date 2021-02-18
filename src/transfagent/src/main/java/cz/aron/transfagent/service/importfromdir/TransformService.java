@@ -236,6 +236,10 @@ public class TransformService {
             throw new RuntimeException(e);
         }
 
+        if (!Files.exists(tempDir)) {
+            log.error("Error not find tempDir={}", tempDir);
+        }
+
         boolean deleteCreated = true;
         try {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");

@@ -57,6 +57,8 @@ public class ApuValidatorTest {
         try (OutputStream fos = Files.newOutputStream(Path.of(INST_DIR, APUSRC_XML))) {
             apusrcBuilder.build(fos, validator);
         }
+
+        Files.delete(Path.of(INST_DIR, APUSRC_XML));
     }
 
     @Test
@@ -69,11 +71,6 @@ public class ApuValidatorTest {
                 apusrcBuilder.build(fos, validator);
             }
         });
-    }
-
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
-        Files.delete(Path.of(INST_DIR, APUSRC_XML));
     }
 
 }

@@ -59,10 +59,8 @@ public class ImportFundInfoTest {
         assertTrue(idra.getFrom().getYear() == Y_1855);
         assertTrue(idra.getTo().getYear() == Y_2013);
         assertFalse(dateRange.isVisible());
-    }
 
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(FUND_DIR, APUSRC_XML));
     }
+
 }
