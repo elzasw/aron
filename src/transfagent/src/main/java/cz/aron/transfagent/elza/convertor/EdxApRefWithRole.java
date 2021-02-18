@@ -45,10 +45,7 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         }
 
         ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
-        Part part = null;
-        if(partType.equals(CoreTypes.PT_ENTITY_ROLE)) {
-            part = ApuSourceBuilder.getFirstPart(ctx.getActiveApu(), partType);
-        }
+        Part part = ApuSourceBuilder.getFirstPart(ctx.getActiveApu(), partType);
         if (part == null) {
             part = ApuSourceBuilder.addPart(ctx.getActiveApu(), partType);
         }
