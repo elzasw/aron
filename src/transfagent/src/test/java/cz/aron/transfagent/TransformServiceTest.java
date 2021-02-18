@@ -37,9 +37,11 @@ public class TransformServiceTest extends AbstractCommonTest {
 
     private final String DAO_DIR = DIR_TO_DAO + "/" + DAO_UUID;
 
+    private final String DAO_TEST = "dao_test"; 
+
     @Test
     public void testTransformService() throws IOException, JAXBException {
-        Path daoInputDir = Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID);
+        Path daoInputDir = Path.of(DIR_TEST_RESOURCES, "input", DAO_TEST, DAO_UUID);
 
         FileUtils.copyDirectory(new File(DAO_DIR), daoInputDir.toFile());
         transformService.transform(daoInputDir);
@@ -69,7 +71,7 @@ public class TransformServiceTest extends AbstractCommonTest {
             assertTrue(bundle.getFile().size() == size);
         }
 
-        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", "dao", DAO_UUID).toFile());
+        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, "input", DAO_TEST).toFile());
     }
 
 }
