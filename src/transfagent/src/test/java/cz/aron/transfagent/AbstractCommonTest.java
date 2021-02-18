@@ -156,37 +156,6 @@ public abstract class AbstractCommonTest {
     }
 
     /**
-     * Přenos souboru XML ke zpracování
-     * 
-     * @param dirFrom
-     * @param dirTo
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    protected void processXmlFile(String dirFrom, String dirTo) throws IOException, InterruptedException {
-        FileUtils.copyDirectory(new File(dirFrom), new File(dirTo));
-        do {
-            Thread.sleep(1000);
-        } while (!isEmpty(Path.of(dirTo)));
-    }
-
-    /**
-     * Kontrola - je adresář prázdný?
-     * 
-     * @param path
-     * @return
-     * @throws IOException
-     */
-    protected boolean isEmpty(Path path) throws IOException {
-        if (Files.isDirectory(path)) {
-            try (Stream<Path> entries = Files.list(path)) {
-                return !entries.findFirst().isPresent();
-            }
-        }
-        return false;
-    }
-
-    /**
      * Aktuální datum jako řetězec znaků
      * 
      * @return YYYYMMDD

@@ -29,9 +29,12 @@ public class TransformServiceTest extends AbstractCommonTest {
 
     @Test
     public void testTransformService() throws IOException, JAXBException {
-        Path daoInputDir = Path.of(DIR_TEST_RESOURCES, DIR_DAO, DAO_UUID);
+        var srcDataDir = Path.of(DIR_TO_DAO, DAO_UUID);
+        var destDataDir = Path.of(DIR_TEST_RESOURCES, DIR_DAO);
 
-        FileUtils.copyDirectory(Path.of(DIR_TO_DAO, DAO_UUID).toFile(), daoInputDir.toFile());
+        var daoInputDir = destDataDir.resolve(DAO_UUID);
+
+        FileUtils.copyDirectory(srcDataDir.toFile(), daoInputDir.toFile());
         transformService.transform(daoInputDir);
 
         Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
@@ -59,7 +62,7 @@ public class TransformServiceTest extends AbstractCommonTest {
             assertTrue(bundle.getFile().size() == size);
         }
 
-        FileUtils.deleteDirectory(Path.of(DIR_TEST_RESOURCES, DIR_DAO).toFile());
+        FileUtils.deleteDirectory(destDataDir.toFile());
     }
 
 }
