@@ -34,7 +34,7 @@ aronCore:
     user: x
     pass: x
     soapLogging: false
-  disabled: true
+  fileImportDisabled: true
 
 elza:
   url: http://localhost:8080/services/ExportService
@@ -50,3 +50,7 @@ dspace:
   # vybrat pouze soubory se zadaným bundle
   #bundleName: ORIGINAL
   disabled: true
+
+logging:
+  level:
+    cz.aron.transfagent: DEBUG

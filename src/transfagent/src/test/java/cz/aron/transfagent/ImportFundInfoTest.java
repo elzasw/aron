@@ -12,6 +12,7 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -21,6 +22,7 @@ import cz.aron.transfagent.elza.ImportFundInfo;
 import cz.aron.transfagent.elza.datace.LocalDateTimeRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
+//@Disabled
 public class ImportFundInfoTest {
 
     private final static String FUND_DIR = "src/test/resources/files/fund/fund-CR2303";
@@ -57,10 +59,8 @@ public class ImportFundInfoTest {
         assertTrue(idra.getFrom().getYear() == Y_1855);
         assertTrue(idra.getTo().getYear() == Y_2013);
         assertFalse(dateRange.isVisible());
-    }
 
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(FUND_DIR, APUSRC_XML));
     }
+
 }

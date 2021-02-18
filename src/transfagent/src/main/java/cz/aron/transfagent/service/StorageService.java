@@ -6,11 +6,15 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class StorageService {
+
+    private static Logger log = LoggerFactory.getLogger(StorageService.class);
 
 	private final Path workDir;
 
@@ -55,10 +59,18 @@ public class StorageService {
 	 * @throws IOException
 	 */
 	public Path moveToDataDir(Path sourceDir) throws IOException {
-		return moveToDir(dataPath,sourceDir);
+		return moveToDir(dataPath, sourceDir);
 	}
 
-	private Path moveToDir(Path targetDir, Path movedDir) throws IOException {
+    public Path moveToErrorDir(Path sourceDir) throws IOException {
+        return moveToDir(errorPath, sourceDir);
+    }
+
+    public Path moveToProcessed(Path sourceDir) throws IOException {
+        return moveToDir(inputPath.resolve("processed"), sourceDir);
+    }
+
+    private Path moveToDir(Path targetDir, Path movedDir) throws IOException {
 		Path parentDir = targetDir.resolve(String.format("%1$tY%1$tm%1$td", new Date()));
 		Files.createDirectories(parentDir);
 		String dirName = movedDir.getFileName().toString();
@@ -71,18 +83,11 @@ public class StorageService {
 				throw new IOException("Fail to create data directory for source " + dirName);
 			}
 		}
+		log.debug("Moving directory {} to directory {}", movedDir, dirPath);
 		Files.move(movedDir, dirPath);
 		return dataPath.relativize(dirPath);
-	}	 
-	
-	public Path moveToErrorDir(Path sourceDir) throws IOException {
-		return moveToDir(errorPath,sourceDir);
 	}
-	
-	public Path moveToProcessed(Path sourceDir) throws IOException {
-		return moveToDir(inputPath.resolve("processed"),sourceDir);
-	}
-	
+
 	/**
 	 * Return absolute path to apu datadir
 	 * @param dataDir relative path of directory
@@ -94,7 +99,7 @@ public class StorageService {
 
 	public Path createTempDir(String prefix) throws IOException {
 		var dailyTmpDir = workDir.resolve("tmp").resolve(String.format("%1$tY%1$tm%1$td", new Date()));
-		Files.createDirectories(dailyTmpDir);		
+		Files.createDirectories(dailyTmpDir);
 		var tmpDir = dailyTmpDir.resolve(prefix);
 		int count = 0;
 		while (Files.exists(tmpDir)) {
@@ -104,6 +109,7 @@ public class StorageService {
 				throw new IOException("Fail to create data directory for source " + prefix);
 			}
 		}
+		log.debug("Creating a temporary directory {}", tmpDir);
 		Files.createDirectory(tmpDir);
 		return tmpDir;
 	}

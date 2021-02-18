@@ -12,6 +12,7 @@ import java.util.List;
 import javax.transaction.Transactional;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -22,6 +23,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 
+//@Disabled
 @SpringBootTest
 public class ImportFindingAidServiceTest extends AbstractCommonTest {
 
@@ -65,7 +67,7 @@ public class ImportFindingAidServiceTest extends AbstractCommonTest {
         assertTrue(findingAid.getFund().equals(fund));
 
         // kontrola reimportu
-        Path filePdf = storageService.getDataPath().resolve(apuSource.getDataDir()).resolve(apuSource.getOrigDir() + ".pdf");
+        Path filePdf = Path.of(DIR_DATA, apuSource.getDataDir(), apuSource.getOrigDir() + ".pdf");
         Files.delete(filePdf);
         importFindingAidService.reimport(apuSource);
 

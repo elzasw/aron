@@ -7,6 +7,7 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -58,6 +59,13 @@ public class TransformService {
 
     public boolean transform(Path dir) throws JAXBException, IOException {
 
+        log.debug("Transforming data, path: {}", dir);
+
+        if (!Files.isDirectory(dir)) {
+            log.error("Directory does not exist {}", dir);
+            throw new IOException();
+        }
+
         Tika tika = new Tika();
 
         var daoUuid = dir.getFileName().toString();
@@ -65,92 +73,105 @@ public class TransformService {
         var filesDir = dir.resolve("files");
 
         // mazání předchozích souborů
+        log.debug("Deleting old files and folders in a directory {}", dir);
         FileSystemUtils.deleteRecursively(filesDir);
         Files.deleteIfExists(daoUuidXmlFile);
 
+        log.debug("Preparing files list in directory {}", dir);
         List<Path> files = prepareFileList(dir);
-        if (!files.isEmpty()) {
-            Files.createDirectories(filesDir);
-
-            DaoBuilder daoBuilder = new DaoBuilder();
-            daoBuilder.setUuid(daoUuid);
-
-            DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
-            DaoBundle hiResView = null;
-            DaoBundle thumbnail = null;
-
-            // originalni soubory k presunu, klic je novy nazev 
-            var filesToMove = new HashMap<String, Path>();
-
-            var pos = 1;
-            for (Path file : files) {
-                String mimeType = tika.detect(file);
-                processPublished(file, published, pos, filesToMove, mimeType);
-                if (mimeType!=null&&mimeType.startsWith("image/")) {
-                    log.info("Generating dzi and thumbnail for {}", file);
-                    if (hiResView == null) {
-                        hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
-                        thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
-                    }
-                    processHiResView(file, filesDir, hiResView, pos);
-                    processThumbNail(file, filesDir, thumbnail, pos);
-                }
-                pos++;
-            }
-
-            // vytvoreni dao-uuid.xml
-            Marshaller marshaller = ApuxFactory.createMarshaller();
-            try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
-                marshaller.marshal(daoBuilder.build(), os);
-            }
-    
-            // move original files
-            for(var entry : filesToMove.entrySet()) {
-                Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
-            }
-            return true;
+        if (files.isEmpty()) {
+            return false;
         }
 
-        Files.delete(dir);
-        return false;
+        Files.createDirectories(filesDir);
+
+        DaoBuilder daoBuilder = new DaoBuilder();
+        daoBuilder.setUuid(daoUuid);
+
+        DaoBundle published = daoBuilder.createDaoBundle(DaoBundleType.PUBLISHED);
+        DaoBundle hiResView = null;
+        DaoBundle thumbnail = null;
+
+        // originalni soubory k presunu, klic je novy nazev 
+        var filesToMove = new HashMap<String, Path>();
+
+        var pos = 1;
+        for (Path file : files) {
+            String mimeType = tika.detect(file);
+            log.debug("Processing {} file {}", mimeType, file);
+            processPublished(file, published, pos, filesToMove, mimeType);
+            if (mimeType != null && mimeType.startsWith("image/")) {
+                log.info("Generating dzi and thumbnail for {}", file);
+                if (hiResView == null) {
+                    hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+                    thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
+                }
+                processHiResView(file, filesDir, hiResView, pos);
+                processThumbNail(file, filesDir, thumbnail, pos);
+            }
+            pos++;
+        }
+
+        // vytvoreni dao-uuid.xml
+        log.debug("Creating file {}", daoUuidXmlFile);
+        Marshaller marshaller = ApuxFactory.createMarshaller();
+        try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
+            marshaller.marshal(daoBuilder.build(), os);
+        }
+
+        // move original files
+        log.debug("Moving all files to {}", filesDir);
+        for (var entry : filesToMove.entrySet()) {
+            Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
+        }
+        return true;
     }
 
-    private List<Path> prepareFileList(Path dir) throws IOException {
+    private List<Path> prepareFileList(Path dir) {
         List<Path> files;
         var bitstreamJson = dir.resolve(DSpaceConsts.BITSTREAM_JSON);
         if (Files.exists(bitstreamJson)) {
             files = readBitstreamJson(dir, bitstreamJson);
             try (Stream<Path> stream = Files.list(dir)) {
                 stream.filter(f -> Files.isRegularFile(f) && !files.contains(f)).map(f -> f.toFile()).forEach(File::delete);
+            } catch (IOException e) {
+                log.error("Error getting file list from {} ", dir, e);
+                throw new RuntimeException(e);
             }
         } else {
-//            try (Stream<Path> stream = Files.list(dir)) {
-//                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
-//            }
-            File[] stream = dir.toFile().listFiles();
-            files = Stream.of(stream).map(f -> f.toPath()).collect(Collectors.toList());
+            try (Stream<Path> stream = Files.list(dir)) {
+                files = stream.filter(f -> Files.isRegularFile(f)).collect(Collectors.toList());
+            } catch (IOException e) {
+                log.error("Error getting file list from {} ", dir, e);
+                throw new RuntimeException(e);
+            }
             files.sort((p1, p2)->p1.getFileName().compareTo(p2.getFileName()));
         }
         return files;
     }
 
-    private List<Path> readBitstreamJson(Path dir, Path bitstreamJson) throws IOException {
+    private List<Path> readBitstreamJson(Path dir, Path bitstreamJson) {
         var filterBundle = configDspace.getBundleName();
         Map<Integer, Path> filesMap = new HashMap<>();
-        var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
-        var jsonValue = jsonReader.readValue();
-        for (var value : jsonValue.asJsonArray()) {
-            var object = value.asJsonObject();
-
-            if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
-                var name = object.getString(DSpaceConsts.NAME);
-                var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
-
-                Validate.notNull(name, "Název souboru nesmí být prázdný");
-                Validate.notNull(id, "SequenceId nesmí být prázdný");
-
-                filesMap.put(id, dir.resolve(name));
+        try {
+            var jsonReader = Json.createReader(Files.newInputStream(bitstreamJson));
+            var jsonValue = jsonReader.readValue();
+            for (var value : jsonValue.asJsonArray()) {
+                var object = value.asJsonObject();
+    
+                if (filterBundle == null || filterBundle.equals(object.getString(DSpaceConsts.BUNDLE_NAME))) {
+                    var name = object.getString(DSpaceConsts.NAME);
+                    var id = object.getInt(DSpaceConsts.SEQUENCE_ID);
+    
+                    Validate.notNull(name, "Název souboru nesmí být prázdný");
+                    Validate.notNull(id, "SequenceId nesmí být prázdný");
+    
+                    filesMap.put(id, dir.resolve(name));
+                }
             }
+        } catch (IOException e) {
+            log.error("Error reading file {} ", bitstreamJson, e);
+            throw new RuntimeException(e);
         }
         return filesMap.entrySet()
                 .stream()
@@ -159,20 +180,27 @@ public class TransformService {
                 .collect(Collectors.toList());
     }
 
-    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) throws IOException {
+    private void processThumbNail(Path file, Path filesDir, DaoBundle thumbnails, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "image/jpeg");
         var uuid = daoFile.getUuid();
 
         thumbnails.getFile().add(daoFile);
-        try (OutputStream os = Files.newOutputStream(filesDir.resolve("file-" + uuid))) {
+        var thumbnailsFile = filesDir.resolve("file-" + uuid);
+
+        log.debug("Creating thumbnails file {}", thumbnailsFile);
+
+        try (OutputStream os = Files.newOutputStream(thumbnailsFile)) {
             Thumbnails.of(file.toFile())
                     .outputFormat("jpg")
                     .size(120, 120)
                     .toOutputStream(os);
+        } catch (IOException e) {
+            log.error("Error creating thumbnails {} ", thumbnailsFile, e);
+            throw new RuntimeException(e);
         }
     }
 
-    private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) throws IOException {
+    private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream");
         var uuid = daoFile.getUuid();
 
@@ -180,9 +208,15 @@ public class TransformService {
         createDzi(file, filesDir.resolve("file-" + uuid));
     }
 
-    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) throws IOException {
+    private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
         var fileName = file.getFileName().toString();
-        var fileSize = Files.size(file);
+        long fileSize;
+        try {
+            fileSize = Files.size(file);
+        } catch (IOException e) {
+            log.error("Failed to read file size, path: {} ", file, e);
+            throw new RuntimeException(e);
+        }
         var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType);
         var uuid = daoFile.getUuid();
 
@@ -190,8 +224,22 @@ public class TransformService {
         published.getFile().add(daoFile);
     }
 
-    private void createDzi(Path sourceImage, Path targetFile) throws IOException {
-        Path tempDir = storageService.createTempDir("dzi_" + sourceImage.getFileName().toString() + "_");
+    private void createDzi(Path sourceImage, Path targetFile) {
+        log.debug("Creating hiResView file {}", targetFile);
+
+        var prefix = "dzi_" + sourceImage.getFileName().toString() + "_";
+        Path tempDir;
+        try {
+            tempDir = storageService.createTempDir(prefix);
+        } catch (IOException e) {
+            log.error("Error creating tempDir prefix={} ", prefix, e);
+            throw new RuntimeException(e);
+        }
+
+        if (!Files.exists(tempDir)) {
+            log.error("Error not find tempDir={}", tempDir);
+        }
+
         boolean deleteCreated = true;
         try {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
@@ -208,19 +256,30 @@ public class TransformService {
                             Files.copy(file, outputStream);
                             outputStream.closeEntry();
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            log.error("Error in copying file, source: {}", file, e);
+                            throw new RuntimeException(e);
                         }
                         return FileVisitResult.CONTINUE;
                     }
                 });
             }
             deleteCreated = false;
+        } catch (IOException e) {
+            log.error("Error in creating ZIP file {}", targetFile, e);
+            throw new RuntimeException(e);
         } finally {
-            if (!FileSystemUtils.deleteRecursively(tempDir)) {
-                log.warn("Fail to delete temp directory");
-            }
-            if (deleteCreated) {
-                Files.deleteIfExists(targetFile);
+            try {
+                log.debug("Deleting directory {}", tempDir);
+                if (!FileSystemUtils.deleteRecursively(tempDir)) {
+                    log.warn("Fail to delete temp directory");
+                }
+                if (deleteCreated) {
+                    log.debug("Deleting file {}", tempDir);
+                    Files.deleteIfExists(targetFile);
+                }
+            } catch (IOException e) {
+                log.error("Error deleting unused file(s) ", e);
+                throw new RuntimeException(e);
             }
         }
     }

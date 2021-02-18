@@ -10,6 +10,7 @@ import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,7 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.elza.ImportInstitution;
 
+//@Disabled
 @SpringBootTest
 public class ApuValidatorTest {
 
@@ -55,6 +57,8 @@ public class ApuValidatorTest {
         try (OutputStream fos = Files.newOutputStream(Path.of(INST_DIR, APUSRC_XML))) {
             apusrcBuilder.build(fos, validator);
         }
+
+        Files.delete(Path.of(INST_DIR, APUSRC_XML));
     }
 
     @Test
@@ -67,11 +71,6 @@ public class ApuValidatorTest {
                 apusrcBuilder.build(fos, validator);
             }
         });
-    }
-
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
-        Files.delete(Path.of(INST_DIR, APUSRC_XML));
     }
 
 }

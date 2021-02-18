@@ -12,6 +12,7 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -21,6 +22,7 @@ import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.elza.datace.LocalDateTimeRange;
 import cz.aron.transfagent.transformation.CoreTypes;
 
+//@Disabled
 public class ImportArchDescTest {
 
     private final static String ARCHDESC_DIR = "src/test/resources/files/archdesc/archdesc-CR2303";
@@ -112,10 +114,8 @@ public class ImportArchDescTest {
         idra = new LocalDateTimeRange(ranges.get(0));
         assertTrue(idra.getFrom().getYear() == Y_1840);
         assertTrue(idra.getTo().getYear() == Y_1850);
-    }
 
-    @AfterAll
-    public static void deleteApusrcXml() throws IOException {
         Files.delete(Path.of(ARCHDESC_DIR, APUSRC_XML));
     }
+
 }
