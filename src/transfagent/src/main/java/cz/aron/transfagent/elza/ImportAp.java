@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -17,6 +18,8 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+
+import com.google.common.base.Objects;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
@@ -37,149 +40,212 @@ import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 
 public class ImportAp implements EdxItemCovertContext {
-	ElzaXmlReader elzaXmlReader;	
-	
-	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
-	
-	static ApTypeService apTypeService = new ApTypeService();
-	
-	private ContextDataProvider dataProvider;
-	
-	Integer parentElzaId;
 
-	private UUID apUuid;
-	
-	private Integer elzaId;
-	
-	/**
-	 * ElzaIds which needs to be requested
-	 */
-	private Set<Integer> requiredEntities = new HashSet<>();
+    ElzaXmlReader elzaXmlReader;
+
+    ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+
+    static ApTypeService apTypeService = new ApTypeService();
+
+    private ContextDataProvider dataProvider;
+
+    Integer parentElzaId;
+
+    private UUID apUuid;
+
+    private Integer elzaId;
+
+    /**
+     * ElzaIds which needs to be requested
+     */
+    private Set<Integer> requiredEntities = new HashSet<>();
 
     private Part activePart;
 
     private Apu apu;
-	
-	public UUID getApUuid() {
-		return apUuid;
-	}
 
-	public ImportAp() {
-		
-	}
-	
-	public Set<Integer> getRequiredEntities() {
-		return requiredEntities;
-	}
+    public UUID getApUuid() {
+        return apUuid;
+    }
 
-	public static void main(String[] args) {
+    public ImportAp() {
+    }
+
+    public Set<Integer> getRequiredEntities() {
+        return requiredEntities;
+    }
+
+    public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
-		ImportAp iap = new ImportAp();
-		try {
-			ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1], args[2]);
-			Path ouputPath = Paths.get(args[2]);
-			try(OutputStream fos = Files.newOutputStream(ouputPath)) {
-				apusrcBuilder.build(fos);
-			}
-		} catch(Exception e) {
-			System.err.println("Failed to process input file: "+inputFile);
-			e.printStackTrace();
-		}
+        ImportAp iap = new ImportAp();
+        try {
+            ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1]);
+            Path ouputPath = Paths.get(args[2]);
+            try(OutputStream fos = Files.newOutputStream(ouputPath)) {
+                apusrcBuilder.build(fos);
+            }
+        } catch(Exception e) {
+            System.err.println("Failed to process input file: " + inputFile);
+            e.printStackTrace();
+        }
+    }
 
-	}
+    private ApuSourceBuilder importAp(Path inputFile, String propFile) throws IOException, JAXBException {
+        Validate.isTrue(propFile!=null&&propFile.length()>0);
 
-	private ApuSourceBuilder importAp(Path inputFile, String expUuid, String propFile) throws IOException {
-		Validate.isTrue(propFile!=null&&propFile.length()>0);
-		
-		PropertiesDataProvider pdp = new PropertiesDataProvider();
-		Path propPath = Paths.get(propFile);
-		pdp.load(propPath);
-		return importAp(inputFile, expUuid, propFile);
-	}
+        PropertiesDataProvider pdp = new PropertiesDataProvider();
+        Path propPath = Paths.get(propFile);
+        pdp.load(propPath);
+        return importAp(inputFile, null, pdp);
+    }
 
-	public ApuSourceBuilder importAp(Path inputFile, UUID expUuid, final ContextDataProvider cdp) throws IOException, JAXBException {
-		this.dataProvider = cdp;
-		
-		try(InputStream is = Files.newInputStream(inputFile);) {
-			elzaXmlReader = ElzaXmlReader.read(is);
-			return importAp(expUuid);
-		}
-	}
+    public ApuSourceBuilder importAp(Path inputFile, UUID expUuid, final ContextDataProvider cdp) throws IOException, JAXBException {
+        this.dataProvider = cdp;
 
-	private ApuSourceBuilder importAp(final UUID expUuid) {
-		AccessPoint ap;
-		if(expUuid!=null) {
-			ap = elzaXmlReader.findAccessPointByUUID(expUuid.toString());
-			if(ap==null) {
-				throw new IllegalStateException("AccessPoint not found: "+expUuid);
-			}
-		} else {
-			// find first
-			ap = elzaXmlReader.getSingleAccessPoint();
-			if(ap==null) {
-				throw new IllegalStateException("AccessPoint not found in result");
-			}
-		}
-		this.apUuid = UUID.fromString(ap.getApe().getUuid());
-		this.elzaId = Integer.valueOf(ap.getApe().getId());
+        try(InputStream is = Files.newInputStream(inputFile);) {
+            elzaXmlReader = ElzaXmlReader.read(is);
+            return importAp(expUuid);
+        }
+    }
 
-		apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);		
-		
-		// extrakce dat
-		// entity info
-		String entityClass = ap.getApe().getT();
-		String ecName = apTypeService.getTypeName(entityClass);
-		Validate.notNull(ecName, "Entity class name not found, code: %s", entityClass);
-		Part aeInfoPart = apusBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
-		apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_SUBCLASS, ecName, true);
-		
-		String parentEcName = apTypeService.getParentName(entityClass);
-		if(parentEcName!=null) {
-			apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_CLASS, parentEcName, false);
-		}
-		
-		// oznaceni
-		Fragments frgs = ap.getFrgs();
-		if(frgs==null) {
-		    throw new IllegalStateException("AP without fragments, uuid: "+apUuid + ", elzaId: "+elzaId);
-		}
-		for(Fragment frg: frgs.getFrg()) {
-			switch(frg.getT()) {
-			case "PT_NAME":
-				importName(apu, frg);
-				break;
-			case "PT_BODY":
-				importBody(apu, aeInfoPart, frg);
-				break;
-			case "PT_IDENT":
-			    importIdent(apu, frg);
-			    break;
-			case "PT_REL":
-				importRel(apu, frg);
-				break;
-			case "PT_EVENT":
-                importEvent(apu, frg);
+    private ApuSourceBuilder importAp(final UUID expUuid) {
+        AccessPoint ap;
+        if(expUuid!=null) {
+            ap = elzaXmlReader.findAccessPointByUUID(expUuid.toString());
+            if(ap==null) {
+                throw new IllegalStateException("AccessPoint not found: "+expUuid);
+            }
+        } else {
+            // find first
+            ap = elzaXmlReader.getSingleAccessPoint();
+            if(ap==null) {
+                throw new IllegalStateException("AccessPoint not found in result");
+            }
+        }
+        this.apUuid = UUID.fromString(ap.getApe().getUuid());
+        this.elzaId = Integer.valueOf(ap.getApe().getId());
+
+        apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);
+
+        // extrakce dat
+        // entity info
+        String entityClass = ap.getApe().getT();
+        String ecName = apTypeService.getTypeName(entityClass);
+        Validate.notNull(ecName, "Entity class name not found, code: %s", entityClass);
+        Part aeInfoPart = apusBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
+        apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_SUBCLASS, ecName, true);
+
+        String parentEcName = apTypeService.getParentName(entityClass);
+        if(parentEcName!=null) {
+            apusBuilder.addEnum(aeInfoPart, CoreTypes.AE_CLASS, parentEcName, false);
+        }
+
+        // oznaceni
+        Fragments frgs = ap.getFrgs();
+        if(frgs==null) {
+            throw new IllegalStateException("AP without fragments, uuid: "+apUuid + ", elzaId: "+elzaId);
+        }
+        for(Fragment frg: frgs.getFrg()) {
+            switch(frg.getT()) {
+            case "PT_NAME":
+                importName(apu, frg);
                 break;
-			case "PT_CRE":
-			    importCre(apu, frg);
-			    break;
+            case "PT_BODY":
+                importBody(apu, aeInfoPart, frg);
+                break;
+            case "PT_IDENT":
+                importIdent(apu, frg);
+                break;
+            case "PT_REL":
+                if (frg.getPid() == null) {
+                    importRel(apu, frg);
+                }
+                break;
+            case "PT_EVENT":
+                importEvent(apu, frg, frgs);
+                break;
+            case "PT_CRE":
+                importCre(apu, frg);
+                break;
             case "PT_EXT":
                 importExt(apu, frg);
                 break;
-			default:
-				throw new IllegalStateException("AP with unsupported part, type: "+frg.getT());
-			}
-		}
-		if(apu.getName()==null) {
-			throw new IllegalStateException("AP without name: "+apUuid);
-		}
-		apu = null;
-		
-		return apusBuilder;
-	}
+            default:
+                throw new IllegalStateException("AP with unsupported part, type: " + frg.getT());
+            }
+        }
+        if(apu.getName()==null) {
+            throw new IllegalStateException("AP without name: "+apUuid);
+        }
+        apu = null;
 
-	private void importEvent(Apu apu, Fragment frg) {
-        // TODO Auto-generated method stub        
+        return apusBuilder;
+    }
+
+    private void importEvent(Apu apu, Fragment frg, Fragments frgs) {
+        String eventClass = ElzaXmlReader.getEnumValue(frg, "EV_TYPE");
+        if(eventClass==null) {
+            // TODO: warning - missing creation class
+            return ;
+        }
+        Map<String, EdxItemConvertor> stringTypeMap = new HashMap<>();
+        stringTypeMap.put("EV_BEGIN", new EdxUnitDateConvertor("EV_BEGIN"));
+        stringTypeMap.put("EV_END", new EdxUnitDateConvertor("EV_END"));
+        stringTypeMap.put("NOTE", new EdxStringConvertor("NOTE"));
+        String typePart;
+        switch(eventClass) {
+        case "ET_MEMBERSHIP":
+            typePart = "PT_AE_MEMBERSHIP";
+            break;
+        case "ET_MILESTONES":
+            typePart = "PT_AE_MILESTONES";
+            break;
+        case "ET_MARRIAGE":
+            typePart = "PT_AE_MARRIAGE";
+            break;
+        case "ET_REASSIGN":
+            typePart = "PT_AE_REASSIGN";
+            break;
+        case "ET_STUDY":
+            typePart = "PT_AE_STUDY";
+            break;
+        case "ET_AVARD":
+            typePart = "PT_AE_AWARD";
+            break;
+        case "ET_HOBBY":
+            typePart = "PT_AE_HOBBY";
+            break;
+        case "ET_JOB":
+            typePart = "PT_AE_JOB";
+            break;
+        default:
+            throw new IllegalStateException("Unknown event class: " + eventClass);
+        }
+
+        activePart = ApuSourceBuilder.addPart(apu, typePart);
+
+        for(var item : frg.getDdOrDoOrDp()) {
+            EdxItemConvertor convertor = stringTypeMap.get(item.getT());
+            if(convertor==null) {
+                // TODO: add warning
+                continue;
+            }
+            convertor.convert(this, item);
+        }
+
+        // add subordinate elements
+        for(Fragment frgt: frgs.getFrg()) {
+            if(frgt.getT().equals("PT_REL") && Objects.equal(frg.getFid(), frgt.getPid())) {
+                addApuRef(activePart, frgt);
+            }
+        }
+
+        // remove empty part
+        if(activePart.getItms()==null||activePart.getItms().getStrOrLnkOrEnm().size()==0) {
+            apu.getPrts().getPart().remove(activePart);
+        }
+
+        activePart = null;
     }
 
     private void importCre(Apu apu, Fragment frg) {
@@ -235,7 +301,7 @@ public class ImportAp implements EdxItemCovertContext {
         
         activePart = null;
     }
-	
+
 	private void importExt(Apu apu, Fragment frg) {
         String extClass = ElzaXmlReader.getEnumValue(frg, ElzaTypes.EXT_CLASS);
         if(extClass==null) {
@@ -288,24 +354,49 @@ public class ImportAp implements EdxItemCovertContext {
         }
         
         activePart = null;
-	}
+    }
 
-    private void importRel(Apu apu, Fragment frg) {
-
-	    DescriptionItemAPRef apRef = ElzaXmlReader.getApRef(frg, ElzaTypes.REL_ENTITY);
-	    if(apRef==null) {
-	        return;
-	    }
+    private void addApuRef(Part part, Fragment frg) {
+        DescriptionItemAPRef apRef = ElzaXmlReader.getApRef(frg, ElzaTypes.REL_ENTITY);
+        if(apRef==null) {
+            return;
+        }
         String relType = ElzaTypes.relEntityMap.get(apRef.getS());
-	    if(relType==null) {
-	        throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
-	    }
+        if(relType==null) {
+            throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
+        }
         Integer apElzaId = Integer.valueOf(apRef.getApid());
+
         // Set parent relation for taxonomical categories
         if(apRef.getS().equals("RT_CATEGORY")) {
             Validate.isTrue(this.parentElzaId==null);
-            
-            parentElzaId = apElzaId;            
+            parentElzaId = apElzaId;
+        }
+        
+        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);                
+        if(CollectionUtils.isEmpty(apUuids)) {
+            this.requiredEntities.add(apElzaId);
+            return;
+        }
+
+        this.apusBuilder.addApuRefsFirstVisible(part, relType, apUuids);
+    }
+
+    private void importRel(Apu apu, Fragment frg) {
+        DescriptionItemAPRef apRef = ElzaXmlReader.getApRef(frg, ElzaTypes.REL_ENTITY);
+        if(apRef==null) {
+            return;
+        }
+        String relType = ElzaTypes.relEntityMap.get(apRef.getS());
+        if(relType==null) {
+            throw new IllegalStateException("Unrecognized relation type: "+apRef.getS());
+        }
+        Integer apElzaId = Integer.valueOf(apRef.getApid());
+
+        // Set parent relation for taxonomical categories
+        if(apRef.getS().equals("RT_CATEGORY")) {
+            Validate.isTrue(this.parentElzaId==null);
+            parentElzaId = apElzaId;
         }
         
         var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);                
@@ -316,15 +407,15 @@ public class ImportAp implements EdxItemCovertContext {
 
         // entity exists -> we can create link
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
-        this.apusBuilder.addApuRefsFirstVisible(part, relType, apUuids);        
+        this.apusBuilder.addApuRefsFirstVisible(part, relType, apUuids);
     }
 
     private void importIdent(Apu apu, Fragment frg) {
-	    String identValue = ElzaXmlReader.getStringType(frg, ElzaTypes.IDN_VALUE);
-	    if(StringUtils.isEmpty(identValue)) {
-	        // skip empty idents
-	        return;
-	    }
+        String identValue = ElzaXmlReader.getStringType(frg, ElzaTypes.IDN_VALUE);
+        if(StringUtils.isEmpty(identValue)) {
+            // skip empty idents
+            return;
+        }
         String identType = ElzaXmlReader.getEnumValue(frg, ElzaTypes.IDN_TYPE);
         if(identType==null) {
             // skip ident without type
@@ -336,7 +427,7 @@ public class ImportAp implements EdxItemCovertContext {
         case "ISO3166_NUM":
         case "ISO3166_PART2":
         case "CZ_RETRO":
-        case "TAXONOMY":        
+        case "TAXONOMY":
         case "ORCID":
         case "PEVA":
         case "RUIAN":
@@ -352,11 +443,18 @@ public class ImportAp implements EdxItemCovertContext {
         case "NUTSLAU":
             identType = "NUTS/LAU";
             break;
+        case "ORCID_ID":
+        case "RODNE_CISLO":
+        case "WHOIS_ID_OSOBA":
+        case "WHOIS_CISLO_UK":
+            // processed idents
+            break;
         default:
             throw new IllegalStateException("Unrecognized identifier: "+identType + ", value: "+identValue);
         }
         StringBuilder sb = new StringBuilder();
         sb.append(identType).append(": ").append(identValue);
+
         // add ident
         Part part = apusBuilder.addPart(apu, "PT_IDENT");
         part.setValue(sb.toString());

@@ -35,6 +35,7 @@ public class CoreTypes {
     // Informace o archivní entitě
     public final static String PT_AE_INFO = "PT_AE_INFO";
     public final static String PT_AE_EXT = "PT_AE_EXT";
+    public final static String PT_EVENT = "PT_EVENT";
 
     public final static String AE_CLASS = "AE_CLASS";
     public final static String AE_SUBCLASS = "AE_SUBCLASS";

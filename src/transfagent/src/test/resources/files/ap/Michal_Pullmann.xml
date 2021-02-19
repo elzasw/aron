@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns2:edx xmlns:ns2="http://elza.tacr.cz/schema/v2">
+    <aps>
+        <ap>
+            <ape id="8146" t="PERSON_INDIVIDUAL" uuid="19523c73-599e-4680-99b3-3d579a861984">
+                <eid>
+                    <t>WHOIS</t>
+                    <v>19523c73-599e-4680-99b3-3d579a861984</v>
+                </eid>
+            </ape>
+            <frgs>
+                <frg fid="3372226" t="PT_NAME">
+                    <de s="NT_NATIV" t="NM_TYPE"/>
+                    <ds t="NM_SUP_CHRO">
+                        <v>1974-</v>
+                    </ds>
+                    <ds t="NM_SUP_PRIV">
+                        <v>WHOIS_CISLO_UK: 55493345</v>
+                    </ds>
+                    <ds t="NM_DEGREE_POST">
+                        <v>Ph.D.</v>
+                    </ds>
+                    <ds t="NM_DEGREE_PRE">
+                        <v>doc. PhDr.</v>
+                    </ds>
+                    <ds t="NM_MINOR">
+                        <v>Michal</v>
+                    </ds>
+                    <ds t="NM_MAIN">
+                        <v>Pullmann</v>
+                    </ds>
+                </frg>
+                <frg fid="4738710" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2020-06-30T00:00:00" fe="false" fmt="D" to="2020-06-30T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2001-10-01T00:00:00" fe="false" fmt="D" to="2001-10-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738709" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2020-06-30T00:00:00" fe="false" fmt="D" to="2020-06-30T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2001-10-01T00:00:00" fe="false" fmt="D" to="2001-10-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738711" t="PT_CRE">
+                    <dt t="CRE_DATE">
+                        <d f="1974-04-03T00:00:00" fe="false" fmt="D" to="1974-04-03T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="CRC_BIRTH" t="CRE_CLASS"/>
+                </frg>
+                <frg fid="4738708" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2014-06-07T00:00:00" fe="false" fmt="D" to="2014-06-07T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2012-06-08T00:00:00" fe="false" fmt="D" to="2012-06-08T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738707" t="PT_EVENT">
+                    <dt t="EV_BEGIN">
+                        <d f="2018-03-01T00:00:00" fe="false" fmt="D" to="2018-03-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738706" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2022-01-31T00:00:00" fe="false" fmt="D" to="2022-01-31T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2018-02-01T00:00:00" fe="false" fmt="D" to="2018-02-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738705" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2016-11-30T00:00:00" fe="false" fmt="D" to="2016-11-30T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2016-07-15T00:00:00" fe="false" fmt="D" to="2016-07-15T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738704" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2014-07-02T00:00:00" fe="false" fmt="D" to="2014-07-02T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2014-06-03T00:00:00" fe="false" fmt="D" to="2014-06-03T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738703" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2011-06-17T00:00:00" fe="false" fmt="D" to="2011-06-17T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2011-05-04T00:00:00" fe="false" fmt="D" to="2011-05-04T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738702" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2010-11-01T00:00:00" fe="false" fmt="D" to="2010-11-01T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2010-10-01T00:00:00" fe="false" fmt="D" to="2010-10-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738701" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2008-08-15T00:00:00" fe="false" fmt="D" to="2008-08-15T23:59:59" toe="false"/>
+                    </dt>
+                    <dt t="EV_BEGIN">
+                        <d f="2008-08-01T00:00:00" fe="false" fmt="D" to="2008-08-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738700" t="PT_EVENT">
+                    <dt t="EV_BEGIN">
+                        <d f="2001-10-01T00:00:00" fe="false" fmt="D" to="2001-10-01T23:59:59" toe="false"/>
+                    </dt>
+                    <de s="ET_JOB" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738699" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2005-03-29T00:00:00" fe="false" fmt="D" to="2005-03-29T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="NOTE">
+                        <v>Vysokoškolské magisterské vzdělání</v>
+                    </ds>
+                    <de s="ET_STUDY" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738698" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="1998-06-02T00:00:00" fe="false" fmt="D" to="1998-06-02T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="NOTE">
+                        <v>Vysokoškolské magisterské vzdělání</v>
+                    </ds>
+                    <de s="ET_STUDY" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738697" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2003-04-30T00:00:00" fe="false" fmt="D" to="2003-04-30T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="NOTE">
+                        <v>Vysokoškolské doktorské vzdělání</v>
+                    </ds>
+                    <de s="ET_STUDY" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738696" t="PT_EVENT">
+                    <dt t="EV_END">
+                        <d f="2014-01-01T00:00:00" fe="false" fmt="D" to="2014-01-01T23:59:59" toe="false"/>
+                    </dt>
+                    <ds t="NOTE">
+                        <v>Univerzita Karlova v Praze, Filozofická fakulta, docent</v>
+                    </ds>
+                    <de s="ET_STUDY" t="EV_TYPE"/>
+                </frg>
+                <frg fid="4738660" pid="4738710" t="PT_REL">
+                    <da apid="3227" s="RT_FUNCTION" t="REL_ENTITY"/>
+                </frg>
+                <frg fid="4738659" pid="4738710" t="PT_REL">
+                    <da apid="765" s="RT_ACTIVITYCORP" t="REL_ENTITY"/>
+                </frg>
+                <frg fid="4738657" pid="4738709" t="PT_REL">
+                    <da apid="3227" s="RT_FUNCTION" t="REL_ENTITY"/>
+                </frg>
+                <frg fid="4738656" pid="4738709" t="PT_REL">
+                    <da apid="765" s="RT_ACTIVITYCORP" t="REL_ENTITY"/>
+                </frg>
+                <frg fid="4738663" pid="4496070" t="PT_REL">
+                    <du s="RT_AFFILIATION" t="REL_ENTITY"/>
+                </frg>
+                <frg fid="3372228" t="PT_BODY">
+                    <de s="GE_MALE" t="GENDER"/>
+                </frg>
+                <frg fid="107954" t="PT_IDENT">
+                    <db v="true" t="IDN_VERIFIED"/>
+                    <ds t="IDN_VALUE">
+                        <v>0000000222827098</v>
+                    </ds>
+                    <de s="ORCID_ID" t="IDN_TYPE"/>
+                </frg>
+                <frg fid="107953" t="PT_IDENT">
+                    <db v="true" t="IDN_VERIFIED"/>
+                    <ds t="IDN_VALUE">
+                        <v>7404036112</v>
+                    </ds>
+                    <de s="RODNE_CISLO" t="IDN_TYPE"/>
+                </frg>
+                <frg fid="107951" t="PT_IDENT">
+                    <ds t="IDN_VALUE">
+                        <v>13026</v>
+                    </ds>
+                    <de s="WHOIS_ID_OSOBA" t="IDN_TYPE"/>
+                </frg>
+                <frg fid="107952" t="PT_IDENT">
+                    <ds t="IDN_VALUE">
+                        <v>55493345</v>
+                    </ds>
+                    <de s="WHOIS_CISLO_UK" t="IDN_TYPE"/>
+                </frg>
+                <frg fid="4738658" t="PT_EVENT"/>
+                <frg fid="4738658" t="PT_EVENT"/>
+                <frg fid="4496069" t="PT_EVENT"/>
+                <frg fid="4496069" t="PT_EVENT"/>
+                <!--	
+                <frg fid="4738662" t="PT_EVENT">
+                    <de s="ET_CITIZENSHIP" t="EV_TYPE"/>
+                </frg>
+                -->
+            </frgs>
+        </ap>
+    </aps>
+</ns2:edx>
