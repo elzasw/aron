@@ -1,6 +1,7 @@
 package cz.aron.transfagent.elza.convertor;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -10,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.ElzaXmlReader;
+import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
@@ -22,16 +24,13 @@ public class EdxApRefWithRole implements EdxItemConvertor {
 
     private final ContextDataProvider dataProvider;
     private Map<String, String> specMap;
-    private Set<String> entityClasses;
 
     public EdxApRefWithRole(String partType,
             final ContextDataProvider dataProvider, 
-            final Map<String, String> specMap,
-            final Set<String> entityClasses) {
+            final Map<String, String> specMap) {
         this.partType = partType;
         this.dataProvider = dataProvider;
         this.specMap = specMap;
-        this.entityClasses = entityClasses;
     }
 
     @Override
@@ -55,7 +54,13 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         }
 
         UUID apUuid = UUID.fromString(ap.getApe().getUuid());
-        var uuids = dataProvider.findByUUIDWithParents(apUuid);
+        var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
+
+        List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
+        for(ArchEntityInfo aei : archEntityInfo) {
+            uuids.add(aei.getUuid());
+            ctx.addEntityClass(aei.getEntityClass());
+        }
 
         String t = this.specMap.get(apRef.getS());
         if(t == null) {

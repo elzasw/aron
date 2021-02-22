@@ -380,7 +380,7 @@ public class ImportAp implements EdxItemCovertContext {
             parentElzaId = apElzaId;
         }
 
-        var archEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        var archEntityInfo = this.dataProvider.getArchivalEntityWithParentsByElzaId(apElzaId);
         if(CollectionUtils.isEmpty(archEntityInfo)) {
             this.requiredEntities.add(apElzaId);
             return;
@@ -407,7 +407,7 @@ public class ImportAp implements EdxItemCovertContext {
             parentElzaId = apElzaId;
         }
 
-        var archEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        var archEntityInfo = this.dataProvider.getArchivalEntityWithParentsByElzaId(apElzaId);
         if(CollectionUtils.isEmpty(archEntityInfo)) {
             this.requiredEntities.add(apElzaId);
             return;
@@ -483,7 +483,7 @@ public class ImportAp implements EdxItemCovertContext {
 
 			parentElzaId = Integer.valueOf(adminPrntRefId);
 
-			var parentEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(parentElzaId);
+			var parentEntityInfo = this.dataProvider.getArchivalEntityWithParentsByElzaId(parentElzaId);
 			if(CollectionUtils.isEmpty(parentEntityInfo)) {
 			    this.requiredEntities.add(parentElzaId);
 			} else {

@@ -138,11 +138,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			try(OutputStream fos = Files.newOutputStream(outputPath)) {
 				apusrcBuilder.build(fos);
 			}
+	        System.out.println(args[2] + " is done.");
 		} catch(Exception e) {
-			System.err.println("Failed to process input file: "+inputFile);
+			System.err.println("Failed to process input file: " + inputFile);
 			e.printStackTrace();
 		}
-		System.out.println(args[2] + " is done.");
 	}
 
 	public ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
@@ -163,7 +163,133 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
     }
 
-	private void initConvertor() {
+    private ApuSourceBuilder importArchDesc() {
+        Sections sections = elzaXmlReader.getEdx().getFs();
+        if(sections==null||sections.getS().size()==0) {
+            throw new RuntimeException("Missing section data");
+        }
+        if(sections.getS().size()>1) {
+            throw new RuntimeException("Exports with one section are supported");
+        }
+        Section sect = sections.getS().get(0);
+        if(sect.getLvls()==null) {
+            throw new RuntimeException("Missing levels.");
+        }
+
+        // read fund info
+        FundInfo fi = sect.getFi();
+        institutionCode = fi.getIc();
+        var institutionInfo = dataProvider.getInstitutionApu(institutionCode);
+        instApuUuid = institutionInfo.getUuid();
+        institutionName = institutionInfo.getName();
+        Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
+
+        fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
+        Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);       
+
+        Levels lvls = sect.getLvls();
+        for(Level lvl: lvls.getLvl()) {
+            processLevel(sect, lvl);
+        }
+
+        // add dates to siblings
+        for (Entry<String, Apu> item : apuMap.entrySet()) {
+            var apu = item.getValue();
+            var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+            if (ranges.isEmpty()) {
+                copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+            }
+        }
+        return apusBuilder;
+    }
+
+    private void processLevel(Section sect, Level lvl) {
+        log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
+        
+        String name = getName(sect, lvl);
+        String desc = getDesc(sect, lvl);
+        Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
+        apu.setDesc(desc);
+        apu.setUuid(lvl.getUuid());
+
+        // set parent
+        Apu parentApu = null;
+        if(lvl.getPid()!=null) {
+            parentApu = apuMap.get(lvl.getPid());
+            if(parentApu==null) {
+                throw new RuntimeException("Missing parent for level: "+lvl.getPid());
+            }
+            apu.setPrnt(parentApu.getUuid());
+            apuParentMap.put(apu, parentApu);
+
+            // add name from parent if empty
+            if(StringUtil.isEmpty(apu.getName())) {
+                apu.setName(parentApu.getName());
+            }
+            if(StringUtil.isEmpty(apu.getDesc())) {
+                apu.setDesc(parentApu.getDesc());
+            }
+        }
+        apuMap.put(lvl.getId(), apu);
+
+        activateArchDescPart(apu);
+        initConvertor();
+
+        // add items
+        for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
+            addItem(apu, item);
+        }
+
+        // daos
+        DigitalArchivalObjects daos = lvl.getDaos();
+        if(daos!=null&&daos.getDao().size()>0) {
+            int numExistingDaos = 0;
+            
+            for(DigitalArchivalObject dao: daos.getDao()) {
+                var daoHandle = dao.getDoid();
+                daoRefs.add(daoHandle);
+                
+                UUID daoUuid = dataProvider.getDao(daoHandle);
+                if(daoUuid!=null) {
+                    ApuSourceBuilder.addDao(activeApu, daoUuid);
+                    numExistingDaos++;
+                }
+            }
+            if(numExistingDaos>0) {
+                ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
+            }
+        }
+
+        // copy values from parent
+        if(parentApu!=null) {
+            List<ItemEnum> itemEnums = apusBuilder.getItemEnums(parentApu, ApuType.ARCH_DESC, CoreTypes.UNIT_TYPE);
+            if(CollectionUtils.isNotEmpty(itemEnums)) {
+                apusBuilder.copyEnums(activePart, itemEnums);
+            }
+        }
+
+        deactivatePart(apu);
+
+        // add static values
+        activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+        addEntityClasses(activePart, entityClasses);
+        apusBuilder.addApuRef(activePart, "FUND_REF", fundApuUuid);
+        apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApuUuid);
+        deactivatePart(apu);
+
+        // add date to parent(s)
+        var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+        for(ItemDateRange item : itemDateRanges) {
+            Apu apuParent = parentApu;
+            while(apuParent != null) {
+                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
+                dateRangeAppender.appendTo(apuParent);
+                apuParent = apuParentMap.get(apuParent);
+            }
+        }
+    }
+
+    private void initConvertor() {
 	    stringTypeMap = new HashMap<>();
         // TITLE is used as default APU name, it is not converted as separate ABSTRACT
         //stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));     
@@ -214,145 +340,37 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
         stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-        stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE, new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap, entityClasses));
+        stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE, new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap));
         stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
         stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
         stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));	    
     }
 
-	private ApuSourceBuilder importArchDesc() {
-		Sections sections = elzaXmlReader.getEdx().getFs();
-		if(sections==null||sections.getS().size()==0) {
-			throw new RuntimeException("Missing section data");
-		}
-		if(sections.getS().size()>1) {
-			throw new RuntimeException("Exports with one section are supported");
-		}
-		Section sect = sections.getS().get(0);
-		if(sect.getLvls()==null) {
-			throw new RuntimeException("Missing levels.");
-		}
-
-		// read fund info
-		FundInfo fi = sect.getFi();
-		institutionCode = fi.getIc();
-		var institutionInfo = dataProvider.getInstitutionApu(institutionCode);
-		instApuUuid = institutionInfo.getUuid();
-		institutionName = institutionInfo.getName();
-		Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
-
-		fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
-		Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);		
-
-		Levels lvls = sect.getLvls();
-		for(Level lvl: lvls.getLvl()) {
-		    processLevel(sect, lvl);
+    private void addItem(Apu apu, DescriptionItem item) {
+        if(item instanceof DescriptionItemUndefined ) {
+            return;
         }
-
-        // add dates to siblings
-        for (Entry<String, Apu> item : apuMap.entrySet()) {
-            var apu = item.getValue();
-            var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
-            if (ranges.isEmpty()) {
-                copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+        // check ignored items
+        for(String ignoredType: ignoredTypes) {
+            if(ignoredType.equals(item.getT())) {
+                return;
             }
         }
 
-        return apusBuilder;
+        EdxItemConvertor convertor = stringTypeMap.get(item.getT());
+        if(convertor!=null) {
+            convertor.convert(this, item);
+            return;
+        }
+        throw new RuntimeException("Unsupported item type: " + item.getT());
     }
 
-	/**
-	 * Process one level
-	 * 
-	 * @param sect
-	 * @param lvl
-	 */
-    private void processLevel(Section sect, Level lvl) {
-        log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
-        
-        String name = getName(sect, lvl);
-        String desc = getDesc(sect, lvl);
-        Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
-        apu.setDesc(desc);
-        apu.setUuid(lvl.getUuid());
-
-        // set parent
-        Apu parentApu = null;
-        if(lvl.getPid()!=null) {
-            parentApu = apuMap.get(lvl.getPid());
-            if(parentApu==null) {
-                throw new RuntimeException("Missing parent for level: "+lvl.getPid());
-            }
-            apu.setPrnt(parentApu.getUuid());
-            apuParentMap.put(apu, parentApu);
-
-            // add name from parent if empty
-            if(StringUtil.isEmpty(apu.getName())) {
-                apu.setName(parentApu.getName());
-            }
-            if(StringUtil.isEmpty(apu.getDesc())) {
-                apu.setDesc(parentApu.getDesc());
+    private void addEntityClasses(Part part, Set<String> entityClasses) {
+        if(!entityClasses.isEmpty()) {
+            for(String item : entityClasses) {
+                apusBuilder.addString(part, "REGISTRY_TYPE", apTypeService.getParentName(item));
             }
         }
-        apuMap.put(lvl.getId(), apu);
-
-        activateArchDescPart(apu);
-
-        initConvertor();
-        // add items
-        for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
-            addItem(apu, item);
-        }
-
-        // daos
-        DigitalArchivalObjects daos = lvl.getDaos();
-        if(daos!=null&&daos.getDao().size()>0) {
-            int numExistingDaos = 0;
-            
-            for(DigitalArchivalObject dao: daos.getDao()) {
-                var daoHandle = dao.getDoid();
-                daoRefs.add(daoHandle);
-                
-                UUID daoUuid = dataProvider.getDao(daoHandle);
-                if(daoUuid!=null) {
-                    ApuSourceBuilder.addDao(activeApu, daoUuid);
-                    numExistingDaos++;
-                }
-            }
-            if(numExistingDaos>0) {
-                ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
-            }
-        }
-        // copy values from parent
-        if(parentApu!=null) {
-            List<ItemEnum> itemEnums = apusBuilder.getItemEnums(parentApu, ApuType.ARCH_DESC, CoreTypes.UNIT_TYPE);
-            if(CollectionUtils.isNotEmpty(itemEnums)) {
-                apusBuilder.copyEnums(activePart, itemEnums);
-            }
-        }
-        
-        deactivatePart(apu);
-
-        // add static values
-        activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-        apusBuilder.addApuRef(activePart, "FUND_REF", fundApuUuid);
-        apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApuUuid);
-        deactivatePart(apu);
-
-        if (!entityClasses.isEmpty()) {
-            // TODO
-        }
-
-        // add date to parent(s)
-        var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
-        for(ItemDateRange item : itemDateRanges) {            
-            Apu apuParent = parentApu;
-            while(apuParent != null) {
-                ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
-                dateRangeAppender.appendTo(apuParent);
-                apuParent = apuParentMap.get(apuParent);
-            }
-        }        
     }
 
     private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
@@ -403,27 +421,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
     }
 
-    private void addItem(Apu apu, DescriptionItem item) {
-        if(item instanceof DescriptionItemUndefined ) {
-            return;
-        }
-
-		// check ignored items
-		for(String ignoredType: ignoredTypes) {
-			if(ignoredType.equals(item.getT())) {
-				return;
-			}
-		}
-
-		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
-		if(convertor!=null) {
-			convertor.convert(this, item);
-			return;
-		}
-
-		throw new RuntimeException("Unsupported item type: " + item.getT());
-	}
-    
     public static Map<String, Integer> otherIdPriorityMap = new HashMap<>();
     static {
         otherIdPriorityMap.put("ZP2015_OTHERID_SIG_ORIG", 99);
@@ -474,7 +471,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             } else 
             if(item.getT().equals("ZP2015_INV_CISLO")&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString title = (DescriptionItemString)item;
-                invCislo = title.getV();                
+                invCislo = title.getV();
             } else 
             if(item.getT().equals("ZP2015_SERIAL_NUMBER")&&(item instanceof DescriptionItemInteger)) {
                 DescriptionItemInteger serNum = (DescriptionItemInteger)item;

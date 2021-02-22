@@ -11,11 +11,11 @@ public interface ContextDataProvider {
 
     InstitutionInfo getInstitutionApu(String instCode);
 
-    List<ArchEntityInfo> getArchivalEntityApuWithParentsByElzaId(Integer elzaId);
+    List<ArchEntityInfo> getArchivalEntityWithParentsByElzaId(Integer elzaId);
 
     UUID getFundApu(String institutionCode, String fundCode);
 
-    List<UUID> findByUUIDWithParents(UUID apUuid);
+    List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid);
 
     UUID getDao(String daoHandle);
 

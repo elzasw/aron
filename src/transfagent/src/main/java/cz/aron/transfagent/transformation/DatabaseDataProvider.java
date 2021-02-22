@@ -73,8 +73,16 @@ public class DatabaseDataProvider implements ContextDataProvider {
     }
 
     @Override
-    public List<ArchEntityInfo> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
+    public List<ArchEntityInfo> getArchivalEntityWithParentsByElzaId(Integer elzaId) {
         return entityRepository.findByElzaIdWithParents(elzaId).stream()
+                .filter(ei -> ei[0] != null)
+                .map(ei -> new ArchEntityInfo(UUID.fromString(ei[0].toString()), ei[1].toString()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid) {
+        return entityRepository.findByUUIDWithParents(apUuid).stream()
                 .filter(ei -> ei[0] != null)
                 .map(ei -> new ArchEntityInfo(UUID.fromString(ei[0].toString()), ei[1].toString()))
                 .collect(Collectors.toList());
@@ -93,11 +101,6 @@ public class DatabaseDataProvider implements ContextDataProvider {
 		Validate.notNull(fund.getUuid());
 		return fund.getUuid();
 	}
-
-    @Override
-    public List<UUID> findByUUIDWithParents(UUID apUuid) {        
-        return entityRepository.findByUUIDWithParents(apUuid);
-    }
 
     @Override
     public UUID getDao(String daoHandle) {

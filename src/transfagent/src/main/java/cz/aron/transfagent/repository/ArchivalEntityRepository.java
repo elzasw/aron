@@ -64,20 +64,20 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
             + "ORDER BY depth")
     List<Object[]> findByElzaIdWithParents(Integer elzaId);
 
-	@Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid) as "
+    @Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid, entity_class) as "
             + "( "
-            + "SELECT uuid,parent_entity_id,1 as depth "
+            + "SELECT uuid, entity_class, parent_entity_id, 1 as depth "
             + "FROM archival_entity ae "
-            + "WHERE ae.uuid=?1 "
+            + "WHERE ae.uuid =? 1 "
             + "UNION ALL "
-            + "SELECT ae2.uuid, ae2.parent_entity_id, cte.depth+1 "
+            + "SELECT ae2.uuid, ae2.entity_class, ae2.parent_entity_id, cte.depth+1 "
             + "FROM archival_entity ae2, cte "
-            + "WHERE ae2.entity_id=cte.parent_entity_id "
+            + "WHERE ae2.entity_id = cte.parent_entity_id "
             + ") "
-            + "SELECT CAST(uuid as VARCHAR(50)) "
+            + "SELECT CAST(uuid as VARCHAR(50)), entity_class "
             + "FROM cte "
             + "ORDER BY depth")
-	List<UUID> findByUUIDWithParents(UUID uuid);
+    List<Object[]> findByUUIDWithParents(UUID uuid);
 
     @Modifying
 	@Query("update ArchivalEntity ae set ae.download = true where ae.elzaId in :ids")

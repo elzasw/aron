@@ -21,34 +21,36 @@ public class PropertiesDataProvider implements ContextDataProvider {
 
 	@Override
 	public InstitutionInfo getInstitutionApu(String instCode) {
-		String propName = "institution."+instCode;
+		String propName = "institution." + instCode;
 		return new InstitutionInfo(UUID.fromString(getProperty(propName)), getProperty(propName));
 	}
 
 	private String getProperty(String propName) {
 		String apuUuid = props.getProperty(propName);
 		if(apuUuid==null) {
-			throw new RuntimeException("Mssing property: "+propName);
+			throw new RuntimeException("Mssing property: " + propName);
 		}
 		return apuUuid;
 	}
 
 	@Override
-	public List<ArchEntityInfo> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
+	public List<ArchEntityInfo> getArchivalEntityWithParentsByElzaId(Integer elzaId) {
 		String propName = "entity." + elzaId;
 		UUID uuid = UUID.fromString(getProperty(propName));
 		return List.of(new ArchEntityInfo(uuid, propName + ".entityClass"));
 	}
 
-	@Override
-	public UUID getFundApu(String institutionCode, String fundCode) {
-		String propName = "fund."+institutionCode+"."+fundCode;
-		return UUID.fromString(getProperty(propName));
-	}
+    @Override
+    public List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid) {
+        String propName = "parent";
+        UUID uuid = UUID.fromString(getProperty(propName));
+        return List.of(new ArchEntityInfo(uuid, "REG_GEO_REF"));
+    }
 
     @Override
-    public List<UUID> findByUUIDWithParents(UUID apUuid) {
-        return Collections.emptyList();
+    public UUID getFundApu(String institutionCode, String fundCode) {
+        String propName = String.format("fund.%s.%s", institutionCode, fundCode);
+        return UUID.fromString(getProperty(propName));
     }
 
     @Override

@@ -2,6 +2,7 @@ package cz.aron.transfagent.elza.convertor;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.util.CollectionUtils;
 
@@ -42,11 +43,12 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 
         ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
 
-        var uuids = dataProvider.findByUUIDWithParents(apUuid);
-        if (CollectionUtils.isEmpty(uuids)) {
+        var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
+        if (CollectionUtils.isEmpty(archEntityInfo)) {
             ctx.addArchEntityRef(apUuid);
             apusBuilder.addApuRef(ctx.getActivePart(), targetType, apUuid);
         } else {
+            var uuids = archEntityInfo.stream().map(i -> i.getUuid()).collect(Collectors.toList());
             uuids.forEach(uuid -> ctx.addArchEntityRef(uuid));
             apusBuilder.addApuRefsFirstVisible(ctx.getActivePart(), targetType, uuids);
         }
