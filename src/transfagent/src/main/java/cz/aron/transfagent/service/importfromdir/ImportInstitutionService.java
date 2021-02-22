@@ -20,10 +20,8 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.EntitySource;
-import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportInstitution;
@@ -33,6 +31,7 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
+import cz.aron.transfagent.service.ArchivalEntityImportService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.ReimportService;
@@ -70,6 +69,8 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
     private final ConfigurationLoader configurationLoader;
 
     private final FileImportService fileImportService;
+    
+    private final ArchivalEntityImportService archEntityImportService;
 
     private final String INSTITUTIONS_DIR = "institutions";
 
@@ -80,6 +81,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader,
+            final ArchivalEntityImportService archEntityImportService,
             final FileImportService fileImportService) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -92,6 +94,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
+        this.archEntityImportService = archEntityImportService;
         this.fileImportService = fileImportService;
     }
 
@@ -253,10 +256,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		var existingArchivalEntity = archivalEntityRepository.findByUuid(apUuid);
 		if (existingArchivalEntity.isEmpty()) {
 			// vytvorim archivni entitu
-			var archivalEntity = new ArchivalEntity();
-			archivalEntity.setStatus(EntityStatus.ACCESSIBLE);
-			archivalEntity.setUuid(apUuid);
-			archivalEntity = archivalEntityRepository.save(archivalEntity);
+			var archivalEntity = archEntityImportService.createAccessibleArchivalEntity(apUuid);
 
 			var entitySource = new EntitySource();
 			entitySource.setApuSource(apuSource);

@@ -226,6 +226,7 @@
       <column name="download" type="boolean">
         <constraints nullable="false" />
       </column>
+      <column name="entity_class" type="varchar(250)" />
     </createTable>
 
     <createIndex indexName="idx_archival_entity_uuid" tableName="archival_entity" unique="true">

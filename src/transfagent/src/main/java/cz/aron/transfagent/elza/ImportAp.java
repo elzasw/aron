@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -54,6 +53,8 @@ public class ImportAp implements EdxItemCovertContext {
     private UUID apUuid;
 
     private Integer elzaId;
+    
+    private String entityClass;
 
     /**
      * ElzaIds which needs to be requested
@@ -64,11 +65,15 @@ public class ImportAp implements EdxItemCovertContext {
 
     private Apu apu;
 
+    public ImportAp() {
+    }
+
     public UUID getApUuid() {
         return apUuid;
     }
-
-    public ImportAp() {
+    
+    public String getEntityClass() {
+        return entityClass;
     }
 
     public Set<Integer> getRequiredEntities() {
@@ -124,6 +129,7 @@ public class ImportAp implements EdxItemCovertContext {
         }
         this.apUuid = UUID.fromString(ap.getApe().getUuid());
         this.elzaId = Integer.valueOf(ap.getApe().getId());
+        this.entityClass = ap.getApe().getT();
 
         apu = apusBuilder.createApu(null, ApuType.ENTITY, apUuid);
 

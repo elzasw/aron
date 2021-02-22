@@ -47,6 +47,17 @@ public class ArchivalEntity {
 
     @Column(nullable = false)
     private boolean download;
+    
+    @Column(name="entity_class", nullable = true)
+    private String entityClass;
+
+    public String getEntityClass() {
+        return entityClass;
+    }
+
+    public void setEntityClass(String entityClass) {
+        this.entityClass = entityClass;
+    }
 
     public ArchivalEntity getParentEntity() {
 		return parentEntity;

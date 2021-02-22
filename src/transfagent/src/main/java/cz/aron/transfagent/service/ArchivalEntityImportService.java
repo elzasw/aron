@@ -217,6 +217,14 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
         
         return storedEntSources;
     }
+    
+    public ArchivalEntity createAccessibleArchivalEntity(UUID entUuid) {
+        var ent = new ArchivalEntity();
+        ent.setStatus(EntityStatus.ACCESSIBLE);
+        ent.setUuid(entUuid);
+        ent = this.archivalEntityRepository.save(ent);
+        return ent;
+    }
 
     private EntitySource createEntitySource(ApuSource apuSource, ArchivalEntity ae) {
         // mark as required by master entity
@@ -265,6 +273,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 				needReindex = true;
 			}
 		}
+		srcArchivalEntity.setEntityClass(importAp.getEntityClass());
 		// update elza id
 		if (srcArchivalEntity.getElzaId() == null) {			
 			// check if elzaId not present with other record
@@ -289,7 +298,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		}
 	}
 
-    private void mergeEntities(ArchivalEntity dbArchEntity, ArchivalEntity srcArchivalEntity, 
+    private void mergeEntities(ArchivalEntity dbArchEntity, 
+                               ArchivalEntity srcArchivalEntity, 
                                ArchivalEntity parentEntity) {
         log.info("Merging entities, srcEntityId: {} (elzaId: {}, uuid: {}, status: {}), targetEntityId: {} (elzaId: {}, uuid: {}, status: {})", 
                  srcArchivalEntity.getId(),
@@ -309,6 +319,9 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
             dbArchEntity.setUuid(srcArchivalEntity.getUuid());
             // reset UUID in old entity (avoid conflicts)
             srcArchivalEntity.setUuid(null);
+        }
+        if(dbArchEntity.getEntityClass()==null) {
+            dbArchEntity.setEntityClass(srcArchivalEntity.getEntityClass());
         }
         dbArchEntity.setParentEntity(parentEntity);
         archivalEntityRepository.save(dbArchEntity);
@@ -437,10 +450,7 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
                               for(var entUuid: batch) {
                                   var ent = lookup.get(entUuid);
                                   if(ent==null) {
-                                      ent = new ArchivalEntity();
-                                      ent.setStatus(EntityStatus.ACCESSIBLE);
-                                      ent.setUuid(entUuid);
-                                      ent = this.archivalEntityRepository.save(ent);
+                                      ent = createAccessibleArchivalEntity(entUuid);
                                   }
                                   // create source link
                                   createEntitySource(apuSource, ent);
