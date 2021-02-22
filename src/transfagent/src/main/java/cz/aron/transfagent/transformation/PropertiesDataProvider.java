@@ -34,9 +34,10 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	}
 
 	@Override
-	public List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
-		String propName = "entity."+elzaId;
-		return List.of(UUID.fromString(getProperty(propName)));
+	public List<ArchEntityInfo> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
+		String propName = "entity." + elzaId;
+		UUID uuid = UUID.fromString(getProperty(propName));
+		return List.of(new ArchEntityInfo(uuid, propName + ".entityClass"));
 	}
 
 	@Override

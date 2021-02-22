@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
@@ -378,12 +379,13 @@ public class ImportAp implements EdxItemCovertContext {
             Validate.isTrue(this.parentElzaId==null);
             parentElzaId = apElzaId;
         }
-        
-        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);                
-        if(CollectionUtils.isEmpty(apUuids)) {
+
+        var archEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        if(CollectionUtils.isEmpty(archEntityInfo)) {
             this.requiredEntities.add(apElzaId);
             return;
         }
+        var apUuids = archEntityInfo.stream().map(i -> i.getUuid()).collect(Collectors.toList());
 
         this.apusBuilder.addApuRefsFirstVisible(part, relType, apUuids);
     }
@@ -404,12 +406,13 @@ public class ImportAp implements EdxItemCovertContext {
             Validate.isTrue(this.parentElzaId==null);
             parentElzaId = apElzaId;
         }
-        
-        var apUuids = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);                
-        if(CollectionUtils.isEmpty(apUuids)) {
+
+        var archEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(apElzaId);
+        if(CollectionUtils.isEmpty(archEntityInfo)) {
             this.requiredEntities.add(apElzaId);
             return;
         }
+        var apUuids = archEntityInfo.stream().map(i -> i.getUuid()).collect(Collectors.toList());
 
         // entity exists -> we can create link
         Part part = this.apusBuilder.addPart(apu, "PT_AE_REL");
@@ -469,27 +472,26 @@ public class ImportAp implements EdxItemCovertContext {
     }
 
     private void importBody(Apu apu, Part part, Fragment frg) {
-		
 		String briefDesc = ElzaXmlReader.getStringType(frg, ElzaTypes.BRIEF_DESC);
 		if(StringUtils.isNotEmpty(briefDesc)) {
 			apu.setDesc(briefDesc);
 		}
-		
+
 		String adminPrntRefId = ElzaXmlReader.getApRefId(frg, ElzaTypes.GEO_ADMIN_CLASS);
 		if(StringUtils.isNotEmpty(adminPrntRefId)) {
-			Validate.isTrue(this.parentElzaId==null);
-			
+			Validate.isTrue(this.parentElzaId == null);
+
 			parentElzaId = Integer.valueOf(adminPrntRefId);
-			
-			var parentEntUuid = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(parentElzaId);
-			if(CollectionUtils.isEmpty(parentEntUuid)) {
+
+			var parentEntityInfo = this.dataProvider.getArchivalEntityApuWithParentsByElzaId(parentElzaId);
+			if(CollectionUtils.isEmpty(parentEntityInfo)) {
 			    this.requiredEntities.add(parentElzaId);
 			} else {
+		        var parentEntUuid = parentEntityInfo.stream().map(i -> i.getUuid()).collect(Collectors.toList());
 			    this.apusBuilder.addApuRefsFirstVisible(part, "AE_GEO_ADMIN_REF", parentEntUuid);
 			}
-			
 		}
-		
+
 		// primy prenos
 		addStringIfExists(frg, ElzaTypes.CORP_PURPOSE, part, CoreTypes.CORP_PURPOSE);
 		addStringIfExists(frg, ElzaTypes.FOUNDING_NORMS, part, CoreTypes.FOUNDING_NORMS);

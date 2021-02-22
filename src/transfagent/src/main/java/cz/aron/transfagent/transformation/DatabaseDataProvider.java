@@ -73,9 +73,10 @@ public class DatabaseDataProvider implements ContextDataProvider {
     }
 
     @Override
-    public List<UUID> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
+    public List<ArchEntityInfo> getArchivalEntityApuWithParentsByElzaId(Integer elzaId) {
         return entityRepository.findByElzaIdWithParents(elzaId).stream()
-                .filter(uuid -> uuid != null)
+                .filter(ei -> ei[0] != null)
+                .map(ei -> new ArchEntityInfo(UUID.fromString(ei[0].toString()), ei[1].toString()))
                 .collect(Collectors.toList());
     }
 

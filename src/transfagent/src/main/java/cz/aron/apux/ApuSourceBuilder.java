@@ -147,7 +147,7 @@ public class ApuSourceBuilder {
 	    return item;
 	}
 
-	public List<ItemRef> addApuRefsFirstVisible(Part part, String itemType, List<UUID> uuids) {	    
+	public List<ItemRef> addApuRefsFirstVisible(Part part, String itemType, List<UUID> uuids) {
 	    var itemRefs = new ArrayList<ItemRef>();
 	    var first = true;
 	    for(var uuid:uuids) {
