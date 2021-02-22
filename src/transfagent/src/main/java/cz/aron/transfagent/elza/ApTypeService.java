@@ -11,19 +11,22 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import cz.aron.transfagent.elza.archentities.APTypeXml;
 import cz.aron.transfagent.elza.archentities.APTypes;
 
+@Service
 public class ApTypeService {
-	private static final Logger log = LoggerFactory.getLogger(ApTypeService.class);
-	
+
+    private static final Logger log = LoggerFactory.getLogger(ApTypeService.class);
+
     private Map<String, APTypeXml> apTypesMap = new HashMap<>();
-    
+
     private Map<APTypeXml, APTypeXml> parentMap = new HashMap<>();
 
-	private APTypes apTypesXml;
-    
+    private APTypes apTypesXml;
+
     private static JAXBContext jaxbContext;
     
     {
@@ -32,15 +35,15 @@ public class ApTypeService {
 		} catch (JAXBException e) {
 			log.error("Failed to prepare JAXB", e);
 			throw new RuntimeException(e);
-		}    	
+		}
     }
-	
+
 	public ApTypeService() {
 		try {
 		try(InputStream is = getClass().getClassLoader().getResourceAsStream("data/ap_type.xml")) {
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             this.apTypesXml = (APTypes) unmarshaller.unmarshal(is);
-			
+
             // fill lookup
             for(APTypeXml typeXml: apTypesXml.getRegisterTypes()) {
             	apTypesMap.put(typeXml.getCode(), typeXml);
@@ -68,7 +71,7 @@ public class ApTypeService {
 		}
 		return null;
 	}
-	
+
 	public String getParentName(String entityClass) {
 		APTypeXml typeXml = apTypesMap.get(entityClass);
 		if(typeXml!=null) {

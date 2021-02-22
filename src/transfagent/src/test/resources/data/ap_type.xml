@@ -1,0 +1,270 @@
+<ap-types>
+    <ap-type code="PARTY_GROUP">
+        <name>korporace</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="REGION" parent-ap-type="PARTY_GROUP">
+        <name>administrativně vymezená území s vlastní správou</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="PUBLIC_ADMINISTRATION" parent-ap-type="PARTY_GROUP">
+        <name>orgány, organizační složky a příspěvkové organizace veřejné správy</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ORGANIZATION" parent-ap-type="PARTY_GROUP">
+        <name>sdružení organizací</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARMY" parent-ap-type="PARTY_GROUP">
+        <name>vojenské a bezpečnostní jednotky</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="COMPANY" parent-ap-type="PARTY_GROUP">
+        <other-codes>
+           <!-- Bug4508 - odstranění "pojmenované částí organizací" -->
+           <other-code code="BRANCH" />
+        </other-codes>
+        <name>organizace založené za účelem podnikání</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="POLITICAL_PARTY" parent-ap-type="PARTY_GROUP">
+        <name>politické organizace</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="CHURCH" parent-ap-type="PARTY_GROUP">
+        <name>náboženské organizace a instituce</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="HEALTH_AND_EDU" parent-ap-type="PARTY_GROUP">
+        <name>kulturní, výchovné, výzkumné a zdravotnické organizace a instituce</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="CHARITY" parent-ap-type="PARTY_GROUP">
+        <name>nadace a nadační fondy</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GUILD" parent-ap-type="PARTY_GROUP">
+        <name>profesní a zájmové organizace</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="CLUB" parent-ap-type="PARTY_GROUP">
+        <name>spolky, společenské organizace</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="PERSON">
+        <name>osoba / bytost</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="PERSON_INDIVIDUAL" parent-ap-type="PERSON">
+        <name>fyzická osoba</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="FICTIVE_INDIVIDUAL" parent-ap-type="PERSON">
+        <name>fiktivní fyzická osoba</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="PERSON_BEING" parent-ap-type="PERSON">
+        <name>bytost</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="PERSON_ANIMAL" parent-ap-type="PERSON">
+        <name>zvíře</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="DYNASTY">
+        <name>rod / rodina</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="FAMILY" parent-ap-type="DYNASTY">
+        <name>rod, rodina</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="FAMILY_BRANCH" parent-ap-type="DYNASTY">
+        <name>větev rodu</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="FICTIVE_DYNASTY" parent-ap-type="DYNASTY">
+        <name>fiktivní rod, fiktivní rodina</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO">
+        <name>geografický objekt</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="GEO_UNIT" parent-ap-type="GEO">
+        <name>administrativně či jinak lidmi vymezená území</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_NATURE_RES" parent-ap-type="GEO">
+        <name>administrativně vymezené části přírody</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_ADMIN_UNIT" parent-ap-type="GEO">
+        <name>další vymezené lokality, oblasti a zóny</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_SEA_FORMATION" parent-ap-type="GEO">
+        <name>geomorfologické útvary na dně moře</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_FORMATION" parent-ap-type="GEO">
+        <name>geomorfologické útvary na zemském povrchu</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_WATERS" parent-ap-type="GEO">
+        <name>vodstvo a vodní plocha, vodní tok</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_SHAPES" parent-ap-type="GEO">
+        <name>pojmenované útvary</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_CLIMATIC_PHEN" parent-ap-type="GEO">
+        <name>pojmenované trvalé klimatické jevy</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="GEO_SPACE" parent-ap-type="GEO">
+        <name>vesmír a jeho části</name>
+        <hierarchical>true</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="EVENT">
+        <name>událost</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="EVENT_EVENT" parent-ap-type="EVENT">
+        <other-codes>
+           <!-- Bug4508 - odstranění "ozbrojené střety (bitvy, války, obléhání...)" -->
+           <other-code code="EVENT_MILITARY" />
+        </other-codes>
+        <name>organizované akce a události</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="EVENT_TRADITION" parent-ap-type="EVENT">
+        <name>lidové zvyky, významné dny a svátky</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="EVENT_NATURE" parent-ap-type="EVENT">
+        <name>dočasné přírodní jevy</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK">
+        <name>dílo / výtvor</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_ARTWORK" parent-ap-type="ARTWORK">
+        <name>autorská a umělecká díla</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_CHARTER" parent-ap-type="ARTWORK">
+        <name>všeobecně známé dokumenty, smlouvy, zákony, předpisy, normy</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_AWARD" parent-ap-type="ARTWORK">
+        <name>vyznamenání, ceny, soutěžní trofeje</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_PROD" parent-ap-type="ARTWORK">
+        <name>výrobky a jejich typová označení, obchodní značky, odrůdy, plemena vytvořená člověkem</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_GAME" parent-ap-type="ARTWORK">
+        <name>názvy společenských, dětských her</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_PROJ" parent-ap-type="ARTWORK">
+        <name>programy, projekty, granty, rozvojové plány, kampaně, nemají-li charakter korporace</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="ARTWORK_CONSTR" parent-ap-type="ARTWORK">
+        <name>stavby, trasy, zásahy do přírodních útvarů s vlastním jménem nebo jinou identifikací</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM">
+        <name>obecný pojem</name>
+        <hierarchical>false</hierarchical>
+        <read-only>true</read-only>
+    </ap-type>
+    <ap-type code="TERM_ABSTRACT" parent-ap-type="TERM">
+        <name>abstraktní entity</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_GENERAL" parent-ap-type="TERM">
+        <name>netaxonomické obecné pojmy</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_PERSON" parent-ap-type="TERM">
+        <name>kategorie a skupiny nepojmenovaných osob</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_CORP" parent-ap-type="TERM">
+        <name>kategorie a skupiny nepojmenovaných korporací</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_MATER" parent-ap-type="TERM">
+        <name>materiály a techniky</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_GENRE" parent-ap-type="TERM">
+        <name>formy a žánry</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_NOMENC" parent-ap-type="TERM">
+        <name>binominální nomenklatura</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+    <ap-type code="TERM_TAXONOMY" parent-ap-type="TERM">
+        <name>archivní taxonomická kategorie</name>
+        <hierarchical>false</hierarchical>
+        <read-only>false</read-only>
+    </ap-type>
+</ap-types>
