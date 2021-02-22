@@ -73,9 +73,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	Map<String, Apu> apuMap = new HashMap<>();
 
 	final Set<UUID> apRefs = new HashSet<>();
-	
+
 	final Set<String> daoRefs = new HashSet<>();
-	
+
+    final Set<String> entityClasses = new HashSet<>();
+
 	private UUID instApuUuid;
 	private UUID fundApuUuid;
 
@@ -86,7 +88,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	private String institutionName;
 
 	private Apu activeApu;
-	
+
     static final String ignoredTypes[] = {"ZP2015_ARRANGEMENT_TYPE", "ZP2015_LEVEL_TYPE",
             "ZP2015_SERIAL_NUMBER", "ZP2015_NAD", "ZP2015_ZNACKA_FONDU",
             "ZP2015_LEVEL_TYPE", "ZP2015_ARRANGER",
@@ -103,16 +105,33 @@ public class ImportArchDesc implements EdxItemCovertContext {
             ElzaTypes.ZP2015_POSITION
     // TODO: k zapracovani:
     };
-    
+
     /**
      * Map of item convertors
      */
     Map<String, EdxItemConvertor> stringTypeMap;
-	
+
+    private final ApTypeService apTypeService;
+
+    public ImportArchDesc(ApTypeService apTypeService) {
+        this.apTypeService = apTypeService;
+    }
+
+    public Set<UUID> getApRefs() {
+        return apRefs;
+    }
+    
+    public Set<String> getDaoRefs() {
+        return daoRefs;
+    }
+
+    public String getInstitutionCode() {
+        return institutionCode;
+    }
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc();
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService());
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -126,21 +145,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		System.out.println(args[2] + " is done.");
 	}
 
-	public ImportArchDesc() {
-	}
-
-	public Set<UUID> getApRefs() {
-		return apRefs;
-	}
-	
-	public Set<String> getDaoRefs() {
-	    return daoRefs;
-	}
-
-	public String getInstitutionCode() {
-		return institutionCode;
-	}
-
 	public ApuSourceBuilder importArchDesc(Path inputFile, String propFile) throws IOException, JAXBException {
 		Validate.isTrue(propFile!=null&&propFile.length()>0);
 
@@ -149,7 +153,16 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		pdp.load(propPath);
 		return importArchDesc(inputFile, pdp);
 	}
-	
+
+    public ApuSourceBuilder importArchDesc(Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
+        this.dataProvider = cdp;
+
+        try(InputStream is = Files.newInputStream(inputFile)) {
+            elzaXmlReader = ElzaXmlReader.read(is);
+            return importArchDesc();
+        }
+    }
+
 	private void initConvertor() {
 	    stringTypeMap = new HashMap<>();
         // TITLE is used as default APU name, it is not converted as separate ABSTRACT
@@ -201,21 +214,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
         stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-        stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE,
-                          new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap));
+        stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE, new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap, entityClasses));
         stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxNullConvertor());
         stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
         stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));	    
-	}
-
-    public ApuSourceBuilder importArchDesc(Path inputFile, final ContextDataProvider cdp) throws IOException, JAXBException {
-		this.dataProvider = cdp;
-
-		try(InputStream is = Files.newInputStream(inputFile)) {
-			elzaXmlReader = ElzaXmlReader.read(is);
-			return importArchDesc();
-		}
-	}
+    }
 
 	private ApuSourceBuilder importArchDesc() {
 		Sections sections = elzaXmlReader.getEdx().getFs();
@@ -294,6 +297,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         apuMap.put(lvl.getId(), apu);
 
         activateArchDescPart(apu);
+
         initConvertor();
         // add items
         for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
@@ -334,6 +338,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
         apusBuilder.addApuRef(activePart, "FUND_REF", fundApuUuid);
         apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApuUuid);
         deactivatePart(apu);
+
+        if (!entityClasses.isEmpty()) {
+            // TODO
+        }
 
         // add date to parent(s)
         var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
@@ -552,4 +560,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	public Apu getActiveApu() {
 		return activeApu;
 	}
+
+    @Override
+    public void addEntityClass(String entityClass) {
+        entityClasses.add(entityClass);
+    }
 }

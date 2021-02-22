@@ -14,7 +14,7 @@ public interface EdxItemCovertContext {
 	Part getActivePart();
 
 	ElzaXmlReader getElzaXmlReader();
-	
+
 	/**
 	 * Add reference to another APU
 	 * @param uuid
@@ -22,5 +22,7 @@ public interface EdxItemCovertContext {
 	void addArchEntityRef(UUID uuid);
 
 	Apu getActiveApu();
+
+	void addEntityClass(String entityClass);
 
 }

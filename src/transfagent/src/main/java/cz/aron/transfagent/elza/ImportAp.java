@@ -562,4 +562,9 @@ public class ImportAp implements EdxItemCovertContext {
     public Apu getActiveApu() {
         return apu;
     }
+
+    @Override
+    public void addEntityClass(String entityClass) {
+        // TODO Auto-generated method stub
+    }
 }

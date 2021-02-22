@@ -26,6 +26,7 @@ import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.elza.ApTypeService;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
@@ -44,6 +45,8 @@ import cz.aron.transfagent.transformation.DatabaseDataProvider;
 public class ImportArchDescService extends ImportDirProcessor implements ReimportProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ImportArchDescService.class);
+
+    private final ApTypeService apTypeService;
 
     private final ApuSourceService apuSourceService;
 
@@ -75,8 +78,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
     final private String ARCHDESC_DIR = "archdesc";
 
-    public ImportArchDescService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
-            FundRepository fundRepository,
+    public ImportArchDescService(ApTypeService apTypeService, ApuSourceService apuSourceService,
+            ReimportService reimportService, StorageService storageService, FundRepository fundRepository,
             InstitutionRepository institutionRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, ArchDescRepository archDescRepository,
             TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
@@ -84,6 +87,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             final ArchivalEntityImportService archivalEntityImportService,
             final FileImportService fileImportService,
             final DSpaceImportService dSpaceImportService) {
+        this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
@@ -164,7 +168,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
      */
     private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
 
-        var iad = new ImportArchDesc();
+        var iad = new ImportArchDesc(apTypeService);
         ApuSourceBuilder apusrcBuilder;
 
         try {
@@ -278,7 +282,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var inputFile = apuDir.resolve(fileName);
              
         ApuSourceBuilder apuSourceBuilder;
-        var iad = new ImportArchDesc();
+        var iad = new ImportArchDesc(apTypeService);
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());

@@ -1,6 +1,8 @@
 package cz.aron.transfagent.elza.convertor;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.util.CollectionUtils;
@@ -9,7 +11,6 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.ElzaXmlReader;
 import cz.aron.transfagent.transformation.ContextDataProvider;
-import cz.aron.transfagent.transformation.CoreTypes;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
@@ -21,13 +22,16 @@ public class EdxApRefWithRole implements EdxItemConvertor {
 
     private final ContextDataProvider dataProvider;
     private Map<String, String> specMap;
+    private Set<String> entityClasses;
 
     public EdxApRefWithRole(String partType,
             final ContextDataProvider dataProvider, 
-            final Map<String, String> specMap) {
+            final Map<String, String> specMap,
+            final Set<String> entityClasses) {
         this.partType = partType;
         this.dataProvider = dataProvider;
         this.specMap = specMap;
+        this.entityClasses = entityClasses;
     }
 
     @Override
@@ -40,13 +44,13 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         ElzaXmlReader elzaXmlReader = ctx.getElzaXmlReader();
         Map<String, AccessPoint> apMap = elzaXmlReader.getApMap();
         AccessPoint ap = apMap.get(apRef.getApid());
-        if(ap==null) {
+        if(ap == null) {
             throw new RuntimeException("Failed to convert AP: " + apRef.getApid() + ", ap not found");
         }
 
         ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
         Part part = ApuSourceBuilder.getFirstPart(ctx.getActiveApu(), partType);
-        if (part == null) {
+        if(part == null) {
             part = ApuSourceBuilder.addPart(ctx.getActiveApu(), partType);
         }
 
@@ -54,7 +58,7 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         var uuids = dataProvider.findByUUIDWithParents(apUuid);
 
         String t = this.specMap.get(apRef.getS());
-        if(t==null) {
+        if(t == null) {
             throw new RuntimeException("Missing mapping for type: " + apRef.getT() + ", spec: " + apRef.getS() + ", ap not found");
         }
 
