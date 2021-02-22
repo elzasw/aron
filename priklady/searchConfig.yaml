@@ -249,6 +249,83 @@ facets:
     source: FUND_REF
     display: ALWAYS
 
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: REGISTRY_TYPE
+    display: DETAIL
+    description: druh rejstříku
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík zeměpisný
+    type: MULTI_REF
+    source: REG_GEO_REF
+    display: DETAIL
+    description: rejstřík zeměpisný
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík osob, bytostí
+    type: MULTI_REF
+    source: REG_PERSON_REF
+    display: DETAIL
+    description: rejstřík osob, bytostí
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík rodů, rodin
+    type: MULTI_REF
+    source: REG_DYNASTY_REF
+    display: DETAIL
+    description: rejstřík rodů, rodin
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík korporací
+    type: MULTI_REF
+    source: REG_GROUP_PARTY_REF
+    display: DETAIL
+    description: rejstřík korporací
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík událostí
+    type: MULTI_REF
+    source: REG_EVENT_REF
+    display: DETAIL
+    description: rejstřík událostí
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík děl
+    type: MULTI_REF
+    source: REG_ARTWORK_REF
+    display: DETAIL
+    description: rejstřík děl
+
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: REGISTRY_TYPE
+          value: rejstřík obecných pojmů
+    type: MULTI_REF
+    source: REG_TERM_REF
+    display: DETAIL
+    description: rejstřík obecných pojmů
+
 # Role entit
   - when:
       apuType: ARCH_DESC

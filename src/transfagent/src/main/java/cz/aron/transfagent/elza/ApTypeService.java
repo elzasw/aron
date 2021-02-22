@@ -1,6 +1,5 @@
 package cz.aron.transfagent.elza;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,4 +79,15 @@ public class ApTypeService {
 		}
 		return null;
 	}
+
+    public String getParentCode(String entityClass) {
+        APTypeXml typeXml = apTypesMap.get(entityClass);
+        if(typeXml!=null) {
+            APTypeXml parentType = this.parentMap.get(typeXml);
+            if(parentType!=null) {
+                return parentType.getCode();
+            }
+        }
+        return null;
+    }
 }

@@ -1310,6 +1310,38 @@ itemTypes:
     name: Vztah k entitě
     type: ITEM_AGGREG
     indexed: true
+  - code: REGISTRY_TYPE
+    name: Rejstřík
+    type: ENUM
+    indexed: true
+  - code: REG_GEO_REF
+    name: Rejstřík zeměpisný
+    type: APU_REF
+    indexed: true
+  - code: REG_PERSON_REF
+    name: Rejstřík osob, bytostí
+    type: APU_REF
+    indexed: true
+  - code: REG_DYNASTY_REF
+    name: Rejstřík rodů, rodin
+    type: APU_REF
+    indexed: true
+  - code: REG_GROUP_PARTY_REF
+    name: Rejstřík korporací
+    type: APU_REF
+    indexed: true
+  - code: REG_EVENT_REF
+    name: Rejstřík událostí
+    type: APU_REF
+    indexed: true
+  - code: REG_ARTWORK_REF
+    name: Rejstřík děl, výtvorů
+    type: APU_REF
+    indexed: true
+  - code: REG_TERM_REF
+    name: Rejstřík obecných pojmů
+    type: APU_REF
+    indexed: true
 
 itemGroups:
   # vztahy u archivního popisu
