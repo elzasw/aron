@@ -43,6 +43,7 @@ import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
+import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -72,11 +73,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	
 	Map<String, Apu> apuMap = new HashMap<>();
 
-	final Set<UUID> apRefs = new HashSet<>();
+	final Map<UUID, ArchEntityInfo> apRefs = new HashMap<>();
+	final Map<UUID, ArchEntityInfo> apLevelRefs = new HashMap<>();
 
-	final Set<String> daoRefs = new HashSet<>();
-
-    final Set<String> entityClasses = new HashSet<>();
+	final Set<String> daoRefs = new HashSet<>();    
 
 	private UUID instApuUuid;
 	private UUID fundApuUuid;
@@ -118,7 +118,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
     }
 
     public Set<UUID> getApRefs() {
-        return apRefs;
+        return apRefs.keySet();
     }
     
     public Set<String> getDaoRefs() {
@@ -205,7 +205,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
     private void processLevel(Section sect, Level lvl) {
         log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
-        entityClasses.clear();
+        apLevelRefs.clear();
         
         String name = getName(sect, lvl);
         String desc = getDesc(sect, lvl);
@@ -273,7 +273,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         // add static values
         activatePart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-        addEntityClasses(activePart, entityClasses);
+        addEntityClasses(activePart);
         apusBuilder.addApuRef(activePart, "FUND_REF", fundApuUuid);
         apusBuilder.addApuRef(activePart, "FUND_INST_REF", instApuUuid);
         deactivatePart(apu);
@@ -366,32 +366,48 @@ public class ImportArchDesc implements EdxItemCovertContext {
         throw new RuntimeException("Unsupported item type: " + item.getT());
     }
 
-    private void addEntityClasses(Part part, Set<String> entityClasses) {
-        if(!entityClasses.isEmpty()) {
-            Set<String> rootClasses = new HashSet<>();
+    private void addEntityClasses(Part part) {
+        if(apLevelRefs.isEmpty()) {
+            return;
+        }
+        
+        Set<String> rootClasses = new HashSet<>();
+
+        Map<String, String> rtMap = new HashMap<>();
+        rtMap.put("PARTY_GROUP", "rejstřík korporací");
+        rtMap.put("PERSON", "rejstřík osob, bytostí");
+        rtMap.put("DYNASTY", "rejstřík rodů, rodin");
+        rtMap.put("EVENT", "rejstřík událostí");
+        rtMap.put("ARTWORK", "rejstřík děl");
+        rtMap.put("GEO", "rejstřík zeměpisný");
+        rtMap.put("TERM", "rejstřík obecných pojmů");
+        
+        Map<String, String> rctMap = new HashMap<>();
+        rctMap.put("PARTY_GROUP", "REG_GROUP_PARTY_REF");
+        rctMap.put("PERSON", "REG_PERSON_REF");
+        rctMap.put("DYNASTY", "REG_DYNASTY_REF");
+        rctMap.put("EVENT", "REG_EVENT_REF");
+        rctMap.put("ARTWORK", "REG_ARTWORK_REF");
+        rctMap.put("GEO", "REG_GEO_REF");
+        rctMap.put("TERM", "REG_TERM_REF");
+
+        for(var apr: apLevelRefs.values()) {
+            var parentCode = apTypeService.getParentCode(apr.getEntityClass());
+            Validate.notNull(parentCode, "Failed to get parent code for class: %s", apr.getEntityClass());
             
-            for(String item : entityClasses) {
-                var parentCode = apTypeService.getParentCode(item);
-                Validate.notNull(parentCode, "Failed to get parent code for class: %s", item);
-                
-                rootClasses.add(parentCode);                
-            }
+            String itemType = rctMap.get(parentCode);
+            Validate.notNull(itemType, "Failed to get itemType for parentCode: %s", parentCode);
+            // Add APref
+            apusBuilder.addApuRef(part, itemType, apr.getUuid());
             
-            Map<String, String> rtMap = new HashMap<>();
-            rtMap.put("PARTY_GROUP", "rejstřík korporací");
-            rtMap.put("PERSON", "rejstřík osob, bytostí");
-            rtMap.put("DYNASTY", "rejstřík rodů, rodin");
-            rtMap.put("EVENT", "rejstřík událostí");
-            rtMap.put("ARTWORK", "rejstřík děl");
-            rtMap.put("GEO", "rejstřík zeměpisný");
-            rtMap.put("TERM", "rejstřík obecných pojmů");
-            
-            // add rootClasses
-            for(String rootCls: rootClasses) {
-                var name = rtMap.get(rootCls);
-                Validate.notNull(name, "Missing mapping for root class: %s", rootCls);
-                apusBuilder.addString(part, "REGISTRY_TYPE", name);
-            }
+            rootClasses.add(parentCode);                
+        }
+
+        // add rootClasses
+        for (String rootCls : rootClasses) {
+            var name = rtMap.get(rootCls);
+            Validate.notNull(name, "Missing mapping for root class: %s", rootCls);
+            apusBuilder.addString(part, "REGISTRY_TYPE", name);
         }
     }
 
@@ -571,17 +587,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	}
 
 	@Override
-	public void addArchEntityRef(UUID uuid) {
-		apRefs.add(uuid);
-	}
-
-	@Override
 	public Apu getActiveApu() {
 		return activeApu;
 	}
 
     @Override
-    public void addEntityClass(String entityClass) {
-        entityClasses.add(entityClass);
+    public void addArchEntityRef(ArchEntityInfo aei) {
+        apRefs.put(aei.getUuid(), aei);
+        apLevelRefs.put(aei.getUuid(), aei);
     }
 }

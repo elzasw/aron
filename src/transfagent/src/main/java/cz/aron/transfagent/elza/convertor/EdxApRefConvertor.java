@@ -1,13 +1,15 @@
 package cz.aron.transfagent.elza.convertor;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.util.CollectionUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.transfagent.elza.ElzaXmlReader;
+import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.DescriptionItem;
@@ -45,11 +47,14 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 
         var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
         if (CollectionUtils.isEmpty(archEntityInfo)) {
-            ctx.addArchEntityRef(apUuid);
+            ctx.addArchEntityRef(new ArchEntityInfo(apUuid, ap.getApe().getT()) );
             apusBuilder.addApuRef(ctx.getActivePart(), targetType, apUuid);
         } else {
-            var uuids = archEntityInfo.stream().map(i -> i.getUuid()).collect(Collectors.toList());
-            uuids.forEach(uuid -> ctx.addArchEntityRef(uuid));
+            List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
+            for(var aei: archEntityInfo) {
+                uuids.add(aei.getUuid());
+                ctx.addArchEntityRef(aei);
+            }
             apusBuilder.addApuRefsFirstVisible(ctx.getActivePart(), targetType, uuids);
         }
     }

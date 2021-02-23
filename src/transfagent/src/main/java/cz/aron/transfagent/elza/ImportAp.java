@@ -30,6 +30,7 @@ import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
+import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
@@ -555,16 +556,11 @@ public class ImportAp implements EdxItemCovertContext {
     }
 
     @Override
-    public void addArchEntityRef(UUID uuid) {        
-    }
-
-    @Override
     public Apu getActiveApu() {
         return apu;
     }
 
     @Override
-    public void addEntityClass(String entityClass) {
-        // TODO Auto-generated method stub
+    public void addArchEntityRef(ArchEntityInfo aei) {        
     }
 }

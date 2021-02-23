@@ -3,7 +3,6 @@ package cz.aron.transfagent.elza.convertor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.util.CollectionUtils;
@@ -56,23 +55,24 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         UUID apUuid = UUID.fromString(ap.getApe().getUuid());
         var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
 
-        List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
-        for(ArchEntityInfo aei : archEntityInfo) {
-            uuids.add(aei.getUuid());
-            ctx.addEntityClass(aei.getEntityClass());
-        }
-
         String t = this.specMap.get(apRef.getS());
         if(t == null) {
             throw new RuntimeException("Missing mapping for type: " + apRef.getT() + ", spec: " + apRef.getS() + ", ap not found");
         }
 
         //apusBuilder.addEnum(part, roleType, s, true);
-        if (CollectionUtils.isEmpty(uuids)) {
-            ctx.addArchEntityRef(apUuid);
+        if (CollectionUtils.isEmpty(archEntityInfo)) {
+            ArchEntityInfo aei = new ArchEntityInfo(apUuid, ap.getApe().getT()); 
+            ctx.addArchEntityRef(aei);
             apusBuilder.addApuRef(part, t, apUuid);
         } else {
-            uuids.forEach(uuid -> ctx.addArchEntityRef(uuid));
+            List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
+            for(ArchEntityInfo aei : archEntityInfo) {
+                var uuid = aei.getUuid();
+                uuids.add(uuid);
+                ctx.addArchEntityRef(aei);
+            }
+
             apusBuilder.addApuRefsFirstVisible(part, t, uuids);
         }
     }
