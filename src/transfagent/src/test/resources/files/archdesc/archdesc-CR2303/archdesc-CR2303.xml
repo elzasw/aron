@@ -1,5 +1,76 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <ns2:edx xmlns:ns2="http://elza.tacr.cz/schema/v2">
+    <aps>
+        <ap>
+            <ape id="1245" t="GEO_UNIT" uuid="28f89a4f-e1ee-4b2d-90a0-a20b528d9d43"/>
+            <frgs>
+                <frg fid="504" t="PT_IDENT">
+                    <de s="INTERPI" t="IDN_TYPE"/>
+                    <ds t="IDN_VALUE">
+                        <v>n000118011</v>
+                    </ds>
+                </frg>
+                <frg fid="507" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Prag Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="508" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Prague Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="509" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Praga Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="510" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Puraha Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="511" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Velká Praha Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="512" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Královské hlavní město Praha Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="513" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Praag Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="514" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Prago Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="515" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Prague Czechia</v>
+                    </ds>
+                </frg>
+                <frg fid="506" t="PT_NAME">
+                    <ds t="NM_MAIN">
+                        <v>Praha</v>
+                    </ds>
+                    <ds t="NM_SUP_GEN">
+                        <v>Česko</v>
+                    </ds>
+                </frg>
+                <frg fid="505" t="PT_BODY">
+                    <ds t="BRIEF_DESC">
+                        <v>Hlavní město.</v>
+                    </ds>
+                </frg>
+            </frgs>
+        </ap>
+    </aps>
     <fs>
         <s rule="ZP2015">
             <fi c="CR2303" ic="225201010" n="Test datace"/>
@@ -7,6 +78,7 @@
                 <lvl id="6406" uuid="752288f9-6c89-4a04-aa3c-906efc294250">
                     <de s="ZP2015_ARRANGEMENT_MAN" t="ZP2015_ARRANGEMENT_TYPE"/>
                     <de s="ZP2015_LEVEL_ROOT" t="ZP2015_LEVEL_TYPE"/>
+                    <da apid="1245" s="ZP2015_ENTITY_ROLE_61" t="ZP2015_ENTITY_ROLE"/>
                 </lvl>
                 <lvl id="6407" pid="6406" uuid="c38cf3ea-a651-4266-bd23-da1b46571ce5">
                     <de s="ZP2015_LEVEL_SERIES" t="ZP2015_LEVEL_TYPE"/>

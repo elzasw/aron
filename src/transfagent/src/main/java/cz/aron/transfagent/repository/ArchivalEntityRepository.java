@@ -49,13 +49,13 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 	@Query("select ae from ArchivalEntity ae where ae.elzaId in (:ids)")
     List<ArchivalEntity> findByElzaIds(@Param("ids") List<Integer> ids);
 
-    @Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid, entity_class) as "
+    @Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid, entity_class, parent_entity_id, depth) as "
             + "( "
             + "SELECT uuid, entity_class, parent_entity_id, 1 as depth "
             + "FROM archival_entity ae "
-            + "WHERE ae.elza_id =? 1 "
+            + "WHERE ae.elza_id = ?1 "
             + "UNION ALL "
-            + "SELECT ae2.uuid. ae2.entity_class, ae2.parent_entity_id, cte.depth+1 "
+            + "SELECT ae2.uuid, ae2.entity_class, ae2.parent_entity_id, cte.depth+1 "
             + "FROM archival_entity ae2, cte "
             + "WHERE ae2.entity_id = cte.parent_entity_id "
             + ") "
@@ -64,11 +64,11 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
             + "ORDER BY depth")
     List<Object[]> findByElzaIdWithParents(Integer elzaId);
 
-    @Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid, entity_class) as "
+    @Query(nativeQuery = true, value="WITH RECURSIVE cte(uuid, entity_class, parent_entity_id, depth) as "
             + "( "
             + "SELECT uuid, entity_class, parent_entity_id, 1 as depth "
             + "FROM archival_entity ae "
-            + "WHERE ae.uuid =? 1 "
+            + "WHERE ae.uuid = ?1 "
             + "UNION ALL "
             + "SELECT ae2.uuid, ae2.entity_class, ae2.parent_entity_id, cte.depth+1 "
             + "FROM archival_entity ae2, cte "

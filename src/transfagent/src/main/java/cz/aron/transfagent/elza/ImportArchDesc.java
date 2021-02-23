@@ -381,7 +381,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         rtMap.put("ARTWORK", "rejstřík děl");
         rtMap.put("GEO", "rejstřík zeměpisný");
         rtMap.put("TERM", "rejstřík obecných pojmů");
-        
+
         Map<String, String> rctMap = new HashMap<>();
         rctMap.put("PARTY_GROUP", "REG_GROUP_PARTY_REF");
         rctMap.put("PERSON", "REG_PERSON_REF");
@@ -394,20 +394,20 @@ public class ImportArchDesc implements EdxItemCovertContext {
         for(var apr: apLevelRefs.values()) {
             var parentCode = apTypeService.getParentCode(apr.getEntityClass());
             Validate.notNull(parentCode, "Failed to get parent code for class: %s", apr.getEntityClass());
-            
+
             String itemType = rctMap.get(parentCode);
             Validate.notNull(itemType, "Failed to get itemType for parentCode: %s", parentCode);
             // Add APref
             apusBuilder.addApuRef(part, itemType, apr.getUuid());
-            
-            rootClasses.add(parentCode);                
+
+            rootClasses.add(parentCode);
         }
 
         // add rootClasses
         for (String rootCls : rootClasses) {
             var name = rtMap.get(rootCls);
             Validate.notNull(name, "Missing mapping for root class: %s", rootCls);
-            apusBuilder.addString(part, "REGISTRY_TYPE", name);
+            apusBuilder.addEnum(part, "REGISTRY_TYPE", name);
         }
     }
 

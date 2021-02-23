@@ -42,9 +42,9 @@ public class PropertiesDataProvider implements ContextDataProvider {
 
     @Override
     public List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid) {
-        String propName = "parent";
+        String propName = "parent.GEO";
         UUID uuid = UUID.fromString(getProperty(propName));
-        return List.of(new ArchEntityInfo(uuid, "REG_GEO_REF"));
+        return List.of(new ArchEntityInfo(uuid, "GEO_UNIT"));
     }
 
     @Override

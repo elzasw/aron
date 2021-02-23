@@ -2,6 +2,7 @@ package cz.aron.transfagent.transformation;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -74,18 +75,22 @@ public class DatabaseDataProvider implements ContextDataProvider {
 
     @Override
     public List<ArchEntityInfo> getArchivalEntityWithParentsByElzaId(Integer elzaId) {
-        return entityRepository.findByElzaIdWithParents(elzaId).stream()
-                .filter(ei -> ei[0] != null)
-                .map(ei -> new ArchEntityInfo(UUID.fromString(ei[0].toString()), ei[1].toString()))
-                .collect(Collectors.toList());
+        return convertObjectsListTo(entityRepository.findByElzaIdWithParents(elzaId));
     }
 
     @Override
     public List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid) {
-        return entityRepository.findByUUIDWithParents(apUuid).stream()
-                .filter(ei -> ei[0] != null)
-                .map(ei -> new ArchEntityInfo(UUID.fromString(ei[0].toString()), ei[1].toString()))
-                .collect(Collectors.toList());
+        return convertObjectsListTo(entityRepository.findByUUIDWithParents(apUuid));
+    }
+
+    private List<ArchEntityInfo> convertObjectsListTo(List<Object[]> objects) {
+        List<ArchEntityInfo> result = new ArrayList<>();
+        for(Object[] obj : objects) {
+            if(obj[0] != null && obj[1] != null) {
+                result.add(new ArchEntityInfo(UUID.fromString(obj[0].toString()), obj[1].toString()));
+            }
+        }
+        return result;
     }
 
 	@Override
