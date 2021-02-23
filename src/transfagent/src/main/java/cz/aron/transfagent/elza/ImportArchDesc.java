@@ -205,6 +205,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
     private void processLevel(Section sect, Level lvl) {
         log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
+        entityClasses.clear();
         
         String name = getName(sect, lvl);
         String desc = getDesc(sect, lvl);
@@ -367,8 +368,29 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
     private void addEntityClasses(Part part, Set<String> entityClasses) {
         if(!entityClasses.isEmpty()) {
+            Set<String> rootClasses = new HashSet<>();
+            
             for(String item : entityClasses) {
-                apusBuilder.addString(part, "REGISTRY_TYPE", apTypeService.getParentName(item));
+                var parentCode = apTypeService.getParentCode(item);
+                Validate.notNull(parentCode, "Failed to get parent code for class: %s", item);
+                
+                rootClasses.add(parentCode);                
+            }
+            
+            Map<String, String> rtMap = new HashMap<>();
+            rtMap.put("PARTY_GROUP", "rejstřík korporací");
+            rtMap.put("PERSON", "rejstřík osob, bytostí");
+            rtMap.put("DYNASTY", "rejstřík rodů, rodin");
+            rtMap.put("EVENT", "rejstřík událostí");
+            rtMap.put("ARTWORK", "rejstřík děl");
+            rtMap.put("GEO", "rejstřík zeměpisný");
+            rtMap.put("TERM", "rejstřík obecných pojmů");
+            
+            // add rootClasses
+            for(String rootCls: rootClasses) {
+                var name = rtMap.get(rootCls);
+                Validate.notNull(name, "Missing mapping for root class: %s", rootCls);
+                apusBuilder.addString(part, "REGISTRY_TYPE", name);
             }
         }
     }
