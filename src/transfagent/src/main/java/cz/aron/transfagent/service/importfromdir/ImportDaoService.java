@@ -15,7 +15,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.StorageService;
 
@@ -26,7 +26,7 @@ public class ImportDaoService extends ImportDirProcessor {
 
 	private final StorageService storageService;
 
-	private final DaoFileRepository daoFileRepository;
+	private final DaoRepository daoRepository;
 
 	private final TransactionTemplate transactionTemplate;
 
@@ -36,11 +36,11 @@ public class ImportDaoService extends ImportDirProcessor {
 
 	final private String DAO_DIR = "dao";
 
-    public ImportDaoService(StorageService storageService, DaoFileRepository daoFileRepository,
+    public ImportDaoService(StorageService storageService, DaoRepository daoFileRepository,
             TransactionTemplate transactionTemplate, TransformService transformService,
             final FileImportService fileImportService) {
         this.storageService = storageService;
-        this.daoFileRepository = daoFileRepository;
+        this.daoRepository = daoFileRepository;
         this.transactionTemplate = transactionTemplate;
         this.transformService = transformService;
         this.fileImportService = fileImportService;
@@ -65,7 +65,7 @@ public class ImportDaoService extends ImportDirProcessor {
 		var uuidStr = dir.getFileName().toString();
 		var uuid = UUID.fromString(dir.getFileName().toString());
 		
-		var daoFileOpt = daoFileRepository.findByUuid(uuid);
+		var daoFileOpt = daoRepository.findByUuid(uuid);
 		if (!daoFileOpt.isPresent()) {
 			try {
 				storageService.moveToErrorDir(dir);
@@ -98,7 +98,7 @@ public class ImportDaoService extends ImportDirProcessor {
 			daoFile.setDataDir(dataPath.toString());
 			daoFile.setState(DaoState.READY);
 			daoFile.setTransferred(false);
-			daoFileRepository.save(daoFile);
+			daoRepository.save(daoFile);
 			return null;
 		});
 		log.info("Imported dao {}", path.getFileName());

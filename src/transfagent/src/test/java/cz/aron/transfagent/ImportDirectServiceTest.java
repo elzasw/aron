@@ -31,7 +31,7 @@ public class ImportDirectServiceTest extends AbstractCommonTest {
         ApuSource apuSource = apuSources.get(0);
         assertTrue(apuSource.getSourceType() == SourceType.DIRECT);
 
-        List<Dao> daoFiles = daoFileRepository.findByApuSource(apuSource);
+        List<Dao> daoFiles = daoRepository.findByApuSource(apuSource);
         assertTrue(daoFiles.size() > 0);
 
         // kontrola reimportu

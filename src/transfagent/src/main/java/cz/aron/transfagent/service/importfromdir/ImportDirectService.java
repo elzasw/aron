@@ -28,18 +28,16 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.apux.ApuxFactory;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.Daos;
-import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
-import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
 public class ImportDirectService extends ImportDirProcessor implements ReimportProcessor {
@@ -54,31 +52,24 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
 
     private final CoreQueueRepository coreQueueRepository;
 
-    private final DaoFileRepository daoFileRepository;
-
-    private final DatabaseDataProvider databaseDataProvider;
+    private final DaoRepository daoRepository;
 
     private final TransactionTemplate transactionTemplate;
 
-    private final ConfigurationLoader configurationLoader;
-    
     private final FileImportService fileImportService;
 
     final private String DIRECT_DIR = "direct";
 
     public ImportDirectService(ReimportService reimportService, StorageService storageService,
             ApuSourceRepository apuSourceRepository, CoreQueueRepository coreQueueRepository,
-            DaoFileRepository daoFileRepository, DatabaseDataProvider databaseDataProvider, 
-            TransactionTemplate transactionTemplate, ConfigurationLoader configurationLoader,
+            DaoRepository daoFileRepository, TransactionTemplate transactionTemplate,
             final FileImportService fileImportService) {
         this.reimportService = reimportService;
         this.storageService = storageService;
         this.apuSourceRepository = apuSourceRepository;
         this.coreQueueRepository = coreQueueRepository;
-        this.daoFileRepository = daoFileRepository;
-        this.databaseDataProvider = databaseDataProvider;
+        this.daoRepository = daoFileRepository;
         this.transactionTemplate = transactionTemplate;
-        this.configurationLoader = configurationLoader;
         this.fileImportService = fileImportService;
     }
 
@@ -151,7 +142,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
         // TODO: vyresit v pripade vetsiho mnozstvi DAO (>1000)
         // TODO: udelat samostatnou service na spravu Dao a vytvorit v ni jako metody
         //       nebo jako ImportBase (predek pro Import...)
-        var dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
+        var dbDaos = daoRepository.findAllByUuidIn(daosUuids);
 
         // pokud existuji, tak musi byt z jednoho apusrc
         var apuSrcIds = dbDaos.stream().map(dbDao -> dbDao.getApuSource().getId()).distinct()
@@ -223,7 +214,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
                 daoFile.setState(DaoState.ACCESSIBLE);
                 daoFile.setTransferred(false);
                 daoFile.setUuid(daoUuid);
-                daoFileRepository.save(daoFile);
+                daoRepository.save(daoFile);
             });
 
             CoreQueue coreQueue = new CoreQueue();
@@ -259,18 +250,18 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
                 daoFile.setState(DaoState.ACCESSIBLE);
                 daoFile.setTransferred(false);
                 daoFile.setUuid(daoUuid);
-                daoFileRepository.save(daoFile);
+                daoRepository.save(daoFile);
             });
 
             toDelete.forEach(dao -> {
-                daoFileRepository.delete(dao);
+                daoRepository.delete(dao);
             });
 
             toUpdate.forEach(dao -> {
                 dao.setDataDir(null);
                 dao.setState(DaoState.ACCESSIBLE);
                 dao.setTransferred(false);
-                daoFileRepository.save(dao);
+                daoRepository.save(dao);
             });
 
             CoreQueue coreQueue = new CoreQueue();
@@ -286,7 +277,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
         if (apuSource.getSourceType() != SourceType.DIRECT)
             return Result.UNSUPPORTED;
 
-        List<Dao> daoFiles = daoFileRepository.findByApuSource(apuSource);
+        List<Dao> daoFiles = daoRepository.findByApuSource(apuSource);
         if (daoFiles.isEmpty()) {
             log.error("Missing dao file(s): {}", apuSource.getId());
             return Result.UNSUPPORTED;
@@ -308,7 +299,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
             List<UUID> daosUuids = daos.getUuid().stream()
                     .map(uuidStr -> UUID.fromString(uuidStr))
                     .collect(Collectors.toList());;
-            List<Dao> dbDaos = daoFileRepository.findAllByUuidIn(daosUuids);
+            List<Dao> dbDaos = daoRepository.findAllByUuidIn(daosUuids);
 
             updateApuSource(apuSource, dataDir, fileName, apux, daosUuids, dbDaos);
         } catch (Exception e) {

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.lightcomp.ft.FileTransfer;
@@ -13,33 +14,33 @@ import com.lightcomp.ft.core.send.items.DirReader;
 
 import cz.aron.transfagent.config.ConfigAronCore;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 
 @Service
 public class DaoSendService implements SmartLifecycle {
-	
+
 	private static final Logger log = LoggerFactory.getLogger(DaoSendService.class);
-	
+
 	private final StorageService storageService;
-	
-	private final DaoFileRepository daoFileRepository;
-	
+
+	private final DaoRepository daoRepository;
+
 	private final ConfigAronCore configAronCore;
-	
+
 	private final int sendInterval;
-	
+
 	private ThreadStatus status;
-	
-	public DaoSendService(StorageService storageService, DaoFileRepository daoFileRepository,
+
+	public DaoSendService(StorageService storageService, DaoRepository daoFileRepository,
 			ConfigAronCore configAronCore, @Value("${dao.sendInterval:60}") Integer sendInterval) {
 		this.storageService = storageService;
-		this.daoFileRepository = daoFileRepository;
+		this.daoRepository = daoFileRepository;
 		this.configAronCore = configAronCore;
 		this.sendInterval = sendInterval;
 	}
-	
+
 	private void uploadDaos() {
-		var ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,false);
+		var ids = daoRepository.findTopByStateAndTransferredOrderById(DaoState.READY, false, PageRequest.of(0, 1000));
 		while (!ids.isEmpty()) {
 			for (var id : ids) {
 				uploadDao(id.getId());
@@ -47,13 +48,13 @@ public class DaoSendService implements SmartLifecycle {
 					return;
 				}
 			}
-			ids = daoFileRepository.findTop1000ByStateAndTransferredOrderById(DaoState.READY,false);
+			ids = daoRepository.findTopByStateAndTransferredOrderById(DaoState.READY, false, PageRequest.of(0, 1000));
 		}
 	}
-	
+
 	private void uploadDao(int id) {
 		
-		var daoOpt = daoFileRepository.findById(id);
+		var daoOpt = daoRepository.findById(id);
 		daoOpt.ifPresentOrElse(dao -> {
 			
 			// vytváření Clienta
@@ -80,7 +81,7 @@ public class DaoSendService implements SmartLifecycle {
 			}
 			
 			dao.setTransferred(true);
-			daoFileRepository.save(dao);			
+			daoRepository.save(dao);			
 			log.info("Dao uuid={}, sent", dao.getUuid());			
 		}, () -> {
 			log.warn("Dao id={}, not exist",id);

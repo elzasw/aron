@@ -41,7 +41,7 @@ import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.repository.ApuSourceRepository;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 import cz.aron.transfagent.service.importfromdir.TransformService;
@@ -57,7 +57,7 @@ public class DSpaceImportService implements ImportProcessor {
     ApuSourceRepository apuSourceRepository;
 
     @Autowired
-    DaoFileRepository daoFileRepository;
+    DaoRepository daoRepository;
 
     @Autowired
     FileImportService importService;
@@ -106,7 +106,7 @@ public class DSpaceImportService implements ImportProcessor {
             return;
         }
 
-        var daos = daoFileRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
+        var daos = daoRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
         for (var dao : daos) {
             try {
                 importDaoFiles(dao);
@@ -228,7 +228,7 @@ public class DSpaceImportService implements ImportProcessor {
     private void saveDao(TransactionStatus t, Dao dao) {
         log.debug("Saving Dao to DB, daoId: {}", dao.getId());
 
-        var dbDao = daoFileRepository.findById(dao.getId())
+        var dbDao = daoRepository.findById(dao.getId())
                 .orElseThrow(
                     ()-> {
                         log.error("Dao not exists in DB, id: {}", dao.getId());
@@ -246,7 +246,7 @@ public class DSpaceImportService implements ImportProcessor {
         dbDao.setState(dao.getState());
         dbDao.setTransferred(false);
         dbDao.setDownload(dao.isDownload());
-        daoFileRepository.save(dbDao);
+        daoRepository.save(dbDao);
     }
 
     /**
@@ -382,7 +382,7 @@ public class DSpaceImportService implements ImportProcessor {
     }
 
     public void updateDaos(ApuSource apuSource, Set<String> daoRefs) {
-        var daos = daoFileRepository.findByApuSource(apuSource);
+        var daos = daoRepository.findByApuSource(apuSource);
         Map<String, Dao> daoLookup = new HashMap<>();
         for (var dao : daos) {
             if(StringUtils.isNotBlank(dao.getHandle())) {
@@ -395,7 +395,7 @@ public class DSpaceImportService implements ImportProcessor {
             if (dao != null) {
                 if (dao.getState() == DaoState.INACCESSIBLE) {
                     dao.setState(DaoState.ACCESSIBLE);
-                    daoFileRepository.save(dao);
+                    daoRepository.save(dao);
                 }
                 daoLookup.remove(dao);
             } else {
@@ -405,13 +405,13 @@ public class DSpaceImportService implements ImportProcessor {
                 dao.setApuSource(apuSource);
                 dao.setTransferred(false);
                 dao.setState(DaoState.ACCESSIBLE);
-                daoFileRepository.save(dao);
+                daoRepository.save(dao);
             }
         }
         // zbyle objekty musi byt zneplatneny
         for (var dao : daoLookup.values()) {
             dao.setState(DaoState.INACCESSIBLE);
-            daoFileRepository.save(dao);
+            daoRepository.save(dao);
         }
     }
 

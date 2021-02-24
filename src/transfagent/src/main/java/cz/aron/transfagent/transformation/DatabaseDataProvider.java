@@ -19,7 +19,7 @@ import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.elza.ImportInstitution;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.StorageService;
@@ -35,14 +35,14 @@ public class DatabaseDataProvider implements ContextDataProvider {
 
     final private FundRepository fundRepository;
 
-    final private DaoFileRepository daoRepository;
+    final private DaoRepository daoRepository;
 
     final private StorageService storageService;
 
     public DatabaseDataProvider(final InstitutionRepository institutionRepository,
             final ArchivalEntityRepository entityRepository,
             final FundRepository fundRepository,
-            final DaoFileRepository daoRepository,
+            final DaoRepository daoRepository,
             final StorageService storageService) {
         this.institutionRepository = institutionRepository;
         this.entityRepository = entityRepository;

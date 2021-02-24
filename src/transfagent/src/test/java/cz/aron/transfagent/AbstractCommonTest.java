@@ -18,7 +18,7 @@ import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
-import cz.aron.transfagent.repository.DaoFileRepository;
+import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -131,16 +131,16 @@ public abstract class AbstractCommonTest {
     ArchDescRepository archDescRepository;
 
     @Autowired
-    DaoFileRepository daoFileRepository;
+    FundRepository fundRepository;
 
     @Autowired
-    FundRepository fundRepository;
+    DaoRepository daoRepository;
 
     @BeforeEach
     protected void deleteAll() {
         entitySourceRepository.deleteAll();
         archivalEntityRepository.deleteAll();
-        daoFileRepository.deleteAll();
+        daoRepository.deleteAll();
         coreQueueRepository.deleteAll();
         archDescRepository.deleteAll();
         fundRepository.deleteAll();
