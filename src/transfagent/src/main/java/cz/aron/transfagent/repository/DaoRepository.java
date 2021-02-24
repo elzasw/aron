@@ -17,7 +17,10 @@ import cz.aron.transfagent.domain.IdProjection;
 
 public interface DaoRepository extends JpaRepository<Dao, Integer> {
 
-    @Query("select d from Dao d where d.state = ?1 and d.transferred = ?2 order by d.id")
+    @Query("select d from Dao d join fetch d.apuSource a " +
+            "where not exists(select q from CoreQueue q where q.apuSource = a) " +
+            "and d.state = ?1 and d.transferred = ?2 and a.reimport is false " +
+            "order by d.id")
     List<IdProjection> findTopByStateAndTransferredOrderById(DaoState state, boolean transferred, Pageable limit);
 
     @EntityGraph(attributePaths = { "apuSource" })
