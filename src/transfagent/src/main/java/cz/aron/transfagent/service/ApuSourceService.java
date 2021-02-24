@@ -39,9 +39,9 @@ public class ApuSourceService {
 		return apuSource;
 	}
 
-	public void reimport(ApuSource apuSource) {
+	public ApuSource reimport(ApuSource apuSource) {
 		apuSource.setReimport(true);
-		apuSourceRepository.save(apuSource);
+		return apuSourceRepository.save(apuSource);
 	}
 
 }
