@@ -250,6 +250,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			ApuSourceBuilder apuSourceBuilder, ArchivalEntity ae, 
 			Set<Integer> requiredEntities, 
 			Set<UUID> referencedEntities) {
+	    log.debug("Saving entity, dataDir: {}, entityId: {}, parentElzaId: {}", dataDir.toString(), 
+	              ae.getId(), importAp.getParentElzaId());
 		// store subsequent hierarchical entities
 		ArchivalEntity parentEntity;
 		if (importAp.getParentElzaId() != null) {
@@ -289,12 +291,13 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		if(srcArchivalEntity.getStatus()!=EntityStatus.AVAILABLE) {
 			needReindex = true;
 		}
-		saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder, requiredEntities, referencedEntities);
+		var savedArchivalEntity = saveApuSource(dataDir, srcArchivalEntity, apuSourceBuilder, requiredEntities, referencedEntities);
 		
 		// entity received new uuid
 		if(needReindex) {
+		    log.debug("Connected entities has to be reindexed.");
 			// -> we have to reindex all entities having this entity as parent
-			reindexAfterEntityChanged(srcArchivalEntity);
+			reindexAfterEntityChanged(savedArchivalEntity);
 		}
 	}
 
@@ -360,7 +363,11 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		// reindex directly connected items
 		List<ArchivalEntity> ents = archivalEntityRepository.findAllByParentEntity(archivalEntity);
 		for(ArchivalEntity ent: ents) {
-			apuSourceService.reimport(ent.getApuSource());			
+		    var apuSource = ent.getApuSource();
+		    // not all connected entities has to exists		    
+		    if(apuSource!=null) {
+		        apuSourceService.reimport(apuSource);
+		    }
 		}
 		// reindex all connected sources on whole subtree
 		archivalEntityRepository.reimportConnected(archivalEntity.getId());
