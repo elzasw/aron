@@ -16,6 +16,8 @@
 # - UNITDATE - datace, výběr z připravených intervalů nebo ruční zadání
 # - MULTI_REF_EXT - odkaz na více archivních entit, výběr pomocí našeptávače, funguje jako OR, 
 #   kombinace s podřízenými podmínkami, musí platit ve stejném partu
+# - MULTI_TYPE_REF - odkaz na více archivních entit, výběr druhů prvků popisu v nichž se vyhledává
+#   funguje jako OR.
 #
 facets:
   # Nazev AS
@@ -335,6 +337,13 @@ facets:
     # zdrojovy itemtype
     group: AP_VIRT_REF
     maxItems: 30
+
+# - when:
+#      apuType: ARCH_DESC
+#    # Druh fazety
+#    type: MULTI_TYPE_REF
+#    # zdrojovy itemtype
+#    group: AE_VIRT_REF
 
   # technika, adjustace, nosič a látka záznamu
   - when:
