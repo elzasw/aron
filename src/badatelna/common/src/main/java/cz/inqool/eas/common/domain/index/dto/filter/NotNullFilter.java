@@ -1,6 +1,6 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
-import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
+import cz.inqool.eas.common.domain.index.field.IndexFieldNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -25,7 +25,7 @@ public class NotNullFilter extends FieldFilter<NotNullFilter> {
 
     @Override
     public QueryBuilder toQueryBuilder(IndexObjectFields indexedFields) {
-        IndexFieldLeafNode indexField = getIndexFieldLeafNode(indexedFields);
+        IndexFieldNode indexField = indexedFields.get(field, IndexFieldNode.class);
 
         QueryBuilder queryBuilder = QueryBuilders.existsQuery(indexField.getElasticSearchPath());
         return wrapIfNested(indexField, queryBuilder);

@@ -30,7 +30,11 @@ abstract public class FieldFilter<FILTER extends FieldFilter<FILTER>> extends Ab
     /**
      * If set to {@code false}, the filter returned by {@link #toQueryBuilder(IndexObjectFields)} will not be an
      * instance of {@link NestedQueryBuilder} (even if the indexField is nested).
+     *
+     * @deprecated autonesting will be removed soon, programmers should wrap their filters in {@link NestedFilter} by
+     * themself
      */
+    @Deprecated(forRemoval = true)
     protected boolean nestedQueryEnabled = true;
 
     /**
@@ -59,11 +63,13 @@ abstract public class FieldFilter<FILTER extends FieldFilter<FILTER>> extends Ab
 
 
     /**
-     * Disables wrapping this filter into a nested query (if the field is in a nested object somewhere). Use when
-     * this filter will be used in custom-defined {@link NestedFilter}.
+     * Disables wrapping this filter into a nested query (if the field is in a nested object somewhere). Use when this
+     * filter will be used in custom-defined {@link NestedFilter}.
      *
      * @return {@code this} for method chaining
+     * @deprecated see {@link #nestedQueryEnabled} for explanation
      */
+    @Deprecated(forRemoval = true)
     public FILTER inNestedQuery() {
         nestedQueryEnabled = false;
         //noinspection unchecked
@@ -73,7 +79,10 @@ abstract public class FieldFilter<FILTER extends FieldFilter<FILTER>> extends Ab
 
     /**
      * Wraps given query builder into a nested query in case the {@code indexField} is nested.
+     *
+     * @deprecated see {@link #nestedQueryEnabled} for explanation
      */
+    @Deprecated(forRemoval = true)
     protected QueryBuilder wrapIfNested(IndexFieldNode indexFieldNode, QueryBuilder queryBuilder) {
         if (nestedQueryEnabled && indexFieldNode.isOfNested()) {
             return QueryBuilders.nestedQuery(indexFieldNode.getNestedPath(), queryBuilder, ScoreMode.None);

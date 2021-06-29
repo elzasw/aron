@@ -33,6 +33,7 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
     closeLabel,
     actions,
     loading = false,
+    disableBackdrop = false,
   },
   ref
 ) {
@@ -87,6 +88,7 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
       onClose={close}
       PaperComponent={DragablePaper}
       maxWidth="lg"
+      disableBackdropClick={disableBackdrop}
     >
       <MuiDialogTitle
         disableTypography={true}
@@ -99,50 +101,52 @@ export const Dialog = forwardRef<DialogHandle, DialogProps>(function Dialog(
       <MuiDialogContent dividers={true}>
         {opened && children()}
       </MuiDialogContent>
-      <MuiDialogActions classes={{ root: classes.actions }}>
-        <ButtonGroup size="small" variant="outlined">
-          {showConfirm && (
-            <Button
-              type="submit"
-              onClick={handleConfirm}
-              variant="outlined"
-              color="primary"
-              disabled={loading}
-              startIcon={
-                loading && <CircularProgress size="20px" color="inherit" />
-              }
-            >
-              <Typography classes={{ root: classes.buttonLabel }}>
-                {confirmLabel ?? (
-                  <FormattedMessage
-                    id="EAS_DIALOG_BTN_CONFIRM"
-                    defaultMessage="Potvrdit"
-                  />
-                )}
-              </Typography>
-            </Button>
-          )}
+      {(showConfirm || actions || showClose) && (
+        <MuiDialogActions classes={{ root: classes.actions }}>
+          <ButtonGroup size="small" variant="outlined">
+            {showConfirm && (
+              <Button
+                type="submit"
+                onClick={handleConfirm}
+                variant="outlined"
+                color="primary"
+                disabled={loading}
+                startIcon={
+                  loading && <CircularProgress size="20px" color="inherit" />
+                }
+              >
+                <Typography classes={{ root: classes.buttonLabel }}>
+                  {confirmLabel ?? (
+                    <FormattedMessage
+                      id="EAS_DIALOG_BTN_CONFIRM"
+                      defaultMessage="Potvrdit"
+                    />
+                  )}
+                </Typography>
+              </Button>
+            )}
 
-          {actions}
+            {actions}
 
-          {showClose && (
-            <Button
-              variant="outlined"
-              onClick={handleCancel}
-              disabled={loading}
-            >
-              <Typography classes={{ root: classes.buttonLabel }}>
-                {closeLabel ?? (
-                  <FormattedMessage
-                    id="EAS_DIALOG_BTN_CANCEL"
-                    defaultMessage="Zrušit"
-                  />
-                )}
-              </Typography>
-            </Button>
-          )}
-        </ButtonGroup>
-      </MuiDialogActions>
+            {showClose && (
+              <Button
+                variant="outlined"
+                onClick={handleCancel}
+                disabled={loading}
+              >
+                <Typography classes={{ root: classes.buttonLabel }}>
+                  {closeLabel ?? (
+                    <FormattedMessage
+                      id="EAS_DIALOG_BTN_CANCEL"
+                      defaultMessage="Zrušit"
+                    />
+                  )}
+                </Typography>
+              </Button>
+            )}
+          </ButtonGroup>
+        </MuiDialogActions>
+      )}
     </MuiDialog>
   );
 });

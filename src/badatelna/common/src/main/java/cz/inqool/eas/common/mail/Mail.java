@@ -6,9 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * Enqueued or sent mail.
@@ -29,6 +27,17 @@ public class Mail extends AuthoredObject<Mail> {
 
     @Nationalized
     protected String content;
+
+    /**
+     * Stav odeslání.
+     */
+    @Enumerated(EnumType.STRING)
+    protected MailState state;
+
+    /**
+     * Identifikátor.
+     */
+    protected String identifier;
 
     /**
      * MIME type.

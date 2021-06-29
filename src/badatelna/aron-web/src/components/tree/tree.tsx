@@ -33,6 +33,7 @@ export function Tree({
         <TreeItem
           {...{
             key: nodeId,
+            id: item.id,
             nodeId,
             label,
             icon: hasChildren ? undefined : (

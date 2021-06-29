@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
  * Filter representing the 'less-than-or-equal' filter condition on given {@link FieldFilter#field}.
  */
 @EqualsAndHashCode(callSuper = true)
-public class LteFilter extends RangeFilter<LteFilter> {
+public class LteFilter extends ComparisonFilter<LteFilter> {
 
     LteFilter() {
         super(FilterOperation.LTE);

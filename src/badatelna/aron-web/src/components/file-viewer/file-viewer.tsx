@@ -5,20 +5,30 @@ import { ViewerProps } from './types';
 import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles';
 import { ImageViewer } from './image-viewer';
-// import { PdfViewer } from './pdf-viewer';
-// import { NoView } from './no-view';
+import { ImageBasicViewer } from './image-basic-viewer';
+import { PdfViewer } from './pdf-viewer';
+import { NoView } from './no-view';
+import { FileType } from './enums';
 
-export function FileViewer({ ...props }: ViewerProps) {
+export function FileViewer({ fileType, ...props }: ViewerProps) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
 
-  // if (!props.file) {
-  //   return <></>;
-  // }
+  let Component = NoView;
 
-  const Component = ImageViewer;
-  // const Component = PdfViewer;
-  // const Component = NoView;
+  switch (fileType) {
+    case FileType.Image:
+      Component = ImageViewer;
+      break;
+    case FileType.ImageBasic:
+      Component = ImageBasicViewer;
+      break;
+    case FileType.Pdf:
+      Component = PdfViewer;
+      break;
+    default:
+      break;
+  }
 
   return (
     <div className={classNames(classes.fileViewer, layoutClasses.flexCentered)}>

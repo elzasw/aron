@@ -14,8 +14,8 @@ export function Checkbox({
   onChange,
   disabled,
   threeState,
-  icon = <CheckBoxOutlineBlankSharpIcon />,
-  checkedIcon = <CheckBoxOutlinedIcon />,
+  icon: defaultIcon,
+  checkedIcon: defaultCheckedIcon,
   highlighted = true,
 }: CheckboxProps) {
   // fix undefined value
@@ -33,12 +33,23 @@ export function Checkbox({
     e.stopPropagation();
   });
 
-  const { root, highlightedRoot, ...classes } = useStyles();
+  const { root, highlightedIcon, ...classes } = useStyles();
+
+  const icon = defaultIcon || (
+    <CheckBoxOutlineBlankSharpIcon
+      className={clsx({ [highlightedIcon]: !disabled && highlighted })}
+    />
+  );
+  const checkedIcon = defaultCheckedIcon || (
+    <CheckBoxOutlinedIcon
+      className={clsx({ [highlightedIcon]: !disabled && highlighted })}
+    />
+  );
 
   return (
     <MuiCheckbox
       classes={{
-        root: clsx(root, { [highlightedRoot]: highlighted }),
+        root,
         ...classes,
       }}
       inputProps={{

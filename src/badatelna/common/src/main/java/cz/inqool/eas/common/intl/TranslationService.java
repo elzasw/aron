@@ -64,20 +64,29 @@ public class TranslationService extends DictionaryService<
     protected void preCreateHook(@NotNull Translation translation) {
         super.preCreateHook(translation);
 
-        evictCache(translation.getLanguage());
-
-
         fileManager.preCreateHook(translation, Translation::getContent);
+    }
+
+    @Override
+    protected void postCreateHook(@NotNull Translation object) {
+        super.postCreateHook(object);
+
+        evictCache(object.getLanguage());
     }
 
     @Override
     protected void preUpdateHook(@NotNull Translation translation) {
         super.preUpdateHook(translation);
 
-        evictCache(translation.getLanguage());
-
         Translation oldTranslation = getInternal(Translation.class, translation.getId());
         fileManager.preUpdateHook(translation, oldTranslation, Translation::getContent);
+    }
+
+    @Override
+    protected void postUpdateHook(@NotNull Translation object) {
+        super.postUpdateHook(object);
+
+        evictCache(object.getLanguage());
     }
 
     @Override
@@ -86,9 +95,14 @@ public class TranslationService extends DictionaryService<
 
         Translation translation = getInternal(Translation.class, id);
 
-        evictCache(translation.getLanguage());
-
         fileManager.preDeleteHook(translation, Translation::getContent);
+    }
+
+    @Override
+    protected void postDeleteHook(@NotNull Translation object) {
+        super.postDeleteHook(object);
+
+        evictCache(object.getLanguage());
     }
 
     protected void evictCache(Language language) {

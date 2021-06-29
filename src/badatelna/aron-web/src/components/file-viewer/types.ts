@@ -1,3 +1,5 @@
+import { FileType } from './enums';
+
 // TODO:
 export type ViewerProps = any;
 
@@ -8,6 +10,8 @@ export type ViewerProps = any;
 // }
 
 export interface WrapperProps {
-  id: string;
+  id?: string;
+  fileType?: FileType;
+  highResImage?: boolean;
   children: (props: any) => JSX.Element;
 }

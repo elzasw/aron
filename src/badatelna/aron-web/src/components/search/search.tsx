@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import classNames from 'classnames';
 import SearchIcon from '@material-ui/icons/Search';
 import { useIntl } from 'react-intl';
@@ -11,24 +11,37 @@ import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { Button } from '../button';
 import { ModulePath, Message } from '../../enums';
 import { NavigationContext } from '@eas/common-web';
+import { usePrevious } from '../../common-utils';
 
-export function Search({ main, onSearch, value = '' }: Props) {
+export function Search({
+  main,
+  onSearch,
+  value = '',
+  placeholder = Message.SEARCH,
+}: Props) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
   const { formatMessage } = useIntl();
 
+  const { navigate } = useContext(NavigationContext);
+
+  const prevValue = usePrevious(value);
+
   const [searchValue, setSearchValue] = useState<string>(value);
 
-  const { navigate } = useContext(NavigationContext);
+  useEffect(() => {
+    if (prevValue !== value && value !== searchValue) {
+      setSearchValue(value);
+    }
+  }, [value, prevValue, searchValue]);
 
   const handleInputChange = (
     value: string | React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
   ) => typeof value === 'string' && setSearchValue(value);
 
-  const handleSearch = () =>
-    (!main || searchValue) && onSearch({ query: searchValue });
+  const handleSearch = () => onSearch({ query: searchValue });
 
   return (
     <div className={classes.search}>
@@ -44,7 +57,7 @@ export function Search({ main, onSearch, value = '' }: Props) {
           value={searchValue}
           onChange={handleInputChange}
           placeholder={formatMessage({
-            id: Message.SEARCH,
+            id: placeholder,
           })}
           InputProps={{
             startAdornment: (

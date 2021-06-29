@@ -9,14 +9,21 @@ public class MailQueue {
     private MailStore store;
 
     @Transactional
-    public Mail queue(String to, String subject, String content, boolean isHtml) {
+    public Mail queue(String to, String subject, String content, boolean isHtml, String identifier) {
         Mail mail = new Mail();
         mail.setTo(to);
         mail.setSubject(subject);
         mail.setContentType(isHtml ? "text/html" : "text/plain");
         mail.setContent(content);
+        mail.setState(MailState.QUEUED);
+        mail.setIdentifier(identifier);
 
         return store.create(mail);
+    }
+
+    @Transactional
+    public Mail queue(String to, String subject, String content, boolean isHtml) {
+        return queue(to, subject, content, isHtml, null);
     }
 
     @Transactional

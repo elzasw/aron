@@ -2,22 +2,25 @@ package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
 import cz.inqool.eas.common.domain.index.field.ES.Suffix;
+import cz.inqool.eas.common.domain.index.field.java.Field;
 import cz.inqool.eas.common.domain.index.reindex.reference.IndexReferenceField;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import static cz.inqool.eas.common.utils.CollectionUtils.join;
 
 /**
- * Represents a field in ElasticSearch mapping, annotated with {@link Field} or {@link MultiField}.
+ * Represents a field in ElasticSearch mapping, annotated with {@link org.springframework.data.elasticsearch.annotations.Field} or {@link MultiField}.
  */
 @Slf4j
 public class IndexFieldLeafNode extends IndexFieldNode {
@@ -27,19 +30,22 @@ public class IndexFieldLeafNode extends IndexFieldNode {
     private final Map<String, IndexedFieldProps> innerFields = new HashMap<>();
 
     @Getter
-    boolean fulltext;
+    @Setter(AccessLevel.PROTECTED)
+    private boolean fulltext;
 
-    @Getter
-    float boost = 1.0f;
+    @Setter(AccessLevel.PROTECTED)
+    private Float boost;
 
 
-    public IndexFieldLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field javaField, Field mainField, IndexFieldInnerNode parent) {
+    public IndexFieldLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, Field javaField, org.springframework.data.elasticsearch.annotations.Field mainField, IndexFieldInnerNode parent) {
         super(rootClass, javaField, parent);
-        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.fielddata());
+        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.analyzer(), mainField.fielddata());
     }
 
     /**
      * Used when indexed field does not really exist in Indexed object, but is added dynamically
+     *
+     * @deprecated Use the next constructor instead
      */
     public IndexFieldLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, String javaFieldName, Class<?> javaFieldClass, IndexedFieldProps mainField, IndexFieldInnerNode parent, boolean fulltext, float boost, Set<IndexReferenceField> indexReferenceFields) {
         super(rootClass, javaFieldName, javaFieldClass, parent, indexReferenceFields);
@@ -48,12 +54,34 @@ public class IndexFieldLeafNode extends IndexFieldNode {
         this.boost = boost;
     }
 
+    /**
+     * Used when indexed field does not really exist in Indexed object, but is added dynamically
+     */
+    public IndexFieldLeafNode(Class<? extends DomainIndexed<?, ?>> rootClass, String javaFieldName, Class<?> javaFieldClass, org.springframework.data.elasticsearch.annotations.Field mainField, IndexFieldInnerNode parent, Set<IndexReferenceField> indexReferenceFields) {
+        super(rootClass, javaFieldName, javaFieldClass, parent, indexReferenceFields);
+        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.analyzer(), mainField.fielddata());
+    }
+
     public FieldType getType() {
         return mainField.getFieldType();
     }
 
+    public float getBoost() {
+        if (boost != null) {
+            return boost;
+        } else {
+            return Optional.ofNullable(parent)
+                    .map(IndexFieldInnerNode::getBoost)
+                    .orElse(1.0F);
+        }
+    }
+
     public boolean isIndexed() {
         return mainField.isIndexed();
+    }
+
+    public String getAnalyzer() {
+        return mainField.getAnalyzer();
     }
 
     public boolean isFieldData() {
@@ -69,7 +97,7 @@ public class IndexFieldLeafNode extends IndexFieldNode {
     }
 
     public void registerInnerField(String suffix, InnerField innerField) {
-        innerFields.put(suffix, new IndexedFieldProps(innerField.type(), innerField.index(), innerField.fielddata()));
+        innerFields.put(suffix, new IndexedFieldProps(innerField.type(), innerField.index(), innerField.analyzer(), innerField.fielddata()));
     }
 
     public void registerInnerField(String suffix, IndexedFieldProps indexedFieldProps) {

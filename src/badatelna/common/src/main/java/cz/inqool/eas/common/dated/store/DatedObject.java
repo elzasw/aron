@@ -43,11 +43,11 @@ abstract public class DatedObject<ROOT> extends DomainObject<ROOT> implements Da
 
     @ViewableProperty(views = {DEFAULT, IDENTIFIED})
     @Column(updatable = false, nullable = false)
-    @GeneratorType(type = InstantGenerator.class, when = GenerationTime.INSERT)
+    @GeneratorType(type = CreatedGenerator.class, when = GenerationTime.INSERT)
     protected Instant created;
 
     @ViewableProperty(views = DEFAULT)
-    @GeneratorType(type = InstantGenerator.class, when = GenerationTime.ALWAYS)
+    @GeneratorType(type = UpdatedGenerator.class, when = GenerationTime.ALWAYS)
     protected Instant updated;
 
     @ViewableProperty(views = {DEFAULT, IDENTIFIED})

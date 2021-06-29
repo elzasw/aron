@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode, ComponentType } from 'react';
 import { DomainObject, ListSource } from 'common/common-types';
 
 export interface SelectProps<OPTION extends DomainObject> {
@@ -30,4 +30,9 @@ export interface SelectProps<OPTION extends DomainObject> {
   idMapper?: (option: OPTION) => string;
   labelMapper?: (option: OPTION) => string;
   tooltipMapper?: (option: OPTION) => ReactNode;
+
+  DisabledComponent?: ComponentType<{
+    value: string | null;
+    disabled?: boolean;
+  }>;
 }

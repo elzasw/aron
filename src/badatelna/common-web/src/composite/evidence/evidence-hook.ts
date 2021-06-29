@@ -10,6 +10,7 @@ import { DetailHandle } from 'composite/detail/detail-types';
 import { EvidenceProps, EvidenceStateAction } from './evidence-types';
 import { NavigationContext } from 'composite/navigation/navigation-context';
 import { useEvidenceItemRedirect } from './hook/item-redirect-hook';
+import { SplitScreenHandle } from 'components/split-screen/split-screen-types';
 
 export function useEvidence<OBJECT extends DomainObject>({
   tableProps,
@@ -20,11 +21,19 @@ export function useEvidence<OBJECT extends DomainObject>({
 
   const tableSource = useScrollableSource<OBJECT>({
     url: apiProps.url + '/list',
+    listItems: apiProps.listItems,
   });
-  const crudSource = useCrudSource<OBJECT>({ url: apiProps.url });
+  const crudSource = useCrudSource<OBJECT>({
+    url: apiProps.url,
+    getItem: apiProps.getItem,
+    createItem: apiProps.createItem,
+    updateItem: apiProps.updateItem,
+    deleteItem: apiProps.deleteItem,
+  });
 
   const tableRef = useRef<TableHandle<OBJECT>>(null);
   const detailRef = useRef<DetailHandle<OBJECT>>(null);
+  const splitScreenRef = useRef<SplitScreenHandle>(null);
 
   const { stateAction } = useContext(NavigationContext);
   useEffect(() => {
@@ -44,7 +53,12 @@ export function useEvidence<OBJECT extends DomainObject>({
 
   const handleActiveRowChange = useEventCallback((id: string | null) => {
     detailRef.current?.setActive(id);
+    detailRef.current?.formRef?.resetValidation();
 
+    const isFullscreenTable = splitScreenRef.current?.isLeftOnFullscreen();
+    if (isFullscreenTable) {
+      splitScreenRef.current?.handleMoveToMiddle();
+    }
     tableProps?.onActiveChange?.(id);
   });
 
@@ -67,6 +81,7 @@ export function useEvidence<OBJECT extends DomainObject>({
     tableSource,
     crudSource,
     tableRef,
+    splitScreenRef,
     detailRef,
     handleActiveRowChange: handleActiveRowChangeDebounced,
     handleDetailPersisted,

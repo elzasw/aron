@@ -5,7 +5,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { MenuItem } from './menu-item';
 import { MenuProps } from './menu-types';
 import { useStyles } from './menu-styles';
-import { MenubarClassOverrides } from '../menubar-types';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export function Menu({
   items,

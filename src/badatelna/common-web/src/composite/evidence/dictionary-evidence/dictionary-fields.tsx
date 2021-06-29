@@ -10,7 +10,6 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
 
   return (
     <>
-      {options.FieldsComponent && <options.FieldsComponent />}
       <FormNumberField
         name="order"
         label={
@@ -52,6 +51,7 @@ export function DictionaryFields(options: { FieldsComponent?: ComponentType }) {
         })}
         disabled={true}
       />
+      {options.FieldsComponent && <options.FieldsComponent />}
       <FormDateTimeField
         name="validFrom"
         label={

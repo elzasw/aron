@@ -16,6 +16,18 @@ export const useStyles = makeStyles((theme) => ({
     fontSize: 14,
     letterSpacing: 0.2,
   },
+  activeMenuItem: {
+    position: 'relative',
+    '&:after': {
+      position: 'absolute',
+      height: 2,
+      right: 4,
+      bottom: -1,
+      left: 4,
+      content: "''",
+      backgroundColor: theme.palette.primary.main,
+    },
+  },
   subMenu: {
     position: 'absolute',
     backgroundColor: 'white',
@@ -23,6 +35,7 @@ export const useStyles = makeStyles((theme) => ({
     top: 0,
     zIndex: 5,
     boxShadow: theme?.eas?.shadow[1],
+    borderRadius: theme.eas?.radius,
   },
   subMenuTopLevel: {
     left: 0,

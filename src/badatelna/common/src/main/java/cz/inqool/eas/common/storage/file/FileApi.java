@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -75,8 +76,8 @@ public class FileApi {
         String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(file.getName());
 
         return ResponseEntity.ok()
-                .header("Content-Disposition", "attachment; " + fileName + "; " + fileNameAsterisk)
-                .header("Content-Length", String.valueOf(file.getSize()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " + fileName + "; " + fileNameAsterisk)
+                .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(file.getSize()))
                 .contentType(MediaType.parseMediaType(file.getContentType()))
                 .body(new InputStreamResource(stream));
     }

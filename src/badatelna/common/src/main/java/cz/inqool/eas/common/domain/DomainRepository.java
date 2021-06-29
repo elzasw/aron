@@ -11,6 +11,8 @@ import cz.inqool.eas.common.domain.index.dto.params.Params;
 import cz.inqool.eas.common.domain.store.DomainStore;
 import cz.inqool.eas.common.domain.store.StoreCache;
 import cz.inqool.eas.common.exception.GeneralException;
+import cz.inqool.eas.common.module.ModuleDefinition;
+import cz.inqool.eas.common.module.Modules;
 import cz.inqool.eas.common.projection.Projection;
 import cz.inqool.eas.common.projection.ProjectionFactory;
 import lombok.Getter;
@@ -19,7 +21,6 @@ import net.jodah.typetools.TypeResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.CommonAnnotationBeanPostProcessor;
 
 import javax.validation.constraints.NotNull;
 import javax.annotation.PostConstruct;
@@ -63,6 +64,7 @@ public abstract class DomainRepository<
 
     protected INDEX index;
 
+    @Getter
     protected Class<ROOT> rootType;
 
     protected Class<INDEX_PROJECTED> indexProjectedType;
@@ -89,7 +91,10 @@ public abstract class DomainRepository<
         AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
         beanFactory.autowireBean(this.store);
         beanFactory.autowireBean(this.index);
-        new CommonAnnotationBeanPostProcessor().postProcessBeforeInitialization(this.index, this.index.getClass().getSimpleName()); //calls @PostConstruct on DomainIndex
+
+        if (this.isIndexManaged()) {
+            this.index.initializeIndexedFields();
+        }
     }
 
     /**
@@ -195,7 +200,7 @@ public abstract class DomainRepository<
             index.delete(indexed);
 
             if (eventService != null) {
-                eventService.create(eventBuilder.deleting(projected, UserGenerator.generateValue()));
+                eventService.create(eventBuilder.deleting(projected, UserGenerator.generateValue(), getModule()));
             }
         }
 
@@ -325,6 +330,15 @@ public abstract class DomainRepository<
     }
 
     /**
+     * Marks if the index should be managed by EAS (auto creating index).
+     *
+     * Only in specific cases should be this method overridden.
+     */
+    public boolean isIndexManaged() {
+        return true;
+    }
+
+    /**
      * Initializes index.
      */
     public void initIndex() {
@@ -409,6 +423,13 @@ public abstract class DomainRepository<
     }
 
     /**
+     * @see DomainIndex#countByParams(Params)
+     */
+    public long countByParams(@NotNull Params params) {
+        return getIndex().countByParams(params);
+    }
+
+    /**
      * @see DomainStore#query()
      */
     public JPAQuery<?> query() {
@@ -429,7 +450,7 @@ public abstract class DomainRepository<
      * @param <PROJECTED> Projection type
      * @return projection store
      */
-    protected <PROJECTED extends Domain<ROOT>> DomainStore<ROOT, PROJECTED, ?> getStore(Class<PROJECTED> type) {
+    public <PROJECTED extends Domain<ROOT>> DomainStore<ROOT, PROJECTED, ?> getStore(Class<PROJECTED> type) {
         return stores.get(this.store, type);
     }
 
@@ -446,7 +467,7 @@ public abstract class DomainRepository<
     /**
      * Returns index.
      */
-    protected INDEX getIndex() {
+    public INDEX getIndex() {
         return index;
     }
 
@@ -511,6 +532,15 @@ public abstract class DomainRepository<
             throw new GeneralException("Can not construct index instance.");
         }
         throw new GeneralException("Can not construct index instance.");
+    }
+
+    /**
+     * Returns module this repository belongs to.
+     *
+     * Override this method to specify custom module.
+     */
+    protected ModuleDefinition getModule() {
+        return Modules.EAS;
     }
 
     @Autowired

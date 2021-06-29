@@ -3,6 +3,7 @@ package cz.inqool.eas.common.alog.event;
 import cz.inqool.eas.common.authored.store.AuthoredObject;
 import cz.inqool.eas.common.authored.user.UserReference;
 import cz.inqool.eas.common.domain.DomainViews;
+import cz.inqool.eas.common.module.ModuleReference;
 import cz.inqool.entityviews.Viewable;
 import cz.inqool.entityviews.ViewableProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,11 +28,24 @@ import static cz.inqool.eas.common.domain.DomainViews.*;
 @Table(name = "eas_alog_event")
 public class Event extends AuthoredObject<Event> {
     /**
+     * Source type.
+     */
+    @Enumerated(EnumType.STRING)
+    protected EventSourceType sourceType;
+
+    /**
      * Source of event.
      */
-    @ViewableProperty(views = {CREATE, UPDATE, DETAIL})
     @NotNull
     protected String source;
+
+    /**
+     * Module of source of event.
+     */
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "module_id"))
+    @AttributeOverride(name = "name", column = @Column(name = "module_name"))
+    protected ModuleReference module;
 
     /**
      * IpAddress of the caller.
@@ -55,6 +69,7 @@ public class Event extends AuthoredObject<Event> {
     /**
      * JSON formated detail of the event.
      */
+    @ViewableProperty(views = {CREATE, UPDATE, DETAIL})
     @Nullable
     @Nationalized
     protected String detail;
@@ -63,4 +78,9 @@ public class Event extends AuthoredObject<Event> {
     @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     @AttributeOverride(name = "name", column = @Column(name = "user_name"))
     protected UserReference user;
+
+    /**
+     * Should be send to syslog.
+     */
+    protected boolean syslog;
 }

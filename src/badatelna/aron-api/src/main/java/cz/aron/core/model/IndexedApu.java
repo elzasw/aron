@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.aron.core.model.types.TypesHolder;
 import cz.aron.core.model.types.dto.ItemType;
 import cz.inqool.eas.common.domain.index.DomainIndexedObject;
+import cz.inqool.eas.common.domain.index.field.Boost;
 import cz.inqool.eas.common.utils.ApplicationContextUtils;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
+
 /**
  * @author Lukas Jane (inQool) 29.10.2020.
  */
@@ -28,10 +32,11 @@ import java.util.Map;
 @Document(indexName = "apu")
 public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
 
-    @Field(type = FieldType.Text)
+    @Boost(2)
+    @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP, fielddata = true)
     private String name;
 
-    @Field(type = FieldType.Text)
+    @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP)
     private String description;
 
     @Field(type = FieldType.Keyword)
@@ -39,6 +44,27 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
 
     @Field(type = FieldType.Boolean)
     private boolean containsDigitalObjects;
+
+    @Field(type = FieldType.Nested)
+    private List<Relation> rels = new ArrayList<>();
+
+    @Field(type = FieldType.Keyword)
+    private List<String> incomingRelTypeGroups = new ArrayList<>();
+
+    @Field(type = FieldType.Keyword)
+    private List<String> incomingRelTypes = new ArrayList<>();
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    private static class Relation {
+        @Field(type = FieldType.Keyword)
+        private String targetId;
+        @Field(type = FieldType.Keyword)
+        private String type;
+        @Field(type = FieldType.Keyword)
+        private List<String> groups;
+    }
 
     @Transient
     private Map<String, List<Object>> additionalDataToIndex = new HashMap<>();  //data are put here to be later inserted to dynamic ES fields
@@ -50,6 +76,8 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
         description = obj.getDescription();
         type = obj.getType().name();
         containsDigitalObjects = obj.getDigitalObjects().size() > 0;
+        incomingRelTypeGroups = obj.getIncomingRelTypeGroups();
+        incomingRelTypes = obj.getIncomingRelTypes();
 
         TypesHolder typesHolder = ApplicationContextUtils.getApplicationContext().getBean(TypesHolder.class);
         ObjectMapper objectMapper = ApplicationContextUtils.getApplicationContext().getBean(ObjectMapper.class);
@@ -59,6 +87,9 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
                 ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
                 if (itemType == null) {
                     log.warn("Item type not recognized: " + item.getType());
+                    continue;
+                }
+                if (!itemType.isIndexed()) {
                     continue;
                 }
                 Object data;
@@ -91,7 +122,10 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
                 }
                 additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
                 if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
+                    List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
+                    rels.add(new Relation((String) data, item.getType(), itemTypeGroups));
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(item.getTargetLabel());
+                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + item.getTargetLabel());
                 }
             }
         }

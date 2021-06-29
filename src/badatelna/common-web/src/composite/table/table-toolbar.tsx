@@ -12,6 +12,7 @@ import { TableSelectedContext, TableContext } from './table-context';
 import { TableToolbarButton } from './table-toolbar-button';
 import { BulkActionButton } from './bulk-action-menu/bulk-action-button';
 import { TableToolbarProps } from './table-types';
+import { NamedSettingsButton } from './saved/named-settings-button';
 
 export function TableToolbar({ before, after }: TableToolbarProps) {
   const classes = useStyles();
@@ -25,18 +26,21 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
     showColumnButton,
     showResetSortsButton,
     showFilterButton,
+    showNamedSettingsButton,
     showReportButton,
     showBulkActionButton,
     disabledRefreshButton,
     disabledColumnButton,
     disabledResetSortsButton,
     disabledFilterButton,
+    disabledNamedSettingsButton,
     disabledBulkActionButton,
     disabledReportButton,
+    reportTag,
     bulkActions,
     refresh,
     openColumnDialog,
-    openReportDialog,
+    openExportDialog,
     openFilterDialog,
     resetSorts,
   } = useContext(TableContext);
@@ -129,6 +133,12 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
               }
             />
           )}
+          {showNamedSettingsButton && reportTag != null && (
+            <NamedSettingsButton
+              disabled={disabledNamedSettingsButton}
+              tag={reportTag}
+            />
+          )}
           {showBulkActionButton && (
             <BulkActionButton
               disabled={disabledBulkActionButton || bulkActions.length === 0}
@@ -139,9 +149,9 @@ export function TableToolbar({ before, after }: TableToolbarProps) {
             <TableToolbarButton
               label={<PrintIcon />}
               disabled={disabledReportButton}
-              onClick={openReportDialog}
+              onClick={openExportDialog}
               tooltip={intl.formatMessage({
-                id: 'EAS_TABLE_TOOLBAR_BTN_REPORT_DIALOG_OPEN',
+                id: 'EAS_TABLE_TOOLBAR_BTN_EXPORT_DIALOG_OPEN',
                 defaultMessage: 'Tisk',
               })}
             />

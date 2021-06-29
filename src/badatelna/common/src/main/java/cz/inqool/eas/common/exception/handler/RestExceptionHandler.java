@@ -10,6 +10,7 @@ import cz.inqool.eas.common.exception.dto.ObfuscatedException;
 import cz.inqool.eas.common.exception.dto.RestException;
 import cz.inqool.eas.common.exception.parser.ExceptionParser;
 import cz.inqool.eas.common.security.captcha.exception.ReCaptchaInvalidException;
+import cz.inqool.eas.common.security.form.twoFactor.TwoFactorException;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchPhaseExecutionException;
 import org.elasticsearch.search.SearchParseException;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.ConstraintViolationException;
@@ -83,19 +85,21 @@ public class RestExceptionHandler {
         return defaultExceptionHandling(request, e, HttpStatus.BAD_REQUEST);
     }
 
-    /*@ExceptionHandler({
-            BadCredentialsException.class
+    @ExceptionHandler({
+//            BadCredentialsException.class
+            TwoFactorException.class
     })
     public ResponseEntity<RestException> unauthorized(HttpServletRequest request, Exception e) {
         return defaultExceptionHandling(request, e, HttpStatus.UNAUTHORIZED);
-    }*/
+    }
 
     @ExceptionHandler({
             //UserPermissionException.class,
             //InstitutionPermissionException.class,
             ForbiddenObject.class,
             ForbiddenOperation.class,
-            AccessDeniedException.class
+            AccessDeniedException.class,
+            ExtensionNotAllowedException.class
     })
     public ResponseEntity<RestException> forbidden(HttpServletRequest request, Exception e) {
         if (eventService != null) {
@@ -113,11 +117,12 @@ public class RestExceptionHandler {
         return defaultExceptionHandling(request, e, HttpStatus.NOT_FOUND);
     }
 
-//    @ExceptionHandler({ // TODO uncomment after exception classes are added
-//    })
-//    public ResponseEntity<RestException> conflict(HttpServletRequest request, Exception e) {
-//        return defaultExceptionHandling(request, e, HttpStatus.CONFLICT);
-//    }
+    @ExceptionHandler({
+            ConflictObject.class
+    })
+    public ResponseEntity<RestException> conflict(HttpServletRequest request, Exception e) {
+        return defaultExceptionHandling(request, e, HttpStatus.CONFLICT);
+    }
 
     @ExceptionHandler({
             SearchPhaseExecutionException.class
@@ -128,6 +133,14 @@ public class RestExceptionHandler {
             status = HttpStatus.PRECONDITION_FAILED;
         }
         return defaultExceptionHandling(request, e, status);
+    }
+
+    @ExceptionHandler({
+            ResponseStatusException.class
+    })
+    public ResponseEntity<RestException> responseStatusException(HttpServletRequest request, Exception e) {
+        ResponseStatusException responseStatusException = (ResponseStatusException) e;
+        return defaultExceptionHandling(request, e, responseStatusException.getStatus());
     }
 
     @ExceptionHandler({

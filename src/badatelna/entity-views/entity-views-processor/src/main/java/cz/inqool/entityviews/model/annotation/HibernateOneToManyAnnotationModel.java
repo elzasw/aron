@@ -13,7 +13,7 @@ import lombok.Setter;
 import javax.persistence.OneToMany;
 import java.util.Map;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static cz.inqool.entityviews.ElementValueUtils.getElementValue;
 
@@ -53,7 +53,7 @@ public class HibernateOneToManyAnnotationModel extends AnnotationModel {
 
             if (viewName != null) { // replace only if view is present
                 String className = targetEntity.toString();
-                String valueClass = className + LOWER_CAMEL.to(UPPER_CAMEL, viewName) + ".class";
+                String valueClass = className + LOWER_UNDERSCORE.to(UPPER_CAMEL, viewName) + ".class";
                 return entry.getKey() + " = " + valueClass;
             }
         }

@@ -18,7 +18,7 @@ export function meCall(meUrl: string) {
 export function useUser(
   meUrl: string,
   logoutUrl: string,
-  checkPermission?: (user: any, permission: string) => boolean
+  checkPermission?: (user: any, permission: string, state?: any) => boolean
 ) {
   const [user, setUser] = useState<User | undefined>(undefined);
 
@@ -33,10 +33,10 @@ export function useUser(
     }
   });
 
-  const hasPermission = useEventCallback((permission: string) => {
+  const hasPermission = useEventCallback((permission: string, state?: any) => {
     if (user !== undefined) {
       if (checkPermission) {
-        return checkPermission(user, permission);
+        return checkPermission(user, permission, state);
       } else {
         return (
           user.authorities?.find((a) => a.authority === permission) !==
@@ -61,6 +61,13 @@ export function useUser(
     form.submit();
   });
 
+  const logoutWithoutRedirect = useEventCallback(async () => {
+    const response = await abortableFetch(`${logoutUrl}`, {
+      method: 'POST',
+    });
+    return await response.none();
+  });
+
   const context: UserContext<User> = useMemo(
     () => ({
       user,
@@ -68,8 +75,9 @@ export function useUser(
       isLogedIn,
       reload,
       logout,
+      logoutWithoutRedirect,
     }),
-    [user, hasPermission, isLogedIn, reload, logout]
+    [user, hasPermission, isLogedIn, reload, logout, logoutWithoutRedirect]
   );
 
   return { user, context };

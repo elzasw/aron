@@ -71,13 +71,25 @@ files:
   transfer:
     path: /tmp/aronFileTransfer
 
-news:
-  file: "./news.json"
+webResources:
+  # Konfigurace header a footer
+  pageTemplate: ./init-data/config/pageTemplate.yaml
+  # Konfigurace novinek
+  news: ./init-data/config/news.yaml
+  # Oblibene dotazy
+  favoriteQueries: ./init-data/config/favoriteQueries.yaml
+  # Fazety pro vyhledavani
+  facets: "./init-data/config/searchConfig.yaml"
+  # Ikona Archivu Online
+  #
+  # Kliknuti na logo vede na Homepage
+  logo: ./init-data/images/logo.svg
+  # Volitelný obrázek zobrazovaný vpravo od názvu
+  # Není klikatelný
+  topImage: ./init-data/images/book.png
 
-favoriteQueries:
-  file: "./favoriteQueries.yaml"
+types-config: "./init-data/config/types.yaml"
 
-facet-config: "classpath:/search-config.yaml"
-types-config: "classpath:/types.yaml"
+help-url: https://seznam.cz
 
 environment: docker

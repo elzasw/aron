@@ -1,15 +1,18 @@
 package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
+import cz.inqool.eas.common.domain.index.field.java.Field;
 import cz.inqool.eas.common.domain.index.reindex.reference.IndexReferenceField;
-import org.springframework.data.elasticsearch.annotations.Field;
+import lombok.AccessLevel;
+import lombok.Setter;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
- * Represents an inner field in ElasticSearch mapping, annotated with {@link Field}.
+ * Represents an inner field in ElasticSearch mapping, annotated with {@link org.springframework.data.elasticsearch.annotations.Field}.
  */
 public class IndexFieldInnerNode extends IndexFieldNode {
 
@@ -17,9 +20,13 @@ public class IndexFieldInnerNode extends IndexFieldNode {
 
     private Set<IndexFieldNode> children = Set.of();
 
-    public IndexFieldInnerNode(Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field javaField, Field mainField, IndexFieldInnerNode parent) {
+    @Setter(AccessLevel.PACKAGE)
+    private Float boost;
+
+
+    public IndexFieldInnerNode(Class<? extends DomainIndexed<?, ?>> rootClass, Field javaField, org.springframework.data.elasticsearch.annotations.Field mainField, IndexFieldInnerNode parent) {
         super(rootClass, javaField, parent);
-        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.fielddata());
+        this.mainField = new IndexedFieldProps(mainField.type(), mainField.index(), mainField.analyzer(), mainField.fielddata());
     }
 
     /**
@@ -32,6 +39,16 @@ public class IndexFieldInnerNode extends IndexFieldNode {
 
     public FieldType getType() {
         return mainField.getFieldType();
+    }
+
+    public float getBoost() {
+        if (boost != null) {
+            return boost;
+        } else {
+            return Optional.ofNullable(parent)
+                    .map(IndexFieldInnerNode::getBoost)
+                    .orElse(1.0F);
+        }
     }
 
     public boolean isIndexed() {

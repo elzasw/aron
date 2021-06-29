@@ -1,28 +1,14 @@
-import React, {
-  useState,
-  useEffect,
-  useContext,
-  useMemo,
-  useRef,
-  useCallback,
-} from 'react';
-import { useParams } from 'react-router-dom';
-import { get, find, flatten, reverse, compact, isEmpty } from 'lodash';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { get, find, flatten, compact, isEmpty, sortBy } from 'lodash';
 import classNames from 'classnames';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import Tooltip from '@material-ui/core/Tooltip';
 import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
-import PersonIcon from '@material-ui/icons/Person';
-import InsertPhotoIcon from '@material-ui/icons/InsertPhoto';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
-import { FormattedMessage } from 'react-intl';
-
-import { NavigationContext } from '@eas/common-web';
+import { useIntl } from 'react-intl';
 
 import {
   ApiUrl,
   ApuType,
-  ApuPartViewType,
   ModulePath,
   ApuPartItemDataType,
   navigationItems,
@@ -31,7 +17,12 @@ import {
 } from '../../enums';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
-import { useGet, usePrevious, getApu, sortByArray } from '../../common-utils';
+import {
+  useGet,
+  getApu,
+  sortByArray,
+  useEvidenceNavigation,
+} from '../../common-utils';
 import { DetailProps } from './types';
 import {
   ApuEntity,
@@ -39,181 +30,18 @@ import {
   ApuPartItemType,
   ApuPartItem,
 } from '../../types';
-import { findApuParts, filterApuPartTypes, getRelatedApusURL } from './utils';
+import {
+  findApuParts,
+  filterApuPartTypes,
+  getRelatedApusFilter,
+  getParentBreadcrumbs,
+} from './utils';
 import { EvidenceDetailDao } from './evidence-detail-dao';
 import { EvidenceDetailTree } from './evidence-detail-tree';
-import {
-  getPathByType,
-  openInNewTab,
-  formatUnitDate,
-} from '../../common-utils';
-import { Module } from '../../components';
-
-function ItemValue({
-  value,
-  type,
-  apus,
-}: {
-  value: string;
-  type: ApuPartItemDataType;
-  apus?: ApuEntity[];
-}) {
-  const classes = useStyles();
-
-  const { navigate } = useContext(NavigationContext);
-
-  let result: string | JSX.Element = value;
-
-  switch (type) {
-    case ApuPartItemDataType.UNITDATE:
-      result = formatUnitDate(value);
-      break;
-    case ApuPartItemDataType.APU_REF:
-      result = (
-        <span
-          className={classes.link}
-          onClick={() => navigate(`${ModulePath.APU}/${value}`)}
-        >
-          {get(
-            find(apus, ({ id }) => id === value),
-            'name',
-            'Zobrazit APU'
-          )}
-        </span>
-      );
-      break;
-    case ApuPartItemDataType.LINK:
-      result = (
-        <span className={classes.link} onClick={() => openInNewTab(value)}>
-          {value}
-        </span>
-      );
-      break;
-  }
-
-  return <span>{result}</span>;
-}
-
-function Component({
-  name,
-  viewType,
-  items,
-  open: outterOpen,
-  index,
-  apus,
-}: {
-  name: string;
-  viewType: ApuPartViewType;
-  items: any[];
-  open: boolean;
-  index: number;
-  apus: ApuEntity[];
-}) {
-  const classes = useStyles();
-  const layoutClasses = useLayoutStyles();
-  const spacingClasses = useSpacingStyles();
-
-  const [open, setOpen] = useState(viewType === ApuPartViewType.STANDALONE);
-
-  const previousOutterOpen = usePrevious(outterOpen);
-
-  useEffect(() => {
-    if (
-      viewType === ApuPartViewType.GROUPED &&
-      previousOutterOpen !== undefined &&
-      previousOutterOpen !== outterOpen
-    ) {
-      setOpen(outterOpen);
-    }
-  }, [viewType, outterOpen, previousOutterOpen]);
-
-  const labelClassName = classNames(
-    classes.evidenceDetailItemText,
-    classes.evidenceDetailItemLabel,
-    spacingClasses.marginRight,
-    spacingClasses.paddingRight
-  );
-
-  return (
-    <div
-      className={classNames(
-        classes.evidenceDetailItem,
-        index && classes.evidenceDetailItemNotFirst
-      )}
-    >
-      <div className={layoutClasses.flex}>
-        <div
-          className={classNames(labelClassName, spacingClasses.paddingTopSmall)}
-        >
-          {name}
-        </div>
-        {viewType === ApuPartViewType.GROUPED ? (
-          <Tooltip
-            title={
-              <FormattedMessage
-                id={open ? Message.CLICK_TO_COLLAPSE : Message.CLICK_TO_EXPAND}
-              />
-            }
-          >
-            <div
-              className={classNames(
-                classes.evidenceDetailItemText,
-                classes.bold,
-                spacingClasses.paddingTopSmall
-              )}
-              style={{ cursor: 'pointer' }}
-              onClick={() => setOpen(!open)}
-            >
-              {items
-                .filter(({ type }) => type !== ApuPartItemDataType.APU_REF)
-                .map(({ value, type }, i) => (
-                  <React.Fragment key={`${value}-${i}`}>
-                    <ItemValue {...{ value, type }} />{' '}
-                  </React.Fragment>
-                ))}
-            </div>
-          </Tooltip>
-        ) : (
-          <div />
-        )}
-      </div>
-      {open ? (
-        items.map(({ name, value, type }, i) =>
-          type !== ApuPartItemDataType.APU_REF ||
-          find(apus, ({ id }) => id === value) ? (
-            <div key={`${name}-${i}`} className={layoutClasses.flex}>
-              <div className={labelClassName}>{name}</div>
-              <div className={classes.evidenceDetailItemText}>
-                <ItemValue {...{ value, type, apus }} />
-              </div>
-            </div>
-          ) : (
-            <div key={`${name}-${i}`} />
-          )
-        )
-      ) : (
-        <></>
-      )}
-    </div>
-  );
-}
-
-const getParentBreadcrumbs = (parent?: ApuEntity) => {
-  const breadcrumbs = [];
-
-  let current = parent;
-
-  while (current) {
-    breadcrumbs.push({
-      path: `${ModulePath.APU}/${current.id}`,
-      label: current.name,
-    });
-
-    current = current.parent;
-  }
-
-  return reverse(breadcrumbs);
-};
+import { getPathByType, useAppState } from '../../common-utils';
+import { Module, Loading, Button } from '../../components';
+import { EvidenceDetailItem } from './evidence-detail-item';
+import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 
 export function EvidenceDetail({
   apuPartTypes,
@@ -223,21 +51,33 @@ export function EvidenceDetail({
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
+  const { appState, updateAppState } = useAppState();
+
+  const { evidencePath } = appState;
+
+  const navigateTo = useEvidenceNavigation();
+
   const [open, setOpen] = useState(false);
 
-  const [loadingItems, setLoadingItems] = useState(false);
+  const [loadingBasic, setLoading] = useState(false);
 
   const [apus, setApus] = useState<ApuEntity[]>([]);
+
+  const [archdescRootRefLoading, setArchdescRootRefLoading] = useState(false);
+
+  const [archdescRootRef, setArchdescRootRef] = useState<ApuPartItem | null>(
+    null
+  );
+
+  const [archdescRootRefItemId, setArchdescRootRefItemId] = useState<string>();
 
   const { id } = useParams();
 
   const url = `${ApiUrl.APU}/${id}`;
 
-  const [item, loading] = useGet<ApuEntity>(url);
+  const [item, loadingItem] = useGet<ApuEntity>(url);
 
-  const { navigate } = useContext(NavigationContext);
-
-  const archdescRootRef = useRef<ApuPartItem | null>(null);
+  const loading = loadingItem || loadingBasic;
 
   const findRoot = useCallback((root?: ApuEntity): ApuEntity | undefined => {
     return root?.parent ? findRoot(root.parent) : root;
@@ -245,12 +85,64 @@ export function EvidenceDetail({
 
   const [root, setRoot] = useState<ApuEntity | undefined>(findRoot(item));
 
+  const { formatMessage } = useIntl();
+
   useEffect(() => {
     const rootItem = findRoot(item);
     if (rootItem && rootItem.id !== root?.id) {
       setRoot(rootItem);
     }
   }, [item, root, findRoot]);
+
+  useEffect(() => {
+    if (
+      item &&
+      item.parts &&
+      !archdescRootRefLoading &&
+      (!archdescRootRefItemId || item.id !== archdescRootRefItemId)
+    ) {
+      setArchdescRootRefItemId(item.id);
+
+      let newArchdescRootRef: ApuPartItem | null = null;
+
+      item.parts!.some((part) =>
+        part.items.some((item: ApuPartItem) => {
+          if (item.type === ApuPartItemEnum.ARCHDESC_ROOT_REF) {
+            newArchdescRootRef = item;
+            return true;
+          }
+
+          return false;
+        })
+      );
+
+      if (
+        newArchdescRootRef &&
+        (!archdescRootRef || newArchdescRootRef!.id !== archdescRootRef.id)
+      ) {
+        const load = async () => {
+          setArchdescRootRefLoading(true);
+
+          setArchdescRootRef(
+            (await getApu(newArchdescRootRef!.value))
+              ? newArchdescRootRef
+              : null
+          );
+
+          setArchdescRootRefLoading(false);
+        };
+
+        load();
+      }
+    }
+  }, [
+    item,
+    apuPartTypes,
+    apuPartItemTypes,
+    archdescRootRef,
+    archdescRootRefLoading,
+    archdescRootRefItemId,
+  ]);
 
   const items: (ApuPartType & {
     items: (ApuPartItem & {
@@ -274,15 +166,8 @@ export function EvidenceDetail({
                             ({ code, name, type }: ApuPartItemType) => {
                               return compact(
                                 findApuParts(part.items, code).map((item) => {
-                                  const isArchdescRootRef =
-                                    item.type ===
-                                    ApuPartItemEnum.ARCHDESC_ROOT_REF;
-
-                                  if (isArchdescRootRef) {
-                                    archdescRootRef.current = item;
-                                  }
-
-                                  return isArchdescRootRef
+                                  return item.type ===
+                                    ApuPartItemEnum.ARCHDESC_ROOT_REF
                                     ? null
                                     : {
                                         ...item,
@@ -326,7 +211,7 @@ export function EvidenceDetail({
 
       if (filteredItems.length) {
         const load = async () => {
-          setLoadingItems(true);
+          setLoading(true);
 
           const promisses = filteredItems.map(getApu);
 
@@ -338,7 +223,7 @@ export function EvidenceDetail({
             result = [];
           }
 
-          setLoadingItems(false);
+          setLoading(false);
 
           setApus(result);
         };
@@ -348,136 +233,197 @@ export function EvidenceDetail({
     }
   }, [items]);
 
-  if (!item || loadingItems) {
-    return loading || loadingItems ? <LinearProgress /> : <></>;
-  }
+  const type = item?.type;
 
-  const { name, description, type, digitalObjects, parent } = item;
+  const icon =
+    type === ApuType.ENTITY
+      ? 'fas fa-key'
+      : type === ApuType.FUND
+      ? 'fas fa-sitemap'
+      : type === ApuType.FINDING_AID
+      ? 'fas fa-book-reader'
+      : null;
 
-  const ImageComponent = type === ApuType.ENTITY ? PersonIcon : InsertPhotoIcon;
+  const path = type ? getPathByType(type) : undefined;
 
-  const path = getPathByType(type);
+  useEffect(() => {
+    if (evidencePath && path) {
+      updateAppState({ evidencePath: null });
+    }
+  }, [evidencePath, path, updateAppState]);
 
   return (
     <Module
       {...{
         items: [
           {
-            path,
+            path: evidencePath || path,
             label:
-              find(navigationItems, (item) => item.path === path)?.label || '',
+              find(
+                navigationItems,
+                (item) => item.path === (evidencePath || path)
+              )?.label || '',
           },
-          ...getParentBreadcrumbs(parent),
+          ...(item ? getParentBreadcrumbs(item.parent) : []),
           {
-            label: name,
+            label: item ? item.name : '...',
           },
         ],
-        toolbar: (
-          <div
-            className={classNames(
-              classes.findRelatedButton,
-              layoutClasses.flexCentered,
-              spacingClasses.paddingHorizontal
-            )}
-            onClick={() => navigate(getRelatedApusURL(name, id))}
-          >
-            <FormattedMessage id={Message.FIND_RELATED} />
-          </div>
-        ),
       }}
     >
-      <div className={classes.evidenceDetail}>
-        <div className={spacingClasses.paddingBig}>
-          {path === ModulePath.ARCH_DESC ? (
-            <h3>{name}</h3>
-          ) : (
-            <div
-              className={classNames(
-                classes.evidenceDetailTop,
-                layoutClasses.flexSpaceBetweenBottom,
-                spacingClasses.marginBottom
-              )}
-            >
-              <div className={layoutClasses.flex}>
-                <ImageComponent
-                  className={classNames(
-                    type === ApuType.ENTITY
-                      ? classes.evidenceDetailImage
-                      : classes.evidenceDetailImageBig,
-                    spacingClasses.marginRightBig
-                  )}
-                />
-                <div className={spacingClasses.paddingBottomSmall}>
-                  <h3 className={spacingClasses.marginBottomSmall}>{name}</h3>
-                  <h4 className={spacingClasses.marginBottomSmall}>
-                    {description}
-                  </h4>
-                  {archdescRootRef.current ? (
-                    <div
-                      className={classNames(
-                        classes.link,
-                        layoutClasses.flexAlignCenter,
-                        spacingClasses.marginTop
-                      )}
-                      onClick={() =>
-                        navigate(
-                          `${ModulePath.APU}/${archdescRootRef.current!.value}`
-                        )
-                      }
-                    >
-                      <AccountTreeIcon
-                        className={spacingClasses.marginRightSmall}
-                      />
-                      {get(
-                        find(
-                          apuPartItemTypes,
-                          ({ code }) =>
-                            code === ApuPartItemEnum.ARCHDESC_ROOT_REF
-                        ),
-                        'name',
-                        'Pohled na celý AS (aktuální stav)'
-                      )}
-                    </div>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              </div>
-              <DoubleArrowIcon
+      <>
+        <Loading {...{ loading }} />
+        <div className={classes.evidenceDetail}>
+          <div className={spacingClasses.paddingBig}>
+            {item && path === ModulePath.ARCH_DESC && root ? (
+              <>
+                <EvidenceDetailTree {...{ item, id: root.id }} />
+                <div className={spacingClasses.paddingBottom} />
+              </>
+            ) : (
+              <></>
+            )}
+            {item ? (
+              <div
                 className={classNames(
-                  classes.evidenceDetailTopIcon,
-                  open && classes.evidenceDetailTopIconOpen,
+                  classes.evidenceDetailTop,
+                  layoutClasses.flexSpaceBetweenBottom,
                   spacingClasses.marginBottom
                 )}
-                onClick={() => setOpen(!open)}
+              >
+                <div className={layoutClasses.flex}>
+                  <div
+                    className={classNames(
+                      layoutClasses.flexColumnCenter,
+                      spacingClasses.marginRightBig,
+                      spacingClasses.marginBottomSmall
+                    )}
+                  >
+                    {icon && (
+                      <i
+                        className={classNames(
+                          icon,
+                          classes.evidenceDetailIcon,
+                          spacingClasses.marginBottomSmall
+                        )}
+                      />
+                    )}
+                    <Button
+                      className={classes.findRelatedButton}
+                      label={formatMessage({ id: Message.FIND_RELATED })}
+                      outlined={true}
+                      size="small"
+                      onClick={() => {
+                        navigateTo(
+                          ModulePath.APU,
+                          1,
+                          10,
+                          '',
+                          getRelatedApusFilter(id, item.name)
+                        );
+                      }}
+                    />
+                  </div>
+                  <div className={spacingClasses.paddingBottomSmall}>
+                    <h3 className={spacingClasses.marginBottomSmall}>
+                      {item.name}
+                    </h3>
+                    {item.description ? (
+                      path === ModulePath.ARCH_DESC ||
+                      path === ModulePath.ENTITY ? (
+                        <h3
+                          className={classNames(
+                            classes.evidenceDetailDescription,
+                            spacingClasses.marginBottomSmall
+                          )}
+                        >
+                          {item.description}
+                        </h3>
+                      ) : (
+                        <h4
+                          className={classNames(
+                            classes.evidenceDetailDescription,
+                            spacingClasses.marginBottomSmall
+                          )}
+                        >
+                          {item.description}
+                        </h4>
+                      )
+                    ) : (
+                      <></>
+                    )}
+                    {archdescRootRef ? (
+                      <Link
+                        to={{
+                          pathname: `${ModulePath.APU}/${archdescRootRef.value}`,
+                        }}
+                        className={classNames(
+                          classes.link,
+                          layoutClasses.flexAlignCenter,
+                          spacingClasses.marginTop
+                        )}
+                      >
+                        <AccountTreeIcon
+                          className={spacingClasses.marginRightSmall}
+                        />
+                        {get(
+                          find(
+                            apuPartItemTypes,
+                            ({ code }) =>
+                              code === ApuPartItemEnum.ARCHDESC_ROOT_REF
+                          ),
+                          'name',
+                          formatMessage({
+                            id: Message.TREE_VIEW_CURRENT_STATE,
+                          })
+                        )}
+                      </Link>
+                    ) : (
+                      <></>
+                    )}
+                  </div>
+                </div>
+                <DoubleArrowIcon
+                  className={classNames(
+                    classes.evidenceDetailTopIcon,
+                    open && classes.evidenceDetailTopIconOpen,
+                    spacingClasses.marginBottom
+                  )}
+                  onClick={() => setOpen(!open)}
+                />
+              </div>
+            ) : (
+              <></>
+            )}
+            {items
+              .map(({ items, ...item }) => ({
+                ...item,
+                items: items.filter(({ visible, value }) => visible && value),
+              }))
+              .filter(({ items }) => !isEmpty(items))
+              .map((item, index) => (
+                <EvidenceDetailItem
+                  {...{
+                    key: `${item.name}-${index}`,
+                    ...item,
+                    index,
+                    open,
+                    apus,
+                  }}
+                />
+              ))}
+            {item && (
+              <EvidenceDetailAttachments
+                items={sortBy(item.attachments, 'order')}
+                setLoading={setLoading}
               />
-            </div>
-          )}
-          {path === ModulePath.ARCH_DESC && root ? (
-            <EvidenceDetailTree {...{ item, id: root.id }} />
-          ) : (
-            <></>
-          )}
-          {items
-            .map(({ items, ...item }) => ({
-              ...item,
-              items: items.filter(({ visible, value }) => visible && value),
-            }))
-            .filter(({ items }) => !isEmpty(items))
-            .map((item, index) => (
-              <Component
-                {...{
-                  key: `${item.name}-${index}`,
-                  ...item,
-                  index,
-                  open,
-                  apus,
-                }}
-              />
-            ))}
-          <EvidenceDetailDao items={digitalObjects || []} />
+            )}
+            {item && (
+              <EvidenceDetailDao items={sortBy(item.digitalObjects, 'order')} />
+            )}
+          </div>
         </div>
-      </div>
+      </>
     </Module>
   );
 }

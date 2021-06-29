@@ -13,6 +13,12 @@
     <include file="/changelog/antivirus.xml"/>
     <include file="/changelog/alog.xml"/>
     <include file="/changelog/index_reference_update.xml"/>
+    <include file="/changelog/schedule.xml"/>
+    <include file="/changelog/soap_logger.xml"/>
+    <include file="/changelog/history.xml"/>
+    <include file="/changelog/named_settings.xml"/>
+    <include file="/changelog/signing.xml"/>
+    <include file="/changelog/action.xml"/>
 
 
     <changeSet id="eas-test:1" author="konecny">

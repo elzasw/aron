@@ -1,6 +1,4 @@
-import { FilterType } from './filters';
-import { ModulePath } from './module';
-import { toFilterOptions, getISOStringFromYear } from '../common-utils';
+import { DaoBundleType } from './dao';
 
 export const data = {
   name: 'Parní mlékárna Rudolf Geiger Ronov nad Doubravou',
@@ -30,186 +28,112 @@ export const dataItems = [
   },
 ];
 
-const archives = [
-  { name: 'SOA v Zámrsku' },
-  { name: 'SOkA Hradec Králove' },
-  { name: 'SOkA Chrudim' },
-  { name: 'SOkA Náchod' },
-  { name: 'SOkA Jičín' },
-  { name: 'SOkA Svitavy' },
-  { name: 'SOkA Rychnov nad Kn.' },
-  { name: 'SOkA Ústí nad Orlicí' },
-  { name: 'SOkA Pardubice' },
-  { name: 'SOkA Trutnov' },
-].map((item, id) => ({ ...item, id }));
-
-const timeRanges = [
-  { from: 1201, to: 1400 },
-  { from: 1401, to: 1600 },
-  { from: 1601, to: 1800 },
-  { from: 1800, to: 2001 },
-  { from: 2000, to: null },
-  { from: null, to: 1500 },
-];
-
-const languages = [
-  { name: 'Česky' },
-  { name: 'Anglicky' },
-  { name: 'Německy' },
-];
-
-const accessPointCreation = [
-  { from: 1900, to: 2000 },
-  { from: 2000, to: null },
-];
-
-const getPlace = (q: string) =>
-  archives
-    .filter((a) => a.name.includes(q))
-    .map((a, i) => ({ name: a.name, id: i }));
-
-export const filtersData: { [key in ModulePath]?: any } = {
-  [ModulePath.APU]: [],
-  [ModulePath.FUND]: [
-    {
-      type: FilterType.RADIO,
-      field: 'LANGUAGE',
-      label: 'Jazyk',
-      options: toFilterOptions(
-        languages,
-        (l) => l.name,
-        (l) => l.name
-      ),
-    },
-    {
-      type: FilterType.CHECKBOX,
-      field: 'ARCHIVE',
-      label: 'Archiv',
-      options: toFilterOptions(
-        archives,
-        (a) => a.name,
-        (a) => a.name
-      ),
-    },
-  ],
-  [ModulePath.FINDING_AID]: [
-    {
-      type: FilterType.CHECKBOX,
-      field: 'ARCHIVE',
-      label: 'Archiv',
-      options: toFilterOptions(
-        archives,
-        (a) => a.name,
-        (a) => a.name
-      ),
-    },
-    {
-      type: FilterType.SELECT,
-      label: 'Druh',
-      field: 'FINDING_AID_TYPE',
-      options: toFilterOptions(
-        [{ type: '1. druh' }, { type: '2.druh' }],
-        (t) => t.type,
-        (t) => t
-      ),
-    },
-    {
-      type: FilterType.CHECKBOX_WITH_RANGE,
-      field: 'TIME_RANGE',
-      label: 'Časový rozsah',
-      options: toFilterOptions(
-        timeRanges,
-        (tr) => `${tr.from ? tr.from : ''} - ${tr.to ? tr.to : ''}`,
-        (tr) => ({
-          from: getISOStringFromYear(tr.from),
-          to: getISOStringFromYear(tr.to),
-        })
-      ),
-    },
-    {
-      type: FilterType.SELECT,
-      label: 'Archivní soubor',
-      options: toFilterOptions(
-        [
-          { filename: 'Parní mlékárna Rudolf Geiger' },
-          { filename: 'Další soubor' },
+export const fakeDaos = [
+  {
+    id: 'feb44d55-a13f-4bd9-a975-fb7b29729f7d',
+    name: 'dao',
+    permalink: '',
+    files: [
+      {
+        id: 'eeb44d55-a13f-4bd9-a975-fb7b29729f7d',
+        permalink: 'eeb44d55-a13f-4bd9-a975-fb7b29729f7d',
+        order: 1,
+        type: DaoBundleType.PUBLISHED,
+        metadata: [],
+        file: {
+          id: '000c52c5-21e0-4211-b17e-a82457f5c752',
+          created: '2020-12-22T18:25:58.685Z',
+          updated: '2020-12-22T18:26:01.410Z',
+          deletedByTenant: null,
+          name: 'test',
+          contentType: 'image/jpeg',
+          size: 1948960,
+          permanent: false,
+        },
+      },
+      {
+        id: '017d757a-bd4b-4961-9beb-ff9feadef64c',
+        permalink: 'eeb44d55-a13f-4bd9-a975-fb7b29729f7d',
+        order: 1,
+        type: DaoBundleType.TILE,
+        metadata: [],
+        file: {
+          id: '007d757a-bd4b-4961-9beb-ff9feadef64c',
+          created: '2020-12-22T18:25:58.685Z',
+          updated: '2020-12-22T18:26:01.410Z',
+          deletedByTenant: null,
+          name: 'test',
+          contentType: 'image/jpeg',
+          size: 1948960,
+          permanent: false,
+        },
+      },
+      {
+        id: 'cd6ceb5f-858f-4240-85fa-fbbbcd29073e',
+        permalink: '',
+        order: 1,
+        type: DaoBundleType.THUMBNAIL,
+        metadata: [
+          {
+            id: 'b1f3210a-2d5c-47ed-b335-6812e368341a',
+            value: 'image/jpeg',
+            type: 'mimeType',
+          },
         ],
-        (t) => t.filename,
-        (t) => t
-      ),
-    },
-  ],
-  [ModulePath.ARCH_DESC]: [
-    {
-      type: FilterType.INPUT,
-      field: 'ABSTRACT',
-      label: 'Abstrakt',
-    },
-    {
-      type: FilterType.INPUT,
-      field: 'UNIT~ID',
-      label: 'Id jednotky',
-    },
-
-    {
-      type: FilterType.RADIO,
-      field: 'containsDigitalObjects',
-      label: 'Digitalizáty',
-      options: [{ label: 'Jen archiválie s digitalizáty', value: true }],
-    },
-    {
-      type: FilterType.CHECKBOX_WITH_RANGE,
-      field: 'UNIT~DATE',
-      label: 'Časový rozsah',
-      options: toFilterOptions(
-        timeRanges,
-        (tr) => `${tr.from ? tr.from : ''} - ${tr.to ? tr.to : ''}`,
-        (tr) => ({
-          from: tr.from && new Date(tr.from, 1).toISOString(),
-          to: tr.to && new Date(tr.to, 1).toISOString(),
-        })
-      ),
-    },
-    {
-      type: FilterType.CHECKBOX,
-      field: 'ARCH_DESC_TYPE',
-      label: 'Typ archiválie',
-      options: toFilterOptions(
-        [
-          { type: 'listina po roce 1850' },
-          { type: 'úřední kniha' },
-          { type: 'mapa' },
+        file: {
+          id: 'ebdddb36-ca4c-4091-bc86-ec9e15865f6f',
+          created: '2021-01-04T13:22:19.232488Z',
+          updated: '2021-01-04T13:22:19.232915Z',
+          name: 'undefined',
+          contentType: 'image/jpeg',
+          size: 32623,
+          permanent: true,
+        },
+      },
+      {
+        id: '80381d6e-cc3c-435f-8c87-6939fc844c37',
+        permalink: '',
+        order: 1,
+        type: DaoBundleType.TILE,
+        metadata: [],
+        file: {
+          id: 'd5331e4c-95b4-4381-8621-284d415a97e6',
+          created: '2021-01-04T13:22:21.306424Z',
+          updated: '2021-01-04T13:22:21.306434Z',
+          name: 'undefined',
+          contentType: 'application/octet-stream',
+          size: 5202314,
+          permanent: true,
+        },
+      },
+      {
+        id: 'fa8dc5fd-3653-45b7-be40-0e1a323e0939',
+        permalink: '',
+        order: 1,
+        type: DaoBundleType.PUBLISHED,
+        metadata: [
+          {
+            id: '93d77dbd-3646-4576-a134-0526c340c7a3',
+            value: 'image/jpeg',
+            type: 'mimeType',
+          },
         ],
-        (t) => t.type,
-        (t) => t
-      ),
-    },
-  ],
-  [ModulePath.ENTITY]: [
-    {
-      type: FilterType.INPUT,
-      field: 'PLACE_OF_CREATION',
-      label: 'Místo vzniku',
-      getOptions: getPlace,
-    },
-    {
-      type: FilterType.CHECKBOX_WITH_RANGE,
-      field: 'ENTITY_CREATION',
-      label: 'Rok vzniku',
-      options: toFilterOptions(
-        accessPointCreation,
-        (tr) => `${tr.from ? tr.from : ''} - ${tr.to ? tr.to : ''}`,
-        (tr) => tr
-      ),
-    },
-    {
-      type: FilterType.SELECT,
-      label: 'Typ',
-      options: toFilterOptions(
-        [{ type: '1. typ PB' }, { type: 'Jiný typ PB' }],
-        (t) => t.type,
-        (t) => t
-      ),
-    },
-  ],
-};
+        file: {
+          id: 'ff209469-827b-445a-bdcd-6b4ec0bc4b3d',
+          created: '2021-01-04T13:22:21.310842Z',
+          updated: '2021-01-04T13:22:21.310851Z',
+          name: 'undefined',
+          contentType: 'image/jpeg',
+          size: 57071,
+          permanent: true,
+        },
+      },
+    ],
+  },
+  {
+    id: 'a51ed9e4-34cc-4954-aad6-3435bb4b1003',
+    name: 'dao 2',
+    permalink: '',
+    files: [],
+  },
+];

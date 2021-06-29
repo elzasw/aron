@@ -9,6 +9,7 @@ export interface LabelOptions {
 
 export interface LayoutOptions {
   noUnderline?: boolean;
+  noSpacing?: boolean;
 }
 
 export interface ErrorOptions {

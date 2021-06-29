@@ -31,6 +31,13 @@ public class UserSettingsApi {
         service.update(settings);
     }
 
+    @Operation(summary = "Clears user settings for currently logged-in user")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public void clear() {
+        service.clear();
+    }
+
     @Autowired
     public void setService(UserSettingsService service) {
         this.service = service;

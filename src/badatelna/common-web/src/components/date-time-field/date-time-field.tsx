@@ -8,6 +8,8 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { parseISOSafe } from 'utils/date-utils';
 import { DateTimeFieldProps } from './date-time-field-types';
 import { useStyles } from './date-time-field-styles';
+import clsx from 'clsx';
+import { useIntl } from 'react-intl';
 
 /**
  * Format data for java Instant, NOT LocalDateTime
@@ -23,6 +25,8 @@ export function DateTimeField({
 }: DateTimeFieldProps) {
   // fix undefined value
   value = value ?? null;
+
+  const intl = useIntl();
 
   const { locale } = useContext(LocaleContext);
 
@@ -67,24 +71,38 @@ export function DateTimeField({
     <MuiPickersUtilsProvider utils={DateFnsUtils} locale={locale.dateFnsLocale}>
       <KeyboardDateTimePicker
         InputProps={{
-          classes,
+          classes: {
+            root: classes.root,
+            input: classes.input,
+          },
         }}
         inputProps={{
           form,
         }}
-        views={['minutes', 'hours', 'date', 'month', 'year']}
-        disableToolbar
-        variant="inline"
+        autoOk={true}
+        ampm={false}
+        variant="dialog"
         fullWidth={true}
         disabled={disabled}
         value={internalValue}
         format={locale.dateTimeFormat}
         onChange={handleChange}
         InputAdornmentProps={{
-          style: {
-            display: 'none',
+          classes: {
+            root: clsx({
+              [classes.addorment]: !disabled,
+              [classes.dissabledAddorment]: disabled,
+            }),
           },
         }}
+        cancelLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_CANCEL',
+          defaultMessage: 'Zrušit',
+        })}
+        okLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_OK',
+          defaultMessage: 'Potvrdit',
+        })}
         // don't show error messages only error underline
         invalidDateMessage=""
         maxDateMessage=""

@@ -1,10 +1,8 @@
 package cz.inqool.eas.common.domain.index.dto.filter;
 
-import cz.inqool.eas.common.domain.index.field.IndexFieldLeafNode;
 import cz.inqool.eas.common.domain.index.field.IndexObjectFields;
 import lombok.EqualsAndHashCode;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.validation.constraints.NotBlank;
 
@@ -25,9 +23,6 @@ public class NullFilter extends FieldFilter<NullFilter> {
 
     @Override
     public QueryBuilder toQueryBuilder(IndexObjectFields indexedFields) {
-        IndexFieldLeafNode indexField = getIndexFieldLeafNode(indexedFields);
-
-        QueryBuilder queryBuilder = QueryBuilders.boolQuery().mustNot(QueryBuilders.existsQuery(indexField.getElasticSearchPath()));
-        return wrapIfNested(indexField, queryBuilder);
+        return new NotFilter(new NotNullFilter(field)).toQueryBuilder(indexedFields);
     }
 }

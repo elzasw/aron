@@ -6,7 +6,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 
 export const UserBtnItem = forwardRef<any, UserBtnItemProps>(
   function UserBtnItem(
-    { action: { label, action }, onClose }: UserBtnItemProps,
+    { action: { label, action, href }, onClose }: UserBtnItemProps,
     ref
   ) {
     const handleClick = useEventCallback(() => {
@@ -17,8 +17,13 @@ export const UserBtnItem = forwardRef<any, UserBtnItemProps>(
     });
 
     return (
-      <MenuItem ref={ref}>
-        <ListItemText primary={label} onClick={handleClick} />
+      <MenuItem
+        component={href ? 'a' : 'div'}
+        href={href}
+        ref={ref}
+        onClick={handleClick}
+      >
+        <ListItemText primary={label} />
       </MenuItem>
     );
   }

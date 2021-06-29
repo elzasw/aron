@@ -133,12 +133,14 @@ export interface TableFieldDialogProps<TObject> {
 
 export interface TableFieldToolbarProps {
   selectedIndex: number | undefined;
+
+  setSelectedIndex: (index: number | undefined) => void;
 }
 
 export interface TableFieldHandle {
   selectedIndex: number | undefined;
 
-  setSelectedIndex: (index: number) => void;
+  setSelectedIndex: (index: number | undefined) => void;
 }
 
 export interface TableFieldProps<TObject> {
@@ -162,7 +164,9 @@ export interface TableFieldProps<TObject> {
    *
    * Defaults to component rendering one cell for every column + radio for row selection.
    */
-  RowComponent?: ComponentType<TableFieldRowProps<TObject>>;
+  RowComponent?: ComponentType<
+    TableFieldRowProps<TObject> & RefAttributes<HTMLDivElement>
+  >;
 
   /**
    * Custom dialog component.
@@ -230,6 +234,11 @@ export interface TableFieldProps<TObject> {
   visibleRemove?: boolean;
 
   /**
+   * Hides actions at the begging of each row if === false.
+   */
+  visibleActionsColumn?: boolean;
+
+  /**
    * Custom factory method for new row creation.
    *
    * Defaults to empty object with new id.
@@ -270,6 +279,28 @@ export interface TableFieldProps<TObject> {
    * Maximum number of rows to show.
    */
   maxRows?: number;
+
+  /**
+   * Collapsed layout = Data wrapper without minHeight.
+   */
+  noMinHeigth?: boolean;
+
+  /**
+   * Use Drag & Drop ordering.
+   */
+  useDnDOrdering?: boolean;
+
+  /**
+   * Use autoupdate order column.
+   */
+  useOrderColumn?: boolean;
+
+  /**
+   * Path to order property.
+   *
+   * Default: order.
+   */
+  orderColumnPath?: string;
 }
 
 export interface TableFieldToolbarButtonProps {

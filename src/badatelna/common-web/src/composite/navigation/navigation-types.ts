@@ -1,9 +1,9 @@
 import { ComponentType, RefAttributes } from 'react';
 import { DialogHandle } from 'components/dialog/dialog-types';
-import { Prompt } from './navigation-context';
+import { NavigationPrompt } from './navigation-context';
 
 export interface PromptDialogProps {
-  prompts: Prompt[];
+  prompts: NavigationPrompt[];
   onConfirm: () => void;
   onCancel: () => void;
 }

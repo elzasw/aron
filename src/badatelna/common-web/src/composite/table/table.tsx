@@ -11,7 +11,7 @@ import useMeasure from 'react-use-measure';
 import { FixedSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import LinearProgress from '@material-ui/core/LinearProgress';
-import { TableProps, TableHandle } from './table-types';
+import { TableProps, TableHandle, TableColumn } from './table-types';
 import { useStyles } from './table-styles';
 import { useTable } from './table-hook';
 import { TableContext, TableSelectedContext } from './table-context';
@@ -34,7 +34,7 @@ export const Table = memo(
       selectedContext,
       columnDialogRef,
       filterDialogRef,
-      reportDialogRef,
+      exportDialogRef,
       loaderRef,
       listRef,
       handleKeyNavigation,
@@ -46,7 +46,7 @@ export const Table = memo(
       ToolbarComponent,
       ColumnDialogComponent,
       FilterDialogComponent,
-      ReportDialogComponent,
+      ExportDialogComponent,
       HeaderComponent,
       RowComponent,
       source,
@@ -101,8 +101,26 @@ export const Table = memo(
     const scrollbarHeight = useScrollBarSize();
     const listHeight = height - barHeight - headerHeight - scrollbarHeight;
 
+    function serializeColumns(columns: TableColumn<any>[]) {
+      return columns.map((column) => ({
+        name: column.name,
+        datakey: column.datakey,
+        displaykey: column.displaykey,
+        width: column.width,
+        visible: column.visible,
+        cellComponentName:
+          column.CellComponent.displayName ?? column.CellComponent.name,
+        valueMapperName:
+          column.valueMapper?.displayName ?? column.valueMapper?.name,
+        valueMapperData: (column.valueMapper as any)?.data,
+      }));
+    }
+
     const provideData = useEventCallback(() => ({
       params: source.getParams(),
+      selected: selectedContext.selected,
+      columns: serializeColumns(context.filteredColumns),
+      title: props.tableName,
     }));
 
     return (
@@ -160,8 +178,8 @@ export const Table = memo(
             <ColumnDialogComponent ref={columnDialogRef} />
             <FilterDialogComponent ref={filterDialogRef} />
             {props.reportTag !== null && (
-              <ReportDialogComponent
-                ref={reportDialogRef}
+              <ExportDialogComponent
+                ref={exportDialogRef}
                 tag={props.reportTag}
                 provideData={provideData}
               />

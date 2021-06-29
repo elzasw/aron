@@ -16,7 +16,7 @@ import { DomainObject } from 'common/common-types';
 import { FormHandle } from 'composite/form/form-types';
 import {
   NavigationContext,
-  Prompt,
+  NavigationPrompt,
 } from 'composite/navigation/navigation-context';
 import {
   DetailProps,
@@ -38,6 +38,7 @@ export function useDetail<OBJECT extends DomainObject>(
   ref: Ref<DetailHandle<OBJECT>>
 ) {
   const formRef = useRef<FormHandle<OBJECT>>(null);
+  const detailContainerRef = useRef<HTMLDivElement>(null);
 
   const props: Required<DetailProps<OBJECT>> = {
     ToolbarComponent: DetailToolbar,
@@ -47,6 +48,7 @@ export function useDetail<OBJECT extends DomainObject>(
     onPersisted: noop,
     initNewItem: defaultInitNewItem,
     showErrorPanel: false,
+    resetScrollbarPosition: false,
     validationSchema: Yup.object<OBJECT>(),
     ...options,
     toolbarProps: {
@@ -65,19 +67,21 @@ export function useDetail<OBJECT extends DomainObject>(
     id: 'EAS_DETAIL_LEAVE_DIALOG_TEXT',
     defaultMessage: 'Skutečně chcete opustit rozpracované změny?',
   });
-  const prompt: Prompt = useMemo(
+
+  const { registerPrompt, unregisterPrompt } = useContext(NavigationContext);
+  const { tableRef, detailRef } = useContext(EvidenceContext);
+
+  const prompt: NavigationPrompt = useMemo(
     () => ({
       title: confirmTitle,
       text: confirmText,
       clearCallback: () => {
+        detailRef.current?.cancelEditing();
         formRef.current?.resetValidation();
       },
     }),
-    [confirmTitle, confirmText]
+    [confirmTitle, confirmText, detailRef]
   );
-
-  const { registerPrompt, unregisterPrompt } = useContext(NavigationContext);
-  const { tableRef, detailRef } = useContext(EvidenceContext);
 
   const [mode, setMode] = useState<DetailMode>(DetailMode.NONE);
   const refreshListeners = useRef<RefreshListener[]>([]);
@@ -97,17 +101,21 @@ export function useDetail<OBJECT extends DomainObject>(
     }
   });
 
+  const callRefreshListeners = useEventCallback(() => {
+    refreshListeners.current.forEach((l) => l());
+  });
+
   const refresh = useEventCallback(() => {
     options.source.refresh();
 
-    refreshListeners.current.forEach((l) => l());
+    callRefreshListeners();
     formRef.current?.resetValidation();
   });
 
   const refreshAll = useEventCallback(() => {
     if (mode === DetailMode.VIEW) {
       options.source.refresh();
-      refreshListeners.current.forEach((l) => l());
+      callRefreshListeners();
 
       formRef.current?.resetValidation();
       props.onPersisted(options.source.data?.id ?? null);
@@ -115,18 +123,13 @@ export function useDetail<OBJECT extends DomainObject>(
   });
 
   const startNew = useEventCallback((data?: OBJECT) => {
-    if (options.source.data !== null) {
-      options.source.reset();
-    }
+    options.source.reset({ ...props.initNewItem(), ...data });
 
-    // needs to do the form initialization in next frame, because the data source reset will trigger form load of empty data
-    requestAnimationFrame(() => {
-      formRef.current?.setFieldValues({ ...props.initNewItem(), ...data });
-
-      setMode(DetailMode.NEW);
-      formRef.current?.resetValidation();
-      registerPrompt(prompt);
-    });
+    // todo: investigate deeper
+    // setMode(DetailMode.NEW);
+    setTimeout(() => setMode(DetailMode.NEW));
+    formRef.current?.resetValidation();
+    registerPrompt(prompt);
   });
 
   const startEditing = useEventCallback(() => {
@@ -176,6 +179,7 @@ export function useDetail<OBJECT extends DomainObject>(
             setActive(data.id);
             setMode(DetailMode.VIEW);
             props.onPersisted(data.id);
+            callRefreshListeners();
           });
         }
       } else if (mode === DetailMode.EDIT) {
@@ -187,6 +191,7 @@ export function useDetail<OBJECT extends DomainObject>(
         if (data !== undefined) {
           setMode(DetailMode.VIEW);
           props.onPersisted(data.id);
+          callRefreshListeners();
         }
       }
     }
@@ -198,6 +203,7 @@ export function useDetail<OBJECT extends DomainObject>(
 
       options.source.reset();
       formRef.current?.resetValidation();
+      tableRef.current?.resetSelection();
       setMode(DetailMode.NONE);
       props.onPersisted(null);
     }
@@ -220,7 +226,7 @@ export function useDetail<OBJECT extends DomainObject>(
           id: 'EAS_DETAIL_VALIDATION_MSG_ERROR',
           defaultMessage: 'Formulář obsahuje chyby.',
         });
-        showSnackbar(message, SnackbarVariant.ERROR);
+        showSnackbar(message, SnackbarVariant.ERROR, true);
       }
 
       return errors;
@@ -249,6 +255,7 @@ export function useDetail<OBJECT extends DomainObject>(
       onPersisted: props.onPersisted,
       isExisting: mode === DetailMode.VIEW || mode === DetailMode.EDIT,
       mode,
+      setMode,
       showErrorPanel: props.showErrorPanel,
       refresh,
       refreshAll,
@@ -269,6 +276,7 @@ export function useDetail<OBJECT extends DomainObject>(
       props.onPersisted,
       props.showErrorPanel,
       mode,
+      setMode,
       refresh,
       refreshAll,
       setActive,
@@ -287,11 +295,21 @@ export function useDetail<OBJECT extends DomainObject>(
     formRef.current?.setFieldValues(options.source.data ?? ({} as any));
   }, [options.source.data]);
 
+  useEffect(() => {
+    if (
+      props.resetScrollbarPosition &&
+      detailContainerRef.current?.scrollTop !== 0 &&
+      options.source.loading
+    ) {
+      detailContainerRef.current?.scroll({ top: 0 });
+    }
+  }, [options.source.loading]);
+
   useImperativeHandle(ref, () => context, [context]);
 
   const editing = mode === DetailMode.NEW || mode === DetailMode.EDIT;
 
-  return { props, context, formRef, editing };
+  return { props, context, formRef, detailContainerRef, editing };
 }
 
 function defaultInitNewItem(): any {

@@ -7,9 +7,13 @@ export const useStyles = makeStyles((theme) => {
   return {
     filterTitle: {
       fontWeight: 600,
-      fontSize: '1.5em',
+      fontSize: '1.3em',
       color: theme.palette.primary.main,
       margin: theme.spacing(2, 1, 1, 0),
+      display: 'flex',
+    },
+    filterDescription: {
+      marginBottom: theme.spacing(1),
     },
     bottomText: {
       cursor: 'pointer',
@@ -28,6 +32,13 @@ export const useStyles = makeStyles((theme) => {
       },
       '&:last-child': {
         padding: 0,
+      },
+    },
+    listedItemCheckbox: {
+      alignItems: 'flex-start',
+
+      '& > div': {
+        paddingTop: 3,
       },
     },
     radioButton: {
@@ -76,6 +87,33 @@ export const useStyles = makeStyles((theme) => {
     relationshipFilterLabel: {
       fontWeight: 'bold',
       marginBottom: theme.spacing(1),
+    },
+    rangeFilterSlider: {
+      marginTop: 30,
+    },
+    rangeFilterSliderWrapper: {
+      width: '90%',
+      margin: 'auto',
+    },
+    rangeFilterRefreshButton: {
+      position: 'absolute',
+      right: theme.spacing(2),
+    },
+    rangeFilterTitle: {
+      maxWidth: 'calc(100% - 1.1em)',
+    },
+    autocompleteFilter: {
+      '& .EasInput-root': {
+        '& div[role=button]': {
+          height: 'auto',
+          minHeight: 20,
+          maxWidth: '100%',
+          marginBottom: 5,
+          '& .MuiChip-label': {
+            whiteSpace: 'normal',
+          },
+        },
+      },
     },
   };
 });

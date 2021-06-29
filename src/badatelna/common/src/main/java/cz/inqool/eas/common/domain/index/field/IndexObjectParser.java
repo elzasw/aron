@@ -1,6 +1,8 @@
 package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
+import cz.inqool.eas.common.domain.index.field.java.Field;
+import cz.inqool.eas.common.domain.index.field.java.JavaField;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +14,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static cz.inqool.eas.common.domain.index.field.ES.Suffix.SEARCH;
-import static cz.inqool.eas.common.utils.ReflectionUtils.resolveType;
 
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -23,20 +24,24 @@ public class IndexObjectParser {
      */
     private static final int MAX_PROPERTY_DEPTH = 5;
 
-
     public static IndexObjectFields parse(Class<? extends DomainIndexed<?, ?>> indexedType) {
-        log.debug("Parsing indexed fields of class '{}'", indexedType.getSimpleName());
+        IndexObjectFields fields = new IndexObjectFields();
 
-        IndexObjectFields indexObjectFields = new IndexObjectFields();
-        for (java.lang.reflect.Field field : FieldUtils.getAllFields(indexedType)) {
-            parse(indexedType, field, null, MAX_PROPERTY_DEPTH)
-                    .forEach(indexField -> indexObjectFields.put(indexField.getElasticSearchPath(), indexField));
-        }
+        parse(indexedType, fields);
 
-        return indexObjectFields;
+        return fields;
     }
 
-    public static Set<IndexFieldNode> parse(Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field field, @Nullable IndexFieldInnerNode parent, int maxDepth) {
+    public static void parse(Class<? extends DomainIndexed<?, ?>> indexedType, IndexObjectFields indexObjectFields) {
+        log.debug("Parsing indexed fields of class '{}'", indexedType.getSimpleName());
+
+        for (java.lang.reflect.Field field : FieldUtils.getAllFields(indexedType)) {
+            parse(indexedType, new JavaField(field), null, MAX_PROPERTY_DEPTH)
+                    .forEach(indexField -> indexObjectFields.put(indexField.getElasticSearchPath(), indexField));
+        }
+    }
+
+    public static Set<IndexFieldNode> parse(Class<? extends DomainIndexed<?, ?>> rootClass, Field field, @Nullable IndexFieldInnerNode parent, int maxDepth) {
         log.trace("Parsing field '{}'", field.getName());
 
         Set<IndexFieldNode> indexFieldNodes = new TreeSet<>();
@@ -46,7 +51,7 @@ public class IndexObjectParser {
             indexFieldNodes.add(parseGeoPointLeaf(geoPointFieldAnnotation, rootClass, field, parent));
         }
 
-        Field fieldAnnotation = field.getAnnotation(Field.class);
+        org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = field.getAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
         if (fieldAnnotation != null) {
             if (fieldAnnotation.type() == FieldType.Object || fieldAnnotation.type() == FieldType.Nested) {
                 indexFieldNodes.addAll(parseFieldObject(fieldAnnotation, rootClass, field, parent, maxDepth));
@@ -63,7 +68,7 @@ public class IndexObjectParser {
         return indexFieldNodes;
     }
 
-    private static Set<IndexFieldNode> parseFieldObject(Field fieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field field, @Nullable IndexFieldInnerNode parent, int maxDepth) {
+    private static Set<IndexFieldNode> parseFieldObject(org.springframework.data.elasticsearch.annotations.Field fieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, Field field, @Nullable IndexFieldInnerNode parent, int maxDepth) {
         if (maxDepth <= 0) {
             log.debug("Max depth reached, skipping parsing of field '{}' of root class '{}'", field.getName(), rootClass.getSimpleName());
             return Set.of();
@@ -77,50 +82,55 @@ public class IndexObjectParser {
             log.warn("Nested field encountered: " + node.getJavaPath());
         }
 
+        Boost boost = field.getAnnotation(Boost.class);
+        if (boost != null) {
+            node.setBoost(boost.value());
+        }
+
         Set<IndexFieldNode> indexFieldNodes = new TreeSet<>();
         indexFieldNodes.add(node);
 
-        for (java.lang.reflect.Field nestedField : FieldUtils.getAllFields(resolveType(field))) {
-            indexFieldNodes.addAll(parse(rootClass, nestedField, node, maxDepth));
+        for (java.lang.reflect.Field nestedField : FieldUtils.getAllFields(field.resolveType())) {
+            indexFieldNodes.addAll(parse(rootClass, new JavaField(nestedField), node, maxDepth));
         }
 
         return indexFieldNodes;
     }
 
-    private static IndexFieldLeafNode parseFieldLeaf(Field fieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field field, @Nullable IndexFieldInnerNode parent) {
+    private static IndexFieldLeafNode parseFieldLeaf(org.springframework.data.elasticsearch.annotations.Field fieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, Field field, @Nullable IndexFieldInnerNode parent) {
         IndexFieldLeafNode leaf = new IndexFieldLeafNode(rootClass, field, fieldAnnotation, parent);
 
         // keyword and text fields are available for fulltext search
-        leaf.fulltext = fieldAnnotation.type() == FieldType.Text;
+        leaf.setFulltext(fieldAnnotation.type() == FieldType.Text);
 
         Boost boost = field.getAnnotation(Boost.class);
         if (boost != null) {
-            leaf.boost = boost.value();
+            leaf.setBoost(boost.value());
         }
 
         return leaf;
     }
 
-    private static IndexFieldLeafNode parseMultifieldLeaf(MultiField multiFieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field field, @Nullable IndexFieldInnerNode parent) {
+    private static IndexFieldLeafNode parseMultifieldLeaf(MultiField multiFieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, Field field, @Nullable IndexFieldInnerNode parent) {
         IndexFieldLeafNode leaf = new IndexFieldLeafNode(rootClass, field, multiFieldAnnotation.mainField(), parent);
-        leaf.fulltext = multiFieldAnnotation.mainField().type() == FieldType.Text;
+        leaf.setFulltext(multiFieldAnnotation.mainField().type() == FieldType.Text);
 
         for (InnerField innerField : multiFieldAnnotation.otherFields()) {
             leaf.registerInnerField(innerField.suffix(), innerField);
             if (SEARCH.equals(innerField.suffix())) {
-                leaf.fulltext = innerField.type() == FieldType.Text;
+                leaf.setFulltext(innerField.type() == FieldType.Text);
             }
         }
 
         Boost boost = field.getAnnotation(Boost.class);
         if (boost != null) {
-            leaf.boost = boost.value();
+            leaf.setBoost(boost.value());
         }
 
         return leaf;
     }
 
-    private static IndexFieldGeoPointLeafNode parseGeoPointLeaf(GeoPointField geoPointFieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, java.lang.reflect.Field field, @Nullable IndexFieldInnerNode parent) {
+    private static IndexFieldGeoPointLeafNode parseGeoPointLeaf(GeoPointField geoPointFieldAnnotation, Class<? extends DomainIndexed<?, ?>> rootClass, Field field, @Nullable IndexFieldInnerNode parent) {
         return new IndexFieldGeoPointLeafNode(rootClass, field, geoPointFieldAnnotation, parent);
     }
 }

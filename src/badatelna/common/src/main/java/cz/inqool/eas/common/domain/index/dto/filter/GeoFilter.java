@@ -11,21 +11,13 @@ import javax.validation.constraints.NotNull;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public abstract class GeoFilter extends AbstractFilter {
-
-    /**
-     * Attribute name
-     */
-    @NotBlank
-    protected String field;
-
+public abstract class GeoFilter<FILTER extends GeoFilter<FILTER>> extends FieldFilter<FILTER> {
 
     protected GeoFilter(@NotNull String operation) {
         super(operation);
     }
 
     protected GeoFilter(@NotNull String operation, @NotBlank String field) {
-        super(operation);
-        this.field = field;
+        super(operation, field);
     }
 }

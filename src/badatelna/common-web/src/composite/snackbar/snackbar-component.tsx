@@ -1,4 +1,9 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, {
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  ReactNode,
+} from 'react';
 import { useEventCallback } from 'utils/event-callback-hook';
 import clsx from 'clsx';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -17,7 +22,7 @@ import { useTimeout } from 'utils/timeout-hook';
  * Internal snackbar state.
  */
 interface SnackbarState {
-  message: string;
+  message: ReactNode;
   variant: SnackbarVariant;
   open: boolean;
 }
@@ -27,6 +32,7 @@ const variantIcon = {
   warning: WarningIcon,
   error: ErrorIcon,
   info: InfoIcon,
+  blank: undefined,
 };
 
 export const SnackbarComponent = forwardRef<
@@ -53,16 +59,24 @@ export const SnackbarComponent = forwardRef<
   });
 
   const showSnackbar = useEventCallback(
-    (message: string, variant: SnackbarVariant) => {
+    (message: ReactNode, variant: SnackbarVariant, autohide?: boolean) => {
       cancelTimeout();
 
       setSnackbar({ message, variant, open: true });
 
-      if (
-        timeout !== 0 &&
-        (variant === SnackbarVariant.SUCCESS ||
-          variant === SnackbarVariant.INFO)
-      ) {
+      let withTimeout = false;
+      if (autohide === undefined) {
+        withTimeout =
+          timeout !== 0 &&
+          (variant === SnackbarVariant.SUCCESS ||
+            variant === SnackbarVariant.INFO);
+      }
+
+      if (autohide !== undefined) {
+        withTimeout = timeout !== 0 && autohide;
+      }
+
+      if (withTimeout) {
         triggerTimeout(() => {
           hideSnackbar();
         }, timeout);
@@ -89,8 +103,15 @@ export const SnackbarComponent = forwardRef<
         className={classes[variant]}
         aria-describedby="client-snackbar"
         message={
-          <span id="client-snackbar" className={classes.message}>
-            <Icon className={clsx(classes.icon, classes.iconVariant)} />
+          <span
+            id="client-snackbar"
+            className={clsx(classes.message, {
+              [classes.dark]: variant === SnackbarVariant.BLANK,
+            })}
+          >
+            {Icon && (
+              <Icon className={clsx(classes.icon, classes.iconVariant)} />
+            )}
             {message}
           </span>
         }
@@ -101,6 +122,9 @@ export const SnackbarComponent = forwardRef<
             color="inherit"
             onClick={hideSnackbar}
             size="small"
+            className={clsx({
+              [classes.dark]: variant === SnackbarVariant.BLANK,
+            })}
           >
             <CloseIcon className={classes.icon} />
           </IconButton>,

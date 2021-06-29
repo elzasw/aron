@@ -16,7 +16,11 @@ public class SyslogObserver {
     @Async
     @EventListener
     public void handleEventCreate(CreateEvent<Event> event) {
-        service.sendEvent(event.getPayload());
+        Event payload = event.getPayload();
+
+        if (payload.isSyslog()) {
+            service.sendEvent(payload);
+        }
     }
 
     @Autowired

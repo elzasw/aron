@@ -1,4 +1,4 @@
-package cz.aron.core.image.tile.processing;//package cz.aron.core.image.tile;
+//package cz.aron.core.image.tile;
 //
 //import lombok.extern.slf4j.Slf4j;
 //import org.springframework.beans.factory.annotation.Value;

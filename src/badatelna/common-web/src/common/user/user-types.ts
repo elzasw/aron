@@ -19,7 +19,7 @@ export interface User {
 export interface UserProviderProps {
   meUrl: string;
   logoutUrl: string;
-  checkPermission?: (user: any, permission: string) => boolean;
+  checkPermission?: (user: any, permission: string, state?: any) => boolean;
 }
 
 export interface AuthorizedProps {

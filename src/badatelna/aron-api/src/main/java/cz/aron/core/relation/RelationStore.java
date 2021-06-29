@@ -16,11 +16,15 @@ public class RelationStore extends DomainStore<Relation, Relation, QRelation> {
         super(Relation.class);
     }
 
-    public List<String> findExistingIds(String sourceId) {
+    public List<String> findIdsBySource(String sourceId) {
         return query().select(metaModel.id).from(metaModel).where(metaModel.source.eq(sourceId)).fetch();
     }
 
-    public List<String> listIdsTargetingIds(Collection<String> targetIds) {
+    public List<String> findIdsByTarget(Collection<String> targetIds) {
         return query().select(metaModel.id).from(metaModel).where(metaModel.target.in(targetIds)).fetch();
+    }
+
+    public List<String> findRelationTypesByTarget(String targetId) {
+        return query().select(metaModel.relation).from(metaModel).where(metaModel.target.eq(targetId)).fetch();
     }
 }

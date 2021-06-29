@@ -2,12 +2,12 @@ import React, { useContext } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import ControlPointIcon from '@material-ui/icons/ControlPoint';
 import { FilesContext } from 'common/files/files-context';
+import { useEventCallback } from 'utils/event-callback-hook';
 import { useStyles } from 'components/table-field/table-field-styles';
 import { TableFieldContext } from 'components/table-field/table-field-context';
 import { TableFieldToolbarButton } from 'components/table-field/table-field-toolbar-button';
-import { useEventCallback } from 'utils/event-callback-hook';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
-import { SnackbarVariant } from 'index';
+import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
 import { FileTableContext } from './file-table-context';
 
 export function FileTableToolbar() {

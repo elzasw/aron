@@ -131,12 +131,13 @@ public class RealTypeModel implements TypeModel {
         if (fullName.equals(ArrayList.class.getCanonicalName()) ||
                 fullName.equals(LinkedList.class.getCanonicalName()) ||
                 fullName.equals(HashSet.class.getCanonicalName()) ||
+                fullName.equals(LinkedHashSet.class.getCanonicalName()) ||
                 fullName.equals(TreeSet.class.getCanonicalName())) {
             return fullName;
         } else if (fullName.equals(List.class.getCanonicalName())) {
             return ArrayList.class.getCanonicalName();
         } else if (fullName.equals(Set.class.getCanonicalName())) {
-            return HashSet.class.getCanonicalName();
+            return LinkedHashSet.class.getCanonicalName();
         } else {
             return null;
         }
@@ -155,6 +156,7 @@ public class RealTypeModel implements TypeModel {
 
         return  fullName.equals(Set.class.getCanonicalName()) ||
                 fullName.equals(HashSet.class.getCanonicalName()) ||
+                fullName.equals(LinkedHashSet.class.getCanonicalName()) ||
                 fullName.equals(TreeSet.class.getCanonicalName());
     }
 

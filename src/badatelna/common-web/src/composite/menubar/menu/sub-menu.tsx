@@ -6,7 +6,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { SubmenuProps } from './menu-types';
 import { useStyles } from './menu-styles';
 import { SubMenuItem } from './sub-menu-item';
-import { MenubarClassOverrides } from '../menubar-types';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export function SubMenu({
   items,
@@ -22,13 +22,19 @@ export function SubMenu({
     setOpenedItem(index);
   });
 
+  let topLevelClassName = `${classes.subMenuTopLevel}`;
+
+  if (classOverrides?.subMenuTopLevel) {
+    topLevelClassName += ` ${classOverrides.subMenuTopLevel}`;
+  }
+
   return (
     <>
       {opened && (
         <MuiMenuList
           classes={{
             root: clsx(classes.subMenu, classOverrides?.subMenu, {
-              [classes.subMenuTopLevel]: topLevel,
+              [topLevelClassName]: topLevel,
             }),
           }}
           disablePadding={true}
@@ -38,6 +44,7 @@ export function SubMenu({
               <Divider key={index} variant="middle" />
             ) : (
               <SubMenuItem
+                SubMenuComponent={SubMenu}
                 item={item}
                 key={index}
                 index={index}

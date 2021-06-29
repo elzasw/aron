@@ -17,15 +17,18 @@ import { DateTimeCell } from '../cells/date-time-cell';
 import { BooleanCell } from '../cells/boolean-cell';
 import { TimeCell } from '../cells/time-cell';
 import { TableFilterCells } from '../table-filter-cells';
+import { Filter } from 'common/common-types';
 
 export function useTableFilters<OBJECT>({
   tableId,
   version,
   columns,
+  initPreFilters,
 }: {
   tableId: string;
   version: number;
   columns: TableColumn<OBJECT>[];
+  initPreFilters: Filter[];
 }) {
   /**
    * Filters definition.
@@ -54,6 +57,11 @@ export function useTableFilters<OBJECT>({
     initFiltersState
   );
 
+  /**
+   * Prefilter state.
+   */
+  const [preFilters, setPreFilters] = useState<Filter[]>(initPreFilters);
+
   const filterDialogRef = useRef<DialogHandle>(null);
   const openFilterDialog = useEventCallback(() =>
     filterDialogRef.current?.open()
@@ -81,6 +89,8 @@ export function useTableFilters<OBJECT>({
     filters,
     filtersState,
     setFiltersState,
+    preFilters,
+    setPreFilters,
   };
 }
 
@@ -98,6 +108,8 @@ function deriveFilters<OBJECT>(columns: TableColumn<OBJECT>[]) {
         CellComponent,
         FilterComponent,
         filterOperation,
+        filterGroup,
+        filterOrder,
       }) =>
         ({
           enabled: false,
@@ -106,6 +118,8 @@ function deriveFilters<OBJECT>(columns: TableColumn<OBJECT>[]) {
           filterkey: filterkey || datakey,
           FilterComponent: FilterComponent ?? deriveComponent(CellComponent),
           value: '',
+          filterGroup: filterGroup ?? 0,
+          filterOrder: filterOrder ?? 0,
         } as TableFilter)
     );
 }

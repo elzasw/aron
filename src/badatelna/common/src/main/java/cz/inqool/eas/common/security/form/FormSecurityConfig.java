@@ -3,12 +3,15 @@ package cz.inqool.eas.common.security.form;
 import cz.inqool.eas.common.alog.event.EventBuilder;
 import cz.inqool.eas.common.alog.event.EventService;
 import cz.inqool.eas.common.authored.user.UserReference;
-import cz.inqool.eas.common.security.internal.RedirectStrategy;
 import cz.inqool.eas.common.security.User;
 import cz.inqool.eas.common.security.captcha.CaptchaValidator;
-import cz.inqool.eas.common.security.form.internal.*;
+import cz.inqool.eas.common.security.form.internal.FormLoginConfigurer;
+import cz.inqool.eas.common.security.form.internal.FormLoginEntryPoint;
+import cz.inqool.eas.common.security.form.internal.UsernamePasswordAuthenticationFilter;
+import cz.inqool.eas.common.security.form.internal.UsernamePasswordCaptchaAuthenticationFilter;
 import cz.inqool.eas.common.security.internal.CombinedFailureHandler;
 import cz.inqool.eas.common.security.internal.CombinedSuccessHandler;
+import cz.inqool.eas.common.security.internal.RedirectStrategy;
 import cz.inqool.eas.common.security.personal.PersonalEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +54,7 @@ public abstract class FormSecurityConfig extends WebSecurityConfigurerAdapter {
         FormLoginEntryPoint entryPoint = new FormLoginEntryPoint(this.getLoginPage());
         entryPoint.setRedirectStrategy(redirectStrategy);
 
-        SimpleUrlAuthenticationFailureHandler failureHandler = new SimpleUrlAuthenticationFailureHandler(this.getFailureRedirectUrl());
+        SimpleUrlAuthenticationFailureHandler failureHandler = getAuthenticationFailureHandler();
         failureHandler.setRedirectStrategy(redirectStrategy);
 
         UsernamePasswordAuthenticationFilter authenticationFilter;
@@ -124,6 +127,10 @@ public abstract class FormSecurityConfig extends WebSecurityConfigurerAdapter {
                             }
                     ))
                     .loginProcessingUrl(this.getAuthUrl());
+    }
+
+    protected SimpleUrlAuthenticationFailureHandler getAuthenticationFailureHandler() {
+        return new SimpleUrlAuthenticationFailureHandler(this.getFailureRedirectUrl());
     }
 
     @Override

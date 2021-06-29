@@ -1,8 +1,17 @@
-import { ComponentType, ReactNode, RefAttributes } from 'react';
+import {
+  ComponentType,
+  ReactNode,
+  RefAttributes,
+  Dispatch,
+  SetStateAction,
+} from 'react';
+import * as Yup from 'yup';
 import { DialogHandle } from 'components/dialog/dialog-types';
-import { ScrollableSource, Filter } from 'common/common-types';
+import { ScrollableSource, Filter, Params } from 'common/common-types';
 import { BulkAction } from './bulk-action-menu/bulk-action-types';
-import { ReportDialogProps } from 'composite/report-dialog/report-dialog-types';
+import { AbortableFetch } from 'utils/abortable-fetch';
+import { Callback } from 'composite/prompt/prompt-types';
+import { ExportDialogProps } from 'modules/export/components/dialog/export-dialog/export-dialog-types';
 
 export interface TableToolbarProps {
   before?: ReactNode;
@@ -69,22 +78,33 @@ export interface FilterComponentProps {
   onChangeState: (state: TableFilterState) => void;
 }
 
-export type TableColumnValueMapper<OBJECT, FIELD = any> = (args: {
-  column: TableColumn<OBJECT, FIELD>;
-  rowValue: OBJECT;
-  value: FIELD;
-}) => FIELD;
+export interface TableColumnValueMapper<OBJECT, FIELD = any> {
+  (args: {
+    column: TableColumn<OBJECT, FIELD>;
+    rowValue: OBJECT;
+    value: FIELD;
+    sorts: TableSort[];
+  }): FIELD;
+  displayName?: string;
+}
 
 export interface TableColumn<OBJECT, FIELD = any> {
   /**
    * Label of the column shown in header component.
    */
-  name: ReactNode;
+  name: string;
 
   /**
    * Attribute of the RowData object.
    */
   datakey: string;
+
+  /**
+   * Display key which will be used in displaying the value.
+   *
+   * Defaults to datakey.
+   */
+  displaykey?: string;
 
   /**
    * Sort key which will be used in params building.
@@ -159,6 +179,20 @@ export interface TableColumn<OBJECT, FIELD = any> {
   filterOperation?: TableFilterOperation;
 
   /**
+   * Specifies in which group filter control belongs.
+   *
+   * Defualts to 0.
+   */
+  filterGroup?: number;
+
+  /**
+   * Specifies order of filter control inside of group.
+   *
+   * Defualts to 0.
+   */
+  filterOrder?: number;
+
+  /**
    * Cell component.
    *
    */
@@ -215,6 +249,11 @@ export interface TableToolbarButtonProps {
    */
   onClick: () => void;
 
+  /**
+   * The URL to link to when the button is clicked.
+   */
+  href?: string;
+
   endIcon?: ReactNode;
 
   /**
@@ -239,6 +278,8 @@ export interface TableToolbarButtonProps {
    * Default: false
    */
   secondary?: boolean;
+
+  className?: string;
 }
 
 export interface TableRowProps<OBJECT> {
@@ -300,10 +341,10 @@ export interface TableProps<OBJECT> {
   ColumnDialogComponent?: ComponentType<RefAttributes<DialogHandle>>;
 
   /**
-   * Custom report dialog component.
+   * Custom export dialog component.
    */
-  ReportDialogComponent?: ComponentType<
-    ReportDialogProps & RefAttributes<DialogHandle>
+  ExportDialogComponent?: ComponentType<
+    ExportDialogProps & RefAttributes<DialogHandle>
   >;
 
   /**
@@ -329,9 +370,19 @@ export interface TableProps<OBJECT> {
   defaultSorts?: TableSort[];
 
   /**
+   * Additional filters to datasource.
+   */
+  defaultPreFilters?: Filter[];
+
+  /**
+   * Modifies the source to return items of specific states
+   */
+  include?: string[];
+
+  /**
    * Name of the table to show.
    */
-  tableName?: ReactNode | null;
+  tableName?: string | null;
 
   /**
    * Show refresh button.
@@ -349,12 +400,19 @@ export interface TableProps<OBJECT> {
   showFilterButton?: boolean;
 
   /**
+   * Show named settings button.
+   *
+   * Default: false.
+   */
+  showNamedSettingsButton?: boolean;
+
+  /**
    * Show bulk action button.
    */
   showBulkActionButton?: boolean;
 
   /**
-   * Show report button.
+   * Show export button.
    */
   showReportButton?: boolean;
 
@@ -394,7 +452,7 @@ export interface TableHandle<OBJECT> {
   /**
    * Name of the table to show.
    */
-  tableName: ReactNode | null;
+  tableName: string | null;
 
   source: ScrollableSource<OBJECT>;
 
@@ -434,6 +492,11 @@ export interface TableHandle<OBJECT> {
   disabledFilterButton: boolean;
 
   /**
+   * Disable named settings button.
+   */
+  disabledNamedSettingsButton: boolean;
+
+  /**
    * Disable bulk action button.
    */
   disabledBulkActionButton: boolean;
@@ -444,7 +507,7 @@ export interface TableHandle<OBJECT> {
   disabledResetSortsButton: boolean;
 
   /**
-   * Disable report action button.
+   * Disable export action button.
    */
   disabledReportButton: boolean;
 
@@ -464,7 +527,14 @@ export interface TableHandle<OBJECT> {
   showFilterButton: boolean;
 
   /**
-   * Show report button.
+   * Show named settings button.
+   *
+   * Default: false.
+   */
+  showNamedSettingsButton: boolean;
+
+  /**
+   * Show export button.
    */
   showReportButton: boolean;
 
@@ -489,7 +559,7 @@ export interface TableHandle<OBJECT> {
   bulkActions: BulkAction<any>[];
 
   /**
-   * Tag for report location.
+   * Tag for export location.
    */
   reportTag: string | null;
 
@@ -508,6 +578,12 @@ export interface TableHandle<OBJECT> {
   sorts: TableSort[];
   filters: TableFilter[];
   filtersState: TableFilterState[];
+
+  /**
+   * Additional filters to datasource.
+   */
+  preFilters: Filter[];
+  setPreFilters: Dispatch<SetStateAction<Filter[]>>;
 
   /**
    * Toggles row selection by id.
@@ -537,9 +613,9 @@ export interface TableHandle<OBJECT> {
   openColumnDialog: () => void;
 
   /**
-   * Opens report dialog.
+   * Opens export dialog.
    */
-  openReportDialog: () => void;
+  openExportDialog: () => void;
 
   /**
    * Closes column settings dialog.
@@ -582,6 +658,11 @@ export interface TableHandle<OBJECT> {
    * Resets sorts to default
    */
   resetSorts: () => void;
+
+  /**
+   * Sets sorts.
+   */
+  setSorts: (sorts: TableSort[]) => void;
 }
 
 export interface TableSort {
@@ -720,4 +801,59 @@ export interface TableFilterDialogItemProps {
    * OnChange handler for complex filter value.
    */
   onChangeFilterState: (state: TableFilterState) => void;
+}
+
+export interface TableToolbarButtonActionProps<T = unknown> {
+  promptKey: string;
+  buttonLabel: ReactNode;
+  buttonTooltip?: ReactNode;
+
+  dialogTitle: string;
+  dialogText: string;
+  dialogWidth?: number;
+
+  FormFields?: ComponentType<{ onConfirm?: Callback; onCancel?: () => void }>;
+  formValidationSchema?: Yup.Schema<T>;
+  formInitialValues?: T;
+
+  successMessage?: string;
+  errorMessage?: string;
+
+  apiCall: (
+    params: Params,
+    selected: string[],
+    formData?: any
+  ) => AbortableFetch;
+
+  /**
+   * Success callback.
+   *
+   * default: refresh CRUD source and call onPersisted from DetailContext.
+   */
+  onSuccess?: () => Promise<void>;
+
+  onError?: (err: Error) => Promise<void>;
+
+  /**
+   * Callback handling the JSON result of apiCall.
+   */
+  onResult?: (result: any) => Promise<any>;
+
+  /**
+   * Callback called to determine if the button should be shown.
+   * This is called on top of modes property handling.
+   *
+   * Default: show allways
+   */
+  onShouldShow?: () => boolean;
+
+  /**
+   * Customize button component.
+   */
+  ButtonComponent?: ComponentType<TableToolbarButtonProps>;
+
+  /**
+   * Set default props.
+   */
+  buttonProps?: Partial<TableToolbarButtonProps>;
 }

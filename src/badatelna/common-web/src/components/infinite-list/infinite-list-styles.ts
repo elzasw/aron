@@ -2,14 +2,8 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 
 export const useStyles = makeStyles((theme) => ({
   item: {
-    paddingTop: '2pt',
-    paddingBottom: '2pt',
+    padding: '2pt 0',
     fontFamily: theme.typography.fontFamily,
-  },
-  itemText: {
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
   },
   itemSelected: {
     backgroundColor: theme.palette.grey[300],

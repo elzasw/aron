@@ -1,11 +1,10 @@
 package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
+import cz.inqool.eas.common.domain.index.field.java.Field;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-
-import java.lang.reflect.Field;
 
 /**
  * Represents a field in ElasticSearch mapping, annotated with {@link GeoPointField}.

@@ -1,17 +1,12 @@
 package cz.aron.core.model.types;
 
-import cz.aron.core.model.types.dto.ApuPartType;
-import cz.aron.core.model.types.dto.ItemType;
-import cz.aron.core.model.types.dto.MetadataType;
-import cz.aron.core.model.types.dto.TypesConfigDto;
+import cz.aron.core.model.types.dto.*;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Lukas Jane (inQool) 19.11.2020.
@@ -23,6 +18,7 @@ public class TypesHolder {
     private Map<String, ApuPartType> apuPartTypeMap = new LinkedHashMap<>();
     private Map<String, MetadataType> metadataTypeMap = new LinkedHashMap<>();
     private Map<String, ItemType> itemTypeMap = new LinkedHashMap<>();
+    private Map<String, List<String>> itemTypeToItemGroupMap = new LinkedHashMap<>();
 
     @Getter
     private Long currentConfigCrc;
@@ -38,6 +34,11 @@ public class TypesHolder {
         }
         for (MetadataType metadataType : typesConfigDto.getMetaDataTypes()) {
             metadataTypeMap.put(metadataType.getCode(), metadataType);
+        }
+        for (ItemTypeGroup itemTypeGroup : typesConfigDto.getItemGroups()) {
+            for (String itemType : itemTypeGroup.getItems()) {
+                itemTypeToItemGroupMap.computeIfAbsent(itemType, k -> new ArrayList<>()).add(itemTypeGroup.getCode());
+            }
         }
         currentConfigCrc = typesConfigDto.getCurrentCrc();
     }
@@ -64,5 +65,13 @@ public class TypesHolder {
 
     public MetadataType getMetadataTypeForCode(String code) {
         return metadataTypeMap.get(code);
+    }
+
+    public List<String> getItemGroupsForItemType(String itemType) {
+        List<String> itemGroups = itemTypeToItemGroupMap.get(itemType);
+        if (itemGroups == null) {
+            itemGroups = new ArrayList<>();
+        }
+        return itemGroups;
     }
 }

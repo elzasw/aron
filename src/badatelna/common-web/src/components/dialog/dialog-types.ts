@@ -21,6 +21,8 @@ export interface DialogProps {
 
   loading?: boolean;
 
+  disableBackdrop?: boolean;
+
   /**
    * Render prop method. Used instead of direct children to conditionaly render the content.
    */

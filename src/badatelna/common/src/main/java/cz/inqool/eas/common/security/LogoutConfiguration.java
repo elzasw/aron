@@ -23,9 +23,6 @@ public abstract class LogoutConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        RedirectStrategy redirectStrategy = new RedirectStrategy();
-        redirectStrategy.setContextRelative(true);
-
         http
                 .requestMatcher(new AntPathRequestMatcher(getLogoutUrl()))
                 .csrf().disable()
@@ -60,7 +57,10 @@ public abstract class LogoutConfiguration extends WebSecurityConfigurerAdapter {
                                 }
                             }
 
-                            redirectStrategy.sendRedirect(request, response, getSuccessRedirectUrl());
+                            RedirectStrategy redirectStrategy = new RedirectStrategy();
+                            String redirect = getSuccessRedirectUrl();
+                            redirectStrategy.setContextRelative(!redirect.startsWith("http"));
+                            redirectStrategy.sendRedirect(request, response, redirect);
                     });
     }
 

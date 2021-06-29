@@ -17,8 +17,7 @@ public class MailStore extends AuthoredStore<Mail, Mail, QMail> {
                 select(model).
                 from(model).
                 where(model.deleted.isNull()).
-                where(model.sent.isFalse()).
-                where(model.error.isNull()).
+                where(model.state.eq(MailState.QUEUED)).
                 fetch();
 
         detachAll();

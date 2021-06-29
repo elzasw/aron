@@ -48,7 +48,7 @@ export function FormFieldWrapper({
     if (helpLabel === ' ') {
       helpLabel = requiredText;
     } else {
-      helpLabel = helpLabel + '<br/>' + requiredText;
+      helpLabel = requiredText + '<br/>' + helpLabel;
     }
   }
 
@@ -67,7 +67,7 @@ export function FormFieldWrapper({
         container
         spacing={0}
         alignItems="flex-start"
-        classes={{ root: spacing }}
+        classes={{ root: clsx({ [spacing]: !layoutOptions?.noSpacing }) }}
       >
         {!hideLabel ? (
           <>
@@ -82,6 +82,7 @@ export function FormFieldWrapper({
                 >
                   <Typography
                     variant="body2"
+                    component="div"
                     classes={{
                       root: clsx(labelText, {
                         [labelBold]: required || labelOptions.bold,
@@ -103,11 +104,18 @@ export function FormFieldWrapper({
                 {after}
               </Box>
               {!hideErrors &&
-                errors?.map((error, index) => (
-                  <FormHelperText key={index} error={hasError}>
-                    <FormattedMessage id={error.value} />
-                  </FormHelperText>
-                ))}
+                errors?.map((error, index) => {
+                  const [key, defaultMessage] = error.value.split(';;');
+
+                  return (
+                    <FormHelperText key={index} error={hasError}>
+                      <FormattedMessage
+                        id={key}
+                        defaultMessage={defaultMessage}
+                      />
+                    </FormHelperText>
+                  );
+                })}
             </Grid>
           </>
         ) : (
@@ -118,11 +126,18 @@ export function FormFieldWrapper({
               {after}
             </Box>
             {!hideErrors &&
-              errors?.map((error, index) => (
-                <FormHelperText key={index} error={hasError}>
-                  <FormattedMessage id={error.value} />
-                </FormHelperText>
-              ))}
+              errors?.map((error, index) => {
+                const [key, defaultMessage] = error.value.split(';;');
+
+                return (
+                  <FormHelperText key={index} error={hasError}>
+                    <FormattedMessage
+                      id={key}
+                      defaultMessage={defaultMessage}
+                    />
+                  </FormHelperText>
+                );
+              })}
           </Grid>
         )}
       </Grid>

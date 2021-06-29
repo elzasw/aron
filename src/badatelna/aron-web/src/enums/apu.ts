@@ -14,6 +14,7 @@ export enum ApuPartItemDataType {
   STRING = 'STRING',
   UNITDATE = 'UNITDATE',
   LINK = 'LINK',
+  ITEM_AGGREG = 'ITEM_AGGREG',
 }
 
 export enum ApuPartItemEnum {

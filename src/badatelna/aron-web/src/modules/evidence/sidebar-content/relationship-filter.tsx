@@ -1,67 +1,78 @@
 import React, { ReactElement } from 'react';
-import { isEmpty, some } from 'lodash';
+import { isEmpty, some, replace } from 'lodash';
 import Divider from '@material-ui/core/Divider';
 import IconButton from '@material-ui/core/IconButton';
 import CloseIcon from '@material-ui/icons/Close';
 import { FormattedMessage } from 'react-intl';
 
-import { RelationshipFilterCreator } from './relationship-filter-creator';
-import { ApuPartItemType, Relationship } from '../../../types';
+import { Relationship } from '../../../types';
 import { useStyles } from './styles';
 import { useSpacingStyles } from '../../../styles';
 import { getApuPartItemName } from '../../../common-utils';
 import { Message } from '../../../enums';
+import { RelationshipFilterProps, RelationshipFilterCreator } from '.';
+import { Tooltip } from '@eas/common-web';
 
-interface Props {
-  relationships: Relationship[];
-  inDialog?: boolean;
-  onChange: (newRelationships: Relationship[]) => void;
-  apuPartItemTypes: ApuPartItemType[];
-}
-
-export default function RelationshipFilter({
-  relationships,
-  inDialog,
+export function RelationshipFilter({
+  source,
+  value: filterValue,
   onChange,
   apuPartItemTypes,
-}: Props): ReactElement {
+  tooltip,
+  description,
+  inDialog,
+  group,
+  apiFilters = [],
+}: RelationshipFilterProps): ReactElement {
   const classes = useStyles();
   const spacingClasses = useSpacingStyles();
 
-  const handleRemove = (field: string, value: string) =>
-    onChange(
-      relationships.filter(
-        (r: Relationship) => !(r.value === value && r.field === field)
-      )
-    );
-
   const handleChange = (newRelationships: Relationship[]) => {
-    onChange([
-      ...relationships,
-      ...newRelationships.filter(
-        ({ field, value }: Relationship) =>
-          !some(relationships, { field, value })
+    onChange({
+      source,
+      value: [
+        ...(filterValue ? filterValue : []),
+        ...newRelationships.filter(
+          ({ field, value }: Relationship) =>
+            !some(filterValue, { field, value })
+        ),
+      ],
+    });
+  };
+
+  const handleRemove = (field: string, value: string) => {
+    onChange({
+      source,
+      value: filterValue.filter(
+        (r: Relationship) => r.value !== value || r.field !== field
       ),
-    ]);
+    });
   };
 
   return (
     <>
-      {inDialog || !isEmpty(relationships) ? (
+      {inDialog || !isEmpty(filterValue) ? (
         <div className={classes.filterTitle}>
-          <FormattedMessage id={Message.RELATIONSHIPS} />
+          <Tooltip title={tooltip}>
+            <div>{getApuPartItemName(apuPartItemTypes, source)}</div>
+          </Tooltip>
         </div>
       ) : (
         <></>
       )}
-      {!isEmpty(relationships) && (
+      {inDialog && description ? (
+        <div className={classes.filterDescription}>{description}</div>
+      ) : (
+        <></>
+      )}
+      {!isEmpty(filterValue) && (
         <div className={spacingClasses.marginBottom}>
           {inDialog && (
             <div className={classes.relationshipFilterLabel}>
               <FormattedMessage id={Message.ACTIVE_FILTERS} />
             </div>
           )}
-          {relationships.map(({ field, value }, i) => (
+          {filterValue.map(({ field, value, name }, i) => (
             <div className={classes.relationshipFilterListItem} key={i}>
               {inDialog && (
                 <IconButton
@@ -72,7 +83,8 @@ export default function RelationshipFilter({
                   <CloseIcon />
                 </IconButton>
               )}
-              {getApuPartItemName(apuPartItemTypes, field || '')} - {value}
+              {getApuPartItemName(apuPartItemTypes, field || '')} -{' '}
+              {name || value}
             </div>
           ))}
           {inDialog && <Divider className={spacingClasses.marginTopSmall} />}
@@ -80,7 +92,13 @@ export default function RelationshipFilter({
       )}
       {inDialog && (
         <RelationshipFilterCreator
-          {...{ onChange: handleChange, apuPartItemTypes }}
+          {...{
+            onChange: handleChange,
+            apuPartItemTypes,
+            apiFilters,
+            source,
+            group: group && replace(group, '_', '~'),
+          }}
         />
       )}
     </>

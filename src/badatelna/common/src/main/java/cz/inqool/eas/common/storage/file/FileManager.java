@@ -72,11 +72,11 @@ public class FileManager {
      * @throws InvalidArgument  if the file size exceeds allowed size limit
      * @throws GeneralException if any other I/O exception occurs
      */
-    @Transactional
+    @Transactional(dontRollbackOn=VirusFoundException.class)
     public File upload(@NotNull MultipartFile multipart) {
         lte(multipart.getSize(), fileSizeLimit, () -> new InvalidArgument(multipart.getName(), SIZE_TOO_BIG));
 
-        String name = getFileName(multipart);
+        String name = getFileName(multipart).toLowerCase();
 
         if (allowedExtensions != null) {
             boolean fail = Arrays.stream(allowedExtensions).noneMatch(name::endsWith);
@@ -143,10 +143,8 @@ public class FileManager {
      * @throws InvalidArgument  if the file size exceeds allowed size limit
      * @throws GeneralException if any other I/O exception occurs
      */
-    @Transactional
+    @Transactional(dontRollbackOn = GeneralException.class)
     public File store(String name, long size, String contentType, InputStream stream) {
-        lte(size, fileSizeLimit, () -> new InvalidArgument(name, SIZE_TOO_BIG));
-
         File file = new File();
         file.setName(name);
         file.setContentType(contentType);

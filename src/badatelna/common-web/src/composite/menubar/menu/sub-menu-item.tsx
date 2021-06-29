@@ -8,8 +8,7 @@ import MuiMenuItem from '@material-ui/core/MenuItem';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { SubmenuItemProps } from './menu-types';
 import { useStyles } from './menu-styles';
-import { SubMenu } from './sub-menu';
-import { MenubarClassOverrides } from '../menubar-types';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export function SubMenuItem({
   item,
@@ -17,6 +16,7 @@ export function SubMenuItem({
   opened,
   onHover,
   classOverrides,
+  SubMenuComponent,
 }: SubmenuItemProps & MenubarClassOverrides) {
   const classes = useStyles();
 
@@ -28,12 +28,22 @@ export function SubMenuItem({
 
   return (
     <MuiMenuItem
-      onClick={item.onClick}
+      component={item.href ? 'a' : 'div'}
+      href={item.href}
+      onClick={(e: React.MouseEvent) => {
+        e.preventDefault();
+
+        if (item.onClick) {
+          item.onClick();
+        }
+      }}
       onMouseEnter={handleMouseEnter}
       className={clsx(classOverrides?.subMenuItem)}
       classes={{ root: classes.subMenuItem }}
     >
-      <ListItemIcon>{item.icon && <Icon>{item.icon}</Icon>}</ListItemIcon>
+      <ListItemIcon classes={{ root: clsx(classOverrides?.subMenuItemIcon) }}>
+        {item.icon && <Icon>{item.icon}</Icon>}
+      </ListItemIcon>
       <Typography
         variant="inherit"
         className={clsx(
@@ -44,7 +54,7 @@ export function SubMenuItem({
         {item.label}
       </Typography>
       {item.items?.length && (
-        <SubMenu
+        <SubMenuComponent
           items={item.items}
           opened={opened}
           classOverrides={classOverrides}

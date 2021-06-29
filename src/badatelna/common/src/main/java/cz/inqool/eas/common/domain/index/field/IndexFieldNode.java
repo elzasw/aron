@@ -1,20 +1,19 @@
 package cz.inqool.eas.common.domain.index.field;
 
 import cz.inqool.eas.common.domain.DomainIndexed;
+import cz.inqool.eas.common.domain.index.field.java.Field;
 import cz.inqool.eas.common.domain.index.reference.CollectionReference;
 import cz.inqool.eas.common.domain.index.reference.LabeledReference;
 import cz.inqool.eas.common.domain.index.reindex.reference.IndexReferenceField;
 import cz.inqool.eas.common.domain.index.reindex.reference.annotation.IndexReference;
 import cz.inqool.eas.common.domain.index.reindex.reference.annotation.IndexReferences;
 import cz.inqool.eas.common.exception.GeneralException;
-import cz.inqool.eas.common.utils.ReflectionUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.lang.Nullable;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,7 +45,7 @@ public abstract class IndexFieldNode implements Comparable<IndexFieldNode> {
     protected IndexFieldNode(Class<? extends DomainIndexed<?, ?>> rootClass, Field javaField, @Nullable IndexFieldInnerNode parent) {
         this.rootClass = rootClass;
         this.javaFieldName = javaField.getName();
-        this.javaFieldClass = ReflectionUtils.resolveType(javaField);
+        this.javaFieldClass = javaField.resolveType();
         this.parent = parent;
         if (parent != null) {
             parent.addChild(this);

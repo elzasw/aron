@@ -13,12 +13,20 @@ public interface Viewable {
 
     default boolean skipInView() {
         ViewContext view = getContext().getView();
+        return skipInView(view);
+    }
+
+    default boolean skipInView(ViewContext view) {
         String[] views = getViews();
         return views != null && !asList(views).contains(view.getName());
     }
 
     default boolean includeInView() {
         return !skipInView();
+    }
+
+    default boolean includeInView(ViewContext view) {
+        return !skipInView(view);
     }
 
     default ViewContext getMappedView() {

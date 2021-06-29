@@ -1,21 +1,58 @@
-import { ApuType, FilterType } from '../enums';
+import { ApuType, FacetType, FacetDisplay } from '../enums';
+import { ApiFilterOperation, Filter } from './api';
+import { Option } from './option';
+
+type FilterConfigValue =
+  | string
+  | string[]
+  | boolean[]
+  | Option[]
+  | Relationship[];
+
+interface Tooltip {
+  value: string;
+  tooltip: string;
+}
 
 export interface FilterOption {
   value: string;
   label: string;
 }
 
-export interface FilterConfig {
-  type?: FilterType;
-  label?: string;
-  field: string;
-  value: string[];
+export interface BasicFilterConfig {
+  source: string;
+  type: FacetType;
+  value?: FilterConfigValue;
   options?: any[];
+  order?: string[];
+}
+
+export interface FilterConfig {
+  type?: FacetType;
+  label?: string;
+  tootlip?: string;
+  tooltips?: Tooltip[];
+  description?: string;
+  source: string;
+  operation?: ApiFilterOperation;
+  value: FilterConfigValue;
+  options?: any[];
+  filters?: Filter[];
+  display?: FacetDisplay;
+  displayedItems?: number;
+  maxDisplayedItems?: number;
+  order?: string[];
+  orderBy?: string;
+  when?: {
+    apuType?: ApuType;
+    all?: FacetAllItem[];
+  };
 }
 
 export interface FavouriteQuery {
-  icon: any;
+  icon: string;
   label: string;
+  tooltip?: string;
   query?: string;
   type?: ApuType;
   filters?: FilterConfig[];
@@ -28,33 +65,43 @@ interface FacetInterval {
   toText: string;
 }
 
-export enum FacetType {
-  FULLTEXT = 'FULLTEXT',
-  ENUM = 'ENUM',
-  MULTI_REF = 'MULTI_REF',
-  MULTI_REF_EXT = 'MULTI_REF_EXT',
-  UNITDATE = 'UNITDATE',
+interface FacetAllItem {
+  apuType?: ApuType;
+  filter?: string;
+  value?: string;
 }
 
 export interface Facet {
-  display: 'ALWAYS' | 'DETAIL';
-  facets: Facet[];
-  intervals: FacetInterval[];
-  maxItems: number;
+  display: FacetDisplay;
+  facets?: Facet[];
+  intervals?: FacetInterval[];
+  displayedItems: number;
+  maxDisplayedItems: number;
   source: string;
   type: FacetType;
-  when: { apuType: ApuType };
+  order?: string[];
+  orderBy?: string;
+  tootlip?: string;
+  tooltips?: Tooltip[];
+  description?: string;
+  when: {
+    apuType?: ApuType;
+    all?: FacetAllItem[];
+  };
 }
 
 export interface AggregationItem {
   key: string;
   value: string;
-  [label: string]: string; // label property in form `${key}~LABEL`
+  [label: string]: string;
 }
+
 export interface AggregationItems {
   [name: string]: AggregationItem[];
 }
+
 export interface Relationship {
   field: string;
   value: string;
+  name?: string;
 }

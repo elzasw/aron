@@ -1,18 +1,17 @@
 import React, { memo, ReactElement, useContext } from 'react';
 import { format, parseISO } from 'date-fns';
-import Typography from '@material-ui/core/Typography';
 import { LocaleContext } from 'common/locale/locale-context';
 import { TableFieldCellProps } from '../table-field-types';
-import { useStyles } from '../table-field-styles';
+import { TextCell } from './text-cell';
 
-export const DateTimeCell = memo(function DateTimeCell<OBJECT>({
-  value,
-}: TableFieldCellProps<OBJECT>) {
-  const classes = useStyles();
-
+export const DateTimeCell = memo(function DateTimeCell<OBJECT>(
+  props: TableFieldCellProps<OBJECT>
+) {
   const { locale } = useContext(LocaleContext);
 
-  const date = value ? format(parseISO(value), locale.dateTimeFormat) : '';
+  const date = props.value
+    ? format(parseISO(props.value), locale.dateTimeFormat)
+    : '';
 
-  return <Typography className={classes.tableCell}>{date}</Typography>;
+  return <TextCell {...props} value={date} />;
 }) as <OBJECT>(p: TableFieldCellProps<OBJECT>) => ReactElement;

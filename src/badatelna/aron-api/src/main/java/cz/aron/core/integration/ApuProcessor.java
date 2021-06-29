@@ -41,8 +41,13 @@ public class ApuProcessor {
     @Inject private ApuRequestQueue apuRequestQueue;
     @Inject private RelationStore relationStore;
 
-    private Map<String, ApuEntity> saveCache = new HashMap<>();
+    private Map<String, ApuEntity> saveCache = new LinkedHashMap<>();   //maintain order so that parent always comes before child
+    private Set<String> relationsDeleteCache = new HashSet<>();
+    private Set<Relation> relationsAddCache = new HashSet<>();
+    private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
     private Set<String> apuIdsProcessed = new HashSet<>();
+
+    private static final int CACHE_SIZE = 1000;
 
     private int apuOrderCounter;
 
@@ -51,15 +56,16 @@ public class ApuProcessor {
         try (StringReader reader = new StringReader(metadata)) {
             apuSource = JAXB.unmarshal(reader, cz.aron.apux._2020.ApuSource.class);
         }
+        log.debug("Processing apu source " + apuSource.getUuid());
         ApuSource ourApuSource = apuSourceRepository.find(apuSource.getUuid());
         boolean create = false;
         if (ourApuSource == null) {
             create = true;
-            ourApuSource = new ApuSource();
+            ourApuSource = new cz.aron.core.model.ApuSource();
             ourApuSource.setId(apuSource.getUuid());
         }
         else {
-            List<String> apusToDelete = apuStore.findBySourceId(apuSource.getUuid());
+            List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(apuSource.getUuid());
             apuRepository.delete(apusToDelete);
         }
         ourApuSource.setData(metadata);
@@ -84,7 +90,7 @@ public class ApuProcessor {
         processApuAndFiles(data, null);
     }
 
-    public void processApu(Apu apu, ApuSource apuSource, Map<String, Path> filesMap) {
+    public void processApu(Apu apu, cz.aron.core.model.ApuSource apuSource, Map<String, Path> filesMap) {
         ApuEntity apuEntity = new ApuEntity();
         apuEntity.setId(apu.getUuid());
         apuEntity.setName(apu.getName());
@@ -118,7 +124,8 @@ public class ApuProcessor {
             }
         }
         saveCache.put(apuEntity.getId(), apuEntity);
-        if (saveCache.size() > 100) {
+        apusToHaveIncomingRelsUpdated.add(apuEntity.getId());
+        if (saveCache.size() > CACHE_SIZE) {
             flush();
         }
         recordRelations(apuEntity);
@@ -225,8 +232,7 @@ public class ApuProcessor {
     }
 
     private void recordRelations(ApuEntity apuEntity) {
-        List<String> existingIds = relationRepository.findExistingIds(apuEntity.getId());
-        relationRepository.delete(existingIds);
+        relationsDeleteCache.add(apuEntity.getId());
         for (ApuPart part : apuEntity.getParts()) {
             for (ApuPartItem item : part.getItems()) {
                 ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
@@ -235,20 +241,39 @@ public class ApuProcessor {
                     relation.setSource(apuEntity.getId());
                     relation.setRelation(item.getType());
                     relation.setTarget(item.getValue());
-                    relationRepository.create(relation);
+                    relationsAddCache.add(relation);
+                    apusToHaveIncomingRelsUpdated.add(item.getValue());
                 }
             }
+        }
+        if (relationsDeleteCache.size() > CACHE_SIZE || relationsAddCache.size() > CACHE_SIZE) {
+            flush();
         }
     }
 
     private void flush() {
+        //save outgoing relations
+        Set<String> relationIdsToDelete = new HashSet<>();
+        for (String apuId : relationsDeleteCache) {
+            relationIdsToDelete.addAll(relationStore.findIdsBySource(apuId));
+        }
+        relationRepository.delete(relationIdsToDelete);
+        relationsDeleteCache.clear();
+        relationRepository.create(relationsAddCache);
+        relationsAddCache.clear();
+
+        //save apus (indexing uses relations table to index incoming relation type groups)
         apuRepository.create(saveCache.values());
         apuIdsProcessed.addAll(saveCache.keySet());
         //Now to reindex all apus that reference these apus, to update labels in them
         List<String> updatedApusIds = saveCache.values().stream().map(DomainObject::getId).collect(Collectors.toList());
-        List<String> apuIdsTargetingUpdatedIds = relationStore.listIdsTargetingIds(updatedApusIds);
+        List<String> apuIdsTargetingUpdatedIds = relationStore.findIdsByTarget(updatedApusIds);
         apuRepository.massIndex(apuIdsTargetingUpdatedIds);
         //clear for next batch
         saveCache.clear();
+
+        //reindex incoming relations on target apus
+        apuRepository.reindex(new ArrayList<>(apusToHaveIncomingRelsUpdated));
+        apusToHaveIncomingRelsUpdated.clear();
     }
 }

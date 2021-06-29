@@ -2,6 +2,7 @@ import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import React from 'react';
 import { render } from 'react-dom';
+import '@fortawesome/fontawesome-free/js/all.js';
 
 import { App } from './app';
 

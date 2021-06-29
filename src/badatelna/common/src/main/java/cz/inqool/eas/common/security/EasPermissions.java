@@ -1,5 +1,7 @@
 package cz.inqool.eas.common.security;
 
 public enum EasPermissions {
-    REPORT
+    ACTION,
+    EXPORT,
+    EXPORT_RUNNER
 }

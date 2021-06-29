@@ -46,10 +46,10 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
     };
   }, [onResize]);
 
-  return items && items.length ? (
+  return items.length ? (
     <div id={ID} className={spacingClasses.marginTopBig}>
       <h3 className={spacingClasses.marginBottomSmall}>
-        <FormattedMessage id={Message.DIGITIZERS} />
+        <FormattedMessage id={Message.DAOS} />
       </h3>
       <div className={layoutClasses.flex}>
         {maxCount ? (
@@ -62,7 +62,9 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
                     ? current
                     : minDAOFile,
                 undefined
-              )?.id;
+              )?.file?.id;
+
+            const onClick = () => setItem(item);
 
             return (
               <div
@@ -77,6 +79,7 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
                     classes.daoPreview,
                     spacingClasses.marginBottomSmall
                   )}
+                  onClick={onClick}
                 >
                   <ImageLoad
                     id={thumbnailID}
@@ -87,7 +90,7 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
                     alternativeImage={<InsertDriveFileIcon />}
                   />
                 </div>
-                <div className={classes.link} onClick={() => setItem(item)}>
+                <div className={classes.link} onClick={onClick}>
                   <FormattedMessage id={Message.DISPLAY} />
                 </div>
               </div>
@@ -104,7 +107,7 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
             )}
             onClick={() => setItem(items[0])}
           >
-            <FormattedMessage id={Message.OTHER_DIGITIZERS} />
+            <FormattedMessage id={Message.OTHER_DAOS} />
           </div>
         )}
       </div>

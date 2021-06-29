@@ -5,14 +5,12 @@ import { FormattedMessage } from 'react-intl';
 
 import { NavigationContext } from '@eas/common-web';
 
-import { ModulePath, IconType, Message } from '../../enums';
-import { Icon } from '..';
+import { ModulePath, Message } from '../../enums';
 import { useStyles } from './styles';
-import { useLayoutStyles } from '../../styles';
+import { Props } from './types';
 
-export function AppTitle() {
+export function AppTitle({ appLogo }: Props) {
   const classes = useStyles();
-  const layoutClasses = useLayoutStyles();
   const location = useLocation();
 
   const { navigate } = useContext(NavigationContext);
@@ -23,23 +21,29 @@ export function AppTitle() {
     <div
       className={classNames(
         classes.appTitle,
-        layoutClasses.flexCentered,
-        isClickable && classes.appTitleClickable
+        isClickable && !appLogo && classes.appTitleClickable
       )}
-      onClick={() => isClickable && navigate(ModulePath.MAIN)}
+      onClick={() => isClickable && !appLogo && navigate(ModulePath.MAIN)}
     >
-      <Icon
-        className={classes.invertColor}
-        type={IconType.BOOK}
-        size={42}
-        color="#fff"
-      />
-      &nbsp;&nbsp;&nbsp;
-      <span className={classes.appTitleFirst}>
-        <FormattedMessage id={Message.ARCHIVE} />
-      </span>
-      &nbsp;
-      <FormattedMessage id={Message.ONLINE} />
+      {appLogo ? (
+        <img
+          src={appLogo}
+          className={classNames(
+            classes.appTitleLogo,
+            isClickable && classes.appTitleLogoClickable
+          )}
+          onClick={() => isClickable && navigate(ModulePath.MAIN)}
+        />
+      ) : (
+        <>
+          <span className={classes.appTitleFirst}>
+            <FormattedMessage id={Message.ARCHIVE} />
+          </span>
+          &nbsp;
+          <FormattedMessage id={Message.ONLINE} />
+        </>
+      )}
+      <div />
     </div>
   );
 }

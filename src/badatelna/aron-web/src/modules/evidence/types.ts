@@ -1,24 +1,14 @@
-import { ModulePath, FilterType } from '../../enums';
+import { ModulePath } from '../../enums';
 import {
   ApuPartType,
   ApuPartItemType,
   Filter,
   Dao,
-  ApiFilterOperation,
   ApuEntity,
   Facet,
-  Relationship,
+  FilterConfig,
+  ApuAttachment,
 } from '../../types';
-
-export type FilterObject = { [key: string]: any };
-
-export type FilterData = {
-  field: string;
-  filterObject: FilterObject;
-  operation?: ApiFilterOperation;
-  filters?: Filter[];
-  type?: FilterType;
-};
 
 export interface FiltersChangeCallbackParams {
   query?: string;
@@ -29,13 +19,7 @@ export type FiltersChangeCallback = (
   params: FiltersChangeCallbackParams
 ) => void;
 
-export type FilterChangeCallBack = (
-  name: string,
-  f: FilterObject | null,
-  operation?: ApiFilterOperation,
-  filters?: Filter[],
-  type?: FilterType
-) => void;
+export type FilterChangeCallBack = (f: FilterConfig) => void;
 
 interface PropsBase {
   label: string;
@@ -52,28 +36,20 @@ export interface SectionProps extends PropsBase {
   modulePath: ModulePath;
 }
 
-export interface DetailProps extends SectionProps { }
+export interface DetailProps extends SectionProps {}
 
-export interface MainProps extends SectionProps { }
+export interface MainProps extends SectionProps {}
 
 export interface SidebarProps {
-  path: ModulePath;
-  query?: string;
-  filters: any[];
-  onChange: FiltersChangeCallback;
   apuPartItemTypes: ApuPartItemType[];
-  relationships: Relationship[] | null;
-  setRelationships: (r: Relationship[] | null) => void;
+  facets: Facet[];
+  path: ModulePath;
 }
 
 export interface ListProps {
   loading: boolean;
   items: any[];
   count: number;
-  page: number;
-  pageSize: number;
-  updatePage: (n: number) => void;
-  updatePageSize: (n: number) => void;
 }
 
 export interface DetailDaoProps {
@@ -91,4 +67,9 @@ export interface DetailTreeProps {
   id: string;
 }
 
-export interface Props extends EvidenceProps { }
+export interface DetailAttachmentsProps {
+  items: ApuAttachment[];
+  setLoading: (loading: boolean) => void;
+}
+
+export interface Props extends EvidenceProps {}

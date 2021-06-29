@@ -24,6 +24,7 @@ class GeoBoundingBoxFilterTest extends IndexFilterTestBase {
         String jsonFilter = JsonUtils.toJsonString(filter, true);
         String expectedJsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_BOUNDING_BOX\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"topLeft\" : {\r\n" +
                 "    \"lat\" : 21.0,\r\n" +
@@ -62,6 +63,7 @@ class GeoBoundingBoxFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_BOUNDING_BOX\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"topLeft\" : {\r\n" +
                 "      \"lat\" : 21.0,\r\n" +
@@ -88,6 +90,7 @@ class GeoBoundingBoxFilterTest extends IndexFilterTestBase {
     void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_BOUNDING_BOX\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"topLeft\" : {\r\n" +
                 "    \"lat\" : 21.0,\r\n" +
@@ -123,6 +126,7 @@ class GeoBoundingBoxFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_BOUNDING_BOX\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"topLeft\" : {\r\n" +
                 "      \"lat\" : 21.0,\r\n" +

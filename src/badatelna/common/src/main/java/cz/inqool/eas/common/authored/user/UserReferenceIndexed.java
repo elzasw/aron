@@ -1,6 +1,7 @@
 package cz.inqool.eas.common.authored.user;
 
 import lombok.*;
+import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -18,6 +19,7 @@ import static cz.inqool.eas.common.domain.index.field.ES.Suffix.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode
+@FieldNameConstants
 public class UserReferenceIndexed {
 
     @Id

@@ -2,8 +2,10 @@ package cz.inqool.eas.common.domain.store;
 
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.EntityPathBase;
+import com.querydsl.jpa.impl.JPADeleteClause;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.jpa.impl.JPAUpdateClause;
 import cz.inqool.eas.common.domain.Domain;
 import cz.inqool.eas.common.domain.store.list.ListFunction;
 import cz.inqool.eas.common.domain.store.list.QueryModifier;
@@ -12,8 +14,8 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.validation.constraints.NotNull;
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -22,7 +24,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static cz.inqool.eas.common.utils.AssertionUtils.*;
+import static cz.inqool.eas.common.utils.AssertionUtils.gte;
 import static cz.inqool.eas.common.utils.CollectionUtils.sortByIds;
 import static java.util.Collections.emptyList;
 
@@ -36,6 +38,7 @@ import static java.util.Collections.emptyList;
 public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROOT>, META_MODEL extends EntityPathBase<PROJECTED>> {
     protected EntityManager entityManager;
 
+    @Getter
     protected JPAQueryFactory queryFactory;
 
     @Getter
@@ -92,7 +95,7 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      * @return created object in detached state
      */
     public PROJECTED create(@NotNull PROJECTED entity) {
-        entityManager.persist(entity);
+        entity = entityManager.merge(entity);
         entityManager.flush();
         detachAll();
 
@@ -110,14 +113,14 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
             return emptyList();
         }
 
-        for (PROJECTED entity : entities) {
-            entityManager.persist(entity);
-        }
+        Set<? extends PROJECTED> saved = entities.stream()
+                .map(entityManager::merge)
+                .collect(Collectors.toSet());
 
         entityManager.flush();
         detachAll();
 
-        return entities;
+        return saved;
     }
 
     /**
@@ -178,6 +181,20 @@ public class DomainStore<ROOT extends Domain<ROOT>, PROJECTED extends Domain<ROO
      */
     public JPAQuery<?> query() {
         return queryFactory.query();
+    }
+
+    /**
+     * Creates QueryDSL delete query object.
+     */
+    public JPADeleteClause deleteQuery() {
+        return queryFactory.delete(metaModel);
+    }
+
+    /**
+     * Creates QueryDSL update query object.
+     */
+    public JPAUpdateClause updateQuery() {
+        return queryFactory.update(metaModel);
     }
 
     /**

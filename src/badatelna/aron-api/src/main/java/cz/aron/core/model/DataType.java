@@ -9,5 +9,6 @@ public enum DataType {
     INTEGER,        //číselná hodnota
     STRING,         //textová hodnota
     UNITDATE,       //datace
-    LINK;           //webový odkaz
+    LINK,           //webový odkaz
+    ITEM_AGGREG;    //virtual item for aggregating all APU_REF relations to one field
 }

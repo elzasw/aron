@@ -40,25 +40,27 @@ public class DictionaryStore<
     /**
      * Activates object.
      * @param id Id of object to activate
+     * @return
      */
-    public void activate(String id) {
+    public PROJECTED activate(String id) {
         PROJECTED projected = this.find(id);
         notNull(projected, () -> new MissingObject(this.getType(), id));
 
         projected.setActive(true);
-        this.update(projected);
+        return this.update(projected);
     }
 
     /**
      * Disables object.
      * @param id Id of object to disable
+     * @return
      */
-    public void deactivate(String id) {
+    public PROJECTED deactivate(String id) {
         PROJECTED projected = this.find(id);
         notNull(projected, () -> new MissingObject(this.getType(), id));
 
         projected.setActive(false);
-        this.update(projected);
+        return this.update(projected);
     }
 
     /**

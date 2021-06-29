@@ -19,6 +19,7 @@ public class PersonList implements cz.inqool.entityviews.View {
 
         entity.addresses = cz.inqool.entityviews.multiple.AddressPersonList.toEntities(view.addresses, java.util.ArrayList::new);
         entity.passports = cz.inqool.entityviews.multiple.PassportPersonList.toEntities(view.passports, java.util.ArrayList::new);
+        if (entity.passports != null) entity.passports.stream().filter((o)->o != null).forEach((o)->o.setPerson(entity));
     }
 
     public static Person toEntity(PersonList view) {

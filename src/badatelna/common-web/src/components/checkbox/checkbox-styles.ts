@@ -15,27 +15,15 @@ export const useStyles = makeStyles((theme) => ({
       fill: '#757575',
     },
   },
-  highlightedRoot: {
-    '&:before': {
-      background: theme.palette.editing,
-      content: "''",
-      display: 'block',
-      position: 'absolute',
-      top: 5,
-      left: 5,
-      right: 5,
-      bottom: 5,
-      zIndex: -2,
-    },
-  },
   checked: {
     '& svg': {
       fill: theme.palette.primary.dark,
     },
   },
   disabled: {
-    '&:before': {
-      backgroundColor: 'inherit',
-    },
+    backgroundColor: 'inherit',
+  },
+  highlightedIcon: {
+    backgroundColor: theme.palette.editing,
   },
 }));

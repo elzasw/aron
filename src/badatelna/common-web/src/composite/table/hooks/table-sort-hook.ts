@@ -86,5 +86,5 @@ export function useTableSort<OBJECT>({
     setTableSettings(tableId, newSettings);
   }, [sorts]);
 
-  return { sorts, toggleSortColumn, resetSorts };
+  return { sorts, setSorts, toggleSortColumn, resetSorts };
 }

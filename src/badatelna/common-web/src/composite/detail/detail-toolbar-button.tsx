@@ -12,6 +12,7 @@ export function DetailToolbarButton({
   tooltip,
   disabled,
   onClick,
+  href,
   type = DetailToolbarButtonType.NORMAL,
   startIcon,
   endIcon,
@@ -35,6 +36,7 @@ export function DetailToolbarButton({
     <Tooltip title={tooltip} placement="top-start">
       <Button
         onClick={onClick}
+        href={href}
         disabled={disabled}
         classes={{ root: classes.toolbarButton }}
         {...buttonProps}

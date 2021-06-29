@@ -42,6 +42,11 @@ export const useLayoutStyles = makeStyles((theme) => ({
     display: 'flex',
     flexDirection: 'column',
   },
+  flexColumnCenter: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
   flexColumnSpaceBetween: {
     display: 'flex',
     flexDirection: 'column',

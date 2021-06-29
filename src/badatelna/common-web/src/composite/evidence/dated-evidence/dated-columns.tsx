@@ -1,22 +1,22 @@
-import React, { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useMemo } from 'react';
+import { useIntl } from 'react-intl';
 import { TableColumn } from 'composite/table/table-types';
 import { TableCells } from 'composite/table/table-cells';
 
 export function useColumns<OBJECT>(options: {
   columns?: TableColumn<OBJECT>[];
 }) {
+  const intl = useIntl();
+
   const columns: TableColumn<OBJECT>[] = useMemo(
     () => [
       ...(options.columns ?? []),
       {
         datakey: 'created',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_CREATED"
-            defaultMessage="Vytvoření"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_CREATED',
+          defaultMessage: 'Vytvoření',
+        }),
         width: 150,
         CellComponent: TableCells.DateTimeCell,
         sortable: true,
@@ -24,19 +24,17 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'updated',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_UPDATED"
-            defaultMessage="Poslední úprava"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_UPDATED',
+          defaultMessage: 'Poslední úprava',
+        }),
         width: 150,
         CellComponent: TableCells.DateTimeCell,
         sortable: true,
         filterable: true,
       },
     ],
-    [options.columns]
+    [options.columns, intl]
   );
 
   return columns;

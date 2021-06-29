@@ -1,4 +1,4 @@
-package cz.aron.core.image.tile.processing;//package cz.aron.core.image;
+//package cz.aron.core.image;
 //
 //import cz.aron.core.image.tile.ImageTiler;
 //import cz.aron.core.image.tile.processing.TiledImage;

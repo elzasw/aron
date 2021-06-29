@@ -9,7 +9,6 @@ import {
   borderBold,
 } from '../../styles';
 
-const height = `calc(100vh - ${appHeaderHeight} - ${breadcrumbsHeight} - 1px)`;
 const sidebarWidth = 300;
 const sidebarMinWidth = 30;
 const daoDialogToolbarHeight = 50;
@@ -21,7 +20,7 @@ export const useStyles = makeStyles((theme) => {
       position: 'fixed',
       left: 0,
       top: `calc(${appHeaderHeight} + ${breadcrumbsHeight})`,
-      height,
+      //height,
       width: sidebarMinWidth,
       background: colorBlueVeryLight,
       borderRight: border,
@@ -30,6 +29,7 @@ export const useStyles = makeStyles((theme) => {
 
       [md]: {
         width: sidebarWidth,
+        overflowY: 'auto',
       },
     },
     sidebarContent: {
@@ -78,6 +78,9 @@ export const useStyles = makeStyles((theme) => {
         color: colorGreyLight,
       },
     },
+    sidebarButton: {
+      width: '100%',
+    },
     list: {
       height: '100%',
       minHeight: '100%',
@@ -108,6 +111,11 @@ export const useStyles = makeStyles((theme) => {
         margin: 0,
       },
     },
+    listItemTitleOnly: {
+      '& h4': {
+        margin: 0,
+      },
+    },
     listEmpty: {
       fontSize: 15,
     },
@@ -132,6 +140,9 @@ export const useStyles = makeStyles((theme) => {
         marginTop: 0,
       },
     },
+    evidenceDetailDescription: {
+      fontWeight: 400,
+    },
     evidenceDetailItem: {
       fontSize: 13,
     },
@@ -143,12 +154,13 @@ export const useStyles = makeStyles((theme) => {
       minWidth: 150,
       textTransform: 'uppercase',
       textAlign: 'right',
+    },
+    evidenceDetailItemLabelBorder: {
       borderRight: border,
     },
     evidenceDetailItemText: {
       marginTop: 0,
       marginBottom: 0,
-      paddingBottom: theme.spacing(1),
     },
 
     toggleSidebarButtonOpen: {
@@ -178,16 +190,30 @@ export const useStyles = makeStyles((theme) => {
       transform: 'rotate(270deg)',
     },
 
-    evidenceDetailImage: {
-      fontSize: 50,
+    evidenceDetailIcon: {
+      fontSize: 60,
     },
-    evidenceDetailImageBig: {
-      fontSize: 150,
+
+    findRelatedButton: {
+      padding: '4px 8px !important',
     },
 
     link: {
       cursor: 'pointer',
       textDecoration: 'underline',
+      color: 'rgba(0, 0, 0, 0.87)',
+
+      '&:hover': {
+        color: 'rgba(0, 0, 0, 0.87)',
+      },
+
+      '&:visited': {
+        color: 'rgba(0, 0, 0, 0.87)',
+      },
+
+      '&:active': {
+        color: 'rgba(0, 0, 0, 0.87)',
+      },
     },
     icon: {
       cursor: 'pointer',
@@ -297,6 +323,11 @@ export const useStyles = makeStyles((theme) => {
     daoDialogCenterOpen: {
       display: 'block',
     },
+    daoDialogNoFiles: {
+      color: '#fff',
+      width: '100%',
+      height: '100%',
+    },
     daoDialogSectionPart: {},
     daoDialogSectionPartLabel: {
       color: '#fff',
@@ -304,12 +335,14 @@ export const useStyles = makeStyles((theme) => {
     },
     daoDialogSectionPartContent: {
       background: '#fff',
-      maxHeight: `calc(50vh - ${daoDialogToolbarHeight / 2}px - 30px - 8px)`,
       overflowY: 'auto',
 
       '& div': {
         cursor: 'pointer',
-        padding: '4px 8px',
+        height: 30,
+        padding: '0 8px',
+        display: 'flex',
+        alignItems: 'center',
 
         '&:hover': {
           color: '#fff',
@@ -365,15 +398,48 @@ export const useStyles = makeStyles((theme) => {
       cursor: 'pointer',
     },
 
-    findRelatedButton: {
+    evidenceTextInfo: {
       height: '100%',
-      cursor: 'pointer',
-      background: colorBlueVeryLight,
-      whiteSpace: 'nowrap',
+      maxWidth: '240px',
+      whiteSpace: 'normal',
+      display: 'flex',
+      alignItems: 'center',
+      paddingLeft: theme.spacing(1),
+      paddingRight: theme.spacing(1),
+      textAlign: 'right',
 
-      '&:hover': {
-        color: '#fff',
-        background: theme.palette.primary.main,
+      [theme.breakpoints.up('md')]: {
+        whiteSpace: 'nowrap',
+        maxWidth: 'none',
+      },
+    },
+
+    itemsCount: {
+      color: theme.palette.grey[500],
+    },
+
+    attachment: {
+      border,
+      borderRadius: 4,
+      width: 'fit-content',
+    },
+
+    attachmentLabel: {
+      flex: 1,
+    },
+
+    attachmentDownload: {
+      cursor: 'pointer',
+    },
+
+    tooManyresults: {
+      '& h3': {
+        marginTop: '0.2em',
+        marginBottom: '0.4em',
+      },
+      '& p': {
+        marginTop: 0,
+        marginBottom: '1.1em',
       },
     },
   };

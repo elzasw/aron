@@ -1,28 +1,33 @@
 import React from 'react';
-
-import { FilterType, ModulePath } from '../../enums';
-import { SelectionFilter } from './sidebar-content/selection-filter';
-import { FilterChangeCallBack } from './types';
-import InputFilter from './sidebar-content/input-filter';
 import {
-  getSearchUrlWithFilters,
-  getTypeByPath,
-  getEnumsOptions,
-} from '../../common-utils';
+  find,
+  isEmpty,
+  flattenDeep,
+  reverse,
+  compact,
+  isArray,
+  omit,
+} from 'lodash';
+
+import { FacetType, ModulePath } from '../../enums';
+import { getTypeByPath } from '../../common-utils';
 import {
   ApiFilterOperation,
   Facet,
   FilterConfig,
-  FacetType,
-  ApuPartItemType,
   Relationship,
   Filter,
-  AggregationItems,
-  AggregationItem,
+  ApuEntity,
+  Option,
 } from '../../types';
-import { find, isEmpty, get } from 'lodash';
-import { toFilterOptions, getTimeRangeLabel } from '../../common-utils';
-import RelationshipFilter from './sidebar-content/relationship-filter';
+import {
+  SelectionFilter,
+  RangeFilter,
+  InputFilter,
+  AutocompleteFilter,
+  RelationshipFilter,
+  yearInISO,
+} from './sidebar-content';
 
 export const findApuParts = (items: any[], code: string) =>
   items.filter(({ type }) => type === code);
@@ -30,153 +35,114 @@ export const findApuParts = (items: any[], code: string) =>
 export const filterApuPartTypes = (items: any[], entityItems: any[]) =>
   items.filter(({ code }) => findApuParts(entityItems, code).length);
 
-export const getFilterComponent = ({
-  type,
-  index = 0,
-  onChange = () => null,
-  ...props
-}: {
-  type: FilterType;
-  index: number;
-  onChange: FilterChangeCallBack;
-}) => {
-  let FilterComponent: React.ReactType;
-  switch (type) {
-    case FilterType.SELECT:
-    case FilterType.RADIO:
-    case FilterType.CHECKBOX_WITH_RANGE:
-    case FilterType.CHECKBOX:
-      FilterComponent = SelectionFilter;
-      break;
-    case FilterType.INPUT:
-    case FilterType.INPUT_MULTI:
-      FilterComponent = InputFilter;
-      break;
-    case FilterType.RELATIONSHIP:
-      FilterComponent = RelationshipFilter;
-      break;
-    default:
-      FilterComponent = () => null;
-      break;
-  }
-  return (
-    <FilterComponent
-      {...{
-        ...props,
-        type,
-        onChange,
-        multiple: type === FilterType.INPUT_MULTI ? true : false,
-        autocomplete: type === FilterType.INPUT_MULTI ? true : false,
-      }}
-      key={index}
-    />
-  );
-};
-
-export const getRelatedApusURL = (name: string, id: string): string =>
-  getSearchUrlWithFilters([
-    {
-      type: FilterType.RADIO,
-      label: `Související s: ${name}`,
-      options: [{ label: 'Ano', value: id }],
-      value: [id],
-      operation: ApiFilterOperation.AND,
-      filters: [
-        {
-          operation: ApiFilterOperation.NOT,
-          filters: [
-            {
-              field: 'id',
-              operation: 'EQ',
-              value: id,
-            },
-          ],
-        },
-        {
-          operation: ApiFilterOperation.AKF,
-          value: id,
-        },
-      ],
-    },
-  ]);
-
-export const retypeFacetToFilter = (type: FacetType): FilterType => {
-  switch (type) {
+export const FilterComponent = (props: any) => {
+  let CFilter: React.ReactType;
+  switch (props.type) {
     case FacetType.ENUM:
-      return FilterType.CHECKBOX;
+    case FacetType.ENUM_SINGLE:
+      CFilter = SelectionFilter;
+      break;
+    case FacetType.UNITDATE:
+      CFilter = RangeFilter;
+      break;
     case FacetType.FULLTEXT:
-      return FilterType.INPUT;
-    case FacetType.UNITDATE:
-      return FilterType.CHECKBOX_WITH_RANGE;
+      CFilter = InputFilter;
+      break;
     case FacetType.MULTI_REF:
-      return FilterType.INPUT_MULTI;
+      CFilter = AutocompleteFilter;
+      break;
     case FacetType.MULTI_REF_EXT:
-      return FilterType.RELATIONSHIP;
-  }
-};
-
-const parseToISO = (date: string) => new Date(date).toISOString();
-
-export const parseFacetOptions = (
-  facet: Facet,
-  enumsOptions: AggregationItems
-) => {
-  switch (facet.type) {
-    case FacetType.UNITDATE:
-      return toFilterOptions(
-        facet.intervals,
-        (i) => getTimeRangeLabel({ from: i.fromText, to: i.toText }),
-        ({ from, to }) => ({ from: parseToISO(from), to: parseToISO(to) })
-      );
-    case FacetType.ENUM:
-      return toFilterOptions(
-        get(enumsOptions, facet.source, []),
-        (o: AggregationItem) => `${o.key} ( ${o.value} )`, // TODO: `${o[`${facet.source}~LABEL`]} ( ${o.value} )`,
-        (o: AggregationItem) => o.key
-      );
+      CFilter = RelationshipFilter;
+      break;
     default:
-      return [];
+      // eslint-disable-next-line react/display-name
+      CFilter = ({ label }) => <div>{label}</div>;
+      break;
   }
+
+  return <CFilter {...props} />;
 };
 
-const isFilterWithOptions = (type: FilterType) => {
-  switch (type) {
-    case FilterType.SELECT:
-    case FilterType.CHECKBOX:
-    case FilterType.CHECKBOX_WITH_RANGE:
-    case FilterType.RADIO:
-      return true;
-    default:
-      return false;
-  }
-};
-export const facetsToFilters = async (
-  facets: Facet[],
-  path: ModulePath,
-  apuPartItemTypes: ApuPartItemType[]
-): Promise<FilterConfig[]> => {
-  const actualFacets = facets.filter(
-    (facet: Facet) => facet.when.apuType === getTypeByPath(path)
+export const getRelatedApusFilter = (id: string, name: string) => [
+  {
+    type: FacetType.RELATED_APUS,
+    operation: ApiFilterOperation.AND,
+    value: name,
+    filters: [
+      {
+        operation: ApiFilterOperation.NOT,
+        filters: [
+          {
+            field: 'id',
+            operation: ApiFilterOperation.EQ,
+            value: id,
+          },
+        ],
+      },
+      {
+        operation: ApiFilterOperation.AKF,
+        value: id,
+      },
+    ],
+  },
+];
+
+export const filterFacets = (facets: Facet[], path: ModulePath): Facet[] =>
+  facets.filter(
+    (facet: Facet) =>
+      !facet.when.apuType || facet.when.apuType === getTypeByPath(path)
   );
-  const enumsOptions = (
-    await getEnumsOptions(
-      actualFacets
-        .filter((facet: Facet) => facet.type === FacetType.ENUM)
-        .map((facet: Facet) => facet.source)
-    )
-  ).aggregations;
 
-  return actualFacets
-    .map((facet: Facet) => ({
-      type: retypeFacetToFilter(facet.type),
-      label: find(apuPartItemTypes, { code: facet.source })?.name || '_',
-      field: facet.source,
-      value: [],
-      options: parseFacetOptions(facet, enumsOptions),
-    })) //filters out ENUM filters with no options
-    .filter(
-      ({ type, options }) => !isFilterWithOptions(type) || !isEmpty(options)
+const clearSource = (source: string) => source.replace(/~|_/, '');
+
+export const filterMappedFilters = (
+  filters: FilterConfig[],
+  path: ModulePath
+) => {
+  const flattenedFilters = flattenDeep(
+    filters.map((f) => (f.filters ? f.filters : (f as any)))
+  );
+
+  const filteredFilters = filters.filter((filterConfig: FilterConfig) => {
+    const { when } = filterConfig;
+
+    return (
+      !when ||
+      !when.all ||
+      when.all.every(({ apuType, filter, value }) => {
+        if (apuType) {
+          return apuType === getTypeByPath(path);
+        }
+
+        if (filter) {
+          const foundFilter = find(
+            flattenedFilters,
+            ({ source }) =>
+              source && clearSource(source) === clearSource(filter)
+          );
+
+          return (
+            foundFilter &&
+            (foundFilter.value === value ||
+              (isArray(foundFilter.value) &&
+                find(
+                  foundFilter.value,
+                  (v) =>
+                    v === value ||
+                    find(
+                      foundFilter.options,
+                      (o) => o && v === o.value && value === o.labelString // check if condition value is equal to option label
+                    )
+                )))
+          );
+        }
+
+        return true;
+      })
     );
+  });
+
+  return filteredFilters;
 };
 
 export const facetsContainRelationships = (
@@ -201,3 +167,128 @@ export const convertRelationshipsToFilter = (
       value,
     })),
   };
+
+export const getParentBreadcrumbs = (parent?: ApuEntity) => {
+  const breadcrumbs = [];
+
+  let current = parent;
+
+  while (current) {
+    breadcrumbs.push({
+      path: `${ModulePath.APU}/${current.id}`,
+      label: current.description || current.name || 'Unknown',
+    });
+
+    current = current.parent;
+  }
+
+  return reverse(breadcrumbs);
+};
+
+export const createApiFilters = (filters: FilterConfig[]) => {
+  return filters.length
+    ? compact(
+        filters.map(({ source, operation, value, type, filters }) => {
+          const createFilter = (params: Filter) => ({
+            field: source,
+            ...(filters ? { filters } : {}),
+            ...params,
+          });
+
+          if (type === FacetType.UNITDATE) {
+            return isArray(value) && value.length >= 2 && value[0] && value[1]
+              ? {
+                  field: source,
+                  operation: ApiFilterOperation.RANGE,
+                  gte: yearInISO(Number(value[0]), true),
+                  lte: yearInISO(Number(value[1])),
+                }
+              : null;
+          }
+
+          if (type === FacetType.MULTI_REF) {
+            if (isArray(value) && value.length) {
+              const optionValues = value as Option[];
+
+              if ('id' in optionValues[0]) {
+                return {
+                  operation: ApiFilterOperation.OR,
+                  filters: optionValues.map(({ id }) => ({
+                    field: source,
+                    operation: ApiFilterOperation.CONTAINS,
+                    value: id,
+                  })),
+                };
+              }
+            }
+
+            return null;
+          }
+
+          if (type === FacetType.MULTI_REF_EXT) {
+            return isArray(value) && value.length
+              ? {
+                  operation: ApiFilterOperation.OR,
+                  filters: (value as Relationship[]).map((relationship) =>
+                    createFilter({
+                      field: relationship.field,
+                      operation: operation || ApiFilterOperation.EQ,
+                      value: relationship.value,
+                    })
+                  ),
+                }
+              : null;
+          }
+
+          return isArray(value)
+            ? value.length > 1
+              ? {
+                  operation: ApiFilterOperation.OR,
+                  filters: (value as string[]).map((v) =>
+                    createFilter({
+                      operation: operation || ApiFilterOperation.EQ,
+                      value: v,
+                    })
+                  ),
+                }
+              : value[0]
+              ? createFilter({
+                  operation: operation || ApiFilterOperation.EQ,
+                  value: value[0],
+                })
+              : null
+            : createFilter({
+                operation:
+                  operation ||
+                  (type === FacetType.FULLTEXT
+                    ? ApiFilterOperation.CONTAINS
+                    : ApiFilterOperation.EQ),
+                value,
+              });
+        })
+      )
+    : [];
+};
+
+export const filterApiFilters = (filters?: any[]): any[] =>
+  filters
+    ? compact(
+        filters.map(({ filters, ...item }) => {
+          const isAndOrNot =
+            item.operation === ApiFilterOperation.AND ||
+            item.operation === ApiFilterOperation.OR ||
+            item.operation === ApiFilterOperation.NOT;
+
+          const filtersOk = filterApiFilters(filters).length;
+
+          return (item.value && !isAndOrNot) ||
+            (isAndOrNot && filtersOk) ||
+            item.operation === ApiFilterOperation.RANGE
+            ? {
+                ...omit(item, isAndOrNot ? ['field', 'value'] : []),
+                ...(filtersOk ? { filters: filterApiFilters(filters) } : {}),
+              }
+            : null;
+        })
+      )
+    : [];

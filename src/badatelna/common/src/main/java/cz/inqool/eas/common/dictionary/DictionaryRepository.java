@@ -1,7 +1,6 @@
 package cz.inqool.eas.common.dictionary;
 
 import cz.inqool.eas.common.authored.AuthoredRepository;
-import cz.inqool.eas.common.dated.index.DatedIndexedObject;
 import cz.inqool.eas.common.dictionary.index.DictionaryAutocomplete;
 import cz.inqool.eas.common.dictionary.index.DictionaryIndex;
 import cz.inqool.eas.common.dictionary.index.DictionaryIndexedObject;
@@ -18,7 +17,6 @@ import org.elasticsearch.search.sort.SortOrder;
 import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 
@@ -50,10 +48,13 @@ public class DictionaryRepository<
     /**
      * Activates object.
      * @param id Id of object to activate
+     * @return
      */
-    public void activate(String id) {
-        getStore().activate(id);
+    public ROOT activate(String id) {
+        ROOT root = getStore().activate(id);
         getIndex().activate(id);
+
+        return root;
     }
 
     /**
@@ -67,10 +68,13 @@ public class DictionaryRepository<
     /**
      * Deactivates object.
      * @param id Id of object to deactivate
+     * @return
      */
-    public void deactivate(String id) {
-        getStore().deactivate(id);
+    public ROOT deactivate(String id) {
+        ROOT root = getStore().deactivate(id);
         getIndex().deactivate(id);
+
+        return root;
     }
 
     /**
@@ -122,7 +126,7 @@ public class DictionaryRepository<
             params = new Params();
         }
 
-        params.setSort(List.of(new FieldSort(Fields.order, SortOrder.ASC), new FieldSort(Fields.name, SortOrder.ASC)));
+        params.setSort(List.of(new FieldSort(Fields.order, SortOrder.ASC), new FieldSort(DictionaryIndexedObject.Fields.name, SortOrder.ASC)));
 
         // text filter
         if (query != null) {

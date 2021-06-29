@@ -18,9 +18,11 @@ export type Url = string | (() => string);
 export function useScrollableSource<TYPE>({
   url,
   params,
+  listItems = defaultListItems,
 }: {
   url: Url;
   params?: Params;
+  listItems?: (url: string, params: Params) => AbortableFetch;
 }) {
   const fetch = useRef<AbortableFetch | null>(null);
   const paramsRef = useRef<Params>({ size: 30 });
@@ -45,17 +47,17 @@ export function useScrollableSource<TYPE>({
       }
 
       setLoading(true);
-      fetch.current = abortableFetch(typeof url === 'function' ? url() : url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...params,
-          ...(paramsRef.current ?? {}),
-          searchAfter: isDataValidRef.current
-            ? dataRef.current.searchAfter
-            : undefined,
-        }),
-      });
+
+      const resolvedUrl = typeof url === 'function' ? url() : url;
+      const combinedParams: Params = {
+        ...params,
+        ...(paramsRef.current ?? {}),
+        searchAfter: isDataValidRef.current
+          ? dataRef.current.searchAfter
+          : undefined,
+      };
+
+      fetch.current = listItems(resolvedUrl, combinedParams);
 
       const data: Source<TYPE> = await fetch.current.json();
 
@@ -103,13 +105,22 @@ export function useScrollableSource<TYPE>({
     () => ({
       ...result,
       loading,
+      setLoading,
       loadMore,
       setParams: (p) => (paramsRef.current = p),
       getParams: () => paramsRef.current,
       reset: () => {
-        fetch.current?.abort();
-        hasNextPageRef.current = true;
-        isDataValidRef.current = false;
+        unstable_batchedUpdates(() => {
+          fetch.current?.abort();
+          hasNextPageRef.current = true;
+          isDataValidRef.current = false;
+
+          setLoading(false);
+          setResult({
+            items: [],
+            count: 0,
+          });
+        });
       },
       hasNextPage: () => hasNextPageRef.current,
       isDataValid: () => isDataValidRef.current,
@@ -118,4 +129,45 @@ export function useScrollableSource<TYPE>({
   );
 
   return source;
+}
+
+export function defaultListItems(url: string, params: Params) {
+  return abortableFetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export function listItemsFactory<TYPE>({
+  listItemsMethod = defaultListItems,
+  postProcess = async (data) => data,
+}: {
+  listItemsMethod?: (url: string, params: Params) => AbortableFetch;
+  postProcess?: (data: Source<TYPE>) => Promise<Source<TYPE>>;
+}) {
+  return function listItems(url: string, params: Params) {
+    const fetch = listItemsMethod(url, params);
+
+    const augmented: AbortableFetch = {
+      response: fetch.response,
+      abort: fetch.abort,
+      json: async () => {
+        const data = await fetch.json();
+        const processedData = postProcess(data);
+        return processedData;
+      },
+      text: async () => {
+        throw new Error('Unsupported operation');
+      },
+      raw: async () => {
+        throw new Error('Unsupported operation');
+      },
+      none: async () => {
+        throw new Error('Unsupported operation');
+      },
+    };
+
+    return augmented;
+  };
 }

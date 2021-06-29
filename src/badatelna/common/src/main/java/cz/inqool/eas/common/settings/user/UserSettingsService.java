@@ -4,7 +4,6 @@ import cz.inqool.eas.common.authored.user.UserGenerator;
 import cz.inqool.eas.common.authored.user.UserReference;
 import cz.inqool.eas.common.exception.ForbiddenOperation;
 import cz.inqool.eas.common.exception.MissingObject;
-import cz.inqool.eas.common.settings.app.AppSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.transaction.Transactional;
@@ -37,6 +36,14 @@ public class UserSettingsService {
         return store.update(entity);
     }
 
+    @Transactional
+    public void clear() {
+        UserReference user = UserGenerator.generateValue();
+        UserSettings entity = store.findBy(user.getId());
+        notNull(entity, () -> new MissingObject(UserSettings.class));
+        entity.setSettings("{}");
+        store.update(entity);
+    }
 
     @Autowired
     public void setStore(UserSettingsStore store) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import clsx from 'clsx';
 import DateFnsUtils from '@date-io/date-fns';
 import { formatISO, isValid } from 'date-fns';
 import { LocaleContext } from 'common/locale/locale-context';
@@ -8,17 +9,23 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { parseISOSafe } from 'utils/date-utils';
 import { DateFieldProps } from './date-field-types';
 import { useStyles } from './date-field-styles';
+import { useIntl } from 'react-intl';
 
 export function DateField({
   form,
   disabled,
   minDate: minDateString,
   maxDate: maxDateString,
+  minDatePicker: minDatePickerString = minDateString,
+  maxDatePicker: maxDatePickerString = maxDateString,
   value,
   onChange,
+  representation = 'date',
 }: DateFieldProps) {
   // fix undefined value
   value = value ?? null;
+
+  const intl = useIntl();
 
   const { locale } = useContext(LocaleContext);
 
@@ -28,6 +35,8 @@ export function DateField({
 
   const minDate = parseISOSafe(minDateString);
   const maxDate = parseISOSafe(maxDateString);
+  const minDatePicker = parseISOSafe(minDatePickerString);
+  const maxDatePicker = parseISOSafe(maxDatePickerString);
 
   const isError = useEventCallback((date: Date | null | undefined) => {
     if (date != null) {
@@ -53,7 +62,11 @@ export function DateField({
     if (date == null) {
       onChange(null);
     } else if (!isError(date)) {
-      onChange(formatISO(date, { representation: 'date' }));
+      if (representation === 'date') {
+        onChange(formatISO(date, { representation: 'date' }));
+      } else {
+        onChange(date.toISOString());
+      }
     }
   });
 
@@ -63,24 +76,39 @@ export function DateField({
     <MuiPickersUtilsProvider utils={DateFnsUtils} locale={locale.dateFnsLocale}>
       <KeyboardDatePicker
         InputProps={{
-          classes,
+          classes: {
+            root: classes.root,
+            input: classes.input,
+          },
         }}
         inputProps={{
           form,
         }}
-        views={['date', 'month', 'year']}
-        disableToolbar
-        variant="inline"
+        autoOk={true}
+        variant="dialog"
         fullWidth={true}
         disabled={disabled}
         value={internalValue}
+        minDate={minDatePicker}
+        maxDate={maxDatePicker}
         format={locale.dateFormat}
         onChange={handleChange}
         InputAdornmentProps={{
-          style: {
-            display: 'none',
+          classes: {
+            root: clsx({
+              [classes.addorment]: !disabled,
+              [classes.dissabledAddorment]: disabled,
+            }),
           },
         }}
+        cancelLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_CANCEL',
+          defaultMessage: 'Zrušit',
+        })}
+        okLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_OK',
+          defaultMessage: 'Potvrdit',
+        })}
         // don't show error messages only error underline
         invalidDateMessage=""
         maxDateMessage=""

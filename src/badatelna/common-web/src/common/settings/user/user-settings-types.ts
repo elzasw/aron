@@ -20,3 +20,7 @@ export interface UserSettingsProviderProps {
   url: string;
   autoInit?: boolean;
 }
+
+export interface CustomSettings {
+  version: number;
+}

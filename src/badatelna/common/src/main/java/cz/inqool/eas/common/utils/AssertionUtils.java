@@ -7,8 +7,12 @@ import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static cz.inqool.eas.common.utils.AopUtils.isProxy;
@@ -53,6 +57,15 @@ public class AssertionUtils {
      * @see AssertionUtils#gt(Integer, Integer, Supplier)
      */
     public static void gt(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) <= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#gt(Integer, Integer, Supplier)
+     */
+    public static void gt(LocalDateTime x, LocalDateTime y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) <= 0) {
             throw supplier.get();
         }
@@ -110,6 +123,15 @@ public class AssertionUtils {
     /**
      * @see AssertionUtils#gte(Integer, Integer, Supplier)
      */
+    public static void gte(LocalDateTime x, LocalDateTime y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) < 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#gte(Integer, Integer, Supplier)
+     */
     public static void gte(Instant x, Instant y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) < 0) {
             throw supplier.get();
@@ -151,6 +173,15 @@ public class AssertionUtils {
      * @see AssertionUtils#lt(Integer, Integer, Supplier)
      */
     public static void lt(LocalDate x, LocalDate y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) >= 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#lt(Integer, Integer, Supplier)
+     */
+    public static void lt(LocalDateTime x, LocalDateTime y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) >= 0) {
             throw supplier.get();
         }
@@ -208,6 +239,15 @@ public class AssertionUtils {
     /**
      * @see AssertionUtils#lte(Integer, Integer, Supplier)
      */
+    public static void lte(LocalDateTime x, LocalDateTime y, Supplier<RuntimeException> supplier) {
+        if (x.compareTo(y) > 0) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * @see AssertionUtils#lte(Integer, Integer, Supplier)
+     */
     public static void lte(Instant x, Instant y, Supplier<RuntimeException> supplier) {
         if (x.compareTo(y) > 0) {
             throw supplier.get();
@@ -236,6 +276,48 @@ public class AssertionUtils {
      */
     public static <U> void ne(U x, U y, Supplier<RuntimeException> supplier) {
         if (Objects.equals(x, y)) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * Check if range computed from {@code validFrom} and {@code validTo} is valid ("validFrom" value must be before "validTo").
+     *
+     * @param supplier Supplier of exception
+     */
+    public static void isValidRange(@Nullable LocalDate validFrom, @Nullable LocalDate validTo, Supplier<RuntimeException> supplier) {
+        LocalDate start = (validFrom != null) ? validFrom : LocalDate.MIN;
+        LocalDate end   = (validTo   != null) ? validTo   : LocalDate.MAX;
+
+        if (!start.isBefore(end)) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * Check if range computed from {@code validFrom} and {@code validTo} is valid ("validFrom" value must be before "validTo").
+     *
+     * @param supplier Supplier of exception
+     */
+    public static void isValidRange(@Nullable LocalDateTime validFrom, @Nullable LocalDateTime validTo, Supplier<RuntimeException> supplier) {
+        LocalDateTime start = (validFrom != null) ? validFrom : LocalDateTime.MIN;
+        LocalDateTime end   = (validTo   != null) ? validTo   : LocalDateTime.MAX;
+
+        if (!start.isBefore(end)) {
+            throw supplier.get();
+        }
+    }
+
+    /**
+     * Check if range computed from {@code validFrom} and {@code validTo} is valid ("validFrom" value must be before "validTo").
+     *
+     * @param supplier Supplier of exception
+     */
+    public static void isValidRange(@Nullable Instant validFrom, @Nullable Instant validTo, Supplier<RuntimeException> supplier) {
+        Instant start = (validFrom != null) ? validFrom : Instant.MIN;
+        Instant end   = (validTo   != null) ? validTo   : Instant.MAX;
+
+        if (!start.isBefore(end)) {
             throw supplier.get();
         }
     }
@@ -350,6 +432,23 @@ public class AssertionUtils {
     }
 
     /**
+     * Executes given function operation on the value if it's not {@code null}, otherwise returns {@code null}
+     *
+     * @param value  to be used as an argument for given consumer
+     * @param mapper operation to be executed on given value
+     * @param <T>    type of the value
+     * @param <U>    type of returned object
+     * @return       mapped value
+     */
+    public static <T, U> U ifPresentDo(T value, Function<T, U> mapper) {
+        if (value != null) {
+            return mapper.apply(value);
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Method for checking of if String is empty or null
      *
      * @param string   String to be checked
@@ -400,6 +499,17 @@ public class AssertionUtils {
         return value != null ? value : factory.get();
     }
 
+    /**
+     * Calls supplied mapper on value or return null.
+     *
+     * @param value Value
+     * @param mapper Mapper to call on value
+     * @param <T> Type of value
+     * @param <U> Type of result
+     */
+    public static <T, U> U safe(T value, Function<T, U> mapper) {
+        return value != null ? mapper.apply(value) : null;
+    }
     /**
      * Wraps any exception in {@link GeneralException} if not already one.
      *

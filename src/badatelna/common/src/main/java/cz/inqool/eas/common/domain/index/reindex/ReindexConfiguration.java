@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
-import org.springframework.security.access.expression.SecurityExpressionRoot;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
@@ -42,9 +41,7 @@ public abstract class ReindexConfiguration {
 
     @Bean
     public ReindexService reindexService() {
-        ReindexService service = new ReindexService();
-        service.setAccessChecker(this::canAccess);
-        return service;
+        return new ReindexService();
     }
 
     /**
@@ -56,13 +53,6 @@ public abstract class ReindexConfiguration {
         reindexApi.setService(reindexService());
 
         return reindexApi;
-    }
-
-    /**
-     * Override to restrict access to reindex service methods
-     */
-    protected boolean canAccess(SecurityExpressionRoot root) {
-        return true;
     }
 
     /**

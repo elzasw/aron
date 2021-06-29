@@ -1,6 +1,7 @@
 package cz.inqool.eas.common.domain.index.dto.params;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import cz.inqool.eas.common.domain.index.DomainIndex;
@@ -13,8 +14,10 @@ import cz.inqool.eas.common.domain.index.dto.filter.custom.CustomFilterModel;
 import cz.inqool.eas.common.domain.index.dto.filter.custom.CustomFilterSpecificParameters;
 import cz.inqool.eas.common.domain.index.dto.sort.Sort;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -31,6 +34,7 @@ import static cz.inqool.eas.common.utils.JsonUtils.fromJsonStringParametrized;
 /**
  * Data transfer object for specification of filtering, sorting and paging.
  */
+@EqualsAndHashCode
 @Getter
 @Setter
 @Schema
@@ -149,5 +153,11 @@ public class Params {
      */
     public void addSort(@NotNull Sort<?>... sortings) {
         this.sort.addAll(List.of(sortings));
+    }
+
+    @SneakyThrows
+    public Params copy() {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(mapper.writeValueAsString(this), Params.class);
     }
 }

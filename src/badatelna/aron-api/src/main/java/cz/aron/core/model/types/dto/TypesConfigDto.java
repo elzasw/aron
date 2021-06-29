@@ -15,6 +15,7 @@ public class TypesConfigDto {
     private List<ApuPartType> partTypes = new ArrayList<>();
     private List<ItemType> itemTypes = new ArrayList<>();
     private List<MetadataType> metaDataTypes = new ArrayList<>();
+    private List<ItemTypeGroup> itemGroups = new ArrayList<>();
 
     private Long currentCrc;
 }

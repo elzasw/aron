@@ -1,22 +1,22 @@
-import React, { useMemo } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useMemo } from 'react';
+import { useIntl } from 'react-intl';
 import { TableColumn } from 'composite/table/table-types';
 import { TableCells } from 'composite/table/table-cells';
 
 export function useColumns<OBJECT>(options: {
   columns?: TableColumn<OBJECT>[];
 }) {
+  const intl = useIntl();
+
   const columns: TableColumn<OBJECT>[] = useMemo(
     () => [
       ...(options.columns ?? []),
       {
         datakey: 'order',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_ORDER"
-            defaultMessage="Pořadí"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_ORDER',
+          defaultMessage: 'Pořadí',
+        }),
         width: 100,
         CellComponent: TableCells.NumberCell,
         sortable: true,
@@ -24,12 +24,10 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'name',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_NAME"
-            defaultMessage="Název"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_NAME',
+          defaultMessage: 'Název',
+        }),
         width: 200,
         CellComponent: TableCells.TextCell,
         sortable: true,
@@ -37,12 +35,10 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'active',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_ACTIVE"
-            defaultMessage="Aktivní"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_ACTIVE',
+          defaultMessage: 'Aktivní',
+        }),
         width: 100,
         CellComponent: TableCells.BooleanCell,
         sortable: true,
@@ -50,12 +46,10 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'validFrom',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_VALID_FROM"
-            defaultMessage="Platnost od"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_VALID_FROM',
+          defaultMessage: 'Platnost od',
+        }),
         width: 150,
         CellComponent: TableCells.DateTimeCell,
         sortable: true,
@@ -63,12 +57,10 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'validTo',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_VALID_TO"
-            defaultMessage="Platnost do"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_VALID_TO',
+          defaultMessage: 'Platnost do',
+        }),
         width: 150,
         CellComponent: TableCells.DateTimeCell,
         sortable: true,
@@ -76,19 +68,17 @@ export function useColumns<OBJECT>(options: {
       },
       {
         datakey: 'code',
-        name: (
-          <FormattedMessage
-            id="EAS_EVIDENCE_COLUMN_CODE"
-            defaultMessage="Kód"
-          />
-        ),
+        name: intl.formatMessage({
+          id: 'EAS_EVIDENCE_COLUMN_CODE',
+          defaultMessage: 'Kód',
+        }),
         width: 100,
         CellComponent: TableCells.TextCell,
         sortable: true,
         filterable: true,
       },
     ],
-    [options.columns]
+    [options.columns, intl]
   );
 
   return columns;

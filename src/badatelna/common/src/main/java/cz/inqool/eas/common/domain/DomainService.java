@@ -12,6 +12,8 @@ import cz.inqool.eas.common.projection.ProjectionFactory;
 import net.jodah.typetools.TypeResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
@@ -55,6 +57,8 @@ public abstract class DomainService<
     protected ProjectionFactory projectionFactory;
     protected ApplicationEventPublisher eventPublisher;
     protected REPOSITORY repository;
+
+    protected PlatformTransactionManager transactionManager;
 
     /**
      * Initializes types, projections and inject repository bean.
@@ -102,13 +106,26 @@ public abstract class DomainService<
      */
     @Transactional
     public <PROJECTED extends Domain<ROOT>> void updateInternal(@NotNull PROJECTED object) {
+        updateInternal(object, true);
+    }
+
+    /**
+     * Updates object from projection
+     *
+     * @param <PROJECTED> Type of projection
+     * @param object      Object to update
+     */
+    @Transactional
+    public <PROJECTED extends Domain<ROOT>> void updateInternal(@NotNull PROJECTED object, boolean publishEvents) {
         doWithRoot(object, this::preUpdateHook);
 
         PROJECTED projected = repository.update(object);
 
         doWithRoot(object, this::postUpdateHook);
 
-        eventPublisher.publishEvent(new UpdateEvent<>(this, projected));
+        if (publishEvents) {
+            eventPublisher.publishEvent(new UpdateEvent<>(this, projected));
+        }
     }
 
     /**
@@ -123,7 +140,7 @@ public abstract class DomainService<
         ROOT object = repository.delete(id);
         notNull(object, () -> new MissingObject(rootType, id));
 
-        postDeleteHook(id);
+        postDeleteHook(object);
         eventPublisher.publishEvent(new DeleteEvent<>(this, object));
     }
 
@@ -142,7 +159,7 @@ public abstract class DomainService<
         PROJECTED view = repository.find(type, id);
         notNull(view, () -> new MissingObject(rootType, id));
 
-        doWithRoot(view, this::postGetHook);
+        view = doWithRoot(view, this::postGetHook);
 
         return view;
     }
@@ -162,7 +179,7 @@ public abstract class DomainService<
         preListHook(params);
         Result<PROJECTED> result = repository.listByParams(type, params);
 
-        doWithRoot(result, this::postListHook);
+        result = doWithRoot(result, this::postListHook);
 
         return result;
     }
@@ -173,13 +190,13 @@ public abstract class DomainService<
      * @param view Provided view
      * @return Detail view of the created object
      */
-    @Transactional
     public DETAIL_PROJECTION create(CREATE_PROJECTION view) {
+        TransactionTemplate template = new TransactionTemplate(this.transactionManager);
+
         ROOT object = createProjection.toBase(view);
+        template.executeWithoutResult((status) -> createInternal(object));
 
-        createInternal(object);
-
-        return repository.find(detailType, object.getId());
+        return template.execute((status) -> repository.find(detailType, object.getId()));
     }
 
     /**
@@ -188,15 +205,18 @@ public abstract class DomainService<
      * @param view Provided view
      * @return Detail view of the updated object
      */
-    @Transactional
     public DETAIL_PROJECTION update(String id, UPDATE_PROJECTION view) {
-        ROOT root = repository.find(id);
-        ROOT object = updateProjection.toBase(view, root);
-        object.setId(id);
+        TransactionTemplate template = new TransactionTemplate(this.transactionManager);
 
-        updateInternal(object);
+        template.executeWithoutResult((status -> {
+            ROOT root = repository.find(id);
+            ROOT object = updateProjection.toBase(view, root);
+            object.setId(id);
 
-        return repository.find(detailType, object.getId());
+            updateInternal(object);
+        }));
+
+        return template.execute(status -> repository.find(detailType, id));
     }
 
     /**
@@ -269,7 +289,7 @@ public abstract class DomainService<
     /**
      * Hook called after deleting object.
      */
-    protected void postDeleteHook(String id) {
+    protected void postDeleteHook(@NotNull ROOT object) {
     }
 
     /**
@@ -355,5 +375,10 @@ public abstract class DomainService<
     @Autowired
     public void setRepository(REPOSITORY repository) {
         this.repository = repository;
+    }
+
+    @Autowired
+    public void setTransactionManager(PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
     }
 }

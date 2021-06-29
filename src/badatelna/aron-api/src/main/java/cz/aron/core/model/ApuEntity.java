@@ -1,5 +1,6 @@
 package cz.aron.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,4 +50,12 @@ public class ApuEntity extends DomainObject<ApuEntity> {
 
     @Enumerated(EnumType.STRING)
     private ApuType type;
+
+    @Transient
+    @JsonIgnore
+    private List<String> incomingRelTypeGroups = new ArrayList<>();
+
+    @Transient
+    @JsonIgnore
+    private List<String> incomingRelTypes = new ArrayList<>();
 }

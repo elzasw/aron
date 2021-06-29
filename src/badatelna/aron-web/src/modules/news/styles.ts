@@ -7,7 +7,6 @@ export const useStyles = makeStyles((theme) => {
   return {
     news: {
       background: colorBlueVeryLight,
-      minHeight: 'calc(100vh - 96px)',
       padding: theme.spacing(2),
       display: 'flex',
       flexDirection: 'column',

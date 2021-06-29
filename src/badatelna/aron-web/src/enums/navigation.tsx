@@ -2,9 +2,8 @@ import React from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import { ModulePath } from './module';
-import { Evidence, Help, Main, News } from '../modules';
+import { Evidence, Main, News } from '../modules';
 import { ApuType } from './apu';
-import { IconType } from './icon';
 import { FavouriteQuery } from '../types';
 import { Message } from './message';
 
@@ -35,9 +34,9 @@ export const appHeaderItems = [
     Component: News,
   },
   {
-    path: ModulePath.HELP,
     label: <FormattedMessage id={Message.HELP} />,
-    Component: Help,
+    url:
+      'https://vychodoceskearchivy.cz/home/prezentace-archivu/e-vystava-archivalii/archiv-online-napoveda',
   },
 ];
 
@@ -53,31 +52,31 @@ export const navigationItems = [
     label: <FormattedMessage id={Message.SEARCH} />,
     Component: Evidence,
   },
-  ...appHeaderItems,
+  ...appHeaderItems.filter(({ Component }) => Component),
 ];
 
 export const favouriteQueries: FavouriteQuery[] = [
   {
-    icon: IconType.FOLDER_OPEN_SOLID,
+    icon: 'fas fa-folder-open',
     label: 'České sbírky',
     type: ApuType.FUND,
     query: 'Sbírky',
     filters: [
       {
-        field: 'LANGUAGE',
+        source: 'LANGUAGE',
         value: ['Česky'],
       },
     ],
   },
-  { icon: IconType.GRADUATION_CAP_SOLID, label: 'Spisy žáků/studentů' },
-  { icon: IconType.BOOK_SOLID, label: 'Kroniky úřední' },
-  { icon: IconType.USERS_SOLID, label: 'Spisy evidence obyvatelstva' },
-  { icon: IconType.BOOK_SOLID, label: 'Kroniky neúřední' },
-  { icon: IconType.ID_BADGE_SOLID, label: 'Úřední kihy/evidence obyvatelstva' },
-  { icon: IconType.BUILDING_SOLID, label: 'Stavební spisy' },
-  { icon: IconType.ID_BADGE_SOLID, label: 'Kartotéky evidence obyvatelstva' },
-  { icon: IconType.GRADUATION_CAP_SOLID, label: 'Třídní výkazy' },
-  { icon: IconType.USERS_SOLID, label: 'Sčítání lidu' },
-  { icon: IconType.MAP_SOLID, label: 'Technické výkresy staveb' },
-  { icon: IconType.FOLDER_OPEN_SOLID, label: 'Spis evidující nemovistosti' },
+  { icon: 'fas fa-graduation-cap', label: 'Spisy žáků/studentů' },
+  { icon: 'fas fa-book', label: 'Kroniky úřední' },
+  { icon: 'fas fa-users', label: 'Spisy evidence obyvatelstva' },
+  { icon: 'fas fa-book', label: 'Kroniky neúřední' },
+  { icon: 'fas fa-id-badge', label: 'Úřední kihy/evidence obyvatelstva' },
+  { icon: 'fas fa-building', label: 'Stavební spisy' },
+  { icon: 'fas fa-id-badge', label: 'Kartotéky evidence obyvatelstva' },
+  { icon: 'fas fa-graduation-cap', label: 'Třídní výkazy' },
+  { icon: 'fas fa-users', label: 'Sčítání lidu' },
+  { icon: 'fas fa-map', label: 'Technické výkresy staveb' },
+  { icon: 'fas fa-folder-open', label: 'Spis evidující nemovistosti' },
 ];

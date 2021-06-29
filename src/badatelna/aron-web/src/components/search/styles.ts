@@ -4,6 +4,16 @@ export const useStyles = makeStyles((theme) => {
   return {
     search: {
       width: '100%',
+
+      '& input.MuiInputBase-input': {
+        '&::placeholder': {
+          color: theme.palette.grey[600],
+          opacity: 1,
+        },
+        '&::-ms-input-placeholder': {
+          color: theme.palette.grey[600],
+        },
+      },
     },
     searchInner: {
       position: 'relative',
@@ -32,6 +42,7 @@ export const useStyles = makeStyles((theme) => {
     },
     searchIcon: {
       fontSize: '1.8rem',
+      marginRight: 8,
     },
     searchButton: {
       height: '100%',

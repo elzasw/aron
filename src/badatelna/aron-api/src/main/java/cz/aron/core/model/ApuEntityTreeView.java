@@ -22,6 +22,7 @@ import java.util.List;
 @BatchSize(size = 100)
 public class ApuEntityTreeView extends DomainObject<ApuEntityTreeView> {
     private String name;
+    private String description;
     private int order;
 
     @Enumerated(EnumType.STRING)

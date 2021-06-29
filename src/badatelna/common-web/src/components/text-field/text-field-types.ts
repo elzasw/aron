@@ -20,4 +20,5 @@ export interface TextFieldProps {
 
   autocomplete?: string;
   type?: string;
+  inputProps?: Record<string, unknown>;
 }

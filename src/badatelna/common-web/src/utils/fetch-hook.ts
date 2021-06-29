@@ -67,5 +67,10 @@ export function useFetch<RESULT>(request: RequestInfo, opts?: Options) {
     setCounter((counter) => ++counter);
   });
 
-  return [result, loading, reset] as [RESULT | undefined, boolean, () => void];
+  return [result, loading, reset, setLoading] as [
+    RESULT | undefined,
+    boolean,
+    () => void,
+    (loading: boolean) => void
+  ];
 }

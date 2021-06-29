@@ -1,5 +1,5 @@
+import { DictionaryAutocomplete } from 'common/common-types';
 import { useStaticListSource } from 'utils/list-source-hook';
-import { DictionaryAutocomplete } from 'index';
 
 export function useLanguages() {
   return useStaticListSource<DictionaryAutocomplete>([

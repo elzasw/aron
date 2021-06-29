@@ -1,7 +1,9 @@
 package cz.inqool.eas.common.exception.dto;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 import javax.servlet.http.HttpServletRequest;
@@ -10,12 +12,13 @@ import javax.servlet.http.HttpServletRequest;
  * Class representing an exception raised during execution of a REST endpoint
  */
 @Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonPropertyOrder({"status", "error", "path", "timestamp", "code", "exception", "message", "cause", "details"})
 public class RestException extends BaseException {
 
-    private final int status;
-    private final String error;
-    private final String path;
+    private int status;
+    private String error;
+    private String path;
 
 
     public RestException(HttpServletRequest request, HttpStatus status, Throwable exception, String message) {
@@ -28,6 +31,6 @@ public class RestException extends BaseException {
 
     @Override
     public ObfuscatedException toObfuscatedException() {
-        return new ObfuscatedException(getException().getName(), message, path);
+        return new ObfuscatedException(throwable.getClass().getName(), message, path);
     }
 }

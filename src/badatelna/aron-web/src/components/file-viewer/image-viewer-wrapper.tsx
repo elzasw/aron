@@ -5,31 +5,47 @@ import { WrapperProps } from './types';
 import { API_URL } from '../../enums';
 import { useRef } from '../../common-utils';
 
-function Component({ id, children: Children, viewer, setViewer }: any) {
+function Component({
+  id,
+  fileType,
+  children: Children,
+  viewer,
+  setViewer,
+}: WrapperProps & {
+  viewer?: OpenSeadragon.Viewer;
+  setViewer: (viewer: OpenSeadragon.Viewer) => void;
+}) {
   const [current, viewerRef] = useRef();
 
   const getZoom = useCallback(
-    () => viewer.viewport.viewportToImageZoom(viewer.viewport.getZoom()),
+    () =>
+      viewer
+        ? viewer.viewport.viewportToImageZoom(viewer.viewport.getZoom())
+        : 0,
     [viewer]
   );
 
   const zoomIn = useCallback(() => {
-    if (getZoom() < 1.1) {
-      viewer.viewport.zoomBy(1 / 0.7);
-    } else {
-      viewer.viewport.zoomTo(viewer.viewport.imageToViewportZoom(1.1));
+    if (viewer) {
+      if (getZoom() < 1.1) {
+        viewer.viewport.zoomBy(1 / 0.7);
+      } else if (viewer) {
+        viewer.viewport.zoomTo(viewer.viewport.imageToViewportZoom(1.1));
+      }
     }
   }, [viewer, getZoom]);
 
   const zoomOut = useCallback(() => {
-    if (getZoom() > 0.2) {
-      viewer.viewport.zoomBy(0.7);
-    } else {
-      viewer.viewport.zoomTo(viewer.viewport.imageToViewportZoom(0.2));
+    if (viewer) {
+      if (getZoom() > 0.2) {
+        viewer.viewport.zoomBy(0.7);
+      } else if (viewer) {
+        viewer.viewport.zoomTo(viewer.viewport.imageToViewportZoom(0.2));
+      }
     }
   }, [viewer, getZoom]);
 
-  const reset = useCallback(() => viewer.viewport.goHome(), [viewer]);
+  const reset = useCallback(() => viewer && viewer.viewport.goHome(), [viewer]);
 
   useEffect(() => {
     if (current && id) {
@@ -53,16 +69,14 @@ function Component({ id, children: Children, viewer, setViewer }: any) {
         zoomIn,
         zoomOut,
         reset,
-        fileViewerProps: {
-          viewerRef,
-        },
+        fileViewerProps: { fileType, viewerRef },
       }}
     />
   );
 }
 
 export function ImageViewerWrapper(props: WrapperProps) {
-  const [viewer, setViewer] = useState();
+  const [viewer, setViewer] = useState<OpenSeadragon.Viewer>();
 
   return <Component {...{ ...props, viewer, setViewer }} />;
 }

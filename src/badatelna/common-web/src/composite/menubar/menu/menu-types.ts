@@ -1,13 +1,16 @@
-import { ReactNode } from 'react';
+import { ReactNode, ComponentType } from 'react';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export interface MenuItem {
-  label: ReactNode;
+  label?: ReactNode;
   separator?: boolean;
   icon?: ReactNode;
   items?: MenuItem[];
   keyShortcut?: string;
   keyShortcutLabel?: ReactNode;
+  href?: string;
   onClick?: () => void;
+  isActive?: (pathname: string) => boolean;
 }
 
 export interface MenuProps {
@@ -34,4 +37,5 @@ export interface SubmenuItemProps {
   opened: boolean;
   index: number;
   onHover: (index: number) => void;
+  SubMenuComponent: ComponentType<SubmenuProps & MenubarClassOverrides>;
 }

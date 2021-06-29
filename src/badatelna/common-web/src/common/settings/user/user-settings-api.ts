@@ -23,3 +23,14 @@ export function updateSettings(url: string, settings: UserSettings) {
     body: JSON.stringify(settings),
   });
 }
+
+/**
+ * Clear user settings.
+ *
+ * @param meUrl Url of service
+ */
+export function clearSettings(url: string) {
+  return abortableFetch(url, {
+    method: 'DELETE',
+  });
+}

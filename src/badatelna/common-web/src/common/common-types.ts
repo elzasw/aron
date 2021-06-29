@@ -1,3 +1,5 @@
+import { AbortableFetch } from 'utils/abortable-fetch';
+
 export interface DomainObject {
   id: string;
 }
@@ -61,11 +63,13 @@ export enum ApiFilterOperation {
   'NOT' = 'NOT',
   'CUSTOM' = 'CUSTOM',
   'IDS' = 'IDS',
+  'IN' = 'IN',
 }
 
 export interface Filter {
   field?: string;
   value?: any;
+  values?: any[];
   operation: ApiFilterOperation;
   ids?: string[];
   filters?: Filter[];
@@ -75,6 +79,16 @@ export interface Sort {
   field: string;
   type: 'FIELD' | 'GEO_DISTANCE' | 'SCRIPT' | 'SCORE';
   order: 'ASC' | 'DESC';
+
+  /**
+   * Points, that will be used with GEO_DISTANCE filter
+   */
+  points?: { lat?: number; lon?: number }[];
+
+  /**
+   * Sorting mode for GEO_DISTANCE filter
+   */
+  sortMode?: 'MIN' | 'MAX' | 'SUM' | 'AVG' | 'MEDIAN';
 }
 
 export interface Params {
@@ -82,6 +96,7 @@ export interface Params {
   sort?: Sort[];
   flipDirection?: boolean;
   filters?: Filter[];
+  include?: string[];
   searchAfter?: string;
 }
 
@@ -89,6 +104,7 @@ export interface ListSource<TYPE> {
   items: TYPE[];
   loading: boolean;
   reset: () => void;
+  loadDetail: (item: TYPE) => Promise<TYPE>;
 }
 
 export interface ResultDto<TYPE> {
@@ -99,6 +115,7 @@ export interface ResultDto<TYPE> {
 
 export interface Source<TYPE> extends ResultDto<TYPE> {
   loading: boolean;
+  setLoading: (loading: boolean) => void;
   reset: () => void;
 }
 
@@ -117,8 +134,21 @@ export interface ScrollableSource<TYPE> extends Source<TYPE> {
   loadMore: () => Promise<void>;
 }
 
-export interface CrudSourceProps {
+export interface CrudSourceProps<TYPE extends DomainObject> {
   url: string;
+  getItem?: (api: string, itemId: string) => AbortableFetch;
+  createItem?: (api: string, item: TYPE) => AbortableFetch;
+  updateItem?: (api: string, item: TYPE, _initialItem: TYPE) => AbortableFetch;
+  deleteItem?: (api: string, itemId: string) => AbortableFetch;
+
+  handleGetError?: (err: Error) => void;
+  handleCreateError?: (err: Error) => void;
+  handleUpdateError?: (err: Error) => void;
+  handleDeleteError?: (err: Error) => void;
+
+  getMessages?: {
+    errorMessage?: string;
+  };
 
   createMessages?: {
     successMessage?: string;
@@ -145,7 +175,7 @@ export interface CrudSource<TYPE extends DomainObject> {
   update: (obj: TYPE, prevObj: TYPE) => Promise<TYPE | undefined>;
   del: (id: string) => Promise<void>;
   refresh: () => Promise<TYPE | undefined>;
-  reset: () => void;
+  reset: (data?: TYPE) => void;
   setLoading: (loading: boolean) => void;
 }
 
@@ -155,64 +185,7 @@ export interface FileRef extends AuthoredObject {
   size: number;
 }
 
-export interface ReportTemplate extends DictionaryObject {
-  content?: FileRef;
-  provider?: string;
-  configuration?: string;
-  tags?: string[];
-  label?: string;
-}
-
-export enum ReportType {
-  DOCX = 'DOCX',
-  XLSX = 'XLSX',
-  PDF = 'PDF',
-  HTML = 'HTML',
-  XML = 'XML',
-  CSV = 'CSV',
-}
-
-export enum ReportRequestState {
-  /**
-   * State of a report request after creation
-   */
-  PENDING = 'PENDING',
-
-  /**
-   * State of a report request being processed
-   */
-  PROCESSING = 'PROCESSING',
-
-  /**
-   * State of a request successfully processed and corresponding report file was generated
-   */
-  PROCESSED = 'PROCESSED',
-
-  /**
-   * State of a report request whose processing failed
-   */
-  FAILED = 'FAILED',
-}
-
-export interface ReportRequest extends AuthoredObject {
-  template?: ReportTemplate;
-  configuration?: string;
-  type?: ReportType;
-  priority?: number;
-
-  state?: ReportRequestState;
-  result?: FileRef;
-
-  /**
-   * Message (e.g. error that occurred when processing this report request)
-   */
-  message?: string;
-
-  processingStart?: string;
-  processingEnd?: string;
-}
-
-export interface ReportProvider {
-  name: string;
-  id: string;
+export enum ScriptType {
+  GROOVY = 'GROOVY',
+  JAVASCRIPT = 'JAVASCRIPT',
 }

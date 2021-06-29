@@ -33,6 +33,9 @@ public class AggregationDeserializer extends StdDeserializer<Aggregation> {
                 case "BUCKET":
                     aggregationClass = BucketAggregation.class;
                     break;
+                case "METRIC":
+                    aggregationClass = MetricAggregation.class;
+                    break;
                 default:
                     aggregationClass = AbstractAggregation.class;
             }

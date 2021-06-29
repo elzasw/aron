@@ -6,9 +6,9 @@ import { Footer } from './footer';
 import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles';
 import { Icon } from '../../components';
-import { IconType } from '../../enums';
+import { Props } from './types';
 
-export const Main: React.FC = () => {
+export const Main = (props: Props) => {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
 
@@ -16,9 +16,9 @@ export const Main: React.FC = () => {
     <div
       className={classNames(classes.main, layoutClasses.flexColumnSpaceBetween)}
     >
-      <Icon type={IconType.BOOK} className={classes.mainBackgroundIcon} />
+      <Icon className={classes.mainBackgroundIcon} />
       <Body />
-      <Footer />
+      <Footer {...props} />
     </div>
   );
 };

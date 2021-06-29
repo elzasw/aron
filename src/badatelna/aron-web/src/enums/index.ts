@@ -5,7 +5,6 @@ export * from './dao';
 export * from './data';
 export * from './date';
 export * from './filters';
-export * from './icon';
 export * from './module';
 export * from './navigation';
 export * from './evidence';

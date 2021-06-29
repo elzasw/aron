@@ -25,7 +25,7 @@ class AndFilterTest extends IndexFilterTestBase {
                 "    \"operation\" : \"EQ\",\r\n" +
                 "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"shortString\",\r\n" +
-                "    \"value\" : \"Obecní úřad Bukovina\"\r\n" +
+                "    \"value\" : \"Obecní úřad Błukovina\"\r\n" +
                 "  }, {\r\n" +
                 "    \"operation\" : \"EQ\",\r\n" +
                 "    \"nestedQueryEnabled\" : true,\r\n" +
@@ -60,7 +60,7 @@ class AndFilterTest extends IndexFilterTestBase {
                 "      \"operation\" : \"EQ\",\r\n" +
                 "      \"nestedQueryEnabled\" : true,\r\n" +
                 "      \"field\" : \"shortString\",\r\n" +
-                "      \"value\" : \"Obecní úřad Bukovina\"\r\n" +
+                "      \"value\" : \"Obecní úřad Błukovina\"\r\n" +
                 "    }, {\r\n" +
                 "      \"operation\" : \"EQ\",\r\n" +
                 "      \"nestedQueryEnabled\" : true,\r\n" +
@@ -84,7 +84,7 @@ class AndFilterTest extends IndexFilterTestBase {
                 "    \"operation\" : \"EQ\",\r\n" +
                 "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"shortString\",\r\n" +
-                "    \"value\" : \"Obecní úřad Bukovina\"\r\n" +
+                "    \"value\" : \"Obecní úřad Błukovina\"\r\n" +
                 "  }, {\r\n" +
                 "    \"operation\" : \"EQ\",\r\n" +
                 "    \"nestedQueryEnabled\" : true,\r\n" +
@@ -116,7 +116,7 @@ class AndFilterTest extends IndexFilterTestBase {
                 "      \"operation\" : \"EQ\",\r\n" +
                 "      \"nestedQueryEnabled\" : true,\r\n" +
                 "      \"field\" : \"shortString\",\r\n" +
-                "      \"value\" : \"Obecní úřad Bukovina\"\r\n" +
+                "      \"value\" : \"Obecní úřad Błukovina\"\r\n" +
                 "    }, {\r\n" +
                 "      \"operation\" : \"EQ\",\r\n" +
                 "      \"nestedQueryEnabled\" : true,\r\n" +

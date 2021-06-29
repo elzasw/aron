@@ -216,7 +216,7 @@ public class TermsAggregation extends BucketAggregation {
                 throw new InvalidAttribute(this.getClass(), null, field, FIELD_NOT_INDEXED);
             }
 
-            aggregationBuilder.field(leafNode.getElasticSearchPath());
+            aggregationBuilder.field(leafNode.getSortable());
         }
         if (size != null) {
             aggregationBuilder.size(size);

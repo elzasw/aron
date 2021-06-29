@@ -1,5 +1,4 @@
-import React, { useState, useContext, useEffect, useMemo } from 'react';
-import { EvidenceScreenMode } from '../evidence-types';
+import React, { useContext, useEffect, useMemo, RefObject } from 'react';
 import { MenubarContext } from 'composite/menubar/menubar-context';
 import { MenuItem } from 'composite/menubar/menu/menu-types';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
@@ -7,55 +6,23 @@ import ArrowForwardIcon from '@material-ui/icons/ArrowForward';
 import ForwardOutlinedIcon from '@material-ui/icons/ForwardOutlined';
 import { useIntl } from 'react-intl';
 import { useStyles } from './screen-mode-styles';
-
-const detailStyles: Record<EvidenceScreenMode, React.CSSProperties> = {
-  [EvidenceScreenMode.TABLE]: {
-    overflow: 'hidden',
-    width: '0px',
-    padding: 0,
-    transition: 'width 1s',
-  },
-  [EvidenceScreenMode.SPLIT]: {
-    width: 'calc(100% - 600px)',
-    transition: 'width 1s',
-  },
-  [EvidenceScreenMode.DETAIL]: {
-    width: '100%',
-    transition: 'width 1s',
-  },
-};
-
-const tableStyles: Record<EvidenceScreenMode, React.CSSProperties> = {
-  [EvidenceScreenMode.TABLE]: {
-    width: '100%',
-    transition: 'width 1s',
-  },
-  [EvidenceScreenMode.SPLIT]: {
-    width: '600px',
-    transition: 'width 1s',
-  },
-  [EvidenceScreenMode.DETAIL]: {
-    width: '0px',
-    transition: 'width 1s',
-  },
-};
+import { SplitScreenHandle } from 'components/split-screen/split-screen-types';
 
 /**
  * Screen mode switcher functionality.
  */
-export function useScreenMode() {
-  const [screenMode, setScreenMode] = useState<EvidenceScreenMode>(
-    EvidenceScreenMode.SPLIT
-  );
-
+export function useScreenMode({
+  splitScreenRef,
+  hideMenuTools = false,
+}: {
+  splitScreenRef: RefObject<SplitScreenHandle>;
+  hideMenuTools?: boolean;
+}) {
   const { modifyItems } = useContext(MenubarContext);
 
   const classes = useStyles();
 
   const intl = useIntl();
-
-  const tableStyle = tableStyles[screenMode];
-  const detailStyle = detailStyles[screenMode];
 
   const menuItems: MenuItem[] = useMemo(
     () => [
@@ -81,8 +48,7 @@ export function useScreenMode() {
               </>
             ),
             onClick: () => {
-              console.log('sss');
-              setScreenMode(EvidenceScreenMode.TABLE);
+              splitScreenRef.current?.handleFullSizeLeft();
             },
           },
           {
@@ -101,7 +67,7 @@ export function useScreenMode() {
               </>
             ),
             onClick: () => {
-              setScreenMode(EvidenceScreenMode.SPLIT);
+              splitScreenRef.current?.handleMoveToMiddle();
             },
           },
           {
@@ -120,7 +86,7 @@ export function useScreenMode() {
               </>
             ),
             onClick: () => {
-              setScreenMode(EvidenceScreenMode.DETAIL);
+              splitScreenRef.current?.handleFullSizeRight();
             },
           },
         ],
@@ -131,17 +97,16 @@ export function useScreenMode() {
 
   // adds items to menu
   useEffect(() => {
-    modifyItems((items) => [...items, ...menuItems]);
+    if (!hideMenuTools) {
+      modifyItems((items) => [...items, ...menuItems]);
 
-    return () => {
-      modifyItems((items) => items.filter((item) => !menuItems.includes(item)));
-    };
+      return () => {
+        modifyItems((items) =>
+          items.filter((item) => !menuItems.includes(item))
+        );
+      };
+    }
   }, [menuItems, modifyItems]);
 
-  return {
-    screenMode,
-    tableStyle,
-    detailStyle,
-    changeScreenMode: setScreenMode,
-  };
+  return { splitScreenRef };
 }

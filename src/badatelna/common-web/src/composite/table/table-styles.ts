@@ -52,7 +52,6 @@ export const useStyles = makeStyles((theme) => ({
   searchIcon: {
     cursor: 'pointer',
     marginRight: 5,
-    padding: 10,
     color: theme.palette.primary.dark,
   },
   toolbarWrapper: {
@@ -72,9 +71,10 @@ export const useStyles = makeStyles((theme) => ({
   },
   toolbarText: {
     fontWeight: 'bold',
-    maxWidth: 250,
     width: '100%',
     whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    overflow: 'hidden',
   },
   toolbarTextSub: {
     fontSize: '1.1em !important',
@@ -116,26 +116,14 @@ export const useStyles = makeStyles((theme) => ({
   toolbarButton: {
     height: 25,
     minWidth: 40,
-    fontSize: 14,
+    fontSize: '14px!important',
     cursor: 'pointer',
     padding: '2px 5px',
 
-    '&.MuiButton-contained': {
+    '&.MuiButton-contained:not(.MuiButton-containedPrimary):not(.MuiButton-containedSecondary)': {
       backgroundColor: '#f1f3f4',
       '&:hover': {
         backgroundColor: '#e0e2e3',
-      },
-    },
-    '&.MuiButton-contained.MuiButton-containedPrimary': {
-      backgroundColor: theme.palette.primary.main,
-      '&:hover': {
-        backgroundColor: theme.palette.primary.dark,
-      },
-    },
-    '&.MuiButton-contained.MuiButton-containedSecondary': {
-      backgroundColor: theme.palette.secondary.main,
-      '&:hover': {
-        backgroundColor: theme.palette.secondary.dark,
       },
     },
   },
@@ -176,7 +164,6 @@ export const useStyles = makeStyles((theme) => ({
     flex: '0 0 auto',
   },
   filterDialogColumnsWrapper: {
-    display: 'flex',
     maxWidth: 900,
   },
   filterDialogItem: {
@@ -228,6 +215,10 @@ export const useStyles = makeStyles((theme) => ({
     display: 'flex',
     alignItems: 'center',
     padding: 0,
+
+    '& svg': {
+      width: 18,
+    },
   },
   tableRowHeader: {
     flexShrink: 0,
@@ -274,6 +265,7 @@ export const useStyles = makeStyles((theme) => ({
     '&:hover': {
       backgroundColor: theme.palette.highlight,
     },
+    cursor: 'pointer',
     padding: '2px 12px',
     display: 'flex',
     alignItems: 'center',

@@ -5,7 +5,7 @@ import React, {
   useContext,
   useRef,
 } from 'react';
-import { bulkActionDialogApi } from './bulk-action-dialog-api';
+import { ResultStatus } from './bulk-action-dialog-api';
 import { BulkActionDialogHandle } from './bulk-action-dialog-types';
 import { FormHandle } from 'composite/form/form-types';
 import { DialogHandle } from 'components/dialog/dialog-types';
@@ -14,29 +14,56 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
 import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
 import { useIntl } from 'react-intl';
+import { EvidenceContext } from 'composite/evidence/evidence-context';
+import { Filter } from 'common/common-types';
+import { convertToApiFilters } from '../hooks/table-data-hook';
+import { TableFilterWithState } from '../table-types';
 
 export function useBulkActionDialog<FORM_DATA>({
   url,
   paramsMapper,
   ref,
+  apiCall,
 }: {
   url: string;
   paramsMapper: (formData?: FORM_DATA) => Record<string, any>;
   ref: React.Ref<BulkActionDialogHandle>;
+  apiCall: (
+    url: string,
+    filters: Filter[],
+    ids: string[],
+    params?: Record<string, any> | undefined
+  ) => Promise<ResultStatus>;
 }) {
   const dialogRef = useRef<DialogHandle>(null);
   const formRef = useRef<FormHandle<FORM_DATA>>(null);
 
   const [submitting, setSubmitting] = useState(false);
-  const { totalCount } = useContext(TableContext); // apiFilters
+  const {
+    preFilters,
+    filters,
+    filtersState,
+    searchQuery,
+    totalCount,
+  } = useContext(TableContext);
   const { selected } = useContext(TableSelectedContext);
+
+  const filtersWithState: TableFilterWithState[] = filters.map((filter, i) => ({
+    ...filter,
+    ...filtersState[i],
+  }));
+
+  const apiFilters = convertToApiFilters(
+    preFilters,
+    filtersWithState,
+    searchQuery
+  );
 
   const applyToSelected = selected.length > 0;
   const count = applyToSelected ? selected.length : totalCount;
 
-  // const { tableRef, formRef } = useContext(EvidenceContext);
-  // const refreshTable = tableRef.current?.refresh!;
-  // const refreshForm = formRef.current?.refresh!;
+  const { detailRef, tableRef } = useContext(EvidenceContext);
+
   const { showSnackbar } = useContext(SnackbarContext);
 
   const intl = useIntl();
@@ -52,9 +79,10 @@ export function useBulkActionDialog<FORM_DATA>({
   const confirm = useCallback(() => {
     async function call() {
       setSubmitting(true);
-      const status = await bulkActionDialogApi(
+
+      const status = await apiCall(
         url,
-        [], // fixme: apiFilters
+        apiFilters,
         selected,
         paramsMapper(formRef.current?.getFieldValues())
       );
@@ -62,9 +90,9 @@ export function useBulkActionDialog<FORM_DATA>({
       setSubmitting(false);
 
       if (status.error === undefined) {
-        // fixme
-        // refreshTable();
-        // refreshForm();
+        detailRef.current?.refreshAll();
+        tableRef.current?.resetSelection();
+        tableRef.current?.refresh();
 
         showSnackbar(
           intl.formatMessage({
@@ -85,7 +113,17 @@ export function useBulkActionDialog<FORM_DATA>({
     }
 
     call();
-  }, [intl, paramsMapper, selected, showSnackbar, url]);
+  }, [
+    apiCall,
+    apiFilters,
+    detailRef,
+    intl,
+    paramsMapper,
+    selected,
+    showSnackbar,
+    tableRef,
+    url,
+  ]);
 
   return {
     submitting,

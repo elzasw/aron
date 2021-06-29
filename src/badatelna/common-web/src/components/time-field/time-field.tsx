@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useIntl } from 'react-intl';
+import clsx from 'clsx';
 import DateFnsUtils from '@date-io/date-fns';
-import { formatISO, isValid } from 'date-fns';
+import { isValid } from 'date-fns';
 import MuiPickersUtilsProvider from '@material-ui/pickers/MuiPickersUtilsProvider';
 import { KeyboardTimePicker } from '@material-ui/pickers/TimePicker';
 import { LocaleContext } from 'common/locale/locale-context';
 import { useEventCallback } from 'utils/event-callback-hook';
-import { parseISOTimeSafe } from 'utils/date-utils';
+import { parseISOTimeSafe, formatISOTime } from 'utils/date-utils';
 import { TimeFieldProps } from './time-field-types';
 import { useStyles } from './time-field-styles';
 
@@ -19,6 +21,8 @@ export function TimeField({
 }: TimeFieldProps) {
   // fix undefined value
   value = value ?? null;
+
+  const intl = useIntl();
 
   const { locale } = useContext(LocaleContext);
 
@@ -53,7 +57,8 @@ export function TimeField({
     if (date == null) {
       onChange(null);
     } else if (!isError(date)) {
-      onChange(formatISO(date, { representation: 'time' }));
+      onChange(formatISOTime(date));
+      console.log('time', formatISOTime(date));
     }
   });
 
@@ -63,24 +68,38 @@ export function TimeField({
     <MuiPickersUtilsProvider utils={DateFnsUtils} locale={locale.dateFnsLocale}>
       <KeyboardTimePicker
         InputProps={{
-          classes,
+          classes: {
+            root: classes.root,
+            input: classes.input,
+          },
         }}
         inputProps={{
           form,
         }}
-        views={['hours', 'minutes', 'seconds']}
-        disableToolbar
-        variant="inline"
+        autoOk={true}
+        ampm={false}
+        variant="dialog"
         fullWidth={true}
         disabled={disabled}
         value={internalValue}
         format={locale.timeFormat}
         onChange={handleChange}
         InputAdornmentProps={{
-          style: {
-            display: 'none',
+          classes: {
+            root: clsx({
+              [classes.addorment]: !disabled,
+              [classes.dissabledAddorment]: disabled,
+            }),
           },
         }}
+        cancelLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_CANCEL',
+          defaultMessage: 'Zrušit',
+        })}
+        okLabel={intl.formatMessage({
+          id: 'EAS_DATEPICKER_BUTTON_OK',
+          defaultMessage: 'Potvrdit',
+        })}
         // don't show error messages only error underline
         invalidDateMessage=""
         maxDateMessage=""

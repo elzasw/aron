@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 
 import { WrapperProps } from './types';
 
-export function PdfViewerWrapper({ id, children: Children }: WrapperProps) {
+export function PdfViewerWrapper({
+  id,
+  fileType,
+  children: Children,
+}: WrapperProps) {
   const [pageNumber, setPageNumber] = useState(0);
   const [numPages, setNumPages] = useState(0);
   const [zoom, setZoom] = useState(1);
@@ -42,7 +46,13 @@ export function PdfViewerWrapper({ id, children: Children }: WrapperProps) {
         zoomInDisabled,
         zoomOutDisabled,
 
-        fileViewerProps: { file: id, zoom, pageNumber, onLoadSuccess }, // TODO:
+        fileViewerProps: {
+          file: id,
+          fileType,
+          zoom,
+          pageNumber,
+          onLoadSuccess,
+        }, // TODO:
       }}
     />
   );

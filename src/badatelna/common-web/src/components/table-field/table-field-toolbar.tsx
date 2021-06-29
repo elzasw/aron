@@ -70,7 +70,7 @@ export function TableFieldToolbar({ selectedIndex }: TableFieldToolbarProps) {
           title={
             <FormattedMessage
               id="EAS_TABLE_FIELD_TOOLBAR_BTN_DELETE"
-              defaultMessage="v"
+              defaultMessage="Smazat"
             />
           }
           onClick={handleRemoveClick}

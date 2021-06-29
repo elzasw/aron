@@ -7,7 +7,10 @@ import React, {
   ReactNode,
 } from 'react';
 
+import { ModulePath } from '../enums';
+
 interface AppState {
+  evidencePath: ModulePath | null;
   evidenceDetailTreeHeight: number;
   evidenceDetailTreeExpandedItems: string[];
 }
@@ -23,6 +26,7 @@ const AppStateContext = createContext<IAppStateContext>(undefined as any);
 
 function useAppStateContext() {
   const [appState, setAppState] = useState<AppState>({
+    evidencePath: null,
     evidenceDetailTreeHeight: 150,
     evidenceDetailTreeExpandedItems: [],
   });

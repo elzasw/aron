@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
  * Filter representing the 'less-than' filter condition on given {@link FieldFilter#field}.
  */
 @EqualsAndHashCode(callSuper = true)
-public class LtFilter extends RangeFilter<LtFilter> {
+public class LtFilter extends ComparisonFilter<LtFilter> {
 
     LtFilter() {
         super(FilterOperation.LT);

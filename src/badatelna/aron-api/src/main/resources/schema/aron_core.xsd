@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xs:schema targetNamespace="http://www.aron.cz/management/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020">
 	<xs:import schemaLocation="aron_apux.xsd" namespace="http://www.aron.cz/apux/2020"/>
-	<xs:element name="deleteApuSourcesRequest" type="s1:UuidList">
+	<xs:element name="deleteApuSources" type="s1:UuidList">
 		<xs:annotation>
 			<xs:documentation>Požadavek na vymazání APU</xs:documentation>
 		</xs:annotation>
 	</xs:element>
-	<xs:element name="deleteApuSourcesResponse"/>
 </xs:schema>

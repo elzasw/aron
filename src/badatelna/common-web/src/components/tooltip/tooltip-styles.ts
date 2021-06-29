@@ -5,5 +5,6 @@ export const useStyles = makeStyles(() => ({
     backgroundColor: '#FEFFDE',
     color: 'black',
     border: '1px solid black',
+    maxWidth: 500,
   },
 }));

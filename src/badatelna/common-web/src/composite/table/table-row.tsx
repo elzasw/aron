@@ -17,7 +17,7 @@ export const TableRow = memo(function TableFieldRow<
 >({ index, value }: TableRowProps<OBJECT>) {
   const classes = useStyles();
 
-  const { filteredColumns, setActiveRow, showSelectBox } = useContext<
+  const { filteredColumns, setActiveRow, showSelectBox, sorts } = useContext<
     TableContext<OBJECT>
   >(TableContext);
 
@@ -65,7 +65,8 @@ export const TableRow = memo(function TableFieldRow<
               value={valueMapper({
                 rowValue: value,
                 column,
-                value: get(value, column.datakey, ''),
+                value: get(value, column.displaykey ?? column.datakey, ''),
+                sorts,
               })}
               rowValue={value}
               column={column}

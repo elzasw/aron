@@ -19,22 +19,14 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class FulltextFilter extends AbstractFilter {
-
-    /**
-     * Value used in comparison
-     */
-    @NotBlank
-    protected String value;
-
+public class FulltextFilter extends ValueFilter {
 
     FulltextFilter() {
         super(FilterOperation.FTX);
     }
 
     public FulltextFilter(@NotBlank String value) {
-        super(FilterOperation.FTX);
-        this.value = value;
+        super(FilterOperation.FTX, value);
     }
 
 

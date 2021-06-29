@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import classNames from 'classnames';
-import { get, uniq } from 'lodash';
+import { uniq } from 'lodash';
 import { Resizable } from 're-resizable';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
@@ -74,73 +74,16 @@ export function EvidenceDetailTree({ item, id }: DetailTreeProps) {
 
         updateAppState({ evidenceDetailTreeExpandedItems: uniq(items) });
 
-        const treeItemContent = get(
-          document.getElementsByClassName('MuiTreeItem-content'),
-          '[0]'
-        );
+        setTimeout(() => {
+          const itemElement = document.getElementById(item.id);
+          const wrapper = document.getElementById(WRAPPER_ID);
 
-        if (treeItemContent) {
-          const itemHeight = treeItemContent.getBoundingClientRect().height;
-
-          const isParent = (parent: ApuTree) => {
-            let current: ApuEntity | undefined = item;
-
-            while (current) {
-              if (current.id === parent.id) {
-                return true;
-              }
-
-              current = current.parent;
-            }
-
-            return false;
-          };
-
-          const getScrollTop = (current: ApuTree, parentId?: string) => {
-            let scrollTop = 0;
-
-            if (current.id !== item.id) {
-              scrollTop += itemHeight;
-
-              const itemId = `${parentId ? `${parentId}__` : ''}${current.id}`;
-
-              current.children.some((child) => {
-                if (child.id === item.id) {
-                  return true;
-                }
-
-                if (isParent(child)) {
-                  scrollTop += getScrollTop(child, itemId);
-                  return true;
-                }
-
-                if (
-                  appState.evidenceDetailTreeExpandedItems.includes(
-                    `${itemId}__${child.id}`
-                  )
-                ) {
-                  scrollTop += getScrollTop(child, itemId);
-                } else {
-                  scrollTop += itemHeight;
-                }
-
-                return false;
-              });
-            }
-
-            return scrollTop;
-          };
-
-          const scrollTop = getScrollTop(treeItem);
-
-          setTimeout(() => {
-            const wrapper = document.getElementById(WRAPPER_ID);
-
-            if (wrapper) {
-              wrapper.scrollTop = scrollTop;
-            }
-          }, 500);
-        }
+          if (itemElement && wrapper) {
+            wrapper.scrollTop =
+              itemElement.getBoundingClientRect().top -
+              wrapper.getBoundingClientRect().top;
+          }
+        }, 500);
       };
 
       setTimeout(init);
@@ -206,7 +149,7 @@ export function EvidenceDetailTree({ item, id }: DetailTreeProps) {
               selected,
               expanded: appState.evidenceDetailTreeExpandedItems,
               disableClick: item,
-              labelMapper: (item) => item.name || 'Neznámé',
+              labelMapper: (item) => item.description || item.name || 'Neznámé',
               onLabelClick: (newItem) =>
                 navigate(`${ModulePath.APU}/${newItem.id}`),
               onNodeToggle: (evidenceDetailTreeExpandedItems) =>

@@ -42,7 +42,7 @@ public class DatedRepository<
      */
     public ROOT deletePermanently(@NotNull String id) {
         //noinspection unchecked
-        DatedStore<ROOT, INDEX_PROJECTED, ?> store = (DatedStore<ROOT, INDEX_PROJECTED, ?>) getStore();
+        DatedStore<ROOT, INDEX_PROJECTED, ?> store = (DatedStore<ROOT, INDEX_PROJECTED, ?>) getStore(indexProjectedType);
 
         INDEX_PROJECTED projected = store.deletePermanently(id);
 
@@ -63,7 +63,7 @@ public class DatedRepository<
      */
     public Collection<ROOT> deletePermanently(@NotNull Collection<String> ids) {
         //noinspection unchecked
-        DatedStore<ROOT, INDEX_PROJECTED, ?> store = (DatedStore<ROOT, INDEX_PROJECTED, ?>) getStore();
+        DatedStore<ROOT, INDEX_PROJECTED, ?> store = (DatedStore<ROOT, INDEX_PROJECTED, ?>) getStore(indexProjectedType);
 
         Collection<INDEX_PROJECTED> projected = store.deletePermanently(ids);
 

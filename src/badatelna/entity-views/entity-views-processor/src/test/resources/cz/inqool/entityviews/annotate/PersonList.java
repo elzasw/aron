@@ -1,9 +1,14 @@
 package cz.inqool.entityviews.annotate;
 
+@javax.persistence.Entity()
 public class PersonList implements cz.inqool.entityviews.View {
     public boolean active;
 
+    @javax.persistence.Column(name = "first_name")
     public String firstName;
+
+    @javax.persistence.Embedded()
+    public cz.inqool.entityviews.annotate.AddressPersonList address;
 
     public static void toEntity(Person entity, PersonList view) {
         if (view == null) {
@@ -12,6 +17,7 @@ public class PersonList implements cz.inqool.entityviews.View {
 
         entity.active = view.active;
         entity.firstName = view.firstName;
+        entity.address = cz.inqool.entityviews.annotate.AddressPersonList.toEntity(view.address);
     }
 
     public static Person toEntity(PersonList view) {
@@ -40,6 +46,7 @@ public class PersonList implements cz.inqool.entityviews.View {
 
         view.active = entity.active;
         view.firstName = entity.firstName;
+        view.address = cz.inqool.entityviews.annotate.AddressPersonList.toView(entity.address);
     }
 
     public static PersonList toView(Person entity) {

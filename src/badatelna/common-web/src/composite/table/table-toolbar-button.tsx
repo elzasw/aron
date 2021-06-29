@@ -7,11 +7,13 @@ import { useStyles } from './table-styles';
 
 export const TableToolbarButton = forwardRef(function TableToolbarButton(
   {
+    className,
     tooltip,
     disabled,
     checked,
     endIcon,
     onClick,
+    href,
     label,
     primary = checked,
     secondary,
@@ -26,10 +28,15 @@ export const TableToolbarButton = forwardRef(function TableToolbarButton(
         <Button
           ref={ref}
           disabled={disabled}
-          className={clsx(classes.toolbarText, classes.toolbarButton)}
+          className={clsx(
+            classes.toolbarText,
+            classes.toolbarButton,
+            className
+          )}
           size="small"
-          component="span"
+          component={href ? 'a' : 'span'}
           onClick={onClick}
+          href={href}
           endIcon={endIcon}
           color={primary ? 'primary' : secondary ? 'secondary' : 'default'}
           variant="contained"

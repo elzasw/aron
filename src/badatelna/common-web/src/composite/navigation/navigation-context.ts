@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-export interface Prompt {
+export interface NavigationPrompt {
   title: string;
   text: string;
   clearCallback?: () => void;
@@ -12,12 +12,13 @@ export interface StateAction {
 }
 
 export interface NavigationContext {
+  prompts: NavigationPrompt[];
   navigate: (url: string, replace?: boolean, state?: StateAction) => void;
 
   testPrompts: (callback: () => void) => void;
 
-  registerPrompt: (promt: Prompt) => void;
-  unregisterPrompt: (promt: Prompt) => void;
+  registerPrompt: (promt: NavigationPrompt) => void;
+  unregisterPrompt: (promt: NavigationPrompt) => void;
 
   stateAction: StateAction | null;
 }

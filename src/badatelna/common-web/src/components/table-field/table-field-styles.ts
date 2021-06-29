@@ -50,11 +50,11 @@ export const useStyles = makeStyles((theme) => ({
     backgroundColor: '#252525',
     fontWeight: 500,
     whiteSpace: 'nowrap',
-    padding: '0 24px!important',
+    padding: '0 18px!important',
   },
   tableRowActions: {
     flexShrink: 0,
-    width: 30,
+    width: 50,
     height: 20,
     verticalAlign: 'top',
     display: 'inline-flex',
@@ -64,7 +64,7 @@ export const useStyles = makeStyles((theme) => ({
       cursor: 'pointer',
       width: 20,
       height: 20,
-      padding: 0,
+      padding: '2pt',
     },
   },
   tableRowHeader: {
@@ -81,6 +81,9 @@ export const useStyles = makeStyles((theme) => ({
     textOverflow: 'ellipsis',
     margin: 'auto',
   },
+  rowDraggable: {
+    alignSelf: 'center',
+  },
   draggable: {
     zIndex: 999,
   },
@@ -96,23 +99,33 @@ export const useStyles = makeStyles((theme) => ({
     display: 'inline-block',
   },
   dataWrapper: {
-    minHeight: 100,
+    minHeight: 60,
     minWidth: '100%',
     width: 'fit-content',
     // overflowY: 'scroll',
+  },
+  noMinHeigth: {
+    minWidth: 'inherit !important',
+    minHeight: 'auto !important',
+    marginTop: '0 !important',
+    paddingBottom: '0 !important',
   },
   row: {
     boxSizing: 'border-box',
     borderBottom: '1px solid #cdcdcd',
     minWidth: '100%',
-    height: 30,
+    minHeight: 30,
     '&:hover': {
       backgroundColor: theme.palette.highlight,
     },
-    padding: '2px 24px',
+    padding: '2px 16px',
     display: 'flex',
     alignItems: 'center',
     flexShrink: 0,
+    cursor: 'pointer',
+  },
+  defaultCursor: {
+    cursor: 'default',
   },
   radioButton: {
     padding: 0,

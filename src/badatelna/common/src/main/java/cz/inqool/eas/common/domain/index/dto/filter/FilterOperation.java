@@ -47,8 +47,14 @@ public final class FilterOperation {
     /** Greater than or equals. Applicable to number or date attributes */
     public static final String GTE = "GTE";
 
+    /** Between. Applicable to number or date attributes */
+    public static final String RANGE = "RANGE";
+
     /** Filters by list of IDs */
     public static final String IDS = "IDS";
+
+    /** Value is one among given values */
+    public static final String IN = "IN";
 
     /** Is not set. Applicable to all attributes */
     public static final String IS_NULL = "IS_NULL";

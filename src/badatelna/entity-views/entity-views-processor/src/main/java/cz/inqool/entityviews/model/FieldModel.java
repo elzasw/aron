@@ -1,5 +1,7 @@
 package cz.inqool.entityviews.model;
 
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Converter;
 import cz.inqool.entityviews.ViewContext;
 import cz.inqool.entityviews.function.Accessible;
 import cz.inqool.entityviews.function.Viewable;
@@ -32,6 +34,8 @@ public class FieldModel implements Accessible, Viewable {
     private String[] views;
     private Map<String, ViewContext> viewMappings;
 
+    private static final Converter<String, String> setterNameConverter = CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_CAMEL);
+
     private static final RealTypeModel columnType = new RealTypeModel(Column.class.getPackageName(), Column.class.getSimpleName(), new TypeModel[]{});
     private static final RealTypeModel oneToManyType = new RealTypeModel(OneToMany.class.getPackageName(), OneToMany.class.getSimpleName(), new TypeModel[]{});
     private static final RealTypeModel joinColumnType = new RealTypeModel(JoinColumn.class.getPackageName(), JoinColumn.class.getSimpleName(), new TypeModel[]{});
@@ -49,15 +53,17 @@ public class FieldModel implements Accessible, Viewable {
             return;
         }
 
+        ViewContext classView = getContext().getView();
+
         inView(getMappedView(), () -> {
-            printAnnotations();
+            printAnnotations(classView);
 
             println(() -> {
                 printModifiers();
 
                 print(type.getUsage(), " ", name);
 
-                if (!isRef() && value != null) {
+                if (value != null) {
                     print(" = ", value);
                 }
 
@@ -76,6 +82,7 @@ public class FieldModel implements Accessible, Viewable {
             boolean isCollection = type.isCollection();
             boolean isUsedView = isCollection ? type.getArguments()[0].isUsedView() : type.isUsedView();
 
+
             if (isUsedView) {
                 println(() -> {
                     print("entity.", name, " = ");
@@ -87,6 +94,19 @@ public class FieldModel implements Accessible, Viewable {
                         print(type.getUsage(), ".toEntity(view.", name, ");");
                     }
                 });
+
+                if (isOneWay()) {
+                    String oneWayTarget = getOneWayTarget();
+                    String fieldSetter = "set" + setterNameConverter.convert(oneWayTarget);
+
+                    println(() -> {
+                        if (isCollection) {
+                            print("if (entity.", name, " != null) entity.", name, ".stream().filter(o -> o != null).forEach(o -> o.", fieldSetter, "(entity));");
+                        } else {
+                            print("if (entity.", name, " != null) entity.", name, ".", fieldSetter, "(entity);");
+                        }
+                    });
+                }
             } else {
                 println("entity.", name, " = view.", name, ";");
             }
@@ -122,12 +142,12 @@ public class FieldModel implements Accessible, Viewable {
         });
     }
 
-    private void printAnnotations() {
+    private void printAnnotations(ViewContext view) {
         boolean foundJoinColumn = false;
         boolean foundJoinTable = false;
 
         for(AnnotationModel annotation : getAnnotations()) {
-            if (annotation.includeInView()) {
+            if (annotation.includeInView(view)) {
                 String name = annotation.getType().getFullName();
 
                 if (annotation.getType().equals(joinColumnType)) {
@@ -182,7 +202,7 @@ public class FieldModel implements Accessible, Viewable {
 
                         if (columnName instanceof String) {
                             String str = (String) columnName;
-                            columnName = str.substring(0, str.length() - 1) + "_id" + "\"";
+                            columnName = escapeString(RealTypeModel.toSnakeCase(str.substring(1, str.length() - 1)) + "_id");
                         }
 
                         AnnotationModel oneToManyAnnotation = new AnnotationModel(oneToManyType, attributes, null);
@@ -238,5 +258,10 @@ public class FieldModel implements Accessible, Viewable {
     private boolean isOneWay() {
         ViewContext view = getContext().getView();
         return view.isUseOneWay();
+    }
+
+    private String getOneWayTarget() {
+        ViewContext view = getContext().getView();
+        return view.getOneWayTarget();
     }
 }

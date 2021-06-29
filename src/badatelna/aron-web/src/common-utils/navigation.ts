@@ -1,29 +1,43 @@
-import { ModulePath } from '../enums';
+import { map, compact } from 'lodash';
 
-import { filterFilters, filtersNotEmpty } from './filter';
+import { ApiFilterOperation } from '../types';
 
-const createUrlParam = (param: any, text: string) =>
-  param ? `${text}=${encodeURI(param)}` : '';
+export const createUrlParams = (params: any) => {
+  const query = map(params, (value, key) =>
+    value ? `${encodeURIComponent(key)}=${encodeURIComponent(value)}` : ''
+  )
+    .filter((value) => value)
+    .join('&');
 
-const createFiltersParam = (filters?: any[]) =>
-  filtersNotEmpty(filters, true)
-    ? createUrlParam(JSON.stringify(filterFilters(filters, true)), 'filters')
-    : '';
-
-export const getUrlWithQuery = (path: string, query = '', filters?: any[]) => {
-  const includeFilters = filtersNotEmpty(filters, true);
-  console.log(
-    'filterFilters(filters, true) :>> ',
-    filterFilters(filters, true)
-  );
-  return `${path}${query || includeFilters ? '?' : ''}${createUrlParam(
-    query,
-    'query'
-  )}${includeFilters ? '&' : ''}${createFiltersParam(filters)}`;
+  return `${query ? `?${query}` : ''}`;
 };
 
-export const getSearchUrlWithFilters = (filters: any[]) =>
-  `${ModulePath.APU}?${createFiltersParam(filters)}`;
+const filterFilters = (filters?: any[]): any[] =>
+  filters
+    ? compact(
+        filters.map(({ filters, ...item }) => {
+          const isAndOrNot =
+            item.operation === ApiFilterOperation.AND ||
+            item.operation === ApiFilterOperation.OR ||
+            item.operation === ApiFilterOperation.NOT;
+
+          const filtersOk = filterFilters(filters).length;
+
+          return item.value || (isAndOrNot && filtersOk)
+            ? {
+                ...item,
+                ...(filtersOk ? { filters: filterFilters(filters) } : {}),
+              }
+            : null;
+        })
+      )
+    : [];
+
+export const createFiltersParam = (filters?: any[]) => {
+  const filtered = filterFilters(filters);
+
+  return filtered.length ? JSON.stringify(filtered) : '';
+};
 
 export const openInNewTab = (url: string) => {
   const a = document.createElement('a');

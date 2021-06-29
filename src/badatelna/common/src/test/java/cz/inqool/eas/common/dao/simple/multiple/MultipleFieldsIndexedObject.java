@@ -137,8 +137,11 @@ public class MultipleFieldsIndexedObject extends DomainIndexedObject<MultipleFie
     @GeoPointField
     private GeoPoint coordinates;
 
-    @Field(type = FieldType.Nested)
+    @Field(type = FieldType.Object)
     private SimpleKeyValueIndexedObject toOneRelationship;
+
+    @Field(type = FieldType.Nested)
+    private SimpleKeyValueIndexedObject toOneRelationshipNested;
 
     @Field(type = FieldType.Nested)
     private List<SimpleKeyValueIndexedObject> toManyRelationship;
@@ -208,6 +211,7 @@ public class MultipleFieldsIndexedObject extends DomainIndexedObject<MultipleFie
             SimpleKeyValueIndexedObject indexedObject = new SimpleKeyValueIndexedObject();
             indexedObject.toIndexedObject(obj.getToOneRelationship());
             this.toOneRelationship = indexedObject;
+            this.toOneRelationshipNested = indexedObject;
         }
 
         if (obj.getToManyRelationship() != null) {

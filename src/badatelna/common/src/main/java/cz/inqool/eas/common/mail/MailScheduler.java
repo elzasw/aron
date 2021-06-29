@@ -1,7 +1,10 @@
 package cz.inqool.eas.common.mail;
 
+import cz.inqool.eas.common.mail.event.MailErrorEvent;
+import cz.inqool.eas.common.mail.event.MailSentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
@@ -14,6 +17,8 @@ public class MailScheduler {
     private MailQueue queue;
 
     private MailSender sender;
+
+    protected ApplicationEventPublisher eventPublisher;
 
     @Scheduled(fixedDelay = 5000)
     public void run() {
@@ -30,11 +35,17 @@ public class MailScheduler {
             try {
                 sender.send(mail);
                 mail.setSent(true);
+                mail.setState(MailState.SENT);
+                queue.updateMail(mail);
+
+                eventPublisher.publishEvent(new MailSentEvent(this, mail));
             } catch (Exception e) {
                 mail.setError(e.getMessage());
-            }
+                mail.setState(MailState.ERROR);
+                queue.updateMail(mail);
 
-            queue.updateMail(mail);
+                eventPublisher.publishEvent(new MailErrorEvent(this, mail));
+            }
         });
     }
 
@@ -46,5 +57,10 @@ public class MailScheduler {
     @Autowired
     public void setSender(MailSender sender) {
         this.sender = sender;
+    }
+
+    @Autowired
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

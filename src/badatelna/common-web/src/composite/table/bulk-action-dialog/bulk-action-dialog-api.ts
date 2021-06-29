@@ -1,7 +1,7 @@
 import { abortableFetch } from 'utils/abortable-fetch';
 import { Filter } from 'common/common-types';
 
-interface ResultStatus {
+export interface ResultStatus {
   status: boolean;
   error?: string;
 }

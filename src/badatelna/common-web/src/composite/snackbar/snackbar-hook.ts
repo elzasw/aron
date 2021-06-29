@@ -7,7 +7,8 @@ export function useSnackbar() {
 
   const context: SnackbarContext = useMemo(
     () => ({
-      showSnackbar: (msg, variant) => ref.current?.showSnackbar(msg, variant),
+      showSnackbar: (msg, variant, autohide) =>
+        ref.current?.showSnackbar(msg, variant, autohide),
     }),
     []
   );

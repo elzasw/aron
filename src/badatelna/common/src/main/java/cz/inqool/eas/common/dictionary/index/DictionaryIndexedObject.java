@@ -3,6 +3,7 @@ package cz.inqool.eas.common.dictionary.index;
 import cz.inqool.eas.common.authored.index.AuthoredIndexedObject;
 import cz.inqool.eas.common.dictionary.Dictionary;
 import cz.inqool.eas.common.dictionary.DictionaryIndexed;
+import cz.inqool.eas.common.domain.index.field.Boost;
 import cz.inqool.eas.common.multiString.MultiStringIndexedObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +26,7 @@ import static cz.inqool.eas.common.domain.index.field.ES.Suffix.*;
 @FieldNameConstants
 abstract public class DictionaryIndexedObject<ROOT extends Dictionary<ROOT>, PROJECTED extends Dictionary<ROOT>> extends AuthoredIndexedObject<ROOT, PROJECTED> implements DictionaryIndexed<ROOT, PROJECTED> {
 
+    @Boost(10)
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = TEXT_SHORT_KEYWORD, searchAnalyzer = TEXT_SHORT_KEYWORD),
             otherFields = {
@@ -38,7 +40,7 @@ abstract public class DictionaryIndexedObject<ROOT extends Dictionary<ROOT>, PRO
     @Field(type = FieldType.Object)
     protected MultiStringIndexedObject multiName;
 
-    @Field(type = FieldType.Text, analyzer = TEXT_SHORT_KEYWORD, searchAnalyzer = TEXT_SHORT_KEYWORD)
+    @Field(type = FieldType.Text, analyzer = TEXT_SHORT_KEYWORD, searchAnalyzer = TEXT_SHORT_KEYWORD, fielddata = true)
     protected String code;
 
     @Field(type = FieldType.Boolean)

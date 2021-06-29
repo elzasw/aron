@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.PropertyMapper;
 import org.springframework.boot.web.servlet.server.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.session.FlushMode;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 
@@ -20,6 +21,7 @@ public class SessionRegistryConfiguration {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public SpringSessionBackedSessionRegistry sessionRegistry(RedisIndexedSessionRepository redisIndexedSessionRepository) {
         redisIndexedSessionRepository.setDefaultMaxInactiveInterval(timeout);
+        redisIndexedSessionRepository.setFlushMode(FlushMode.IMMEDIATE);
         return new SpringSessionBackedSessionRegistry(redisIndexedSessionRepository);
     }
 

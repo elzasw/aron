@@ -608,7 +608,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void nestedObjectEq_first() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.toOneRelationship + "." + key, entity_1.getToOneRelationship().getKey())
+                new EqFilter(IndexFields.toOneRelationshipNested + "." + key, entity_1.getToOneRelationship().getKey())
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -618,7 +618,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void nestedObjectEq_second() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.toOneRelationship + "." + key, entity_2.getToOneRelationship().getKey())
+                new EqFilter(IndexFields.toOneRelationshipNested + "." + key, entity_2.getToOneRelationship().getKey())
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -631,7 +631,7 @@ class EqFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.toOneRelationship + "." + key, entity_1.getToOneRelationship().getKey())
+                new EqFilter(IndexFields.toOneRelationshipNested + "." + key, entity_1.getToOneRelationship().getKey())
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -641,7 +641,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void nestedObjectEq_none() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.toOneRelationship + "." + key, "random Text")
+                new EqFilter(IndexFields.toOneRelationshipNested + "." + key, "random Text")
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -708,7 +708,7 @@ class EqFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new EqFilter(IndexFields.toOneRelationship, "47")
+                new EqFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

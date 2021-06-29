@@ -24,7 +24,7 @@ public class SequenceIndexedObject extends DictionaryIndexedObject<Sequence, Seq
     )
     protected String description;
 
-    @Field(type = FieldType.Text, analyzer = TEXT_SHORT_KEYWORD, searchAnalyzer = TEXT_SHORT_KEYWORD)
+    @Field(type = FieldType.Text, analyzer = TEXT_SHORT_KEYWORD, searchAnalyzer = TEXT_SHORT_KEYWORD, fielddata = true)
     protected String format;
 
     @Field(type = FieldType.Long)

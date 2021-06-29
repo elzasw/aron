@@ -51,6 +51,14 @@ public abstract class DictionaryApi<
         UPDATE_PROJECTION,
         SERVICE> {
 
+    @Operation(summary = "Get object by code")
+    @ApiResponse(responseCode = "200", description = "OK")
+    @ApiResponse(responseCode = "404", description = "Object not found", content = @Content(schema = @Schema(implementation = RestException.class)))
+    @GetMapping(value = "/coded/{code}")
+    public DETAIL_PROJECTION getByCode(@PathVariable("code") String code) {
+        return service.getByCode(code);
+    }
+
     @Operation(summary = "Deactivates object with given id")
     @ApiResponse(responseCode = "200", description = "OK")
     @ApiResponse(responseCode = "404", description = "Object not found", content = @Content(schema = @Schema(implementation = RestException.class)))

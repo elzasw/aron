@@ -8,6 +8,8 @@ export function dictionaryColumnMapper({
   return value?.name;
 }
 
+dictionaryColumnMapper.displayName = 'dictionaryColumnMapper';
+
 export function dictionaryArrayColumnMapper({
   value,
 }: {
@@ -15,3 +17,5 @@ export function dictionaryArrayColumnMapper({
 }) {
   return (value || []).map((v) => v.name).join(', ');
 }
+
+dictionaryArrayColumnMapper.displayName = 'dictionaryArrayColumnMapper';

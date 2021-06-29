@@ -13,12 +13,16 @@ export function useInlineAutocompleteCellFactory<
   isSubkey = true,
   multiple,
   disabled,
+  notifyChange,
+  labelMapper,
 }: {
   dataHook: () => AutocompleteSource<ATTRIBUTE>;
   collectionDatakey: string;
   isSubkey?: boolean;
   multiple?: boolean;
   disabled?: ((index: number) => boolean) | boolean;
+  notifyChange?: () => void;
+  labelMapper?: (object: ATTRIBUTE) => string;
 }) {
   return useMemo(
     () =>
@@ -42,9 +46,19 @@ export function useInlineAutocompleteCellFactory<
             disabled={
               typeof disabled === 'function' ? disabled(index) : disabled
             }
+            labelMapper={labelMapper}
+            notifyChange={notifyChange}
           />
         );
       },
-    [collectionDatakey, dataHook, isSubkey, multiple, disabled]
+    [
+      collectionDatakey,
+      dataHook,
+      isSubkey,
+      multiple,
+      disabled,
+      labelMapper,
+      notifyChange,
+    ]
   );
 }

@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { get } from 'lodash';
 
 import { DateFormat } from '../enums';
 
@@ -83,5 +84,16 @@ export const formatUnitDate = (value: string) => {
   } catch (e) {
     console.log(e);
     return '';
+  }
+};
+
+export const getUnitDatePart = (value: string, part: string) => {
+  try {
+    const parsed = JSON.parse(value);
+
+    return get(parsed, part);
+  } catch (e) {
+    console.log(e);
+    return null;
   }
 };

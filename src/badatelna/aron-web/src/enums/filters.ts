@@ -1,9 +1,16 @@
-export enum FilterType {
-  CHECKBOX,
-  CHECKBOX_WITH_RANGE,
-  RADIO,
-  INPUT,
-  SELECT,
-  INPUT_MULTI,
-  RELATIONSHIP,
+export enum FacetType {
+  FULLTEXT = 'FULLTEXT',
+  ENUM = 'ENUM',
+  ENUM_SINGLE = 'ENUM_SINGLE',
+  MULTI_REF = 'MULTI_REF',
+  MULTI_REF_EXT = 'MULTI_REF_EXT',
+  UNITDATE = 'UNITDATE',
+
+  DAO_ONLY = 'DAO_ONLY',
+  RELATED_APUS = 'RELATED_APUS',
+}
+
+export enum FacetDisplay {
+  ALWAYS = 'ALWAYS',
+  DETAIL = 'DETAIL',
 }

@@ -10,14 +10,14 @@ import { callLoadTranslations } from './locale-api';
 import { useLocalStorage } from 'utils/local-storage-hook';
 
 export function useLocale(props: LocaleProviderProps) {
-  const [locale, setLocale] = useLocalStorage<Locale>(
-    'locale',
-    localeMap[props.defaultLocale]
+  const [localeName, setLocaleName] = useLocalStorage<LocaleName>(
+    'localeName',
+    props.defaultLocale
   );
   const [messages, setMessages] = useState<Record<string, string>>({});
 
   const switchLocale = useEventCallback(async (localeName: LocaleName) => {
-    setLocale(localeMap[localeName]);
+    setLocaleName(localeName);
   });
 
   const loadTranslations = useEventCallback(async (lang: string) => {
@@ -38,17 +38,22 @@ export function useLocale(props: LocaleProviderProps) {
     }
   });
 
+  const refreshTranslations = useEventCallback(async () => {
+    await loadTranslations(localeMap[localeName].easLanguage);
+  });
+
   useEffect(() => {
-    loadTranslations(locale.easLanguage);
-  }, [loadTranslations, locale]);
+    loadTranslations(localeMap[localeName].easLanguage);
+  }, [loadTranslations, localeName]);
 
   const context: LocaleContext = useMemo(
     () => ({
-      locale,
+      locale: localeMap[localeName],
       messages,
       switchLocale,
+      refresh: refreshTranslations,
     }),
-    [locale, messages, switchLocale]
+    [localeName, messages, switchLocale, refreshTranslations]
   );
 
   return { context };

@@ -13,13 +13,12 @@ export interface SubscriptionContext<T> {
   subscriptions: Set<FormSubscription>;
   getValue: <U>(selector: FormSelector<T, U>) => U;
 
-  parent: SubscriptionContext<T>;
+  parent: SubscriptionContext<any>;
 }
-
 
 /**
  * Form subscription context.
  */
-export const SubscriptionContext = createContext<
-  SubscriptionContext<any>
->(undefined as never);
+export const SubscriptionContext = createContext<SubscriptionContext<any>>(
+  undefined as never
+);

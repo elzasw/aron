@@ -9,10 +9,19 @@ import { useEventCallback } from './event-callback-hook';
 
 export function useCrudSource<TYPE extends DomainObject>({
   url,
+  getItem = defaultGetItem,
+  createItem = defaultCreateItem,
+  updateItem = defaultUpdateItem,
+  deleteItem = defaultDeleteItem,
+  handleGetError,
+  handleCreateError,
+  handleUpdateError,
+  handleDeleteError,
+  getMessages,
   createMessages,
   updateMessages,
   delMessages,
-}: CrudSourceProps): CrudSource<TYPE> {
+}: CrudSourceProps<TYPE>): CrudSource<TYPE> {
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<TYPE | null>(null);
   const fetch = useRef<AbortableFetch | null>(null);
@@ -20,14 +29,14 @@ export function useCrudSource<TYPE extends DomainObject>({
   const intl = useIntl();
   const { showSnackbar } = useContext(SnackbarContext);
 
-  const get = useEventCallback(async (id: string) => {
+  const handleGet = useEventCallback(async (id: string) => {
     try {
       setLoading(true);
       if (fetch.current !== null) {
         fetch.current.abort();
       }
 
-      fetch.current = fetchItem(url, id);
+      fetch.current = getItem(url, id);
 
       const data: TYPE = await fetch.current.json();
       unstable_batchedUpdates(() => {
@@ -39,23 +48,26 @@ export function useCrudSource<TYPE extends DomainObject>({
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message = intl.formatMessage(
-          {
-            id: 'EAS_CRUD_SOURCE_MSG_LOAD_ERROR',
-            defaultMessage: 'Chyba načtení dat: {detail}',
-          },
-          { detail: err.message }
-        );
+        if (handleGetError !== undefined) {
+          handleGetError(err);
+        } else {
+          const message =
+            getMessages?.errorMessage ??
+            intl.formatMessage({
+              id: 'EAS_CRUD_SOURCE_MSG_LOAD_ERROR',
+              defaultMessage: 'Chyba načtení dat: {detail}',
+            });
 
-        showSnackbar(message, SnackbarVariant.ERROR);
+          showSnackbar(message, SnackbarVariant.ERROR);
 
-        throw err;
+          throw err;
+        }
       }
       return undefined;
     }
   });
 
-  const create = useEventCallback(async (item: TYPE) => {
+  const handleCreate = useEventCallback(async (item: TYPE) => {
     try {
       setLoading(true);
       if (fetch.current !== null) {
@@ -83,25 +95,29 @@ export function useCrudSource<TYPE extends DomainObject>({
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message =
-          createMessages?.errorMessage ??
-          intl.formatMessage(
-            {
-              id: 'EAS_CRUD_SOURCE_MSG_CREATE_ERROR',
-              defaultMessage: 'Chyba uložení dat: {detail}',
-            },
-            { detail: err.message }
-          );
+        if (handleCreateError !== undefined) {
+          handleCreateError(err);
+        } else {
+          const message =
+            createMessages?.errorMessage ??
+            intl.formatMessage(
+              {
+                id: 'EAS_CRUD_SOURCE_MSG_CREATE_ERROR',
+                defaultMessage: 'Chyba uložení dat: {detail}',
+              },
+              { detail: err.message }
+            );
 
-        showSnackbar(message, SnackbarVariant.ERROR);
+          showSnackbar(message, SnackbarVariant.ERROR);
 
-        throw err;
+          throw err;
+        }
       }
       return undefined;
     }
   });
 
-  const update = useEventCallback(async (item: TYPE, prevItem: TYPE) => {
+  const handleUpdate = useEventCallback(async (item: TYPE, prevItem: TYPE) => {
     try {
       setLoading(true);
       if (fetch.current !== null) {
@@ -129,25 +145,29 @@ export function useCrudSource<TYPE extends DomainObject>({
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message =
-          updateMessages?.errorMessage ??
-          intl.formatMessage(
-            {
-              id: 'EAS_CRUD_SOURCE_MSG_UPDATE_ERROR',
-              defaultMessage: 'Chyba uložení dat: {detail}',
-            },
-            { detail: err.message }
-          );
+        if (handleUpdateError !== undefined) {
+          handleUpdateError(err);
+        } else {
+          const message =
+            updateMessages?.errorMessage ??
+            intl.formatMessage(
+              {
+                id: 'EAS_CRUD_SOURCE_MSG_UPDATE_ERROR',
+                defaultMessage: 'Chyba uložení dat: {detail}',
+              },
+              { detail: err.message }
+            );
 
-        showSnackbar(message, SnackbarVariant.ERROR);
+          showSnackbar(message, SnackbarVariant.ERROR);
 
-        throw err;
+          throw err;
+        }
       }
       return undefined;
     }
   });
 
-  const del = useEventCallback(async (id: string) => {
+  const handleDelete = useEventCallback(async (id: string) => {
     try {
       setLoading(true);
       if (fetch.current !== null) {
@@ -174,36 +194,40 @@ export function useCrudSource<TYPE extends DomainObject>({
       setLoading(false);
 
       if (err.name !== 'AbortError') {
-        const message =
-          delMessages?.successMessage ??
-          intl.formatMessage(
-            {
-              id: 'EAS_CRUD_SOURCE_MSG_DELETE_ERROR',
-              defaultMessage: 'Chyba mazání dat: {detail}',
-            },
-            { detail: err.message }
-          );
+        if (handleDeleteError !== undefined) {
+          handleDeleteError(err);
+        } else {
+          const message =
+            delMessages?.successMessage ??
+            intl.formatMessage(
+              {
+                id: 'EAS_CRUD_SOURCE_MSG_DELETE_ERROR',
+                defaultMessage: 'Chyba mazání dat: {detail}',
+              },
+              { detail: err.message }
+            );
 
-        showSnackbar(message, SnackbarVariant.ERROR);
+          showSnackbar(message, SnackbarVariant.ERROR);
 
-        throw err;
+          throw err;
+        }
       }
     }
   });
 
   const refresh = useEventCallback(async () => {
     if (data !== null) {
-      return get(data.id);
+      return handleGet(data.id);
     }
   });
 
-  const reset = useEventCallback(() => {
+  const reset = useEventCallback((data?: TYPE) => {
     if (fetch.current !== null) {
       fetch.current.abort();
       fetch.current = null;
     }
 
-    setData(null);
+    setData(data ?? null);
   });
 
   return {
@@ -211,10 +235,10 @@ export function useCrudSource<TYPE extends DomainObject>({
     data,
     loading,
     setLoading,
-    get,
-    create,
-    update,
-    del,
+    get: handleGet,
+    create: handleCreate,
+    update: handleUpdate,
+    del: handleDelete,
     refresh,
     reset,
   };
@@ -225,7 +249,7 @@ export function useCrudSource<TYPE extends DomainObject>({
  *
  * @param api API url
  */
-export function fetchItem(api: string, itemId: string) {
+export function defaultGetItem(api: string, itemId: string) {
   return abortableFetch(`${api}/${itemId}`, {
     method: 'GET',
     headers: new Headers({ 'Content-Type': 'application/json' }),
@@ -238,7 +262,7 @@ export function fetchItem(api: string, itemId: string) {
  * @param api API endpoint
  * @param item Object to save
  */
-export function createItem<TYPE>(api: string, item: TYPE) {
+export function defaultCreateItem<TYPE>(api: string, item: TYPE) {
   return abortableFetch(api, {
     method: 'POST',
     headers: new Headers({
@@ -256,7 +280,7 @@ export function createItem<TYPE>(api: string, item: TYPE) {
  * @param initialItem Initial data from last saved instance
  * @param item Object to save
  */
-export function updateItem<TYPE extends DomainObject>(
+export function defaultUpdateItem<TYPE extends DomainObject>(
   api: string,
   item: TYPE,
   _initialItem: TYPE
@@ -276,11 +300,137 @@ export function updateItem<TYPE extends DomainObject>(
  * @param api API endpoint
  * @param itemId Id of object
  */
-export function deleteItem(api: string, itemId: string) {
+export function defaultDeleteItem(api: string, itemId: string) {
   return abortableFetch(`${api}/${itemId}`, {
     headers: new Headers({
       'Content-Type': 'application/json',
     }),
     method: 'DELETE',
   });
+}
+
+export function getItemFactory<TYPE>({
+  getItemMethod = defaultGetItem,
+  postProcess = (data) => data,
+}: {
+  getItemMethod?: (api: string, itemId: string) => AbortableFetch;
+  postProcess?: (data: TYPE) => TYPE | Promise<TYPE>;
+}) {
+  return function getItem(api: string, itemId: string) {
+    const fetch = getItemMethod(api, itemId);
+
+    const augmented: AbortableFetch = {
+      response: fetch.response,
+      abort: fetch.abort,
+      json: async () => {
+        const data = await fetch.json();
+        const processedData = postProcess(data);
+
+        if (processedData instanceof Promise) {
+          return await processedData;
+        } else {
+          return processedData;
+        }
+      },
+      text: async () => {
+        throw new Error('Unsupported operation');
+      },
+      raw: async () => {
+        throw new Error('Unsupported operation');
+      },
+      none: async () => {
+        throw new Error('Unsupported operation');
+      },
+    };
+
+    return augmented;
+  };
+}
+
+export function updateItemFactory<TYPE extends DomainObject>({
+  updateItemMethod = defaultUpdateItem,
+  preProcess = (data) => data,
+  postProcess = (data) => data,
+}: {
+  updateItemMethod?: (
+    api: string,
+    item: TYPE,
+    initialItem: TYPE
+  ) => AbortableFetch;
+  preProcess?: (data: TYPE) => TYPE;
+  postProcess?: (data: TYPE) => TYPE | Promise<TYPE>;
+}) {
+  return function updateItem(api: string, item: TYPE, initialItem: TYPE) {
+    const preprocessed = preProcess(item);
+
+    const fetch = updateItemMethod(api, preprocessed, initialItem);
+
+    const augmented: AbortableFetch = {
+      response: fetch.response,
+      abort: fetch.abort,
+      json: async () => {
+        const data = await fetch.json();
+        const processedData = postProcess(data);
+
+        if (processedData instanceof Promise) {
+          return await processedData;
+        } else {
+          return processedData;
+        }
+      },
+      text: async () => {
+        throw new Error('Unsupported operation');
+      },
+      raw: async () => {
+        throw new Error('Unsupported operation');
+      },
+      none: async () => {
+        throw new Error('Unsupported operation');
+      },
+    };
+
+    return augmented;
+  };
+}
+
+export function createItemFactory<TYPE extends DomainObject>({
+  createItemMethod = defaultCreateItem,
+  preProcess = (data) => data,
+  postProcess = (data) => data,
+}: {
+  createItemMethod?: (api: string, item: TYPE) => AbortableFetch;
+  preProcess?: (data: TYPE) => TYPE;
+  postProcess?: (data: TYPE) => TYPE | Promise<TYPE>;
+}) {
+  return function createItem(api: string, item: TYPE) {
+    const preprocessed = preProcess(item);
+
+    const fetch = createItemMethod(api, preprocessed);
+
+    const augmented: AbortableFetch = {
+      response: fetch.response,
+      abort: fetch.abort,
+      json: async () => {
+        const data = await fetch.json();
+        const processedData = postProcess(data);
+
+        if (processedData instanceof Promise) {
+          return await processedData;
+        } else {
+          return processedData;
+        }
+      },
+      text: async () => {
+        throw new Error('Unsupported operation');
+      },
+      raw: async () => {
+        throw new Error('Unsupported operation');
+      },
+      none: async () => {
+        throw new Error('Unsupported operation');
+      },
+    };
+
+    return augmented;
+  };
 }

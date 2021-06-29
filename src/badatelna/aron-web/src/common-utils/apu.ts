@@ -36,3 +36,12 @@ export const getApuPartItemName = (
   apuPartItemTypes: ApuPartItemType[],
   code: string
 ) => find(apuPartItemTypes, { code })?.name;
+
+export const getApuPartItemType = (
+  apuPartItemTypes: ApuPartItemType[],
+  code: string
+) => find(apuPartItemTypes, { code })?.type;
+
+export const parseApuRefOptionId = (option: string) => option.split('|')[0];
+
+export const parseApuRefOptionLabel = (option: string) => option.split('|')[1];

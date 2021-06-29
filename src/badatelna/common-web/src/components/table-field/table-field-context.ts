@@ -38,6 +38,11 @@ export interface TableFieldContext<TObject> {
   visibleRemove: boolean;
 
   /**
+   * Hides actions at the begging of each row if === false.
+   */
+  visibleActionsColumn: boolean;
+
+  /**
    * Select handler
    */
   onSelect?: (row: TObject | null, index: number) => void;
@@ -109,6 +114,8 @@ export interface TableFieldContext<TObject> {
    * Defaults to empty object with new id.
    */
   initNewRow: () => TObject;
+
+  useDnDOrdering: boolean;
 }
 
 export const TableFieldContext = createContext<TableFieldContext<any>>(

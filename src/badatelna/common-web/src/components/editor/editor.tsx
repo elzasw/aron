@@ -1,6 +1,6 @@
 import React from 'react';
 import { noop } from 'lodash';
-import { ControlledEditor } from '@monaco-editor/react';
+import MonacoEditor from '@monaco-editor/react';
 import { EditorProps } from './editor-types';
 import { useEventCallback } from 'utils/event-callback-hook';
 
@@ -19,13 +19,13 @@ export function Editor({
 
   language = language ?? 'text';
 
-  const handleChange = useEventCallback((e, value: string | undefined) => {
+  const handleChange = useEventCallback((value: string | undefined) => {
     onChange(value ?? null);
   });
 
   return (
     <>
-      <ControlledEditor
+      <MonacoEditor
         height={height}
         language={language}
         value={value}

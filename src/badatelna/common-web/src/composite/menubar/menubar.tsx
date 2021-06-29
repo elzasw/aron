@@ -3,7 +3,7 @@ import { GlobalHotKeys } from 'react-hotkeys';
 import { noop } from 'lodash';
 import clsx from 'clsx';
 import Grid from '@material-ui/core/Grid';
-import { MenubarProps, MenubarClassOverrides } from './menubar-types';
+import { MenubarProps } from './menubar-types';
 import { useStyles } from './menubar-styles';
 import { Menu } from './menu/menu';
 import { UserBtn } from './user-btn/user-btn';
@@ -11,6 +11,7 @@ import { useMenubar } from './menubar-hook';
 import { MenubarContext } from './menubar-context';
 import { MenuItem } from './menu/menu-types';
 import { HotKeys } from './menubar-types';
+import { MenubarClassOverrides } from './menubar-class-overrides-types';
 
 export function Menubar({
   logo,
@@ -20,6 +21,9 @@ export function Menubar({
   hotKeys: providedHotKeys = { keyMap: {}, handlers: {} },
   children,
   userBtnActions,
+  displayLogoutBtn,
+  beforeUserBtn,
+  afterUserBtn,
   classOverrides,
 }: PropsWithChildren<MenubarProps & MenubarClassOverrides>) {
   const classes = useStyles();
@@ -71,10 +75,13 @@ export function Menubar({
             >
               <Grid>{title}</Grid>
               <Grid>
+                {beforeUserBtn}
                 <UserBtn
                   actions={userBtnActions}
+                  displayLogoutBtn={displayLogoutBtn}
                   classOverrides={classOverrides}
                 />
+                {afterUserBtn}
               </Grid>
             </Grid>
             <Menu items={items} classOverrides={classOverrides} />

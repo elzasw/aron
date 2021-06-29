@@ -1,60 +1,96 @@
 import React, { useContext } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 import ButtonGroup from '@material-ui/core/ButtonGroup/ButtonGroup';
 import { DictionaryObject } from 'common/common-types';
-import { DetailHandle } from 'composite/detail/detail-types';
-import { DetailToolbarButton } from 'composite/detail/detail-toolbar-button';
+import { DetailHandle, DetailMode } from 'composite/detail/detail-types';
+import { activateItem, deactivateItem } from './dictionary-api';
 import { DetailContext } from 'composite/detail/detail-context';
 import { useStyles } from 'composite/detail/detail-styles';
-import { useDictionary } from './dictionary-hook';
+import { DetailToolbarButtonAction } from 'composite/detail/detail-toolbar-button-action';
+import { useEventCallback } from 'utils/event-callback-hook';
 
 export function DictionaryToolbar() {
+  const intl = useIntl();
   const classes = useStyles();
-  const { isExisting, source, onPersisted } = useContext<
-    DetailHandle<DictionaryObject>
-  >(DetailContext);
+  const { source, mode } = useContext<DetailHandle<DictionaryObject>>(
+    DetailContext
+  );
 
-  const { activate, deactivate } = useDictionary({ source, onPersisted });
+  const activateCall = useEventCallback((id: string) => {
+    return activateItem(source.url, id);
+  });
+
+  const deactivateCall = useEventCallback((id: string) => {
+    return deactivateItem(source.url, id);
+  });
 
   return (
     <>
-      {isExisting && (
+      {mode === DetailMode.VIEW && (
         <ButtonGroup
           size="small"
           variant="outlined"
           className={classes.toolbarIndentLeft}
         >
           {source.data?.active ? (
-            <DetailToolbarButton
-              label={
-                <FormattedMessage
-                  id="EAS_DICTIONARY_EVIDENCE_TOOLBAR_BTN_DEACTIVATE"
-                  defaultMessage="Deaktivovat"
-                />
-              }
-              tooltip={
-                <FormattedMessage
-                  id="EAS_DICTIONARY_EVIDENCE_TOOLBAR_TOOLTIP_DEACTIVATE"
-                  defaultMessage="Záznam číselníku se vyřadí ze seznamu použitelných hodnot v evidencích"
-                />
-              }
-              onClick={deactivate}
+            <DetailToolbarButtonAction
+              promptKey="DICTIONARY_DEACTIVATE"
+              buttonLabel={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_BTN_DEACTIVATE',
+                defaultMessage: 'Deaktivovat',
+              })}
+              buttonTooltip={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_TOOLTIP_DEACTIVATE',
+                defaultMessage: 'Otevře dialog s potvrzením akce',
+              })}
+              dialogTitle={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_DIALOG_TITLE_DEACTIVATE',
+                defaultMessage: 'Varování',
+              })}
+              dialogText={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_DIALOG_TEXT_DEACTIVATE',
+                defaultMessage:
+                  'Záznam číselníku se vyřadí ze seznamu použitelných hodnot v evidencích',
+              })}
+              successMessage={intl.formatMessage({
+                id: 'EAS_EVIDENCE_MSG_DEACTIVATED_SUCCESS',
+                defaultMessage: 'Záznam byl úspěšně deaktivován.',
+              })}
+              errorMessage={intl.formatMessage({
+                id: 'EAS_EVIDENCE_MSG_DEACTIVATED_ERROR',
+                defaultMessage: 'Chyba volání funkce: {detail}',
+              })}
+              apiCall={deactivateCall}
             />
           ) : (
-            <DetailToolbarButton
-              label={
-                <FormattedMessage
-                  id="EAS_DICTIONARY_EVIDENCE_TOOLBAR_BTN_ACTIVATE"
-                  defaultMessage="Aktivovat"
-                />
-              }
-              tooltip={
-                <FormattedMessage
-                  id="EAS_DICTIONARY_EVIDENCE_TOOLBAR_TOOLTIP_ACTIVATE"
-                  defaultMessage="Záznam číselníku se přidá do seznamu použitelných hodnot v evidencích"
-                />
-              }
-              onClick={activate}
+            <DetailToolbarButtonAction
+              promptKey="DICTIONARY_ACTIVATE"
+              buttonLabel={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_BTN_ACTIVATE',
+                defaultMessage: 'Aktivovat',
+              })}
+              buttonTooltip={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_TOOLTIP_ACTIVATE',
+                defaultMessage: 'Otevře dialog s potvrzením akce',
+              })}
+              dialogTitle={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_DIALOG_TITLE_ACTIVATE',
+                defaultMessage: 'Varování',
+              })}
+              dialogText={intl.formatMessage({
+                id: 'EAS_DICTIONARY_EVIDENCE_TOOLBAR_DIALOG_TEXT_ACTIVATE',
+                defaultMessage:
+                  'Záznam číselníku se přidá do seznamu použitelných hodnot v evidencích',
+              })}
+              successMessage={intl.formatMessage({
+                id: 'EAS_EVIDENCE_MSG_ACTIVATED_SUCCESS',
+                defaultMessage: 'Záznam byl úspěšně aktivován.',
+              })}
+              errorMessage={intl.formatMessage({
+                id: 'EAS_EVIDENCE_MSG_ACTIVATED_ERROR',
+                defaultMessage: 'Chyba volání funkce: {detail}',
+              })}
+              apiCall={activateCall}
             />
           )}
         </ButtonGroup>

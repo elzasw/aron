@@ -1,6 +1,7 @@
 import React, { useContext, forwardRef } from 'react';
 import clsx from 'clsx';
 import Draggable from 'react-draggable';
+import { FormattedMessage } from 'react-intl';
 import { useEventCallback } from 'utils/event-callback-hook';
 import Typography from '@material-ui/core/Typography';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
@@ -9,6 +10,7 @@ import { useStyles } from './table-styles';
 import { TableContext, TableSelectedContext } from './table-context';
 import { TableColumn } from './table-types';
 import { useScrollBarSize } from 'utils/use-scrollbar-size';
+import { Tooltip } from 'components/tooltip/tooltip';
 
 export const TableHeader = forwardRef<HTMLDivElement, any>(function TableHeader(
   _,
@@ -58,13 +60,23 @@ export const TableHeader = forwardRef<HTMLDivElement, any>(function TableHeader(
     <div ref={ref} className={classes.header}>
       <div style={{ width: size }}></div>
       {showSelectBox && (
-        <div className={classes.tableRowActions}>
-          <Checkbox
-            highlighted={false}
-            value={selected.length > 0}
-            onChange={toggleAllRowSelection}
-          />
-        </div>
+        <Tooltip
+          title={
+            <FormattedMessage
+              id="EAS_TABLE_SELECT_ALL"
+              defaultMessage="Výběr položek slouží jako vstup pro hromadné operace (např. tisk)"
+            />
+          }
+          placement="top-start"
+        >
+          <div className={classes.tableRowActions}>
+            <Checkbox
+              highlighted={false}
+              value={selected.length > 0}
+              onChange={toggleAllRowSelection}
+            />
+          </div>
+        </Tooltip>
       )}
       {filteredColumns.map((column, i) => {
         const { name, datakey } = column;

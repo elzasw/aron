@@ -1,5 +1,5 @@
 import React, { forwardRef, useContext, useState } from 'react';
-import { findIndex } from 'lodash';
+import _, { findIndex, groupBy } from 'lodash';
 import { FormattedMessage } from 'react-intl';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
@@ -7,7 +7,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { Dialog } from 'components/dialog/dialog';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { TableContext } from './table-context';
-import { TableFilter, TableFilterState } from './table-types';
+import { TableFilterState } from './table-types';
 import { TableFilterDialogItem } from './table-filter-dialog-item';
 import { useStyles } from './table-styles';
 
@@ -35,7 +35,22 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
      * Saves current filters states.
      */
     const handleSave = useEventCallback(() => {
-      setProvidedFiltersState(filtersState);
+      const validFilterState = filtersState.map((filter) => {
+        if (
+          filter.enabled &&
+          filter.value === null &&
+          !filter.filters?.length
+        ) {
+          return {
+            ...filter,
+            enabled: false,
+          };
+        }
+
+        return filter;
+      });
+
+      setProvidedFiltersState(validFilterState);
     });
 
     /**
@@ -74,7 +89,14 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
 
     const handleRemoveAllFilters = useEventCallback(() => {
       setFiltersState(
-        filtersState.map((state) => ({ ...state, enabled: false }))
+        filtersState.map((state) => ({
+          ...state,
+          value: null,
+          enabled: false,
+          object: null,
+          filters: [],
+          numberFilter: null,
+        }))
       );
     });
 
@@ -82,7 +104,6 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
      * Split UI of filter dialog into columns depending on count of filters
      */
     let COLUMNS = 0;
-    const filterCols: TableFilter[][] = [];
 
     if (filters.length < 3) {
       COLUMNS = 1;
@@ -92,12 +113,7 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
       COLUMNS = 3;
     }
 
-    filters.forEach((filter, i) => {
-      if (!filterCols[i % COLUMNS]) {
-        filterCols.push([]);
-      }
-      filterCols[i % COLUMNS].push(filter);
-    });
+    const groupedFilters = groupBy(filters, 'filterGroup');
 
     return (
       <Dialog
@@ -133,32 +149,55 @@ export const TableFilterDialog = forwardRef<DialogHandle, any>(
       >
         {() => (
           <div className={classes.filterDialogColumnsWrapper}>
-            {filterCols.map((col, i) => {
+            {Object.keys(groupedFilters).map((key) => {
               return (
-                <div key={i}>
-                  {col.map((filter) => {
-                    const index = findIndex(
-                      filters,
-                      (f) => f.filterkey === filter.filterkey
-                    );
-                    const state = filtersState[index];
+                <>
+                  <div
+                    style={{
+                      maxWidth: 900,
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}
+                  >
+                    {_(groupedFilters[key])
+                      .orderBy('filterOrder')
+                      .chunk(COLUMNS)
+                      .value()
+                      .map((filterChunk, i) => (
+                        <div key={i} style={{ display: 'flex' }}>
+                          {filterChunk.map((filter) => {
+                            const index = findIndex(
+                              filters,
+                              (f) => f.filterkey === filter.filterkey
+                            );
+                            const state = filtersState[index];
 
-                    return (
-                      <TableFilterDialogItem
-                        key={index}
-                        filter={filter}
-                        state={state}
-                        onToggle={() => handleFilterToggle(index)}
-                        onChangeValue={(value) =>
-                          handleFilterValueChange(index, value)
-                        }
-                        onChangeFilterState={(state) =>
-                          handleFilterStateChange(index, state)
-                        }
-                      />
-                    );
-                  })}
-                </div>
+                            return (
+                              <TableFilterDialogItem
+                                key={index}
+                                filter={filter}
+                                state={state}
+                                onToggle={() => handleFilterToggle(index)}
+                                onChangeValue={(value) =>
+                                  handleFilterValueChange(index, value)
+                                }
+                                onChangeFilterState={(state) =>
+                                  handleFilterStateChange(index, state)
+                                }
+                              />
+                            );
+                          })}
+                        </div>
+                      ))}
+                  </div>
+                  <hr
+                    style={{
+                      border: '1px solid rgba(0, 0, 0, 0.12)',
+                      height: 1,
+                      margin: '10px 0',
+                    }}
+                  />
+                </>
               );
             })}
           </div>

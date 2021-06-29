@@ -2,7 +2,7 @@ import React, { useMemo, ComponentType } from 'react';
 import { DictionaryObject } from 'common/common-types';
 import { TableColumn, TableSort } from 'composite/table/table-types';
 import { DetailToolbarProps } from 'composite/detail/detail-types';
-import { useAuthoredEvidence } from '../authored-evidence';
+import { useAuthoredEvidence } from '../authored-evidence/authored-evidence';
 import { DictionaryToolbar } from './dictionary-toolbar';
 import { DictionaryFields } from './dictionary-fields';
 import { useColumns } from './dictionary-columns';

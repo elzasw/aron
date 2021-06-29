@@ -1,5 +1,6 @@
 import { TextCell } from './cells/text-cell';
 import { BooleanCell } from './cells/boolean-cell';
+import { FileCell } from './cells/file-cell';
 import { NumberCell } from './cells/number-cell';
 import { DateCell } from './cells/date-cell';
 import { DateTimeCell } from './cells/date-time-cell';
@@ -16,4 +17,5 @@ export const TableFieldCells = {
   TimeCell,
   useSelectCellFactory,
   useAutocompleteCellFactory,
+  FileCell,
 };

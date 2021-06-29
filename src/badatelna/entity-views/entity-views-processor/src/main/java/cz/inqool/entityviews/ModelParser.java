@@ -24,6 +24,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
+import javax.persistence.OneToMany;
 import java.util.*;
 
 public class ModelParser {
@@ -453,7 +454,12 @@ public class ModelParser {
             }
 
             for (String view : mapping.views()) {
-                viewMappings.put(view, new ViewContext(mappedTo, type, mapping.useRef(), mapping.useOneWay()));
+                String oneWayTarget = null;
+                if (mapping.useOneWay()) {
+                    OneToMany oneToMany = AnnotationUtils.getAnnotation(element, OneToMany.class);
+                    oneWayTarget = oneToMany.mappedBy();
+                }
+                viewMappings.put(view, new ViewContext(mappedTo, type, mapping.useRef(), mapping.useOneWay(), oneWayTarget));
             }
         }
 

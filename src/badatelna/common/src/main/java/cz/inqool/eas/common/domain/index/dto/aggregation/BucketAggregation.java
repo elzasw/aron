@@ -33,6 +33,10 @@ import java.util.List;
         @JsonSubTypes.Type(name = "FILTERS", value = FiltersAggregation.class),
         @JsonSubTypes.Type(name = "FILTER", value = FilterAggregation.class),
         @JsonSubTypes.Type(name = "TERMS", value = TermsAggregation.class),
+        @JsonSubTypes.Type(name = "NESTED", value = NestedAggregation.class),
+        @JsonSubTypes.Type(name = "REVERSE_NESTED", value = ReverseNestedAggregation.class),
+        @JsonSubTypes.Type(name = "DATE_HISTOGRAM", value = DateHistogramAggregation.class),
+        @JsonSubTypes.Type(name = "DATE_RANGE", value = DateRangeAggregation.class),
 })
 @Getter
 @Setter

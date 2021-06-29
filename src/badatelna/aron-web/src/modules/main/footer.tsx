@@ -1,73 +1,89 @@
 import React from 'react';
 import classNames from 'classnames';
 import { FormattedMessage } from 'react-intl';
-
-import { AppTitle } from '../../components';
 import { useStyles } from './styles';
-import { useLayoutStyles, useSpacingStyles } from '../../styles';
+import { useSpacingStyles } from '../../styles';
 import { Message } from '../../enums';
+import { Props } from './types';
 
-export const Footer: React.FC = () => {
+export const Footer = ({ pageTemplate }: Props) => {
   const classes = useStyles();
-  const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
   return (
     <div className={classes.mainFooter}>
       <div className={spacingClasses.padding}>
-        <div className={classNames(layoutClasses.flex, layoutClasses.flexWrap)}>
-          <div
-            className={classNames(
-              classes.mainFooterLeft,
-              layoutClasses.flexAlignTop,
-              spacingClasses.padding
-            )}
-          >
-            <AppTitle />
-          </div>
-          <div className={layoutClasses.flex}>
-            {[
-              {
-                title: Message.BASIC_INFORMATION,
-                content: [
-                  'Archiv Online je webová aplikace Státního oblastního archivu v Zámrsku sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů. Do tohoto systému bude třeba převést přes deset tisíc starších archivních pomůcek a zhruba šest milionů již dříve pořízených snímků, a to včetně ošetření ochrany osobních údajů a dalších práv. Postupně budou tvořeny nové pomůcky, nové digitalizáty a přístupové body (zjednodušeně řečeno „rejstříková hesla“).',
-                  'Vzhledem k tomu, že na tuto činnost nemá archiv žádné specializované pracoviště ani pracovní síly, musí ji vykonávat archiváři vedle svých dalších povinností v podobě kontrolní činnosti u původců, skartačních řízení, výběru archiválií, obsluhy badatelen, odpovědí na badatelské dotazy atd. Věc tedy nepůjde tak rychle, jak bychom sami chtěli, budeme se však snažit maximálně zúročit naše nové technické prostředky a postupně zlepšovat služby veřejnosti.',
-                ],
-              },
-              {
-                title: Message.CONTACT,
-                content: ['webmaster@ahapa.cz'],
-              },
-            ].map(({ title, content }) => (
-              <div
-                key={title}
-                className={classNames(
-                  classes.mainFooterSection,
-                  spacingClasses.padding
-                )}
-              >
-                <p
+        <div className={classes.mainFooterInner}>
+          {pageTemplate ? (
+            <div className={classes.mainFooterSections}>
+              {[
+                pageTemplate.homepage.footerCenter,
+                pageTemplate.homepage.footerRight,
+              ].map((item) => (
+                <div
+                  key={item}
                   className={classNames(
-                    classes.mainFooterTitle,
-                    spacingClasses.marginSmall
+                    classes.mainFooterSection,
+                    spacingClasses.padding
+                  )}
+                  dangerouslySetInnerHTML={{ __html: item }}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={classes.mainFooterSections}>
+              {[
+                {
+                  title: Message.BASIC_INFORMATION,
+                  content: [
+                    <p>
+                      ARchiv ONline je webová aplikace{' '}
+                      <a href="https://vychodoceskearchivy.cz/">
+                        Státního oblastního archivu v Zámrsku
+                      </a>{' '}
+                      sloužící ke zpřístupnění popisu archiválií a jejich
+                      digitalizátů.
+                    </p>,
+                    <p>
+                      Copyright &copy; 2021 Státní oblastní archiv v Zámrsku
+                    </p>,
+                  ],
+                },
+                {
+                  title: Message.CONTACT,
+                  content: [<p>webmaster@ahapa.cz</p>],
+                },
+              ].map(({ title, content }) => (
+                <div
+                  key={title}
+                  className={classNames(
+                    classes.mainFooterSection,
+                    spacingClasses.padding
                   )}
                 >
-                  <FormattedMessage id={title} />
-                </p>
-                {content.map((c) => (
                   <p
-                    key={c}
                     className={classNames(
-                      classes.mainFooterText,
-                      spacingClasses.marginNone
+                      classes.mainFooterTitle,
+                      spacingClasses.marginSmall
                     )}
                   >
-                    {c}
+                    <FormattedMessage id={title} />
                   </p>
-                ))}
-              </div>
-            ))}
-          </div>
+                  {content.map((c: any, i: number) => (
+                    <p
+                      key={`${i}-${i}`}
+                      className={classNames(
+                        classes.mainFooterText,
+                        spacingClasses.marginNone
+                      )}
+                    >
+                      {c}
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

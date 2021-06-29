@@ -3,6 +3,7 @@ package cz.inqool.eas.common.dictionary.store;
 import cz.inqool.eas.common.authored.store.AuthoredObject;
 import cz.inqool.eas.common.dictionary.Dictionary;
 import cz.inqool.eas.common.dictionary.DictionaryViews;
+import cz.inqool.eas.common.dictionary.reference.Coded;
 import cz.inqool.eas.common.domain.index.reference.Labeled;
 import cz.inqool.eas.common.multiString.MultiString;
 import cz.inqool.entityviews.ViewableClass;
@@ -11,6 +12,7 @@ import cz.inqool.entityviews.ViewableMapping;
 import cz.inqool.entityviews.ViewableProperty;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import org.hibernate.annotations.Nationalized;
 
 import javax.annotation.Nullable;
@@ -25,11 +27,12 @@ import static cz.inqool.eas.common.domain.DomainViews.*;
 @ViewableMapping(views = CREATE, mappedTo = CREATE)
 @ViewableMapping(views = UPDATE, mappedTo = UPDATE)
 @ViewableMapping(views = {DictionaryViews.LABELED, IDENTIFIED}, mappedTo = IDENTIFIED)
-@ViewableImplement(value = {Dictionary.class, Labeled.class}, views = DEFAULT)
+@ViewableImplement(value = {Dictionary.class, Labeled.class, Coded.class}, views = DEFAULT)
 @Getter
 @Setter
 @MappedSuperclass
-abstract public class DictionaryObject<ROOT> extends AuthoredObject<ROOT> implements Dictionary<ROOT>, Labeled {
+@FieldNameConstants
+abstract public class DictionaryObject<ROOT> extends AuthoredObject<ROOT> implements Dictionary<ROOT>, Labeled, Coded {
     /**
      * Name
      */
@@ -57,7 +60,7 @@ abstract public class DictionaryObject<ROOT> extends AuthoredObject<ROOT> implem
     protected Instant validFrom;
 
     /**
-     * Valid from
+     * Valid to
      */
     @ViewableProperty(views = {DEFAULT, CREATE, UPDATE})
     @Nullable
@@ -77,6 +80,10 @@ abstract public class DictionaryObject<ROOT> extends AuthoredObject<ROOT> implem
      */
     @ViewableProperty(views = DEFAULT)
     public boolean isValidAndActive() {
+        if (deleted != null) {
+            return false;
+        }
+
         if (!active) {
             return false;
         }

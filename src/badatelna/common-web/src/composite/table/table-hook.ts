@@ -4,11 +4,16 @@ import {
   KeyboardEvent,
   Ref,
   useImperativeHandle,
+  useContext,
 } from 'react';
-import { noop } from 'lodash';
+import { FixedSizeList } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
+import { noop } from 'lodash';
 import { useEventCallback } from 'utils/event-callback-hook';
+import { useForceRender } from 'utils/force-render';
 import { DomainObject } from 'common/common-types';
+import { NamedSettingsContext } from 'common/settings/named/named-settings-context';
+import { ExportDialog } from 'modules/export/components/dialog/export-dialog/export-dialog';
 import { TableProps, TableHandle } from './table-types';
 import { TableSearchbar } from './table-searchbar';
 import { TableToolbar } from './table-toolbar';
@@ -23,15 +28,14 @@ import { useTableFilters } from './hooks/table-filters-hook';
 import { TableFilterDialog } from './table-filter-dialog';
 import { useTableSearch } from './hooks/table-search-hook';
 import { useTableData } from './hooks/table-data-hook';
-import { FixedSizeList } from 'react-window';
-import { useForceRender } from 'utils/force-render';
-import { useTableReports } from './hooks/table-report-hook';
-import { ReportDialog } from 'composite/report-dialog/report-dialog';
+import { useTableExports } from './hooks/table-export-hook';
 
 export function useTable<OBJECT extends DomainObject>(
   options: TableProps<OBJECT>,
   ref: Ref<TableHandle<OBJECT>>
 ) {
+  const namedSettingsContext = useContext(NamedSettingsContext);
+
   const props: Required<TableProps<OBJECT>> = {
     tableId: '',
     version: 0,
@@ -42,9 +46,11 @@ export function useTable<OBJECT extends DomainObject>(
       () => [{ field: 'id', datakey: 'id', order: 'ASC', type: 'FIELD' }],
       []
     ),
+    defaultPreFilters: [],
     showRefreshButton: true,
     showColumnButton: true,
     showFilterButton: true,
+    showNamedSettingsButton: namedSettingsContext.defaultTableNamedSettings,
     showBulkActionButton: true,
     showReportButton: true,
     showSelectBox: true,
@@ -56,9 +62,10 @@ export function useTable<OBJECT extends DomainObject>(
     RowComponent: TableRow,
     ColumnDialogComponent: TableColumnDialog,
     FilterDialogComponent: TableFilterDialog,
-    ReportDialogComponent: ReportDialog,
+    ExportDialogComponent: ExportDialog,
     bulkActions: useMemo(() => [], []),
     reportTag: null,
+    include: useMemo(() => [], []),
     onActiveChange: noop,
     toolbarProps: {},
     ...options,
@@ -90,19 +97,22 @@ export function useTable<OBJECT extends DomainObject>(
     filters,
     filtersState,
     setFiltersState,
+    preFilters,
+    setPreFilters,
   } = useTableFilters({
     tableId: props.tableId,
     version: props.version,
     columns: props.columns,
+    initPreFilters: props.defaultPreFilters,
   });
 
   const {
-    reportDialogRef,
-    openReportDialog,
-    closeReportDialog,
-  } = useTableReports();
+    exportDialogRef,
+    openExportDialog,
+    closeExportDialog,
+  } = useTableExports();
 
-  const { sorts, toggleSortColumn, resetSorts } = useTableSort({
+  const { sorts, toggleSortColumn, resetSorts, setSorts } = useTableSort({
     tableId: props.tableId,
     version: props.version,
     columns: props.columns,
@@ -133,9 +143,11 @@ export function useTable<OBJECT extends DomainObject>(
     source: props.source,
     searchQuery,
     sorts,
+    preFilters,
     filters,
     filtersState,
     loaderRef,
+    include: props.include,
   });
 
   /**
@@ -178,9 +190,11 @@ export function useTable<OBJECT extends DomainObject>(
       disabledBulkActionButton: false,
       disabledReportButton: false,
       disabledResetSortsButton: false,
+      disabledNamedSettingsButton: false,
       showRefreshButton: props.showRefreshButton,
       showColumnButton: props.showColumnButton,
       showFilterButton: props.showFilterButton,
+      showNamedSettingsButton: props.showNamedSettingsButton,
       showBulkActionButton: props.showBulkActionButton,
       showReportButton: props.showReportButton,
       showSelectBox: props.showSelectBox,
@@ -193,6 +207,8 @@ export function useTable<OBJECT extends DomainObject>(
       sorts,
       filters,
       filtersState,
+      preFilters,
+      setPreFilters,
       toggleAllRowSelection,
       toggleRowSelection,
       resetSelection,
@@ -207,12 +223,13 @@ export function useTable<OBJECT extends DomainObject>(
       closeColumnDialog,
       openFilterDialog,
       closeFilterDialog,
-      openReportDialog,
-      closeReportDialog,
+      openExportDialog,
+      closeExportDialog,
       toggleSortColumn,
       setSearchQuery,
       setFiltersState,
       resetSorts,
+      setSorts,
     }),
     [
       props.columns,
@@ -223,6 +240,7 @@ export function useTable<OBJECT extends DomainObject>(
       props.showRefreshButton,
       props.showColumnButton,
       props.showFilterButton,
+      props.showNamedSettingsButton,
       props.showBulkActionButton,
       props.showReportButton,
       props.showSelectBox,
@@ -234,6 +252,8 @@ export function useTable<OBJECT extends DomainObject>(
       sorts,
       filters,
       filtersState,
+      preFilters,
+      setPreFilters,
       toggleAllRowSelection,
       toggleRowSelection,
       resetSelection,
@@ -248,12 +268,13 @@ export function useTable<OBJECT extends DomainObject>(
       closeColumnDialog,
       openFilterDialog,
       closeFilterDialog,
-      openReportDialog,
-      closeReportDialog,
+      openExportDialog,
+      closeExportDialog,
       toggleSortColumn,
       setSearchQuery,
       setFiltersState,
       resetSorts,
+      setSorts,
     ]
   );
 
@@ -275,7 +296,7 @@ export function useTable<OBJECT extends DomainObject>(
     loaderRef,
     listRef,
     filterDialogRef,
-    reportDialogRef,
+    exportDialogRef,
     handleKeyNavigation,
   };
 }

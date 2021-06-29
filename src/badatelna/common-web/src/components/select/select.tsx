@@ -14,6 +14,10 @@ import { SelectProps } from './select-types';
 import { useStyles } from './select-styles';
 import { TextField } from 'components/text-field/text-field';
 
+/**
+ * todo: add loadDetail call also to multiple select
+ *
+ */
 export function Select<OPTION extends DomainObject>({
   form,
   disabled,
@@ -28,6 +32,7 @@ export function Select<OPTION extends DomainObject>({
   idMapper = (option: OPTION) => option.id,
   labelMapper = (option: OPTION) => (option as any).name,
   tooltipMapper = (option: OPTION) => (option as any).tooltip,
+  DisabledComponent = TextField,
 }: SelectProps<OPTION>) {
   // fix undefined value
   value = value ?? null;
@@ -65,7 +70,7 @@ export function Select<OPTION extends DomainObject>({
   });
 
   const handleChange = useEventCallback(
-    (e: ChangeEvent<{ name?: string; value: unknown }>) => {
+    async (e: ChangeEvent<{ name?: string; value: unknown }>) => {
       const ids = e.target.value;
 
       let values: VALUE | VALUES | null;
@@ -75,6 +80,9 @@ export function Select<OPTION extends DomainObject>({
         values = idsToValues(ids as string[]);
       } else {
         values = idToValue(ids as string);
+        if (!valueIsId) {
+          values = await source.loadDetail(values as any);
+        }
       }
 
       onChange(values);
@@ -123,7 +131,7 @@ export function Select<OPTION extends DomainObject>({
   const showOneIcon = !showTwoIcon && (showSelectAllButton || showClearButton);
 
   const RenderFunc = useCallback(
-    (val: any) => {
+    (val: any, Component = TextField) => {
       let label = '';
       if (multiple) {
         const ids = val as string[];
@@ -138,15 +146,15 @@ export function Select<OPTION extends DomainObject>({
         label = option !== undefined ? labelMapper(option) : '';
       }
 
-      return <TextField disabled={true} value={label} />;
+      return <Component disabled={true} value={label} />;
     },
-    [labelMapper, multiple, options]
+    [disabled, labelMapper, multiple, options]
   );
 
   return (
     <>
       {disabled ? (
-        <>{RenderFunc(getLocalValue(value))}</>
+        <>{RenderFunc(getLocalValue(value), DisabledComponent)}</>
       ) : (
         <MuiSelect
           endAdornment={

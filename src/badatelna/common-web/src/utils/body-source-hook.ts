@@ -88,6 +88,7 @@ export function useBodySource<TYPE, BODY>(url: Url) {
     () => ({
       ...result,
       loading,
+      setLoading,
       loadMore,
       setBody: (p) => (bodyRef.current = p),
       reset: () => {

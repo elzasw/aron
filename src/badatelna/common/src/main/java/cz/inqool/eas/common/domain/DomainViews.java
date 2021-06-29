@@ -28,4 +28,5 @@ public @interface DomainViews {
     String UPDATE = "update";
     String DEFAULT = "default";
     String IDENTIFIED = "identified";
+    String INDEXED = "indexed";
 }

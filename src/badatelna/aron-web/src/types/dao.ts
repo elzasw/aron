@@ -1,5 +1,5 @@
 import { DaoBundleType } from '../enums';
-import { LinkedEntity } from './basic';
+import { LinkedEntity, Entity } from './basic';
 
 export interface Dao extends LinkedEntity {
   name: string;
@@ -8,7 +8,7 @@ export interface Dao extends LinkedEntity {
 
 export interface DaoFile extends LinkedEntity {
   order: number;
-  metadata: MetadataItem[]; // TODO: JSON?
+  metadata: MetadataItem[];
   type: DaoBundleType;
   file: DaoFileFileType;
 }
@@ -17,13 +17,8 @@ interface DaoFileFileType {
   id: string;
   name: string;
 }
-interface MetadataItem {
-  value: string;
-  type: MetadataType;
-}
 
-interface MetadataType {
-  name: string;
-  code: string;
-  order: number;
+interface MetadataItem extends Entity {
+  value: string;
+  type: string;
 }

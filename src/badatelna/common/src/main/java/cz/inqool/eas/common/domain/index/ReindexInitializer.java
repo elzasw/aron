@@ -38,9 +38,17 @@ public class ReindexInitializer implements ApplicationListener<ApplicationReadyE
             if (reindexService != null && reindexQueueStore != null) {
                 for (ReindexQueue<? extends ReindexQueue<?>> reindexQueueItem : reindexQueueStore.listAll()) {
                     atLeastOneReindexed |= transactionTemplate.execute(status -> {
-                        var repositoryClass = reindexQueueItem.getRepositoryClass();
+                        String repositoryClass = reindexQueueItem.getRepositoryClass();
+                        try { // check if the class exists
+                            Class.forName(repositoryClass);
+                        } catch (ClassNotFoundException e) {
+                            log.error("Repository class '" + repositoryClass + "' not found. Was it renamed/removed?", e);
+                            reindexQueueStore.delete(reindexQueueItem.getId());
+                            return false;
+                        }
+
                         log.info("Found {} repository queued for reindex", repositoryClass);
-                        reindexService.reindex(List.of(repositoryClass.getName()));
+                        reindexService.reindex(List.of(repositoryClass));
                         reindexQueueStore.delete(reindexQueueItem.getId());
                         return true;
                     });

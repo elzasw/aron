@@ -4,6 +4,7 @@ export interface BulkAction<BulkActionHandle> {
   label: string;
   action: (handle: BulkActionHandle) => void;
   Component?: ComponentType<RefAttributes<BulkActionHandle>>;
+  disableFilteredBulkAction?: boolean;
 }
 
 export interface BulkActionItemProps {

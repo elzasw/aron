@@ -13,5 +13,7 @@ public class ItemType {
     private String code;
     private String name;
     private DataType type;
-    private boolean indexed;
+    private boolean indexed = true;
+    private Boolean indexFolding;
+    private Boolean indexBoost;
 }

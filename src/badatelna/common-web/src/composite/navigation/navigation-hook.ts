@@ -1,7 +1,11 @@
 import { useMemo, useState, useRef } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useEventCallback } from 'utils/event-callback-hook';
-import { NavigationContext, Prompt, StateAction } from './navigation-context';
+import {
+  NavigationContext,
+  NavigationPrompt,
+  StateAction,
+} from './navigation-context';
 import { DialogHandle } from 'components/dialog/dialog-types';
 
 type Callback = () => void;
@@ -10,7 +14,7 @@ export function useNavigation() {
   const history = useHistory();
   const { state } = useLocation();
 
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [prompts, setPrompts] = useState<NavigationPrompt[]>([]);
   const dialogRef = useRef<DialogHandle>(null);
   const callbackRef = useRef<Callback>();
 
@@ -44,12 +48,12 @@ export function useNavigation() {
       });
     }
   );
-  const registerPrompt = useEventCallback((prompt: Prompt) => {
+  const registerPrompt = useEventCallback((prompt: NavigationPrompt) => {
     if (!prompts.includes(prompt)) {
       setPrompts([...prompts, prompt]);
     }
   });
-  const unregisterPrompt = useEventCallback((prompt: Prompt) => {
+  const unregisterPrompt = useEventCallback((prompt: NavigationPrompt) => {
     if (prompts.includes(prompt)) {
       setPrompts(prompts.filter((p) => p !== prompt));
     }
@@ -72,13 +76,14 @@ export function useNavigation() {
 
   const context: NavigationContext = useMemo(
     () => ({
+      prompts,
       navigate,
       testPrompts,
       registerPrompt,
       unregisterPrompt,
       stateAction: state != null ? (state as StateAction) : null,
     }),
-    [navigate, testPrompts, registerPrompt, unregisterPrompt, state]
+    [prompts, navigate, testPrompts, registerPrompt, unregisterPrompt, state]
   );
 
   return { context, dialogRef, prompts, promptConfirm, promptCancel };

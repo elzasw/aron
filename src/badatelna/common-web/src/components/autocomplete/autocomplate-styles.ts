@@ -3,7 +3,13 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 export const useStyles = makeStyles((theme) => ({
   paper: {
     width: '600px',
-    height: '300px',
+    height: 'fit-content',
+    minHeight: 26,
+  },
+  paperItem: {
+    minHeight: 26,
+    lineHeight: '26px',
+    padding: '0 10px',
   },
   popper: {
     width: '500px',

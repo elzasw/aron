@@ -23,6 +23,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
         String jsonFilter = JsonUtils.toJsonString(filter, true);
         String expectedJsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_DISTANCE\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"point\" : {\r\n" +
                 "    \"lat\" : 21.2130969,\r\n" +
@@ -31,7 +32,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "    \"fragment\" : true\r\n" +
                 "  },\r\n" +
                 "  \"distance\" : 10.0,\r\n" +
-                "  \"distanceUnit\" : \"KILOMETERS\"\r\n" +
+                "  \"unit\" : \"KILOMETERS\"\r\n" +
                 "}";
 
         assertEquals(expectedJsonFilter, jsonFilter);
@@ -53,6 +54,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_DISTANCE\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"point\" : {\r\n" +
                 "      \"lat\" : 21.2130969,\r\n" +
@@ -61,7 +63,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "      \"fragment\" : true\r\n" +
                 "    },\r\n" +
                 "    \"distance\" : 10.0,\r\n" +
-                "    \"distanceUnit\" : \"KILOMETERS\"\r\n" +
+                "    \"unit\" : \"KILOMETERS\"\r\n" +
                 "  } ],\r\n" +
                 "  \"aggregations\" : [ ],\r\n" +
                 "  \"fields\" : null,\r\n" +
@@ -75,6 +77,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
     void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_DISTANCE\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"point\" : {\r\n" +
                 "    \"lat\" : 21.2130969,\r\n" +
@@ -83,7 +86,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "    \"fragment\" : true\r\n" +
                 "  },\r\n" +
                 "  \"distance\" : 10.0,\r\n" +
-                "  \"distanceUnit\" : \"KILOMETERS\"\r\n" +
+                "  \"unit\" : \"KILOMETERS\"\r\n" +
                 "}";
         Filter filter = JsonUtils.fromJsonString(jsonFilter, Filter.class);
 
@@ -102,6 +105,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_DISTANCE\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"point\" : {\r\n" +
                 "      \"lat\" : 21.2130969,\r\n" +
@@ -110,7 +114,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
                 "      \"fragment\" : true\r\n" +
                 "    },\r\n" +
                 "    \"distance\" : 10.0,\r\n" +
-                "    \"distanceUnit\" : \"KILOMETERS\"\r\n" +
+                "    \"unit\" : \"KILOMETERS\"\r\n" +
                 "  } ],\r\n" +
                 "  \"aggregations\" : [ ],\r\n" +
                 "  \"fields\" : null,\r\n" +
@@ -180,7 +184,7 @@ class GeoDistanceFilterTest extends IndexFilterTestBase {
     void filterFieldNotGeoLeaf() {
         Params params = new Params();
         params.addFilter(
-                new GeoDistanceFilter(IndexFields.toOneRelationship, new GeoPoint(19.2675660, 49.0490454), 10, DistanceUnit.KILOMETERS)
+                new GeoDistanceFilter(IndexFields.toOneRelationshipNested, new GeoPoint(19.2675660, 49.0490454), 10, DistanceUnit.KILOMETERS)
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

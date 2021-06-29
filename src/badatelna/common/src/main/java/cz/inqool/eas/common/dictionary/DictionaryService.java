@@ -1,15 +1,21 @@
 package cz.inqool.eas.common.dictionary;
 
 import cz.inqool.eas.common.authored.AuthoredService;
+import cz.inqool.eas.common.dictionary.event.ActivateEvent;
+import cz.inqool.eas.common.dictionary.event.DeactivateEvent;
 import cz.inqool.eas.common.dictionary.index.DictionaryAutocomplete;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
+import cz.inqool.eas.common.exception.MissingObject;
 import cz.inqool.eas.common.intl.Language;
 import cz.inqool.eas.common.projection.Projectable;
 
 import javax.annotation.Nullable;
 import javax.transaction.Transactional;
+import javax.validation.constraints.NotNull;
 import java.util.List;
+
+import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
 
 /**
  * CRUD Service layer for objects implementing {@link Dictionary}.
@@ -37,6 +43,39 @@ public abstract class DictionaryService<
         UPDATE_PROJECTION,
         REPOSITORY> {
 
+    /**
+     * Gets detail projection of object based on code.
+     *
+     * @param code Code of the object
+     * @return Detail view of the object
+     */
+    @Transactional
+    public DETAIL_PROJECTION getByCode(String code) {
+        return this.getInternalByCode(detailType, code);
+    }
+
+    /**
+     * Gets object based on code using projection.
+     *
+     * preGetHook is called after retrieval, because otherwise we don't know the id of the object.
+     *
+     * @param type        Projection type
+     * @param code        Code of the object
+     * @param <PROJECTED> Type of projection
+     * @return The object
+     */
+    @Transactional
+    public <PROJECTED extends Dictionary<ROOT>> PROJECTED getInternalByCode(Class<PROJECTED> type, @NotNull String code) {
+
+        PROJECTED view = repository.findByCode(type, code);
+        notNull(view, () -> new MissingObject(rootType, "code:" + code));
+
+        preGetHook(view.getId());
+        doWithRoot(view, this::postGetHook);
+
+        return view;
+    }
+
     public Result<DictionaryAutocomplete> listAutocomplete(@Nullable String query, @Nullable Language language, @Nullable Params params) {
         return this.repository.listAutocomplete(query, language, params, false);
     }
@@ -56,19 +95,30 @@ public abstract class DictionaryService<
     /**
      * Activates object.
      *
+     * PostUpdate hook is called, but not preUpdate.
+     *
      * @param id Id of object to activate
      */
     @Transactional
     public void activate(String id) {
-        repository.activate(id);
+        ROOT root = repository.activate(id);
+        postUpdateHook(root);
+
+        eventPublisher.publishEvent(new ActivateEvent<>(this, root));
     }
 
     /**
      * Deactivates object.
+     *
+     * PostUpdate hook is called, but not preUpdate.
+     *
      * @param id Id of object to deactivate
      */
     @Transactional
     public void deactivate(String id) {
-        repository.deactivate(id);
+        ROOT root = repository.deactivate(id);
+        postUpdateHook(root);
+
+        eventPublisher.publishEvent(new DeactivateEvent<>(this, root));
     }
 }

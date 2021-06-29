@@ -1,10 +1,11 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { stubTrue, noop } from 'lodash';
+import { stubTrue, noop, compact, get, set } from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import {
   TableFieldProps,
   TableFieldColumnState,
   TableFieldColumn,
+  TableFieldFormFieldsProps,
 } from './table-field-types';
 import { TableFieldToolbar } from './table-field-toolbar';
 import { TableFieldHeader } from './table-field-header';
@@ -14,8 +15,13 @@ import { TableFieldRemoveDialog } from './table-field-remove-dialog';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { TableFieldContext } from './table-field-context';
 import { DialogHandle } from 'components/dialog/dialog-types';
+import { arrayMove } from 'utils/array-move';
+import { useIntl, FormattedMessage } from 'react-intl';
+import { FormNumberField } from 'composite/form/fields/form-number-field';
 
 export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
+  const intl = useIntl();
+
   const props: Required<TableFieldProps<OBJECT>> = {
     showToolbar: true,
     disabled: false,
@@ -25,7 +31,12 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     visibleAdd: true,
     visibleEdit: true,
     visibleRemove: true,
+    visibleActionsColumn: true,
+    useDnDOrdering: false,
+    useOrderColumn: false,
+    orderColumnPath: 'order',
     maxRows: 10,
+    noMinHeigth: false,
     onSelect: noop,
     initNewRow: defaultInitNewRow,
     showDetailBtnCond: stubTrue,
@@ -35,8 +46,59 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     RowComponent: TableFieldRow,
     DialogComponent: TableFieldDialog,
     RemoveDialogComponent: TableFieldRemoveDialog,
-    FormFieldsComponent: Empty,
     ...options,
+    columns: useMemo(
+      () =>
+        compact([
+          options.useOrderColumn
+            ? {
+                name: intl.formatMessage({
+                  id: 'EAS_TABLE_FIELD_COLUMN_ORDER',
+                  defaultMessage: 'Pořadí',
+                }),
+                datakey: options.orderColumnPath ?? 'order',
+                width: 100,
+                visible: true,
+              }
+            : undefined,
+          ...options.columns,
+        ]) as TableFieldColumn<OBJECT>[],
+      [intl, options.columns, options.orderColumnPath, options.useOrderColumn]
+    ),
+    FormFieldsComponent: useMemo(
+      () =>
+        function FormFieldsComponent(props: TableFieldFormFieldsProps<OBJECT>) {
+          return (
+            <>
+              {options.useOrderColumn && (
+                <FormNumberField
+                  name={options.orderColumnPath ?? 'order'}
+                  disabled
+                  label={
+                    <FormattedMessage
+                      id="EAS_TABLE_FIELD_FIELD_LABEL_ORDER"
+                      defaultMessage="Pořadí"
+                    />
+                  }
+                  helpLabel={intl.formatMessage({
+                    id: 'EAS_TABLE_FIELD_FIELD_HELP_ORDER',
+                    defaultMessage: ' ',
+                  })}
+                />
+              )}
+              {options.FormFieldsComponent && (
+                <options.FormFieldsComponent {...props} />
+              )}
+            </>
+          );
+        },
+      [
+        intl,
+        options.FormFieldsComponent,
+        options.orderColumnPath,
+        options.useOrderColumn,
+      ]
+    ),
   };
 
   const value = props.value ?? [];
@@ -96,10 +158,16 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
   });
 
   const selectRow = useEventCallback((index: number) => {
-    setSelectedIndex(index);
+    if (index !== selectedIndex) {
+      setSelectedIndex(index);
 
-    if (props.value != null) {
-      props.onSelect(props.value[index], index);
+      if (props.value != null) {
+        props.onSelect(props.value[index], index);
+      }
+    } else {
+      setSelectedIndex(undefined);
+
+      props.onSelect(null, index);
     }
   });
 
@@ -124,6 +192,29 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     });
   });
 
+  /**
+   * Swaps rows positions and optionaly also order attribute.
+   */
+  const swapRows = useEventCallback(
+    ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
+      const newValue = arrayMove(value, oldIndex, newIndex);
+
+      if (props.useOrderColumn) {
+        const oldRow = { ...newValue[oldIndex] };
+        const newRow = { ...newValue[newIndex] };
+        newValue[oldIndex] = oldRow;
+        newValue[newIndex] = newRow;
+
+        const oldRowNum = get(oldRow, props.orderColumnPath);
+        const newRowNum = get(newRow, props.orderColumnPath);
+        set(oldRow as any, props.orderColumnPath, newRowNum);
+        set(newRow as any, props.orderColumnPath, oldRowNum);
+      }
+
+      props.onChange(newValue);
+    }
+  );
+
   const filteredColumns = columnsState
     .map((state) => {
       const column = props.columns.find(
@@ -146,6 +237,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       visibleAdd: props.visibleAdd,
       visibleEdit: props.visibleEdit,
       visibleRemove: props.visibleRemove,
+      visibleActionsColumn: props.visibleActionsColumn,
       onSelect: props.onSelect,
       columnsState,
       filteredColumns,
@@ -160,6 +252,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       showDetailBtnCond: props.showDetailBtnCond,
       showRadioCond: props.showRadioCond,
       initNewRow: props.initNewRow,
+      useDnDOrdering: props.useDnDOrdering,
     }),
     [
       columnsState,
@@ -176,6 +269,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       props.visibleAdd,
       props.visibleEdit,
       props.visibleRemove,
+      props.visibleActionsColumn,
       removeRow,
       saveRow,
       selectRow,
@@ -185,6 +279,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
       showEditDialog,
       showRemoveDialog,
       value,
+      props.useDnDOrdering,
     ]
   );
 
@@ -195,6 +290,7 @@ export function useTableField<OBJECT>(options: TableFieldProps<OBJECT>) {
     setSelectedIndex,
     formDialogRef,
     removeDialogRef,
+    swapRows,
   };
 }
 

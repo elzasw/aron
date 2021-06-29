@@ -6,12 +6,15 @@ export interface InfiniteListProps<ITEM extends DomainObject> {
 
   onItemClick?: (option: ITEM, index: number) => void;
 
-  labelMapper?: (option: ITEM) => ReactNode;
+  labelMapper?: (option: ITEM, index: number) => ReactNode;
   tooltipMapper?: (option: ITEM) => ReactNode;
 
   showTooltip?: boolean;
 
   selectedIds?: string[];
+
+  maxListHeight?: number;
+  defaultRowHeight?: number;
 }
 
 export interface InfiniteListHandle<ITEM extends DomainObject> {

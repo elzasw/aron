@@ -345,7 +345,7 @@ class LtFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new LtFilter(IndexFields.toOneRelationship, "47")
+                new LtFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

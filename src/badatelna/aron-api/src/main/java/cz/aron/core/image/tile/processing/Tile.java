@@ -1,4 +1,4 @@
-package cz.aron.core.image.tile.processing;//package cz.aron.core.image.tile.processing;
+//package cz.aron.core.image.tile.processing;
 //
 //import java.awt.image.BufferedImage;
 //

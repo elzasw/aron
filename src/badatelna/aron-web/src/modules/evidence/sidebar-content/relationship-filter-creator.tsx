@@ -3,38 +3,40 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import { get, isArray, isEmpty } from 'lodash';
 import { FormattedMessage } from 'react-intl';
 
-import { Autocomplete, Button } from '../../../components';
-import { Option, ApuPartItemType, Relationship } from '../../../types';
+import { Autocomplete, Button, TextWithCount } from '../../../components';
+import { Option } from '../../../types';
 import {
   useGetEntityRelationships,
   useGetMatchingName,
+  getApuPartItemName,
 } from '../../../common-utils';
 import { ClickableSelection } from '../../../components/clickable-selection/clickable-selection';
 import { useStyles } from './styles';
 import { useSpacingStyles } from '../../../styles';
-import { getApuPartItemName } from '../../../common-utils';
 import { Message } from '../../../enums';
-
-interface Props {
-  onChange: (newRelationships: Relationship[]) => void;
-  apuPartItemTypes: ApuPartItemType[];
-}
+import { RelationshipFilterCreatorProps } from '.';
 
 export function RelationshipFilterCreator({
   onChange,
   apuPartItemTypes,
-}: Props): ReactElement {
+  apiFilters,
+  group,
+}: RelationshipFilterCreatorProps): ReactElement {
   const classes = useStyles();
   const spacingClasses = useSpacingStyles();
 
   const [searchValue, setSearchValue] = useState<Option | null>(null);
   const [query, setQuery] = useState('');
 
-  const [resultAutocomplete, loadingAutocomplete] = useGetMatchingName(query);
-  const [resultRelationships, loadingRelationships] = useGetEntityRelationships(
-    searchValue?.id
+  const [resultAutocomplete, loadingAutocomplete] = useGetMatchingName(
+    query,
+    group
   );
-
+  const [resultRelationships, loadingRelationships] = useGetEntityRelationships(
+    searchValue?.id,
+    apiFilters,
+    group
+  );
   const [selectedRelationships, setSelectedRelationships] = useState<
     {
       name: string;
@@ -43,12 +45,29 @@ export function RelationshipFilterCreator({
   >();
 
   const updateFilterValue = useCallback(
-    (fields: string[], value: string) => {
-      onChange(fields.map((field: string) => ({ field, value })));
+    (fields: string[]) => {
+      onChange(
+        fields.map((field: string) => ({
+          field,
+          value: searchValue?.id ? searchValue.id : searchValue?.name,
+          name: searchValue?.name,
+        }))
+      );
     },
-    [onChange]
+    [onChange, searchValue?.id, searchValue?.name]
   );
 
+  const options = resultRelationships.map(
+    (relationship: { key: string; value: string }) => ({
+      field: relationship.key,
+      name: (
+        <TextWithCount
+          text={getApuPartItemName(apuPartItemTypes, relationship.key)}
+          count={parseInt(relationship.value)}
+        />
+      ),
+    })
+  );
   return (
     <div className={classes.relationshipFilterCreatorWrapper}>
       <div className={classes.relationshipFilterLabel}>
@@ -73,15 +92,7 @@ export function RelationshipFilterCreator({
               <FormattedMessage id={Message.RELATIONSHIP_TYPE_CONSTRAINT} />
             </div>
             <ClickableSelection
-              options={resultRelationships.map(
-                (relationship: { key: string; value: string }) => ({
-                  field: relationship.key,
-                  name: `${getApuPartItemName(
-                    apuPartItemTypes,
-                    relationship.key
-                  )} (${relationship.value})`,
-                })
-              )}
+              options={options}
               onChange={setSelectedRelationships}
             />
             <Button
@@ -92,8 +103,11 @@ export function RelationshipFilterCreator({
               className={spacingClasses.marginTopSmall}
               onClick={() =>
                 updateFilterValue(
-                  (selectedRelationships || []).map((r) => r.field),
-                  searchValue?.name
+                  selectedRelationships === undefined
+                    ? []
+                    : isEmpty(selectedRelationships)
+                    ? options
+                    : selectedRelationships.map((r) => r.field)
                 )
               }
             />

@@ -1,6 +1,6 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
-export const useStyles = makeStyles(() => ({
+export const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: 'inherit',
     // paddingBottom: 5,
@@ -11,10 +11,25 @@ export const useStyles = makeStyles(() => ({
       opacity: 0,
     },
   },
+  fullHeight: {
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  sumaryFullHeight: {
+    flex: '0 0 auto',
+  },
   summaryRoot: {
     minHeight: '32px !important',
     height: 32,
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
+    borderRadius: theme.eas?.radius,
+  },
+  summaryContent: {
+    overflow: 'hidden',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   summaryRootWithBorder: {
     border: '1px solid #cdcdcd',
@@ -38,5 +53,11 @@ export const useStyles = makeStyles(() => ({
   },
   labelRoot: {
     fontWeight: 700,
+    marginRight: 5,
+  },
+  formPanelSummary: {
+    fontWeight: 700,
+    fontSize: 14,
+    lineHeight: '32px',
   },
 }));

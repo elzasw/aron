@@ -29,6 +29,11 @@ public class IndexInitializer implements ApplicationListener<ApplicationReadyEve
             boolean atLeastOneFound = false;
 
             for (var repository : repositories) {
+                if (!repository.isIndexManaged()) {
+                    log.info("Skipping, because repository does not have managed index.");
+                    continue;
+                }
+
                 if (!repository.isIndexInitialized()) {
                     atLeastOneFound = true;
                     log.info("Found missing index for {}.", repository);

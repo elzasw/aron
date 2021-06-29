@@ -58,24 +58,24 @@ public class PostInitializer implements ApplicationListener<ApplicationReadyEven
                 reindexService.reindex(null);
                 log.info("Loading example data...");
                 if (environment.startsWith("docker")) {
-                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutions.xml").getInputStream()) {
+                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/institutions.xml"))) {
                         apuProcessor.processTestingInputStream(inputStream);
                     }
                     log.info("next file...");
-                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/institutionEntities.xml").getInputStream()) {
+                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/institutionEntities.xml"))) {
                         apuProcessor.processTestingInputStream(inputStream);
                     }
                     log.info("next file...");
-                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/archdesc-1820.xml").getInputStream()) {
+                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/archdesc-1820.xml"))) {
                         apuProcessor.processTestingInputStream(inputStream);
                     }
                     log.info("next file...");
-                    try (InputStream inputStream = resourceLoader.getResource("classpath:/examples/fund-1820.xml").getInputStream()) {
+                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/fund-1820.xml"))) {
                         apuProcessor.processTestingInputStream(inputStream);
                     }
                 }
-                else if (Files.exists(Path.of("./sample"))) {
-                    Files.list(Path.of("./sample")).forEach(
+                else if (Files.exists(Path.of("./init-data/sample"))) {
+                    Files.list(Path.of("./init-data/sample")).forEach(
                             path -> {
                                 log.info(" - " + path.getFileName().toString() + "...");
                                 try (InputStream inputStream = Files.newInputStream(path)) {

@@ -2,7 +2,7 @@ import { useScrollableSource } from 'utils/scrollable-source-hook';
 import { useMemo, useRef } from 'react';
 import { AutocompleteSource } from './autocomplete-types';
 import { useEventCallback } from 'utils/event-callback-hook';
-import { fetchItem } from 'utils/crud-source-hook';
+import { defaultGetItem as fetchItem } from 'utils/crud-source-hook';
 import { Params } from 'common/common-types';
 
 export function useAutocompleteSource<ITEM extends { id: string }>({
@@ -21,7 +21,7 @@ export function useAutocompleteSource<ITEM extends { id: string }>({
   });
 
   const getUrl = useEventCallback(() => {
-    return `${url}?query=${query.current}`;
+    return `${url}?query=${encodeURIComponent(query.current)}`;
   });
 
   const loadDetail = useEventCallback(async (item: ITEM) => {

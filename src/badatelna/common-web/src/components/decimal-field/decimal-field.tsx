@@ -7,7 +7,7 @@ import { DecimalFieldProps } from './decimal-field-types';
 import { TextField } from 'components/text-field/text-field';
 
 export function DecimalField({
-  value: providedValue = 'null',
+  value: providedValue = null,
   onChange: providedOnChange,
   negative = false,
   formated = false,
@@ -15,7 +15,7 @@ export function DecimalField({
   minValue,
   ...props
 }: DecimalFieldProps) {
-  providedValue = providedValue != null ? providedValue : '';
+  providedValue = providedValue != null ? providedValue : '0';
 
   const valueCondition = useEventCallback(
     (value: string, externalValue: string) => {

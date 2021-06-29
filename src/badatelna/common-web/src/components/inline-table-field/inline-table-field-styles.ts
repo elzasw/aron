@@ -6,18 +6,18 @@ export const useStyles = makeStyles((theme: Theme) =>
       boxSizing: 'border-box',
       borderBottom: '1px solid #cdcdcd',
       minWidth: '100%',
-      height: 30,
+      minHeight: 30,
       '&:hover': {
         backgroundColor: theme.palette.highlight,
       },
-      padding: '2px 24px',
+      padding: '2px 12px',
       display: 'flex',
       alignItems: 'center',
       flexShrink: 0,
     },
     tableRowActions: {
       flexShrink: 0,
-      width: 30,
+      width: 50,
       height: 20,
       verticalAlign: 'top',
       display: 'inline-block',
@@ -27,7 +27,7 @@ export const useStyles = makeStyles((theme: Theme) =>
         cursor: 'pointer',
         width: 20,
         height: 20,
-        padding: 0,
+        padding: '2pt',
       },
     },
     cellWrapper: {
@@ -54,6 +54,9 @@ export const useStyles = makeStyles((theme: Theme) =>
     buttonGroup: {
       display: 'flex',
       marginLeft: -5, // offset first icon left padding
+    },
+    rowDraggable: {
+      alignSelf: 'center',
     },
   })
 );

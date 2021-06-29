@@ -12,6 +12,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 public class IndexedFieldProps {
     private FieldType fieldType;
     private boolean indexed = true;
+    private String analyzer;
     private boolean fieldData;
 
     public IndexedFieldProps(FieldType fieldType) {

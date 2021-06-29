@@ -414,7 +414,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     void nestedObjectStartWith_first() {
         Params params = new Params();
         params.addFilter(
-                new StartWithFilter(IndexFields.toOneRelationship + "." + key, "Grandfather")
+                new StartWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Grandfather")
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -424,7 +424,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     void nestedObjectStartWith_second() {
         Params params = new Params();
         params.addFilter(
-                new StartWithFilter(IndexFields.toOneRelationship + "." + key, "Grandmother")
+                new StartWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Grandmother")
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -434,7 +434,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     void nestedObjectStartWith_all() {
         Params params = new Params();
         params.addFilter(
-                new StartWithFilter(IndexFields.toOneRelationship + "." + key, "Grand")
+                new StartWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Grand")
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -444,7 +444,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     void nestedObjectStartWith_none() {
         Params params = new Params();
         params.addFilter(
-                new StartWithFilter(IndexFields.toOneRelationship + "." + key, "mother")
+                new StartWithFilter(IndexFields.toOneRelationshipNested + "." + key, "mother")
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -507,7 +507,7 @@ class StartWithFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new StartWithFilter(IndexFields.toOneRelationship, "47")
+                new StartWithFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

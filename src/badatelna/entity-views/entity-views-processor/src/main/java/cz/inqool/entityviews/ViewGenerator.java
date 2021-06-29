@@ -24,7 +24,7 @@ public class ViewGenerator {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 PrintWriter writer = new PrintWriter(outputStream);
 
-                ViewContext view = new ViewContext(viewName, unit.getClazz().getType(),false, false);
+                ViewContext view = new ViewContext(viewName, unit.getClazz().getType(),false, false, null);
                 setContext(new Context(view,0, writer, units, unit));
                 unit.printUnit();
 
@@ -54,7 +54,7 @@ public class ViewGenerator {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
                 PrintWriter writer = new PrintWriter(outputStream);
 
-                ViewContext view = new ViewContext(null, unit.getClazz().getType(), true, false);
+                ViewContext view = new ViewContext(null, unit.getClazz().getType(), true, false, null);
                 setContext(new Context(view, 0, writer, null, unit));
                 unit.printRef();
 

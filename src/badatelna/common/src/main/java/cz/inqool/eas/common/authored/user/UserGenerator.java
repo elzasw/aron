@@ -32,4 +32,18 @@ public class UserGenerator implements ValueGenerator<UserReference> {
 
         return null;
     }
+
+    public static User getUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null) {
+            Object principal = authentication.getPrincipal();
+
+            if (principal instanceof User) {
+                return (User) principal;
+            }
+        }
+
+        return null;
+    }
 }

@@ -26,6 +26,7 @@ class GeoPolygonFilterTest extends IndexFilterTestBase {
         String jsonFilter = JsonUtils.toJsonString(filter, true);
         String expectedJsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_POLYGON\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"points\" : [ {\r\n" +
                 "    \"lat\" : 21.0,\r\n" +
@@ -74,6 +75,7 @@ class GeoPolygonFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_POLYGON\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"points\" : [ {\r\n" +
                 "      \"lat\" : 21.0,\r\n" +
@@ -109,6 +111,7 @@ class GeoPolygonFilterTest extends IndexFilterTestBase {
     void deserialize() {
         String jsonFilter = "{\r\n" +
                 "  \"operation\" : \"GEO_POLYGON\",\r\n" +
+                "  \"nestedQueryEnabled\" : true,\r\n" +
                 "  \"field\" : \"coordinates\",\r\n" +
                 "  \"points\" : [ {\r\n" +
                 "    \"lat\" : 21.0,\r\n" +
@@ -154,6 +157,7 @@ class GeoPolygonFilterTest extends IndexFilterTestBase {
                 "  \"flipDirection\" : false,\r\n" +
                 "  \"filters\" : [ {\r\n" +
                 "    \"operation\" : \"GEO_POLYGON\",\r\n" +
+                "    \"nestedQueryEnabled\" : true,\r\n" +
                 "    \"field\" : \"coordinates\",\r\n" +
                 "    \"points\" : [ {\r\n" +
                 "      \"lat\" : 21.0,\r\n" +

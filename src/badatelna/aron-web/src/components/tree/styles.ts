@@ -4,7 +4,11 @@ import { colorGreyLight } from '../../styles';
 
 export const useStyles = makeStyles((theme) => {
   return {
-    tree: {},
+    tree: {
+      '& .MuiTreeItem-content': {
+        alignItems: 'flex-start',
+      },
+    },
     endItem: { color: colorGreyLight },
   };
 });

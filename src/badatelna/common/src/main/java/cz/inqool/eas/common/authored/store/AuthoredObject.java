@@ -1,9 +1,11 @@
 package cz.inqool.eas.common.authored.store;
 
 import cz.inqool.eas.common.authored.Authored;
-import cz.inqool.eas.common.authored.tenant.TenantGenerator;
+import cz.inqool.eas.common.authored.tenant.CreatedByTenantGenerator;
 import cz.inqool.eas.common.authored.tenant.TenantReference;
-import cz.inqool.eas.common.authored.user.UserGenerator;
+import cz.inqool.eas.common.authored.tenant.UpdatedByTenantGenerator;
+import cz.inqool.eas.common.authored.user.CreatedByGenerator;
+import cz.inqool.eas.common.authored.user.UpdatedByGenerator;
 import cz.inqool.eas.common.authored.user.UserReference;
 import cz.inqool.eas.common.dated.store.DatedObject;
 import cz.inqool.entityviews.ViewableClass;
@@ -36,7 +38,7 @@ abstract public class AuthoredObject<ROOT> extends DatedObject<ROOT> implements 
      * Field should be assigned with logged in {@link UserReference} when entity is first created.
      */
     @ViewableProperty(views = DEFAULT)
-    @GeneratorType( type = UserGenerator.class, when = GenerationTime.INSERT)
+    @GeneratorType( type = CreatedByGenerator.class, when = GenerationTime.INSERT)
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "created_by_id"))
     @AttributeOverride(name = "name", column = @Column(name = "created_by_name"))
@@ -46,7 +48,7 @@ abstract public class AuthoredObject<ROOT> extends DatedObject<ROOT> implements 
      * Field should be assigned with logged in {@link TenantReference} when entity is first created.
      */
     @ViewableProperty(views = DEFAULT)
-    @GeneratorType( type = TenantGenerator.class, when = GenerationTime.INSERT)
+    @GeneratorType( type = CreatedByTenantGenerator.class, when = GenerationTime.INSERT)
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "created_by_tenant_id"))
     @AttributeOverride(name = "name", column = @Column(name = "created_by_tenant_name"))
@@ -56,7 +58,7 @@ abstract public class AuthoredObject<ROOT> extends DatedObject<ROOT> implements 
      * Field should be assigned with logged in {@link UserReference} when entity is updated.
      */
     @ViewableProperty(views = DEFAULT)
-    @GeneratorType( type = UserGenerator.class, when = GenerationTime.ALWAYS)
+    @GeneratorType( type = UpdatedByGenerator.class, when = GenerationTime.ALWAYS)
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "updated_by_id"))
     @AttributeOverride(name = "name", column = @Column(name = "updated_by_name"))
@@ -66,7 +68,7 @@ abstract public class AuthoredObject<ROOT> extends DatedObject<ROOT> implements 
      * Field should be assigned with logged in {@link TenantReference} when entity is updated.
      */
     @ViewableProperty(views = DEFAULT)
-    @GeneratorType( type = TenantGenerator.class, when = GenerationTime.ALWAYS)
+    @GeneratorType( type = UpdatedByTenantGenerator.class, when = GenerationTime.ALWAYS)
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "updated_by_tenant_id"))
     @AttributeOverride(name = "name", column = @Column(name = "updated_by_tenant_name"))

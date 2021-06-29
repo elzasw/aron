@@ -3,6 +3,7 @@ package cz.inqool.eas.common.ws;
 import cz.inqool.eas.common.crypto.CertHelper;
 import cz.inqool.eas.common.exception.GeneralException;
 import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+import org.apache.http.conn.ssl.TrustAllStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -60,6 +61,8 @@ public class SSLHelper {
             if (trustStore != null) {
                 KeyStore store = CertHelper.getKeyStore(trustStore, trustStorePswd);
                 builder.loadTrustMaterial(store, null);
+            } else {
+                builder.loadTrustMaterial(new TrustAllStrategy());
             }
 
             SSLContext sslContext = builder.build();

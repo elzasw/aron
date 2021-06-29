@@ -7,31 +7,6 @@ export interface HotKeys {
   handlers: Record<string, () => void>;
 }
 
-export interface MenubarClassOverrides {
-  classOverrides?: {
-    // menubar.tsx
-    menuBarWrapper?: string;
-    iconlink?: string;
-    menuBarInnerWrapper?: string;
-    menuContainer?: string;
-    // menu.tsx
-    menu?: string;
-    // menu-item.tsx
-    menuItem?: string;
-    menuItemText?: string;
-    // user-btn.tsx
-    userButton?: string;
-    userMenu?: string;
-    // sub-menu.tsx
-    subMenu?: string;
-    // sub-menu-item.tsx
-    subMenuArrow?: string;
-    subMenuItem?: string;
-    subMenuItemText?: string;
-    subMenuAction?: string;
-  };
-}
-
 export interface MenubarProps {
   logo: ReactNode;
   logoUrl?: string;
@@ -39,4 +14,7 @@ export interface MenubarProps {
   items: MenuItem[];
   hotKeys?: HotKeys;
   userBtnActions?: UserBtnAction[];
+  displayLogoutBtn?: boolean;
+  beforeUserBtn?: ReactNode;
+  afterUserBtn?: ReactNode;
 }

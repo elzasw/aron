@@ -9,11 +9,17 @@ export const TableFieldHeader = forwardRef<HTMLDivElement, any>(
   function TableFieldHeader(_, ref) {
     const classes = useStyles();
 
-    const { filteredColumns, setColumnWidth } = useContext(TableFieldContext);
+    const {
+      filteredColumns,
+      setColumnWidth,
+      visibleActionsColumn,
+    } = useContext(TableFieldContext);
 
     return (
       <div ref={ref} className={classes.header}>
-        <div className={classes.tableRowActions}></div>
+        {visibleActionsColumn && (
+          <div className={classes.tableRowActions}></div>
+        )}
         {filteredColumns.map((column, i) => {
           const { name, datakey } = column;
 

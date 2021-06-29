@@ -345,7 +345,7 @@ class GtFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new GtFilter(IndexFields.toOneRelationship, "47")
+                new GtFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

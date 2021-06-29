@@ -898,7 +898,7 @@ class FieldSortTest extends IndexSortTestBase {
     void objectAsc() {
         Params params = new Params();
         params.addSort(
-                new FieldSort(IndexFields.toOneRelationship + "." + value, SortOrder.ASC)
+                new FieldSort(IndexFields.toOneRelationshipNested + "." + value, SortOrder.ASC)
         );
 
         assertMatchesOrder(() -> repository.listByParams(params), entity_3, entity_1, entity_2);
@@ -911,7 +911,7 @@ class FieldSortTest extends IndexSortTestBase {
 
         Params params = new Params();
         params.addSort(
-                new FieldSort(IndexFields.toOneRelationship + "." + value, SortOrder.ASC, MissingValues.LAST)
+                new FieldSort(IndexFields.toOneRelationshipNested + "." + value, SortOrder.ASC, MissingValues.LAST)
         );
 
         assertMatchesOrder(() -> repository.listByParams(params), entity_1, entity_2, entity_3);
@@ -924,7 +924,7 @@ class FieldSortTest extends IndexSortTestBase {
 
         Params params = new Params();
         params.addSort(
-                new FieldSort(IndexFields.toOneRelationship + "." + value, SortOrder.ASC, MissingValues.FIRST)
+                new FieldSort(IndexFields.toOneRelationshipNested + "." + value, SortOrder.ASC, MissingValues.FIRST)
         );
 
         assertMatchesOrder(() -> repository.listByParams(params), entity_3, entity_1, entity_2);
@@ -934,7 +934,7 @@ class FieldSortTest extends IndexSortTestBase {
     void objectDesc() {
         Params params = new Params();
         params.addSort(
-                new FieldSort(IndexFields.toOneRelationship + "." + value, SortOrder.DESC));
+                new FieldSort(IndexFields.toOneRelationshipNested + "." + value, SortOrder.DESC));
 
         assertMatchesOrder(() -> repository.listByParams(params), entity_2, entity_1, entity_3);
     }
@@ -952,7 +952,7 @@ class FieldSortTest extends IndexSortTestBase {
     @Test
     void filterFieldNotSortable() {
         Params params = new Params();
-        params.addSort(new FieldSort(IndexFields.toOneRelationship, SortOrder.ASC));
+        params.addSort(new FieldSort(IndexFields.toOneRelationshipNested, SortOrder.ASC));
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));
     }

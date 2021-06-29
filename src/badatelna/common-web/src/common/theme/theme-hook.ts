@@ -8,13 +8,16 @@ export function useTheme({
   secondary,
   editing,
   highlight,
+  fontSize,
+  fontFamily,
+  radius,
 }: ThemeProviderProps) {
   const theme = useMemo(
     () =>
       createMuiTheme({
         typography: {
-          fontFamily: ['"Public Sans"'].join(','),
-          fontSize: 12,
+          fontFamily: (fontFamily ?? ['"Public Sans"']).join(','),
+          fontSize: fontSize ?? 12,
           h6: {
             fontSize: '0.9rem',
           },
@@ -45,7 +48,7 @@ export function useTheme({
           },
           MuiOutlinedInput: {
             root: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiInput: {
@@ -61,12 +64,12 @@ export function useTheme({
           },
           MuiButton: {
             root: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiCard: {
             root: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiCardHeader: {
@@ -83,22 +86,22 @@ export function useTheme({
           },
           MuiMenu: {
             paper: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiTooltip: {
             tooltip: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiIconButton: {
             root: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
             },
           },
           MuiDialog: {
             paper: {
-              borderRadius: 0,
+              borderRadius: radius ?? 0,
               // width: 700,
               backgroundColor: '#f1f3f4',
             },
@@ -123,9 +126,10 @@ export function useTheme({
             '0px 0px 10px #e0e2e3', // default in menuBarWrapper [menubar-styles.ts]
             '0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12)', // defualt in subMenu [menu-styles.ts]
           ],
+          radius: radius,
         },
       }),
-    [primary, editing, highlight]
+    [primary, secondary, editing, highlight, fontFamily, radius]
   );
 
   return theme;

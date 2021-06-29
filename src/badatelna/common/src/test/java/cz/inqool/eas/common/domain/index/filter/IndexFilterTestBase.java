@@ -61,7 +61,7 @@ abstract public class IndexFilterTestBase extends CommonTestBase {
 
         entity_1 = MultipleFieldsEntity.builder()
                 .uuidId(UUID.fromString("3daf1258-79b8-40b4-8f01-363e74360956"))
-                .shortString("Obecní úřad Bukovina")
+                .shortString("Obecní úřad Błukovina")
                 .longString("Probably more than some two words because we need to test some full-text searching " +
                         "functionality of ElasticSearch and what could be more suitable than an useless text like this. " +
                         "I'm the best random sentence generator. Lorem ipsum is nothing in comparison with me. I should also " +

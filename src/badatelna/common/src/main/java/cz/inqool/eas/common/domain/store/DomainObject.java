@@ -36,7 +36,7 @@ import static cz.inqool.eas.common.domain.DomainViews.*;
  */
 @ViewableClass(views = {DEFAULT, CREATE, UPDATE, IDENTIFIED})
 @ViewableImplement(value = Domain.class, views = {DEFAULT, IDENTIFIED})
-@ViewableAnnotation(value = EqualsAndHashCode.class, views = DEFAULT)
+@ViewableAnnotation(value = EqualsAndHashCode.class, views = {DEFAULT, IDENTIFIED})
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")

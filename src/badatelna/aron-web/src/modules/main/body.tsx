@@ -1,30 +1,86 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import classNames from 'classnames';
-import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { NavigationContext } from '@eas/common-web';
 
-import { Icon, Search } from '../../components';
+import { Tooltip } from '@eas/common-web';
+
+import { Search } from '../../components';
 import { ModulePath, Message, ApiUrl } from '../../enums';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
-import { getPathByType, getUrlWithQuery, useGet } from '../../common-utils';
-import { searchOptions } from '../../enums';
+import {
+  getPathByType,
+  useGet,
+  parseYaml,
+  useEvidenceNavigation,
+  useSearchOptions,
+} from '../../common-utils';
 import { ClickableSelection } from '../../components/clickable-selection/';
-import { FavouriteQuery } from '../../types';
+import { FavouriteQuery, FilterConfig } from '../../types';
+import { replace } from 'lodash';
 
 export const Body: React.FC = () => {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
-  const { navigate } = useContext(NavigationContext);
+  const { formatMessage } = useIntl();
+
+  const navigateTo = useEvidenceNavigation();
+
+  const searchOptions = useSearchOptions();
 
   const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
-
-  const [favouriteQueries, loadingFavouriteQueries] = useGet<FavouriteQuery[]>(
-    ApiUrl.FAVORITE_QUERY
+  const [placeholder, setPlaceholder] = useState<Message>(
+    Message.SEARCH_NO_FILTER
   );
+
+  const [favouriteQueriesText, loadingFavouriteQueries] = useGet<string>(
+    ApiUrl.FAVORITE_QUERY,
+    { textResponse: true }
+  );
+
+  const favouriteQueries: FavouriteQuery[] | null = parseYaml(
+    favouriteQueriesText
+  )?.map(({ filters, ...q }: FavouriteQuery) => ({
+    ...q,
+    filters: filters
+      ? filters.map(({ source, ...f }: FilterConfig) => ({
+          ...f,
+          source: replace(source, '_', '~'),
+        }))
+      : [],
+  }));
+
+  const updateSelection = (value: any[]) => {
+    const current = value[0];
+    let placeholder: Message = Message.SEARCH_NO_FILTER;
+
+    if (current) {
+      switch (current.path) {
+        case ModulePath.ARCH_DESC:
+          placeholder = current.filters
+            ? Message.SEARCH_ARCH_DESC_DAO_ONLY
+            : Message.SEARCH_ARCH_DESC;
+          break;
+        case ModulePath.ENTITY:
+          placeholder = Message.SEARCH_ENTITY;
+          break;
+        case ModulePath.FINDING_AID:
+          placeholder = Message.SEARCH_FINDING_AID;
+          break;
+        case ModulePath.FUND:
+          placeholder = Message.SEARCH_FUND;
+          break;
+        default:
+          break;
+      }
+    }
+
+    setSelectedOptions(value);
+    setPlaceholder(placeholder);
+  };
 
   return (
     <div
@@ -35,30 +91,28 @@ export const Body: React.FC = () => {
       )}
     >
       <div className={classes.mainBodyInner}>
-        <h1>
-          <FormattedMessage id={Message.ENTER_SEARCH_QUERY} />
-        </h1>
+        <div className={spacingClasses.paddingBottomBig} />
         <Search
           main={true}
-          onSearch={({ query }) =>
-            navigate(
-              getUrlWithQuery(
-                selectedOptions[0]?.path || ModulePath.APU,
-                query,
-                selectedOptions[0]?.filters || []
-              )
-            )
-          }
+          placeholder={placeholder}
+          onSearch={({ query }) => {
+            const selectedPath = selectedOptions[0]?.path;
+            const path = selectedPath || ModulePath.APU;
+
+            if (query || selectedPath) {
+              navigateTo(path, 1, 10, query, selectedOptions[0]?.filters);
+            }
+          }}
         />
         <ClickableSelection
           radio={true}
           options={searchOptions}
-          onChange={setSelectedOptions}
+          onChange={updateSelection}
         />
         {(favouriteQueries || loadingFavouriteQueries) && (
           <>
             <h4 className={spacingClasses.marginTopBig}>
-              <FormattedMessage id={Message.FAVOURITE_QUERIES} />
+              {formatMessage({ id: Message.FAVOURITE_QUERIES })}
             </h4>
             <div
               className={classNames(
@@ -72,26 +126,32 @@ export const Body: React.FC = () => {
                 <CircularProgress />
               ) : (
                 (favouriteQueries || []).map(
-                  ({ icon, label, type, query, filters }) => (
-                    <div
-                      key={label}
-                      onClick={() =>
-                        navigate(
-                          getUrlWithQuery(
+                  ({ icon, label, tooltip, type, query, filters }) => (
+                    <Tooltip key={label} title={tooltip}>
+                      <div
+                        onClick={() =>
+                          navigateTo(
                             type ? getPathByType(type) : ModulePath.APU,
+                            1,
+                            10,
                             query,
                             filters
                           )
-                        )
-                      }
-                      className={classNames(
-                        layoutClasses.flexAlignCenter,
-                        spacingClasses.marginBottomSmall
-                      )}
-                    >
-                      <Icon type={icon} />
-                      &nbsp;&nbsp;&nbsp;{label}
-                    </div>
+                        }
+                        className={classNames(
+                          layoutClasses.flexAlignCenter,
+                          spacingClasses.marginBottomSmall
+                        )}
+                      >
+                        <i
+                          className={classNames(
+                            icon,
+                            classes.mainFavouriteIcon
+                          )}
+                        />
+                        &nbsp;&nbsp;&nbsp;{label}
+                      </div>
+                    </Tooltip>
                   )
                 )
               )}

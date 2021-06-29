@@ -1,5 +1,7 @@
 import { ReactChild } from 'react';
 
+import { ModulePath } from '../../enums';
+
 interface Item {
   path?: string;
   label: ReactChild;
@@ -18,6 +20,7 @@ export interface Breadcrumbs {
 }
 
 export interface ModuleProps extends Breadcrumbs {
+  path?: ModulePath;
   children: ReactChild;
 }
 

@@ -20,9 +20,7 @@ public class SequenceService extends DictionaryService<
 
     @Transactional
     public String generateNextValue(String sequenceId) {
-        Sequence sequence = getInternal(Sequence.class, sequenceId);
-
-        return generator.generate(sequence);
+        return generator.generate(sequenceId);
     }
 
     @Transactional
@@ -33,7 +31,7 @@ public class SequenceService extends DictionaryService<
             return "";
         }
 
-        return generator.generate(sequence);
+        return generator.generate(sequence.getId());
     }
 
     @Autowired

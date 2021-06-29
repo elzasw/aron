@@ -2,12 +2,12 @@ import React from 'react';
 
 import { WrapperProps } from './types';
 
-export function NoViewWrapper({ children: Children }: WrapperProps) {
+export function NoViewWrapper({ fileType, children: Children }: WrapperProps) {
   return (
     <Children
       {...{
         noView: true,
-        fileViewerProps: {},
+        fileViewerProps: { fileType },
       }}
     />
   );

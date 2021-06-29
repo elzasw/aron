@@ -6,6 +6,7 @@ export interface LocaleContext {
   messages: Record<string, string>;
 
   switchLocale: (localeName: LocaleName) => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 export const LocaleContext = createContext<LocaleContext>(undefined as any);

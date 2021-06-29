@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.TEXT_LONG_KEYWORD;
 import static org.springframework.data.elasticsearch.core.document.Document.parse;
 
 /**
@@ -57,11 +59,20 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
     private Map<String, Object> createCustomMapping() {
         Map<String, Object> customMapping = new HashMap<>();
         for (ItemType allItemType : typesHolder.getAllItemTypes()) {
+            if (!allItemType.isIndexed()) {
+                continue;
+            }
             Map<String, Object> fieldProperties = new HashMap<>();
             String dataType;
             switch (allItemType.getType()) {
                 case STRING:
                     dataType = "text";
+                    if (allItemType.getIndexFolding() == null || allItemType.getIndexFolding()) { //defaults to folded
+                        fieldProperties.put("analyzer", FOLDING_AND_TOKENIZING_STOP);
+                    }
+                    else {  //unfolded also means untokenized for us
+                        fieldProperties.put("analyzer", TEXT_LONG_KEYWORD);
+                    }
                     break;
                 case ENUM:
                     dataType = "keyword";
@@ -78,6 +89,8 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
                 case LINK:
                     dataType = "keyword";
                     break;
+                case ITEM_AGGREG:
+                    continue;
                 default:
                     throw new RuntimeException("unknown type");
             }
@@ -85,6 +98,7 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
             customMapping.put(allItemType.getCode(), fieldProperties);
             if (allItemType.getType() == DataType.APU_REF) {
                 customMapping.put(allItemType.getCode() + "~LABEL", fieldProperties);
+                customMapping.put(allItemType.getCode() + "~ID~LABEL", fieldProperties);
             }
         }
         return customMapping;
@@ -94,12 +108,22 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
     public Map<String, IndexFieldNode> getDynamicFields() {
         Map<String, IndexFieldNode> dynamicFields = new HashMap<>();
         for (ItemType allItemType : typesHolder.getAllItemTypes()) {
+            if (!allItemType.isIndexed()) {
+                continue;
+            }
             FieldType fieldType;
+            String analyzer = null;
             Class<?> javaType;
             switch (allItemType.getType()) {
                 case STRING:
                     fieldType = FieldType.Text;
                     javaType = String.class;
+                    if (allItemType.getIndexFolding() == null || allItemType.getIndexFolding()) { //defaults to folded
+                        analyzer = FOLDING_AND_TOKENIZING_STOP;
+                    }
+                    else {  //unfolded also means untokenized for us
+                        analyzer = TEXT_LONG_KEYWORD;
+                    }
                     break;
                 case ENUM:
                 case LINK:
@@ -115,6 +139,8 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
                     fieldType = FieldType.Date;
                     javaType = String.class;
                     break;
+                case ITEM_AGGREG:
+                    continue;
                 default:
                     throw new RuntimeException("unknown type");
             }
@@ -124,15 +150,19 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
             }
 
             String fieldName = allItemType.getCode();
-            IndexedFieldProps indexedFieldProps = new IndexedFieldProps(fieldType, true, false);
+            IndexedFieldProps indexedFieldProps = new IndexedFieldProps(fieldType, true, analyzer, false);
 
             IndexFieldLeafNode indexFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, fieldName, javaType, indexedFieldProps, null, fulltext, 1.0f, new HashSet<>());
             dynamicFields.put(fieldName, indexFieldLeafNode);
 
             if (allItemType.getType() == DataType.APU_REF) {
                 String labelFieldName = fieldName + "~LABEL";
-                indexedFieldProps = new IndexedFieldProps(fieldType, true, false);
-                IndexFieldLeafNode indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, true, 1.0f, new HashSet<>());
+                indexedFieldProps = new IndexedFieldProps(fieldType, true, null, false);
+                IndexFieldLeafNode indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, false, 1.0f, new HashSet<>());
+                dynamicFields.put(labelFieldName, indexLabelFieldLeafNode);
+                labelFieldName = fieldName + "~ID~LABEL";
+                indexedFieldProps = new IndexedFieldProps(fieldType, true, null, false);
+                indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, false, 1.0f, new HashSet<>());
                 dynamicFields.put(labelFieldName, indexLabelFieldLeafNode);
             }
         }

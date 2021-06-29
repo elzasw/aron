@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import clsx from 'clsx';
 import MuiMenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -7,7 +8,7 @@ import { useEventCallback } from 'utils/event-callback-hook';
 import { MenuItemProps } from './menu-types';
 import { useStyles } from './menu-styles';
 import { SubMenu } from './sub-menu';
-import { MenubarClassOverrides } from '../menubar-types';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export function MenuItem({
   item,
@@ -32,10 +33,19 @@ export function MenuItem({
     onClickAway(index);
   });
 
+  const { pathname } = useLocation();
+
   return (
     <ClickAwayListener onClickAway={handleClickAway}>
       <MuiMenuItem
-        className={clsx(classes.menuItem, classOverrides?.menuItem)}
+        className={clsx(
+          classes.menuItem,
+          classOverrides?.menuItem,
+          item?.isActive?.(pathname) && [
+            classes.activeMenuItem,
+            classOverrides?.activeMenuItem,
+          ]
+        )}
         onMouseEnter={handleHover}
         onClick={handleClick}
       >

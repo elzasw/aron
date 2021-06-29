@@ -449,7 +449,7 @@ class IsNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectIsNull_first() {
+    void listIsNull_first() {
         entity_1.setElementCollection(null);
         repository.update(entity_1);
 
@@ -462,7 +462,7 @@ class IsNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectIsNull_second() {
+    void listIsNull_second() {
         entity_2.setElementCollection(null);
         repository.update(entity_2);
 
@@ -475,7 +475,7 @@ class IsNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectIsNull_all() {
+    void listIsNull_all() {
         entity_1.setElementCollection(null);
         entity_2.setElementCollection(null);
         repository.update(List.of(entity_1, entity_2));
@@ -489,10 +489,116 @@ class IsNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectIsNull_none() {
+    void listIsNull_none() {
         Params params = new Params();
         params.addFilter(
                 new NullFilter(IndexFields.elementCollection)
+        );
+
+        assertMatchesNone(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectIsNull_first() {
+        entity_1.getToOneRelationship().setKey(null);
+        entity_1.getToOneRelationship().setValue(null);
+        repository.update(entity_1);
+        entity_1.setToOneRelationship(null);
+        repository.update(entity_1);
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesFirst(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectIsNull_second() {
+        entity_2.setToOneRelationship(null);
+        repository.update(entity_2);
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesSecond(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectIsNull_all() {
+        entity_1.setToOneRelationship(null);
+        entity_2.setToOneRelationship(null);
+        repository.update(List.of(entity_1, entity_2));
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesBoth(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectIsNull_none() {
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesNone(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectIsNull_first() {
+        entity_1.getToOneRelationship().setKey(null);
+        entity_1.getToOneRelationship().setValue(null);
+        repository.update(entity_1);
+        entity_1.setToOneRelationship(null);
+        repository.update(entity_1);
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesFirst(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectIsNull_second() {
+        entity_2.setToOneRelationship(null);
+        repository.update(entity_2);
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesSecond(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectIsNull_all() {
+        entity_1.setToOneRelationship(null);
+        entity_2.setToOneRelationship(null);
+        repository.update(List.of(entity_1, entity_2));
+
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesBoth(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectIsNull_none() {
+        Params params = new Params();
+        params.addFilter(
+                new NullFilter(IndexFields.toOneRelationshipNested)
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -503,16 +609,6 @@ class IsNullFilterTest extends IndexFilterTestBase {
         Params params = new Params();
         params.addFilter(
                 new NullFilter("nonMapped")
-        );
-
-        assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));
-    }
-
-    @Test
-    void filterFieldNotLeaf() {
-        Params params = new Params();
-        params.addFilter(
-                new NullFilter(IndexFields.toOneRelationship)
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

@@ -3,15 +3,14 @@ package cz.inqool.eas.common.utils;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import cz.inqool.eas.common.exception.GeneralException;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+import org.w3c.dom.Node;
 
-import javax.validation.constraints.NotNull;
 import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -27,11 +26,9 @@ import static cz.inqool.eas.common.exception.ExceptionUtils.checked;
 /**
  * Utility methods for working with XML.
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class XmlUtils {
 
-    @SuppressWarnings("UnstableApiUsage")
-    private static final Cache<Class<?>, JAXBContext> JAXB_CONTEXT_CACHE = CacheBuilder.newBuilder()
+    protected static final Cache<Class<?>, JAXBContext> JAXB_CONTEXT_CACHE = CacheBuilder.newBuilder()
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .build();
 
@@ -72,7 +69,7 @@ public class XmlUtils {
                 .body(responseBody);
     }
 
-    private static <T> void marshall(@Nullable T object, @NotNull BiConsumer<Marshaller, T> marshallerConsumer) {
+    protected static <T> void marshall(@Nullable T object, @NotNull BiConsumer<Marshaller, T> marshallerConsumer) {
         if (object == null) {
             return;
         }
@@ -90,17 +87,28 @@ public class XmlUtils {
     }
 
     /**
-     * Reads an XML input stream into POJO of given type.
+     * Reads an XML node into POJO of given type.
      *
-     * @param stream input stream with XML data
-     * @param type type of object to convert the stream to
+     * @param source XML node
+     * @param type type of object to convert the node to
      */
-    public static <T> T fromXml(@NotNull InputStream stream, @NotNull Class<T> type) {
+    public static <T> T fromXml(@NotNull Node source, @NotNull Class<T> type) {
         //noinspection unchecked
-        return unmarshall(stream, type, (unmarshaller, inputStream) -> (T) checked(() -> unmarshaller.unmarshal(inputStream)));
+        return unmarshall(source, type, (unmarshaller, node) -> (T) checked(() -> unmarshaller.unmarshal(node)));
     }
 
-    private static <T, S> T unmarshall(@Nullable S source, @NotNull Class<T> type, @NotNull BiFunction<Unmarshaller, S, T> marshallerConsumer) {
+    /**
+     * Reads an XML input stream into POJO of given type.
+     *
+     * @param source input stream with XML data
+     * @param type type of object to convert the stream to
+     */
+    public static <T> T fromXml(@NotNull InputStream source, @NotNull Class<T> type) {
+        //noinspection unchecked
+        return unmarshall(source, type, (unmarshaller, inputStream) -> (T) checked(() -> unmarshaller.unmarshal(inputStream)));
+    }
+
+    public static <TARGET, SOURCE> TARGET unmarshall(@Nullable SOURCE source, @NotNull Class<TARGET> type, @NotNull BiFunction<Unmarshaller, SOURCE, TARGET> marshallerConsumer) {
         if (source == null) {
             return null;
         }
@@ -116,8 +124,7 @@ public class XmlUtils {
     }
 
     @SneakyThrows
-    private static JAXBContext getContext(@NotNull Class<?> type) {
-        //noinspection UnstableApiUsage
+    protected static JAXBContext getContext(@NotNull Class<?> type) {
         return JAXB_CONTEXT_CACHE.get(type, () -> JAXBContext.newInstance(type));
     }
 }

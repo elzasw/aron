@@ -1,119 +1,92 @@
-import React, { ReactElement, useState, useCallback } from 'react';
+import React, { ReactElement, useState, useCallback, useEffect } from 'react';
+import { debounce } from 'lodash';
 
-import {
-  Option,
-  ApiFilterOperation,
-  Filter,
-  AggregationItem,
-} from '../../../types';
-import { FilterObject, FilterChangeCallBack } from '../types';
-import { Autocomplete, TextField } from '../../../components';
-import { isEmpty, debounce, get, isArray } from 'lodash';
+import { TextField, Tooltip } from '../../../components';
 import { useStyles } from './styles';
-import { FilterType } from '../../../enums';
-import { useGetOptionsByField } from '../../../common-utils';
+import { useStyles as useEvidenceStyles } from '../styles';
+import { useSpacingStyles } from '../../../styles';
+import { InputFilterProps } from '.';
+import { useGetCountInput } from './utils';
 
-interface Props {
-  field: string;
-  label: string;
-  onChange: FilterChangeCallBack;
-  value: Option;
-  operation?: ApiFilterOperation;
-  filters?: Filter[];
-  autocomplete?: boolean;
-  multiple?: boolean;
-}
-
-export default function InputFilter({
-  field,
-  label,
-  onChange,
+export function InputFilter({
   value,
-  operation = ApiFilterOperation.EQ,
-  filters,
-  autocomplete = true,
-  multiple = false,
-}: Props): ReactElement {
-  const [inputValue, setInputValue] = useState<Option[] | Option | null>(value);
+  onChange,
+  source,
+  label,
+  tooltip,
+  description,
+  inDialog,
+  apiFilters,
+}: InputFilterProps): ReactElement {
+  const classes = useStyles();
+  const classesEvidence = useEvidenceStyles();
+  const classesSpacing = useSpacingStyles();
 
-  const [query, setQuery] = useState('');
+  const [inputValue, setInputValue] = useState(value);
 
-  const [result, loading] = useGetOptionsByField(query, field);
   const updateFilterValue = useCallback(
-    (newFilterValue: FilterObject | null) => {
-      onChange(
-        field,
-        !isEmpty(newFilterValue) ? newFilterValue : null,
-        operation,
-        filters,
-        FilterType.INPUT
-      );
+    (newFilterValue: string) => {
+      onChange({
+        source,
+        value: newFilterValue,
+      });
     },
 
-    [field, onChange, operation, filters]
+    [onChange, source]
   );
-  const handleAutocompleteInputChange = (options: Option[] | Option | null) => {
-    setInputValue(options);
-    updateFilterValue(
-      isEmpty(options)
-        ? {}
-        : isArray(options)
-        ? options.reduce(
-            (result: FilterObject, option: Option) => ({
-              ...result,
-              [option.id]: option.id,
-            }),
-            {}
-          )
-        : options === null
-        ? {}
-        : { [options.id]: options.id }
-    );
-  };
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const updateFilterDebounced = useCallback(debounce(updateFilterValue, 500), [
-    updateFilterValue,
-  ]);
+  const updateFilterValueDebounced = useCallback(
+    debounce(updateFilterValue, 300),
+    [updateFilterValue]
+  );
 
-  const handleTextFieldInputChange = (name: any) => {
-    const newOptionObject = name.length > 0 ? { id: '_TEXTFIELD', name } : null;
-    setInputValue(newOptionObject);
-    name.length > 0 ? updateFilterDebounced([name]) : updateFilterValue(null);
+  const handleChange = (text: string) => {
+    setInputValue(text);
+    updateFilterValueDebounced(text);
   };
 
-  const classes = useStyles();
+  useEffect(() => {
+    if (value !== inputValue) {
+      setInputValue(value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  const [result, loading] = useGetCountInput(source, value, apiFilters);
+
   return (
     <>
-      <div className={classes.filterTitle}>{label}</div>
-      {autocomplete ? (
-        <Autocomplete
-          {...{
-            options: get(result, 'aggregations.items', []).map(
-              (option: AggregationItem) => ({
-                id: option.key,
-                name: `${option[`${field}~LABEL`]} (${option.value})`,
-              })
-            ),
-            onQueryChange: setQuery,
-            value: inputValue,
-            onChange: handleAutocompleteInputChange,
-            multiple,
-            loading,
-          }}
-        />
+      <div className={classes.filterTitle}>
+        <Tooltip title={tooltip}>
+          <span>
+            <span className={classesSpacing.marginRightSmall}>{label}</span>
+            {inputValue && !loading ? (
+              <span className={classesEvidence.itemsCount}>
+                <span>(</span>
+                {result?.count || 0}
+                <span>)</span>
+              </span>
+            ) : (
+              <></>
+            )}
+          </span>
+        </Tooltip>
+      </div>
+      {inDialog && description ? (
+        <div className={classes.filterDescription}>{description}</div>
       ) : (
-        //TODO if needed rework to multi, now TextField works just with single values
-        <TextField
-          className={classes.inputFilterTextField}
-          {...{
-            size: 'small',
-            value:
-              (!isArray(inputValue) && inputValue && inputValue.name) || '',
-            onChange: handleTextFieldInputChange,
-          }}
-        />
+        <></>
       )}
+      <TextField
+        {...{
+          className: classes.inputFilterTextField,
+          size: 'small',
+          variant: 'outlined',
+          value: inputValue || '',
+          onChange: handleChange,
+        }}
+      />
     </>
   );
 }

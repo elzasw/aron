@@ -27,9 +27,24 @@ export interface ApuPartItem extends Entity {
   type: string;
 }
 
+export interface ApuAttachmentFileFile extends Entity {
+  name: string;
+  contentType: string;
+  size: number;
+  permanent: boolean;
+}
+
+export interface ApuAttachmentFile extends Entity {
+  order: number;
+  type: string;
+  metadata: MetadataItem[];
+  file: ApuAttachmentFileFile;
+}
+
 export interface ApuAttachment extends Entity {
   name: string;
-  file: any;
+  order: number;
+  file: ApuAttachmentFile;
 }
 
 export interface ApuSource extends Entity {
@@ -53,4 +68,9 @@ export interface ApuTree extends Entity {
   name: string;
   type: ApuType;
   children: ApuTree[];
+}
+
+export interface MetadataItem extends Entity {
+  value: string;
+  type: string;
 }

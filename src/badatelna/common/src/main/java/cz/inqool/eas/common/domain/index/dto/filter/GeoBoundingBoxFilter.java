@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class GeoBoundingBoxFilter extends GeoFilter {
+public class GeoBoundingBoxFilter extends GeoFilter<GeoBoundingBoxFilter> {
 
     @NotNull
     private GeoPoint topLeft;

@@ -1,226 +1,122 @@
 import React, { useState, useCallback } from 'react';
-import { isEmpty } from 'lodash';
-import CloseIcon from '@material-ui/icons/Close';
-import IconButton from '@material-ui/core/IconButton';
+import { find } from 'lodash';
 import Radio from '@material-ui/core/Radio';
 import { FormattedMessage } from 'react-intl';
 import classNames from 'classnames';
 
-import { TextField } from '@eas/common-web';
 import { Checkbox } from '@eas/common-web';
 
+import { Tooltip, TextWithCount } from '../../../components';
+import { Message, FacetType } from '../../../enums';
 import { useStyles } from './styles';
-import { useLayoutStyles, useSpacingStyles } from '../../../styles';
-import { FilterType, Message } from '../../../enums';
-import { Select } from '../../../components';
-import { FilterObject, FilterChangeCallBack } from '../types';
-import { ApiFilterOperation, Filter } from '../../../types';
-
-interface Range {
-  from: string | null;
-  to: string | null;
-}
-
-export interface SelectionFilterOption {
-  label: string;
-  value: any;
-  id: string;
-}
-
-interface SelectionFilterProps {
-  type: FilterType;
-  field: string;
-  label?: string;
-  options: SelectionFilterOption[];
-  displayCount?: number;
-  onChange: FilterChangeCallBack;
-  value: FilterObject;
-  inDialog?: boolean;
-  operation?: ApiFilterOperation;
-  filters: Filter[];
-}
+import { SelectionFilterProps } from '.';
 
 export const SelectionFilter: React.FC<SelectionFilterProps> = ({
   type,
-  field,
+  source,
   label,
-  options,
-  displayCount = 5,
-  onChange,
-  value: filterValue = {},
+  tooltip,
+  description,
   inDialog,
-  operation,
-  filters,
+  options,
+  displayedItems,
+  maxDisplayedItems,
+  onChange,
+  value: filterValue,
 }) => {
   const classes = useStyles();
-  const classesLayout = useLayoutStyles();
-  const classesSpacing = useSpacingStyles();
 
   const updateFilterValue = useCallback(
-    (newFilterValue: FilterObject) => {
-      onChange(
-        field,
-        !isEmpty(newFilterValue) ? newFilterValue : null,
-        operation,
-        filters,
-        type
-      );
+    (value: string[]) => {
+      onChange({ source, value });
     },
-    [onChange, field, operation, filters, type]
+    [onChange, source]
   );
 
-  const handleClick = (isSelected: boolean, id: string, value: any) => {
-    if (isSelected) {
-      updateFilterValue(
-        type !== FilterType.RADIO
-          ? { ...filterValue, [id]: value }
-          : { [id]: value }
-      );
-    } else {
-      const newFilterValue = filterValue;
-      delete newFilterValue[id];
-      updateFilterValue({ ...newFilterValue });
-    }
+  const onClick = (value: string) => {
+    updateFilterValue(
+      type === FacetType.ENUM_SINGLE
+        ? [value]
+        : find(filterValue, (f) => f === value)
+        ? filterValue.filter((f) => f !== value)
+        : [...filterValue, value]
+    );
   };
 
   const [showAll, setShowAll] = useState(false);
-  const data =
-    inDialog || showAll || type === FilterType.SELECT
-      ? options
-      : options.slice(0, displayCount);
 
-  const [showRangeInput, setShowRangeInput] = useState(false);
-  const [range, setRange] = useState<Range>({
-    from: null,
-    to: null,
-  });
+  const allOptions = maxDisplayedItems
+    ? options.slice(0, maxDisplayedItems)
+    : options;
 
-  const updateRange = (newRange: Range) => {
-    setRange(newRange);
-    const rangeInISO = {
-      from: yearInISO(newRange.from),
-      to: yearInISO(newRange.to),
-    };
-    if (newRange.from === null && newRange.to === null) {
-      const newFilterValue = filterValue;
-      delete newFilterValue['_RANGE'];
-      updateFilterValue(newFilterValue);
-    } else {
-      updateFilterValue({ ...filterValue, _RANGE: rangeInISO });
-    }
-  };
-  const yearInISO = (value: string | null) =>
-    parseInt(value || '')
-      ? new Date(parseInt(value || ''), 1).toISOString()
-      : null;
+  const displayCount = displayedItems || 0;
+
+  const visibleOptions =
+    inDialog || showAll || !displayCount
+      ? allOptions
+      : allOptions.slice(0, displayCount);
 
   return (
     <div>
-      <div className={classes.filterTitle}>{label}</div>
-      {type === FilterType.SELECT ? (
-        <Select
-          value={filterValue['_SELECTION']}
-          options={options.map((o: SelectionFilterOption) => ({
-            id: o.id,
-            name: o.label,
-          }))}
-          onChange={(v: any) => updateFilterValue({ _SELECTION: v })}
-        />
+      <div className={classes.filterTitle}>
+        <Tooltip title={tooltip}>
+          <div>{label}</div>
+        </Tooltip>
+      </div>
+      {inDialog && description ? (
+        <div className={classes.filterDescription}>{description}</div>
       ) : (
-        <>
-          <div>
-            {data.map((item, index) => (
-              <div
-                key={index}
-                onClick={() =>
-                  handleClick(!filterValue[item.id], item.id, item.value)
-                }
-                className={classes.listedItem}
-              >
-                {type === FilterType.RADIO ? (
-                  <Radio
-                    className={classes.radioButton}
-                    size="small"
-                    color="primary"
-                    checked={filterValue[item.id] !== undefined}
-                    onChange={() => handleClick(true, item.id, item.value)}
-                  />
-                ) : (
-                  <Checkbox
-                    value={filterValue[item.id]}
-                    onChange={(isChecked: null | boolean) =>
-                      handleClick(isChecked || false, item.id, item.value)
-                    }
-                  />
-                )}
-                <div>{item.label}</div>
-              </div>
-            ))}
-          </div>
-          {!inDialog && options.length > displayCount ? (
+        <></>
+      )}
+      <div>
+        {visibleOptions.map(({ value, label, tooltip }, index) => {
+          const isChecked = !!find(filterValue, (f) => f === value);
+
+          const handleClick = () => onClick(value);
+
+          return (
             <div
-              className={classes.bottomText}
-              onClick={() => setShowAll((prev) => !prev)}
-            >
-              {showAll ? (
-                <FormattedMessage id={Message.SHOW_LESS} />
-              ) : (
-                <span>
-                  <FormattedMessage id={Message.SHOW_MORE} />
-                  <span>( {options.length - displayCount} )</span>
-                </span>
+              key={index}
+              onClick={handleClick}
+              className={classNames(
+                classes.listedItem,
+                classes.listedItemCheckbox
               )}
-            </div>
-          ) : (
-            <></>
-          )}
-          {type === FilterType.CHECKBOX_WITH_RANGE &&
-            (showRangeInput ? (
-              <div
-                className={classNames(
-                  classesLayout.flexAlignCenter,
-                  classesSpacing.paddingTopSmall
-                )}
-              >
-                <FormattedMessage id={Message.FROM} />
-                :&nbsp;&nbsp;&nbsp;
-                <TextField
-                  type="number"
-                  onChange={(value: string | null) =>
-                    updateRange({ ...range, from: value })
-                  }
-                  value={range.from}
-                />
-                &nbsp;&nbsp;&nbsp;
-                <FormattedMessage id={Message.TO} />
-                :&nbsp;&nbsp;&nbsp;
-                <TextField
-                  type="number"
-                  onChange={(value: string | null) =>
-                    updateRange({ ...range, to: value })
-                  }
-                  value={range.to}
-                />
-                <IconButton
-                  color="secondary"
+            >
+              {type === FacetType.ENUM_SINGLE ? (
+                <Radio
+                  className={classes.radioButton}
                   size="small"
-                  onClick={() => {
-                    setShowRangeInput(false);
-                    updateRange({ from: null, to: null });
-                  }}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </div>
-            ) : (
-              <div
-                className={classes.bottomText}
-                onClick={() => setShowRangeInput(true)}
-              >
-                <FormattedMessage id={Message.ENTER_THE_RANGE} />
-              </div>
-            ))}
-        </>
+                  color="primary"
+                  checked={isChecked}
+                  onChange={handleClick}
+                />
+              ) : (
+                <Checkbox value={isChecked} onChange={handleClick} />
+              )}
+              <Tooltip title={tooltip}>
+                <div>{label}</div>
+              </Tooltip>
+            </div>
+          );
+        })}
+      </div>
+      {!inDialog && displayedItems && options.length > displayCount ? (
+        <div
+          className={classes.bottomText}
+          onClick={() => setShowAll((prev) => !prev)}
+        >
+          {showAll ? (
+            <FormattedMessage id={Message.SHOW_LESS} />
+          ) : (
+            <TextWithCount
+              text={<FormattedMessage id={Message.SHOW_MORE} />}
+              count={options.length - displayCount}
+            />
+          )}
+        </div>
+      ) : (
+        <></>
       )}
     </div>
   );

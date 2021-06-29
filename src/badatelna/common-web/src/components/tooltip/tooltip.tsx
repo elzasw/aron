@@ -25,7 +25,13 @@ export function Tooltip({
     return (
       <MuiTooltip
         interactive
-        title={title !== undefined ? <Typography>{title}</Typography> : ''}
+        title={
+          title !== undefined ? (
+            <Typography component="div">{title}</Typography>
+          ) : (
+            ''
+          )
+        }
         classes={classes}
         placement={placement}
       >
@@ -39,7 +45,7 @@ export function Tooltip({
         title={
           title !== undefined ? (
             <ClickAwayListener onClickAway={closeTooltip}>
-              <Typography>{title}</Typography>
+              <Typography component="div">{title}</Typography>
             </ClickAwayListener>
           ) : (
             ''

@@ -3,6 +3,7 @@ import { noop, stubTrue, stubFalse } from 'lodash';
 import { FormattedMessage } from 'react-intl';
 import ButtonGroup from '@material-ui/core/ButtonGroup/ButtonGroup';
 import RefreshIcon from '@material-ui/icons/Refresh';
+import LinkIcon from '@material-ui/icons/Link';
 import PlaylistAddCheckIcon from '@material-ui/icons/PlaylistAddCheck';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import EditOutlinedIcon from '@material-ui/icons/EditOutlined';
@@ -17,6 +18,7 @@ import {
   DetailHandle,
 } from './detail-types';
 import { ConfirmDialog } from 'composite/confirm-dialog/confirm-dialog';
+import { ShareDialog } from 'composite/share-dialog/share-dialog';
 import { DialogHandle } from 'components/dialog/dialog-types';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { DomainObject } from 'common/common-types';
@@ -30,6 +32,7 @@ export function DetailToolbar<OBJECT extends DomainObject>({
   const classes = useStyles();
   const { mode, source } = useContext<DetailHandle<OBJECT>>(DetailContext);
   const confirmDeleteDialog = useRef<DialogHandle>(null);
+  const shareDeleteDialog = useRef<DialogHandle>(null);
 
   const {
     refresh,
@@ -45,9 +48,27 @@ export function DetailToolbar<OBJECT extends DomainObject>({
     confirmDeleteDialog.current?.open();
   });
 
+  const handleShare = useEventCallback(() => {
+    shareDeleteDialog.current?.open();
+  });
+
   const handleNew = useEventCallback(() => {
     startNew();
   });
+
+  const showSaveButton =
+    (showButton({
+      button: 'EDIT',
+      source,
+    }) &&
+      mode === DetailMode.EDIT) ||
+    (showButton({
+      button: 'NEW',
+      source,
+    }) &&
+      mode === DetailMode.NEW);
+
+  const showCloseButton = showSaveButton;
 
   return (
     <>
@@ -69,6 +90,18 @@ export function DetailToolbar<OBJECT extends DomainObject>({
                   />
                 }
                 onClick={refresh}
+              />
+            )}
+            {mode === DetailMode.VIEW && (
+              <DetailToolbarButton
+                label={<LinkIcon />}
+                tooltip={
+                  <FormattedMessage
+                    id="EAS_DETAIL_TOOLTIP_SHARE"
+                    defaultMessage="Získat odkaz ke sdílení"
+                  />
+                }
+                onClick={handleShare}
               />
             )}
             <DetailToolbarButton
@@ -168,7 +201,7 @@ export function DetailToolbar<OBJECT extends DomainObject>({
                 type={DetailToolbarButtonType.SECONDARY}
               />
             )}
-          {(mode === DetailMode.NEW || mode === DetailMode.EDIT) && (
+          {showSaveButton && (
             <DetailToolbarButton
               label={
                 <FormattedMessage
@@ -186,7 +219,7 @@ export function DetailToolbar<OBJECT extends DomainObject>({
               type={DetailToolbarButtonType.PRIMARY}
             />
           )}
-          {(mode === DetailMode.NEW || mode === DetailMode.EDIT) && (
+          {showCloseButton && (
             <DetailToolbarButton
               label={
                 <FormattedMessage
@@ -223,6 +256,7 @@ export function DetailToolbar<OBJECT extends DomainObject>({
           />
         }
       />
+      <ShareDialog ref={shareDeleteDialog} onCancel={noop} />
     </>
   );
 }

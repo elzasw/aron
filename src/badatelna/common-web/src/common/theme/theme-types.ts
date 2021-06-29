@@ -9,4 +9,7 @@ export interface ThemeProviderProps {
   secondary?: ColorIntention;
   editing: string;
   highlight: string;
+  fontSize?: number;
+  fontFamily?: string[];
+  radius?: number;
 }

@@ -21,13 +21,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)
-public class AnyKeywordFieldFilter extends AbstractFilter {
-
-    /**
-     * Value used in comparison
-     */
-    @NotBlank
-    protected String value;
+public class AnyKeywordFieldFilter extends ValueFilter {
 
     AnyKeywordFieldFilter() {
         super(FilterOperation.AKF);
@@ -35,8 +29,7 @@ public class AnyKeywordFieldFilter extends AbstractFilter {
 
     @Builder
     public AnyKeywordFieldFilter(@NotBlank String value) {
-        super(FilterOperation.AKF);
-        this.value = value;
+        super(FilterOperation.AKF, value);
     }
 
     @Override

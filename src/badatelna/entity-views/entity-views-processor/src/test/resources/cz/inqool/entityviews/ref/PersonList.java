@@ -29,7 +29,7 @@ public class PersonList implements cz.inqool.entityviews.View {
         entity.firstName = view.firstName;
         entity.address = cz.inqool.entityviews.ref.AddressRef.toEntity(view.address);
         entity.passport = cz.inqool.entityviews.ref.PassportRef.toEntity(view.passport);
-        entity.names = cz.inqool.entityviews.ref.NameRef.toEntities(view.names, java.util.HashSet::new);
+        entity.names = cz.inqool.entityviews.ref.NameRef.toEntities(view.names, java.util.LinkedHashSet::new);
     }
 
     public static Person toEntity(PersonList view) {
@@ -59,7 +59,7 @@ public class PersonList implements cz.inqool.entityviews.View {
         view.firstName = entity.firstName;
         view.address = cz.inqool.entityviews.ref.AddressRef.toRef(entity.address);
         view.passport = cz.inqool.entityviews.ref.PassportRef.toRef(entity.passport);
-        view.names = cz.inqool.entityviews.ref.NameRef.toRefs(entity.names, java.util.HashSet::new);
+        view.names = cz.inqool.entityviews.ref.NameRef.toRefs(entity.names, java.util.LinkedHashSet::new);
     }
 
     public static PersonList toView(Person entity) {

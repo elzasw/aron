@@ -6,8 +6,17 @@ export enum ApiUrl {
   APU_PART_ITEM_TYPE = '/apuPartItemType',
   FACETS = '/facets',
   FILE = '/file',
+  HELP = '/help',
   ME = '/me',
   NEWS = '/news',
   RELATION = '/relation',
   FAVORITE_QUERY = '/favoriteQuery',
+  PAGE_TEMPLATE = '/pageTemplate',
+  PAGE_TEMPLATE_LOGO = '/pageTemplate/logo',
+  PAGE_TEMPLATE_TOP_IMAGE = '/pageTemplate/topImage',
+}
+
+export enum SortMode {
+  MIN = 'MIN',
+  MAX = 'MAX',
 }

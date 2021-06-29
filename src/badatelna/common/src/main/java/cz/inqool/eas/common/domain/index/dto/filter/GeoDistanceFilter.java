@@ -17,7 +17,7 @@ import javax.validation.constraints.PositiveOrZero;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class GeoDistanceFilter extends GeoFilter {
+public class GeoDistanceFilter extends GeoFilter<GeoDistanceFilter> {
 
     @NotNull
     private GeoPoint point;
@@ -27,18 +27,18 @@ public class GeoDistanceFilter extends GeoFilter {
     private double distance;
 
     @NotNull
-    private DistanceUnit distanceUnit;
+    private DistanceUnit unit;
 
 
     GeoDistanceFilter() {
         super(FilterOperation.GEO_DISTANCE);
     }
 
-    public GeoDistanceFilter(@NotNull String field, @NotNull GeoPoint point, @NotNull @PositiveOrZero double distance, @NotNull DistanceUnit distanceUnit) {
+    public GeoDistanceFilter(@NotNull String field, @NotNull GeoPoint point, @NotNull @PositiveOrZero double distance, @NotNull DistanceUnit unit) {
         super(FilterOperation.GEO_DISTANCE, field);
         this.point = point;
         this.distance = distance;
-        this.distanceUnit = distanceUnit;
+        this.unit = unit;
     }
 
 
@@ -48,6 +48,6 @@ public class GeoDistanceFilter extends GeoFilter {
 
         return QueryBuilders.geoDistanceQuery(leafNode.getElasticSearchPath())
                 .point(point)
-                .distance(distance, distanceUnit);
+                .distance(distance, unit);
     }
 }

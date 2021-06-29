@@ -1,12 +1,15 @@
 package cz.inqool.eas.common.security.form;
 
 import cz.inqool.eas.common.security.User;
+import cz.inqool.eas.common.security.form.twoFactor.TwoFactorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.AbstractUserDetailsAuthenticationProvider;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,10 +17,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
 
 public abstract class FormAuthenticationProvider extends AbstractUserDetailsAuthenticationProvider {
-    private PasswordEncoder passwordEncoder;
+    protected PasswordEncoder passwordEncoder;
+    protected Boolean useTwoFactorAuth;
+    protected TwoFactorService twoFactorService;
 
     @Override
-    protected final void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+    protected void additionalAuthenticationChecks(UserDetails userDetails, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
         String username = (String)authentication.getPrincipal();
         String password = (String)authentication.getCredentials();
 
@@ -30,6 +35,11 @@ public abstract class FormAuthenticationProvider extends AbstractUserDetailsAuth
             if (result != Boolean.TRUE) {
                 throw new BadCredentialsException("Invalid password supplied");
             }
+
+            if (useTwoFactorAuth && userDetails.getAuthorities().stream()
+                    .anyMatch(ga -> ga.getAuthority().equals(TwoFactorService.TWO_FACTOR_PRE_AUTH_PERMISSION))) {
+                twoFactorService.createFor(user.getId());
+            }
         } catch (BadCredentialsException e) {
             throw e;
         } catch (Exception e) {
@@ -38,17 +48,43 @@ public abstract class FormAuthenticationProvider extends AbstractUserDetailsAuth
     }
 
     @Override
-    protected final UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
-        User user = findUser(username);
-        notNull(user, () -> new UsernameNotFoundException(username));
+    protected UserDetails retrieveUser(String username, UsernamePasswordAuthenticationToken authentication) throws AuthenticationException {
+        User user;
+        if (useTwoFactorAuth) {
+            user = findUser(username);
+            notNull(user, () -> new UsernameNotFoundException(username));
+            //add permission to be able to challenge secret code
+            user.setAuthorities(AuthorityUtils.createAuthorityList(TwoFactorService.TWO_FACTOR_PRE_AUTH_PERMISSION));
+        } else {
+            user = findUserWithAuthorities(username);
+            notNull(user, () -> new UsernameNotFoundException(username));
+        }
 
         return user;
     }
 
+    /**
+     * Should find user by given name WITHOUT authorities
+     */
     public abstract User findUser(String username);
+
+    /**
+     * Should find user by given name WITH authorities
+     */
+    public User findUserWithAuthorities(String username) {
+        return findUser(username);
+    }
 
     @Autowired
     public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
+    }
+    @Autowired
+    public void setUseTwoFactorAuth(@Value("${eas.security.form.two-factor.enabled:false}") Boolean useTwoFactorAuth) {
+        this.useTwoFactorAuth = useTwoFactorAuth;
+    }
+    @Autowired(required = false)
+    public void setTwoFactorService(TwoFactorService twoFactorService) {
+        this.twoFactorService = twoFactorService;
     }
 }

@@ -7,7 +7,8 @@ import { DomainObject, ApiFilterOperation } from 'common/common-types';
 import { isArray } from 'lodash';
 
 export function useFilterAutocompleteCellFactory<OBJECT extends DomainObject>(
-  dataHook: () => AutocompleteSource<OBJECT>
+  dataHook: () => AutocompleteSource<OBJECT>,
+  labelMapper?: (option: OBJECT) => string
 ) {
   return useMemo(
     () =>
@@ -43,6 +44,7 @@ export function useFilterAutocompleteCellFactory<OBJECT extends DomainObject>(
           <Autocomplete
             disabled={disabled}
             source={source}
+            labelMapper={labelMapper}
             value={state.object}
             onChange={handleChange}
           />

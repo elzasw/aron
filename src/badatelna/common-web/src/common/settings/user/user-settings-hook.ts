@@ -1,11 +1,20 @@
 import { useMemo, useContext, useState, useCallback } from 'react';
+import { get, set } from 'lodash';
 import { UserSettingsContext } from './user-settings-context';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { useIntl } from 'react-intl';
 import { SnackbarContext } from 'composite/snackbar/snackbar-context';
 import { SnackbarVariant } from 'composite/snackbar/snackbar-types';
-import { fetchSettings, updateSettings } from './user-settings-api';
-import { UserSettings, TableSettings } from './user-settings-types';
+import {
+  fetchSettings,
+  updateSettings,
+  clearSettings,
+} from './user-settings-api';
+import {
+  UserSettings,
+  TableSettings,
+  CustomSettings,
+} from './user-settings-types';
 
 export function useUserSettings(url: string) {
   const intl = useIntl();
@@ -70,6 +79,31 @@ export function useUserSettings(url: string) {
     }
   });
 
+  const clear = useEventCallback(async () => {
+    try {
+      await clearSettings(url).none();
+
+      await init();
+
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      if (err.name !== 'AbortError') {
+        const message = intl.formatMessage(
+          {
+            id: 'EAS_USER_SETTINGS_MSG_CLEAR_ERROR',
+            defaultMessage: 'Chyba mazání nastavení: {detail}',
+          },
+          { detail: err.message }
+        );
+
+        showSnackbar(message, SnackbarVariant.ERROR);
+
+        throw err;
+      }
+    }
+  });
+
   const init = useEventCallback(async () => {
     const settings = await load();
 
@@ -110,13 +144,53 @@ export function useUserSettings(url: string) {
     }
   );
 
+  const getCustomSettings = useCallback(
+    (key: string, version: number) => {
+      const customSettings = get(settings, key);
+
+      if (customSettings !== undefined && version === customSettings.version) {
+        return customSettings as CustomSettings;
+      }
+
+      return undefined;
+    },
+    [settings]
+  );
+
+  const setCustomSettings = useEventCallback(
+    (key: string, customSettings: CustomSettings) => {
+      if (settings === undefined) {
+        return;
+      }
+
+      const newUserSettings = {
+        ...settings,
+      };
+      set(newUserSettings, key, customSettings);
+
+      setSettings(newUserSettings);
+
+      save(newUserSettings);
+    }
+  );
+
   const context: UserSettingsContext = useMemo(
     () => ({
       init,
       getTableSettings,
       setTableSettings,
+      getCustomSettings,
+      setCustomSettings,
+      clear,
     }),
-    [getTableSettings, init, setTableSettings]
+    [
+      init,
+      clear,
+      getTableSettings,
+      setTableSettings,
+      getCustomSettings,
+      setCustomSettings,
+    ]
   );
 
   return { context, loading, settings };

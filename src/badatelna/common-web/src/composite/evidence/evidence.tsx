@@ -5,38 +5,33 @@ import { Table } from 'composite/table/table';
 import { EvidenceProps } from './evidence-types';
 import { useEvidence } from './evidence-hook';
 import { useStyles } from './evidence-styles';
-import { EvidenceSwitcher } from './evidence-switcher';
 import { useScreenMode } from './hook/screen-mode-hook';
 import { Detail } from 'composite/detail/detail';
 import { useEvidenceTableToolbar } from './hook/toolbar-hook';
 import { EvidenceContext } from './evidence-context';
+import { SplitScreen } from 'components/split-screen/split-screen';
 
 export function Evidence<OBJECT extends DomainObject>(
   props: EvidenceProps<OBJECT>
 ) {
-  const {
-    tableProps,
-    detailProps,
-    SwitcherComponent = EvidenceSwitcher,
-  } = props;
+  const { tableProps, detailProps, switcherProps } = props;
 
   const {
     columns,
     FieldsComponent,
     tableSource,
     crudSource,
+    splitScreenRef,
     tableRef,
     detailRef,
     handleActiveRowChange,
     handleDetailPersisted,
   } = useEvidence(props);
 
-  const {
-    screenMode,
-    changeScreenMode,
-    tableStyle,
-    detailStyle,
-  } = useScreenMode();
+  useScreenMode({
+    splitScreenRef,
+    hideMenuTools: switcherProps?.hideMenuTools,
+  });
 
   const { BeforeToolbar } = useEvidenceTableToolbar({ tableRef });
 
@@ -56,7 +51,11 @@ export function Evidence<OBJECT extends DomainObject>(
         <AutoSizer disableWidth={true}>
           {({ height }) => (
             <div style={{ height, display: 'flex' }}>
-              <div style={tableStyle}>
+              <SplitScreen
+                ref={splitScreenRef}
+                rightLabel={switcherProps?.rightLabel}
+                leftLabel={switcherProps?.leftLabel}
+              >
                 <Table
                   tableId={props.identifier + '_TABLE'}
                   version={props.version}
@@ -67,8 +66,6 @@ export function Evidence<OBJECT extends DomainObject>(
                   height={height}
                   onActiveChange={handleActiveRowChange}
                 />
-              </div>
-              <div style={{ ...detailStyle, height: '100%' }}>
                 <Detail
                   toolbarProps={{ before: BeforeToolbar }}
                   ref={detailRef}
@@ -77,11 +74,7 @@ export function Evidence<OBJECT extends DomainObject>(
                   source={crudSource}
                   onPersisted={handleDetailPersisted}
                 />
-              </div>
-              <SwitcherComponent
-                screenMode={screenMode}
-                onChange={changeScreenMode}
-              />
+              </SplitScreen>
             </div>
           )}
         </AutoSizer>

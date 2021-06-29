@@ -13,8 +13,9 @@ public class ViewContext {
     private TypeModel type;
     private boolean useRef;
     private boolean useOneWay;
+    private String oneWayTarget;
 
-    public static ViewContext EMPTY_VIEW = new ViewContext(null, null, false, false);
+    public static ViewContext EMPTY_VIEW = new ViewContext(null, null, false, false, null);
 
     public boolean shouldSkip() {
         return name != null && name.equals(ViewableMapping.SKIP);

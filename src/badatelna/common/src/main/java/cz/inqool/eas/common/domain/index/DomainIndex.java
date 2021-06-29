@@ -24,6 +24,8 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.core.CountRequest;
+import org.elasticsearch.client.core.CountResponse;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
@@ -45,7 +47,6 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 
 import javax.validation.constraints.NotNull;
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,9 +58,9 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static cz.inqool.eas.common.domain.index.QueryUtils.andQuery;
+import static cz.inqool.eas.common.domain.index.QueryUtils.orQuery;
 import static cz.inqool.eas.common.domain.store.AggregationUtils.processAggregations;
-import static cz.inqool.eas.common.utils.AssertionUtils.gte;
-import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
+import static cz.inqool.eas.common.utils.AssertionUtils.*;
 import static org.springframework.data.elasticsearch.core.document.Document.parse;
 
 /**
@@ -81,16 +82,11 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
 
     private IndexObjectFields indexObjectFields;
 
-    private Resource settings;
+    protected Resource settings;
 
     public DomainIndex(Class<INDEXED> indexedType) {
         this.indexedType = indexedType;
         this.ELASTIC_SIZE_LIMIT = 10000;
-    }
-
-    @PostConstruct
-    public void postInit() {
-        analyzeIndexedClass();
     }
 
     /**
@@ -235,6 +231,40 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
     }
 
     /**
+     * Return count of all objects that respect the selected {@link Params}
+     *
+     * @param params Parameters to comply with
+     * @return count
+     */
+    public long countByParams(@NotNull Params params) {
+        QueryBuilder queryBuilder = toQueryBuilder(params);
+        if (queryBuilder == null) {
+            queryBuilder = orQuery(List.of());
+        }
+        return count(queryBuilder);
+    }
+
+    /**
+     * Return count of all objects that satisfies given {@code queryBuilder}
+     *
+     * @param queryBuilder queryBuilder to comply with
+     * @return count
+     */
+    private long count(QueryBuilder queryBuilder) {
+        CountRequest request = createCountRequest(queryBuilder);
+        if (log.isTraceEnabled()) {
+            log.trace("ES query:\n{}", request.query().toString());
+        }
+
+        CountResponse response = execute(client -> client.count(request, RequestOptions.DEFAULT));
+        if (log.isTraceEnabled()) {
+            log.trace("ES response:\n{}", response.toString());
+        }
+
+        return response.getCount();
+    }
+
+    /**
      * Index object implementing {@link Domain} into elasticsearch
      *
      * @param obj Object to be indexed
@@ -356,14 +386,24 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
                 .source(builder);
     }
 
+    private CountRequest createCountRequest(QueryBuilder builder) {
+        return new CountRequest()
+                .indices(getIndexName())
+                .query(builder);
+    }
+
     protected IndexRequest createIndexRequest(INDEXED obj) {
+        org.springframework.data.elasticsearch.core.document.Document document = converter.mapObject(obj);
+
+        customIndexHook(document, obj);
+
         return new IndexRequest().
                 index(getIndexName()).
                 id(obj.getId()).
-                source(converter.mapObject(obj));
+                source(document);
     }
 
-    private BulkRequest createBulkIndexRequest(Collection<? extends INDEXED> objects) {
+    protected BulkRequest createBulkIndexRequest(Collection<? extends INDEXED> objects) {
         BulkRequest request = new BulkRequest();
         objects.stream()
                 .map(this::createIndexRequest)
@@ -396,19 +436,30 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
         String mapping = new MappingBuilder(converter).
                 buildPropertyMapping(indexedType);
 
+        org.springframework.data.elasticsearch.core.document.Document document = parse(mapping);
+
+        customMappingHook(document);
+
         return new PutMappingRequest(getIndexName()).
-                source(parse(mapping));
+                source(document);
     }
 
     /**
      * Analyze indexed object class.
      */
-    private void analyzeIndexedClass() {
-        indexObjectFields = IndexObjectParser.parse(indexedType);
+    public void initializeIndexedFields() {
+        IndexObjectFields fields = new IndexObjectFields();
+
+        IndexObjectParser.parse(indexedType, fields);
+
+        customFieldsHook(fields);
+
         if (this instanceof DynamicIndex) {
             Map<String, IndexFieldNode> dynamicFields = ((DynamicIndex) this).getDynamicFields();
-            indexObjectFields.putAll(dynamicFields);
+            fields.putAll(dynamicFields);
         }
+
+        this.setIndexObjectFields(fields);
     }
 
     /**
@@ -441,20 +492,14 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
         builder.size(size);
         builder.trackTotalHits(true);
 
-        if (params.getFilters() != null && !params.getFilters().isEmpty()) {
-            List<QueryBuilder> filterList = params.getFilters().stream()
-                    .map(filter -> filter.toQueryBuilder(indexObjectFields))
-                    .collect(Collectors.toList());
-
-            builder.query((filterList.size() > 1) ? andQuery(filterList) : filterList.get(0));
-        }
+        ifPresent(toQueryBuilder(params), builder::query);
 
         if (params.getSort() != null) {
             for (Sort sort : params.getSort()) {
                 if (params.getFlipDirection()) {
                     sort = sort.withReversedOrder();
                 }
-                builder.sort(sort.toSortBuilder(indexObjectFields));
+                builder.sort(sort.toSortBuilder(this.getIndexObjectFields()));
             }
         }
 
@@ -472,8 +517,26 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
 
         if (params.getAggregations() != null) {
             for (Aggregation aggregation : params.getAggregations()) {
-                builder.aggregation(aggregation.toAggregationBuilder(indexObjectFields));
+                builder.aggregation(aggregation.toAggregationBuilder(this.getIndexObjectFields()));
             }
+        }
+    }
+
+    /**
+     * Create a QueryBuilder from filters on given params
+     *
+     * @param params Params
+     * @return query builder or {@code null} if no filter is present
+     */
+    private QueryBuilder toQueryBuilder(Params params) {
+        if (params.getFilters() != null && !params.getFilters().isEmpty()) {
+            List<QueryBuilder> filterList = params.getFilters().stream()
+                    .map(filter -> filter.toQueryBuilder(this.getIndexObjectFields()))
+                    .collect(Collectors.toList());
+
+            return (filterList.size() > 1) ? andQuery(filterList) : filterList.get(0);
+        } else {
+            return null;
         }
     }
 
@@ -508,6 +571,38 @@ public class DomainIndex<ROOT extends Projectable<ROOT>, PROJECTED extends Proje
         result.setAggregations(processAggregations(response.getAggregations()));
 
         return result;
+    }
+
+    /**
+     * Returns prepared object fields.
+     */
+    protected IndexObjectFields getIndexObjectFields() {
+        return indexObjectFields;
+    }
+
+    /**
+     * Sets prepared object fields.
+     */
+    protected void setIndexObjectFields(IndexObjectFields fields) {
+        this.indexObjectFields = fields;
+    }
+
+    /**
+     * Allows to add/modify custom mapping for entity.
+     */
+    protected void customMappingHook(org.springframework.data.elasticsearch.core.document.Document document) {
+    }
+
+    /**
+     * Allows to add/modify custom fields for entity.
+     */
+    protected void customFieldsHook(IndexObjectFields fields) {
+    }
+
+    /**
+     * Allows to add/modify custom index request for entity.
+     */
+    protected void customIndexHook(org.springframework.data.elasticsearch.core.document.Document document, INDEXED obj) {
     }
 
     @Autowired

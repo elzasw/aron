@@ -15,6 +15,7 @@ import { useStyles } from './detail-styles';
 import { Form } from 'composite/form/form';
 import { FormPanel } from 'composite/form/fields/form-panel';
 import { FormattedMessage } from 'react-intl';
+import { EmptyComponent } from 'utils/empty-component';
 
 // eslint-disable-next-line react/display-name
 export const Detail = memo(
@@ -22,7 +23,10 @@ export const Detail = memo(
     options: DetailProps<OBJECT>,
     ref: Ref<DetailHandle<OBJECT>>
   ) {
-    const { props, context, formRef, editing } = useDetail(options, ref);
+    const { props, context, formRef, detailContainerRef, editing } = useDetail(
+      options,
+      ref
+    );
     const {
       ToolbarComponent,
       ContainerComponent,
@@ -43,7 +47,7 @@ export const Detail = memo(
             </div>
           )}
           <ToolbarComponent {...toolbarProps} />
-          <div className={classes.wrapper}>
+          <div ref={detailContainerRef} className={classes.wrapper}>
             <Form<OBJECT>
               ref={formRef}
               initialValues={{} as any}
@@ -53,7 +57,10 @@ export const Detail = memo(
             >
               <ContainerComponent>
                 <FieldsComponent />
-                {GeneralFieldsComponent !== undefined && (
+                {!(
+                  GeneralFieldsComponent === EmptyComponent ||
+                  GeneralFieldsComponent === undefined
+                ) && (
                   <FormPanel
                     label={
                       <FormattedMessage

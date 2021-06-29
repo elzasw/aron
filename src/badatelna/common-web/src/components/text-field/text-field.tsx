@@ -34,6 +34,7 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
       error = false,
       type = 'text',
       autocomplete,
+      inputProps,
     }: TextFieldProps,
     ref
   ) {
@@ -85,6 +86,7 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
         inputProps={{
           form,
           ref: inputRef,
+          ...inputProps,
         }}
         className={clsx({ [classes.disabled]: disabled })}
         id={id}

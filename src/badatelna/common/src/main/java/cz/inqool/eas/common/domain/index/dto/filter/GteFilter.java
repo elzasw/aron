@@ -12,7 +12,7 @@ import javax.validation.constraints.NotNull;
  * Filter representing the 'greater-than-or-equal' filter condition on given {@link FieldFilter#field}.
  */
 @EqualsAndHashCode(callSuper = true)
-public class GteFilter extends RangeFilter<GteFilter> {
+public class GteFilter extends ComparisonFilter<GteFilter> {
 
     GteFilter() {
         super(FilterOperation.GTE);

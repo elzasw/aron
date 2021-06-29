@@ -6,6 +6,7 @@ import React, {
   MouseEvent,
 } from 'react';
 import clsx from 'clsx';
+import { unstable_batchedUpdates } from 'react-dom';
 import { useDebouncedCallback } from 'use-debounce';
 import ArrowDropDownIcon from '@material-ui/icons/ArrowDropDown';
 import IconButton from '@material-ui/core/IconButton';
@@ -21,6 +22,7 @@ import { InfiniteList } from 'components/infinite-list/infinite-list';
 import { AutocompleteProps } from './autocomplete-types';
 import { useStyles } from './autocomplate-styles';
 import { InfiniteListHandle } from 'components/infinite-list/infinite-list-types';
+import { AutocompleteItem } from './autocomplete-item';
 
 export function Autocomplete<OPTION extends DomainObject>({
   disabled,
@@ -31,18 +33,24 @@ export function Autocomplete<OPTION extends DomainObject>({
   multiple = false,
   labelMapper = (option: OPTION) => (option as any).name, // fixme: memorize
   tooltipMapper,
+  ItemComponent = AutocompleteItem,
   showTooltip,
+  DisabledComponent = TextField,
 }: AutocompleteProps<OPTION>) {
   // fix undefined value
   value = value ?? null;
   const singleValue = value as OPTION;
   const multipleValue = (value as OPTION[]) ?? [];
   const multipleIds = multiple ? multipleValue.map((item) => item.id) : [];
-  const singleLabel = singleValue != null ? labelMapper(singleValue) : '';
-  const multiLabel = multiple ? multipleValue.map(labelMapper).join(', ') : '';
+  const singleLabel =
+    singleValue != null ? labelMapper(singleValue, 'FIELD') : '';
+  const multiLabel = multiple
+    ? multipleValue.map((val) => labelMapper(val, 'FIELD')).join(', ')
+    : '';
 
   const {
     paper,
+    paperItem,
     popper,
     icon,
     iconOpened,
@@ -74,21 +82,31 @@ export function Autocomplete<OPTION extends DomainObject>({
       onChange(option);
       setPopupOpen(false);
 
-      const value = labelMapper(option);
+      const value = labelMapper(option, 'FIELD');
       setTextValue(value);
       setSearchQuery(value);
     }
   });
 
-  const handleClickAway = useEventCallback(() => {
+  const error =
+    !multiple &&
+    textValue !== (value !== null ? labelMapper(singleValue, 'FIELD') : null);
+
+  const handleClickAway = useEventCallback((e: MouseEvent<any>) => {
     setPopupOpen(false);
+
+    if (error) {
+      handleClear(e);
+    }
   });
 
   const [setSearchQuery] = useDebouncedCallback((value: string | null) => {
-    source.setSearchQuery(value ?? '');
-    source.reset();
+    unstable_batchedUpdates(() => {
+      source.reset();
+      source.setSearchQuery(value ?? '');
 
-    infiniteList.current?.reset();
+      infiniteList.current?.reset();
+    });
   }, 500);
 
   const handleChange = useEventCallback((value: string | null) => {
@@ -96,7 +114,7 @@ export function Autocomplete<OPTION extends DomainObject>({
     setSearchQuery(value);
   });
 
-  const handleClear = useEventCallback((e: MouseEvent) => {
+  const handleClear = useEventCallback((e: MouseEvent<any>) => {
     e.stopPropagation();
     onChange(null);
     setTextValue(null);
@@ -109,7 +127,12 @@ export function Autocomplete<OPTION extends DomainObject>({
 
   const handleClick = useEventCallback(() => {
     if (!disabled) {
-      setSearchQuery(textValue);
+      unstable_batchedUpdates(() => {
+        source.reset();
+        source.setSearchQuery(textValue ?? '');
+
+        infiniteList.current?.reset();
+      });
       setPopupOpen(true);
     }
   });
@@ -139,14 +162,12 @@ export function Autocomplete<OPTION extends DomainObject>({
 
   useEffect(() => {
     if (!multiple) {
-      setTextValue(singleValue !== null ? labelMapper(singleValue) : null);
+      setTextValue(
+        singleValue !== null ? labelMapper(singleValue, 'FIELD') : null
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [singleValue, multiple]);
-
-  const error =
-    !multiple &&
-    textValue !== (value !== null ? labelMapper(singleValue) : null);
 
   return (
     <>
@@ -156,7 +177,7 @@ export function Autocomplete<OPTION extends DomainObject>({
         })}
       >
         {disabled ? (
-          <TextField
+          <DisabledComponent
             disabled={true}
             value={multiple ? multiLabel : singleLabel}
           />
@@ -195,7 +216,7 @@ export function Autocomplete<OPTION extends DomainObject>({
                 {multipleValue.map((value) => (
                   <Chip
                     key={value.id}
-                    label={labelMapper(value)}
+                    label={labelMapper(value, 'FIELD')}
                     className={chip}
                     variant="outlined"
                     size="small"
@@ -224,6 +245,19 @@ export function Autocomplete<OPTION extends DomainObject>({
                 showTooltip={showTooltip}
                 tooltipMapper={tooltipMapper}
                 selectedIds={multipleIds}
+                labelMapper={(item, index) => (
+                  <div
+                    style={{
+                      backgroundColor:
+                        index % 2 === 0 ? '#ededed55' : 'inherit',
+                    }}
+                    className={paperItem}
+                  >
+                    <ItemComponent item={item}>
+                      {labelMapper(item, 'OPTION')}
+                    </ItemComponent>
+                  </div>
+                )}
               />
             </Paper>
           </ClickAwayListener>

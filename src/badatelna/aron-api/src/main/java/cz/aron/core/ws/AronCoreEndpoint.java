@@ -24,12 +24,12 @@ public class AronCoreEndpoint {
     @Inject private ApuSourceStore apuSourceStore;
     @Inject private ApuStore apuStore;
 
-    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteApuSourcesRequest")
+    @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteApuSources")
     @ResponsePayload
     @Transactional
     public void deleteApuSources(@RequestPayload UuidList request) {
         for (String sourceId : request.getUuid()) {
-            List<String> apusToDelete = apuStore.findBySourceId(sourceId);
+            List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(sourceId);
             apuRepository.delete(apusToDelete);
             apuSourceStore.delete(sourceId);
         }

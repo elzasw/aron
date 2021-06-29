@@ -1,7 +1,9 @@
-import { ComponentType, ReactNode } from 'react';
+import { ComponentType, ReactNode, Dispatch, SetStateAction } from 'react';
 import * as Yup from 'yup';
 import { CrudSource, DomainObject } from 'common/common-types';
-import { FormHandle } from 'composite/form/form-types';
+import { FormHandle, ValidationError } from 'composite/form/form-types';
+import { AbortableFetch } from 'utils/abortable-fetch';
+import { Callback } from 'composite/prompt/prompt-types';
 
 export type DetailToolbarButtonName = 'NEW' | 'EDIT' | 'REMOVE';
 
@@ -54,6 +56,13 @@ export interface DetailProps<OBJECT extends DomainObject> {
    * Default: false
    */
   showErrorPanel?: boolean;
+
+  /**
+   * Resets scrollbar position
+   *
+   * Default: false
+   */
+  resetScrollbarPosition?: boolean;
 }
 
 export type RefreshListener = () => void;
@@ -62,6 +71,7 @@ export interface DetailHandle<OBJECT extends DomainObject> {
   source: CrudSource<OBJECT>;
   isExisting: boolean;
   mode: DetailMode;
+  setMode: Dispatch<SetStateAction<DetailMode>>;
   formRef?: FormHandle<OBJECT> | null;
   showErrorPanel: boolean;
 
@@ -77,7 +87,7 @@ export interface DetailHandle<OBJECT extends DomainObject> {
   startNew: (data?: OBJECT) => void;
   startEditing: () => void;
   cancelEditing: () => void;
-  validate: () => void;
+  validate: () => Promise<ValidationError[]>;
   save: () => void;
   del: () => void;
 
@@ -122,6 +132,11 @@ export interface DetailToolbarButtonProps {
   onClick: () => void;
 
   /**
+   * Hypertext reference.
+   */
+  href?: string;
+
+  /**
    * Optional tooltip.
    */
   tooltip?: ReactNode;
@@ -145,7 +160,11 @@ export interface DetailToolbarButtonProps {
 export interface DetailToolbarButtonMenuItem {
   label: ReactNode;
   tooltip?: ReactNode;
+  Icon?: ReactNode;
+  divider?: boolean;
+  warning?: boolean;
   onClick: () => void;
+  href?: string;
 }
 
 /**
@@ -186,4 +205,64 @@ export enum DetailMode {
   VIEW,
   EDIT,
   NEW,
+}
+
+export interface DetailToolbarButtonActionProps<T = unknown> {
+  promptKey: string;
+  buttonLabel: ReactNode;
+  buttonTooltip?: ReactNode;
+
+  buttonDisabled?: boolean;
+
+  dialogTitle: string;
+  dialogText: string;
+  dialogWidth?: number;
+
+  FormFields?: ComponentType<{ onConfirm?: Callback; onCancel?: () => void }>;
+  formValidationSchema?: Yup.Schema<T>;
+  formInitialValues?: T;
+
+  successMessage?: string;
+  errorMessage?: string;
+
+  apiCall: (id: string, formData?: any) => AbortableFetch;
+
+  /**
+   * Success callback.
+   *
+   * default: refresh CRUD source and call onPersisted from DetailContext.
+   */
+  onSuccess?: () => Promise<void>;
+
+  onError?: (err: Error) => Promise<void>;
+
+  /**
+   * Callback handling the JSON result of apiCall.
+   */
+  onResult?: (result: any) => Promise<any>;
+
+  /**
+   * Show the action button only in this views.
+   *
+   * Default: VIEW
+   */
+  modes?: DetailMode[];
+
+  /**
+   * Callback called to determine if the button should be shown.
+   * This is called on top of modes property handling.
+   *
+   * Default: show allways
+   */
+  onShouldShow?: () => boolean;
+
+  /**
+   * Customize button component.
+   */
+  ButtonComponent?: ComponentType<DetailToolbarButtonProps>;
+
+  /**
+   * Set default props.
+   */
+  buttonProps?: Partial<DetailToolbarButtonProps>;
 }

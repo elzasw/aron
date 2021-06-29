@@ -1,1 +1,4 @@
-export interface Props {}
+export interface Props {
+  appLogo?: string;
+  appTopImage?: string;
+}

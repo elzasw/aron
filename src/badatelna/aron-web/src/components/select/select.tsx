@@ -1,5 +1,7 @@
 import React from 'react';
+
 import { Select as EasSelect } from '@eas/common-web';
+
 import { Option } from '../../types';
 
 interface SelectProps {
@@ -20,7 +22,12 @@ export const Select: React.FC<SelectProps> = ({
   return (
     <EasSelect
       value={value}
-      source={{ items: options, loading, reset: () => null }}
+      source={{
+        items: options,
+        loading,
+        reset: () => null,
+        loadDetail: (o: any) => o,
+      }}
       onChange={onChange}
       {...{ clearable }}
     />

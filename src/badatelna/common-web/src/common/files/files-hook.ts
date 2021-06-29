@@ -47,7 +47,7 @@ export function useFiles(url: string, maxUploadSize?: number) {
         let message = '';
         if (
           err.exception ===
-          'org.springframework.web.multipart.MaxUploadSizeExceededException'
+          'class org.springframework.web.multipart.MaxUploadSizeExceededException'
         ) {
           message = intl.formatMessage({
             id: 'EAS_FILES_MSG_ERROR_UPLOAD_SIZE',
@@ -55,7 +55,8 @@ export function useFiles(url: string, maxUploadSize?: number) {
               'Byla překročena maximální povolena velikost souboru',
           });
         } else if (
-          err.exception === 'cz.inqool.eas.common.exception.VirusFoundException'
+          err.exception ===
+          'class cz.inqool.eas.common.exception.VirusFoundException'
         ) {
           message = intl.formatMessage({
             id: 'EAS_FILES_MSG_ERROR_VIRUS',
@@ -63,7 +64,7 @@ export function useFiles(url: string, maxUploadSize?: number) {
           });
         } else if (
           err.exception ===
-          'cz.inqool.eas.common.exception.ExtensionNotAllowedException'
+          'class cz.inqool.eas.common.exception.ExtensionNotAllowedException'
         ) {
           message = intl.formatMessage({
             id: 'EAS_FILES_MSG_ERROR_NOT_ALLOWED',

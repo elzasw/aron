@@ -4,6 +4,7 @@ import React, {
   ReactElement,
   Ref,
   useMemo,
+  useContext,
 } from 'react';
 import { stubFalse } from 'lodash';
 import { TableField } from 'components/table-field/table-field';
@@ -12,6 +13,7 @@ import { TableFieldHandle } from 'components/table-field/table-field-types';
 import { InlineTableFieldToolbar } from './inline-table-field-toolbar';
 import { InlineTableFieldRow } from './inline-table-field-row';
 import { InlineTableFieldContext } from './inline-table-context';
+import { FormContext } from 'composite/form/form-context';
 
 export const InlineTableField = forwardRef(function InlineTableField<OBJECT>(
   {
@@ -29,6 +31,15 @@ export const InlineTableField = forwardRef(function InlineTableField<OBJECT>(
     () => ({ withRemove, initNewItem }),
     [withRemove, initNewItem]
   );
+
+  const { editing } = useContext(FormContext);
+
+  /**
+   * Hide actions if disabled, and both dndOrdering / removeButton not visible
+   */
+  const visibleActionsColumn =
+    !props.disabled || props.useDnDOrdering || (withRemove && editing);
+
   return (
     <InlineTableFieldContext.Provider value={context}>
       <TableField
@@ -36,6 +47,7 @@ export const InlineTableField = forwardRef(function InlineTableField<OBJECT>(
         RowComponent={RowComponent}
         showRadioCond={showRadioCond}
         showDetailBtnCond={showDetailBtnCond}
+        visibleActionsColumn={visibleActionsColumn}
         {...props}
         ref={ref}
       />

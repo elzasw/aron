@@ -19,12 +19,14 @@ declare module '@material-ui/core/styles/createMuiTheme' {
   interface Theme {
     eas?: {
       shadow: [string, string];
+      radius?: number;
     };
   }
   // allow configuration using `createMuiTheme`
   interface ThemeOptions {
     eas?: {
       shadow: [string, string];
+      radius?: number;
     };
   }
 }

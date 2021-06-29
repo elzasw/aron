@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class GeoPolygonFilter extends GeoFilter {
+public class GeoPolygonFilter extends GeoFilter<GeoPolygonFilter> {
 
     @NotEmpty
     private List<GeoPoint> points;

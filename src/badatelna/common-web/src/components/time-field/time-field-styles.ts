@@ -11,4 +11,16 @@ export const useStyles = makeStyles(() => ({
   input: {
     padding: '2pt',
   },
+  addorment: {
+    '& button': {
+      padding: '3px',
+    },
+    '& svg': {
+      height: 20,
+      width: 20,
+    },
+  },
+  dissabledAddorment: {
+    display: 'none',
+  },
 }));

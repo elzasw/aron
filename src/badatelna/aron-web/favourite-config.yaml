@@ -1,0 +1,45 @@
+---
+# Font Awesome ikona verze 5
+# povinné
+# dostupné z https://fontawesome.com/icons?d=gallery&m=free
+# např. "fas fa-book" pro zobrazení knihy
+icon: fas fa-book
+# Název oblíbeného dotazu
+# povinné
+label: Název oblíbeného dotazu
+# Tooltip oblíbeného dotazu
+# nepovinné
+tooltip: Tooltip oblíbeného dotazu
+# Text fulltextového vyhledávání
+# nepovinné
+query: Text fulltextového vyhledávání
+# Typ APU
+# nepovinné
+# slouží pro specifikaci sekce
+# jedno z:
+# ARCH_DESC - Archiválie
+# ENTITY - Přístupové body
+# FINDING_AID - Archivní pomůcky
+# FUND - Archivní soubory
+type: FUND
+# Fazety/filtry
+# nepovinné
+filters:
+  # Typ
+  # povinné při definici nového filtru
+  # jedno z:
+  # ENUM - zaškrtávací políčko
+  # ENUM_SINGLE - přepínač
+  # FULLTEXT - textové vyhledávání
+  # MULTI_REF - našeptávač
+  # MULTI_REF_EXT - vztahy
+  # UNITDATE - datace
+  - type: FULLTEXT
+    # Název pole pro filtrování
+    # povinné
+    source: Název pole pro filtrování
+    # Hodnota/hodnoty filtru
+    # povinné (alespoň jedna hodnota)
+    value:
+      - Hodnota filtru 1
+      - Hodnota filtru 2

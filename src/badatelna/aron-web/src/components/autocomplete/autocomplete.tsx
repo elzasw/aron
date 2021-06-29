@@ -1,5 +1,8 @@
 import React, { ReactElement } from 'react';
+import { identity } from 'lodash';
+
 import { Autocomplete as EasAutocomplete } from '@eas/common-web';
+
 import { Option } from '../../types';
 
 interface Props {
@@ -26,6 +29,7 @@ export function Autocomplete({
     setParams: () => null,
     getParams: () => ({}),
     loadMore: () => new Promise<void>(() => null),
+    loadDetail: identity,
     loading,
     reset: () => null,
     items: options,

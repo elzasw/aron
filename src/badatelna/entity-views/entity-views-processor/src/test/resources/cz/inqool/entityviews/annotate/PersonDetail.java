@@ -4,9 +4,11 @@ package cz.inqool.entityviews.annotate;
 public class PersonDetail implements cz.inqool.entityviews.View {
     public boolean active;
 
+    @javax.persistence.Column(name = "first_name")
     public String firstName;
 
-    public String address;
+    @javax.persistence.Embedded()
+    public cz.inqool.entityviews.annotate.AddressPersonDetail address;
 
     public static void toEntity(Person entity, PersonDetail view) {
         if (view == null) {
@@ -15,7 +17,7 @@ public class PersonDetail implements cz.inqool.entityviews.View {
 
         entity.active = view.active;
         entity.firstName = view.firstName;
-        entity.address = view.address;
+        entity.address = cz.inqool.entityviews.annotate.AddressPersonDetail.toEntity(view.address);
     }
 
     public static Person toEntity(PersonDetail view) {
@@ -44,7 +46,7 @@ public class PersonDetail implements cz.inqool.entityviews.View {
 
         view.active = entity.active;
         view.firstName = entity.firstName;
-        view.address = entity.address;
+        view.address = cz.inqool.entityviews.annotate.AddressPersonDetail.toView(entity.address);
     }
 
     public static PersonDetail toView(Person entity) {

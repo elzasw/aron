@@ -8,12 +8,13 @@ import { useStyles } from './user-btn-styles';
 import { UserBtnProps } from './user-btn-types';
 import { UserContext } from 'common/user/user-context';
 import { UserBtnItem } from './user-btn-item';
-import { MenubarClassOverrides } from '../menubar-types';
 import { FormattedMessage } from 'react-intl';
+import { MenubarClassOverrides } from '../menubar-class-overrides-types';
 
 export function UserBtn({
   actions = [],
   classOverrides,
+  displayLogoutBtn = true,
 }: UserBtnProps & MenubarClassOverrides) {
   const classes = useStyles();
 
@@ -66,18 +67,20 @@ export function UserBtn({
         {actions.map((action, i) => (
           <UserBtnItem action={action} key={i} onClose={closeMenu} />
         ))}
-        <UserBtnItem
-          action={{
-            label: (
-              <FormattedMessage
-                id="EAS_MENU_BTN_LOGOUT"
-                defaultMessage="Odhlásit"
-              />
-            ),
-            action: logout,
-          }}
-          onClose={closeMenu}
-        />
+        {displayLogoutBtn && (
+          <UserBtnItem
+            action={{
+              label: (
+                <FormattedMessage
+                  id="EAS_MENU_BTN_LOGOUT"
+                  defaultMessage="Odhlásit"
+                />
+              ),
+              action: logout,
+            }}
+            onClose={closeMenu}
+          />
+        )}
       </MuiMenu>
     </>
   );

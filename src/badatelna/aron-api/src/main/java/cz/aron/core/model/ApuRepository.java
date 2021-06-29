@@ -2,6 +2,7 @@ package cz.aron.core.model;
 
 import cz.aron.core.model.types.TypesHolder;
 import cz.aron.core.model.types.dto.ItemType;
+import cz.aron.core.relation.RelationStore;
 import cz.inqool.eas.common.domain.Domain;
 import cz.inqool.eas.common.domain.DomainRepository;
 import cz.inqool.eas.common.projection.Projection;
@@ -25,6 +26,7 @@ public class ApuRepository extends DomainRepository<
         ApuIndex> {
 
     @Inject private TypesHolder typesHolder;
+    @Inject private RelationStore relationStore;
 
     public List<IdLabelDto> mapNames(Collection<String> ids) {
         return store.mapNames(ids);
@@ -63,10 +65,23 @@ public class ApuRepository extends DomainRepository<
                 map(entityProjection::toBase).
                 map(indexProjection::toProjected).
                 collect(Collectors.toList());
+        for (ApuEntity apuEntity : indexProjected) {
+            fillIncomingRels(apuEntity);
+        }
         fillTargetLabelsToApuRefs(indexProjected);
         return indexProjected.stream().
                 map(indexedProjection::toProjected).
                 collect(Collectors.toList());
+    }
+
+    private void fillIncomingRels(ApuEntity targetApu) {
+        List<String> relationTypesByTarget = relationStore.findRelationTypesByTarget(targetApu.getId());
+        Set<String> relationGroupsByTarget = new HashSet<>();
+        for (String relationType : relationTypesByTarget) {
+            relationGroupsByTarget.addAll(typesHolder.getItemGroupsForItemType(relationType));
+        }
+        targetApu.getIncomingRelTypeGroups().addAll(relationGroupsByTarget);
+        targetApu.getIncomingRelTypes().addAll(relationTypesByTarget);
     }
 
     private void fillTargetLabelsToApuRefs(Collection<ApuEntity> apus) {

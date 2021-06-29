@@ -1,40 +1,29 @@
-import React, { forwardRef, useState, useEffect, useCallback } from 'react';
+import React, { forwardRef, useState, useEffect, useMemo } from 'react';
 import classNames from 'classnames';
-import { get, find } from 'lodash';
+import { find, isEqual } from 'lodash';
 import { FormattedMessage, useIntl } from 'react-intl';
 
 import { DialogHandle, Dialog } from '@eas/common-web';
 
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
-import { getFilterComponent } from '../utils';
-import { FilterData, FilterObject } from '../types';
-import { ApuPartItemType, Relationship } from '../../../types';
+import {
+  FilterComponent,
+  createApiFilters,
+  filterApiFilters,
+  filterFacets,
+  filterMappedFilters,
+} from '../utils';
+import { FilterConfig } from '../../../types';
 import { Message } from '../../../enums';
-import RelationshipFilter from './relationship-filter';
+import { FilterDialogProps } from '.';
+import { usePrevious } from '../../../common-utils';
+import { useFilters } from '../evidence-filters';
+import { useMapFilters } from '../use-map-filters';
 
-interface Props {
-  filters: any[];
-  filterData: FilterData[];
-  onConfirm: (
-    filterData: FilterData[],
-    newRelationships: Relationship[]
-  ) => void;
-  onCancel: () => void;
-  apuPartItemTypes: ApuPartItemType[];
-  relationshipsInit: Relationship[] | null;
-}
-
-export const FilterDialog = forwardRef<DialogHandle, Props>(
+export const FilterDialog = forwardRef<DialogHandle, FilterDialogProps>(
   function FilterDialog(
-    {
-      filters,
-      filterData,
-      onConfirm,
-      onCancel,
-      apuPartItemTypes,
-      relationshipsInit,
-    },
+    { filters: defaultFilters, onClose, apuPartItemTypes, facets, path },
     ref
   ) {
     const classes = useStyles();
@@ -43,62 +32,65 @@ export const FilterDialog = forwardRef<DialogHandle, Props>(
 
     const { formatMessage } = useIntl();
 
-    const [relationships, setRelationships] = useState<Relationship[] | null>(
-      relationshipsInit
+    const { typeFilter, queryFilter, updateFilters } = useFilters();
+
+    const [current, setCurrent] = useState<string>(defaultFilters[0]?.source);
+
+    const prevFilters = usePrevious(defaultFilters);
+
+    const [filters, setDialogFilters] = useState<FilterConfig[]>(
+      defaultFilters
     );
 
-    const relationshipItem = {
-      label: <FormattedMessage id={Message.RELATIONSHIPS} />,
-      relationshipsSelected: true,
+    const mapFilters = useMapFilters();
+
+    const apiFilters = useMemo(
+      () => filterApiFilters([typeFilter, ...createApiFilters(filters)]),
+      [typeFilter, filters]
+    );
+
+    const facetsOnPath = filterFacets(facets, path);
+
+    const onFilterChange = (newFilter: FilterConfig) => {
+      const setMappedFilters = async () => {
+        const filterConfig = filters.map((f) =>
+          f.source === newFilter.source ? { ...f, value: newFilter.value } : f
+        );
+
+        const mapped = await mapFilters(
+          facetsOnPath,
+          apuPartItemTypes,
+          filterConfig,
+          typeFilter,
+          queryFilter
+        );
+
+        const filtered = filterMappedFilters(mapped, path);
+
+        setDialogFilters(filtered);
+      };
+
+      setMappedFilters();
     };
-
-    const [current, setCurrent] = useState<any>(filters[0] || relationshipItem);
-
-    const [newFilterData, setNewFilterData] = useState<FilterData[]>(
-      filterData
-    );
-
-    const onFilterChange = useCallback(
-      (field: string, filterObject: FilterObject | null) => {
-        setNewFilterData([
-          ...newFilterData.filter((f) => f.field !== field),
-          ...(filterObject ? [{ field, filterObject }] : []),
-        ]);
-      },
-      [newFilterData]
-    );
 
     const handleConfirm = () => {
-      onConfirm(newFilterData, relationships || []);
+      updateFilters(filters);
+      onClose();
     };
 
-    const handleCancel = () => onCancel();
+    const handleCancel = () => onClose();
 
     useEffect(() => {
-      setNewFilterData(filterData);
-    }, [filterData]);
+      if (
+        !isEqual(prevFilters, defaultFilters) &&
+        !isEqual(defaultFilters, filters)
+      ) {
+        setDialogFilters(defaultFilters);
+        setCurrent(defaultFilters[0].source);
+      }
+    }, [prevFilters, defaultFilters, filters]);
 
-    const filterComponent = current.relationshipsSelected ? (
-      <RelationshipFilter
-        {...{
-          inDialog: true,
-          relationships: relationships || [],
-          onChange: setRelationships,
-          apuPartItemTypes,
-        }}
-      />
-    ) : (
-      getFilterComponent({
-        ...current,
-        onChange: onFilterChange,
-        value: get(
-          find(newFilterData, ({ field }) => field === current.field),
-          'filterObject'
-        ),
-        inDialog: true,
-        apuPartItemTypes,
-      })
-    );
+    const currentFilter = find(filters, (f) => f.source === current);
 
     return (
       <Dialog
@@ -112,24 +104,32 @@ export const FilterDialog = forwardRef<DialogHandle, Props>(
         {() => (
           <div className={classNames(classes.filterDialog, layoutClasses.flex)}>
             <div className={classes.filterDialogLeft}>
-              {[...filters, relationshipsInit !== null && relationshipItem].map(
-                (item) => (
-                  <div
-                    key={item.label}
-                    className={classNames(
-                      classes.filterDialogItem,
-                      item.label === current.label &&
-                        classes.filterDialogItemActive
-                    )}
-                    onClick={() => setCurrent(item)}
-                  >
-                    <div className={spacingClasses.padding}>{item.label}</div>
-                  </div>
-                )
-              )}
+              {filters.map((item) => (
+                <div
+                  key={item.source}
+                  className={classNames(
+                    classes.filterDialogItem,
+                    item.source === current && classes.filterDialogItemActive
+                  )}
+                  onClick={() => setCurrent(item.source)}
+                >
+                  <div className={spacingClasses.padding}>{item.label}</div>
+                </div>
+              ))}
             </div>
             <div className={classes.filterDialogRight}>
-              <div className={spacingClasses.padding}>{filterComponent}</div>
+              <div className={spacingClasses.padding}>
+                <FilterComponent
+                  {...{
+                    ...currentFilter,
+                    onChange: onFilterChange,
+                    filters,
+                    apiFilters,
+                    inDialog: true,
+                    apuPartItemTypes,
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}

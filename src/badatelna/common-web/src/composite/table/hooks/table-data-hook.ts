@@ -22,15 +22,19 @@ export function useTableData<OBJECT>({
   source,
   searchQuery,
   sorts,
+  preFilters,
   filters,
   filtersState,
+  include,
   loaderRef,
 }: {
   source: ScrollableSource<OBJECT>;
   searchQuery: string;
   sorts: TableSort[];
+  preFilters: Filter[];
   filters: TableFilter[];
   filtersState: TableFilterState[];
+  include?: string[];
   loaderRef: RefObject<InfiniteLoader>;
 }) {
   const { forceRender } = useForceRender();
@@ -42,7 +46,8 @@ export function useTableData<OBJECT>({
 
     source.setParams({
       sort: convertToApiSorts(sorts),
-      filters: convertToApiFilters([], filtersWithState, searchQuery),
+      filters: convertToApiFilters(preFilters, filtersWithState, searchQuery),
+      include: include,
       size: 30,
     });
   });
@@ -61,7 +66,7 @@ export function useTableData<OBJECT>({
     });
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, sorts, filtersState]);
+  }, [searchQuery, sorts, preFilters, filtersState, include]);
 }
 
 function convertToApiSorts(sorts: TableSort[]): Sort[] {
@@ -80,7 +85,7 @@ function convertToApiSorts(sorts: TableSort[]): Sort[] {
  * @param filters
  * @param searchQuery
  */
-function convertToApiFilters(
+export function convertToApiFilters(
   preFilters: Filter[],
   filters: TableFilterWithState[],
   searchQuery: string
@@ -107,7 +112,11 @@ function convertToApiFilters(
     });
   }
 
-  return [...preFilters, ...apiFilters];
+  if (preFilters.length) {
+    apiFilters.push(...preFilters.filter(({ value }) => !!value));
+  }
+
+  return apiFilters;
 }
 
 function filterEmptyFilter({ value, operation }: TableFilter) {

@@ -1,6 +1,9 @@
 package cz.inqool.eas.common.sequence;
 
+import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.validation.constraints.NotNull;
@@ -14,10 +17,14 @@ import java.text.DecimalFormat;
 public class SequenceGenerator {
     private SequenceRepository repository;
 
-    private TransactionTemplate transactionTemplate;
+    private PlatformTransactionManager transactionManager;
 
-    public synchronized Long generatePlain(@NotNull Sequence sequence) {
+    public synchronized Long generatePlain(@NotNull String sequenceId) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
         return transactionTemplate.execute(status -> {
+                    Sequence sequence = repository.find(sequenceId);
                     Long counter = sequence.getCounter();
 
                     sequence.setCounter(counter + 1);
@@ -28,8 +35,13 @@ public class SequenceGenerator {
         );
     }
 
-    public synchronized String generate(@NotNull Sequence sequence) {
+    @SneakyThrows
+    public synchronized String generate(@NotNull String sequenceId) {
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
         return transactionTemplate.execute(status -> {
+            Sequence sequence = repository.find(sequenceId);
             Long counter = sequence.getCounter();
 
             sequence.setCounter(counter + 1);
@@ -47,7 +59,7 @@ public class SequenceGenerator {
     }
 
     @Autowired
-    public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
-        this.transactionTemplate = transactionTemplate;
+    public void setTransactionManager(PlatformTransactionManager transactionManager) {
+        this.transactionManager = transactionManager;
     }
 }

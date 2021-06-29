@@ -1,9 +1,5 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {
-  appHeaderHeight,
-  colorBlueLight,
-  colorBlueVeryLight,
-} from '../../styles';
+import { appHeaderHeight, colorBlueVeryLight } from '../../styles';
 
 export const useStyles = makeStyles((theme) => {
   return {
@@ -37,7 +33,7 @@ export const useStyles = makeStyles((theme) => {
     mainFavourite: {
       width: '100%',
 
-      '& div': {
+      '& > div': {
         width: '100%',
         cursor: 'pointer',
 
@@ -52,6 +48,8 @@ export const useStyles = makeStyles((theme) => {
     },
     mainFavouriteIcon: {
       color: theme.palette.primary.main,
+      width: '24px !important',
+      height: '24px !important',
     },
     mainFooter: {
       marginTop: 'auto',
@@ -59,11 +57,38 @@ export const useStyles = makeStyles((theme) => {
       background: theme.palette.primary.dark,
       color: '#fff',
     },
+    mainFooterInner: {
+      display: 'flex',
+      flexDirection: 'column',
+
+      ['@media (min-width:1400px)']: {
+        flexDirection: 'row',
+      },
+    },
     mainFooterLeft: {
-      minWidth: 'calc((100vw - 800px - 64px) / 2)',
+      minWidth: '100%',
+
+      ['@media (min-width:1400px)']: {
+        minWidth: 'calc((100vw - 800px - 64px) / 2)',
+      },
     },
     mainFooterSection: {
-      maxWidth: 1000,
+      ['@media (min-width:1400px)']: {
+        maxWidth: 1000,
+      },
+    },
+    mainFooterSections: {
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+
+      [theme.breakpoints.up('sm')]: {
+        flexDirection: 'row',
+      },
+
+      '& a': {
+        color: '#fff',
+      },
     },
     mainFooterTitle: {
       fontSize: '0.8rem',
@@ -71,9 +96,12 @@ export const useStyles = makeStyles((theme) => {
       marginLeft: 0,
     },
     mainFooterText: {
-      color: colorBlueLight,
+      color: '#fff',
       fontSize: '0.75rem',
       lineHeight: '1.4rem',
+      '& a': {
+        color: '#fff',
+      },
     },
     mainSearchOptions: {
       display: 'flex',

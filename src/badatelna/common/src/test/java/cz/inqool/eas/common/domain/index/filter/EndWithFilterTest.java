@@ -293,7 +293,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
     void accentTextEndsWith_first() {
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.shortString, "cní úřad Bukovina")
+                new EndWithFilter(IndexFields.shortString, "cní úřad Błukovina")
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -404,7 +404,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
     void nestedObjectEndsWith_first() {
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.toOneRelationship + "." + key, "Steve")
+                new EndWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Steve")
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -414,7 +414,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
     void nestedObjectEndsWith_second() {
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.toOneRelationship + "." + key, "Mary")
+                new EndWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Mary")
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -427,7 +427,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
 
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.toOneRelationship + "." + key, "Steve")
+                new EndWithFilter(IndexFields.toOneRelationshipNested + "." + key, "Steve")
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -437,7 +437,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
     void nestedObjectEndsWith_none() {
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.toOneRelationship + "." + key, "random Text")
+                new EndWithFilter(IndexFields.toOneRelationshipNested + "." + key, "random Text")
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -497,7 +497,7 @@ class EndWithFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new EndWithFilter(IndexFields.toOneRelationship, "47")
+                new EndWithFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

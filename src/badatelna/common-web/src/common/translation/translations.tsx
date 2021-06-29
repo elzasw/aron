@@ -1,5 +1,5 @@
 import React from 'react';
-import { FormattedMessage } from 'react-intl';
+import { useIntl } from 'react-intl';
 import { useDictionaryEvidence } from 'composite/evidence/dictionary-evidence/dictionary-evidence';
 import { Evidence } from 'composite/evidence/evidence';
 import { useValidationSchema } from './translations-schema';
@@ -9,6 +9,7 @@ import { TranslationsFields } from './translations-fields';
 
 export function translationsFactory(url: string, reportTag: string) {
   return function Translations() {
+    const intl = useIntl();
     const validationSchema = useValidationSchema();
 
     const evidence = useDictionaryEvidence<Translation>({
@@ -18,12 +19,10 @@ export function translationsFactory(url: string, reportTag: string) {
       },
       tableProps: {
         columns: useColumns(),
-        tableName: (
-          <FormattedMessage
-            id="EAS_TRANSLATIONS_TABLE_TITLE"
-            defaultMessage="Překlady"
-          />
-        ),
+        tableName: intl.formatMessage({
+          id: 'EAS_TRANSLATIONS_TABLE_TITLE',
+          defaultMessage: 'Překlady',
+        }),
         reportTag,
       },
       detailProps: {

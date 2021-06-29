@@ -1,27 +1,30 @@
-import React, { useRef, forwardRef } from 'react';
+import React, { useRef, useContext, forwardRef } from 'react';
 import MenuItem from '@material-ui/core/MenuItem';
 import { BulkActionItemProps } from './bulk-action-types';
+import { TableSelectedContext } from '../table-context';
 
-export function BulkActionItemWithoutRef(
-  { action, closeMenu }: BulkActionItemProps,
-  ref: React.Ref<any>
-) {
-  const componentRef = useRef(null);
+export const BulkActionItem = forwardRef<HTMLDivElement, BulkActionItemProps>(
+  function BulkActionItem({ action, closeMenu }, ref) {
+    const componentRef = useRef(null);
 
-  return (
-    <MenuItem
-      ref={ref}
-      onClick={() => {
-        action.action(componentRef.current);
-        closeMenu();
-      }}
-    >
-      <>
-        {action.label}
-        {action.Component && <action.Component ref={componentRef} />}
-      </>
-    </MenuItem>
-  );
-}
+    const { selected } = useContext(TableSelectedContext);
+    const disabled = action.disableFilteredBulkAction && selected.length === 0;
 
-export const BulkActionItem = forwardRef(BulkActionItemWithoutRef);
+    return (
+      <MenuItem
+        component="div"
+        ref={ref}
+        onClick={() => {
+          action.action(componentRef.current);
+          closeMenu();
+        }}
+        disabled={disabled}
+      >
+        <>
+          {action.label}
+          {action.Component && <action.Component ref={componentRef} />}
+        </>
+      </MenuItem>
+    );
+  }
+);

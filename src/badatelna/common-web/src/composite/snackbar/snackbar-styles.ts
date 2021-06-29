@@ -16,6 +16,12 @@ export const useStyles = makeStyles((theme) => ({
   warning: {
     backgroundColor: theme.palette.warning.main,
   },
+  blank: {
+    backgroundColor: 'white',
+  },
+  dark: {
+    color: 'black',
+  },
   icon: {
     fontSize: 20,
   },

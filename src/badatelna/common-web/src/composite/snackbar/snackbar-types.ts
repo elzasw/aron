@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 export interface SnackbarProviderProps {
   timeout: number;
 }
@@ -10,8 +12,13 @@ export enum SnackbarVariant {
   WARNING = 'warning',
   ERROR = 'error',
   INFO = 'info',
+  BLANK = 'blank',
 }
 
 export interface SnackbarHandle {
-  showSnackbar: (msg: string, variant: SnackbarVariant) => void;
+  showSnackbar: (
+    msg: ReactNode,
+    variant: SnackbarVariant,
+    autohide?: boolean
+  ) => void;
 }

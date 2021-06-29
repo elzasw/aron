@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static cz.inqool.entityviews.ElementValueUtils.getElementValue;
 
@@ -52,7 +52,7 @@ public class SwaggerSchemaAnnotationModel extends AnnotationModel {
             if (viewName != null) {
                 String oneOfArray = Arrays.stream(oneOf)
                         .map(ClassType::toString)
-                        .map(className -> className + LOWER_CAMEL.to(UPPER_CAMEL, viewName) + ".class")
+                        .map(className -> className + LOWER_UNDERSCORE.to(UPPER_CAMEL, viewName) + ".class")
                         .collect(Collectors.joining(", ", "{", "}"));
 
                 return entry.getKey() + " = " + oneOfArray;

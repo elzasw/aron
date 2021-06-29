@@ -1,10 +1,10 @@
 import { TextFieldProps } from '@material-ui/core/TextField';
 
-interface MyProps {
+interface CustomProps {
   value: string;
   onChange: (_: string) => any;
   className?: string;
   variant?: 'outlined' | 'standard' | 'filled';
 }
 
-export type Props = MyProps & TextFieldProps;
+export type Props = CustomProps & Omit<TextFieldProps, 'onChange'>;

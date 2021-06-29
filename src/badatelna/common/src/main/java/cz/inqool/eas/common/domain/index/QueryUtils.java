@@ -1,12 +1,12 @@
 package cz.inqool.eas.common.domain.index;
 
+import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 import javax.annotation.Nullable;
-import java.text.Normalizer;
 import java.util.List;
 import java.util.Objects;
 
@@ -95,9 +95,11 @@ public class QueryUtils {
      */
     public static String asciiFolding(String s) {
         if (s != null) {
-            s = Normalizer.normalize(s, Normalizer.Form.NFD);
-            s = s.replaceAll("[^\\p{ASCII}]", "");
-            return s;
+            int length = s.length();
+            char[] unfoldedChars = s.toCharArray();
+            char[] foldedChars = new char[length * 4]; // according to "foldToASCII" method should be of size >= length * 4
+            ASCIIFoldingFilter.foldToASCII(unfoldedChars, 0, foldedChars, 0, length);
+            return new String(foldedChars, 0, length);
         } else {
             return null;
         }

@@ -59,6 +59,22 @@ public class NestedFilter extends AbstractFilter {
 
     @Override
     public QueryBuilder toQueryBuilder(IndexObjectFields indexedFields) {
+        disableAutonesting(filter);
         return QueryBuilders.nestedQuery(path, filter.toQueryBuilder(indexedFields), scoreMode);
+    }
+
+    /**
+     * @deprecated see {@link FieldFilter#nestedQueryEnabled} for explanation
+     */
+    @Deprecated(forRemoval = true)
+    private void disableAutonesting(Filter filter) {
+        if (filter instanceof LogicalFilter) {
+            for (Filter innerFilter : ((LogicalFilter) filter).filters) {
+                disableAutonesting(innerFilter);
+            }
+        }
+        else if (filter instanceof FieldFilter) {
+            ((FieldFilter) filter).nestedQueryEnabled = false;
+        }
     }
 }

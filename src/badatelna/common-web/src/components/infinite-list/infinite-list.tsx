@@ -9,11 +9,12 @@ import React, {
   useRef,
   useImperativeHandle,
   useState,
+  useEffect,
 } from 'react';
 import clsx from 'clsx';
+import { unstable_batchedUpdates } from 'react-dom';
 import { noop } from 'lodash';
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { VariableSizeList, ListChildComponentProps } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
@@ -21,7 +22,8 @@ import { Tooltip } from 'components/tooltip/tooltip';
 import { InfiniteListProps, InfiniteListHandle } from './infinite-list-types';
 import { useStyles } from './infinite-list-styles';
 import { DomainObject } from 'common/common-types';
-import { useForceRender } from 'utils/force-render';
+import { useEventCallback } from 'utils/event-callback-hook';
+import { composeRefs } from 'utils/compose-refs';
 
 // eslint-disable-next-line react/display-name
 export const InfiniteList = memo(
@@ -33,21 +35,88 @@ export const InfiniteList = memo(
       tooltipMapper = (option: ITEM) => (option as any).tooltip,
       showTooltip = false,
       selectedIds = [],
+      maxListHeight = 300,
+      defaultRowHeight = 26,
     }: InfiniteListProps<ITEM>,
     ref: Ref<InfiniteListHandle<ITEM>>
   ) {
     const classes = useStyles();
-    const loader = useRef<InfiniteLoader>(null);
-    const [focusedIndex, setFocusedIndex] = useState<number>(-1);
-    const { forceRender } = useForceRender();
 
+    /**
+     * Reference to InfiniteLoader
+     */
+    const loader = useRef<InfiniteLoader>(null);
+
+    /**
+     * Reference to VariableSizeList
+     */
+    const listRef = useRef<VariableSizeList>(null);
+
+    /**
+     * Map of each mounted item height.
+     */
+    const itemHeightMap = useRef<{ [key: number]: number }>({});
+
+    const setItemHeight = useEventCallback((index, size) => {
+      itemHeightMap.current = { ...itemHeightMap.current, [index]: size };
+    });
+    const getItemHeight = useEventCallback(
+      (index) => itemHeightMap.current[index] || defaultRowHeight
+    );
+
+    /**
+     * Currently focused item index. Defaults to none.
+     */
+    const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+
+    /**
+     * Height of VariableSizeList, dynamically changed between `defaultRowHeight` and `maxListHeight`.
+     */
+    const [listHeight, setListHeight] = useState(defaultRowHeight);
+
+    const computeListHeight = useEventCallback(
+      (itemIndex?: number, itemHeight?: number) => {
+        if (
+          itemIndex !== undefined &&
+          itemHeight !== undefined &&
+          listRef.current
+        ) {
+          setItemHeight(itemIndex, itemHeight);
+          listRef.current.resetAfterIndex(itemIndex);
+        } else {
+          itemHeightMap.current = {};
+        }
+
+        let newListHeight = 0;
+        for (const key in itemHeightMap.current) {
+          newListHeight += itemHeightMap.current[key];
+        }
+
+        if (newListHeight > maxListHeight) {
+          newListHeight = maxListHeight;
+        }
+
+        setListHeight(newListHeight);
+      }
+    );
+
+    useEffect(() => {
+      computeListHeight();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [source.count]);
+
+    /**
+     * Infinite list interface.
+     */
     useImperativeHandle(
       ref,
       () => ({
         reset: () => {
-          forceRender();
-          loader.current?.resetloadMoreItemsCache(true);
-          setFocusedIndex(-1);
+          unstable_batchedUpdates(() => {
+            setFocusedIndex(-1);
+            loader.current?.resetloadMoreItemsCache(false);
+            source.loadMore();
+          });
         },
         focusPrevious: () => {
           const newIndex = Math.min(
@@ -67,7 +136,7 @@ export const InfiniteList = memo(
           return focusedIndex !== -1 ? source.items[focusedIndex] : undefined;
         },
       }),
-      [focusedIndex, forceRender, source.items]
+      [focusedIndex, source]
     );
 
     const renderItem = useCallback(
@@ -76,7 +145,9 @@ export const InfiniteList = memo(
         const id =
           index < source.items.length ? source.items[index].id : undefined;
         const value =
-          index < source.items.length ? labelMapper(source.items[index]) : '';
+          index < source.items.length
+            ? labelMapper(source.items[index], index)
+            : '';
         const tooltip =
           index < source.items.length ? tooltipMapper(source.items[index]) : '';
 
@@ -98,9 +169,16 @@ export const InfiniteList = memo(
             }}
           >
             <ListItemText
-              classes={{ root: classes.itemText }}
               disableTypography={true}
               primary={value}
+              ref={(item: HTMLDivElement) => {
+                if (
+                  item &&
+                  item.clientHeight !== itemHeightMap.current[index]
+                ) {
+                  computeListHeight(index, item.clientHeight);
+                }
+              }}
             />
           </ListItem>
         );
@@ -116,13 +194,13 @@ export const InfiniteList = memo(
         labelMapper,
         tooltipMapper,
         classes.item,
-        classes.itemFocused,
         classes.itemSelected,
-        classes.itemText,
-        focusedIndex,
+        classes.itemFocused,
         selectedIds,
+        focusedIndex,
         showTooltip,
         onItemClick,
+        computeListHeight,
       ]
     );
 
@@ -137,34 +215,34 @@ export const InfiniteList = memo(
       [source]
     );
 
+    const loadMoreItems = source.loading ? async () => noop() : source.loadMore;
+
     return (
-      <AutoSizer>
-        {({ width, height }) => {
+      <InfiniteLoader
+        ref={loader}
+        isItemLoaded={isItemLoaded}
+        itemCount={totalCount}
+        loadMoreItems={loadMoreItems}
+        threshold={1}
+      >
+        {({ onItemsRendered, ref }) => {
+          const composedRef = composeRefs(ref, listRef);
+
           return (
-            <InfiniteLoader
-              ref={loader}
-              isItemLoaded={isItemLoaded}
+            <VariableSizeList
+              height={listHeight}
+              width="100%"
+              itemSize={getItemHeight}
               itemCount={totalCount}
-              loadMoreItems={source.loadMore}
+              estimatedItemSize={defaultRowHeight}
+              ref={composedRef}
+              onItemsRendered={onItemsRendered}
             >
-              {({ onItemsRendered, ref }) => {
-                return (
-                  <FixedSizeList
-                    height={height}
-                    width={width}
-                    itemSize={26.5}
-                    itemCount={totalCount}
-                    ref={ref}
-                    onItemsRendered={onItemsRendered}
-                  >
-                    {renderItem}
-                  </FixedSizeList>
-                );
-              }}
-            </InfiniteLoader>
+              {renderItem}
+            </VariableSizeList>
           );
         }}
-      </AutoSizer>
+      </InfiniteLoader>
     );
   })
 ) as <ITEM extends DomainObject>(

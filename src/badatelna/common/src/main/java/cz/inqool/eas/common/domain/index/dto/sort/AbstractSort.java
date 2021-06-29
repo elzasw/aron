@@ -60,7 +60,7 @@ public abstract class AbstractSort<SB extends SortBuilder<SB>> implements Sort<S
     /**
      * Returns the type of sort
      *
-     * @see Type
+     * @see Sort.Type
      */
     public abstract String getType();
 

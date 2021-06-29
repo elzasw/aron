@@ -293,7 +293,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void accentTextContains_first() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.shortString, "cní úřad B")
+                new ContainsFilter(IndexFields.shortString, "cní úřad Błu")
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -413,7 +413,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void nestedObjectContains_first() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.toOneRelationship + "." + key, "father")
+                new ContainsFilter(IndexFields.toOneRelationshipNested + "." + key, "father")
         );
 
         assertMatchesFirst(() -> repository.listByParams(params));
@@ -423,7 +423,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void nestedObjectContains_second() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.toOneRelationship + "." + key, "mother")
+                new ContainsFilter(IndexFields.toOneRelationshipNested + "." + key, "mother")
         );
 
         assertMatchesSecond(() -> repository.listByParams(params));
@@ -433,7 +433,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void nestedObjectContains_all() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.toOneRelationship + "." + key, "rand")
+                new ContainsFilter(IndexFields.toOneRelationshipNested + "." + key, "rand")
         );
 
         assertMatchesBoth(() -> repository.listByParams(params));
@@ -443,7 +443,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void nestedObjectContains_none() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.toOneRelationship + "." + key, "random Text")
+                new ContainsFilter(IndexFields.toOneRelationshipNested + "." + key, "random Text")
         );
 
         assertMatchesNone(() -> repository.listByParams(params));
@@ -503,7 +503,7 @@ class ContainsFilterTest extends IndexFilterTestBase {
     void filterFieldNotLeaf() {
         Params params = new Params();
         params.addFilter(
-                new ContainsFilter(IndexFields.toOneRelationship, "47")
+                new ContainsFilter(IndexFields.toOneRelationshipNested, "47")
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

@@ -1,7 +1,6 @@
 package cz.inqool.eas.common.domain.index.reindex.queue;
 
 import cz.inqool.eas.common.dated.store.InstantGenerator;
-import cz.inqool.eas.common.domain.DomainRepository;
 import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +29,7 @@ public abstract class ReindexQueue<RQ_ENTITY> extends DomainObject<RQ_ENTITY> {
     /**
      * Repository class name
      */
-    Class<DomainRepository<?, ?, ?, ?, ?>> repositoryClass;
+    String repositoryClass;
 
     /**
      * Create timestamp

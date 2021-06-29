@@ -1,12 +1,9 @@
 import React, { memo, ReactElement } from 'react';
-import Typography from '@material-ui/core/Typography';
 import { TableFieldCellProps } from '../table-field-types';
-import { useStyles } from '../table-field-styles';
+import { TextCell } from './text-cell';
 
-export const NumberCell = memo(function NumberCell<OBJECT>({
-  value,
-}: TableFieldCellProps<OBJECT>) {
-  const classes = useStyles();
-
-  return <Typography className={classes.tableCell}>{value}</Typography>;
+export const NumberCell = memo(function NumberCell<OBJECT>(
+  props: TableFieldCellProps<OBJECT>
+) {
+  return <TextCell {...props} />;
 }) as <OBJECT>(p: TableFieldCellProps<OBJECT>) => ReactElement;

@@ -449,7 +449,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectNotNull_first() {
+    void listNotNull_first() {
         entity_2.setElementCollection(null);
         repository.update(entity_2);
 
@@ -462,7 +462,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectNotNull_second() {
+    void listNotNull_second() {
         entity_1.setElementCollection(null);
         repository.update(entity_1);
 
@@ -475,7 +475,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectNotNull_all() {
+    void listNotNull_all() {
         Params params = new Params();
         params.addFilter(
                 new NotNullFilter(IndexFields.elementCollection)
@@ -485,7 +485,7 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
-    void objectNotNull_none() {
+    void listNotNull_none() {
         entity_1.setElementCollection(null);
         entity_2.setElementCollection(null);
         repository.update(List.of(entity_1, entity_2));
@@ -499,20 +499,110 @@ class NotNullFilterTest extends IndexFilterTestBase {
     }
 
     @Test
+    void objectNotNull_first() {
+        entity_2.setToOneRelationship(null);
+        repository.update(entity_2);
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesFirst(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectNotNull_second() {
+        entity_1.setToOneRelationship(null);
+        repository.update(entity_1);
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesSecond(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectNotNull_all() {
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesBoth(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void objectNotNull_none() {
+        entity_1.setToOneRelationship(null);
+        entity_2.setToOneRelationship(null);
+        repository.update(List.of(entity_1, entity_2));
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationship)
+        );
+
+        assertMatchesNone(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectNotNull_first() {
+        entity_2.setToOneRelationship(null);
+        repository.update(entity_2);
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesFirst(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectNotNull_second() {
+        entity_1.setToOneRelationship(null);
+        repository.update(entity_1);
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesSecond(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectNotNull_all() {
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesBoth(() -> repository.listByParams(params));
+    }
+
+    @Test
+    void nestedObjectNotNull_none() {
+        entity_1.setToOneRelationship(null);
+        entity_2.setToOneRelationship(null);
+        repository.update(List.of(entity_1, entity_2));
+
+        Params params = new Params();
+        params.addFilter(
+                new NotNullFilter(IndexFields.toOneRelationshipNested)
+        );
+
+        assertMatchesNone(() -> repository.listByParams(params));
+    }
+
+    @Test
     void filterFieldNotMapped() {
         Params params = new Params();
         params.addFilter(
                 new NotNullFilter("nonMapped")
-        );
-
-        assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));
-    }
-
-    @Test
-    void filterFieldNotLeaf() {
-        Params params = new Params();
-        params.addFilter(
-                new NotNullFilter(IndexFields.toOneRelationship)
         );
 
         assertThrows(InvalidAttribute.class, () -> repository.listByParams(params));

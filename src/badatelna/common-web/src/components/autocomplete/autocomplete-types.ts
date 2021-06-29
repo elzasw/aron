@@ -1,5 +1,5 @@
 import { DomainObject, ScrollableSource } from 'common/common-types';
-import { ReactNode } from 'react';
+import { ReactNode, ComponentType } from 'react';
 
 export interface AutocompleteSource<OPTION> extends ScrollableSource<OPTION> {
   setSearchQuery: (q: string) => void;
@@ -17,6 +17,12 @@ export interface AutocompleteProps<OPTION extends DomainObject> {
   multiple?: boolean;
   showTooltip?: boolean;
 
-  labelMapper?: (option: OPTION) => string;
+  ItemComponent?: ComponentType<{ item: OPTION; children: ReactNode }>;
+  labelMapper?: (option: OPTION, type: 'FIELD' | 'OPTION') => string;
   tooltipMapper?: (option: OPTION) => ReactNode;
+
+  DisabledComponent?: ComponentType<{
+    value: string | null;
+    disabled?: boolean;
+  }>;
 }

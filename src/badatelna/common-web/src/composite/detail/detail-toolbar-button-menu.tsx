@@ -1,8 +1,11 @@
 import React, { useRef, useState, forwardRef } from 'react';
-import Button, { ButtonProps } from '@material-ui/core/Button';
+import clsx from 'clsx';
 import { Tooltip } from 'components/tooltip/tooltip';
+import Divider from '@material-ui/core/Divider';
+import Button, { ButtonProps } from '@material-ui/core/Button';
 import MuiMenu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import {
@@ -93,18 +96,34 @@ interface ItemProps {
   onClose: () => void;
 }
 
-const Item = forwardRef<any, ItemProps>(function UserBtnItem(
-  { item: { label, tooltip, onClick }, onClose }: ItemProps,
+const Item = forwardRef<any, ItemProps>(function Item(
+  {
+    item: { label, tooltip, onClick, href, Icon, divider, warning },
+    onClose,
+  }: ItemProps,
   ref
 ) {
+  const classes = useStyles();
+
   const handleClick = useEventCallback(() => {
     onClick();
     onClose();
   });
 
-  return (
+  return divider ? (
+    <Divider />
+  ) : (
     <Tooltip title={tooltip} placement="right-start">
-      <MenuItem ref={ref} onClick={handleClick}>
+      <MenuItem
+        ref={ref}
+        component={Button}
+        onClick={handleClick}
+        href={href}
+        className={clsx(classes.toolbarButton, classes.toolbarButtonMenu, {
+          [classes.toolbarButtonWarning]: warning,
+        })}
+      >
+        {Icon && <ListItemIcon>{Icon}</ListItemIcon>}
         <ListItemText primary={label} />
       </MenuItem>
     </Tooltip>

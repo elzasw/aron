@@ -19,4 +19,9 @@ public class Passport {
     @ManyToOne
     @JoinColumn(name = "person_id")
     public Person person;
+
+    @ViewableProperty(views = {})
+    public void setPerson(Person person) {
+        this.person = person;
+    }
 }

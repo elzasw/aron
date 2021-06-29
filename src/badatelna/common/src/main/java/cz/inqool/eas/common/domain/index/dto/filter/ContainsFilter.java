@@ -38,7 +38,7 @@ public class ContainsFilter extends TextFilter<ContainsFilter> {
 
         // regexp and wildcard query do not analyze given query string, so it needs to be folded in the application
         boolean hasDedicatedFoldField = indexField.hasInnerField(ES.Suffix.FOLD);
-        boolean mainFieldIsFolded = indexField.getType() == FieldType.Text;
+        boolean mainFieldIsFolded = indexField.getType() == FieldType.Text && indexField.getAnalyzer() != null && (indexField.getAnalyzer().isEmpty() || indexField.getAnalyzer().contains("folding"));
         String normalizedValue = (useFolding && (hasDedicatedFoldField || mainFieldIsFolded)) ? asciiFolding(lowercase(value)) : value;
         String field = useFolding ? indexField.getFolded() : indexField.getElasticSearchPath();
 

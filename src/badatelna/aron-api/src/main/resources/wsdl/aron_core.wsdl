@@ -3,11 +3,6 @@
 	<wsdl:types>
 		<xs:schema targetNamespace="http://www.aron.cz/management/v1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.aron.cz/apux/2020">
 			<xs:import schemaLocation="../schema/aron_apux.xsd" namespace="http://www.aron.cz/apux/2020"/>
-			<xs:element name="deleteApuSources" type="s1:UuidList">
-				<xs:annotation>
-					<xs:documentation>Požadavek na vymazání APU</xs:documentation>
-				</xs:annotation>
-			</xs:element>
 		</xs:schema>
 	</wsdl:types>
 	<wsdl:message name="DeleteApuSourcesResponse"/>
