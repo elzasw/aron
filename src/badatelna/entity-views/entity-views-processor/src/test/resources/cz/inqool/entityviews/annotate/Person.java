@@ -1,14 +1,13 @@
 package cz.inqool.entityviews.annotate;
 
-import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import cz.inqool.entityviews.ViewableAnnotation;
 import cz.inqool.entityviews.ViewableClass;
 import cz.inqool.entityviews.ViewableMapping;
 import cz.inqool.entityviews.ViewableProperty;
+
+import javax.persistence.Column;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
 
 @ViewableClass(views = {"list", "detail", "create"})
 @ViewableAnnotation(value = javax.persistence.Entity.class, views = {"list", "detail"})

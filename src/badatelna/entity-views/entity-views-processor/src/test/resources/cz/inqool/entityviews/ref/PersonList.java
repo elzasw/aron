@@ -1,9 +1,5 @@
 package cz.inqool.entityviews.ref;
 
-import javax.persistence.*;
-
-import java.util.Set;
-
 @javax.persistence.Entity
 public class PersonList implements cz.inqool.entityviews.View {
     public String firstName;

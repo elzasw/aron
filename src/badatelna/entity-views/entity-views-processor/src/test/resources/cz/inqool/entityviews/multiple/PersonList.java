@@ -1,8 +1,5 @@
 package cz.inqool.entityviews.multiple;
 
-import javax.persistence.FetchType;
-import java.util.List;
-
 @javax.persistence.Entity
 public class PersonList implements cz.inqool.entityviews.View {
     @javax.persistence.OneToMany(mappedBy = "person", fetch = javax.persistence.FetchType.EAGER)
