@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
@@ -18,6 +20,7 @@ import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 import cz.tacr.elza.schema.v2.Institution;
+import cz.tacr.elza.schema.v2.Institutions;
 
 public class ImportInstitution {
 	
@@ -122,4 +125,25 @@ public class ImportInstitution {
 		
 		return apusBuilder;
 	}
+	
+	/**
+	 * Precte kody instituci obsazenych v xml
+	 * @param inputFile xml soubor
+	 * @return List<String>
+	 * @throws Exception
+	 */
+	public static List<String> readInstitutionCodes(Path inputFile) throws Exception {
+		var ret = new ArrayList<String>();
+		try (var is=Files.newInputStream(inputFile)) {
+			var elzaXmlReader = ElzaXmlReader.read(is);
+			var insts = elzaXmlReader.getEdx().getInss();
+			if (insts!=null) {
+				for(var inst: insts.getInst()) {
+					ret.add(inst.getC());
+				}
+			}
+		}
+		return ret;
+	}
+
 }

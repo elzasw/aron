@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
@@ -138,18 +139,54 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			return false;
 		}
 
-        protocol = new ImportProtocol(dir);
-        protocol.add("Zahájení importu");
-
 		var fileName = inst.get().getFileName().toString();
 		var tmp = fileName.substring("institution-".length());
 		var code = tmp.substring(0,tmp.length()-".xml".length());
-
+		
+		if ("all".equals(code)) {
+			copyInstitutionFiles(dir, inst.get());
+			try {
+				FileSystemUtils.deleteRecursively(dir);
+			} catch (IOException e) {
+				log.error("Fail todelete directory {}",dir);
+				return false;
+			}
+		} else {
+			// import one institution
+	        protocol = new ImportProtocol(dir);
+	        protocol.add("Zahájení importu");			
+			importInstitution(dir, inst.get(), code);
+	        protocol.add("Import byl úspěšně dokončen");
+		}
+        return true;
+    }
+	
+	/**
+	 * Rozkopiruje soubor se vsemi instutucemi do adresaru
+	 * @param dir zdrojovy adresar
+	 * @param instFilePath soubor s institucemi ve zdrojovem adresari
+	 */
+	private void copyInstitutionFiles(Path dir, Path instFilePath) {
+		try {
+			for (var instCode : ImportInstitution.readInstitutionCodes(instFilePath)) {
+				Path targetDir = dir.getParent().resolve(dir.getFileName().toString()+"-"+instCode);
+				FileSystemUtils.copyRecursively(dir, targetDir);
+				Path target = targetDir.resolve("institution-" + instCode + ".xml");
+				Path src = targetDir.resolve(instFilePath.getFileName());
+				Files.move(src, target);
+			}
+		} catch (Exception e) {
+			protocol.add("Chyba " + e.getMessage());
+			throw new IllegalStateException(e);
+		}
+	}
+	
+	private void importInstitution(Path dir, Path instFilePath, String code) {
 		var ii = new ImportInstitution();
 		ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = ii.importInstitution(inst.get(), code, null);
+            apusrcBuilder = ii.importInstitution(instFilePath, code, null);
         } catch (IOException e) {
             protocol.add("Chyba " + e.getMessage());
             throw new UncheckedIOException(e);
@@ -188,10 +225,8 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 		} else {
 			updateInstitution(institution, dataDir, dir, apusrcBuilder, code, ii);
 		}
-
-        protocol.add("Import byl úspěšně dokončen");
-        return true;
-    }
+		
+	}
 
 	private void createInstitution(Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String institutionCode,
 			ImportInstitution ii) {
