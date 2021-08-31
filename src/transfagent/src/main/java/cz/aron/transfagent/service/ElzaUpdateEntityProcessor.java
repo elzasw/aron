@@ -21,6 +21,7 @@ import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
+import cz.tacr.elza.ws.types.v1.EntityUpdates;
 import cz.tacr.elza.ws.types.v1.SearchEntityUpdates;
 
 @Service
@@ -91,7 +92,12 @@ public class ElzaUpdateEntityProcessor implements ImportProcessor {
         var exportService = elzaExportService.get();
         var request = new SearchEntityUpdates();
         request.setFromTrans(fromTrans);
-        var entityUpdates = exportService.searchEntityUpdates(request);
+        EntityUpdates entityUpdates;
+        try {
+            entityUpdates = exportService.searchEntityUpdates(request);
+        } catch(Exception e) {
+            throw new IllegalStateException(e);
+        }
         
         log.debug("Received updates, transaction from: {} to: {}", entityUpdates.getFromTrans(), entityUpdates.getToTrans());
 

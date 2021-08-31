@@ -5,6 +5,12 @@
 			<xs:documentation>Root element for elza data exchange format</xs:documentation>
 		</xs:annotation>
 	</xs:element>
+	<xs:simpleType name="AccessPointState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="APPROVED"/>
+			<xs:enumeration value="NEW"/>
+		</xs:restriction>
+	</xs:simpleType>
 	<xs:simpleType name="AccessPointType">
 		<xs:annotation>
 			<xs:documentation>Registry item type. Value have to be one of items stored in the table reg_registry_type.</xs:documentation>
@@ -74,6 +80,7 @@ At least one name have to be defined.</xs:documentation>
 			<xs:element name="eid" type="e:ExternalId" minOccurs="0" maxOccurs="unbounded"/>
 		</xs:sequence>
 		<xs:attribute name="id" use="required" type="e:Id"/>
+		<xs:attribute name="s" use="optional" type="e:AccessPointState"/>
 		<xs:attribute name="t" use="required" type="e:AccessPointType">
 			<xs:annotation>
 				<xs:documentation>Type of access point</xs:documentation>
@@ -166,6 +173,18 @@ At least one name have to be defined.</xs:documentation>
 						<xs:documentation>Acess point entry ID</xs:documentation>
 					</xs:annotation>
 				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="DescriptionItemBinary">
+		<xs:annotation>
+			<xs:documentation>Binary data</xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="e:DescriptionItem">
+				<xs:sequence>
+					<xs:element name="d" type="e:BinData" minOccurs="1" maxOccurs="1"/>
+				</xs:sequence>
 			</xs:extension>
 		</xs:complexContent>
 	</xs:complexType>
@@ -517,6 +536,7 @@ Each file has name and its content - binary data.</xs:documentation>
 				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dg" type="e:DescriptionItemBinary" minOccurs="1" maxOccurs="1"/>
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="fid" use="optional" type="e:Id">
@@ -650,6 +670,7 @@ Each file has name and its content - binary data.</xs:documentation>
 				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dg" type="e:DescriptionItemBinary" minOccurs="1" maxOccurs="1"/>
 			</xs:choice>
 			<xs:element name="aprs" type="e:AccessPointRefs" minOccurs="0" maxOccurs="1">
 				<xs:annotation>
@@ -1118,6 +1139,7 @@ This is ID of the created party</xs:documentation>
 				<xs:element name="db" type="e:DescriptionItemBit" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="dl" type="e:DescriptionItemUriRef" minOccurs="1" maxOccurs="1"/>
 				<xs:element name="ddt" type="e:DescriptionItemDate" minOccurs="1" maxOccurs="1"/>
+				<xs:element name="dg" type="e:DescriptionItemBinary" minOccurs="1" maxOccurs="1"/>
 			</xs:choice>
 		</xs:sequence>
 		<xs:attribute name="asgn" use="optional" type="xs:boolean">

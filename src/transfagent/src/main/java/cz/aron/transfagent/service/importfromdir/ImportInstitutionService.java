@@ -169,7 +169,7 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 	private void copyInstitutionFiles(Path dir, Path instFilePath) {
 		try {
 			for (var instCode : ImportInstitution.readInstitutionCodes(instFilePath)) {
-				Path targetDir = dir.getParent().resolve(dir.getFileName().toString()+"-"+instCode);
+				Path targetDir = dir.getParent().resolve("institution-"+instCode);
 				FileSystemUtils.copyRecursively(dir, targetDir);
 				Path target = targetDir.resolve("institution-" + instCode + ".xml");
 				Path src = targetDir.resolve(instFilePath.getFileName());
