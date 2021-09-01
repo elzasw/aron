@@ -26,6 +26,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportFundInfo;
+import cz.aron.transfagent.peva.ImportPevaFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -109,7 +110,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         List<Path> xmls;
         try (var stream = Files.list(dir)) {
             xmls = stream
-                    .filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith("fund")
+                    .filter(f -> Files.isRegularFile(f) && (f.getFileName().toString().startsWith("fund") || f.getFileName().toString().startsWith("pevafund"))
                             && f.getFileName().toString().endsWith(".xml"))
                     .collect(Collectors.toList());
         } catch (IOException ioEx) {
@@ -120,13 +121,31 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
                 .filter(p -> p.getFileName().toString().startsWith("fund-")
                         && p.getFileName().toString().endsWith(".xml"))
                 .findFirst();
+        
+        var pevaFundXml = xmls.stream()
+                .filter(p -> p.getFileName().toString().startsWith("pevafund-")
+                        && p.getFileName().toString().endsWith(".xml"))
+                .findFirst();
 
-        if (fundXml.isEmpty()) {
+        if (fundXml.isEmpty()&&pevaFundXml.isEmpty()) {
             log.warn("Directory is empty {}", dir);
             return false;
         }
-
-        var fileName = fundXml.get().getFileName().toString();
+        
+        if (!fundXml.isEmpty()&&!pevaFundXml.isEmpty()) {
+        	log.warn("Directory contains 2 definitions {}", dir);
+            return false;
+        }
+        
+        if (!fundXml.isEmpty()) {
+        	return processFund(dir, fundXml.get());	
+        } else {
+        	return processFundPeva(dir, pevaFundXml.get());
+        }
+    }
+    
+    private boolean processFund(Path dir, Path fundXml) {
+        var fileName = fundXml.getFileName().toString();
         var tmp = fileName.substring("fund-".length());
         var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
         
@@ -137,7 +156,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         ApuSourceBuilder apusrcBuilder;
  
         try {
-            apusrcBuilder = ifi.importFundInfo(fundXml.get(), fundUuid, databaseDataProvider);
+            apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -177,6 +196,59 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         return true;
     }
 
+    private boolean processFundPeva(Path dir, Path fundXml) {
+        var fileName = fundXml.getFileName().toString();
+        var tmp = fileName.substring("pevafund-".length());
+        var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
+        
+        var fund = fundRepository.findByCode(fundCode);
+        UUID fundUuid = (fund!=null)?fund.getUuid():null;
+
+        var ifi = new ImportPevaFundInfo();
+        ApuSourceBuilder apusrcBuilder;
+ 
+        try {
+            apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } catch (JAXBException e) {
+            throw new IllegalStateException(e);
+        }
+        
+        if (fund != null) {
+            apusrcBuilder.setUuid(fund.getApuSource().getUuid());
+        }
+
+        var institutionCode = ifi.getInstitutionCode();
+        var institution = institutionRepository.findByCode(institutionCode);
+        if (institution == null) {
+            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
+        }
+
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+        } catch (IOException ioEx) {
+            throw new UncheckedIOException(ioEx);
+        } catch (JAXBException e) {
+            throw new IllegalStateException(e);
+        }
+
+        Path dataDir;
+        try {
+            dataDir = storageService.moveToDataDir(dir);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        if (fund == null) {
+            createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
+        } else {
+            updateFund(fund, dataDir, dir);
+        }
+        return true;
+    	
+    }
+    
     private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
 
         var fundUuid = apusrcBuilder.getMainApu().getUuid();
