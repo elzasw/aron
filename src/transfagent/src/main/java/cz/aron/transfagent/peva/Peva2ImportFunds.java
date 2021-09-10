@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
-import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeConstants;
 import javax.xml.datatype.DatatypeFactory;
@@ -18,6 +17,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -45,6 +45,7 @@ import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 
 @Service
+@ConditionalOnProperty(value = "peva2.urlr")
 public class Peva2ImportFunds implements ImportProcessor {
     
     private static final Logger log = LoggerFactory.getLogger(Peva2ImportFunds.class);
@@ -68,6 +69,8 @@ public class Peva2ImportFunds implements ImportProcessor {
     private final TransactionTemplate tt;
     
     private final StorageService storageService;
+    
+    private OffsetDateTime nextRun = null;
 
     public Peva2ImportFunds(PEvA peva2, PropertyRepository propertyRepository, FileImportService importService,
             ArchivalEntityRepository archivalEntityRepository, ApuSourceRepository apuSourceRepository,ConfigPeva2 config,
@@ -93,8 +96,12 @@ public class Peva2ImportFunds implements ImportProcessor {
         var updateAfterProp = propertyRepository.findByName(PEVA2_UPDATE_AFTER);
         var searchAfterProp = propertyRepository.findByName(PEVA2_SEARCH_AFTER);
         
-        final OffsetDateTime nowTime = OffsetDateTime.now();
-        OffsetDateTime nextTime = nowTime.plusSeconds(config.getInterval());        
+        final OffsetDateTime nowTime = OffsetDateTime.now();        
+        
+        if (nextRun!=null&&nextRun.isAfter(OffsetDateTime.now())) {
+        	//TODO nejake lepsi planovani
+        	return;
+        }
         
         XMLGregorianCalendar od = null;
         if (updateAfterProp != null&&StringUtils.isNotBlank(updateAfterProp.getValue())) {
@@ -131,6 +138,9 @@ public class Peva2ImportFunds implements ImportProcessor {
             propertyRepository.save(ua);
             return null;
         });
+        
+        // po uspesne synchronizaci nastavim dalsi cas synchronizace
+        nextRun = nowTime.plusSeconds(config.getInterval());
         
     }
 
