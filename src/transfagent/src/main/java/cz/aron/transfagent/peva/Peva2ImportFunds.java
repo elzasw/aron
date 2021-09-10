@@ -45,7 +45,7 @@ import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 
 @Service
-@ConditionalOnProperty(value = "peva2.urlr")
+@ConditionalOnProperty(value = "peva2.url")
 public class Peva2ImportFunds implements ImportProcessor {
     
     private static final Logger log = LoggerFactory.getLogger(Peva2ImportFunds.class);

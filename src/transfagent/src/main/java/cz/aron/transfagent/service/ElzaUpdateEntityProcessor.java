@@ -8,6 +8,7 @@ import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -25,6 +26,7 @@ import cz.tacr.elza.ws.types.v1.EntityUpdates;
 import cz.tacr.elza.ws.types.v1.SearchEntityUpdates;
 
 @Service
+@ConditionalOnProperty(value = "elza.update", havingValue="1", matchIfMissing=true)
 public class ElzaUpdateEntityProcessor implements ImportProcessor {
     
     private static final Logger log = LoggerFactory.getLogger(ElzaUpdateEntityProcessor.class);
