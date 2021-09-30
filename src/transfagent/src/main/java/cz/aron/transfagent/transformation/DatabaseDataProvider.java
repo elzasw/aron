@@ -106,6 +106,20 @@ public class DatabaseDataProvider implements ContextDataProvider {
 		Validate.notNull(fund.getUuid());
 		return fund.getUuid();
 	}
+	
+	@Override
+	public UUID getFundApuByUUID(String institutionCode, UUID fundUuid) {
+        var institution = institutionRepository.findByCode(institutionCode);
+        if (institution == null) {
+        	return null;
+        }
+		var fund = fundRepository.findByUuidAndInstitution(fundUuid, institution);
+		if(fund==null) {
+			return null;
+		}
+		Validate.notNull(fund.getUuid());
+		return fund.getUuid();		
+	}
 
     @Override
     public UUID getDao(String daoHandle) {

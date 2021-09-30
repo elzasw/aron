@@ -14,6 +14,8 @@ public interface ContextDataProvider {
     List<ArchEntityInfo> getArchivalEntityWithParentsByElzaId(Integer elzaId);
 
     UUID getFundApu(String institutionCode, String fundCode);
+    
+    UUID getFundApuByUUID(String institutionCode, UUID fundUuid);
 
     List<ArchEntityInfo> getArchivalEntityWithParentsByUuid(UUID apUuid);
 

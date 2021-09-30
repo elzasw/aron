@@ -15,6 +15,7 @@ import javax.xml.namespace.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cz.aron.peva2.wsdl.GetFindingAidResponse;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
 import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.peva2.wsdl.NadSheet;
@@ -62,4 +63,15 @@ public class Peva2XmlReader {
 	public static void marshalGetNadSheetResponse(GetNadSheetResponse gnsr, Path fileName) throws JAXBException {						
 		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetNadSheetResponse(gnsr), fileName.toFile());
 	}
+	
+	public static void marshalGetFindingAidResponse(GetFindingAidResponse gfar, Path fileName) throws JAXBException {
+		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetFindingAidResponse(gfar), fileName.toFile());
+	}
+
+	public static GetFindingAidResponse unmarshalGetFindingAidResponse(Path path) throws IOException, JAXBException {
+		try (InputStream is = Files.newInputStream(path)) {
+			return ((JAXBElement<GetFindingAidResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
+		}
+	}	
+	
 }

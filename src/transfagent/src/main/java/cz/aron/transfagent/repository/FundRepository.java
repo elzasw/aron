@@ -1,5 +1,7 @@
 package cz.aron.transfagent.repository;
 
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -13,7 +15,11 @@ public interface FundRepository extends JpaRepository<Fund, Integer> {
     Fund findByCode(String code);
 
     Fund findByCodeAndInstitution(String code, Institution institution);
+    
+    Fund findByUuidAndInstitution(UUID uuid, Institution institution);
 
     Fund findByApuSource(ApuSource apuSource);
+    
+    Fund findByUuid(UUID uuid);
 
 }

@@ -31,6 +31,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
+import cz.aron.transfagent.peva.ImportPevaFindingAid;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
@@ -80,6 +81,10 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
     final private String FINDING_AID_DASH = FINDING_AID + "-";
 
     final private String FINDING_AIDS_DIR = FINDING_AID + "s";
+    
+    private final String PEVA_FINDING_AID = "pevafa";
+    
+    private final String PEVA_FINDING_AID_DASH = PEVA_FINDING_AID + "-";
 
     private ImportProtocol protocol;
 
@@ -122,40 +127,125 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
      */
     @Override
     public boolean processDirectory(Path dir) {
-        List<Path> xmls;
-        try (var stream = Files.list(dir)) {
-            xmls = stream
-                    .filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith(FINDING_AID)
-                            && f.getFileName().toString().endsWith(".xml"))
-                    .collect(Collectors.toList());
-        } catch (IOException ioEx) {
-            throw new UncheckedIOException(ioEx);
+		List<Path> xmls;
+		try (var stream = Files.list(dir)) {
+			xmls = stream.filter(f -> Files.isRegularFile(f)
+					&& (f.getFileName().toString().startsWith(FINDING_AID)
+							|| f.getFileName().toString().startsWith(PEVA_FINDING_AID))
+					&& f.getFileName().toString().endsWith(".xml")).collect(Collectors.toList());
+		} catch (IOException ioEx) {
+			throw new UncheckedIOException(ioEx);
         }
 
         var findingaidXml = xmls.stream()
                 .filter(p -> p.getFileName().toString().startsWith(FINDING_AID_DASH)
                         && p.getFileName().toString().endsWith(".xml"))
                 .findFirst();
+        
+        var pevaFindingAidXml = xmls.stream()
+                .filter(p -> p.getFileName().toString().startsWith(PEVA_FINDING_AID_DASH)
+                        && p.getFileName().toString().endsWith(".xml"))
+                .findFirst(); 
 
-        if (findingaidXml.isEmpty()) {
+        if (findingaidXml.isEmpty()&&pevaFindingAidXml.isEmpty()) {
             log.warn("Directory is empty {}", dir);
             return false;
         }
 
         protocol = new ImportProtocol(dir);
         protocol.add("Zahájení importu");
-
-        var findingaidXmlPath = findingaidXml.get();
-        var fileName = findingaidXmlPath.getFileName().toString();
-        var tmp = fileName.substring(FINDING_AID_DASH.length());
-        var findingaidCode = tmp.substring(0, tmp.length() - ".xml".length());
-
-        boolean result = transactionTemplate.execute(t -> importFindingAid(t, dir, findingaidCode, findingaidXmlPath));
-
+        
+        boolean result;
+        if (findingaidXml.isPresent()) {
+            var findingaidXmlPath = findingaidXml.get();
+            var fileName = findingaidXmlPath.getFileName().toString();
+            var tmp = fileName.substring(FINDING_AID_DASH.length());
+            var findingaidCode = tmp.substring(0, tmp.length() - ".xml".length());
+            result = transactionTemplate.execute(t -> importFindingAid(t, dir, findingaidCode, findingaidXmlPath));        	
+        } else {
+            var findingaidXmlPath = pevaFindingAidXml.get();
+            var fileName = findingaidXmlPath.getFileName().toString();
+            var tmp = fileName.substring(PEVA_FINDING_AID_DASH.length());
+            var findingaidCode = tmp.substring(0, tmp.length() - ".xml".length());
+            result = transactionTemplate.execute(t -> importFindingAidPeva(t, dir, findingaidCode, findingaidXmlPath));        	        	
+        }
         protocol.add("Import byl úspěšně dokončen");
         return result;
     }
 
+    private boolean importFindingAidPeva(TransactionStatus t, 
+            Path dir, String findingAidCode, 
+            Path findingAidXmlPath) {
+            
+        var ifai = new ImportPevaFindingAid();
+        ApuSourceBuilder builder;
+        try {
+            builder = ifai.importFindingAidInfo(findingAidXmlPath, databaseDataProvider);
+        } catch (IOException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new UncheckedIOException(e);
+        } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new IllegalStateException(e);
+        }
+
+    	var fund = fundRepository.findByUuid(ifai.getFundUUID());
+        if (fund == null) {
+            protocol.add("The entry Fund code={" + findingAidCode + "} must exist.");
+            //throw new IllegalStateException("The entry Fund code={" + findingAidCode + "} must exist.");
+        }
+        var findingAid = findingAidRepository.findByUuid(ifai.getFindingAidUUID());
+        UUID findingaidUuid, apusourceUuid;
+        if (findingAid != null) {
+            findingaidUuid = findingAid.getUuid();
+            apusourceUuid = findingAid.getApuSource().getUuid();
+        } else {
+            findingaidUuid = ifai.getFindingAidUUID();
+            apusourceUuid = UUID.randomUUID();
+        }
+
+        var institutionCode = ifai.getInstitutionCode();
+        var institution = institutionRepository.findByCode(institutionCode);
+        if (institution == null) {
+            protocol.add("The entry Institution code={" + institutionCode + "} must exist.");
+            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
+        }
+
+        List<Path> attachments = readAttachments(dir, findingAidCode, builder);
+        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+            builder.setUuid(apusourceUuid);
+            builder.build(fos, new ApuValidator(configurationLoader.getConfig()));
+        } catch (IOException ioEx) {
+            protocol.add("Chyba " + ioEx.getMessage());
+            throw new UncheckedIOException(ioEx);
+        } catch (JAXBException e) {
+            protocol.add("Chyba " + e.getMessage());
+            throw new IllegalStateException(e);
+        }
+
+        Path dataDir;
+        try {
+            dataDir = storageService.moveToDataDir(dir);
+            protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
+            // change directory of attachments
+            if(attachments!=null) {
+                attachments = attachments.stream()
+                        .map(p -> dataDir.resolve(p.getFileName()))
+                        .collect(Collectors.toList());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        
+        if (findingAid == null) {
+            createFindingAid(findingAidCode, fund, institution, dataDir, dir, builder, attachments);
+        } else {
+            updateFindingAid(findingAid, dataDir, dir, builder, attachments);
+        }
+        
+    	return true;
+    }
+    
     private boolean importFindingAid(TransactionStatus t, 
                                   Path dir, String findingAidCode, 
                                   Path findingAidXmlPath) {

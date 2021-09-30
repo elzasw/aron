@@ -108,41 +108,10 @@ public class ImportPevaFundInfo {
         }        
         // datace
         if (nadHeader.getTimeRange()!=null) {
-        	fillDateRange(nadHeader.getTimeRange(), partFundInfo);
+        	Peva2Utils.fillDateRange(nadHeader.getTimeRange(), partFundInfo, apusBuilder);
         }        
 
-    }
-    
-    private void fillDateRange(UniversalTimeRange timeRange, Part partFundInfo) {    	
-    	String timeRangeFrom = timeRange.getTimeRangeFrom();
-    	String timeRangeTo = timeRange.getTimeRangeTo();    	
-    	var itemDateRange = new ItemDateRange();    	
-    	if (timeRangeFrom!=null) {
-        	itemDateRange.setF(getDate(timeRangeFrom));
-        	itemDateRange.setFe(isEstimate(timeRangeFrom));    		
-    	}    	
-    	if (timeRangeTo!=null) {
-        	itemDateRange.setTo(getDate(timeRangeTo));
-        	itemDateRange.setToe(isEstimate(timeRangeTo));    		
-    	}    	
-    	itemDateRange.setFmt("Y-Y");
-    	itemDateRange.setType(CoreTypes.UNIT_DATE);
-    	itemDateRange.setVisible(true);    	
-    	apusBuilder.addDateRange(partFundInfo, itemDateRange);
-    }
-    
-    private String getDate(String date) {
-    	if (isEstimate(date)) {
-    		return date.substring(1,date.length()-1);
-    	} else {
-    		return date;
-    	}
-    }
-    
-    private boolean isEstimate(String date) {
-    	return date.startsWith("[");
-    }
-    
+    }   
 
     public String getInstitutionCode() {
     	return institutionCode;

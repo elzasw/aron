@@ -57,4 +57,10 @@ public class PropertiesDataProvider implements ContextDataProvider {
     public UUID getDao(String daoHandle) {
         return null;
     }
+
+	@Override
+	public UUID getFundApuByUUID(String institutionCode, UUID fundUuid) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
