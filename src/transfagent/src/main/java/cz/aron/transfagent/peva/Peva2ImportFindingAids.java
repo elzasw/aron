@@ -88,35 +88,34 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
         return numUpdated;
 	}
 
-	private void patchFindingAidsBatch(List<FindingAid> findingAids, Peva2CodeLists codeLists, Map<String, List<Path>> attachments) {
+	private void patchFindingAidsBatch(List<FindingAid> findingAids, Peva2CodeLists codeLists,
+			Map<String, List<Path>> attachments) {
 		var faInputDir = storageService.getInputPath().resolve("findingAids");
-		for (var findingAid : findingAids) {			
+		for (var findingAid : findingAids) {
 			if (findingAid.getNadSheets() == null || findingAid.getNadSheets().getNadSheet() == null
 					|| findingAid.getNadSheets().getNadSheet().isEmpty()) {
-				log.warn("Finding aid without NadSheet institution:{}, finding aid:{}", findingAid.getInstitution().getExternalId(), findingAid.getEvidenceNumber());
+				log.warn("Finding aid without NadSheet institution:{}, finding aid:{}, id:{}",
+						findingAid.getInstitution().getExternalId(), findingAid.getEvidenceNumber(),
+						findingAid.getId());
 				continue;
-			}			
+			}
 			var gfar = new GetFindingAidResponse();
-			gfar.setFindingAid(findingAid);			
-			String id = findingAid.getInstitution().getExternalId() + "_" + findingAid.getId();			
-			var faDir = faInputDir.resolve("pevafa-"+id);
+			gfar.setFindingAid(findingAid);
+			String id = findingAid.getInstitution().getExternalId() + "_" + findingAid.getId();
+			var faDir = faInputDir.resolve("pevafa-" + id);
 			try {
 				Files.createDirectories(faDir);
-				Path name = faDir.resolve("pevafa-"+id+".xml");
+				Path name = faDir.resolve("pevafa-" + id + ".xml");
 				Peva2XmlReader.marshalGetFindingAidResponse(gfar, name);
-				
-				if ("1366".equals(findingAid.getEvidenceNumber())) {
-					System.out.println("Nazdar");
-				}
-				
+
 				var attachmentFiles = attachments.get(findingAid.getEvidenceNumber());
-				if (attachmentFiles!=null) {
-					for(var attachmentFile:attachmentFiles) {
-						Files.copy(attachmentFile, faDir.resolve(attachmentFile.getFileName()));						
+				if (attachmentFiles != null) {
+					for (var attachmentFile : attachmentFiles) {
+						Files.copy(attachmentFile, faDir.resolve(attachmentFile.getFileName()));
 					}
-				}				
+				}
 			} catch (Exception e) {
-				log.error("Fail to store peva finding aid {} to input dir",findingAid.getId(),e);			
+				log.error("Fail to store peva finding aid {} to input dir", findingAid.getId(), e);
 			}
 		}
 	}
@@ -135,6 +134,8 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 						Matcher m = pattern.matcher(fileName);					
 						if (m.matches()) {
 							var code = m.group(1);
+							// odstraneni pocatecnich nul
+							code = ""+Integer.parseInt(code);
 							var pathList = ret.get(code);
 							if (pathList==null) {
 								pathList = new ArrayList<Path>();
