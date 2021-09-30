@@ -10,11 +10,15 @@ public class Peva2CodeListProvider {
 		this.codeListDownloader = codeListDownloader;
 	}
 
-	public Peva2CodeLists getCodeLists() {
+	public synchronized Peva2CodeLists getCodeLists() {
 		if (codeLists == null) {
 			codeLists = codeListDownloader.downloadCodeLists();
 		}
 		return codeLists;
+	}
+	
+	public synchronized void reset() {
+		codeLists = null;
 	}
 
 }

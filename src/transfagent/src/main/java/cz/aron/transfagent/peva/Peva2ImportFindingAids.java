@@ -90,7 +90,7 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 
 	private void patchFindingAidsBatch(List<FindingAid> findingAids, Peva2CodeLists codeLists,
 			Map<String, List<Path>> attachments) {
-		var faInputDir = storageService.getInputPath().resolve("findingAids");
+		var faInputDir = storageService.getInputPath().resolve("findingaids");
 		for (var findingAid : findingAids) {
 			if (findingAid.getNadSheets() == null || findingAid.getNadSheets().getNadSheet() == null
 					|| findingAid.getNadSheets().getNadSheet().isEmpty()) {

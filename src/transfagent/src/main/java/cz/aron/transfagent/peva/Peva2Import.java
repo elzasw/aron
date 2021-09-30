@@ -3,6 +3,7 @@ package cz.aron.transfagent.peva;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PostConstruct;
 
@@ -26,11 +27,11 @@ public class Peva2Import implements ImportProcessor {
 
 	private final PEvA peva2;
 
-	private final Peva2CodeListDownloader codeListDownloader;
-
 	private final List<Peva2Downloader> downloaders = new ArrayList<>();
 	
 	private final ApplicationContext applicationContext;
+	
+	private final Peva2CodeListProvider codeListProvider;
 
 	private OffsetDateTime nextRun = null;
 
@@ -39,8 +40,10 @@ public class Peva2Import implements ImportProcessor {
 		this.importService = importService;
 		this.config = config;
 		this.peva2 = peva2;
-		this.codeListDownloader = codeListDownloader;
+		this.codeListProvider = new Peva2CodeListProvider(codeListDownloader);
 		this.applicationContext = applicationContext;
+		
+		PEvA2Client.fillHeaders(peva2, config);		
 	}
 
 	@PostConstruct
@@ -61,9 +64,8 @@ public class Peva2Import implements ImportProcessor {
 			// TODO nejake lepsi planovani
 			return;
 		}
-
-		PEvA2Client.fillHeaders(peva2, config);
-		Peva2CodeListProvider codeListProvider = new Peva2CodeListProvider(codeListDownloader);
+		
+		codeListProvider.reset();
 		for (var downloader : downloaders) {
 			downloader.importDataInternal(ic, codeListProvider);
 		}
@@ -72,4 +74,8 @@ public class Peva2Import implements ImportProcessor {
 		nextRun = nowTime.plusSeconds(config.getInterval());
 	}
 
+	public Peva2CodeLists getCodeLists() {
+		return codeListProvider.getCodeLists();
+	}
+	
 }

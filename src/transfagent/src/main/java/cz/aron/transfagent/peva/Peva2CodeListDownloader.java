@@ -67,7 +67,6 @@ public class Peva2CodeListDownloader {
     
 	private Map<String, String> getFindingAidType() {
 		Map<String, String> ret = new HashMap<>();
-		/*
 		var lfatReq = new ListFindingAidTypeRequest();
 		lfatReq.setSize(100);
 		var lfatResp = peva2.listFindingAidType(lfatReq);
@@ -75,7 +74,6 @@ public class Peva2CodeListDownloader {
 			ret.put(findingAidType.getId(), findingAidType.getName());
 		}
 		log.info("Finding aid type downloaded.");
-		*/
 		return ret;
 	}
 

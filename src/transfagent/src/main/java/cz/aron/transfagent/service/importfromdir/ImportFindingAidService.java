@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,7 @@ import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
 import cz.aron.transfagent.peva.ImportPevaFindingAid;
+import cz.aron.transfagent.peva.Peva2Import;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
@@ -76,12 +78,15 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
     private final TransactionTemplate transactionTemplate;
 
     private final ConfigurationLoader configurationLoader;
+    
+    // TODO predelat jednotlive importy do bean
+    private final Optional<Peva2Import> peva2import;
 
-    final private String FINDING_AID = "findingaid";
+    private final String FINDING_AID = "findingaid";
 
-    final private String FINDING_AID_DASH = FINDING_AID + "-";
+    private final String FINDING_AID_DASH = FINDING_AID + "-";
 
-    final private String FINDING_AIDS_DIR = FINDING_AID + "s";
+    private final String FINDING_AIDS_DIR = FINDING_AID + "s";
     
     private final String PEVA_FINDING_AID = "pevafa";
     
@@ -96,7 +101,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             FindingAidRepository findingAidRepository, AttachmentRepository attachmentRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, FundRepository fundRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader) {
+            ConfigurationLoader configurationLoader, Optional<Peva2Import> peva2import) {
         this.apuSourceService = apuSourceService;
         this.fileImportService = fileImportService;
         this.reimportService = reimportService;
@@ -110,6 +115,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         this.databaseDataProvider = databaseDataProvider;
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
+        this.peva2import = peva2import;
     }
 
     @PostConstruct
@@ -180,7 +186,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             Path dir, String findingAidCode, 
             Path findingAidXmlPath) {
             
-        var ifai = new ImportPevaFindingAid();
+        var ifai = new ImportPevaFindingAid(peva2import.get().getCodeLists());
         ApuSourceBuilder builder;
         try {
             builder = ifai.importFindingAidInfo(findingAidXmlPath, databaseDataProvider);

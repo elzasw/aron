@@ -23,12 +23,18 @@ public class ImportPevaFindingAid {
 	private ContextDataProvider dataProvider;
 
 	private final ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
+	
+	private final Peva2CodeLists codeLists;
 
 	private String institutionCode;
 
 	private UUID fundUUID;
 	
 	private UUID findingAidUUID;
+	
+	public ImportPevaFindingAid(Peva2CodeLists codeLists) {
+		this.codeLists = codeLists;
+	}
 
 	public ApuSourceBuilder importFindingAidInfo(final Path inputFile, final ContextDataProvider cdp)
 			throws IOException, JAXBException {
@@ -69,7 +75,7 @@ public class ImportPevaFindingAid {
 			apusBuilder.addString(partInfo, CoreTypes.FINDINGAID_RELEASE_DATE_PLACE, releaseDatePlace);
 		}*/
 						
-		var findingAidType = Peva2CodeLists.findingAidTypesDefault.get(findingAid.getType());
+		var findingAidType = codeLists.getFindingAidTypes().get(findingAid.getType());
 		if (StringUtils.isNotEmpty(findingAidType)) {
 			apusBuilder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, findingAidType);
 		}
