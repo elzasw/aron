@@ -45,11 +45,10 @@ public class Peva2Import implements ImportProcessor {
 
 	@PostConstruct
 	void init() {
-		
 		// create downloaders
+		//downloaders.add(applicationContext.getBean(Peva2ImportOriginators.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFunds.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAids.class));
-		
 		importService.registerImportProcessor(this);
 	}
 

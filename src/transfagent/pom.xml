@@ -428,6 +428,9 @@
 									<packagenames>
 										<packagename>cz.aron.peva2.wsdl</packagename>
 									</packagenames>
+									<bindingFiles>
+						                            <bindingFile>${basedir}/src/main/resources/wsdl/peva_v1.xjb</bindingFile>
+						                        </bindingFiles>
 								</wsdlOption>
 							</wsdlOptions>
 						</configuration>

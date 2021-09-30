@@ -24,6 +24,8 @@ public class ConfigPeva2 {
     private int batchSize = 100;
     
     private boolean soapLogging;
+    
+    private String attachmentDir;
 
     public String getUserId() {
         return userId;
@@ -96,5 +98,13 @@ public class ConfigPeva2 {
     public void setSoapLogging(boolean soapLogging) {
         this.soapLogging = soapLogging;
     }
+
+	public String getAttachmentDir() {
+		return attachmentDir;
+	}
+
+	public void setAttachmentDir(String attachmentDir) {
+		this.attachmentDir = attachmentDir;
+	}    
 
 }

@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -85,6 +86,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
     private final String PEVA_FINDING_AID = "pevafa";
     
     private final String PEVA_FINDING_AID_DASH = PEVA_FINDING_AID + "-";
+    
+    private final Tika tika = new Tika();
 
     private ImportProtocol protocol;
 
@@ -211,7 +214,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
-        List<Path> attachments = readAttachments(dir, findingAidCode, builder);
+        List<Path> attachments = readAllAttachments(dir, builder);
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
             builder.setUuid(apusourceUuid);
             builder.build(fos, new ApuValidator(configurationLoader.getConfig()));
@@ -319,6 +322,33 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         }
         return true;
     }
+    
+	private List<Path> readAllAttachments(Path dir, ApuSourceBuilder builder) {
+		// get root apu
+		var apu = builder.getMainApu();
+		List<Path> attachments = new ArrayList<>();
+
+		try (var stream = Files.list(dir)) {
+			stream.forEach(f -> {
+				if (Files.isRegularFile(f) && !f.getFileName().toString().startsWith(PEVA_FINDING_AID_DASH)
+						&& !"protokol.txt".equals(f.getFileName().toString())) {
+
+					String mimetype = null;
+					try {
+						mimetype = tika.detect(f);
+					} catch (IOException e) {
+						throw new UncheckedIOException(e);
+					}
+					var att = builder.addAttachment(apu, f.getFileName().toString(), mimetype);
+					attachments.add(f);
+				}
+			});
+		} catch (IOException e) {
+			log.error("Fail to read attachments from directory {}", dir);
+			throw new UncheckedIOException(e);
+		}
+		return attachments;
+	}    
 
     private List<Path> readAttachments(Path dir, String findingaidCode, ApuSourceBuilder builder) {
         // get root apu

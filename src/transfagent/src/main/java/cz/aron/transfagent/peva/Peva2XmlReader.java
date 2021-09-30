@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
+import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
@@ -72,6 +73,17 @@ public class Peva2XmlReader {
 		try (InputStream is = Files.newInputStream(path)) {
 			return ((JAXBElement<GetFindingAidResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
 		}
+	}
+	
+	public static void marshalGetOriginatorResponse(GetOriginatorResponse gfar, Path fileName) throws JAXBException {
+		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetOriginatorResponse(gfar), fileName.toFile());
+	}
+
+	public static GetOriginatorResponse unmarshalGetOriginatorResponse(Path path) throws IOException, JAXBException {
+		try (InputStream is = Files.newInputStream(path)) {
+			return ((JAXBElement<GetOriginatorResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
+		}
 	}	
+
 	
 }
