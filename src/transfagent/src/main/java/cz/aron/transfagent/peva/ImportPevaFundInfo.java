@@ -136,6 +136,24 @@ public class ImportPevaFundInfo {
 				});
 			}
 		}
+		
+		// odkaz na archivni pomucky
+		var findingAids = nadSheet.getFindingAids();
+		if (findingAids!=null&&findingAids.getFindingAid()!=null) {
+			findingAids.getFindingAid().forEach(fa->{
+				apusBuilder.addApuRef(partFundInfo, "FINDINGAID_REF", UUID.fromString(fa));				
+			});
+			
+		}
+		
+		// odkaz na puvodce
+		var originators = nadSheet.getOriginators();
+		if (originators!=null&&originators.getOriginator()!=null) {
+			originators.getOriginator().forEach(o->{
+				apusBuilder.addApuRef(partFundInfo, "ORIGINATOR_REF", UUID.fromString(o));		
+			});
+		}
+		
     }   
 
     public String getInstitutionCode() {
