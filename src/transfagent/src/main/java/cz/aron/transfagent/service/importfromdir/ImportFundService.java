@@ -19,6 +19,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
+import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.CoreQueue;
@@ -62,6 +63,9 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
 
     private final ConfigurationLoader configurationLoader;
     
+    // TODO rozdelit import do komponent
+    private final ConfigPeva2 configPeva2;
+    
     final FileImportService fileImportService;
 
     final private String FUND_DIR = "fund";
@@ -71,7 +75,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
             ApuSourceRepository apuSourceRepository, FundRepository fundRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader,
-            final FileImportService fileImportService) {
+            final FileImportService fileImportService, ConfigPeva2 configPeva2) {
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
         this.storageService = storageService;
@@ -83,6 +87,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
         this.fileImportService = fileImportService;
+        this.configPeva2 = configPeva2;
     }
 
     @PostConstruct
@@ -204,7 +209,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         var fund = fundRepository.findByCode(fundCode);
         UUID fundUuid = (fund!=null)?fund.getUuid():null;
 
-        var ifi = new ImportPevaFundInfo();
+        var ifi = new ImportPevaFundInfo(configPeva2.isParseInternalChanges());
         ApuSourceBuilder apusrcBuilder;
  
         try {

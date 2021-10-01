@@ -621,6 +621,27 @@ itemTypes:
     name: Rejstříkové heslo
     type: APU_REF
     indexed: true
+  # Udaje k fondu z PEvA
+  - code: FUND_NOTE
+    name: Poznámka
+    type: STRING
+    indexed: true
+  - code: FUND_ORIG_NOTE
+    name: O původci
+    type: STRING
+    indexed: true
+  - code: FUND_TOPIC
+    name: Téma
+    type: STRING
+    indexed: true
+  - code: FUND_EDITIONS
+    name: Edice
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_REF
+    name: Archivní pomůcka
+    type: APU_REF
+    indexed: true
 
   #
   # Archivní pomucka

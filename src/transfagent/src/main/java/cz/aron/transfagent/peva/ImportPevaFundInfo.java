@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -25,6 +26,9 @@ import cz.aron.transfagent.transformation.PropertiesDataProvider;
 
 public class ImportPevaFundInfo {
 	
+	// pokud nejsou nastavene editions tak vezme prvni radek z intenal changes
+	private final boolean parseInternalChanges;
+	
 	private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
     
     private ContextDataProvider dataProvider;
@@ -33,7 +37,7 @@ public class ImportPevaFundInfo {
     
     public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
-        ImportPevaFundInfo ifi = new ImportPevaFundInfo();
+        ImportPevaFundInfo ifi = new ImportPevaFundInfo(false);
         try {
             ApuSourceBuilder apusrcBuilder = ifi.importFundInfo(inputFile, args[1]);
             Path ouputPath = Paths.get(args[2]);
@@ -45,6 +49,10 @@ public class ImportPevaFundInfo {
             e.printStackTrace();
         }
 
+    }
+    
+    public ImportPevaFundInfo(boolean parseInternalChanges) {
+    	this.parseInternalChanges = parseInternalChanges;
     }
 
     public ApuSourceBuilder importFundInfo(Path inputFile, String propFile) throws IOException, JAXBException {
@@ -107,8 +115,27 @@ public class ImportPevaFundInfo {
         // datace
         if (nadHeader.getTimeRange()!=null) {
         	Peva2Utils.fillDateRange(nadHeader.getTimeRange(), partFundInfo, apusBuilder);
-        }        
-
+        }
+		var additionalInfo = nadSheet.getAdditionalInfo();
+		if (additionalInfo != null) {
+			if (StringUtils.isNotBlank(additionalInfo.getNote())) {
+				apusBuilder.addString(partFundInfo, "FUND_NOTE", additionalInfo.getNote());
+			}
+			if (StringUtils.isNotBlank(additionalInfo.getOriginator())) {
+				apusBuilder.addString(partFundInfo, "FUND_ORIG_NOTE", additionalInfo.getOriginator());
+				apusBuilder.getMainApu().setDesc(additionalInfo.getOriginator());
+			}
+			if (StringUtils.isNotBlank(additionalInfo.getThematicDescription())) {
+				apusBuilder.addString(partFundInfo, "FUND_TOPIC", additionalInfo.getThematicDescription());
+			}
+			if (StringUtils.isNotBlank(additionalInfo.getEdition())) {
+				apusBuilder.addString(partFundInfo, "FUND_EDITIONS", additionalInfo.getEdition());
+			} else if (parseInternalChanges && StringUtils.isNotBlank(additionalInfo.getInternalChanges())) {
+				additionalInfo.getInternalChanges().lines().findFirst().ifPresent(l -> {
+					apusBuilder.addString(partFundInfo, "FUND_EDITIONS", l);
+				});
+			}
+		}
     }   
 
     public String getInstitutionCode() {

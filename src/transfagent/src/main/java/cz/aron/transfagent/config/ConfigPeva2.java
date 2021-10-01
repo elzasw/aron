@@ -26,6 +26,8 @@ public class ConfigPeva2 {
     private boolean soapLogging;
     
     private String attachmentDir;
+    
+    private boolean parseInternalChanges;
 
     public String getUserId() {
         return userId;
@@ -105,6 +107,14 @@ public class ConfigPeva2 {
 
 	public void setAttachmentDir(String attachmentDir) {
 		this.attachmentDir = attachmentDir;
-	}    
+	}
 
+	public boolean isParseInternalChanges() {
+		return parseInternalChanges;
+	}
+
+	public void setParseInternalChanges(boolean parseInternalChanges) {
+		this.parseInternalChanges = parseInternalChanges;
+	}    
+	
 }
