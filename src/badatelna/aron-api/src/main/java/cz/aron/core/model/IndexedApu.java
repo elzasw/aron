@@ -15,6 +15,8 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.SORTING;
+import static cz.inqool.eas.common.domain.index.field.ES.Suffix.SORT;
 
 /**
  * @author Lukas Jane (inQool) 29.10.2020.
@@ -32,8 +36,13 @@ import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TO
 @Document(indexName = "apu")
 public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
 
-    @Boost(2)
-    @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP, fielddata = true)
+    @Boost(2)    
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP),
+            otherFields = {
+                    @InnerField(suffix = SORT, type = FieldType.Keyword)
+            }
+    )
     private String name;
 
     @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP)
