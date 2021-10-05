@@ -48,7 +48,6 @@ public class ImportPevaFundInfo {
             System.err.println("Failed to process input file: "+inputFile);
             e.printStackTrace();
         }
-
     }
     
     public ImportPevaFundInfo(boolean parseInternalChanges) {

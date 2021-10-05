@@ -1,17 +1,11 @@
 package cz.aron.transfagent.service.importfromdir;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.xml.bind.JAXBException;
 
-import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,12 +16,8 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.CoreQueue;
-import cz.aron.transfagent.domain.Fund;
-import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ImportFundInfo;
-import cz.aron.transfagent.peva.ImportPevaFundInfo;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -36,6 +26,7 @@ import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.importfromdir.ImportFundService.FundImporter.ImportResult;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -43,51 +34,33 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
 
     private static final Logger log = LoggerFactory.getLogger(ImportFundService.class);
 
-    private final ApuSourceService apuSourceService;
-
     private final ReimportService reimportService;
 
     private final StorageService storageService;
-
-    private final InstitutionRepository institutionRepository;
-
-    private final CoreQueueRepository coreQueueRepository;
-
-    private final ApuSourceRepository apuSourceRepository;
 
     private final FundRepository fundRepository;
 
     private final DatabaseDataProvider databaseDataProvider;
 
-    private final TransactionTemplate transactionTemplate;
-
     private final ConfigurationLoader configurationLoader;
     
-    // TODO rozdelit import do komponent
-    private final ConfigPeva2 configPeva2;
-    
-    final FileImportService fileImportService;
+    private final List<FundImporter> fundImporters;
+        
+    private final FileImportService fileImportService;
 
-    final private String FUND_DIR = "fund";
+    private final String FUND_DIR = "fund";
 
-    public ImportFundService(ApuSourceService apuSourceService, ReimportService reimportService, StorageService storageService,
-            InstitutionRepository institutionRepository, CoreQueueRepository coreQueueRepository,
-            ApuSourceRepository apuSourceRepository, FundRepository fundRepository,
-            DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
+    public ImportFundService(ReimportService reimportService, StorageService storageService,            
+            FundRepository fundRepository, DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
             ConfigurationLoader configurationLoader,
-            final FileImportService fileImportService, ConfigPeva2 configPeva2) {
-        this.apuSourceService = apuSourceService;
+            FileImportService fileImportService, List<FundImporter> fundImporters) {
         this.reimportService = reimportService;
         this.storageService = storageService;
-        this.institutionRepository = institutionRepository;
-        this.coreQueueRepository = coreQueueRepository;
-        this.apuSourceRepository = apuSourceRepository;
         this.fundRepository = fundRepository;
         this.databaseDataProvider = databaseDataProvider;
-        this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
         this.fileImportService = fileImportService;
-        this.configPeva2 = configPeva2;
+        this.fundImporters = fundImporters;
     }
 
     @PostConstruct
@@ -111,194 +84,23 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
      */
     @Override
     public boolean processDirectory(Path dir) {
-
-        List<Path> xmls;
-        try (var stream = Files.list(dir)) {
-            xmls = stream
-                    .filter(f -> Files.isRegularFile(f) && (f.getFileName().toString().startsWith("fund") || f.getFileName().toString().startsWith("pevafund"))
-                            && f.getFileName().toString().endsWith(".xml"))
-                    .collect(Collectors.toList());
-        } catch (IOException ioEx) {
-            throw new UncheckedIOException(ioEx);
-        }
-
-        var fundXml = xmls.stream()
-                .filter(p -> p.getFileName().toString().startsWith("fund-")
-                        && p.getFileName().toString().endsWith(".xml"))
-                .findFirst();
-        
-        var pevaFundXml = xmls.stream()
-                .filter(p -> p.getFileName().toString().startsWith("pevafund-")
-                        && p.getFileName().toString().endsWith(".xml"))
-                .findFirst();
-
-        if (fundXml.isEmpty()&&pevaFundXml.isEmpty()) {
-            log.warn("Directory is empty {}", dir);
-            return false;
-        }
-        
-        if (!fundXml.isEmpty()&&!pevaFundXml.isEmpty()) {
-        	log.warn("Directory contains 2 definitions {}", dir);
-            return false;
-        }
-        
-        if (!fundXml.isEmpty()) {
-        	return processFund(dir, fundXml.get());	
-        } else {
-        	return processFundPeva(dir, pevaFundXml.get());
-        }
-    }
-    
-    private boolean processFund(Path dir, Path fundXml) {
-        var fileName = fundXml.getFileName().toString();
-        var tmp = fileName.substring("fund-".length());
-        var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
-        
-        var fund = fundRepository.findByCode(fundCode);
-        UUID fundUuid = (fund!=null)?fund.getUuid():null;
-
-        var ifi = new ImportFundInfo();
-        ApuSourceBuilder apusrcBuilder;
- 
-        try {
-            apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
-        
-        if (fund != null) {
-            apusrcBuilder.setUuid(fund.getApuSource().getUuid());
-        }
-
-        var institutionCode = ifi.getInstitutionCode();
-        var institution = institutionRepository.findByCode(institutionCode);
-        if (institution == null) {
-            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
-        }
-
-        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
-        } catch (IOException ioEx) {
-            throw new UncheckedIOException(ioEx);
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
-
-        Path dataDir;
-        try {
-            dataDir = storageService.moveToDataDir(dir);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        if (fund == null) {
-            createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
-        } else {
-            updateFund(fund, dataDir, dir);
-        }
-        return true;
-    }
-
-    private boolean processFundPeva(Path dir, Path fundXml) {
-        var fileName = fundXml.getFileName().toString();
-        var tmp = fileName.substring("pevafund-".length());
-        var fundCode = tmp.substring(0, tmp.length() - ".xml".length());
-        
-        var fund = fundRepository.findByCode(fundCode);
-        UUID fundUuid = (fund!=null)?fund.getUuid():null;
-
-        var ifi = new ImportPevaFundInfo(configPeva2.isParseInternalChanges());
-        ApuSourceBuilder apusrcBuilder;
- 
-        try {
-            apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
-        
-        if (fund != null) {
-            apusrcBuilder.setUuid(fund.getApuSource().getUuid());
-        }
-
-        var institutionCode = ifi.getInstitutionCode();
-        var institution = institutionRepository.findByCode(institutionCode);
-        if (institution == null) {
-            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
-        }
-
-        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
-            apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
-        } catch (IOException ioEx) {
-            throw new UncheckedIOException(ioEx);
-        } catch (JAXBException e) {
-            throw new IllegalStateException(e);
-        }
-
-        Path dataDir;
-        try {
-            dataDir = storageService.moveToDataDir(dir);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        if (fund == null) {
-            createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
-        } else {
-            updateFund(fund, dataDir, dir);
-        }
-        return true;
     	
-    }
-    
-    private void createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder, String fundCode) {
+    	boolean imported = false;
+    	out:for(var fundImporter:fundImporters) {    		
+    		ImportResult importResult = fundImporter.processPath(dir);
+    		switch(importResult) {
+    		case IMPORTED:
+    			imported = true;
+    			break out;
+    		case FAIL:
+    			break out;
+    		case UNSUPPORTED:
+    			break;
+    		default:
+    		}
+    	}
 
-        var fundUuid = apusrcBuilder.getMainApu().getUuid();
-        Validate.notNull(fundUuid, "Fund UUID is null");
-        
-        var apuSourceUuidStr = apusrcBuilder.getApusrc().getUuid();
-        var apuSourceUuid = apuSourceUuidStr == null? UUID.randomUUID() : UUID.fromString(apuSourceUuidStr); 
-
-        transactionTemplate.execute(t -> {
-            var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FUND, 
-                    dataDir, origDir.getFileName().toString());
-
-            var fund = new Fund();
-            fund.setApuSource(apuSource);
-            fund.setInstitution(institution);
-            fund.setCode(fundCode);
-            fund.setSource("source");
-            fund.setUuid(UUID.fromString(fundUuid));
-            fund = fundRepository.save(fund);
-
-            var coreQueue = new CoreQueue();
-            coreQueue.setApuSource(apuSource);
-            coreQueueRepository.save(coreQueue);
-            return null;
-        });
-        log.info("Fund created code={}, uuid={}", fundCode, fundUuid);
-    }
-
-    private void updateFund(Fund fund, Path dataDir, Path origDir) {
-
-        var oldDir = fund.getApuSource().getDataDir();
-
-        transactionTemplate.execute(t -> {
-            var apuSource = fund.getApuSource();
-            apuSource.setDataDir(dataDir.toString());
-            apuSource.setOrigDir(origDir.getFileName().toString());
-
-            var coreQueue = new CoreQueue();
-            coreQueue.setApuSource(apuSource);
-
-            apuSourceRepository.save(apuSource);
-            coreQueueRepository.save(coreQueue);
-            return null;
-        });
-        log.info("Fund updated code={}, uuid={}, original data dir {}", fund.getCode(), fund.getUuid(), oldDir);
+    	return imported;
     }
 
     @Override
@@ -329,4 +131,17 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
         return Result.REIMPORTED;
     }
 
+    
+    public interface FundImporter {
+    	
+    	enum ImportResult {
+    		IMPORTED,
+    		FAIL,
+    		UNSUPPORTED
+    	}
+    	
+    	ImportResult processPath(Path path);
+    	
+    }
+    
 }
