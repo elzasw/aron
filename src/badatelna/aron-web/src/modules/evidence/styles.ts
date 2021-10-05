@@ -109,6 +109,7 @@ export const useStyles = makeStyles((theme) => {
 
       '& p': {
         margin: 0,
+        whiteSpace: "pre-wrap",
       },
     },
     listItemTitleOnly: {
@@ -161,6 +162,7 @@ export const useStyles = makeStyles((theme) => {
     evidenceDetailItemText: {
       marginTop: 0,
       marginBottom: 0,
+      whiteSpace: "pre-wrap",
     },
 
     toggleSidebarButtonOpen: {
