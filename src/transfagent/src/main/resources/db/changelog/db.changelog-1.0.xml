@@ -329,4 +329,41 @@
 
   </changeSet>
 
+
+  <changeSet  id="2" author="karel.zacek@lightcomp.cz">
+    <createTable tableName="finding_aid_fund">
+      <column name="finding_aid_id" type="int">
+        <constraints nullable="false" />
+      </column>
+      <column name="fund_id" type="int">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <sql>
+    	insert into finding_aid_fund(fund_id, finding_aid_id)
+	select fund_id, finding_aid_id
+	from finding_aid;
+    </sql>
+
+    <addForeignKeyConstraint
+      baseTableName="finding_aid_fund" baseColumnNames="fund_id"
+      constraintName="finding_aid_fund_fund_id"
+      referencedTableName="fund"
+      referencedColumnNames="fund_id" />
+
+    <addForeignKeyConstraint
+      baseTableName="finding_aid_fund" baseColumnNames="finding_aid_id"
+      constraintName="finding_aid_fund_finding_aid_id"
+      referencedTableName="finding_aid"
+      referencedColumnNames="finding_aid_id" />
+
+    <dropForeignKeyConstraint baseTableName="finding_aid" constraintName="finding_aid_fund_id"/>
+
+    <dropColumn tableName="finding_aid">
+      <column name="fund_id" type="int"/>
+    </dropColumn>
+
+  </changeSet>
+
 </databaseChangeLog>
