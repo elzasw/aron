@@ -1,5 +1,8 @@
 package cz.aron.transfagent.domain;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,6 +12,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -34,6 +39,10 @@ public class Fund {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "apusource_id", nullable = false)
     private ApuSource apuSource;
+    
+	@ManyToMany
+	@JoinTable(name = "finding_aid_fund", joinColumns = @JoinColumn(name = "fund_id"), inverseJoinColumns = @JoinColumn(name = "finding_aid_id"))
+	Set<FindingAid> findingAids = new HashSet<>();
 
     @Column(nullable = false)
     private String source;
@@ -86,4 +95,36 @@ public class Fund {
         this.source = source;
     }
 
+	public Set<FindingAid> getFindingAids() {
+		return findingAids;
+	}
+
+	public void setFindingAids(Set<FindingAid> findingAids) {
+		this.findingAids = findingAids;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(apuSource, code, institution, source, uuid);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Fund other = (Fund) obj;
+		return Objects.equals(apuSource, other.apuSource) && Objects.equals(code, other.code)
+				&& Objects.equals(institution, other.institution) && Objects.equals(source, other.source)
+				&& Objects.equals(uuid, other.uuid);
+	}
+	
+	public void addFindingAid(FindingAid findingAid) {
+        this.findingAids.add(findingAid);
+        findingAid.getFunds().add(this);
+    }
+ 
 }

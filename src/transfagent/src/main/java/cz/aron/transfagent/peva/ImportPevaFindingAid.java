@@ -2,6 +2,8 @@ package cz.aron.transfagent.peva;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
@@ -28,7 +30,7 @@ public class ImportPevaFindingAid {
 
 	private String institutionCode;
 
-	private UUID fundUUID;
+	private List<UUID> fundUUIDs = new ArrayList<>();
 	
 	private UUID findingAidUUID;
 	
@@ -61,9 +63,14 @@ public class ImportPevaFindingAid {
 		Validate.notNull(instInfo, "Missing institution, code: %s", institutionCode);
 
 		// TODO vice NadSheet
-		String fundCode = findingAid.getNadSheets().getNadSheet().get(0);
-		fundUUID = dataProvider.getFundApuByUUID(institutionCode, UUID.fromString(fundCode));
-		Validate.notNull(fundUUID, "Missing fund, code: %s, institution: %s", fundCode, institutionCode);		
+		
+		for(var fundCode:findingAid.getNadSheets().getNadSheet()) {
+			var fundUUID = dataProvider.getFundApuByUUID(institutionCode, UUID.fromString(fundCode));			
+			Validate.notNull(fundUUID, "Missing fund, code: %s, institution: %s", fundCode, institutionCode);
+			fundUUIDs.add(fundUUID);
+		}
+		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
+				institutionCode);
 
 		// add info part
 		Part partInfo = apusBuilder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
@@ -89,9 +96,11 @@ public class ImportPevaFindingAid {
 			apusBuilder.addString(partInfo, CoreTypes.FINDINGAID_UNITS_AMOUNT, unitsAmount);
 		}*/
 
-		// add references part
-		Part partRef = apusBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-		apusBuilder.addApuRef(partRef, "FUND_REF", fundUUID);
+		// add references part		
+		var partRef = apusBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+		for(var fundUUID:fundUUIDs) {
+			apusBuilder.addApuRef(partRef, "FUND_REF", fundUUID);
+		}
 		apusBuilder.addApuRef(partRef, "FUND_INST_REF", instInfo.getUuid());
 
 	}
@@ -106,8 +115,8 @@ public class ImportPevaFindingAid {
 		return institutionCode;
 	}
 	
-	public UUID getFundUUID() {
-		return fundUUID;
+	public List<UUID> getFundUUIDs() {
+		return fundUUIDs;
 	}
 
 	public UUID getFindingAidUUID() {

@@ -1,5 +1,8 @@
 package cz.aron.transfagent.domain;
 
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -9,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -35,9 +39,8 @@ public class FindingAid {
     @JoinColumn(name = "institution_id", nullable = false)
     private Institution institution;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fund_id", nullable = false)
-    private Fund fund;
+    @ManyToMany(mappedBy = "findingAids")
+    private Set<Fund> funds = new HashSet<>();
 
     public Integer getId() {
         return id;
@@ -79,12 +82,36 @@ public class FindingAid {
         this.institution = institution;
     }
 
-    public Fund getFund() {
-        return fund;
-    }
+	public Set<Fund> getFunds() {
+		return funds;
+	}
 
-    public void setFund(Fund fund) {
-        this.fund = fund;
-    }
+	public void setFunds(Set<Fund> funds) {
+		this.funds = funds;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(apuSource, code, funds, institution, uuid);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FindingAid other = (FindingAid) obj;
+		return Objects.equals(apuSource, other.apuSource) && Objects.equals(code, other.code)
+				&& Objects.equals(funds, other.funds) && Objects.equals(institution, other.institution)
+				&& Objects.equals(uuid, other.uuid);
+	}
+	
+	public void addFund(Fund fund) {
+		this.funds.add(fund);
+		fund.getFindingAids().add(this);
+	}
 
 }

@@ -6,13 +6,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Date;
 import java.util.List;
 
 import javax.transaction.Transactional;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -64,7 +62,8 @@ public class ImportFindingAidServiceTest extends AbstractCommonTest {
         assertTrue(findingAid.getCode().equals(FUND_CODE));
         assertTrue(findingAid.getApuSource().equals(apuSource));
         assertTrue(findingAid.getInstitution().equals(institution));
-        assertTrue(findingAid.getFund().equals(fund));
+        assertTrue(findingAid.getFunds().size()==1);
+        assertTrue(findingAid.getFunds().iterator().next().equals(fund));
 
         // kontrola reimportu
         Path filePdf = Path.of(DIR_DATA, apuSource.getDataDir(), apuSource.getOrigDir() + ".pdf");

@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.time.ZonedDateTime;
 import java.util.UUID;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.stereotype.Service;
 

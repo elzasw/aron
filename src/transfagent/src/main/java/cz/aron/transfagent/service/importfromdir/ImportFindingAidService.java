@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,10 +28,8 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Attachment;
-import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
-import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
 import cz.aron.transfagent.peva.ImportPevaFindingAid;
@@ -43,6 +42,7 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
+import cz.aron.transfagent.service.FindingAidService;
 import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
@@ -79,6 +79,8 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
 
     private final ConfigurationLoader configurationLoader;
     
+    private final FindingAidService findingAidService;
+    
     // TODO predelat jednotlive importy do bean
     private final Optional<Peva2Import> peva2import;
 
@@ -101,7 +103,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             FindingAidRepository findingAidRepository, AttachmentRepository attachmentRepository, ApuSourceRepository apuSourceRepository,
             CoreQueueRepository coreQueueRepository, FundRepository fundRepository,
             DatabaseDataProvider databaseDataProvider, TransactionTemplate transactionTemplate,
-            ConfigurationLoader configurationLoader, Optional<Peva2Import> peva2import) {
+            ConfigurationLoader configurationLoader, Optional<Peva2Import> peva2import, FindingAidService findingAidService) {
         this.apuSourceService = apuSourceService;
         this.fileImportService = fileImportService;
         this.reimportService = reimportService;
@@ -116,6 +118,7 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         this.transactionTemplate = transactionTemplate;
         this.configurationLoader = configurationLoader;
         this.peva2import = peva2import;
+        this.findingAidService = findingAidService;
     }
 
     @PostConstruct
@@ -198,10 +201,14 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
             throw new IllegalStateException(e);
         }
 
-    	var fund = fundRepository.findByUuid(ifai.getFundUUID());
-        if (fund == null) {
-            protocol.add("The entry Fund code={" + findingAidCode + "} must exist.");
-            //throw new IllegalStateException("The entry Fund code={" + findingAidCode + "} must exist.");
+        var funds = new ArrayList<Fund>();
+        for (var fundUUID:ifai.getFundUUIDs()) {
+        	var fund = fundRepository.findByUuid(fundUUID);
+        	if (fund == null) {
+                protocol.add("The entry Fund code={" + findingAidCode + "} must exist.");
+                //throw new IllegalStateException("The entry Fund code={" + findingAidCode + "} must exist.");
+            }
+        	funds.add(fund);
         }
         var findingAid = findingAidRepository.findByUuid(ifai.getFindingAidUUID());
         UUID findingaidUuid, apusourceUuid;
@@ -247,9 +254,9 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         }
         
         if (findingAid == null) {
-            createFindingAid(findingAidCode, fund, institution, dataDir, dir, builder, attachments);
+            findingAidService.createFindingAid(findingAidCode, funds, institution, dataDir, dir, builder, attachments);
         } else {
-            updateFindingAid(findingAid, dataDir, dir, builder, attachments);
+            findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments);
         }
         
     	return true;
@@ -322,9 +329,9 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         }
         
         if (findingAid == null) {
-            createFindingAid(findingAidCode, fund, institution, dataDir, dir, builder, attachments);
+            findingAidService.createFindingAid(findingAidCode, Collections.singletonList(fund), institution, dataDir, dir, builder, attachments);
         } else {
-            updateFindingAid(findingAid, dataDir, dir, builder, attachments);
+            findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments);
         }
         return true;
     }
@@ -373,39 +380,6 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         return attachments;
     }
 
-    private FindingAid createFindingAid(String findingaidCode, Fund fund, 
-                                  Institution institution, 
-                                  Path dataDir, Path origDir, ApuSourceBuilder builder, 
-                                  List<Path> attachments) {
-
-        var findingaidUuid = builder.getMainApu().getUuid();
-        Validate.notNull(findingaidUuid, "FindingAid UUID is null");
-
-        var apuSourceUuidStr = builder.getApusrc().getUuid();
-        var apuSourceUuid = UUID.fromString(apuSourceUuidStr); 
-
-        var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.FINDING_AID,
-                                                         dataDir, origDir.getFileName().toString());
-
-        var findingAid = new FindingAid();
-        findingAid.setCode(findingaidCode);
-        findingAid.setUuid(UUID.fromString(findingaidUuid));
-        findingAid.setApuSource(apuSource);
-        findingAid.setInstitution(institution);
-        findingAid.setFund(fund);
-        findingAid = findingAidRepository.save(findingAid);
-
-        updateAttachments(findingAid, builder, attachments);
-
-        var coreQueue = new CoreQueue();
-        coreQueue.setApuSource(apuSource);
-        coreQueueRepository.save(coreQueue);
-
-        log.info("FindingAid created code={}, uuid={}", findingaidCode, findingaidUuid);
-
-        return findingAid;
-    }
-
     private void updateAttachments(FindingAid findingAid, 
                                    ApuSourceBuilder builder, List<Path> attachments) {
         var dbAttachments = attachmentRepository.findByApuSource(findingAid.getApuSource());
@@ -446,26 +420,6 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
     private Path getPdfPath(Path parentPath, String findingAidCode) {
         var filePdf = FINDING_AID_DASH + findingAidCode + ".pdf";
         return parentPath.resolve(filePdf);
-    }
-
-    private void updateFindingAid(FindingAid findingAid, Path dataDir,
-                                  Path origDir,
-                                  ApuSourceBuilder builder, List<Path> attachments) {
-
-        var apuSource = findingAid.getApuSource();
-        apuSource.setDataDir(dataDir.toString());
-        apuSource.setOrigDir(origDir.getFileName().toString());
-
-        updateAttachments(findingAid, builder, attachments);
-
-        var coreQueue = new CoreQueue();
-        coreQueue.setApuSource(apuSource);
-
-        apuSourceRepository.save(apuSource);
-        coreQueueRepository.save(coreQueue);
-
-        log.info("FindingAid updated code={}, uuid={}, data dir: {}",
-                 findingAid.getCode(), findingAid.getUuid(), dataDir.toString());
     }
 
     @Override
