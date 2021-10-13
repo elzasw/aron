@@ -2,6 +2,7 @@ package cz.aron.transfagent.config;
 
 public class ConfigPeva2FundProperties {
 	
+	// do edice prida prvni radek z interni zmeny
     private boolean parseInternalChanges;
     
     // do popisu findu prida jazyky
@@ -27,6 +28,14 @@ public class ConfigPeva2FundProperties {
     
     // do popisu fondu v prehledu prida jako description popis puvodce
     private boolean originatorAsDescription;
+    
+    // do popisu fondu v prehledu prida jako description poznaku    
+    private boolean noteAsDescription;
+    
+    // do popisu fondu v prehledu prida jako description prvni radek z interni zmeny
+    private boolean parseInternalChangesAsDescription;
+    
+    private boolean correctLineSeparators;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -99,5 +108,29 @@ public class ConfigPeva2FundProperties {
 	public void setOriginatorAsDescription(boolean originatorAsDescription) {
 		this.originatorAsDescription = originatorAsDescription;
 	}
-	
+
+	public boolean isNoteAsDescription() {
+		return noteAsDescription;
+	}
+
+	public void setNoteAsDescription(boolean noteAsDescription) {
+		this.noteAsDescription = noteAsDescription;
+	}
+
+	public boolean isParseInternalChangesAsDescription() {
+		return parseInternalChangesAsDescription;
+	}
+
+	public void setParseInternalChangesAsDescription(boolean parseInternalChangesAsDescription) {
+		this.parseInternalChangesAsDescription = parseInternalChangesAsDescription;
+	}
+
+	public boolean isCorrectLineSeparators() {
+		return correctLineSeparators;
+	}
+
+	public void setCorrectLineSeparators(boolean correctLineSeparators) {
+		this.correctLineSeparators = correctLineSeparators;
+	}	
+
 }

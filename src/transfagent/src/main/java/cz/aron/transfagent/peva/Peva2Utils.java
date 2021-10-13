@@ -1,5 +1,7 @@
 package cz.aron.transfagent.peva;
 
+import java.util.regex.Pattern;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.Part;
@@ -52,4 +54,34 @@ public class Peva2Utils {
     	}    	
     }
     
+    private static Pattern pattern = Pattern.compile("(\\\r[^\n])|(\\\r$)");
+    
+    /**
+     * Opravi samostatne \r na \r\n
+     * @param original vstupni retezec
+     * @return opraveny retezec
+     */
+	public static String correctLineSeparators(String original) {
+		if (original == null) {
+			return null;
+		}
+		var matcher = pattern.matcher(original);
+		if (!matcher.find()) {
+			return original;
+		}
+		int lastIndex = 0;
+		StringBuilder output = new StringBuilder();
+		do {
+			output.append(original, lastIndex, matcher.start()).append("\r\n");
+			if (matcher.end()-matcher.start()>1) {
+				output.append(original, matcher.end() - 1, matcher.end());
+			}
+			lastIndex = matcher.end();
+		} while (matcher.find());
+		if (lastIndex < original.length()) {
+			output.append(original, lastIndex, original.length());
+		}
+		return output.toString();
+	}
+
 }

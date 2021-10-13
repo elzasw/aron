@@ -13,6 +13,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.eclipse.jetty.util.StringUtil;
 import org.springframework.util.CollectionUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -176,7 +177,8 @@ public class ImportPevaFundInfo {
 		}
     }
     
-	private void processNadSheetSubNadSheetCommon(NadSheet nadSheet, Part partFundInfo) {		
+	private void processNadSheetSubNadSheetCommon(NadSheet nadSheet, Part partFundInfo) {
+		generateDescription(nadSheet, partFundInfo);
 		processAdditionalInfo(nadSheet, partFundInfo);
 		processFindingAids(nadSheet, partFundInfo);
 		processOriginators(nadSheet, partFundInfo);
@@ -185,33 +187,61 @@ public class ImportPevaFundInfo {
 		processPlacesOfOrigin(nadSheet, partFundInfo);
 		processPreservationStatus(nadSheet, partFundInfo);
 	}
+	
+	private void generateDescription(NadSheet nadSheet, Part partFundInfo) {
+		
+		var sj = new StringJoiner("\r\n");
+		boolean add = false;
+		
+		var additionalInfo = nadSheet.getAdditionalInfo();		
+		// prida popis puvodce do main apu
+		if (fundProperties.isOriginatorAsDescription()&&StringUtils.isNotBlank(additionalInfo.getOriginator())) {
+			sj.add(correctString(additionalInfo.getOriginator()));
+			add = true;
+		}
+		if (fundProperties.isNoteAsDescription()&&StringUtil.isNotBlank(additionalInfo.getNote())) {
+			sj.add(correctString(additionalInfo.getNote()));
+			add = true;
+		}
+		if (fundProperties.isParseInternalChangesAsDescription()&& StringUtils.isNotBlank(additionalInfo.getInternalChanges())) {
+			additionalInfo.getInternalChanges().lines().findFirst().ifPresent(l -> {
+				sj.add(l);
+			});		
+			add = true;
+		}
+		if (add) {
+			apusBuilder.getMainApu().setDesc(sj.toString());
+		}
+	}
     
-    private void processAdditionalInfo(NadSheet nadSheet, Part partFundInfo) {
-    	var additionalInfo = nadSheet.getAdditionalInfo();
+	private void processAdditionalInfo(NadSheet nadSheet, Part partFundInfo) {
+		var additionalInfo = nadSheet.getAdditionalInfo();
 		if (additionalInfo != null) {
 			if (StringUtils.isNotBlank(additionalInfo.getNote())) {
-				ApuSourceBuilder.addString(partFundInfo, "FUND_NOTE", additionalInfo.getNote());
-			}			
-			// prida popis puvodce do main apu
-			if (fundProperties.isOriginatorAsDescription()&&StringUtils.isNotBlank(additionalInfo.getOriginator())) {
-				ApuSourceBuilder.addString(partFundInfo, "FUND_ORIG_NOTE", additionalInfo.getOriginator());
-				apusBuilder.getMainApu().setDesc(additionalInfo.getOriginator());
+				ApuSourceBuilder.addString(partFundInfo, "FUND_NOTE", correctString(additionalInfo.getNote()));
+			}
+			if (StringUtils.isNotBlank(additionalInfo.getOriginator())) {
+				ApuSourceBuilder.addString(partFundInfo, "FUND_ORIG_NOTE",
+						correctString(additionalInfo.getOriginator()));
 			}
 			if (StringUtils.isNotBlank(additionalInfo.getThematicDescription())) {
-				ApuSourceBuilder.addString(partFundInfo, "FUND_TOPIC", additionalInfo.getThematicDescription());
+				ApuSourceBuilder.addString(partFundInfo, "FUND_TOPIC",
+						correctString(additionalInfo.getThematicDescription()));
 			}
 			if (StringUtils.isNotBlank(additionalInfo.getEdition())) {
-				ApuSourceBuilder.addString(partFundInfo, "FUND_EDITIONS", additionalInfo.getEdition());
-			} else if (fundProperties.isParseInternalChanges() && StringUtils.isNotBlank(additionalInfo.getInternalChanges())) {
+				ApuSourceBuilder.addString(partFundInfo, "FUND_EDITIONS", correctString(additionalInfo.getEdition()));
+			} else if (fundProperties.isParseInternalChanges()
+					&& StringUtils.isNotBlank(additionalInfo.getInternalChanges())) {
 				additionalInfo.getInternalChanges().lines().findFirst().ifPresent(l -> {
-					ApuSourceBuilder.addString(partFundInfo, "FUND_EDITIONS", l);
+					ApuSourceBuilder.addString(partFundInfo, "FUND_EDITIONS", correctString(l));
 				});
 			}
-			if (fundProperties.isLiterature()&&StringUtils.isNotBlank(additionalInfo.getLiterature())) {
-				ApuSourceBuilder.addString(partFundInfo, "FUND_LITERATURE", additionalInfo.getLiterature());
-			}			
+			if (fundProperties.isLiterature() && StringUtils.isNotBlank(additionalInfo.getLiterature())) {
+				ApuSourceBuilder.addString(partFundInfo, "FUND_LITERATURE",
+						correctString(additionalInfo.getLiterature()));
+			}
 		}
-    }
+	}
 
     private void processFindingAids(NadSheet nadSheet, Part partFundInfo) {
     	var findingAids = nadSheet.getFindingAids();
@@ -382,6 +412,17 @@ public class ImportPevaFundInfo {
 			}
 		}
 	}
+	
+	
+	private String correctString(String original) {
+		if (fundProperties.isCorrectLineSeparators()) {
+			return Peva2Utils.correctLineSeparators(original);
+		} else {
+			return original;
+		}				
+	}
+	
+	
 	
     public String getInstitutionCode() {
     	return institutionCode;
