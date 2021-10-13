@@ -27,7 +27,7 @@ public class ConfigPeva2 {
     
     private String attachmentDir;
     
-    private boolean parseInternalChanges;
+    private ConfigPeva2FundProperties fundProperties;
 
     public String getUserId() {
         return userId;
@@ -109,12 +109,12 @@ public class ConfigPeva2 {
 		this.attachmentDir = attachmentDir;
 	}
 
-	public boolean isParseInternalChanges() {
-		return parseInternalChanges;
+	public ConfigPeva2FundProperties getFundProperties() {
+		return fundProperties;
 	}
 
-	public void setParseInternalChanges(boolean parseInternalChanges) {
-		this.parseInternalChanges = parseInternalChanges;
-	}    
+	public void setFundProperties(ConfigPeva2FundProperties fundProperties) {
+		this.fundProperties = fundProperties;
+	}
 	
 }

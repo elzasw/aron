@@ -13,9 +13,13 @@ import cz.aron.peva2.wsdl.Integrity;
 import cz.aron.peva2.wsdl.ListAccessibilityRequest;
 import cz.aron.peva2.wsdl.ListFindingAidTypeRequest;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
+import cz.aron.peva2.wsdl.ListLanguageRequest;
+import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
 import cz.aron.peva2.wsdl.ListPhysicalStateRequest;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PhysicalState;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2EvidenceUnitType;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Language;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
@@ -76,9 +80,39 @@ public class Peva2CodeListDownloader {
 		log.info("Finding aid type downloaded.");
 		return ret;
 	}
+	
+	public Map<String,Peva2Language> getLanguages() {
+		Map<String,Peva2Language> ret = new HashMap<>();
+		var llReq = new ListLanguageRequest();
+		llReq.setSize(1000);
+		var llResp = peva2.listLanguage(llReq);
+		for(var lang:llResp.getLanguages().getLanguage()) {
+			ret.put(lang.getId(), new Peva2Language(lang.getCode(), lang.getName()));
+		}
+		log.info("Languages downloaded.");
+		return ret;
+	}
+	
+	public Map<String,Peva2EvidenceUnitType> getEvidenceUnitTypes() {
+		Map<String,Peva2EvidenceUnitType> ret = new HashMap<>();
+		var meutReq = new ListMainEvidenceUnitTypeRequest();
+		meutReq.setSize(100);
+		var meutResp = peva2.listMainEvidenceUnitType(meutReq);
+		for(var meut:meutResp.getMainEvidenceUnitTypes().getMainEvidenceUnitType()) {
+			ret.put(meut.getId(), new Peva2EvidenceUnitType(meut.getName()));
+			if (meut.getPartialEvidenceUnitTypes()!=null) {
+				for(var partial:meut.getPartialEvidenceUnitTypes()) {
+					ret.put(partial.getId(), new Peva2EvidenceUnitType(partial.getName()));
+				}
+			}
+		}
+		log.info("Evidence unit types downloaded.");
+		return ret;
+	}
 
 	public Peva2CodeLists downloadCodeLists() {
-		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType());
+		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
+				getLanguages(), getEvidenceUnitTypes());
 	}
 
 }

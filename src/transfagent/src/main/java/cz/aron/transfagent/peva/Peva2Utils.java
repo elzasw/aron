@@ -38,4 +38,18 @@ public class Peva2Utils {
     	return date.startsWith("[");
     }
 
+    public static String getAsString(UniversalTimeRange timeRange) {    	
+    	var timeRangeFrom = timeRange.getTimeRangeFrom();
+    	var timeRangeTo = timeRange.getTimeRangeTo();
+    	if (timeRangeFrom!=null) {
+    		if (timeRangeTo!=null&&!timeRangeFrom.equals(timeRangeTo)) {
+    			return timeRangeFrom + " " + timeRangeTo;
+    		} else {
+    			return timeRangeFrom;
+    		}
+    	} else {
+    		return null;
+    	}    	
+    }
+    
 }
