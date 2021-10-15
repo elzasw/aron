@@ -664,6 +664,19 @@ itemTypes:
   - code: FUND_LENGTH
     name: Metráž
     type: STRING
+  - code: FUND_LENGTH
+    name: Metráž
+    type: STRING
+  - code: FUND_EVIDENCE_STATUS
+    name: Evidenční status
+    type: ENUM
+    indexed: true
+  - code: FUND_EVIDENCE_STATUS_TEXT
+    name: Evidenční status
+    type: STRING
+  - code: ACCESSIBILITY
+    name: Přístupnost
+    type: ENUM
 
   #
   # Archivní pomucka

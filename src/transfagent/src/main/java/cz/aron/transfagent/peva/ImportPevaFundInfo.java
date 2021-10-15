@@ -180,6 +180,8 @@ public class ImportPevaFundInfo {
 		if (fundProperties.isToDate()&&nadHeader.getToDate()!=null) {
 			ApuSourceBuilder.addString(partFundInfo, "FUND_UPTODATE", nadHeader.getToDate().toString());
 		}
+		processEvidenceStatus(nadHeader, partFundInfo);
+		processAccessibility(nadHeader, partFundInfo);
     }
     
 	private void processNadSheetSubNadSheetCommon(NadSheet nadSheet, Part partFundInfo) {
@@ -484,7 +486,50 @@ public class ImportPevaFundInfo {
 		}
 	}
 	
+	private void processEvidenceStatus(NadHeader nadHeader, Part partFundInfo) {
+		if (fundProperties.isEvidenceStatus()) {
+			var evidenceStatus = nadHeader.getEvidenceStatus();
+			if (evidenceStatus != null) {
+				String statusName = null;
+				switch (evidenceStatus) {
+				case DIRECT_CARE:
+					statusName = "Archivní soubory v přímé péči instituce, uložené v instituci";
+					break;
+				case OUTSIDE_INSTITUTION_CONTRACT:
+					statusName = "Archivní soubory uložené na základě smlouvy o uložení mimo instituci";
+					break;
+				case INSIDE_INSTITUTION_CONTRACT:
+					statusName = "Archivní soubory uložené v instituci na základě smlouvy o uložení";
+					break;
+				case EVIDED_ISSUED_TO_OWNER:
+					statusName = "Archivní soubory vydané vlastníkům a archivem evidované";
+					break;
+				case EVIDED:
+					statusName = "Archivní soubory archivem pouze evidované";
+					break;
+				default:
+				}
+				if (statusName != null) {
+					ApuSourceBuilder.addEnum(partFundInfo, "FUND_EVIDENCE_STATUS", evidenceStatus.toString())
+							.setVisible(false);
+					ApuSourceBuilder.addString(partFundInfo, "FUND_EVIDENCE_STATUS_TEXT", statusName);
+				}
+			}
+		}
+	}
 	
+	private void processAccessibility(NadHeader nadHeader, Part partFundInfo) {
+		if (fundProperties.isAccessibility()) {
+			var accessibilityUUID = nadHeader.getAccessibility();
+			if (StringUtils.isNotBlank(accessibilityUUID)) {
+				var accessibility = codeListProvider.getCodeLists().getAccessibilityName(accessibilityUUID);
+				if (StringUtils.isNotBlank(accessibility)) {
+					ApuSourceBuilder.addEnum(partFundInfo, "ACCESSIBILITY", accessibility);
+				}
+			}
+		}
+	}
+
 	private String correctString(String original) {
 		if (fundProperties.isCorrectLineSeparators()) {
 			return Peva2Utils.correctLineSeparators(original);

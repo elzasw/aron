@@ -37,7 +37,14 @@ public class ConfigPeva2FundProperties {
     
     private boolean correctLineSeparators;
     
+    // vyplni metraz fondu
     private boolean length;
+    
+    // vyplni evidencni status
+    private boolean evidenceStatus;
+    
+    // vyplni pristupnost
+    private boolean accessibility;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -142,5 +149,21 @@ public class ConfigPeva2FundProperties {
 	public void setLength(boolean length) {
 		this.length = length;
 	}
-	
+
+	public boolean isEvidenceStatus() {
+		return evidenceStatus;
+	}
+
+	public void setEvidenceStatus(boolean evidenceStatus) {
+		this.evidenceStatus = evidenceStatus;
+	}
+
+	public boolean isAccessibility() {
+		return accessibility;
+	}
+
+	public void setAccessibility(boolean accessibility) {
+		this.accessibility = accessibility;
+	}
+
 }
