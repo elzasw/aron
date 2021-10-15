@@ -87,19 +87,19 @@ public class ImportInstitution {
 		
 		// oznaceni
 		
+		Fragment acronymName = null;
 		Fragment prefName = null;
 		Fragments frgs = ap.getFrgs();		
 		for(Fragment frg: frgs.getFrg()) {
 			if(frg.getT().equals("PT_NAME")) {
 				if(prefName==null) {
 					prefName = frg;
-				}
+				}				
 				// zjisteni zda je zkratka				
 				String shortCode = ElzaXmlReader.getSingleEnum(frg, ElzaTypes.NM_TYPE);
 				if(shortCode!=null) {
 					if(shortCode.equals(ElzaTypes.NT_ACRONYM)) {
-						prefName = frg;
-						break;
+						acronymName = frg;
 					}
 				}
 			}
@@ -115,6 +115,9 @@ public class ImportInstitution {
 		// kod archivu
 		Part infoPart = apusBuilder.addPart(apu, "PT_INST_INFO");
 		apusBuilder.addString(infoPart, "INST_CODE", instCode);
+		if (acronymName!=null) {
+			apusBuilder.addString(infoPart, "INST_SHORT_NAME", ElzaXmlReader.getFullName(acronymName));
+		}
 		
 		// odkaz na entitu
 		apRefUuid = UUID.fromString(ap.getApe().getUuid());

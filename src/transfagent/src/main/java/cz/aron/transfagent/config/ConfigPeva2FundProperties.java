@@ -36,6 +36,8 @@ public class ConfigPeva2FundProperties {
     private boolean parseInternalChangesAsDescription;
     
     private boolean correctLineSeparators;
+    
+    private boolean length;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -131,6 +133,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setCorrectLineSeparators(boolean correctLineSeparators) {
 		this.correctLineSeparators = correctLineSeparators;
-	}	
+	}
 
+	public boolean isLength() {
+		return length;
+	}
+
+	public void setLength(boolean length) {
+		this.length = length;
+	}
+	
 }

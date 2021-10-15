@@ -18,6 +18,7 @@ public class CoreTypes {
     // poznámka
     public static final String NOTE = "NOTE";
     public static final String LANGUAGE = "LANGUAGE";
+    public static final String LANGUAGE_TEXT = "LANGUAGE_TEXT";
     public static final String ORIGINATOR_REF = "ORIGINATOR_REF";
 
     // Informace o fondu

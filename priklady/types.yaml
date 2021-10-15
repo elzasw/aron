@@ -110,7 +110,10 @@ itemTypes:
     name: Kód archivu
     type: STRING
     indexed: true
-
+  - code: INST_SHORT_NAME
+    name: Zkrácené označení
+    type: STRING
+    indexed: true
   # Archivní entity
   - code: AE_CLASS
     name: Třída entity
@@ -118,6 +121,10 @@ itemTypes:
     indexed: true
   - code: AE_SUBCLASS
     name: Podtřída entity
+    type: ENUM
+    indexed: true
+  - code: AE_ORIGINATOR
+    name: Původce
     type: ENUM
     indexed: true
   - code: AE_IDENT_TYPE
@@ -654,6 +661,9 @@ itemTypes:
   - code: FUND_PRESERVATION
     name: Stav zachování
     type: STRING
+  - code: FUND_LENGTH
+    name: Metráž
+    type: STRING
 
   #
   # Archivní pomucka
@@ -829,6 +839,9 @@ itemTypes:
     code: LANGUAGE
     type: ENUM
     indexed: true
+  - name: Jazyk
+    code: LANGUAGE_TEXT
+    type: STRING
   - code: SCALE
     name: Měřítko
     type: STRING

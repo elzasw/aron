@@ -6,7 +6,11 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Collator;
+import java.util.Comparator;
+import java.util.Locale;
 import java.util.StringJoiner;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
@@ -26,6 +30,7 @@ import cz.aron.peva2.wsdl.NadHeader;
 import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
+import cz.aron.peva2.wsdl.Quantity;
 import cz.aron.transfagent.config.ConfigPeva2FundProperties;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
@@ -98,12 +103,12 @@ public class ImportPevaFundInfo {
     	var instInfo = getInstitutionInfo(subsheet);
         var nadHeader = subsheet.getHeader();
         var fundName = nadHeader.getName();        
-        var fullFundName = createFundName(instInfo, primarySheet);
+        var fullFundName = createFundName(instInfo, subsheet);
 
-    	Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, UUID.fromString(subsheet.getId()));
+    	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(subsheet.getId()));
     	Part partName = ApuSourceBuilder.addPart(apu, CoreTypes.PT_TITLE);
 		partName.setValue(fundName);
-		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fullFundName);
+		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
 		
 		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
@@ -121,10 +126,10 @@ public class ImportPevaFundInfo {
         var fundName = nadHeader.getName();
         var fullFundName = createFundName(instInfo, primarySheet);
 
-    	Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, UUID.fromString(primarySheet.getId()));
+    	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(primarySheet.getId()));
     	Part partName = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
 		partName.setValue(fundName);
-		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fullFundName);
+		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
 
 		Part partFundInfo = apusBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
@@ -186,6 +191,7 @@ public class ImportPevaFundInfo {
 		processEvidenceUnits(nadSheet, partFundInfo);
 		processPlacesOfOrigin(nadSheet, partFundInfo);
 		processPreservationStatus(nadSheet, partFundInfo);
+		processLength(nadSheet, partFundInfo);
 	}
 	
 	private void generateDescription(NadSheet nadSheet, Part partFundInfo) {
@@ -261,18 +267,41 @@ public class ImportPevaFundInfo {
 		}
     }
     
+    private static Comparator<Object> cmp = Collator.getInstance(new Locale("cs","CZ"));
+    
 	private void processLanguages(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isLanguages()) {
-			var languages = nadSheet.getLanguageRecords();
+			var languages = nadSheet.getLanguageRecords();									
+			var lng = new TreeSet<String>(cmp);
 			for (var language : languages.getLanguageRecord()) {
 				var p2Lang = codeListProvider.getCodeLists().getLanguage(language.getLanguage());
 				if (p2Lang != null) {
-					ApuSourceBuilder.addEnum(partFundInfo, CoreTypes.LANGUAGE, p2Lang.getName());
+					var result = ApuSourceBuilder.addEnum(partFundInfo, CoreTypes.LANGUAGE, p2Lang.getName());
+					result.setVisible(false);
+					lng.add(p2Lang.getName());
 				}
+			}
+			if (!lng.isEmpty()) {
+				StringJoiner sj = new StringJoiner(", ");
+				lng.forEach(l->sj.add(l));
+				ApuSourceBuilder.addString(partFundInfo, CoreTypes.LANGUAGE_TEXT, sj.toString());
 			}
 		}
 	}
 	
+	private void processLength(NadSheet nadSheet, Part partFundInfo) {
+		if (fundProperties.isLength()) {
+			var length = nadSheet.getLength();
+			if (length!=null) {
+				StringJoiner sj = new StringJoiner("");
+				processEvidenceUnitProcedure("", length, sj);
+				if (sj.length()>0) {
+					ApuSourceBuilder.addString(partFundInfo, "FUND_LENGTH", sj.toString());				
+				}
+			}
+		}
+	}
+
 	private void processEvidenceUnits(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isEvidenceUnits()) {
 			var evidenceUnits = nadSheet.getEvidenceUnits();
@@ -286,38 +315,80 @@ public class ImportPevaFundInfo {
 					}					
 					processEvidenceUnitProcedure("Velikost v digitální podobě", evidenceUnit.getDigitalProcedure(), sj);
 					processEvidenceUnitProcedure("Počet", evidenceUnit.getCountProcedure(), sj);
-					processEvidenceUnitProcedure("Metráž", evidenceUnit.getLengthProcedure(), sj);
+					processEvidenceUnitProcedure("Metráž", evidenceUnit.getLengthProcedure(), sj);					
+					if (evidenceUnit.getNumber()!=null) {
+						sj.add("Pořadové číslo:"+evidenceUnit.getNumber());
+					}
+					if (evidenceUnit.getEvidenceUnitFormType()!=null) {
+						switch(evidenceUnit.getEvidenceUnitFormType()) {
+						case ANALOG:
+							sj.add("Analogová");
+							break;
+						case DIGITAL:
+							sj.add("Digitální");
+							break;
+						default:
+						}						
+					}					
 					ApuSourceBuilder.addString(partFundInfo, "EVIDENCE_UNIT", sj.toString());
 				}
 			}
 		}
 	}
 
-	private void processEvidenceUnitProcedure(String name, EvidenceUnitProcedure evidenceUnitProcedure, StringJoiner sj) {
-		boolean add = false;
-		StringJoiner sjInt = new StringJoiner(", ", name, "");
+	private void processEvidenceUnitProcedure(String name, EvidenceUnitProcedure evidenceUnitProcedure,
+			StringJoiner sj) {
 		if (evidenceUnitProcedure == null) {
 			return;
 		}
-		if (evidenceUnitProcedure.getDamaged().getAmount().compareTo(BigDecimal.ZERO) > 0) {
-			sjInt.add("Poškozeno: " + evidenceUnitProcedure.getDamaged().getAmount());
+		boolean add = false;
+		StringJoiner sjInt = new StringJoiner(", ", name, "");
+		if (processQuantity(evidenceUnitProcedure.getDamaged(), "Poškozeno: ", sjInt)) {
 			add = true;
 		}
-		if (evidenceUnitProcedure.getInventory().getAmount().compareTo(BigDecimal.ZERO) > 0) {
-			sjInt.add("Inventarizováno: " + evidenceUnitProcedure.getInventory().getAmount());
+		if (processQuantity(evidenceUnitProcedure.getInventory(), "Inventarizováno: ", sjInt)) {
 			add = true;
 		}
-		if (evidenceUnitProcedure.getNotProcessed().getAmount().compareTo(BigDecimal.ZERO) > 0) {
-			sjInt.add("Nezpracováno: " + evidenceUnitProcedure.getNotProcessed().getAmount());
+		if (processQuantity(evidenceUnitProcedure.getNotProcessed(), "Nezpracováno: ", sjInt)) {
 			add = true;
 		}
-		if (evidenceUnitProcedure.getProcessed().getAmount().compareTo(BigDecimal.ZERO) > 0) {
-			sjInt.add("Zpracováno: " + evidenceUnitProcedure.getProcessed().getAmount());
+		if (processQuantity(evidenceUnitProcedure.getProcessed(), "Zpracováno: ", sjInt)) {
 			add = true;
-		}		
+		}
 		if (add) {
 			sj.add(sjInt.toString());
 		}
+	}
+
+	private boolean processQuantity(Quantity quantity, String name, StringJoiner sj) {
+		if (quantity!=null&&quantity.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+			sj.add(name + quantity.getAmount()
+					+ getUnit(quantity));
+			return true;
+		}
+		return false;
+	}
+	
+	private String getUnit(Quantity quantity) {
+		if (quantity.getCountUnit() != null) {
+			switch (quantity.getCountUnit()) {
+			case SINGLE:
+				return "";
+			case DOZEN:
+				return " tucet";
+			case PAIR:
+				return " pár";
+			default:
+				return "";
+			}		
+		}
+		if (quantity.getDigitalUnit() != null) {
+			return " " + quantity.getDigitalUnit();
+		}
+		if (quantity.getLengthUnit() != null) {
+			return " " + quantity.getLengthUnit();
+		}
+		return "";
 	}
 	
 	private void processPlacesOfOrigin(NadSheet nadSheet, Part partFundInfo) {

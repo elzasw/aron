@@ -45,7 +45,7 @@ public class Peva2Utils {
     	var timeRangeTo = timeRange.getTimeRangeTo();
     	if (timeRangeFrom!=null) {
     		if (timeRangeTo!=null&&!timeRangeFrom.equals(timeRangeTo)) {
-    			return timeRangeFrom + " " + timeRangeTo;
+    			return timeRangeFrom + "-" + timeRangeTo;
     		} else {
     			return timeRangeFrom;
     		}
