@@ -20,7 +20,7 @@ import cz.aron.peva2.wsdl.UniversalTimeRange;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 
-public class ImportPevaFindingAid {
+public class ImportPevaFindingAidInfo {
 
 	private ContextDataProvider dataProvider;
 
@@ -34,7 +34,7 @@ public class ImportPevaFindingAid {
 	
 	private UUID findingAidUUID;
 	
-	public ImportPevaFindingAid(Peva2CodeLists codeLists) {
+	public ImportPevaFindingAidInfo(Peva2CodeLists codeLists) {
 		this.codeLists = codeLists;
 	}
 
