@@ -194,6 +194,7 @@ public class ImportPevaFundInfo {
 		processPlacesOfOrigin(nadSheet, partFundInfo);
 		processPreservationStatus(nadSheet, partFundInfo);
 		processLength(nadSheet, partFundInfo);
+		processDigital(nadSheet, partFundInfo);
 	}
 	
 	private void generateDescription(NadSheet nadSheet, Part partFundInfo) {
@@ -299,6 +300,19 @@ public class ImportPevaFundInfo {
 				processEvidenceUnitProcedure("", length, sj);
 				if (sj.length()>0) {
 					ApuSourceBuilder.addString(partFundInfo, "FUND_LENGTH", sj.toString());				
+				}
+			}
+		}
+	}
+	
+	private void processDigital(NadSheet nadSheet, Part partFundInfo) {
+		if (fundProperties.isDigitalLength()) {
+			var digitalLength = nadSheet.getDigital();
+			if (digitalLength!=null) {
+				StringJoiner sj = new StringJoiner("");
+				processEvidenceUnitProcedure("", digitalLength, sj);
+				if (sj.length()>0) {
+					ApuSourceBuilder.addString(partFundInfo, "FUND_DIGITAL_LENGTH", sj.toString());				
 				}
 			}
 		}

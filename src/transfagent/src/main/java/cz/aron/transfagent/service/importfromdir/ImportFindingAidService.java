@@ -469,5 +469,18 @@ public class ImportFindingAidService extends ImportDirProcessor implements Reimp
         attachment.setUuid(uuid);
         attachment = attachmentRepository.save(attachment); 
     }
+    
+    public interface FindingAidImporter {
+    	
+    	enum ImportResult {
+    		IMPORTED,
+    		FAIL,
+    		UNSUPPORTED
+    	}
+    	
+    	ImportResult processPath(Path path);
+    	
+    }
+
 
 }

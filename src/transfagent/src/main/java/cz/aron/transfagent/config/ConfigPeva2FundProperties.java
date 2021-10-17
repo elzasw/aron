@@ -40,6 +40,9 @@ public class ConfigPeva2FundProperties {
     // vyplni metraz fondu
     private boolean length;
     
+    // vyplni digitalni velikost fondu
+    private boolean digitalLength;
+    
     // vyplni evidencni status
     private boolean evidenceStatus;
     
@@ -164,6 +167,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setAccessibility(boolean accessibility) {
 		this.accessibility = accessibility;
+	}
+
+	public boolean isDigitalLength() {
+		return digitalLength;
+	}
+
+	public void setDigitalLength(boolean digitalLength) {
+		this.digitalLength = digitalLength;
 	}
 
 }

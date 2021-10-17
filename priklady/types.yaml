@@ -667,6 +667,9 @@ itemTypes:
   - code: FUND_LENGTH
     name: Metráž
     type: STRING
+  - code: FUND_DIGITAL_LENGTH
+    name: Velikost
+    type: STRING
   - code: FUND_EVIDENCE_STATUS
     name: Evidenční status
     type: ENUM

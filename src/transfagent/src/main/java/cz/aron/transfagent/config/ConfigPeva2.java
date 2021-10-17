@@ -28,6 +28,8 @@ public class ConfigPeva2 {
     private String attachmentDir;
     
     private ConfigPeva2FundProperties fundProperties;
+    
+    private ConfigPeva2FindingAidProperties findingAidProperties;
 
     public String getUserId() {
         return userId;
@@ -115,6 +117,14 @@ public class ConfigPeva2 {
 
 	public void setFundProperties(ConfigPeva2FundProperties fundProperties) {
 		this.fundProperties = fundProperties;
+	}
+
+	public ConfigPeva2FindingAidProperties getFindingAidProperties() {
+		return findingAidProperties;
+	}
+
+	public void setFindingAidProperties(ConfigPeva2FindingAidProperties findingAidProperties) {
+		this.findingAidProperties = findingAidProperties;
 	}
 	
 }
