@@ -30,6 +30,12 @@ public class ConfigPeva2 {
     private ConfigPeva2FundProperties fundProperties;
     
     private ConfigPeva2FindingAidProperties findingAidProperties;
+    
+    public ConfigPeva2() {
+    	// default values
+    	fundProperties = new ConfigPeva2FundProperties();
+    	findingAidProperties = new ConfigPeva2FindingAidProperties();
+    }
 
     public String getUserId() {
         return userId;

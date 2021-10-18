@@ -700,13 +700,28 @@ itemTypes:
     name: Druh pomůcky
     type: ENUM
     indexed: true    
-  - code: FINDINGAID_DATE_RANGE
-    name: Časové rozmezí
+  - code: FINDINGAID_FORM_TYPE
+    name: Forma pomůcky
+    type: ENUM
+    indexed: true    
+  - code: FINDINGAID_YEAR_OF_ORIGIN
+    name: Rok vzniku
     type: STRING
     indexed: true
   - code: FINDINGAID_UNITS_AMOUNT
     name: Rozsah zpřístupněných archiválií
     type: STRING
+    indexed: true
+  - code: FINDINGAID_SIG
+    name: Signatura
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_ADDENUM
+    name: Dodatky
+    type: STRING
+  - code: FINDINGAID_AUTHOR_REF
+    name: Autor
+    type: APU_REF
     indexed: true
 
   #

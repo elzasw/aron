@@ -1,5 +1,10 @@
 package cz.aron.transfagent.peva;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
+
+@Service
+@ConditionalOnProperty(value = "peva2.url")
 public class Peva2CodeListProvider {
 	
 	private final Peva2CodeListDownloader codeListDownloader;

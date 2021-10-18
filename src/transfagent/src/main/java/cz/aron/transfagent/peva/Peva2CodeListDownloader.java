@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import cz.aron.peva2.wsdl.Accessibility;
 import cz.aron.peva2.wsdl.Integrity;
 import cz.aron.peva2.wsdl.ListAccessibilityRequest;
+import cz.aron.peva2.wsdl.ListFindingAidFormTypeRequest;
 import cz.aron.peva2.wsdl.ListFindingAidTypeRequest;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
 import cz.aron.peva2.wsdl.ListLanguageRequest;
@@ -109,10 +110,22 @@ public class Peva2CodeListDownloader {
 		log.info("Evidence unit types downloaded.");
 		return ret;
 	}
+	
+	private Map<String, String> getFindingAidFormType() {
+		Map<String, String> ret = new HashMap<>();
+		var lfaftReq = new ListFindingAidFormTypeRequest();
+		lfaftReq.setSize(100);
+		var lfaftResp = peva2.listFindingAidFormType(lfaftReq);
+		for (var findingAidType : lfaftResp.getFindingAidFormTypes().getFindingAidFormType()) {
+			ret.put(findingAidType.getId(), findingAidType.getName());
+		}
+		log.info("Finding aid type downloaded.");
+		return ret;
+	}
 
 	public Peva2CodeLists downloadCodeLists() {
 		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
-				getLanguages(), getEvidenceUnitTypes());
+				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType());
 	}
 
 }

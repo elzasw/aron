@@ -3,7 +3,6 @@ package cz.aron.transfagent.peva;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.annotation.PostConstruct;
 
@@ -36,11 +35,11 @@ public class Peva2Import implements ImportProcessor {
 	private OffsetDateTime nextRun = null;
 
 	public Peva2Import(FileImportService importService, ConfigPeva2 config, PEvA peva2,
-			Peva2CodeListDownloader codeListDownloader, ApplicationContext applicationContext) {
+			Peva2CodeListProvider codeListProvider, ApplicationContext applicationContext) {
 		this.importService = importService;
 		this.config = config;
 		this.peva2 = peva2;
-		this.codeListProvider = new Peva2CodeListProvider(codeListDownloader);
+		this.codeListProvider = codeListProvider;
 		this.applicationContext = applicationContext;
 		
 		PEvA2Client.fillHeaders(peva2, config);		
