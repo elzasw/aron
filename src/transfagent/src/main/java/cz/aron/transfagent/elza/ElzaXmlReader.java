@@ -248,10 +248,11 @@ public class ElzaXmlReader {
 		}
 		String degreePost = getStringType(frg, ElzaTypes.NM_DEGREE_POST);
 		if(StringUtils.isNotBlank(degreePost)) {
-			if(sbTitules.length()>0) {
-				sb.append(" ");
-			}
 			sbTitules.append(degreePost);
+		}
+		if(sbTitules.length()>0) {
+			sb.append(" ");
+			sb.append(String.join(", ", sbTitules));
 		}
 		
 		List<String> additions = getTypes(frg, ElzaTypes.NM_SUPS);		

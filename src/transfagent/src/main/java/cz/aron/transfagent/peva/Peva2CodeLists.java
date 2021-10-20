@@ -11,10 +11,12 @@ public class Peva2CodeLists {
     private final Map<String, Peva2Language> languages;
     private final Map<String, Peva2EvidenceUnitType> evidenceUnitTypes;
     private final Map<String, String> findingAidFormTypes;
+    private final Map<String,Peva2OriginatorSubclass> originatorSubClasses; 
     
 	public Peva2CodeLists(Map<String, String> accessibilities, Map<String, String> physicalStates,
 			Map<String, String> integrity, Map<String, String> findingAidTypes, Map<String, Peva2Language> languages,
-			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes) {
+			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes,
+			Map<String,Peva2OriginatorSubclass> originatorSubClasses) {
 		this.accessibilities = accessibilities;
 		this.physicalStates = physicalStates;
 		this.integrity = integrity;
@@ -22,6 +24,7 @@ public class Peva2CodeLists {
 		this.languages = languages;
 		this.evidenceUnitTypes = evidenceUnitTypes;
 		this.findingAidFormTypes = findingAidFormTypes;
+		this.originatorSubClasses = originatorSubClasses;
 	}
 
     public String getAccessibilityName(String id) {
@@ -52,6 +55,10 @@ public class Peva2CodeLists {
 		return evidenceUnitTypes.get(id);
 	}
 	
+	public Peva2OriginatorSubclass getOriginatorSubClass(String id) {
+		return originatorSubClasses.get(id);
+	}
+	
 	public static class Peva2Language {
 		private final String code;
 		private final String name;
@@ -79,6 +86,31 @@ public class Peva2CodeLists {
 		public String getName() {
 			return name;
 		}
-	}	
+	}
 	
+	public static class Peva2OriginatorSubclass {
+		private final String oClass;
+		private final String name;
+		private final String camCode;
+
+		public Peva2OriginatorSubclass(String oClass, String name, String camCode) {
+			this.oClass = oClass;
+			this.name = name;
+			this.camCode = camCode;
+		}
+
+		public String getoClass() {
+			return oClass;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getCamCode() {
+			return camCode;
+		}
+		
+	}
+
 }

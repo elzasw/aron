@@ -16,11 +16,13 @@ import cz.aron.peva2.wsdl.ListFindingAidTypeRequest;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
 import cz.aron.peva2.wsdl.ListLanguageRequest;
 import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
+import cz.aron.peva2.wsdl.ListOriginatorSubClassRequest;
 import cz.aron.peva2.wsdl.ListPhysicalStateRequest;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PhysicalState;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2EvidenceUnitType;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Language;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2OriginatorSubclass;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
@@ -119,13 +121,25 @@ public class Peva2CodeListDownloader {
 		for (var findingAidType : lfaftResp.getFindingAidFormTypes().getFindingAidFormType()) {
 			ret.put(findingAidType.getId(), findingAidType.getName());
 		}
-		log.info("Finding aid type downloaded.");
+		log.info("Finding aid form type downloaded.");
+		return ret;
+	}
+	
+	private Map<String, Peva2OriginatorSubclass> getOriginatorSubclass() {
+		Map<String, Peva2OriginatorSubclass> ret = new HashMap<>();
+		var losReq = new ListOriginatorSubClassRequest();
+		losReq.setSize(100);
+		var losResp = peva2.listOriginatorSubClass(losReq);
+		for (var sc : losResp.getOriginatorSubClasses().getOriginatorSubClass()) {
+			ret.put(sc.getId(), new Peva2OriginatorSubclass(sc.getOClass().toString(), sc.getName(), sc.getCamCode()));
+		}
+		log.info("Originator subclasses downloaded.");
 		return ret;
 	}
 
 	public Peva2CodeLists downloadCodeLists() {
 		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
-				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType());
+				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType(), getOriginatorSubclass());
 	}
 
 }
