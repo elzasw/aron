@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -30,6 +31,7 @@ import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
+@ConditionalOnProperty(value = "peva2.url")
 public class ImportPevaOriginator implements OriginatorImporter {
 	
 	private static final Logger log = LoggerFactory.getLogger(ImportPevaOriginator.class);
