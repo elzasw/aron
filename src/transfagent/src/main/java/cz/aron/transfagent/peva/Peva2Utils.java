@@ -1,5 +1,7 @@
 package cz.aron.transfagent.peva;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import cz.aron.apux.ApuSourceBuilder;
@@ -83,5 +85,27 @@ public class Peva2Utils {
 		}
 		return output.toString();
 	}
-
+	
+	
+	private static final Map<String,String> CAM_CODE_MAP = new HashMap<>();
+	
+	static {
+		CAM_CODE_MAP.put("CRC_BIRTH", CoreTypes.CRC_BIRTH_DATE);
+		CAM_CODE_MAP.put("CRC_RISE", CoreTypes.CRC_RISE_DATE);
+		CAM_CODE_MAP.put("CRC_BEGINSCOPE", CoreTypes.CRC_BEGINSCOPE_DATE);
+		CAM_CODE_MAP.put("CRC_FIRSTMBIRTH", CoreTypes.CRC_FIRSTMBIRTH_DATE);
+		CAM_CODE_MAP.put("CRC_FIRSTWMENTION", CoreTypes.CRC_FIRSTWMENTION_DATE);
+		CAM_CODE_MAP.put("CRC_ORIGIN", CoreTypes.CRC_ORIGIN_DATE);
+		CAM_CODE_MAP.put("CRC_BEGINVALIDNESS", CoreTypes.CRC_BEGINVALIDNESS_DATE);
+	}
+	
+	public static String transformCamCode(String camCode) {
+		var converted = CAM_CODE_MAP.get(camCode);
+		if (converted!=null) {
+			return converted;
+		} else {
+			return camCode;
+		}
+	}
+	
 }

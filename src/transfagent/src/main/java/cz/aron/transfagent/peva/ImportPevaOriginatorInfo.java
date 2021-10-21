@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 
@@ -11,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.ApuType;
+import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.Part;
 import cz.aron.peva2.wsdl.Dynasty;
 import cz.aron.peva2.wsdl.DynastyName;
@@ -104,13 +106,26 @@ public class ImportPevaOriginatorInfo {
 		if (parentEcName != null) {
 			ApuSourceBuilder.addEnum(part, CoreTypes.AE_CLASS, parentEcName, true);
 		}
-		ApuSourceBuilder.addEnum(part, "AE_ORIGINATOR", "ANO", false);
+		ApuSourceBuilder.addEnum(part, "AE_ORIGINATOR", "ANO", false);		
 	}
 
-	private void processOriginator(Part part, Originator originator) {				
+	private void processOriginator(Part part, Originator originator) {
 		apusBuilder.setUuid(UUID.fromString(originator.getId()));
 		if (StringUtils.isNotBlank(originator.getNote())) {
 			ApuSourceBuilder.addString(part, CoreTypes.NOTE, originator.getNote());
+		}
+		if (originator.getDating() != null) {
+			var dating = originator.getDating();
+			if (dating.getOriginDate() != null) {
+				var datingMethod = codeLists.getCodeLists().getDatingMethod(dating.getOriginMethod());
+				var dateRange = parseOriginatorDating(dating.getOriginDate(), Peva2Utils.transformCamCode(datingMethod.getCamCode()));
+				ApuSourceBuilder.addDateRange(part, dateRange);
+			}
+			if (dating.getEndDate() != null) {
+				var datingMethod = codeLists.getCodeLists().getDatingMethod(dating.getEndMethod());
+				var dateRange = parseOriginatorDating(dating.getEndDate(), Peva2Utils.transformCamCode(datingMethod.getCamCode()));
+				ApuSourceBuilder.addDateRange(part, dateRange);
+			}
 		}
 	}
 
@@ -192,6 +207,35 @@ public class ImportPevaOriginatorInfo {
 			sb.append(" ").append(supplements.toString());
 		}
 		return sb.toString();
+	}
+	
+	private static Pattern DATE_PATTERN = Pattern.compile("^(\\d{1,2}).(\\d{1,2}).(\\d+)$");
+	private static Pattern DATE_PATTERN_YEAR = Pattern.compile("^\\d+$");
+	
+	private ItemDateRange parseOriginatorDating(String date, String type) {
+		var idr = new ItemDateRange();
+		idr.setType(type);
+		var matcher = DATE_PATTERN_YEAR.matcher(date);
+		if (matcher.matches()) {			
+			idr.setFmt("Y-Y");
+			idr.setF(date);
+			idr.setFe(false);
+			idr.setTo(date);
+			idr.setToe(false);
+			idr.setVisible(true);
+			return idr;
+		}
+		matcher = DATE_PATTERN.matcher(date);
+		if (matcher.matches()) {
+			idr.setFmt("D-D");
+			idr.setF(date);
+			idr.setFe(false);
+			idr.setTo(date);
+			idr.setToe(false);
+			idr.setVisible(true);
+			return idr;	
+		}
+		return null;
 	}
 
 	public String getUuid() {

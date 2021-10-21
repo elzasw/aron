@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import cz.aron.peva2.wsdl.Accessibility;
 import cz.aron.peva2.wsdl.Integrity;
 import cz.aron.peva2.wsdl.ListAccessibilityRequest;
+import cz.aron.peva2.wsdl.ListDatingMethodRequest;
 import cz.aron.peva2.wsdl.ListFindingAidFormTypeRequest;
 import cz.aron.peva2.wsdl.ListFindingAidTypeRequest;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
@@ -20,6 +21,7 @@ import cz.aron.peva2.wsdl.ListOriginatorSubClassRequest;
 import cz.aron.peva2.wsdl.ListPhysicalStateRequest;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PhysicalState;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2DatingMethod;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2EvidenceUnitType;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Language;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2OriginatorSubclass;
@@ -136,10 +138,23 @@ public class Peva2CodeListDownloader {
 		log.info("Originator subclasses downloaded.");
 		return ret;
 	}
+	
+	private Map<String,Peva2DatingMethod> getDatingMethod() {		
+		Map<String,Peva2DatingMethod> ret = new HashMap<>(); 
+		var ldmReq = new ListDatingMethodRequest();
+		ldmReq.setSize(100);
+		var ldmResp = peva2.listDatingMethod(ldmReq);
+		for(var dm:ldmResp.getDatingMethods().getDatingMethod()) {
+			ret.put(dm.getId(), new Peva2DatingMethod(dm.getName(),dm.getType().toString(), dm.getCamCode()));
+		}
+		log.info("Dating methods downloaded.");
+		return ret;
+	}
 
 	public Peva2CodeLists downloadCodeLists() {
 		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
-				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType(), getOriginatorSubclass());
+				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType(), getOriginatorSubclass(),
+				getDatingMethod());
 	}
 
 }

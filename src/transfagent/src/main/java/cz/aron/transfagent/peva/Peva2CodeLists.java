@@ -11,12 +11,13 @@ public class Peva2CodeLists {
     private final Map<String, Peva2Language> languages;
     private final Map<String, Peva2EvidenceUnitType> evidenceUnitTypes;
     private final Map<String, String> findingAidFormTypes;
-    private final Map<String,Peva2OriginatorSubclass> originatorSubClasses; 
+    private final Map<String,Peva2OriginatorSubclass> originatorSubClasses;
+    private final Map<String,Peva2DatingMethod> datingMethods;
     
 	public Peva2CodeLists(Map<String, String> accessibilities, Map<String, String> physicalStates,
 			Map<String, String> integrity, Map<String, String> findingAidTypes, Map<String, Peva2Language> languages,
 			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes,
-			Map<String,Peva2OriginatorSubclass> originatorSubClasses) {
+			Map<String,Peva2OriginatorSubclass> originatorSubClasses, Map<String,Peva2DatingMethod> datingMethods) {
 		this.accessibilities = accessibilities;
 		this.physicalStates = physicalStates;
 		this.integrity = integrity;
@@ -25,6 +26,7 @@ public class Peva2CodeLists {
 		this.evidenceUnitTypes = evidenceUnitTypes;
 		this.findingAidFormTypes = findingAidFormTypes;
 		this.originatorSubClasses = originatorSubClasses;
+		this.datingMethods = datingMethods;
 	}
 
     public String getAccessibilityName(String id) {
@@ -57,6 +59,10 @@ public class Peva2CodeLists {
 	
 	public Peva2OriginatorSubclass getOriginatorSubClass(String id) {
 		return originatorSubClasses.get(id);
+	}
+	
+	public Peva2DatingMethod getDatingMethod(String id) {
+		return datingMethods.get(id);
 	}
 	
 	public static class Peva2Language {
@@ -111,6 +117,31 @@ public class Peva2CodeLists {
 			return camCode;
 		}
 		
+	}
+	
+	public static class Peva2DatingMethod {
+		private final String name;
+		private final String type;
+		private final String camCode;
+
+		public Peva2DatingMethod(String name, String type, String camCode) {
+			this.name = name;
+			this.type = type;
+			this.camCode = camCode;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public String getCamCode() {
+			return camCode;
+		}
+
 	}
 
 }
