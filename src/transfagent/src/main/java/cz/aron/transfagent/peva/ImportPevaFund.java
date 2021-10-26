@@ -26,6 +26,7 @@ import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundProvider;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
+import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.FundService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService.FundImporter;
@@ -59,10 +60,12 @@ public class ImportPevaFund implements FundImporter, FundProvider {
     
     private final Peva2CachedEntityDownloader entityDownloader;
     
+    private final ArchivalEntityService archivalEntityService;
+    
     public ImportPevaFund(FundRepository fundRepository, InstitutionRepository institutionRepository,
 			DatabaseDataProvider databaseDataProvider, ConfigurationLoader configurationLoader,
 			ConfigPeva2 configPeva2, FundService fundService, StorageService storageService, TransactionTemplate tt, Peva2CodeListDownloader codeListDownloader,
-			Peva2CachedEntityDownloader entityDownloader) {
+			Peva2CachedEntityDownloader entityDownloader, ArchivalEntityService archivalEntityService) {
 		super();
 		this.fundRepository = fundRepository;
 		this.institutionRepository = institutionRepository;
@@ -74,6 +77,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		this.tt = tt;
 		this.codeListProvider = new Peva2CodeListProvider(codeListDownloader);
 		this.entityDownloader = entityDownloader;
+		this.archivalEntityService = archivalEntityService;
 	}
     
 	@Override
@@ -153,12 +157,17 @@ public class ImportPevaFund implements FundImporter, FundProvider {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-
-        if (fund == null) {
-            fundService.createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
-        } else {
-            fundService.updateFund(fund, dataDir, dir);
-        }
+        
+        tt.executeWithoutResult(t->{        	
+        	var fnd = fund;        	
+        	if (fnd == null) {
+                fnd = fundService.createFund(institution, dataDir, dir, apusrcBuilder, fundCode);            
+            } else {
+                fundService.updateFund(fnd, dataDir, dir);
+            }
+            var uuids = ifi.getOriginatorIds().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
+            archivalEntityService.registerAccessibleEntities(uuids, ImportPevaOriginator.ENTITY_CLASS, fnd.getApuSource());	
+        });
         return true;    	
     }
 

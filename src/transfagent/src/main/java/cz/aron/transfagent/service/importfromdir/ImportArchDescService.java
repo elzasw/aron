@@ -34,7 +34,7 @@ import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
-import cz.aron.transfagent.service.ArchivalEntityImportService;
+import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.DSpaceImportService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
@@ -70,7 +70,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
     private final ConfigurationLoader configurationLoader;
     
-    private final ArchivalEntityImportService archivalEntityImportService;
+    private final ArchivalEntityService archivalEntityService;
     
     private final FileImportService fileImportService;
     
@@ -84,9 +84,9 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             CoreQueueRepository coreQueueRepository, ArchDescRepository archDescRepository,
             TransactionTemplate transactionTemplate, DatabaseDataProvider databaseDataProvider,
             ConfigurationLoader configurationLoader,
-            final ArchivalEntityImportService archivalEntityImportService,
-            final FileImportService fileImportService,
-            final DSpaceImportService dSpaceImportService) {
+            ArchivalEntityService archivalEntityService,
+            FileImportService fileImportService,
+            DSpaceImportService dSpaceImportService) {
         this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -99,7 +99,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.transactionTemplate = transactionTemplate;
         this.databaseDataProvider = databaseDataProvider;
         this.configurationLoader = configurationLoader;
-        this.archivalEntityImportService = archivalEntityImportService;
+        this.archivalEntityService = archivalEntityService;
         this.fileImportService = fileImportService;
         this.dSpaceImportService = dSpaceImportService;
     }
@@ -219,7 +219,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         // Request entities and store refs
         Set<UUID> uuids = iad.getApRefs();        
-        archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
+        archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
         
         dSpaceImportService.updateDaos(archDesc.getApuSource(), iad.getDaoRefs());
     }
@@ -291,7 +291,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             }
             // Request entities and store refs
             Set<UUID> uuids = iad.getApRefs();        
-            archivalEntityImportService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
+            archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
         } catch (Exception e) {
             log.error("Fail to process, file: {}", inputFile, e);
             return Result.FAILED;

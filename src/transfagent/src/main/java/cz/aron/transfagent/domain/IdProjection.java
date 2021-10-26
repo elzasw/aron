@@ -4,4 +4,6 @@ public interface IdProjection {
 
 	int getId();
 	
+	String getEntityClass();
+	
 }

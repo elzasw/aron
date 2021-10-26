@@ -2,7 +2,10 @@ package cz.aron.transfagent.peva;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.ItemDateRange;
@@ -27,7 +30,7 @@ public class Peva2Utils {
     	itemDateRange.setFmt("Y-Y");
     	itemDateRange.setType(CoreTypes.UNIT_DATE);
     	itemDateRange.setVisible(true);    	
-    	apusBuilder.addDateRange(partFundInfo, itemDateRange);
+    	ApuSourceBuilder.addDateRange(partFundInfo, itemDateRange);
     }
     
     public static String getDate(String date) {
@@ -43,17 +46,23 @@ public class Peva2Utils {
     }
 
     public static String getAsString(UniversalTimeRange timeRange) {    	
+    	StringJoiner sj = new StringJoiner(" ");    	    	
+    	if (StringUtils.isNotBlank(timeRange.getPrior())) {
+    		sj.add("("+timeRange.getPrior()+")");    		
+    	}    	    	    	
     	var timeRangeFrom = timeRange.getTimeRangeFrom();
     	var timeRangeTo = timeRange.getTimeRangeTo();
     	if (timeRangeFrom!=null) {
     		if (timeRangeTo!=null&&!timeRangeFrom.equals(timeRangeTo)) {
-    			return timeRangeFrom + "-" + timeRangeTo;
+    			sj.add(timeRangeFrom+ "-" + timeRangeTo);
     		} else {
-    			return timeRangeFrom;
+    			sj.add(timeRangeFrom);
     		}
-    	} else {
-    		return null;
-    	}    	
+    	}
+    	if (StringUtils.isNotBlank(timeRange.getPosterior())) {
+    		sj.add("("+timeRange.getPosterior()+")");
+    	}
+    	return sj.toString();
     }
     
     private static Pattern pattern = Pattern.compile("(\\\r[^\n])|(\\\r$)");

@@ -18,6 +18,7 @@ import cz.aron.peva2.wsdl.Dynasty;
 import cz.aron.peva2.wsdl.DynastyName;
 import cz.aron.peva2.wsdl.Event;
 import cz.aron.peva2.wsdl.EventName;
+import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.Originator;
 import cz.aron.peva2.wsdl.PartyGroup;
 import cz.aron.peva2.wsdl.PartyGroupName;
@@ -44,8 +45,12 @@ public class ImportPevaOriginatorInfo {
 
 	public ApuSourceBuilder importOriginator(Path inputFile, ContextDataProvider cdp)
 			throws IOException, JAXBException {
-
 		var getOriginatorResp = Peva2XmlReader.unmarshalGetOriginatorResponse(inputFile);
+		return importOriginator(getOriginatorResp, cdp);
+	}
+	
+	public ApuSourceBuilder importOriginator(GetOriginatorResponse getOriginatorResp, ContextDataProvider cdp)
+			throws IOException, JAXBException {		
 		if (getOriginatorResp.getDynasty() != null) {
 			importDynasty(getOriginatorResp.getDynasty());
 		} else if (getOriginatorResp.getEvent() != null) {
@@ -55,7 +60,7 @@ public class ImportPevaOriginatorInfo {
 		} else if (getOriginatorResp.getPerson() != null) {
 			importPerson(getOriginatorResp.getPerson());
 		} else {
-			throw new IllegalStateException("Unsupported type of originator, path= {}" + inputFile);
+			throw new IllegalStateException("Unsupported type of originator");
 		}
 		return apusBuilder;
 	}
@@ -66,7 +71,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(dynasty.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, dynasty.getOClass().toString(), dynasty.getSubClass());
-		processOriginator(part, dynasty);
+		processOriginator(part, dynasty, false);
 	}
 
 	private void importEvent(Event event) {
@@ -75,7 +80,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(event.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, event.getOClass().toString(), event.getSubClass());
-		processOriginator(part, event);
+		processOriginator(part, event, false);
 	}
 
 	private void importPartyGroup(PartyGroup partyGroup) {
@@ -84,7 +89,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(partyGroup.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, partyGroup.getOClass().toString(), partyGroup.getSubClass());
-		processOriginator(part, partyGroup);
+		processOriginator(part, partyGroup, false);
 	}
 
 	private void importPerson(Person person) {
@@ -93,7 +98,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(person.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, person.getOClass().toString(), person.getSubClass());
-		processOriginator(part, person);
+		processOriginator(part, person, true);
 	}
 
 	private void processClassSubclass(Part part, String oClass, String subclassId) {
@@ -109,12 +114,12 @@ public class ImportPevaOriginatorInfo {
 		ApuSourceBuilder.addEnum(part, "AE_ORIGINATOR", "ANO", false);		
 	}
 
-	private void processOriginator(Part part, Originator originator) {
+	private void processOriginator(Part part, Originator originator, boolean limitedDating) {
 		apusBuilder.setUuid(UUID.fromString(originator.getId()));
 		if (StringUtils.isNotBlank(originator.getNote())) {
 			ApuSourceBuilder.addString(part, CoreTypes.NOTE, originator.getNote());
 		}
-		if (originator.getDating() != null) {
+		if (originator.getDating() != null&&!limitedDating) {
 			var dating = originator.getDating();
 			if (dating.getOriginDate() != null) {
 				var datingMethod = codeLists.getCodeLists().getDatingMethod(dating.getOriginMethod());

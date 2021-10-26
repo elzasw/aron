@@ -15,6 +15,8 @@ import cz.aron.transfagent.domain.EntitySource;
 public interface EntitySourceRepository extends JpaRepository<EntitySource,Integer> {
 
 	List<EntitySource> findByArchivalEntity(ArchivalEntity archivalEntity);
+	
+	EntitySource findByArchivalEntityAndApuSource(ArchivalEntity archivalEntity, ApuSource apuSource);
 
 	@Query("select es from EntitySource es join fetch es.archivalEntity where es.apuSource = :apusrc")
     List<EntitySource> findByApuSourceJoinFetchArchivalEntity(@Param("apusrc") ApuSource apuSource);

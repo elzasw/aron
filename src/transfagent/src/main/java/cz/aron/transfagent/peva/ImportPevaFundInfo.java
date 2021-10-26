@@ -7,7 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
 import java.util.TreeSet;
@@ -48,6 +50,8 @@ public class ImportPevaFundInfo {
     private ConfigPeva2FundProperties fundProperties;
     
     private String institutionCode;
+    
+    private List<String> originators = new ArrayList<>();
     
     public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
@@ -127,11 +131,11 @@ public class ImportPevaFundInfo {
         var fullFundName = createFundName(instInfo, primarySheet);
 
     	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(primarySheet.getId()));
-    	Part partName = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
+    	Part partName = ApuSourceBuilder.addPart(apu, CoreTypes.PT_TITLE);
 		partName.setValue(fundName);
 		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
 
-		Part partFundInfo = apusBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
+		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
 	
 		processEvidenceNumber(primarySheet, null, partFundInfo);	
@@ -261,15 +265,16 @@ public class ImportPevaFundInfo {
 		}	
     }
     
-    private void processOriginators(NadSheet nadSheet, Part partFundInfo) {
+	private void processOriginators(NadSheet nadSheet, Part partFundInfo) {
 		var originators = nadSheet.getOriginators();
-		if (originators!=null&&originators.getOriginator()!=null) {
-			originators.getOriginator().forEach(o->{
-				apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, UUID.fromString(o));		
+		if (originators != null && originators.getOriginator() != null) {
+			originators.getOriginator().forEach(o -> {
+				apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, UUID.fromString(o));
+				this.originators.add(o);
 			});
 		}
-    }
-    
+	}
+
     private static Comparator<Object> cmp = Collator.getInstance(new Locale("cs","CZ"));
     
 	private void processLanguages(NadSheet nadSheet, Part partFundInfo) {
@@ -321,14 +326,22 @@ public class ImportPevaFundInfo {
 	private void processEvidenceUnits(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isEvidenceUnits()) {
 			var evidenceUnits = nadSheet.getEvidenceUnits();
-			if (evidenceUnits!=null) {
-				for(var evidenceUnit:evidenceUnits.getEvidenceUnit()) {					
-					StringJoiner sj = new StringJoiner(", ");					
+			if (evidenceUnits!=null) {				
+				StringJoiner allSj = new StringJoiner("\r\n");				
+				for(var evidenceUnit:evidenceUnits.getEvidenceUnit()) {
+					
+					StringBuilder sb = new StringBuilder();
 					var type = evidenceUnit.getEvidenceUnitType();
 					var typeName = codeListProvider.getCodeLists().getEvidenceUnitType(type.getValue());
 					if (typeName!=null) {
-						sj.add(typeName.getName());
-					}					
+						sb.append(typeName.getName());
+					}
+					if (evidenceUnit.getTimeRange()!=null) {
+						sb.append(Peva2Utils.getAsString(evidenceUnit.getTimeRange()));
+					}
+					allSj.add(sb.toString());
+										
+					StringJoiner sj = new StringJoiner(", ");
 					processEvidenceUnitProcedure("Velikost v digitální podobě", evidenceUnit.getDigitalProcedure(), sj);
 					processEvidenceUnitProcedure("Počet", evidenceUnit.getCountProcedure(), sj);
 					processEvidenceUnitProcedure("Metráž", evidenceUnit.getLengthProcedure(), sj);					
@@ -345,9 +358,14 @@ public class ImportPevaFundInfo {
 							break;
 						default:
 						}						
-					}					
-					ApuSourceBuilder.addString(partFundInfo, "EVIDENCE_UNIT", sj.toString());
-				}
+					}
+					if (sj.length()>0) {
+						allSj.add(sj.toString());
+					}				
+				}				
+				if (allSj.length()>0) {
+					ApuSourceBuilder.addString(partFundInfo, "EVIDENCE_UNIT", allSj.toString());
+				}								
 			}
 		}
 	}
@@ -495,7 +513,7 @@ public class ImportPevaFundInfo {
 				sj.add(sjDmg.toString());
 			}
 			if (add) {
-				apusBuilder.addString(partFundInfo, "FUND_PRESERVATION", sj.toString());
+				ApuSourceBuilder.addString(partFundInfo, "FUND_PRESERVATION", sj.toString());
 			}
 		}
 	}
@@ -551,13 +569,15 @@ public class ImportPevaFundInfo {
 			return original;
 		}				
 	}
-	
-	
-	
+		
     public String getInstitutionCode() {
     	return institutionCode;
     }
     
+    public List<String> getOriginatorIds() {
+    	return originators;
+    }
+
 	public interface FundProvider {		
 		NadPrimarySheet getFundByUUID(UUID uuid) throws IOException, JAXBException;		
 	}

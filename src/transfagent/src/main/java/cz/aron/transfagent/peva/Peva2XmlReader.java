@@ -72,8 +72,8 @@ public class Peva2XmlReader {
 		}
 	}
 	
-	public static void marshalGetOriginatorResponse(GetOriginatorResponse gfar, Path fileName) throws JAXBException {
-		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetOriginatorResponse(gfar), fileName.toFile());
+	public static void marshalGetOriginatorResponse(GetOriginatorResponse gor, Path fileName) throws JAXBException {
+		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetOriginatorResponse(gor), fileName.toFile());
 	}
 
 	@SuppressWarnings("unchecked")
