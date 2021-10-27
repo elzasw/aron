@@ -680,6 +680,13 @@ itemTypes:
   - code: ACCESSIBILITY
     name: Přístupnost
     type: ENUM
+  - code: FUND_THEMATIC_GROUP
+    name: Tematická skupina
+    type: ENUM
+    indexed: true
+  - code: FUND_THEMATIC_GROUP_TEXT 
+    name: Tematická skupina
+    type: STRING
 
   #
   # Archivní pomucka

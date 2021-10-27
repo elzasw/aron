@@ -19,12 +19,15 @@ import cz.aron.peva2.wsdl.ListLanguageRequest;
 import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
 import cz.aron.peva2.wsdl.ListOriginatorSubClassRequest;
 import cz.aron.peva2.wsdl.ListPhysicalStateRequest;
+import cz.aron.peva2.wsdl.ListThematicEvidenceGroupRequest;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PhysicalState;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2DatingMethod;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2EvidenceUnitType;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Language;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2OriginatorSubclass;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2ThematicGroup;
+import cz.aron.transfagent.service.StorageService;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
@@ -34,8 +37,11 @@ public class Peva2CodeListDownloader {
 	
 	private final PEvA peva2;
 	
-	public Peva2CodeListDownloader(PEvA peva2) {
+	private final StorageService storageService;
+	
+	public Peva2CodeListDownloader(PEvA peva2, StorageService storageService) {
 		this.peva2 = peva2;
+		this.storageService = storageService;
 	}
 
     private Map<String, String> getAccessibility() {
@@ -150,11 +156,23 @@ public class Peva2CodeListDownloader {
 		log.info("Dating methods downloaded.");
 		return ret;
 	}
+	
+	private Map<String, Peva2ThematicGroup> getThematicGroup() {
+		Map<String, Peva2ThematicGroup> ret = new HashMap<>();
+		var ltegReq = new ListThematicEvidenceGroupRequest();
+		ltegReq.setSize(1000);
+		var ltegResp = peva2.listThematicEvidenceGroup(ltegReq);
+		for (var teg : ltegResp.getThematicEvidenceGroups().getThematicEvidenceGroup()) {
+			ret.put(teg.getId(), new Peva2ThematicGroup(teg.getName(), teg.getCode()));
+		}
+		log.info("Thematic groups downloaded.");
+		return ret;
+	}
 
 	public Peva2CodeLists downloadCodeLists() {
 		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
 				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType(), getOriginatorSubclass(),
-				getDatingMethod());
+				getDatingMethod(), getThematicGroup());
 	}
 
 }

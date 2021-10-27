@@ -13,11 +13,13 @@ public class Peva2CodeLists {
     private final Map<String, String> findingAidFormTypes;
     private final Map<String,Peva2OriginatorSubclass> originatorSubClasses;
     private final Map<String,Peva2DatingMethod> datingMethods;
+    private final Map<String, Peva2ThematicGroup> thematicGroups;
     
 	public Peva2CodeLists(Map<String, String> accessibilities, Map<String, String> physicalStates,
 			Map<String, String> integrity, Map<String, String> findingAidTypes, Map<String, Peva2Language> languages,
 			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes,
-			Map<String,Peva2OriginatorSubclass> originatorSubClasses, Map<String,Peva2DatingMethod> datingMethods) {
+			Map<String,Peva2OriginatorSubclass> originatorSubClasses, Map<String,Peva2DatingMethod> datingMethods,
+			Map<String, Peva2ThematicGroup> thematicGroups) {
 		this.accessibilities = accessibilities;
 		this.physicalStates = physicalStates;
 		this.integrity = integrity;
@@ -27,6 +29,7 @@ public class Peva2CodeLists {
 		this.findingAidFormTypes = findingAidFormTypes;
 		this.originatorSubClasses = originatorSubClasses;
 		this.datingMethods = datingMethods;
+		this.thematicGroups = thematicGroups;
 	}
 
     public String getAccessibilityName(String id) {
@@ -63,6 +66,10 @@ public class Peva2CodeLists {
 	
 	public Peva2DatingMethod getDatingMethod(String id) {
 		return datingMethods.get(id);
+	}
+	
+	public Peva2ThematicGroup getThematicGroup(String id) {
+		return thematicGroups.get(id);
 	}
 	
 	public static class Peva2Language {
@@ -140,6 +147,28 @@ public class Peva2CodeLists {
 
 		public String getCamCode() {
 			return camCode;
+		}
+
+	}
+	
+	public static class Peva2ThematicGroup {
+		
+		private final String name;
+		
+		private final String code;
+
+		public Peva2ThematicGroup(String name, String code) {
+			super();
+			this.name = name;
+			this.code = code;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getCode() {
+			return code;
 		}
 
 	}

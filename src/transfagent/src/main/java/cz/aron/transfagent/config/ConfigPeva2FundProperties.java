@@ -35,6 +35,7 @@ public class ConfigPeva2FundProperties {
     // do popisu fondu v prehledu prida jako description prvni radek z interni zmeny
     private boolean parseInternalChangesAsDescription;
     
+    // predela \r na \r\n (chyba v la pnp)
     private boolean correctLineSeparators;
     
     // vyplni metraz fondu
@@ -48,6 +49,9 @@ public class ConfigPeva2FundProperties {
     
     // vyplni pristupnost
     private boolean accessibility;
+    
+    // vyplni tematicke skupiny
+    private boolean thematicEvidenceGroups;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -175,6 +179,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setDigitalLength(boolean digitalLength) {
 		this.digitalLength = digitalLength;
+	}
+
+	public boolean isThematicEvidenceGroups() {
+		return thematicEvidenceGroups;
+	}
+
+	public void setThematicEvidenceGroups(boolean thematicEvidenceGroups) {
+		this.thematicEvidenceGroups = thematicEvidenceGroups;
 	}
 
 }

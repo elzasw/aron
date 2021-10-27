@@ -199,6 +199,7 @@ public class ImportPevaFundInfo {
 		processPreservationStatus(nadSheet, partFundInfo);
 		processLength(nadSheet, partFundInfo);
 		processDigital(nadSheet, partFundInfo);
+		processThematicGroups(nadSheet, partFundInfo);
 	}
 	
 	private void generateDescription(NadSheet nadSheet, Part partFundInfo) {
@@ -275,12 +276,12 @@ public class ImportPevaFundInfo {
 		}
 	}
 
-    private static Comparator<Object> cmp = Collator.getInstance(new Locale("cs","CZ"));
+    private static Comparator<Object> COMPARATOR_CS_CZ = Collator.getInstance(new Locale("cs","CZ"));
     
 	private void processLanguages(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isLanguages()) {
 			var languages = nadSheet.getLanguageRecords();									
-			var lng = new TreeSet<String>(cmp);
+			var lng = new TreeSet<String>(COMPARATOR_CS_CZ);
 			for (var language : languages.getLanguageRecord()) {
 				var p2Lang = codeListProvider.getCodeLists().getLanguage(language.getLanguage());
 				if (p2Lang != null) {
@@ -558,6 +559,24 @@ public class ImportPevaFundInfo {
 				if (StringUtils.isNotBlank(accessibility)) {
 					ApuSourceBuilder.addEnum(partFundInfo, "ACCESSIBILITY", accessibility);
 				}
+			}
+		}
+	}
+	
+	private void processThematicGroups(NadSheet nadSheet, Part partFundInfo) {
+		if (fundProperties.isThematicEvidenceGroups()) {			
+			var grps = new TreeSet<String>(COMPARATOR_CS_CZ);			
+			for(var groupUUID:nadSheet.getGroups().getGroup()) {
+				var thematicGroup = codeListProvider.getCodeLists().getThematicGroup(groupUUID);
+				if (thematicGroup != null) {
+					ApuSourceBuilder.addEnum(partFundInfo, "FUND_THEMATIC_GROUP", thematicGroup.getName(), false);
+					grps.add(thematicGroup.getName());
+				}
+			}
+			if (!grps.isEmpty()) {
+				StringJoiner sj = new StringJoiner(", ");
+				grps.forEach(l->sj.add(l));
+				ApuSourceBuilder.addString(partFundInfo, "FUND_THEMATIC_GROUP_TEXT", sj.toString());
 			}
 		}
 	}
