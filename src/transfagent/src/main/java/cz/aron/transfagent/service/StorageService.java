@@ -1,11 +1,13 @@
 package cz.aron.transfagent.service;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +29,8 @@ public class StorageService {
 	private final Path daoPath;
 
 	private final AtomicLong counter = new AtomicLong(0);
+	
+	private final Tika tika = new Tika();
 
 	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir.path}")String daoFolderStr) {
 		this.workDir = Path.of(workDirStr);
@@ -113,4 +117,15 @@ public class StorageService {
 		Files.createDirectory(tmpDir);
 		return tmpDir;
 	}
+	
+	/**
+	 * Detekuje mimetype souboru 
+	 * @param file soubor k detekci
+	 * @return String s mimetype
+	 * @throws IOException
+	 */
+	public String detectMimetype(Path file) throws IOException {
+		return tika.detect(file);
+	}
+	
 }

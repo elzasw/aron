@@ -53,6 +53,8 @@ public class ImportPevaFundInfo {
     
     private List<String> originators = new ArrayList<>();
     
+    private List<String> findingAids = new ArrayList<>();
+    
     public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
         ImportPevaFundInfo ifi = new ImportPevaFundInfo(new ConfigPeva2FundProperties());
@@ -261,7 +263,8 @@ public class ImportPevaFundInfo {
     	var findingAids = nadSheet.getFindingAids();
 		if (findingAids!=null&&findingAids.getFindingAid()!=null) {
 			findingAids.getFindingAid().forEach(fa->{
-				apusBuilder.addApuRef(partFundInfo, "FINDINGAID_REF", UUID.fromString(fa));				
+				apusBuilder.addApuRef(partFundInfo, "FINDINGAID_REF", UUID.fromString(fa));
+				this.findingAids.add(fa);
 			});			
 		}	
     }
@@ -595,7 +598,11 @@ public class ImportPevaFundInfo {
     
     public List<String> getOriginatorIds() {
     	return originators;
-    }
+    }    
+
+	public List<String> getFindingAidIds() {
+		return findingAids;
+	}
 
 	public interface FundProvider {		
 		NadPrimarySheet getFundByUUID(UUID uuid) throws IOException, JAXBException;		

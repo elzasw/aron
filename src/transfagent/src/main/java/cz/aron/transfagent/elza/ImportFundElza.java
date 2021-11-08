@@ -17,11 +17,16 @@ import org.springframework.stereotype.Service;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
+import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Fund;
+import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.FundService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService.FundImporter;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -30,6 +35,8 @@ public class ImportFundElza implements FundImporter {
 	private static final Logger log = LoggerFactory.getLogger(ImportFundElza.class);
 
 	private static final String PREFIX = "fund-";
+	
+	private static final String FUND_SOURCE = "elza";
 	
 	private final FundService fundService;
 	
@@ -133,11 +140,35 @@ public class ImportFundElza implements FundImporter {
 		}
 
 		if (fund == null) {
-			fundService.createFund(institution, dataDir, dir, apusrcBuilder, fundCode);
+			fundService.createFund(institution, dataDir, dir, apusrcBuilder, fundCode, FUND_SOURCE);
 		} else {
-			fundService.updateFund(fund, dataDir, dir);
+			fundService.updateFund(fund, dataDir, dir, true);
 		}
 		return true;
+	}
+
+	@Override
+	public Result reimport(ApuSource apuSource, Fund fund, Path dataDir) {
+		
+		if (!dataDir.getFileName().toString().startsWith(PREFIX)) {
+			return Result.UNSUPPORTED;
+		}
+		
+        var fileName = PREFIX + fund.getCode() + ".xml";
+        var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+        ApuSourceBuilder apuSourceBuilder;
+        var ifi = new ImportFundInfo();
+        try {
+            apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), fund.getUuid(), databaseDataProvider);
+            apuSourceBuilder.setUuid(apuSource.getUuid());
+            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
+                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }
+        } catch (Exception e) {
+            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
+            return Result.FAILED;
+        }
+        return Result.REIMPORTED;
 	}
 
 }

@@ -138,8 +138,8 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	}
 
 	@Override
-	public Result reimport(ApuSource apuSource) {
-		throw new UnsupportedOperationException("Not implemented yet");
+	public Result reimport(ApuSource apuSource) {		
+		return Result.UNSUPPORTED;				
 	}
 
 }

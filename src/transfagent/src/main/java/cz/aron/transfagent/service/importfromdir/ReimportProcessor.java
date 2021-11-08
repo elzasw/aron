@@ -12,9 +12,11 @@ public interface ReimportProcessor {
     };
 
 	/**
-	 * 
+	 * Reimport apu
 	 * @param apuSource
 	 * @return Return if apuSource was reimported
+	 * 
+	 * Insert into CoreQueue when REIMPORTED result is returned
 	 */
 	Result reimport(ApuSource apuSource);
 

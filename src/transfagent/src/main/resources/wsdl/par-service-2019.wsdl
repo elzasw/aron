@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions name="PAR_WSDL" targetNamespace="http://www.nacr.cz/nda/par/api/2019" xmlns:tns="http://www.nacr.cz/nda/par/api/2019" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<wsdl:types>
+		<xs:schema targetNamespace="http://www.nacr.cz/nda/par/api/2019" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:s1="http://www.nacr.cz/nda/par/api/2019" elementFormDefault="qualified">
+			<xs:element name="archivy" type="s1:SeznamArchivu">
+				<xs:annotation>
+					<xs:documentation>Kořenový element se seznamem archivů</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="jednoCisloArchivu" type="s1:CisloArchivu">
+				<xs:annotation>
+					<xs:documentation>Zaslání dotazu s jedním číslem archivu</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="samostatneJmenoArchivu" type="s1:JmenoArchivu">
+				<xs:annotation>
+					<xs:documentation>Návratová hodnota se jménem archivu</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="snimekEvidenceArchivu" type="s1:EvidenceArchivu">
+				<xs:annotation>
+					<xs:documentation>Kořenový element pro snímek evidence archivů</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:simpleType name="CisloArchivu">
+				<xs:annotation>
+					<xs:documentation>Jednoznačný identifikátor archivu v soustavě archivů</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="DruhArchivu">
+				<xs:annotation>
+					<xs:documentation>Druh archivu</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="DruhVztahu">
+				<xs:annotation>
+					<xs:documentation>Typ vztahu mezi archivy. Slouží k vyjádření soustavy archivů v ČR. 
+Možné vztahy jsou:
+	- je součástí
+	- vede druhotnou evidenci</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="SOUCAST">
+						<xs:annotation>
+							<xs:documentation>Udává zda jeden archiv je součástí jiného. Používá se pro vyjádření vztahu mezi oblastním archivem a okresním archivem.
+
+Příklad:
+SOkA Teplice je organizační součástí SOA Litoměřice
+
+zdroj: SOkA Teplice
+cil: SOA Litoměřice
+
+Poznámka: Reálně se přenáší identifikátory archivů, nikoliv jejich názvy</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="VEDE_DRUH_EVID">
+						<xs:annotation>
+							<xs:documentation>Uvádí, který archiv vede druhotnou evidenci jinému.
+
+Příklad:
+MZA Brno vede druhnotnou evidenci Archivu města Brna.
+
+Zdroj: MZA Brno
+Cíl: Archiv města Brna
+
+Poznámka: Reálně se přenáší identifikátory archivů, nikoliv jejich názvy</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType name="JmenoArchivu">
+				<xs:annotation>
+					<xs:documentation>Název archivu</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="255"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:simpleType name="Obec">
+				<xs:annotation>
+					<xs:documentation>Obec</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="PopisArchivu">
+				<xs:annotation>
+					<xs:documentation>Doplňující popis archivu</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="PSC">
+				<xs:annotation>
+					<xs:documentation>PSČ</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="Ulice">
+				<xs:annotation>
+					<xs:documentation>Ulice včetně čísla popisného či orientačního</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+			<xs:simpleType name="ZkraceneJmeno">
+				<xs:annotation>
+					<xs:documentation>Zkrácený název archivu</xs:documentation>
+				</xs:annotation>
+				<xs:restriction base="xs:string">
+					<xs:maxLength value="255"/>
+				</xs:restriction>
+			</xs:simpleType>
+			<xs:element name="Adresa" type="s1:Adresa"/>
+			<xs:complexType name="Adresa">
+				<xs:annotation>
+					<xs:documentation>Adresa (fyzická)</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:element name="ulice" type="s1:Ulice" minOccurs="0" maxOccurs="1"/>
+					<xs:element name="obec" type="s1:Obec" minOccurs="0" maxOccurs="1"/>
+					<xs:element name="psc" type="s1:PSC" minOccurs="0" maxOccurs="1"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="Archiv" type="s1:Archiv"/>
+			<xs:complexType name="Archiv">
+				<xs:sequence>
+					<xs:element name="cisloArchivu" type="s1:CisloArchivu" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="jmeno" type="s1:JmenoArchivu" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="zkraceneJmeno" type="s1:ZkraceneJmeno" minOccurs="0" maxOccurs="1"/>
+					<xs:element name="popis" type="s1:PopisArchivu" minOccurs="0" maxOccurs="1"/>
+					<xs:element name="sidlo" type="s1:Adresa" minOccurs="0" maxOccurs="1"/>
+					<xs:element name="druhArchivu" type="s1:DruhArchivu" minOccurs="0" maxOccurs="1"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="EvidenceArchivu" type="s1:EvidenceArchivu"/>
+			<xs:complexType name="EvidenceArchivu">
+				<xs:annotation>
+					<xs:documentation>Evidence archivů je tvořena:
+	- seznamem archivů
+	- vztahy mezi archivy</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:element name="archivy" type="s1:SeznamArchivu" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="vztahy" type="s1:VztahyMeziArchivy" minOccurs="1" maxOccurs="1"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="SeznamArchivu" type="s1:SeznamArchivu"/>
+			<xs:complexType name="SeznamArchivu">
+				<xs:annotation>
+					<xs:documentation>Kolekce archivů</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:element name="archiv" type="s1:Archiv" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="VztahMeziArchivy" type="s1:VztahMeziArchivy"/>
+			<xs:complexType name="VztahMeziArchivy">
+				<xs:annotation>
+					<xs:documentation>Vztah mezi archivy. Každý vztah má definován:
+	- druh vztahu
+	- zdroj
+	- cil</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:element name="druh" type="s1:DruhVztahu" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="zdroj" type="s1:CisloArchivu" minOccurs="1" maxOccurs="1"/>
+					<xs:element name="cil" type="s1:CisloArchivu" minOccurs="1" maxOccurs="1"/>
+				</xs:sequence>
+			</xs:complexType>
+			<xs:element name="VztahyMeziArchivy" type="s1:VztahyMeziArchivy"/>
+			<xs:complexType name="VztahyMeziArchivy">
+				<xs:annotation>
+					<xs:documentation>Kolekce vztahů mezi archivy</xs:documentation>
+				</xs:annotation>
+				<xs:sequence>
+					<xs:element name="vztah" type="s1:VztahMeziArchivy" minOccurs="0" maxOccurs="unbounded"/>
+				</xs:sequence>
+			</xs:complexType>
+		</xs:schema>
+	</wsdl:types>
+	<wsdl:message name="CisloArchivu">
+		<wsdl:part name="cisloArchivu" element="tns:jednoCisloArchivu"/>
+	</wsdl:message>
+	<wsdl:message name="VratSeznamArchivu"/>
+	<wsdl:message name="SeznamArchivuOdpoved">
+		<wsdl:part name="seznamArchivu" element="tns:archivy"/>
+	</wsdl:message>
+	<wsdl:message name="VratEvidenciArchivu">
+		<wsdl:documentation>Požadavek na vrácení kompletní evidence archivů</wsdl:documentation>
+	</wsdl:message>
+	<wsdl:message name="EvidenceArchivuOdpoved">
+		<wsdl:documentation>Odpověď s evidencí archivů</wsdl:documentation>
+		<wsdl:part name="evidence" element="tns:snimekEvidenceArchivu"/>
+	</wsdl:message>
+	<wsdl:message name="NazevArchivu">
+		<wsdl:part name="nazevArchivu" element="tns:samostatneJmenoArchivu"/>
+	</wsdl:message>
+	<wsdl:portType name="ArchivyPort">
+		<wsdl:operation name="VratEvidenciArchivu">
+			<wsdl:documentation>Požadavek na získání evidence archivů</wsdl:documentation>
+			<wsdl:input name="vratEvidenciArchivu" message="tns:VratEvidenciArchivu"/>
+			<wsdl:output name="evidenceArchivuOdpoved" message="tns:EvidenceArchivuOdpoved">
+				<wsdl:documentation>Aktuální stav evidence archivů</wsdl:documentation>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="VratNazevArchivu">
+			<wsdl:input name="cisloArchivu" message="tns:CisloArchivu"/>
+			<wsdl:output name="nazevArchivu" message="tns:NazevArchivu"/>
+		</wsdl:operation>
+		<wsdl:operation name="VratSeznamArchivu">
+			<wsdl:input name="request" message="tns:VratSeznamArchivu"/>
+			<wsdl:output name="response" message="tns:SeznamArchivuOdpoved"/>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="ArchivyBinding" type="tns:ArchivyPort">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<wsdl:operation name="VratEvidenciArchivu">
+			<wsdl:documentation>Požadavek na získání evidence archivů</wsdl:documentation>
+			<soap:operation soapAction="http://nda.nacr.cz/par/VratEvidenciArchivu" style="document"/>
+			<wsdl:input name="vratEvidenciArchivu">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="evidenceArchivuOdpoved">
+				<wsdl:documentation>Aktuální stav evidence archivů</wsdl:documentation>
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="VratNazevArchivu">
+			<soap:operation soapAction="http://nda.nacr.cz/par/VratNazevArchivu" style="document"/>
+			<wsdl:input name="cisloArchivu">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="nazevArchivu">
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="VratSeznamArchivu">
+			<soap:operation soapAction="http://nda.nacr.cz/par/VratSeznamArchivu" style="document"/>
+			<wsdl:input name="request">
+				<soap:body use="literal"/>
+			</wsdl:input>
+			<wsdl:output name="response">
+				<soap:body use="literal"/>
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="ArchivyService">
+		<wsdl:port name="ArchivyPort" binding="tns:ArchivyBinding">
+			<soap:address location="nda.nacr.cz/pev/archivy"/>
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.tika.Tika;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -20,7 +19,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
-import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.Fund;
@@ -32,7 +30,6 @@ import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService.FindingAidImporter;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
-import cz.aron.transfagent.transformation.InstitutionInfo;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
@@ -63,8 +60,6 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 	private final Peva2CodeListProvider codeListProvider;
 	
 	private final ConfigPeva2 configPeva2;
-	
-	private final Tika tika = new Tika();
 	
 	public ImportPevaFindingAid(StorageService storageService, FindingAidService findingAidService,
 			FindingAidRepository findingAidRepository, FundRepository fundRepository,
@@ -176,25 +171,26 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             throw new IllegalStateException(e);
         }
 
-        Path dataDir;
-        try {
-            dataDir = storageService.moveToDataDir(dir);
-            protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
-            // change directory of attachments
-            if(attachments!=null) {
-                attachments = attachments.stream()
-                        .map(p -> dataDir.resolve(p.getFileName()))
-                        .collect(Collectors.toList());
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-        
-        if (findingAid == null) {
-            findingAidService.createFindingAid(findingAidCode, funds, institution, dataDir, dir, builder, attachments);
-        } else {
-            findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments);
-        }
+		Path dataDir;
+		try {
+			dataDir = storageService.moveToDataDir(dir);
+			protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
+			// change directory of attachments
+			if (attachments != null) {
+				attachments = attachments.stream().map(p -> dataDir.resolve(p.getFileName()))
+						.collect(Collectors.toList());
+			}
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		}
+
+		if (findingAid == null) {
+			findingAidService.createFindingAid(findingAidCode, funds, institution, dataDir, dir, builder, attachments,
+					configPeva2.getFundProperties().isAggregateAttachments());
+		} else {
+			findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments,
+					configPeva2.getFundProperties().isAggregateAttachments());
+		}
         
     	return true;
 
@@ -213,11 +209,11 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 
 					String mimetype = null;
 					try {
-						mimetype = tika.detect(f);
+						mimetype = this.storageService.detectMimetype(f);
 					} catch (IOException e) {
 						throw new UncheckedIOException(e);
 					}
-					var att = builder.addAttachment(apu, f.getFileName().toString(), mimetype);
+					builder.addAttachment(apu, f.getFileName().toString(), mimetype);
 					attachments.add(f);
 				}
 			});

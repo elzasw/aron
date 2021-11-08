@@ -43,11 +43,13 @@ public class FindingAidService {
 	
 	private final AttachmentRepository attachmentRepository;
 	
+	private final AttachmentService attachmentService;
+	
 	//private final FundRepository fundRepository;
 
 	public FindingAidService(ApuSourceService apuSourceService, ApuSourceRepository apuSourceRepository,
 			FindingAidRepository findingAidRepository, FundRepository fundRepository,
-			CoreQueueRepository coreQueueRepository, AttachmentRepository attachmentRepository) {
+			CoreQueueRepository coreQueueRepository, AttachmentRepository attachmentRepository, AttachmentService attachmentService) {
 		super();
 		this.apuSourceService = apuSourceService;
 		this.apuSourceRepository = apuSourceRepository;
@@ -55,18 +57,15 @@ public class FindingAidService {
 		this.fundRepository = fundRepository;
 		this.coreQueueRepository = coreQueueRepository;
 		this.attachmentRepository = attachmentRepository;
+		this.attachmentService = attachmentService;
 	}
 
 	@Transactional
-	public FindingAid createFindingAid(String findingaidCode, List<Fund> relatedFunds, Institution institution, Path dataDir,
-			Path origDir, ApuSourceBuilder builder, List<Path> attachments) {
-		
+	public FindingAid createFindingAid(String findingaidCode, List<Fund> relatedFunds, Institution institution,
+			Path dataDir, Path origDir, ApuSourceBuilder builder, List<Path> attachments, boolean reimportFund) {
+
 		// reload funds from db
-		var funds = fundRepository.findAllById(relatedFunds.stream().map(f->f.getId()).collect(Collectors.toList()));
-		
-		if (funds.size()>1) {
-			System.out.println("Nazdar");
-		}
+		var funds = fundRepository.findAllById(relatedFunds.stream().map(f -> f.getId()).collect(Collectors.toList()));
 
 		var findingaidUuid = builder.getMainApu().getUuid();
 		Validate.notNull(findingaidUuid, "FindingAid UUID is null");
@@ -82,12 +81,15 @@ public class FindingAidService {
 		findingAid.setUuid(UUID.fromString(findingaidUuid));
 		findingAid.setApuSource(apuSource);
 		findingAid.setInstitution(institution);
-		for(var fund:funds) {
+		for (var fund : funds) {
 			findingAid.addFund(fund);
+			if (reimportFund&&fund.getApuSource()!=null) {
+				fund.getApuSource().setReimport(true);
+			}
 		}
 		findingAid = findingAidRepository.save(findingAid);
 
-		updateAttachments(findingAid, builder, attachments);
+		attachmentService.updateAttachments(findingAid.getApuSource(), builder, attachments);
 
 		var coreQueue = new CoreQueue();
 		coreQueue.setApuSource(apuSource);
@@ -97,57 +99,27 @@ public class FindingAidService {
 		return findingAid;
 	}
 
-	private void updateAttachments(FindingAid findingAid, ApuSourceBuilder builder, List<Path> attachments) {
-		var dbAttachments = attachmentRepository.findByApuSource(findingAid.getApuSource());
-		if (dbAttachments.size() > 0) {
-			// drop old attachment
-			attachmentRepository.deleteInBatch(dbAttachments);
-		}
-
-		if (CollectionUtils.isNotEmpty(attachments)) {
-			var mainApu = builder.getMainApu();
-			Validate.isTrue(attachments.size() == mainApu.getAttchs().size(),
-					"Attachment size does not match, attachments: %i, xml: %i", attachments.size(),
-					mainApu.getAttchs().size());
-
-			var attIt = mainApu.getAttchs().iterator();
-			var fileIt = attachments.iterator();
-			while (attIt.hasNext() && fileIt.hasNext()) {
-				var att = attIt.next();
-				var attPath = fileIt.next();
-
-				Validate.notNull(att.getFile(), "DaoFile is null");
-				Validate.notNull(att.getFile().getUuid(), "DaoFile without UUID");
-
-				createAttachment(findingAid.getApuSource(), attPath.getFileName().toString(),
-						UUID.fromString(att.getFile().getUuid()));
-			}
-		}
-	}
-	
-    private void createAttachment(ApuSource apuSource, String fileName, UUID uuid) {
-        var attachment = new Attachment();
-        attachment.setApuSource(apuSource);
-        attachment.setFileName(fileName);
-        attachment.setUuid(uuid);
-        attachment = attachmentRepository.save(attachment); 
-    }
-
     @Transactional
 	public void updateFindingAid(FindingAid findingAid, Path dataDir, Path origDir, ApuSourceBuilder builder,
-			List<Path> attachments) {
+			List<Path> attachments, boolean reimportFund) {
 
 		var apuSource = findingAid.getApuSource();
 		apuSource.setDataDir(dataDir.toString());
 		apuSource.setOrigDir(origDir.getFileName().toString());
 
-		updateAttachments(findingAid, builder, attachments);
+		attachmentService.updateAttachments(findingAid.getApuSource(), builder, attachments);
 
 		var coreQueue = new CoreQueue();
 		coreQueue.setApuSource(apuSource);
 
 		apuSourceRepository.save(apuSource);
 		coreQueueRepository.save(coreQueue);
+		
+		if (reimportFund) {
+			for(var fund:findingAid.getFunds()) {
+				fund.getApuSource().setReimport(true);
+			}
+		}
 
 		log.info("FindingAid updated code={}, uuid={}, data dir: {}", findingAid.getCode(), findingAid.getUuid(),
 				dataDir.toString());

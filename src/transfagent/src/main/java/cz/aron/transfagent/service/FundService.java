@@ -52,7 +52,7 @@ public class FundService {
 	 */
 	@Transactional
 	public Fund createFund(Institution institution, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder,
-			String fundCode) {
+			String fundCode, String source) {
 
 		var fundUuid = apusrcBuilder.getMainApu().getUuid();
 		Validate.notNull(fundUuid, "Fund UUID is null");
@@ -67,7 +67,7 @@ public class FundService {
 		fund.setApuSource(apuSource);
 		fund.setInstitution(institution);
 		fund.setCode(fundCode);
-		fund.setSource("source");
+		fund.setSource(source);
 		fund.setUuid(UUID.fromString(fundUuid));
 		fund = fundRepository.save(fund);
 
@@ -87,19 +87,20 @@ public class FundService {
 	 * @param fund aktualizovany fond
 	 * @param dataDir adresar/zip s daty
 	 * @param origDir puvodni adresar/zip s daty
+	 * @param insertToCoreQueue pokud je true vlozi udalost do CoreQueue
 	 */
 	@Transactional
-	public void updateFund(Fund fund, Path dataDir, Path origDir) {
-
+	public void updateFund(Fund fund, Path dataDir, Path origDir, boolean insertToCoreQueue) {
 		var oldDir = fund.getApuSource().getDataDir();
 		var apuSource = fund.getApuSource();
 		apuSource.setDataDir(dataDir.toString());
 		apuSource.setOrigDir(origDir.getFileName().toString());
 		apuSourceRepository.save(apuSource);
-		var coreQueue = new CoreQueue();
-		coreQueue.setApuSource(apuSource);
-		apuSourceRepository.save(apuSource);
-		coreQueueRepository.save(coreQueue);
+		if (insertToCoreQueue) {
+			var coreQueue = new CoreQueue();
+			coreQueue.setApuSource(apuSource);			
+			coreQueueRepository.save(coreQueue);
+		}
 		log.info("Fund updated code={}, uuid={}, original data dir {}", fund.getCode(), fund.getUuid(), oldDir);
 	}
 

@@ -1,29 +1,19 @@
 package cz.aron.transfagent.service;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import cz.aron.transfagent.common.BulkOperation;
 import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.ArchivalEntity;
-import cz.aron.transfagent.domain.EntitySource;
 import cz.aron.transfagent.domain.EntityStatus;
 import cz.aron.transfagent.domain.IdProjection;
+import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.EntitySourceRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
@@ -70,6 +60,11 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 
 	@Override
 	public Result reimport(ApuSource apuSource) {
+		
+		if(apuSource.getSourceType()!=SourceType.ARCH_ENTITY) {
+			return Result.UNSUPPORTED;
+		}
+		
 		var ret = Result.UNSUPPORTED;
 		for(var entityImporter:entityImporters) {
 			ret = entityImporter.reimport(apuSource);

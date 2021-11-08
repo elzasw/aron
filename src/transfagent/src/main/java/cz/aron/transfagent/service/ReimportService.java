@@ -51,45 +51,45 @@ public class ReimportService implements ImportProcessor {
 
 	@Override
 	public void importData(final ImportContext ic) {
-		transactionTemplate.execute(t -> importTrans(ic));		
+		
+		// check from DB reimport request
+		while(true) {
+			List<ApuSource> reimportRequests = apuSourceRepository.findFirst1000ByReimport(true);
+			if (reimportRequests.isEmpty()) {
+				// nic k reimportu
+				break;
+			}
+			apuSourceLabel: for (var apuSource : reimportRequests) {
+				log.debug("Reimporting apuSource: {}", apuSource.getId());
+				for (var proc : processors) {
+					var result = proc.reimport(apuSource);
+					if (result == Result.REIMPORTED || result == Result.NOCHANGES) {
+						log.info("Reimported apuSource: id={}, uuid={}", apuSource.getId(), apuSource.getUuid());						
+						transactionTemplate.executeWithoutResult(t->{
+							apuSource.setReimport(false);
+							apuSource.setDateImported(ZonedDateTime.now());
+							apuSourceRepository.save(apuSource);
+							if (result == Result.REIMPORTED) {
+								// send to Core
+								CoreQueue cq = new CoreQueue();
+								cq.setApuSource(apuSource);
+								coreQueueRepository.save(cq);
+							}							
+						});
+						continue apuSourceLabel;
+					} else if (result == Result.FAILED) {
+						log.error("Reimport failed, id={}, uuid={}",apuSource.getId(), apuSource.getUuid());
+						break;
+					}
+				}
+				log.error("Item cannot be reimported: id={}, uuid={}", apuSource.getId(), apuSource.getUuid());
+				ic.setFailed(true);
+				break;
+			}	
+		}				
 	}
 	
 	@Override
 	public int getPriority() { return -100; }
-
-	private Object importTrans(ImportContext ic) {
-		// check from DB reimport request
-		List<ApuSource> reimportRequests = apuSourceRepository.findByReimport(true);
-		apuSourceLabel:
-		for(var apuSource: reimportRequests) {
-			log.debug("Reimporting apuSource: {}", apuSource.getId());
-			for(var proc: processors) {
-			    var result = proc.reimport(apuSource);
-				if(result==Result.REIMPORTED||result==Result.NOCHANGES) {
-					log.info("Reimported apuSource: {}", apuSource.getId());
-					apuSource.setReimport(false);
-					apuSource.setDateImported(ZonedDateTime.now());
-					apuSourceRepository.save(apuSource);
-					
-					if(result==Result.REIMPORTED) {
-                        // send to Core
-					    CoreQueue cq = new CoreQueue();
-					    cq.setApuSource(apuSource);
-					    coreQueueRepository.save(cq);
-					}
-					
-					continue apuSourceLabel;
-				} else 
-				if(result==Result.FAILED) {
-				    log.error("Reimport failed");
-				    break;
-				}
-			}
-			log.error("Item cannot be reimported: {}", apuSource.getId());
-			ic.setFailed(true);
-			break;
-		}
-		return null;
-	}
 
 }

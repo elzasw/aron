@@ -1,6 +1,5 @@
 package cz.aron.transfagent.service.importfromdir;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -11,18 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.apux.ApuValidator;
-import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
-import cz.aron.transfagent.elza.ImportFundInfo;
-import cz.aron.transfagent.repository.ApuSourceRepository;
-import cz.aron.transfagent.repository.CoreQueueRepository;
 import cz.aron.transfagent.repository.FundRepository;
-import cz.aron.transfagent.repository.InstitutionRepository;
-import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
@@ -107,28 +99,21 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     public Result reimport(ApuSource apuSource) {
         if (apuSource.getSourceType() != SourceType.FUND)
             return Result.UNSUPPORTED;
-
         var fund = fundRepository.findByApuSource(apuSource);
         if (fund == null) {
             log.error("Missing fund: {}", apuSource.getId());
             return Result.UNSUPPORTED;
         }
-        String fileName = "fund-" + fund.getCode() + ".xml";
-
+        var ret = Result.UNSUPPORTED;        
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
-        ApuSourceBuilder apuSourceBuilder;
-        var ifi = new ImportFundInfo();
-        try {
-            apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), fund.getUuid(), databaseDataProvider);
-            apuSourceBuilder.setUuid(apuSource.getUuid());
-            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
-                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-            }
-        } catch (Exception e) {
-            log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
-            return Result.FAILED;
-        }
-        return Result.REIMPORTED;
+        for(var fundImporter:fundImporters) {        	
+        	var fiRet = fundImporter.reimport(apuSource, fund, apuDir);
+        	if (fiRet!=Result.UNSUPPORTED) {
+        		ret = fiRet;
+        		break;
+        	}
+        }        
+        return ret;
     }
 
     
@@ -140,7 +125,21 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     		UNSUPPORTED
     	}
     	
+    	/**
+    	 * Import fondu ze souboru
+    	 * @param path cesta k souboru
+    	 * @return vysledek importu
+    	 */
     	ImportResult processPath(Path path);
+    	
+    	/**
+    	 * Reimport apu 
+    	 * @param apuSource nacteny objekt ApuSource z databaze, ktery ma byt aktualizovan
+    	 * @param fund nacteny objekt fond
+    	 * @param apuPath cesta k adresari/zipu s daty apu
+    	 * @return vysledek reimportu
+    	 */
+    	Result reimport(ApuSource apuSource, Fund fund, Path apuPath);
     	
     }
     

@@ -16,7 +16,7 @@ public interface ApuSourceRepository extends JpaRepository<ApuSource, Integer> {
     
     Optional<ApuSource> findByUuid(UUID uuid);
 
-    List<ApuSource> findByReimport(boolean reimport);
+    List<ApuSource> findFirst1000ByReimport(boolean reimport);
 
     @Query(nativeQuery = true, value = "UPDATE apu_source AS a "
             + "SET a.reimport = true FROM archival_entity ae "

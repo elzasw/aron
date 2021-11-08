@@ -52,6 +52,9 @@ public class ConfigPeva2FundProperties {
     
     // vyplni tematicke skupiny
     private boolean thematicEvidenceGroups;
+    
+    // agregace priloh z pomucek
+    private boolean aggregateAttachments;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -187,6 +190,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setThematicEvidenceGroups(boolean thematicEvidenceGroups) {
 		this.thematicEvidenceGroups = thematicEvidenceGroups;
+	}
+
+	public boolean isAggregateAttachments() {
+		return aggregateAttachments;
+	}
+
+	public void setAggregateAttachments(boolean aggregateAttachments) {
+		this.aggregateAttachments = aggregateAttachments;
 	}
 
 }
