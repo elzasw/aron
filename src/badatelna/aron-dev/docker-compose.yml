@@ -1,0 +1,20 @@
+version: '3.7'
+services:
+  aron-web-custom-ghj:
+    image: aron-web-custom:latest
+    build:
+      context: .
+      dockerfile: ./dev.Dockerfile
+    networks:
+      - backend
+    ports:
+      - "8090:80"
+    volumes:
+      - type: bind
+        source: ../aron-web/dist/ 
+        target: /usr/local/apache2/htdocs/
+        consistency: delegated
+networks:
+  backend:
+volumes:
+  fe_build_volume:
