@@ -12,6 +12,7 @@ import javax.xml.bind.JAXBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cz.aron.peva2.wsdl.GetFindingAidCopyResponse;
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
@@ -82,5 +83,16 @@ public class Peva2XmlReader {
 			return ((JAXBElement<GetOriginatorResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
 		}
 	}
-	
+
+	public static void marshalGetFindingAidCopyResponse(GetFindingAidCopyResponse gfacr, Path fileName) throws JAXBException {
+		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetFindingAidCopyResponse(gfacr), fileName.toFile());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static GetFindingAidCopyResponse unmarshalGetFindingAidCopyResponse(Path path) throws IOException, JAXBException {
+		try (InputStream is = Files.newInputStream(path)) {
+			return ((JAXBElement<GetFindingAidCopyResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
+		}
+	}
+
 }

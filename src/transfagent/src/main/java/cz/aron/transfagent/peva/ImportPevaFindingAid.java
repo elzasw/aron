@@ -19,6 +19,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
+import cz.aron.apux._2020.Part;
+import cz.aron.peva2.wsdl.FindingAidCopy;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.Fund;
@@ -29,6 +31,7 @@ import cz.aron.transfagent.service.FindingAidService;
 import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService.FindingAidImporter;
+import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -159,6 +162,16 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
+		var findingAidCopies = readFindingAidCopies(findingaidUuid.toString());
+		if (!findingAidCopies.isEmpty()) {
+			var apu = builder.getMainApu();
+			Part partInfo = ApuSourceBuilder.getFirstPart(apu, CoreTypes.PT_FINDINGAID_INFO);			
+			for (var findingAidCopy : findingAidCopies) {
+				var institutionInfo = databaseDataProvider.getInstitutionApu(findingAidCopy.getInstitution().getExternalId());				
+				ApuSourceBuilder.addString(partInfo, "FINDINGAID_COPY", institutionInfo.getName() + ": " + findingAidCopy.getEvidenceNumber());
+			}
+		}
+        
         List<Path> attachments = readAllAttachments(dir, builder);
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
             builder.setUuid(apusourceUuid);
@@ -224,5 +237,25 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 		return attachments;
 	}
 
+	private List<FindingAidCopy> readFindingAidCopies(String findingAidId) {
+		var ret = new ArrayList<FindingAidCopy>();
+		var dir = storageService.getInputPath().resolve("facopies").resolve(findingAidId);
+		if (Files.isDirectory(dir)) {
+			try (var stream = Files.list(dir)) {
+				stream.forEach(f -> {
+					if (Files.isRegularFile(f)) {
+						try {
+							Peva2XmlReader.unmarshalGetFindingAidCopyResponse(null);
+						} catch (IOException | JAXBException e) {
+							throw new IllegalStateException(e);
+						}
+					}
+				});
+			} catch (IOException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
 
 }

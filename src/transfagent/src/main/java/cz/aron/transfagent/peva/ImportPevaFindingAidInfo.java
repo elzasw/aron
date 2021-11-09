@@ -11,13 +11,14 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
 import cz.aron.peva2.wsdl.FindingAid;
-import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.UniversalTimeRange;
 import cz.aron.transfagent.config.ConfigPeva2FindingAidProperties;
 import cz.aron.transfagent.transformation.ContextDataProvider;
@@ -25,6 +26,8 @@ import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.InstitutionInfo;
 
 public class ImportPevaFindingAidInfo {
+	
+	private static final Logger log = LoggerFactory.getLogger(ImportPevaFindingAidInfo.class);
 
 	private ContextDataProvider dataProvider;
 
@@ -69,9 +72,12 @@ public class ImportPevaFindingAidInfo {
 		ApuSourceBuilder.addString(partTitle, CoreTypes.TITLE, findingAidName);
 		
 		for(var fundCode:findingAid.getNadSheets().getNadSheet()) {
-			var fundUUID = dataProvider.getFundApuByUUID(institutionCode, UUID.fromString(fundCode));			
-			Validate.notNull(fundUUID, "Missing fund, code: %s, institution: %s", fundCode, institutionCode);
-			fundUUIDs.add(fundUUID);
+			var fundUUID = dataProvider.getFundApuByUUID(institutionCode, UUID.fromString(fundCode));
+			if (fundUUID!=null) {
+				fundUUIDs.add(fundUUID);	
+			} else {
+				log.error("FindingAid uuid={}, missing fund {}",findingAid.getId(),fundCode);
+			}						
 		}
 		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
 				institutionCode);

@@ -730,6 +730,9 @@ itemTypes:
     name: Autor
     type: APU_REF
     indexed: true
+  - code: FINDINGAID_COPY
+    name: Stejnopis
+    type: STRING
 
   #
   # Archivní popis
