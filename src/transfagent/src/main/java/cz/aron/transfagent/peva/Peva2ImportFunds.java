@@ -24,10 +24,7 @@ import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
-import cz.aron.transfagent.repository.ApuSourceRepository;
-import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.repository.PropertyRepository;
-import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
@@ -35,27 +32,15 @@ import cz.aron.transfagent.service.StorageService;
 public class Peva2ImportFunds extends Peva2Downloader {
     
     private static final Logger log = LoggerFactory.getLogger(Peva2ImportFunds.class);
-        
-    private final FileImportService importService;
     
-    private final ArchivalEntityRepository archivalEntityRepository;
-
-    private final ApuSourceRepository apuSourceRepository;
-    
-    private final TransactionTemplate tt;	
+    private static final String PREFIX_DASH = "pevafund-";
 	
 	private LRUMap<String,String> fundUUIDToJaFa = null;
 
-    public Peva2ImportFunds(PEvA peva2, PropertyRepository propertyRepository, FileImportService importService,
-            ArchivalEntityRepository archivalEntityRepository, ApuSourceRepository apuSourceRepository,ConfigPeva2 config,
-            TransactionTemplate tt, StorageService storageService) {
-    	
-    	super("FUND",peva2,propertyRepository,config,tt,storageService);
-        this.importService = importService;
-        this.archivalEntityRepository = archivalEntityRepository;
-        this.apuSourceRepository = apuSourceRepository;
-        this.tt = tt;
-    }
+	public Peva2ImportFunds(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+			TransactionTemplate tt, StorageService storageService) {
+		super("FUND", peva2, propertyRepository, config, tt, storageService);
+	}
     
 	@Override
     protected int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial, Peva2CodeListProvider codeListProvider) {                        
@@ -109,10 +94,10 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				NadPrimarySheet nps = (NadPrimarySheet)nadSheet;
 				InstitutionReference ir = nps.getInstitution();
 				String fundId = ArchiveFundId.createJaFaId(ir.getExternalId(),nps.getEvidenceNumber(),null);				
-				Path fundDir = fundsInputDir.resolve("pevafund-"+fundId);			
+				Path fundDir = fundsInputDir.resolve(PREFIX_DASH+fundId);			
 				try {
 					Files.createDirectories(fundDir);
-					Path name = fundDir.resolve("pevafund-"+fundId+".xml");					
+					Path name = fundDir.resolve(PREFIX_DASH+fundId+".xml");					
 					GetNadSheetResponse gnsr = new GetNadSheetResponse();
 					gnsr.setNadPrimarySheet(nps);					
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
@@ -133,10 +118,10 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				}												
 				InstitutionReference ir = nss.getInstitution();
 				var fundId = ArchiveFundId.createJaFaId(ir.getExternalId(),evidenceNumber,""+nss.getNumber());				
-				Path fundDir = fundsInputDir.resolve("pevafund-"+fundId);			
+				Path fundDir = fundsInputDir.resolve(PREFIX_DASH+fundId);			
 				try {
 					Files.createDirectories(fundDir);
-					Path name = fundDir.resolve("pevafund-"+fundId+".xml");					
+					Path name = fundDir.resolve(PREFIX_DASH+fundId+".xml");					
 					GetNadSheetResponse gnsr = new GetNadSheetResponse();
 					gnsr.setNadSubsheet(nss);					
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
@@ -146,5 +131,35 @@ public class Peva2ImportFunds extends Peva2Downloader {
 			}
 		}
     }
+
+	@Override
+	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {		
+		var fileName = path.getFileName().toString();
+		if (!fileName.startsWith(PREFIX_DASH)) {
+			// not my command
+			return false;
+		}
+		
+		var id = fileName.substring(PREFIX_DASH.length());		
+		var gnsReq = new GetNadSheetRequest();
+		gnsReq.setId(id);
+		var gnsResp = peva2.getNadSheet(gnsReq);
+		
+		NadSheet nadSheet = gnsResp.getNadPrimarySheet();
+		if (nadSheet==null) {
+			nadSheet = gnsResp.getNadSubsheet();
+		}
+		
+		fundUUIDToJaFa = new LRUMap<String,String>(10000);
+		try {
+			patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
+		} finally {
+			fundUUIDToJaFa = null;
+		}
+		return true;
+	}
+    
+    
+    
     
 }

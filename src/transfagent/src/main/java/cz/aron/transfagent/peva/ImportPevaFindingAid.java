@@ -245,14 +245,17 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 				stream.forEach(f -> {
 					if (Files.isRegularFile(f)) {
 						try {
-							Peva2XmlReader.unmarshalGetFindingAidCopyResponse(null);
+							var facResp = Peva2XmlReader.unmarshalGetFindingAidCopyResponse(f);
+							ret.add(facResp.getFindingAidCopy());
 						} catch (IOException | JAXBException e) {
+							log.error("Fail to deserialize finding aid copy {}", f, e);
 							throw new IllegalStateException(e);
 						}
 					}
 				});
 			} catch (IOException e) {
 				// ignore
+				log.error("Fail to read directory containing finding aid copies {}", dir, e);
 			}
 		}
 		return ret;

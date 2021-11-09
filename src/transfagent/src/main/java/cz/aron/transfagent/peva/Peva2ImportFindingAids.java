@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,8 +22,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.FindingAid;
+import cz.aron.peva2.wsdl.GetFindingAidRequest;
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
+import cz.aron.peva2.wsdl.GetNadSheetRequest;
 import cz.aron.peva2.wsdl.ListFindingAidRequest;
+import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
@@ -33,6 +37,8 @@ import cz.aron.transfagent.service.StorageService;
 public class Peva2ImportFindingAids extends Peva2Downloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportFindingAids.class);
+	
+	private static final String PREFIX_DASH = "pevafa-";
 
 	public Peva2ImportFindingAids(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
 			TransactionTemplate tt, StorageService storageService) {
@@ -102,10 +108,10 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 			var gfar = new GetFindingAidResponse();
 			gfar.setFindingAid(findingAid);
 			String id = findingAid.getInstitution().getExternalId() + "_" + findingAid.getId();
-			var faDir = faInputDir.resolve("pevafa-" + id);
+			var faDir = faInputDir.resolve(PREFIX_DASH + id);
 			try {
 				Files.createDirectories(faDir);
-				Path name = faDir.resolve("pevafa-" + id + ".xml");
+				Path name = faDir.resolve(PREFIX_DASH + id + ".xml");
 				Peva2XmlReader.marshalGetFindingAidResponse(gfar, name);
 
 				var attachmentFiles = attachments.get(findingAid.getEvidenceNumber());
@@ -162,5 +168,23 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 			return ret;
 		}
 	}
+
+	@Override
+	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
+		var fileName = path.getFileName().toString();
+		if (!fileName.startsWith(PREFIX_DASH)) {
+			// not my command
+			return false;
+		}
+		var id = fileName.substring(PREFIX_DASH.length());
+		var gfaReq = new GetFindingAidRequest();
+		gfaReq.setId(id);
+		var gfaResp = peva2.getFindingAid(gfaReq);
+		var attMap = initAttachments();
+		patchFindingAidsBatch(Collections.singletonList(gfaResp.getFindingAid()), codeListProvider.getCodeLists(),
+				attMap);
+		return true;
+	}
+
 
 }

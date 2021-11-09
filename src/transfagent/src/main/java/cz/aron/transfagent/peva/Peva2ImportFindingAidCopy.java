@@ -22,7 +22,7 @@ import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
-@ConditionalOnProperty(value = "peva2.url")
+@ConditionalOnProperty(value = "peva2.importFindingAidCopy")
 public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportFindingAidCopy.class);

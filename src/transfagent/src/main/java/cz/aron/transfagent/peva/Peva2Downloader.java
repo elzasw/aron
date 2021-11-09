@@ -1,5 +1,6 @@
 package cz.aron.transfagent.peva;
 
+import java.nio.file.Path;
 import java.time.OffsetDateTime;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -109,5 +110,19 @@ public abstract class Peva2Downloader {
 
 	protected abstract int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial,
 			Peva2CodeListProvider codeListProvider);
+
+	/**
+	 * Process command described by file
+	 * @param path path co command file
+	 * @param codeListProvider ciselniky
+	 * @return true command processed, false not interested on this command file
+	 * 
+	 * Command file will be deleted when return true
+	 * 
+	 */
+	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
+		// by default command is not processed
+		return false;
+	}
 
 }
