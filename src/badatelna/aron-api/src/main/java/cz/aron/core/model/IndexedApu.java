@@ -40,7 +40,7 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
     @MultiField(
             mainField = @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP),
             otherFields = {
-                    @InnerField(suffix = SORT, type = FieldType.Keyword)
+                    @InnerField(suffix = SORT, type = FieldType.Text, analyzer = SORTING, searchAnalyzer = SORTING, fielddata = true)
             }
     )
     private String name;
