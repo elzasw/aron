@@ -199,8 +199,10 @@ public class ImportPevaFund implements FundImporter, FundProvider {
             } else {
                 fundService.updateFund(fnd, dataDir, dir, true);
             }
-            var uuids = ifi.getOriginatorIds().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
-            archivalEntityService.registerAccessibleEntities(uuids, ImportPevaOriginator.ENTITY_CLASS, fnd.getApuSource());
+            var originatorUuids = ifi.getOriginatorIds().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
+            archivalEntityService.registerAccessibleEntities(originatorUuids, ImportPevaOriginator.ENTITY_CLASS, fnd.getApuSource());
+            var geoUuids = ifi.getGeos().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
+            archivalEntityService.registerAccessibleEntities(geoUuids, ImportPevaGeo.ENTITY_CLASS, fnd.getApuSource());
             attachmentService.updateAttachments(fnd.getApuSource(), apusrcBuilder, attachments);
         });
         return true;

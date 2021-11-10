@@ -2,6 +2,8 @@ package cz.aron.transfagent.peva;
 
 import java.util.Map;
 
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Geo;
+
 public class Peva2CodeLists {
     
     private final Map<String,String> accessibilities;
@@ -14,12 +16,13 @@ public class Peva2CodeLists {
     private final Map<String,Peva2OriginatorSubclass> originatorSubClasses;
     private final Map<String,Peva2DatingMethod> datingMethods;
     private final Map<String, Peva2ThematicGroup> thematicGroups;
+    private final Map<String, Peva2Geo> geoTypes;
     
 	public Peva2CodeLists(Map<String, String> accessibilities, Map<String, String> physicalStates,
 			Map<String, String> integrity, Map<String, String> findingAidTypes, Map<String, Peva2Language> languages,
 			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes,
 			Map<String,Peva2OriginatorSubclass> originatorSubClasses, Map<String,Peva2DatingMethod> datingMethods,
-			Map<String, Peva2ThematicGroup> thematicGroups) {
+			Map<String, Peva2ThematicGroup> thematicGroups, Map<String, Peva2Geo> geoTypes) {
 		this.accessibilities = accessibilities;
 		this.physicalStates = physicalStates;
 		this.integrity = integrity;
@@ -30,6 +33,7 @@ public class Peva2CodeLists {
 		this.originatorSubClasses = originatorSubClasses;
 		this.datingMethods = datingMethods;
 		this.thematicGroups = thematicGroups;
+		this.geoTypes = geoTypes;
 	}
 
     public String getAccessibilityName(String id) {
@@ -72,6 +76,10 @@ public class Peva2CodeLists {
 		return thematicGroups.get(id);
 	}
 	
+	public Peva2Geo getGeoType(String id) {
+		return geoTypes.get(id);
+	}
+
 	public static class Peva2Language {
 		private final String code;
 		private final String name;
@@ -171,6 +179,27 @@ public class Peva2CodeLists {
 			return code;
 		}
 
+	}
+	
+	public static class Peva2Geo {
+		
+		private final String name;
+		
+		private final String oSubclass;
+		
+		public Peva2Geo(String name, String oSubclass) {
+			this.name = name;
+			this.oSubclass = oSubclass;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public String getoSubclass() {
+			return oSubclass;
+		}
+		
 	}
 
 }

@@ -51,9 +51,11 @@ public class ImportPevaFundInfo {
     
     private String institutionCode;
     
-    private List<String> originators = new ArrayList<>();
+    private final List<String> originators = new ArrayList<>();
     
-    private List<String> findingAids = new ArrayList<>();
+    private final List<String> findingAids = new ArrayList<>();
+    
+    private final List<String> geos = new ArrayList<>();
     
     public static void main(String[] args) {
         Path inputFile = Path.of(args[0]);
@@ -440,7 +442,8 @@ public class ImportPevaFundInfo {
 			//var geo = entityDownloader.getGeoObject(placeId);
 			//var name = geo.getPreferredName().getPrimaryPart();
 			//places.add(name);								
-			apusBuilder.addApuRef(partFundInfo, "ORIG_PLACES_REF", UUID.fromString(placeId));			
+			apusBuilder.addApuRef(partFundInfo, "ORIG_PLACES_REF", UUID.fromString(placeId));
+			geos.add(placeId);
 		}
 		
 	}
@@ -602,6 +605,10 @@ public class ImportPevaFundInfo {
 
 	public List<String> getFindingAidIds() {
 		return findingAids;
+	}	
+
+	public List<String> getGeos() {
+		return geos;
 	}
 
 	public interface FundProvider {		

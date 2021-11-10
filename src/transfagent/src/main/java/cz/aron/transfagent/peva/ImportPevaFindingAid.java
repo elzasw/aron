@@ -103,7 +103,7 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 				&& p.getFileName().toString().endsWith(".xml")).findFirst();
 
 		if (pevaFindingAidXml.isEmpty()) {
-			log.warn("Directory not contail pevafund- file. Directory {}", path);
+			log.warn("Directory not contail pevafund-* file. Directory {}", path);
 			return ImportResult.FAIL;
 		}
 

@@ -14,6 +14,7 @@ import cz.aron.peva2.wsdl.ListAccessibilityRequest;
 import cz.aron.peva2.wsdl.ListDatingMethodRequest;
 import cz.aron.peva2.wsdl.ListFindingAidFormTypeRequest;
 import cz.aron.peva2.wsdl.ListFindingAidTypeRequest;
+import cz.aron.peva2.wsdl.ListGeoObjectTypeRequest;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
 import cz.aron.peva2.wsdl.ListLanguageRequest;
 import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
@@ -24,6 +25,7 @@ import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PhysicalState;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2DatingMethod;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2EvidenceUnitType;
+import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Geo;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Language;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2OriginatorSubclass;
 import cz.aron.transfagent.peva.Peva2CodeLists.Peva2ThematicGroup;
@@ -168,11 +170,22 @@ public class Peva2CodeListDownloader {
 		log.info("Thematic groups downloaded.");
 		return ret;
 	}
+	
+	private Map<String, Peva2Geo> getGeoTypes() {
+		Map<String, Peva2Geo> ret = new HashMap<>();
+		var lgotReq = new ListGeoObjectTypeRequest();
+		lgotReq.setSize(1000);
+		var lgotResp = peva2.listGeoObjectType(lgotReq);
+		for(var lgot : lgotResp.getGeoObjectTypes().getGeoObjectType()) {
+			ret.put(lgot.getId(), new Peva2Geo(lgot.getName(),lgot.getOSubClass()));
+		}
+		return ret;
+	}
 
 	public Peva2CodeLists downloadCodeLists() {
 		return new Peva2CodeLists(getAccessibility(), getPhysicalState(), getIntegrity(), getFindingAidType(),
 				getLanguages(), getEvidenceUnitTypes(), getFindingAidFormType(), getOriginatorSubclass(),
-				getDatingMethod(), getThematicGroup());
+				getDatingMethod(), getThematicGroup(), getGeoTypes());
 	}
 
 }

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import cz.aron.peva2.wsdl.GetFindingAidCopyResponse;
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
+import cz.aron.peva2.wsdl.GetGeoObjectResponse;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.NadSheet;
@@ -95,4 +96,15 @@ public class Peva2XmlReader {
 		}
 	}
 
+	public static void marshalGetGeoObjectResponse(GetGeoObjectResponse ggor, Path fileName) throws JAXBException {
+		JAXB_CONTEXT.createMarshaller().marshal(OBJECT_FACTORY.createGetGeoObjectResponse(ggor), fileName.toFile());
+	}
+
+	@SuppressWarnings("unchecked")
+	public static GetGeoObjectResponse unmarshalGetGeoObjectResponse(Path path) throws IOException, JAXBException {
+		try (InputStream is = Files.newInputStream(path)) {
+			return ((JAXBElement<GetGeoObjectResponse>) JAXB_CONTEXT.createUnmarshaller().unmarshal(is)).getValue();
+		}
+	}
+	
 }
