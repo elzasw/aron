@@ -12,6 +12,8 @@ export const useStyles = makeStyles((theme) => {
       position: 'sticky',
       top: 0,
       zIndex: 20,
+      flexShrink: 0,
+      flexGrow: 0,
     },
     appHeaderInner: {
       height: '100%',

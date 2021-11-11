@@ -39,7 +39,9 @@ export function Module({ children, path, items, ...props }: Props) {
   return (
     <div className={classes.module}>
       <BreadcrumbItems {...{ key, items, ...props }} />
-      {children}
+      <div className={classes.moduleWrapper}>
+        {children}
+      </div>
     </div>
   );
 }

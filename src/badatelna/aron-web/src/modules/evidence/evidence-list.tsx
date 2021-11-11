@@ -140,9 +140,10 @@ function ItemsList() {
 
 export function EvidenceList() {
   const { initialized, loading } = useFilters();
+  const classes = useStyles();
 
   return (
-    <div>
+    <div className={classes.listContainer}>
       {initialized ? (
         <ItemsList />
       ) : (

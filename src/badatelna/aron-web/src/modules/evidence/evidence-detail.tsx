@@ -271,159 +271,157 @@ export function EvidenceDetail({
         ],
       }}
     >
-      <>
+      <div className={classes.evidenceDetail}>
         <Loading {...{ loading }} />
-        <div className={classes.evidenceDetail}>
-          <div className={spacingClasses.paddingBig}>
-            {item && path === ModulePath.ARCH_DESC && root ? (
-              <>
-                <EvidenceDetailTree {...{ item, id: root.id }} />
-                <div className={spacingClasses.paddingBottom} />
-              </>
-            ) : (
-              <></>
-            )}
-            {item ? (
-              <div
-                className={classNames(
-                  classes.evidenceDetailTop,
-                  layoutClasses.flexSpaceBetweenBottom,
-                  spacingClasses.marginBottom
-                )}
-              >
-                <div className={layoutClasses.flex}>
-                  <div
-                    className={classNames(
-                      layoutClasses.flexColumnCenter,
-                      spacingClasses.marginRightBig,
-                      spacingClasses.marginBottomSmall
-                    )}
-                  >
-                    {icon && (
-                      <i
+        <div className={spacingClasses.paddingBig}>
+          {item && path === ModulePath.ARCH_DESC && root ? (
+            <>
+              <EvidenceDetailTree {...{ item, id: root.id }} />
+              <div className={spacingClasses.paddingBottom} />
+            </>
+          ) : (
+            <></>
+          )}
+          {item ? (
+            <div
+              className={classNames(
+                classes.evidenceDetailTop,
+                layoutClasses.flexSpaceBetweenBottom,
+                spacingClasses.marginBottom
+              )}
+            >
+              <div className={layoutClasses.flex}>
+                <div
+                  className={classNames(
+                    layoutClasses.flexColumnCenter,
+                    spacingClasses.marginRightBig,
+                    spacingClasses.marginBottomSmall
+                  )}
+                >
+                  {icon && (
+                    <i
+                      className={classNames(
+                        icon,
+                        classes.evidenceDetailIcon,
+                        spacingClasses.marginBottomSmall
+                      )}
+                    />
+                  )}
+                  <Button
+                    className={classes.findRelatedButton}
+                    label={formatMessage({ id: Message.FIND_RELATED })}
+                    outlined={true}
+                    size="small"
+                    onClick={() => {
+                      navigateTo(
+                        ModulePath.APU,
+                        1,
+                        10,
+                        '',
+                        getRelatedApusFilter(id, item.name)
+                      );
+                    }}
+                  />
+                </div>
+                <div className={spacingClasses.paddingBottomSmall}>
+                  <h3 className={spacingClasses.marginBottomSmall}>
+                    {item.name}
+                  </h3>
+                  {item.description ? (
+                    path === ModulePath.ARCH_DESC ||
+                    path === ModulePath.ENTITY ? (
+                      <h3
                         className={classNames(
-                          icon,
-                          classes.evidenceDetailIcon,
+                          classes.evidenceDetailDescription,
                           spacingClasses.marginBottomSmall
                         )}
-                      />
-                    )}
-                    <Button
-                      className={classes.findRelatedButton}
-                      label={formatMessage({ id: Message.FIND_RELATED })}
-                      outlined={true}
-                      size="small"
-                      onClick={() => {
-                        navigateTo(
-                          ModulePath.APU,
-                          1,
-                          10,
-                          '',
-                          getRelatedApusFilter(id, item.name)
-                        );
-                      }}
-                    />
-                  </div>
-                  <div className={spacingClasses.paddingBottomSmall}>
-                    <h3 className={spacingClasses.marginBottomSmall}>
-                      {item.name}
-                    </h3>
-                    {item.description ? (
-                      path === ModulePath.ARCH_DESC ||
-                      path === ModulePath.ENTITY ? (
-                        <h3
-                          className={classNames(
-                            classes.evidenceDetailDescription,
-                            spacingClasses.marginBottomSmall
-                          )}
-                        >
-                          {item.description}
-                        </h3>
-                      ) : (
-                        <h4
-                          className={classNames(
-                            classes.evidenceDetailDescription,
-                            spacingClasses.marginBottomSmall
-                          )}
-                        >
-                          {item.description}
-                        </h4>
-                      )
+                      >
+                        {item.description}
+                      </h3>
                     ) : (
-                      <></>
-                    )}
-                    {archdescRootRef ? (
-                      <Link
-                        to={{
-                          pathname: `${ModulePath.APU}/${archdescRootRef.value}`,
-                        }}
+                      <h4
                         className={classNames(
-                          classes.link,
-                          layoutClasses.flexAlignCenter,
-                          spacingClasses.marginTop
+                          classes.evidenceDetailDescription,
+                          spacingClasses.marginBottomSmall
                         )}
                       >
-                        <AccountTreeIcon
-                          className={spacingClasses.marginRightSmall}
-                        />
-                        {get(
-                          find(
-                            apuPartItemTypes,
-                            ({ code }) =>
-                              code === ApuPartItemEnum.ARCHDESC_ROOT_REF
-                          ),
-                          'name',
-                          formatMessage({
-                            id: Message.TREE_VIEW_CURRENT_STATE,
-                          })
-                        )}
-                      </Link>
-                    ) : (
-                      <></>
-                    )}
-                  </div>
-                </div>
-                <DoubleArrowIcon
-                  className={classNames(
-                    classes.evidenceDetailTopIcon,
-                    open && classes.evidenceDetailTopIconOpen,
-                    spacingClasses.marginBottom
+                        {item.description}
+                      </h4>
+                    )
+                  ) : (
+                    <></>
                   )}
-                  onClick={() => setOpen(!open)}
-                />
+                  {archdescRootRef ? (
+                    <Link
+                      to={{
+                        pathname: `${ModulePath.APU}/${archdescRootRef.value}`,
+                      }}
+                      className={classNames(
+                        classes.link,
+                        layoutClasses.flexAlignCenter,
+                        spacingClasses.marginTop
+                      )}
+                    >
+                      <AccountTreeIcon
+                        className={spacingClasses.marginRightSmall}
+                      />
+                      {get(
+                        find(
+                          apuPartItemTypes,
+                          ({ code }) =>
+                            code === ApuPartItemEnum.ARCHDESC_ROOT_REF
+                        ),
+                        'name',
+                        formatMessage({
+                          id: Message.TREE_VIEW_CURRENT_STATE,
+                        })
+                      )}
+                    </Link>
+                  ) : (
+                    <></>
+                  )}
+                </div>
               </div>
-            ) : (
-              <></>
-            )}
-            {items
-              .map(({ items, ...item }) => ({
-                ...item,
-                items: items.filter(({ visible, value }) => visible && value),
-              }))
-              .filter(({ items }) => !isEmpty(items))
-              .map((item, index) => (
-                <EvidenceDetailItem
-                  {...{
-                    key: `${item.name}-${index}`,
-                    ...item,
-                    index,
-                    open,
-                    apus,
-                  }}
-                />
-              ))}
-            {item && (
-              <EvidenceDetailAttachments
-                items={sortBy(item.attachments, 'order')}
-                setLoading={setLoading}
+              <DoubleArrowIcon
+                className={classNames(
+                  classes.evidenceDetailTopIcon,
+                  open && classes.evidenceDetailTopIconOpen,
+                  spacingClasses.marginBottom
+                )}
+                onClick={() => setOpen(!open)}
               />
-            )}
-            {item && (
-              <EvidenceDetailDao items={sortBy(item.digitalObjects, 'order')} />
-            )}
-          </div>
+            </div>
+          ) : (
+            <></>
+          )}
+          {items
+            .map(({ items, ...item }) => ({
+              ...item,
+              items: items.filter(({ visible, value }) => visible && value),
+            }))
+            .filter(({ items }) => !isEmpty(items))
+            .map((item, index) => (
+              <EvidenceDetailItem
+                {...{
+                  key: `${item.name}-${index}`,
+                  ...item,
+                  index,
+                  open,
+                  apus,
+                }}
+              />
+            ))}
+          {item && (
+            <EvidenceDetailAttachments
+              items={sortBy(item.attachments, 'order')}
+              setLoading={setLoading}
+            />
+          )}
+          {item && (
+            <EvidenceDetailDao items={sortBy(item.digitalObjects, 'order')} />
+          )}
         </div>
-      </>
+      </div>
     </Module>
   );
 }

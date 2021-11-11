@@ -10,8 +10,8 @@ import { Button, Search, Loading } from '../../components';
 import { useStyles } from './styles';
 import {
   useSpacingStyles,
-  appHeaderHeight,
-  breadcrumbsHeight,
+  // appHeaderHeight,
+  // breadcrumbsHeight,
 } from '../../styles';
 import { SidebarProps } from './types';
 import { FilterComponent } from './utils';
@@ -20,8 +20,8 @@ import { Message, FacetDisplay, ModulePath } from '../../enums';
 import { FilterDialog } from './sidebar-content';
 import { useFilters } from './evidence-filters';
 import {
-  useHeight,
-  iOS,
+  // useHeight,
+  // iOS,
   useEvidenceNavigation,
   useSearchOptions,
 } from '../../common-utils';
@@ -85,17 +85,17 @@ export const EvidenceSidebar: React.FC<SidebarProps> = ({
     [updateFilter]
   );
 
-  const browserHeight = useHeight();
+  // const browserHeight = useHeight();
 
-  const isIOS = iOS();
+  // const isIOS = iOS();
 
-  const height = `calc(${
-    isIOS ? `${browserHeight}px` : '100vh'
-  } - ${appHeaderHeight} - ${breadcrumbsHeight} - 1px)`;
+  // const height = `calc(${
+  //   isIOS ? `${browserHeight}px` : '100vh'
+  // } - ${appHeaderHeight} - ${breadcrumbsHeight} - 1px)`;
 
   return (
     <div
-      style={{ height }}
+      // style={{ height }}
       className={classNames(classes.sidebar, visible && classes.sidebarVisible)}
     >
       <div

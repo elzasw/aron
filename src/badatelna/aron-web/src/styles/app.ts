@@ -14,6 +14,9 @@ export const useAppStyles = makeStyles({
     '& .MuiSnackbar-root': {
       zIndex: 100000,
     },
+    position: "relative",
+    height: "0",
+    flex: 1,
   },
   appLoadingFailed: {
     display: 'flex',

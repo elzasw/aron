@@ -1,6 +1,6 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {
-  appHeaderHeight,
+  // appHeaderHeight,
   breadcrumbsHeight,
   colorText,
   border,
@@ -10,15 +10,27 @@ import {
 export const useStyles = makeStyles((theme) => {
   return {
     module: {
-      minHeight: `calc(100% - ${appHeaderHeight})`,
+      // minHeight: `calc(100% - ${appHeaderHeight})`,
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      flex: 1,
+    },
+    moduleWrapper: {
+      position: 'relative',
+      flex: 1,
+      height: '50%',
+      // overflowX: 'auto',
     },
     breadcrumbsWrapper: {
       position: 'sticky',
-      top: appHeaderHeight,
+      // top: appHeaderHeight,
       zIndex: 10,
       height: breadcrumbsHeight,
       borderBottom: border,
       background: '#fff',
+      flexShrink: 0,
+      flexGrow: 0,
     },
     breadcrumbs: {
       height: '100%',

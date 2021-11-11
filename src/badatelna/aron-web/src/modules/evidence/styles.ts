@@ -1,7 +1,7 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {
-  appHeaderHeight,
-  breadcrumbsHeight,
+  // appHeaderHeight,
+  // breadcrumbsHeight,
   colorBlueVeryLight,
   colorGrey,
   colorGreyLight,
@@ -17,10 +17,10 @@ export const useStyles = makeStyles((theme) => {
   const md = theme.breakpoints.up('md');
   return {
     sidebar: {
-      position: 'fixed',
+      position: 'absolute',
       left: 0,
-      top: `calc(${appHeaderHeight} + ${breadcrumbsHeight})`,
-      //height,
+      // top: `calc(${appHeaderHeight} + ${breadcrumbsHeight})`,
+      height: '100%',
       width: sidebarMinWidth,
       background: colorBlueVeryLight,
       borderRight: border,
@@ -81,6 +81,10 @@ export const useStyles = makeStyles((theme) => {
     sidebarButton: {
       width: '100%',
     },
+    listContainer: {
+      overflowX: 'auto',
+      height: '100%',
+    },
     list: {
       height: '100%',
       minHeight: '100%',
@@ -134,6 +138,8 @@ export const useStyles = makeStyles((theme) => {
       },
     },
     evidenceDetail: {
+      overflowX: 'auto',
+      height: '100%',
       '& h3': {
         marginTop: 0,
       },

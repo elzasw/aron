@@ -6,7 +6,7 @@ export const useStyles = makeStyles((theme) => {
     main: {
       position: 'relative',
       background: colorBlueVeryLight,
-      minHeight: `calc(100vh - ${appHeaderHeight})`,
+      minHeight: `calc(100% - ${appHeaderHeight})`,
     },
     mainBackgroundIcon: {
       transform: 'rotate(15deg)',

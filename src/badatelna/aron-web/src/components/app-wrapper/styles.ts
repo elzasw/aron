@@ -5,11 +5,13 @@ export const useStyles = makeStyles((theme) => ({
     width: '100vw',
     minWidth: '100vw',
     maxWidth: '100vw',
-    height: '100vh',
-    minHeight: '100vh',
-    overflowY: 'auto',
+    height: '100%',
+    // minHeight: '100vh',
+    overflowY: 'hidden',
     background: '#fff',
     overflowX: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
   },
 
   iOSWrapper: {
