@@ -9,7 +9,8 @@ public class ItemTypeConfig {
         STRING, 
         UNITDATE, 
         LINK,
-        ITEM_AGGREG
+        ITEM_AGGREG,
+        JSON
     }
 
     private String code;

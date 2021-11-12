@@ -10,6 +10,7 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuSource;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
+import cz.aron.apux._2020.ItemJson;
 import cz.aron.apux._2020.ItemLink;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
@@ -60,7 +61,6 @@ public class ApuValidator {
         }
         // ItemEnum
         if (obj instanceof ItemEnum) {
-            ItemEnum item = (ItemEnum) obj;
             validateItem(((ItemEnum) obj).getType(), Types.ENUM);
         }
         // ItemRef
@@ -70,6 +70,10 @@ public class ApuValidator {
         // ItemDateRange
         if (obj instanceof ItemDateRange) {
             validateItem(((ItemDateRange) obj).getType(), Types.UNITDATE);
+        }
+        // Item json
+        if (obj instanceof ItemJson) {
+        	validateItem(((ItemJson) obj).getType(),Types.JSON);
         }
     }
 

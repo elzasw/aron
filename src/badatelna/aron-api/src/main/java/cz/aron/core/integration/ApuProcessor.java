@@ -207,6 +207,12 @@ public class ApuProcessor {
                 }
                 item.setVisible(itemDateRange.isVisible() == null || itemDateRange.isVisible());
             }
+            else if (o instanceof ItemJson) {
+                ItemJson itemJson = (ItemJson) o;
+                item.setType(itemJson.getType().replace("_", "~"));
+                item.setValue(itemJson.getValue());
+                item.setVisible(itemJson.isVisible() == null || itemJson.isVisible());
+            }
             item.setApuPart(apuPart);
             apuPart.getItems().add(item);
         }
