@@ -419,7 +419,7 @@ public class ImportPevaFundInfo {
 						log.error("Fail to serialize EVIDENCE_UNIT_JSON to json",e);
 						throw new IllegalStateException(e);
 					}
-					ApuSourceBuilder.addJson(partFundInfo, "EVIDENCE_UNIT_JSON", value);
+					ApuSourceBuilder.addJson(partFundInfo, "EVIDENCE_UNIT", value);
 				}
 			}		
 		}
