@@ -21,6 +21,7 @@ import cz.aron.apux._2020.DaoFile;
 import cz.aron.apux._2020.Daos;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
+import cz.aron.apux._2020.ItemJson;
 import cz.aron.apux._2020.ItemLink;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
@@ -118,6 +119,14 @@ public class ApuSourceBuilder {
 		
 		part.getItms().getStrOrLnkOrEnm().add(itmStr);
 		return itmStr;
+	}
+	
+	public static ItemJson addJson(Part part, String itemType, String value) {
+		ItemJson itmJson = ApuxFactory.getObjFactory().createItemJson();
+		itmJson.setType(itemType);
+		itmJson.setValue(value);
+		part.getItms().getStrOrLnkOrEnm().add(itmJson);
+		return itmJson;
 	}
 
 	public ItemRef addApuRef(Part part, String itemType, UUID value) {

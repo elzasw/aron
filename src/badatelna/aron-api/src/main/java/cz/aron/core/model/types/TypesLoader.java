@@ -1,5 +1,6 @@
 package cz.aron.core.model.types;
 
+import cz.aron.core.model.DataType;
 import cz.aron.core.model.types.dto.ApuPartType;
 import cz.aron.core.model.types.dto.ItemType;
 import cz.aron.core.model.types.dto.ItemTypeGroup;
@@ -43,6 +44,10 @@ public class TypesLoader {
             }
             for (ItemType itemType : typesConfigDto.getItemTypes()) {
                 itemType.setCode(itemType.getCode().replace("_", "~"));
+                if (DataType.JSON.equals(itemType.getType())) {
+                    // json objects are not indexed
+                    itemType.setIndexed(false);
+                }
             }
             for (ItemTypeGroup itemTypeGroup : typesConfigDto.getItemGroups()) {
                 itemTypeGroup.setCode(itemTypeGroup.getCode().replace("_", "~"));

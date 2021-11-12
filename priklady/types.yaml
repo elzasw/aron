@@ -652,6 +652,9 @@ itemTypes:
   - code: EVIDENCE_UNIT
     name: Evidenční jednotka
     type: STRING
+  - code: EVIDENCE_UNIT_JSON
+    name: Evidenční jednotka
+    type: JSON
   - code: FUND_LITERATURE
     name: Literatura
     type: STRING

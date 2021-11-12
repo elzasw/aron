@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -20,7 +21,11 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.eclipse.jetty.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
@@ -34,12 +39,17 @@ import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
 import cz.aron.peva2.wsdl.Quantity;
 import cz.aron.transfagent.config.ConfigPeva2FundProperties;
+import cz.aron.transfagent.peva.jsoncomponent.Column;
+import cz.aron.transfagent.peva.jsoncomponent.JSONComponent;
+import cz.aron.transfagent.peva.jsoncomponent.Table;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.InstitutionInfo;
 import cz.aron.transfagent.transformation.PropertiesDataProvider;
 
 public class ImportPevaFundInfo {
+	
+	private static final Logger log = LoggerFactory.getLogger(ImportPevaFundInfo.class);
 		
 	private ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
     
@@ -332,50 +342,190 @@ public class ImportPevaFundInfo {
 	private void processEvidenceUnits(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isEvidenceUnits()) {
 			var evidenceUnits = nadSheet.getEvidenceUnits();
-			if (evidenceUnits!=null) {				
-				StringJoiner allSj = new StringJoiner("\r\n");				
+			if (evidenceUnits!=null) {
+				var rows = new ArrayList<List<String>>();												
 				for(var evidenceUnit:evidenceUnits.getEvidenceUnit()) {
-					
-					StringBuilder sb = new StringBuilder();
 					var type = evidenceUnit.getEvidenceUnitType();
 					var typeName = codeListProvider.getCodeLists().getEvidenceUnitType(type.getValue());
+					var name = "";
 					if (typeName!=null) {
-						sb.append(typeName.getName());
+						name = typeName.getName();
 					}
+					if (StringUtils.isNotBlank(evidenceUnit.getNote())) {
+						name += "\r\n" + evidenceUnit.getNote();
+					}					
+					String timeRange = "";
 					if (evidenceUnit.getTimeRange()!=null) {
-						sb.append(Peva2Utils.getAsString(evidenceUnit.getTimeRange()));
+						timeRange = Peva2Utils.getAsString(evidenceUnit.getTimeRange());
 					}
-					allSj.add(sb.toString());
-										
-					StringJoiner sj = new StringJoiner(", ");
-					processEvidenceUnitProcedure("Velikost v digitální podobě", evidenceUnit.getDigitalProcedure(), sj);
-					processEvidenceUnitProcedure("Počet", evidenceUnit.getCountProcedure(), sj);
-					processEvidenceUnitProcedure("Metráž", evidenceUnit.getLengthProcedure(), sj);					
-					if (evidenceUnit.getNumber()!=null) {
-						sj.add("Pořadové číslo:"+evidenceUnit.getNumber());
+					
+					var digitalEJ = processEvidenceUnitProcedure(evidenceUnit.getDigitalProcedure());
+					var countEJ = processEvidenceUnitProcedure(evidenceUnit.getCountProcedure());
+					var lengthEJ = processEvidenceUnitProcedure(evidenceUnit.getLengthProcedure());
+					
+					var unprocessed = new StringJoiner("/");
+					var processed = new StringJoiner("/");
+					var inventarized = new StringJoiner("/");
+					var damaged = new StringJoiner("/");
+					
+					boolean add = false;
+					if (digitalEJ.isActive()) {
+						digitalEJ.addDamaged(damaged);
+						digitalEJ.addInventarized(inventarized);
+						digitalEJ.addProcessed(processed);
+						digitalEJ.addUnprocessed(unprocessed);
+						add = true;
 					}
-					if (evidenceUnit.getEvidenceUnitFormType()!=null) {
-						switch(evidenceUnit.getEvidenceUnitFormType()) {
-						case ANALOG:
-							sj.add("Analogová");
-							break;
-						case DIGITAL:
-							sj.add("Digitální");
-							break;
-						default:
-						}						
+					if (countEJ.isActive()) {
+						countEJ.addDamaged(damaged);
+						countEJ.addInventarized(inventarized);
+						countEJ.addProcessed(processed);
+						countEJ.addUnprocessed(unprocessed);
+						add = true;
 					}
-					if (sj.length()>0) {
-						allSj.add(sj.toString());
-					}				
-				}				
-				if (allSj.length()>0) {
-					ApuSourceBuilder.addString(partFundInfo, "EVIDENCE_UNIT", allSj.toString());
-				}								
+					if (lengthEJ.isActive()) {
+						lengthEJ.addDamaged(damaged);
+						lengthEJ.addInventarized(inventarized);
+						lengthEJ.addProcessed(processed);
+						lengthEJ.addUnprocessed(unprocessed);
+						add = true;
+					}
+				
+					if (add) {
+						if (unprocessed.length()==0) {
+							unprocessed.add("0");
+						}
+						if (processed.length()==0) {
+							processed.add("0");
+						}
+						if (inventarized.length()==0) {
+							inventarized.add("0");
+						}
+						if (damaged.length()==0) {
+							damaged.add("0");
+						}
+						rows.add(Arrays.asList(name,unprocessed.toString(),processed.toString(),inventarized.toString(),damaged.toString(),timeRange));
+					}
+				}
+				if (!rows.isEmpty()) {					
+					var table = new Table(Arrays.asList(new Column("Název"), new Column("Nezpracováno"),
+							new Column("Zpracováno"), new Column("Inventarizováno"), new Column("Poškozeno"),
+							new Column("Časový rozsah")), rows);
+					var jsonComponent = new JSONComponent("table",table);
+					String value;
+					try {
+						value = jsonComponent.serializeToString();
+					} catch (JsonProcessingException e) {
+						log.error("Fail to serialize EVIDENCE_UNIT_JSON to json",e);
+						throw new IllegalStateException(e);
+					}
+					ApuSourceBuilder.addJson(partFundInfo, "EVIDENCE_UNIT_JSON", value);
+				}
+			}		
+		}
+	}
+	
+	class EJProcedure {
+		
+		private String damaged;
+		
+		private String inventarized;
+		
+		private String unprocessed;
+		
+		private String processed;
+		
+		private boolean active = false;
+
+		public String getDamaged() {
+			return damaged;
+		}
+
+		public void setDamaged(String damaged) {
+			this.damaged = damaged;
+			active = true;
+		}
+
+		public String getInventarized() {
+			return inventarized;
+		}
+
+		public void setInventarized(String inventarized) {
+			this.inventarized = inventarized;
+			active = true;
+		}
+
+		public String getUnprocessed() {
+			return unprocessed;
+		}
+
+		public void setUnprocessed(String unprocessed) {
+			this.unprocessed = unprocessed;
+			active = true;
+		}
+
+		public String getProcessed() {
+			return processed;
+		}
+
+		public void setProcessed(String processed) {
+			this.processed = processed;
+			active = true;
+		}
+
+		public boolean isActive() {
+			return active;
+		}
+		
+		public void addDamaged(StringJoiner sj) {
+			if (damaged!=null) {
+				sj.add(damaged);
+			}
+		}
+		
+		public void addInventarized(StringJoiner sj) {
+			if (inventarized!=null) {
+				sj.add(inventarized);
+			}
+		}
+		
+		public void addUnprocessed(StringJoiner sj) {
+			if (unprocessed!=null) {
+				sj.add(unprocessed);
+			}
+		}
+		
+		public void addProcessed(StringJoiner sj) {
+			if (processed!=null) {
+				sj.add(processed);
 			}
 		}
 	}
-
+	
+	private EJProcedure processEvidenceUnitProcedure(EvidenceUnitProcedure evidenceUnitProcedure) {
+		var ejProcedure = new EJProcedure();
+		if (evidenceUnitProcedure == null) {
+			return ejProcedure;
+		}		
+		var quantity = evidenceUnitProcedure.getDamaged(); 
+		if (quantity !=null&&quantity.getAmount().compareTo(BigDecimal.ZERO)>0) {
+			ejProcedure.setDamaged(quantity.getAmount().toString()+getUnit(quantity));
+		}		
+		quantity = evidenceUnitProcedure.getInventory();
+		if (quantity != null && quantity.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+			ejProcedure.setInventarized(quantity.getAmount().toString() + getUnit(quantity));
+		}						
+		quantity = evidenceUnitProcedure.getNotProcessed();
+		if (quantity != null && quantity.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+			ejProcedure.setUnprocessed(quantity.getAmount().toString() + getUnit(quantity));
+		}						
+		quantity = evidenceUnitProcedure.getProcessed();
+		if (quantity != null && quantity.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+			ejProcedure.setProcessed(quantity.getAmount().toString() + getUnit(quantity));
+		}						
+		return ejProcedure;
+	}
+	
 	private void processEvidenceUnitProcedure(String name, EvidenceUnitProcedure evidenceUnitProcedure,
 			StringJoiner sj) {
 		if (evidenceUnitProcedure == null) {

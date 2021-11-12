@@ -167,6 +167,7 @@
 				<xs:element name="enm" type="s1:ItemEnum" minOccurs="0" maxOccurs="1"/>
 				<xs:element name="ref" type="s1:ItemRef" minOccurs="0" maxOccurs="1"/>
 				<xs:element name="drng" type="s1:ItemDateRange" minOccurs="0" maxOccurs="1"/>
+				<xs:element name="json" type="s1:ItemJson" minOccurs="0" maxOccurs="1"/>
 			</xs:choice>
 		</xs:sequence>
 	</xs:complexType>
@@ -246,6 +247,13 @@
 		</xs:simpleContent>
 	</xs:complexType>
 	<xs:complexType name="ItemString">
+		<xs:simpleContent>
+			<xs:extension base="s1:LongString">
+				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="ItemJson">
 		<xs:simpleContent>
 			<xs:extension base="s1:LongString">
 				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
