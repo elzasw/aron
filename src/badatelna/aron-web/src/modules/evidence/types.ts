@@ -9,6 +9,8 @@ import {
   FilterConfig,
   ApuAttachment,
 } from '../../types';
+import {JsonType} from '../../enums';
+import { TableData } from '../../components';
 
 export interface FiltersChangeCallbackParams {
   query?: string;
@@ -73,3 +75,15 @@ export interface DetailAttachmentsProps {
 }
 
 export interface Props extends EvidenceProps {}
+
+export interface JsonDataBase {
+    type: JsonType;
+    data: any;
+}
+
+export interface JsonTable extends JsonDataBase {
+    type: JsonType.TABLE;
+    data: TableData;
+}
+
+export type JsonData = JsonTable;
