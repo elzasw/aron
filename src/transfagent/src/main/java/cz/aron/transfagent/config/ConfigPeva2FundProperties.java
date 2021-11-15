@@ -55,6 +55,12 @@ public class ConfigPeva2FundProperties {
     
     // agregace priloh z pomucek
     private boolean aggregateAttachments;
+    
+    // importuje fond jako command, aby se nacetl pomoci GetNadSheet
+    private boolean importAsCommand;
+    
+    // vyplni casti ulozene v jinem archivu
+    private boolean archiveGroupParts;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -198,6 +204,22 @@ public class ConfigPeva2FundProperties {
 
 	public void setAggregateAttachments(boolean aggregateAttachments) {
 		this.aggregateAttachments = aggregateAttachments;
+	}
+
+	public boolean isImportAsCommand() {
+		return importAsCommand;
+	}
+
+	public void setImportAsCommand(boolean importAsCommand) {
+		this.importAsCommand = importAsCommand;
+	}
+
+	public boolean isArchiveGroupParts() {
+		return archiveGroupParts;
+	}
+
+	public void setArchiveGroupParts(boolean archiveGroupParts) {
+		this.archiveGroupParts = archiveGroupParts;
 	}
 
 }

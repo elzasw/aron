@@ -1,5 +1,6 @@
 package cz.aron.transfagent.peva;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -62,14 +63,22 @@ public class Peva2ImportFunds extends Peva2Downloader {
             fundUUIDToJaFa = new LRUMap<String,String>(10000);            
             int numUpdatedFromBatch = 0;
             try {
-                patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());
+            	if (config.getFundProperties().isImportAsCommand()) {
+            		createCommands(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet());
+            	} else {
+            		patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());
+            	}
                 numUpdatedFromBatch+=lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
             } catch (Exception e) {
                 log.error("Fail to update fund batch", e);
                 // zkusim to po jednom
                 for (NadSheet nadSheet : lnsResp.getItems().getNadPrimarySheetOrNadSubsheet()) {
                     try {
-                        patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
+                    	if (config.getFundProperties().isImportAsCommand()) {
+                    		createCommands(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet());   
+                    	} else {
+                    		patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
+                    	}
                         numUpdatedFromBatch++;
                     } catch (Exception e1) {
                         log.error("Fail to update fund {}", nadSheet.getId(), e1);
@@ -103,6 +112,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
 				} catch (Exception e) {
 					log.error("Fail to store pevafund {} to input dir",nadSheet.getId(),e);
+					throw new IllegalStateException(e);
 				}
 				fundUUIDToJaFa.put(nps.getId(), nps.getEvidenceNumber());
 			} else if (nadSheet instanceof NadSubsheet) {
@@ -127,9 +137,24 @@ public class Peva2ImportFunds extends Peva2Downloader {
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
 				} catch (Exception e) {
 					log.error("Fail to store pevafund {} to input dir",nadSheet.getId(),e);
+					throw new IllegalStateException(e);
 				}
 			}
 		}
+    }
+    
+    private void createCommands(List<NadSheet> nadSheets) {
+    	Path commandsInputDir = storageService.getInputPath().resolve("commands");
+    	for (NadSheet nadSheet : nadSheets) {
+    		var commandFile = commandsInputDir.resolve(PREFIX_DASH+nadSheet.getId());
+    		if (!Files.isRegularFile(commandFile)) {
+    			try {
+    				Files.createFile(commandsInputDir);
+    			} catch (IOException e) {
+    				log.error("Fail to create command file {}",commandFile,e);
+    			}
+    		}
+    	}    	
     }
 
 	@Override

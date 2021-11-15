@@ -684,8 +684,11 @@ itemTypes:
     name: Tematická skupina
     type: ENUM
     indexed: true
-  - code: FUND_THEMATIC_GROUP_TEXT 
+  - code: FUND_THEMATIC_GROUP_TEXT
     name: Tematická skupina
+    type: STRING
+  - code: FUND_ARCHIVE_GROUP_PARTS
+    name: Části archivního souboru v jiných institucích
     type: STRING
 
   #

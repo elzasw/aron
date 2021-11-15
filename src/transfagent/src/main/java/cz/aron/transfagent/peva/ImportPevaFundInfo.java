@@ -10,6 +10,7 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.StringJoiner;
@@ -31,6 +32,7 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.Part;
+import cz.aron.peva2.wsdl.EvidenceUnit;
 import cz.aron.peva2.wsdl.EvidenceUnitProcedure;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
 import cz.aron.peva2.wsdl.NadHeader;
@@ -268,6 +270,10 @@ public class ImportPevaFundInfo {
 				ApuSourceBuilder.addString(partFundInfo, "FUND_LITERATURE",
 						correctString(additionalInfo.getLiterature()));
 			}
+			if (fundProperties.isArchiveGroupParts()&&StringUtils.isNotBlank(additionalInfo.getArchiveGroupParts())) {
+				ApuSourceBuilder.addString(partFundInfo, "FUND_ARCHIVE_GROUP_PARTS",
+						correctString(additionalInfo.getArchiveGroupParts()));
+			}
 		}
 	}
 
@@ -339,12 +345,66 @@ public class ImportPevaFundInfo {
 		}
 	}
 
+	class EUSort {
+		
+		private final EvidenceUnit evidenceUnit;
+		
+		private final List<EvidenceUnit> partial = new ArrayList<>();
+		
+		public EUSort(EvidenceUnit evidenceUnit) {
+			this.evidenceUnit = evidenceUnit;
+		}
+
+		public EvidenceUnit getEvidenceUnit() {
+			return evidenceUnit;
+		}
+
+		public List<EvidenceUnit> getPartial() {
+			return partial;
+		}
+		
+	}
+	
+	private List<EvidenceUnit> orderEvidenceUnit(List<EvidenceUnit> evidenceUnits) {
+		var map = new LinkedHashMap<String, EUSort>();
+		var ret = new ArrayList<EvidenceUnit>();
+		// insert main evidence unit types into map
+		for (var evidenceUnit : evidenceUnits) {
+			var id = evidenceUnit.getId();
+			var type = codeListProvider.getCodeLists()
+					.getEvidenceUnitType(evidenceUnit.getEvidenceUnitType().getValue());
+			if (type.getMainEUTId() == null) {
+				map.put(evidenceUnit.getEvidenceUnitType().getValue(), new EUSort(evidenceUnit));
+			}
+		}
+
+		// attach partial evidence unit types
+		for (var evidenceUnit : evidenceUnits) {
+			var type = codeListProvider.getCodeLists()
+					.getEvidenceUnitType(evidenceUnit.getEvidenceUnitType().getValue());
+			if (type.getMainEUTId() != null) {
+				var main = map.get(type.getMainEUTId());
+				if (main == null) {
+					log.error("Undefined main evidence unit type {}", type.getMainEUTId());
+					throw new IllegalStateException("Undefined main evidence unit type:" + type.getMainEUTId());
+				}
+				main.getPartial().add(evidenceUnit);
+			}
+		}
+		map.forEach((k, v) -> {
+			ret.add(v.getEvidenceUnit());
+			ret.addAll(v.getPartial());
+		});
+		return ret;
+	}
+	
 	private void processEvidenceUnits(NadSheet nadSheet, Part partFundInfo) {
 		if (fundProperties.isEvidenceUnits()) {
 			var evidenceUnits = nadSheet.getEvidenceUnits();
 			if (evidenceUnits!=null) {
-				var rows = new ArrayList<List<String>>();												
-				for(var evidenceUnit:evidenceUnits.getEvidenceUnit()) {
+				var rows = new ArrayList<List<String>>();
+				var ejs = orderEvidenceUnit(evidenceUnits.getEvidenceUnit());
+				for(var evidenceUnit:ejs) {
 					var type = evidenceUnit.getEvidenceUnitType();
 					var typeName = codeListProvider.getCodeLists().getEvidenceUnitType(type.getValue());
 					var name = "";
@@ -391,7 +451,7 @@ public class ImportPevaFundInfo {
 						add = true;
 					}
 				
-					if (add) {
+					if (add||true) {
 						if (unprocessed.length()==0) {
 							unprocessed.add("0");
 						}

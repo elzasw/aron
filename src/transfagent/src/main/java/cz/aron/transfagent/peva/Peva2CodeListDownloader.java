@@ -106,16 +106,16 @@ public class Peva2CodeListDownloader {
 		return ret;
 	}
 	
-	public Map<String,Peva2EvidenceUnitType> getEvidenceUnitTypes() {
-		Map<String,Peva2EvidenceUnitType> ret = new HashMap<>();
+	public Map<String, Peva2EvidenceUnitType> getEvidenceUnitTypes() {
+		Map<String, Peva2EvidenceUnitType> ret = new HashMap<>();
 		var meutReq = new ListMainEvidenceUnitTypeRequest();
 		meutReq.setSize(100);
 		var meutResp = peva2.listMainEvidenceUnitType(meutReq);
-		for(var meut:meutResp.getMainEvidenceUnitTypes().getMainEvidenceUnitType()) {
-			ret.put(meut.getId(), new Peva2EvidenceUnitType(meut.getName()));
-			if (meut.getPartialEvidenceUnitTypes()!=null) {
-				for(var partial:meut.getPartialEvidenceUnitTypes()) {
-					ret.put(partial.getId(), new Peva2EvidenceUnitType(partial.getName()));
+		for (var meut : meutResp.getMainEvidenceUnitTypes().getMainEvidenceUnitType()) {
+			ret.put(meut.getId(), new Peva2EvidenceUnitType(meut.getName(), null));
+			if (meut.getPartialEvidenceUnitTypes() != null) {
+				for (var partial : meut.getPartialEvidenceUnitTypes()) {
+					ret.put(partial.getId(), new Peva2EvidenceUnitType(partial.getName(), meut.getId()));
 				}
 			}
 		}

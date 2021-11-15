@@ -103,24 +103,29 @@ public class Peva2Import implements ImportProcessor {
 	private void processCommands() {
 		Path commandsPath = storageService.getInputPath().resolve("commands");
 		if (Files.isDirectory(commandsPath)) {
-			try(Stream<Path> stream=Files.list(commandsPath);) {
-				stream.forEach(f->{					
+			try (Stream<Path> stream = Files.list(commandsPath);) {
+				stream.forEach(f -> {
 					if (Files.isRegularFile(f)) {
 						for (var downloader : downloaders) {
-							if ( downloader.processCommand(f, codeListProvider) ) {
-								try {
-									Files.deleteIfExists(f);
-								} catch (IOException e) {
-									log.error("Fail to delete command file {}",f);
-									throw new UncheckedIOException(e);
+							try {
+								if (downloader.processCommand(f, codeListProvider)) {
+									try {
+										Files.deleteIfExists(f);
+									} catch (IOException e) {
+										log.error("Fail to delete command file {}", f);
+										throw new UncheckedIOException(e);
+									}
+									break;
 								}
-								break;
+							} catch (Exception e) {
+								log.error("Fail to process command file {}", f, e);
+								throw new IllegalStateException(e);
 							}
-						}						
-					}										
+						}
+					}
 				});
 			} catch (IOException ioEx) {
-				log.error("Fail to read commands directory {}", commandsPath);
+				log.error("Fail to read commands directory {}", commandsPath, ioEx);
 				throw new UncheckedIOException(ioEx);
 			}
 		}
