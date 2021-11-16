@@ -149,7 +149,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
     		var commandFile = commandsInputDir.resolve(PREFIX_DASH+nadSheet.getId());
     		if (!Files.isRegularFile(commandFile)) {
     			try {
-    				Files.createFile(commandsInputDir);
+    				Files.createFile(commandFile);
     			} catch (IOException e) {
     				log.error("Fail to create command file {}",commandFile,e);
     			}

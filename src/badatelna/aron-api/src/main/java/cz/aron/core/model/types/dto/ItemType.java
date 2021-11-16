@@ -1,6 +1,8 @@
 package cz.aron.core.model.types.dto;
 
 import cz.aron.core.model.DataType;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,4 +18,5 @@ public class ItemType {
     private boolean indexed = true;
     private Boolean indexFolding;
     private Boolean indexBoost;
+    private List<LocalizedItem> lang = new ArrayList<>();
 }
