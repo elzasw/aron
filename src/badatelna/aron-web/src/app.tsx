@@ -11,7 +11,7 @@ import {
   LocaleName,
 } from '@eas/common-web';
 
-import { AppWrapper, Loading } from './components';
+import { AppWrapper, Loading, ConfigurationProvider } from './components';
 import { navigationItems, ApiUrl, messages, Message } from './enums';
 import {
   useGet,
@@ -131,24 +131,26 @@ export function App() {
   const classes = useAppStyles();
 
   return (
-    <ThemeProvider {...{ primary, editing, highlight, fontSize, fontFamily }}>
-      <LocaleProvider
-        defaultLocale={LocaleName.cs}
-        messages={messages}
-        translationsUrl=""
-      >
-        <div className={classes.app}>
-          <SnackbarProvider timeout={3000}>
-            <AppStateProvider>
-              <BrowserRouter {...{ basename: process.env.URL_PREFIX }}>
-                <NavigationProvider>
-                  <AppComponent />
-                </NavigationProvider>
-              </BrowserRouter>
-            </AppStateProvider>
-          </SnackbarProvider>
-        </div>
-      </LocaleProvider>
-    </ThemeProvider>
+    <ConfigurationProvider>
+      <ThemeProvider {...{ primary, editing, highlight, fontSize, fontFamily }}>
+        <LocaleProvider
+          defaultLocale={LocaleName.cs}
+          messages={messages}
+          translationsUrl=""
+        >
+          <div className={classes.app}>
+            <SnackbarProvider timeout={3000}>
+              <AppStateProvider>
+                <BrowserRouter {...{ basename: process.env.URL_PREFIX }}>
+                  <NavigationProvider>
+                    <AppComponent />
+                  </NavigationProvider>
+                </BrowserRouter>
+              </AppStateProvider>
+            </SnackbarProvider>
+          </div>
+        </LocaleProvider>
+      </ThemeProvider>
+    </ConfigurationProvider>
   );
 }

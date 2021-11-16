@@ -16,3 +16,4 @@ export * from './tooltip';
 export * from './tree';
 export * from './text-with-count';
 export * from './table';
+export * from './configuration';

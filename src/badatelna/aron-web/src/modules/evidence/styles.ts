@@ -13,7 +13,11 @@ const sidebarWidth = 300;
 const sidebarMinWidth = 30;
 const daoDialogToolbarHeight = 50;
 
-export const useStyles = makeStyles((theme) => {
+export interface StyleConfiguration {
+  alternativeItemLabel?: boolean;
+}
+
+export const useStyles =  makeStyles((theme) => {
   const md = theme.breakpoints.up('md');
   return {
     sidebar: {
@@ -156,12 +160,13 @@ export const useStyles = makeStyles((theme) => {
     evidenceDetailItemNotFirst: {
       borderTop: border,
     },
-    evidenceDetailItemLabel: {
+    evidenceDetailItemLabel: ({alternativeItemLabel}:StyleConfiguration) => ({
       width: 150,
       minWidth: 150,
-      textTransform: 'uppercase',
+      textTransform: alternativeItemLabel ? 'none' : 'uppercase',
       textAlign: 'right',
-    },
+      fontWeight: alternativeItemLabel ? 'bold' : 'normal',
+    }),
     evidenceDetailItemLabelBorder: {
       borderRight: border,
     },

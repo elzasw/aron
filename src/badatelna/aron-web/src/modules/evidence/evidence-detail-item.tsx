@@ -10,6 +10,7 @@ import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { usePrevious } from '../../common-utils';
 import { ApuEntity } from '../../types';
 import { EvidenceDetailItemValue } from './evidence-detail-item-value';
+import { useConfiguration } from '../../components';
 
 export function EvidenceDetailItem({
   name,
@@ -26,7 +27,8 @@ export function EvidenceDetailItem({
   index: number;
   apus: ApuEntity[];
 }) {
-  const classes = useStyles();
+  const configuration = useConfiguration();
+  const classes = useStyles({alternativeItemLabel: configuration.alternativeItemLabel});
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
