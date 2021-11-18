@@ -8,7 +8,6 @@ import { useIntl } from 'react-intl';
 
 import {
   ApiUrl,
-  ApuType,
   ModulePath,
   ApuPartItemDataType,
   navigationItems,
@@ -42,6 +41,7 @@ import { getPathByType, useAppState } from '../../common-utils';
 import { Module, Loading, Button } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
+import { EvidenceIcon } from './evidence-icon';
 
 export function EvidenceDetail({
   apuPartTypes,
@@ -235,14 +235,6 @@ export function EvidenceDetail({
 
   const type = item?.type;
 
-  const icon =
-    type === ApuType.ENTITY
-      ? 'fas fa-key'
-      : type === ApuType.FUND
-      ? 'fas fa-sitemap'
-      : type === ApuType.FINDING_AID
-      ? 'fas fa-book-reader'
-      : null;
 
   const path = type ? getPathByType(type) : undefined;
 
@@ -298,15 +290,7 @@ export function EvidenceDetail({
                     spacingClasses.marginBottomSmall
                   )}
                 >
-                  {icon && (
-                    <i
-                      className={classNames(
-                        icon,
-                        classes.evidenceDetailIcon,
-                        spacingClasses.marginBottomSmall
-                      )}
-                    />
-                  )}
+                  {type && <EvidenceIcon type={type}/>}
                   <Button
                     className={classes.findRelatedButton}
                     label={formatMessage({ id: Message.FIND_RELATED })}
