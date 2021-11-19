@@ -11,8 +11,8 @@ import {
   LocaleName,
 } from '@eas/common-web';
 
-import { AppWrapper, Loading, ConfigurationProvider } from './components';
-import { navigationItems, ApiUrl, messages, Message } from './enums';
+import { AppWrapper, Loading, ConfigurationProvider, useConfiguration } from './components';
+import { getNavigationItems, ApiUrl, messages, Message } from './enums';
 import {
   useGet,
   AppStateProvider,
@@ -41,6 +41,7 @@ const fontFamily = [
 function AppComponent() {
   const classes = useAppStyles();
 
+  const configuration = useConfiguration();
   const [loadingImages, setLoadingImages] = useState(true);
   const [appLogo, setAppLogo] = useState<string>();
   const [appTopImage, setAppTopImage] = useState<string>();
@@ -94,7 +95,7 @@ function AppComponent() {
         </Helmet>
         {apuPartTypes && apuPartItemTypes && facets ? (
           <Switch>
-            {navigationItems.map(
+            {getNavigationItems(configuration).map(
               ({ path, exact = false, Component, label }: any) => (
                 <Route {...{ key: path, path, exact }}>
                   <Component

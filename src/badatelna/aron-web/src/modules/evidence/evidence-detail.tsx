@@ -10,9 +10,9 @@ import {
   ApiUrl,
   ModulePath,
   ApuPartItemDataType,
-  navigationItems,
   ApuPartItemEnum,
   Message,
+  getNavigationItems,
 } from '../../enums';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
@@ -38,7 +38,7 @@ import {
 import { EvidenceDetailDao } from './evidence-detail-dao';
 import { EvidenceDetailTree } from './evidence-detail-tree';
 import { getPathByType, useAppState } from '../../common-utils';
-import { Module, Loading, Button } from '../../components';
+import { Module, Loading, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { EvidenceIcon } from './evidence-icon';
@@ -50,6 +50,7 @@ export function EvidenceDetail({
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
+  const configuration = useConfiguration();
 
   const { appState, updateAppState } = useAppState();
 
@@ -252,7 +253,7 @@ export function EvidenceDetail({
             path: evidencePath || path,
             label:
               find(
-                navigationItems,
+                getNavigationItems(configuration),
                 (item) => item.path === (evidencePath || path)
               )?.label || '',
           },

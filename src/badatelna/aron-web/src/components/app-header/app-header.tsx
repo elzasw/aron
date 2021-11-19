@@ -6,19 +6,21 @@ import MenuIcon from '@material-ui/icons/Menu';
 
 import { LocaleContext, LocaleName } from '@eas/common-web';
 
-import { appHeaderItems, ApiUrl } from '../../enums';
+import { getAppHeaderItems, ApiUrl } from '../../enums';
 import { AppTitle } from '../app-title';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { Language } from '../language';
 import { openUrl, useGet } from '../../common-utils';
 import { Props } from './types';
+import { useConfiguration } from '../configuration'
 
 export function AppHeader({ pageTemplate, ...props }: Props) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
   const location = useLocation();
+  const configuration = useConfiguration();
   const [open, setOpen] = useState(false);
 
   const [result] = useGet<string>(ApiUrl.HELP, { textResponse: true });
@@ -54,7 +56,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
       >
         <AppTitle {...props} />
         <div className={classes.appHeaderItems}>
-          {appHeaderItems.map(({ path, label }, i) =>
+          {getAppHeaderItems(configuration).map(({ path, label }, i) =>
             !path ? (
               <div
                 key={i}
@@ -101,7 +103,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
               className={classes.appHeaderItemsMobile}
               onClick={() => setOpen(false)}
             >
-              {appHeaderItems.map(({ path, label }, i) =>
+              {getAppHeaderItems(configuration).map(({ path, label }, i) =>
                 !path ? (
                   <div
                     key={i}
