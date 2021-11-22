@@ -1,6 +1,8 @@
 package cz.aron.transfagent.elza;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +14,7 @@ import java.util.Set;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -46,6 +49,8 @@ public class ElzaXmlReader {
 
 	static JAXBContext jaxbContext;
 	static Schema schemaElza;
+	
+	static ObjectFactory OBJECT_FACTORY = new ObjectFactory();
 
 	static {
 		try {
@@ -330,6 +335,18 @@ public class ElzaXmlReader {
 		return aps.getAp().get(0);
 	}
 
-
+	public static void write(ElzaDataExchange edx, Path path) throws JAXBException {
+		Marshaller m = jaxbContext.createMarshaller();
+		m.setSchema(schemaElza);		
+		m.marshal(OBJECT_FACTORY.createEdx(edx), path.toFile());				
+	}
+	
+	public static byte[] write(ElzaDataExchange edx) throws JAXBException {
+		Marshaller m = jaxbContext.createMarshaller();
+		m.setSchema(schemaElza);
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		m.marshal(OBJECT_FACTORY.createEdx(edx), baos);
+		return baos.toByteArray();
+	}
 
 }

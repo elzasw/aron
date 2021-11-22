@@ -443,13 +443,15 @@ public class ImportPevaFundInfo {
 						countEJ.addUnprocessed(unprocessed);
 						add = true;
 					}
+					
+					/*
 					if (lengthEJ.isActive()) {
 						lengthEJ.addDamaged(damaged);
 						lengthEJ.addInventarized(inventarized);
 						lengthEJ.addProcessed(processed);
 						lengthEJ.addUnprocessed(unprocessed);
 						add = true;
-					}
+					}*/
 				
 					if (add||true) {
 						if (unprocessed.length()==0) {

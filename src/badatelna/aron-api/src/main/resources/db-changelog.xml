@@ -138,4 +138,51 @@
             <column name="order" type="int" value="0"/>
         </addColumn>
     </changeSet>
+    <changeSet id="aron:6" author="zacek@lightcomp.cz">
+        <createIndex indexName="idx_apu_part_item_apu_part_id"
+            tableName="apu_part_item" unique="false">
+            <column name="apu_part_id" />
+        </createIndex>
+        <createIndex indexName="idx_apu_part_apu_id"
+            tableName="apu_part" unique="false">
+            <column name="apu_id" />
+        </createIndex>
+        <createIndex indexName="idx_apu_part_apu_part_id"
+            tableName="apu_part" unique="false">
+            <column name="parent_part_id" />
+        </createIndex>
+        <createIndex indexName="idx_apu_entity_apu_source_id"
+            tableName="apu_entity" unique="false">
+            <column name="source_id" />
+        </createIndex>
+        <createIndex indexName="idx_apu_entity_apu_entity_id"
+            tableName="apu_entity" unique="false">
+            <column name="parent_id" />
+        </createIndex>
+        <createIndex indexName="idx_apu_attachment_apu_id"
+            tableName="apu_attachment" unique="false">
+            <column name="apu_id" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_file_attachment_id"
+            tableName="digital_object_file" unique="false">
+            <column name="attachment_id" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_eas_file_id"
+            tableName="digital_object_file" unique="false">
+            <column name="file_id" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_file_digital_object_id"
+            tableName="digital_object_file" unique="false">
+            <column name="digital_object_id" />
+        </createIndex>
+        <createIndex indexName="idx_relation_source"
+            tableName="relation" unique="false">
+            <column name="source" />
+        </createIndex>
+        <createIndex indexName="idx_relation_target"
+            tableName="relation" unique="false">
+            <column name="target" />
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

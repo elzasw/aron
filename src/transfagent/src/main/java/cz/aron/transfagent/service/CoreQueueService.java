@@ -57,14 +57,21 @@ public class CoreQueueService implements SmartLifecycle {
      * Odeslání dat do jádra
      */
     private void sendData() {
-        while (coreQueueRepository.count() > 0) {
-            CoreQueue item = coreQueueRepository.findFirstByOrderById();
-            uploadOrDeleteData(item);
-            coreQueueRepository.delete(item);
-            if (status!=ThreadStatus.RUNNING) {
-            	break;
-            }
-        }
+    	
+    	while(true) {
+    		var events = coreQueueRepository.findFirst1000ByOrderById();
+    		if (events.isEmpty()) {
+    			// nothing to send
+    			return;
+    		}
+    		for(var item:events) {
+    		    uploadOrDeleteData(item);
+                coreQueueRepository.delete(item);
+                if (status!=ThreadStatus.RUNNING) {
+                	return;
+                }    			
+    		}
+    	}
     }
 
     /**
