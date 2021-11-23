@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { get, find, flatten, compact, isEmpty, sortBy } from 'lodash';
 import classNames from 'classnames';
@@ -28,6 +28,7 @@ import {
   ApuPartType,
   ApuPartItemType,
   ApuPartItem,
+  ApuLocale,
 } from '../../types';
 import {
   findApuParts,
@@ -42,6 +43,7 @@ import { Module, Loading, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { EvidenceIcon } from './evidence-icon';
+import { LocaleContext } from '@eas/common-web';
 
 export function EvidenceDetail({
   apuPartTypes,
@@ -51,6 +53,7 @@ export function EvidenceDetail({
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
   const configuration = useConfiguration();
+  const locale = useContext(LocaleContext);
 
   const { appState, updateAppState } = useAppState();
 
@@ -145,6 +148,13 @@ export function EvidenceDetail({
     archdescRootRefItemId,
   ]);
 
+  const getLocalizedName = (langs: ApuLocale[], defaultName: string) => {
+    const lang = langs.find((lang) => 
+        lang.lang.substr(0, 2) === locale.locale.name
+    ) 
+    return lang ? lang.text : defaultName;
+  }
+
   const items: (ApuPartType & {
     items: (ApuPartItem & {
       code: string;
@@ -159,12 +169,14 @@ export function EvidenceDetail({
               item.parts.map((part) =>
                 filterApuPartTypes(apuPartTypes, [part]).map(
                   (apuPartType: ApuPartType) => {
+                      
                     return {
                       ...apuPartType,
+                      name: getLocalizedName(apuPartType.lang, apuPartType.name),
                       items: sortByArray(
                         flatten(
                           filterApuPartTypes(apuPartItemTypes, part.items).map(
-                            ({ code, name, type }: ApuPartItemType) => {
+                            ({ code, name, type, lang }: ApuPartItemType) => {
                               return compact(
                                 findApuParts(part.items, code).map((item) => {
                                   return item.type ===
@@ -173,7 +185,7 @@ export function EvidenceDetail({
                                     : {
                                         ...item,
                                         code,
-                                        name,
+                                        name: getLocalizedName(lang, name),
                                         type,
                                       };
                                 })
@@ -193,7 +205,7 @@ export function EvidenceDetail({
             'code'
           )
         : [],
-    [item, apuPartTypes, apuPartItemTypes]
+    [item, apuPartTypes, apuPartItemTypes, locale]
   );
 
   useEffect(() => {

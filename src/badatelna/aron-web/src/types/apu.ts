@@ -52,16 +52,23 @@ export interface ApuSource extends Entity {
   data: string;
 }
 
+export interface ApuLocale {
+  lang: string;
+  text: string;
+}
+
 export interface ApuPartType extends Entity {
   code: string;
   name: string;
   viewType: ApuPartViewType;
+  lang: ApuLocale[];
 }
 
 export interface ApuPartItemType extends Entity {
   code: string;
   name: string;
   type: ApuPartItemDataType;
+  lang: ApuLocale[];
 }
 
 export interface ApuTree extends Entity {
