@@ -25,10 +25,9 @@ import {
 import { DetailProps } from './types';
 import {
   ApuEntity,
-  ApuPartType,
-  ApuPartItemType,
   ApuPartItem,
   ApuLocale,
+  ApuPart,
 } from '../../types';
 import {
   findApuParts,
@@ -155,56 +154,52 @@ export function EvidenceDetail({
     return lang ? lang.text : defaultName;
   }
 
-  const items: (ApuPartType & {
-    items: (ApuPartItem & {
-      code: string;
-      name: string;
-      type: ApuPartItemDataType;
-    })[];
-  })[] = useMemo(
-    () =>
-      item && item.parts
-        ? sortByArray(
-            flatten(
-              item.parts.map((part) =>
-                filterApuPartTypes(apuPartTypes, [part]).map(
-                  (apuPartType: ApuPartType) => {
-                      
-                    return {
-                      ...apuPartType,
-                      name: getLocalizedName(apuPartType.lang, apuPartType.name),
-                      items: sortByArray(
-                        flatten(
-                          filterApuPartTypes(apuPartItemTypes, part.items).map(
-                            ({ code, name, type, lang }: ApuPartItemType) => {
-                              return compact(
-                                findApuParts(part.items, code).map((item) => {
-                                  return item.type ===
-                                    ApuPartItemEnum.ARCHDESC_ROOT_REF
-                                    ? null
-                                    : {
-                                        ...item,
-                                        code,
-                                        name: getLocalizedName(lang, name),
-                                        type,
-                                      };
-                                })
-                              );
-                            }
-                          )
-                        ),
-                        apuPartItemTypes,
-                        'code'
-                      ),
+  const getApuPartItems = (part: ApuPart) => {
+    return flatten(
+        filterApuPartTypes(apuPartItemTypes, part.items)
+          .sort((a, b) => a.viewOrder - b.viewOrder)
+          .map(({ code, name, type, lang }) => {
+            return compact(
+              findApuParts(part.items, code).map((item) => {
+                return item.type ===
+                  ApuPartItemEnum.ARCHDESC_ROOT_REF
+                  ? null
+                  : {
+                      ...item,
+                      code,
+                      name: getLocalizedName(lang, name),
+                      type,
                     };
-                  }
-                )
-              )
-            ),
-            apuPartTypes,
-            'code'
+              })
+            );
+          }
+        )
+      )
+  }
+
+  const getApuParts = (item: ApuEntity) => {
+    if(!item?.parts) {return []}
+    return sortByArray(
+      flatten(
+        item.parts.map((part) =>
+          filterApuPartTypes(apuPartTypes, [part]).map(
+            (apuPartType) => {
+              return {
+                ...apuPartType,
+                name: getLocalizedName(apuPartType.lang, apuPartType.name),
+                items: getApuPartItems(part),
+              };
+            }
           )
-        : [],
+        )
+      ),
+      apuPartTypes,
+      'code'
+    )
+  }
+
+  const items = useMemo(
+    () => item ? getApuParts(item) : [],
     [item, apuPartTypes, apuPartItemTypes, locale]
   );
 

@@ -29,10 +29,10 @@ import {
   yearInISO,
 } from './sidebar-content';
 
-export const findApuParts = (items: any[], code: string) =>
+export const findApuParts = <EntityItem extends {type: string}>(items: EntityItem[], code: string) =>
   items.filter(({ type }) => type === code);
 
-export const filterApuPartTypes = (items: any[], entityItems: any[]) =>
+export const filterApuPartTypes = <Item extends {code: string}, EntityItem extends {type: string}>(items: Item[], entityItems: EntityItem[]) =>
   items.filter(({ code }) => findApuParts(entityItems, code).length);
 
 export const FilterComponent = (props: any) => {
