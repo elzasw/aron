@@ -4,13 +4,15 @@ import { AppHeaderItemCode } from '../../enums';
 export interface ConfigurationType {
     alternativeItemLabel?: boolean;
     showHeader?: boolean;
+    showStandalonePartName?: boolean;
     headerItems?: Array<AppHeaderItemCode>;
 }
 
 
-const defaultConfiguration = {
+const defaultConfiguration:ConfigurationType = {
     alternativeItemLabel: false,
     showHeader: true,
+    showStandalonePartName: true,
     headerItems: [
         AppHeaderItemCode.FUND,
         AppHeaderItemCode.ARCH_DESC,

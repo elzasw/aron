@@ -69,16 +69,17 @@ export function EvidenceDetailItem({
           (!isGrouped || !open) && spacingClasses.paddingBottomSmall
         )}
       >
+        {(isGrouped || configuration.showStandalonePartName) && 
+            <div
+                className={classNames(
+                    labelClassName,
+                    isGrouped && classes.evidenceDetailItemLabelBorder
+                )}
+            >
+                {name}
+            </div>
+        }
         {isGrouped ? (
-            <>
-        <div
-          className={classNames(
-            labelClassName,
-            isGrouped && classes.evidenceDetailItemLabelBorder
-          )}
-        >
-          {name}
-        </div>
           <Tooltip
             title={
               <FormattedMessage
@@ -104,7 +105,6 @@ export function EvidenceDetailItem({
                 ))}
             </div>
           </Tooltip>
-          </>
         ) : (
           <div />
         )}
