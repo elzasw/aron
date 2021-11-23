@@ -69,6 +69,8 @@ export function EvidenceDetailItem({
           (!isGrouped || !open) && spacingClasses.paddingBottomSmall
         )}
       >
+        {isGrouped ? (
+            <>
         <div
           className={classNames(
             labelClassName,
@@ -77,7 +79,6 @@ export function EvidenceDetailItem({
         >
           {name}
         </div>
-        {isGrouped ? (
           <Tooltip
             title={
               <FormattedMessage
@@ -103,6 +104,7 @@ export function EvidenceDetailItem({
                 ))}
             </div>
           </Tooltip>
+          </>
         ) : (
           <div />
         )}
