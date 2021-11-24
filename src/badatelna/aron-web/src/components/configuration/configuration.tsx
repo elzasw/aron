@@ -5,6 +5,7 @@ export interface ConfigurationType {
     alternativeItemLabel?: boolean;
     showHeader?: boolean;
     showStandalonePartName?: boolean;
+    showMainPageBreadcrumb?: boolean;
     headerItems?: Array<AppHeaderItemCode>;
 }
 
@@ -13,6 +14,7 @@ const defaultConfiguration:ConfigurationType = {
     alternativeItemLabel: false,
     showHeader: true,
     showStandalonePartName: true,
+    showMainPageBreadcrumb: true,
     headerItems: [
         AppHeaderItemCode.FUND,
         AppHeaderItemCode.ARCH_DESC,

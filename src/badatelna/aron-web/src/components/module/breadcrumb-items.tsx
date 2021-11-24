@@ -8,6 +8,7 @@ import { Breadcrumbs } from './types';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { BreadcrumbItem } from './breadcrumb-item';
+import { useConfiguration } from '../configuration';
 
 const BREADCRUMBS_ID = 'module-breadcrumbs';
 const TOOLBAR_ID = 'module-toolbar';
@@ -16,6 +17,7 @@ export function BreadcrumbItems({ items, toolbar }: Breadcrumbs) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
+  const configuration = useConfiguration();
 
   const location = useLocation();
 
@@ -25,12 +27,14 @@ export function BreadcrumbItems({ items, toolbar }: Breadcrumbs) {
   const [lastItemWidth, setLastItemWidth] = useState(0);
 
   const itemsWithMain = [
-    {
-      path: ModulePath.MAIN,
-      label: <FormattedMessage id={Message.INTRODUCTION} />,
-    },
     ...items,
   ];
+  if(configuration.showMainPageBreadcrumb){
+    itemsWithMain.unshift({
+      path: ModulePath.MAIN,
+      label: <FormattedMessage id={Message.INTRODUCTION} />,
+    })
+  }
 
   const allItems =
     responsive && itemsWithMain.length > 2
