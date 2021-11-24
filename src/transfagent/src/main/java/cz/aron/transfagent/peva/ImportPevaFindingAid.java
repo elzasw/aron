@@ -197,16 +197,15 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 			throw new IllegalStateException(e);
 		}
 
+		boolean send = !configPeva2.getFindingAidProperties().isDontSend();
 		if (findingAid == null) {
 			findingAidService.createFindingAid(findingAidCode, funds, institution, dataDir, dir, builder, attachments,
-					configPeva2.getFundProperties().isAggregateAttachments());
+					configPeva2.getFundProperties().isAggregateAttachments(),send);
 		} else {
 			findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments,
-					configPeva2.getFundProperties().isAggregateAttachments());
+					configPeva2.getFundProperties().isAggregateAttachments(),send);
 		}
-        
     	return true;
-
 	}
 	
 	

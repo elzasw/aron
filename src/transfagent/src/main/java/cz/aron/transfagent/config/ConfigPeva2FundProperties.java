@@ -62,6 +62,9 @@ public class ConfigPeva2FundProperties {
     // vyplni casti ulozene v jinem archivu
     private boolean archiveGroupParts;
 
+    // posle reference na pomucky
+    private boolean findingAids;
+
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
 	}
@@ -220,6 +223,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setArchiveGroupParts(boolean archiveGroupParts) {
 		this.archiveGroupParts = archiveGroupParts;
+	}
+
+	public boolean isFindingAids() {
+		return findingAids;
+	}
+
+	public void setFindingAids(boolean findingAids) {
+		this.findingAids = findingAids;
 	}
 
 }

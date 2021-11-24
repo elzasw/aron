@@ -277,15 +277,18 @@ public class ImportPevaFundInfo {
 		}
 	}
 
-    private void processFindingAids(NadSheet nadSheet, Part partFundInfo) {
-    	var findingAids = nadSheet.getFindingAids();
-		if (findingAids!=null&&findingAids.getFindingAid()!=null) {
-			findingAids.getFindingAid().forEach(fa->{
-				apusBuilder.addApuRef(partFundInfo, "FINDINGAID_REF", UUID.fromString(fa));
+	private void processFindingAids(NadSheet nadSheet, Part partFundInfo) {
+		var fillFindingAids = fundProperties.isFindingAids();
+		var findingAids = nadSheet.getFindingAids();
+		if (findingAids != null && findingAids.getFindingAid() != null) {
+			findingAids.getFindingAid().forEach(fa -> {
+				if (fillFindingAids) {
+					apusBuilder.addApuRef(partFundInfo, "FINDINGAID_REF", UUID.fromString(fa));
+				}
 				this.findingAids.add(fa);
-			});			
-		}	
-    }
+			});
+		}
+	}
     
 	private void processOriginators(NadSheet nadSheet, Part partFundInfo) {
 		var originators = nadSheet.getOriginators();

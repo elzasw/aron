@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import cz.aron.apux.ApuSourceBuilder;
-import cz.aron.transfagent.domain.ApuSource;
-import cz.aron.transfagent.domain.Attachment;
 import cz.aron.transfagent.domain.CoreQueue;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
@@ -62,7 +59,7 @@ public class FindingAidService {
 
 	@Transactional
 	public FindingAid createFindingAid(String findingaidCode, List<Fund> relatedFunds, Institution institution,
-			Path dataDir, Path origDir, ApuSourceBuilder builder, List<Path> attachments, boolean reimportFund) {
+			Path dataDir, Path origDir, ApuSourceBuilder builder, List<Path> attachments, boolean reimportFund, boolean send) {
 
 		// reload funds from db
 		var funds = fundRepository.findAllById(relatedFunds.stream().map(f -> f.getId()).collect(Collectors.toList()));
@@ -91,9 +88,11 @@ public class FindingAidService {
 
 		attachmentService.updateAttachments(findingAid.getApuSource(), builder, attachments);
 
-		var coreQueue = new CoreQueue();
-		coreQueue.setApuSource(apuSource);
-		coreQueueRepository.save(coreQueue);
+		if (send) {
+			var coreQueue = new CoreQueue();
+			coreQueue.setApuSource(apuSource);
+			coreQueueRepository.save(coreQueue);
+		}
 
 		log.info("FindingAid created code={}, uuid={}", findingaidCode, findingaidUuid);
 		return findingAid;
@@ -101,20 +100,21 @@ public class FindingAidService {
 
     @Transactional
 	public void updateFindingAid(FindingAid findingAid, Path dataDir, Path origDir, ApuSourceBuilder builder,
-			List<Path> attachments, boolean reimportFund) {
+			List<Path> attachments, boolean reimportFund, boolean send) {
 
 		var apuSource = findingAid.getApuSource();
 		apuSource.setDataDir(dataDir.toString());
 		apuSource.setOrigDir(origDir.getFileName().toString());
 
 		attachmentService.updateAttachments(findingAid.getApuSource(), builder, attachments);
-
-		var coreQueue = new CoreQueue();
-		coreQueue.setApuSource(apuSource);
-
 		apuSourceRepository.save(apuSource);
-		coreQueueRepository.save(coreQueue);
-		
+
+		if (send) {
+			var coreQueue = new CoreQueue();
+			coreQueue.setApuSource(apuSource);
+			coreQueueRepository.save(coreQueue);
+		}
+
 		if (reimportFund) {
 			for(var fund:findingAid.getFunds()) {
 				fund.getApuSource().setReimport(true);

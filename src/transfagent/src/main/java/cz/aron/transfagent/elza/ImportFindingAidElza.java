@@ -174,9 +174,9 @@ public class ImportFindingAidElza implements FindingAidImporter {
 
 		if (findingAid == null) {
 			findingAidService.createFindingAid(findingAidCode, Collections.singletonList(fund), institution, dataDir,
-					dir, builder, attachments, false);
+					dir, builder, attachments, false, true);
 		} else {
-			findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments, false);
+			findingAidService.updateFindingAid(findingAid, dataDir, dir, builder, attachments, false, true);
 		}
 		return true;
 	}

@@ -116,7 +116,7 @@ public class CoreQueueService implements SmartLifecycle {
         // vytváření Clienta
         ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
         clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
-        clientConfig.setRecoveryDelay(3);
+        clientConfig.setRecoveryDelay(1);
         Client client = FileTransfer.createClient(clientConfig);
 
         List<SourceItem> sourceItems = createSourceItems(item);
