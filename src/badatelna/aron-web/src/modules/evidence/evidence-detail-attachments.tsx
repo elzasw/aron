@@ -52,7 +52,7 @@ export function EvidenceDetailAttachments({
                 onClick: async () => {
                   if (fileId) {
                     setLoading(true);
-                    const ok = await downloadFile(fileId, name, true);
+                    const ok = await downloadFile(fileId, name);
                     if (!ok) {
                       showSnackbar(
                         formatMessage({ id: Message.ERROR_DOWNLOAD_FILE }),
