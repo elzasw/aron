@@ -55,6 +55,7 @@ public class TypesLoader {
             Yaml yaml = new Yaml();
             TypesConfigDto typesConfigDto = yaml.loadAs(checkedInputStream, TypesConfigDto.class);
             //we replace underscores with tildes because otherwise indexing would turn them to dots
+            Map<String, Object> itemViewOrders = (Map<String,Object>)localization.getOrDefault("viewOrders",Collections.emptyMap());
             Map<String,Object> ptLoc = (Map<String,Object>)localization.getOrDefault("partTypes",Collections.emptyMap());
             for (ApuPartType apuPartType : typesConfigDto.getPartTypes()) {
                 ptLoc.forEach((k,v)->{
@@ -66,6 +67,8 @@ public class TypesLoader {
                 });
                 apuPartType.setCode(apuPartType.getCode().replace("_", "~"));
             }
+
+            int viewOrderCounter = 10000;
             Map<String,Object> itLoc = (Map<String,Object>)localization.getOrDefault("itemTypes",Collections.emptyMap());
             for (ItemType itemType : typesConfigDto.getItemTypes()) {
                 itLoc.forEach((k,v)->{
@@ -75,6 +78,12 @@ public class TypesLoader {
                         itemType.getLang().add(new LocalizedItem(k,text));
                     }
                 });
+                var itemViewOrder = itemViewOrders.get(itemType.getCode());
+                if (itemViewOrder!=null) {
+                    itemType.setViewOrder((Integer)itemViewOrder);
+                } else {
+                    itemType.setViewOrder(viewOrderCounter++);
+                }
                 itemType.setCode(itemType.getCode().replace("_", "~"));
                 if (DataType.JSON.equals(itemType.getType())) {
                     // json objects are not indexed

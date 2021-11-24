@@ -19,4 +19,5 @@ public class ItemType {
     private Boolean indexFolding;
     private Boolean indexBoost;
     private List<LocalizedItem> lang = new ArrayList<>();
+    private int viewOrder;
 }
