@@ -1,8 +1,13 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import { appHeaderHeight } from '../../styles';
+import { appHeaderHeight as _appHeaderHeight, compactAppHeaderHeight } from '../../styles';
 
-export const useStyles = makeStyles((theme) => {
+export interface StyleConfiguration {
+    compactAppHeader?: boolean;
+}
+
+export const useStyles = (configuration?: StyleConfiguration ) => makeStyles((theme) => {
   const lg = theme.breakpoints.up('lg');
+  const appHeaderHeight = configuration?.compactAppHeader ? compactAppHeaderHeight : _appHeaderHeight;
   return {
     appHeader: {
       width: '100%',
@@ -76,4 +81,4 @@ export const useStyles = makeStyles((theme) => {
       },
     },
   };
-});
+})();

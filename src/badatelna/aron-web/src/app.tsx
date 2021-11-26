@@ -69,7 +69,7 @@ function AppComponent() {
 
   useEffect(() => {
     const loadImages = async () => {
-      const logo = await getPageTemplateLogo();
+      const logo = configuration.showAppLogo ? await getPageTemplateLogo() : null;
       const topImage = await getPageTemplateTopImage();
 
       if (logo) {

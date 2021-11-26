@@ -3,6 +3,8 @@ import { AppHeaderItemCode } from '../../enums';
 
 export interface ConfigurationType {
     alternativeItemLabel?: boolean;
+    compactAppHeader?: boolean;
+    showAppLogo?: boolean,
     showHeader?: boolean;
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
@@ -12,6 +14,8 @@ export interface ConfigurationType {
 
 const defaultConfiguration:ConfigurationType = {
     alternativeItemLabel: false,
+    compactAppHeader: false,
+    showAppLogo: true,
     showHeader: true,
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,

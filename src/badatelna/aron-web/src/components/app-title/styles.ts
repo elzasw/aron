@@ -1,8 +1,14 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
-import { appHeaderHeight } from '../../styles';
+import { appHeaderHeight as _appHeaderHeight, compactAppHeaderHeight } from '../../styles';
 
-export const useStyles = makeStyles((theme) => ({
+export interface StyleConfiguration {
+    compactAppHeader?: boolean;
+}
+
+export const useStyles = (configuration?: StyleConfiguration ) => makeStyles((theme) => {
+  const appHeaderHeight = configuration?.compactAppHeader ? compactAppHeaderHeight : _appHeaderHeight;
+  return {
   appTitle: {
     fontSize: '1.2rem',
     color: '#fff',
@@ -55,4 +61,4 @@ export const useStyles = makeStyles((theme) => ({
       display: 'block',
     },
   },
-}));
+}})();

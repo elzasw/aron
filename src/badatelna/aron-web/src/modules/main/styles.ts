@@ -1,12 +1,12 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import { appHeaderHeight, colorBlueVeryLight } from '../../styles';
+import { colorBlueVeryLight } from '../../styles';
 
 export const useStyles = makeStyles((theme) => {
   return {
     main: {
       position: 'relative',
       background: colorBlueVeryLight,
-      minHeight: `calc(100% - ${appHeaderHeight})`,
+      minHeight: `calc(100%)`,
     },
     mainBackgroundIcon: {
       transform: 'rotate(15deg)',

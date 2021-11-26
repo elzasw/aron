@@ -8,9 +8,11 @@ import { NavigationContext } from '@eas/common-web';
 import { ModulePath, Message } from '../../enums';
 import { useStyles } from './styles';
 import { Props } from './types';
+import { useConfiguration } from '../configuration'
 
 export function AppTitle({ appLogo }: Props) {
-  const classes = useStyles();
+  const configuration = useConfiguration();
+  const classes = useStyles({compactAppHeader: configuration.compactAppHeader});
   const location = useLocation();
 
   const { navigate } = useContext(NavigationContext);
@@ -25,24 +27,25 @@ export function AppTitle({ appLogo }: Props) {
       )}
       onClick={() => isClickable && !appLogo && navigate(ModulePath.MAIN)}
     >
-      {appLogo ? (
-        <img
-          src={appLogo}
-          className={classNames(
-            classes.appTitleLogo,
-            isClickable && classes.appTitleLogoClickable
-          )}
-          onClick={() => isClickable && navigate(ModulePath.MAIN)}
-        />
-      ) : (
-        <>
-          <span className={classes.appTitleFirst}>
-            <FormattedMessage id={Message.ARCHIVE} />
-          </span>
-          &nbsp;
-          <FormattedMessage id={Message.ONLINE} />
-        </>
-      )}
+      {configuration.showAppLogo &&
+        (appLogo ? (
+          <img
+            src={appLogo}
+            className={classNames(
+              classes.appTitleLogo,
+              isClickable && classes.appTitleLogoClickable
+            )}
+            onClick={() => isClickable && navigate(ModulePath.MAIN)}
+          />
+        ) : (
+          <>
+            <span className={classes.appTitleFirst}>
+              <FormattedMessage id={Message.ARCHIVE} />
+            </span>
+            &nbsp;
+            <FormattedMessage id={Message.ONLINE} />
+          </>
+      ))}
       <div />
     </div>
   );

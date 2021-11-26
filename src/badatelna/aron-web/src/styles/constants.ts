@@ -15,6 +15,7 @@ export const colorText = colorGrey;
 /* SIZE */
 
 export const appHeaderHeight = '6rem';
+export const compactAppHeaderHeight = '2rem';
 export const breadcrumbsHeight = '2.5rem';
 
 /* STYLE */

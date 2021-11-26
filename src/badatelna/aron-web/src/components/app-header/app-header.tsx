@@ -16,11 +16,11 @@ import { Props } from './types';
 import { useConfiguration } from '../configuration'
 
 export function AppHeader({ pageTemplate, ...props }: Props) {
-  const classes = useStyles();
+  const configuration = useConfiguration();
+  const classes = useStyles({compactAppHeader: configuration.compactAppHeader});
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
   const location = useLocation();
-  const configuration = useConfiguration();
   const [open, setOpen] = useState(false);
 
   const [result] = useGet<string>(ApiUrl.HELP, { textResponse: true });
