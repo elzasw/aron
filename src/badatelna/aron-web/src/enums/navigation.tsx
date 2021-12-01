@@ -9,10 +9,12 @@ import { Message } from './message';
 import { ConfigurationType } from '../components'
 
 export enum AppHeaderItemCode {
+  ARCHIVE = "ARCHIVE",
   FUND = "FUND",
   FINDING_AID = "FINDING_AID",
   ARCH_DESC = "ARCH_DESC",
   ENTITY = "ENTITY",
+  ORIGINATOR = "ORIGINATOR",
   NEWS = "NEWS",
   HELP = "HELP",
 }
@@ -26,6 +28,11 @@ export interface NavigationItem {
 }
 
 export const appHeaderItems:Record<AppHeaderItemCode, NavigationItem> = {
+  ARCHIVE: {
+    path: ModulePath.ARCHIVE,
+    label: <FormattedMessage id={Message.ARCHIVES} />,
+    Component: Evidence,
+  },
   FUND: {
     path: ModulePath.FUND,
     label: <FormattedMessage id={Message.FUND} />,
@@ -44,6 +51,11 @@ export const appHeaderItems:Record<AppHeaderItemCode, NavigationItem> = {
   ENTITY: {
     path: ModulePath.ENTITY,
     label: <FormattedMessage id={Message.ENTITY} />,
+    Component: Evidence,
+  },
+  ORIGINATOR: {
+    path: ModulePath.ORIGINATOR,
+    label: <FormattedMessage id={Message.ORIGINATORS} />,
     Component: Evidence,
   },
   NEWS: {

@@ -9,6 +9,7 @@ export const CZECH = {
   [M.APP_LOADING_FAILED]: 'Chyba: Nepodařilo se načíst aplikaci.',
   [M.ARCH_DESC_DAO_ONLY]: 'Archiválie - pouze s digitalizáty',
   [M.ARCHIVE]: 'Archiv',
+  [M.ARCHIVES]: 'Archivy',
   [M.ATTACHMENTS]: 'Přílohy',
   [M.BASIC_INFORMATION]: 'Základní informace',
   [M.CANCEL]: 'Zrušit',
@@ -47,6 +48,7 @@ export const CZECH = {
   [M.NO_ITEMS_FOUND]:
     'Žádné položky nenalezeny. Zkuste změnit zadaná kritéria.',
   [M.ONLINE]: 'Online',
+  [M.ORIGINATORS]: 'Původci',
   [M.OTHER_DAOS]: 'Další digitalizáty',
   [M.PER_PAGE]: 'Počet na stránce',
   [M.PREVIOUS_PAGE]: 'Předchozí strana',

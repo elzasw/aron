@@ -61,8 +61,7 @@ export const FilterDialog = forwardRef<DialogHandle, FilterDialogProps>(
           facetsOnPath,
           apuPartItemTypes,
           filterConfig,
-          typeFilter,
-          queryFilter
+          [typeFilter, queryFilter]
         );
 
         const filtered = filterMappedFilters(mapped, path);

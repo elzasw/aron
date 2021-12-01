@@ -12,6 +12,10 @@ export const getTypeByPath = (path: ModulePath) => {
       return ApuType.FINDING_AID;
     case ModulePath.ARCH_DESC:
       return ApuType.ARCH_DESC;
+    case ModulePath.ARCHIVE:
+      return ApuType.ENTITY;
+    case ModulePath.ORIGINATOR:
+      return ApuType.ENTITY;
     default:
       return null;
   }

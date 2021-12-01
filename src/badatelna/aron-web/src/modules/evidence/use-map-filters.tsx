@@ -40,8 +40,7 @@ const getEnumOptions = async (
   source: string,
   apuPartItemTypes: ApuPartItemType[],
   filters: FilterConfig[],
-  typeFilter: Filter,
-  queryFilter: Filter
+  additionalFilters: Filter[],
 ) => {
   const response = await fetch(createUrl(`${ApiUrl.APU}/list`), {
     method: 'POST',
@@ -64,8 +63,7 @@ const getEnumOptions = async (
         },
       ],
       filters: filterApiFilters([
-        typeFilter,
-        queryFilter,
+        ...additionalFilters,
         ...createApiFilters(filters.filter((f) => f.source !== source)),
       ]),
     }),
@@ -78,12 +76,11 @@ export const getEnumsOptions = async (
   sources: string[],
   apuPartItemTypes: ApuPartItemType[],
   filters: FilterConfig[],
-  typeFilter: Filter,
-  queryFilter: Filter
+  additionalFilters: Filter[],
 ) => {
   try {
     const promisses = sources.map((source) =>
-      getEnumOptions(source, apuPartItemTypes, filters, typeFilter, queryFilter)
+      getEnumOptions(source, apuPartItemTypes, filters, additionalFilters)
     );
 
     let result = {};
@@ -146,8 +143,7 @@ export function useMapFilters() {
     facets: Facet[],
     apuPartItemTypes: ApuPartItemType[],
     filters: FilterConfig[],
-    typeFilter: Filter,
-    queryFilter: Filter
+    additionalFilters: Filter[],
   ): Promise<FilterConfig[]> => {
     const merged: BasicFilterConfig[] = [...facets];
 
@@ -203,8 +199,7 @@ export function useMapFilters() {
         .map((item) => item.source),
       apuPartItemTypes,
       mapped,
-      typeFilter,
-      queryFilter
+      additionalFilters
     );
 
     // add options

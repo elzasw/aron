@@ -185,6 +185,19 @@ export const getParentBreadcrumbs = (parent?: ApuEntity) => {
   return reverse(breadcrumbs);
 };
 
+export const getPathSpecificFilters = (path: ModulePath) => {
+    switch (path) {
+        case ModulePath.ORIGINATOR:
+            return [{
+                field: "AE~ORIGINATOR",
+                operation: ApiFilterOperation.EQ,
+                value: "ANO",
+            }];
+        default:
+            return [];
+    }
+}
+
 export const createApiFilters = (filters: FilterConfig[]) => {
   return filters.length
     ? compact(

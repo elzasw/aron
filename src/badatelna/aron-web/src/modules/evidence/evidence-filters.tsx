@@ -29,6 +29,7 @@ import {
   filterApiFilters,
   filterFacets,
   filterMappedFilters,
+  getPathSpecificFilters,
 } from './utils';
 import { useMapFilters } from './use-map-filters';
 
@@ -54,6 +55,7 @@ interface IFilterContext {
   apiFiltersOnly: Filter[];
   typeFilter: Filter;
   queryFilter: Filter;
+  pathSpecificFilters: Filter[];
   updatePage: (page: number) => void;
   updatePageSize: (pageSize: number) => void;
   updateQuery: (query: string) => void;
@@ -130,14 +132,19 @@ function useFiltersContext({
     [query]
   );
 
+  const pathSpecificFilters = useMemo(
+    () => getPathSpecificFilters(path),
+    [path]
+  );
+
   const apiFiltersOnly = useMemo(
     () => filterApiFilters(createApiFilters(filters)),
     [filters]
   );
 
   const apiFilters = useMemo(
-    () => filterApiFilters([typeFilter, queryFilter, ...apiFiltersOnly]),
-    [typeFilter, queryFilter, apiFiltersOnly]
+    () => filterApiFilters([typeFilter, queryFilter, ...pathSpecificFilters, ...apiFiltersOnly]),
+    [typeFilter, queryFilter, pathSpecificFilters, apiFiltersOnly]
   );
 
   /*********************************
@@ -277,8 +284,7 @@ function useFiltersContext({
       facets,
       apuPartItemTypes,
       newFiltersFromUrl,
-      typeFilter,
-      queryFilter
+      [typeFilter, queryFilter, ...pathSpecificFilters]
     );
 
     const newFilters = filterMappedFilters(mappedFilters, path);
@@ -424,6 +430,7 @@ function useFiltersContext({
       apiFiltersOnly,
       typeFilter,
       queryFilter,
+      pathSpecificFilters,
       updatePage,
       updatePageSize,
       updateQuery,
@@ -441,6 +448,7 @@ function useFiltersContext({
       apiFiltersOnly,
       typeFilter,
       queryFilter,
+      pathSpecificFilters,
       updatePage,
       updatePageSize,
       updateQuery,
