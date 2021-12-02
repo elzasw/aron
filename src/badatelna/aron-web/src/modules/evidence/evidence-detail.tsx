@@ -43,6 +43,7 @@ import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { EvidenceIcon } from './evidence-icon';
 import { LocaleContext } from '@eas/common-web';
+import { EvidenceShareButtons } from './evidence-share-buttons';
 
 export function EvidenceDetail({
   apuPartTypes,
@@ -343,6 +344,7 @@ export function EvidenceDetail({
                   ) : (
                     <></>
                   )}
+                  <EvidenceShareButtons item={item}/>
                   {archdescRootRef ? (
                     <Link
                       to={{

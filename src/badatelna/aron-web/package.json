@@ -41,6 +41,7 @@
     "react-intl": "4.7.2",
     "react-pdf": "5.0.0",
     "react-router-dom": "5.2.0",
+    "react-share": "^4.4.0",
     "regenerator-runtime": "^0.13.5",
     "use-debounce": "3.4.2",
     "yup": "^0.29.3"

@@ -6,6 +6,7 @@ export interface ConfigurationType {
     compactAppHeader?: boolean;
     showAppLogo?: boolean,
     showHeader?: boolean;
+    showShareButtons?: boolean;
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
     headerItems?: Array<AppHeaderItemCode>;
@@ -17,6 +18,7 @@ const defaultConfiguration:ConfigurationType = {
     compactAppHeader: false,
     showAppLogo: true,
     showHeader: true,
+    showShareButtons: false,
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
     headerItems: [

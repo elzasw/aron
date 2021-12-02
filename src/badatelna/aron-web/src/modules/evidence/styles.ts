@@ -455,5 +455,23 @@ export const useStyles =  makeStyles((theme) => {
         marginBottom: '1.1em',
       },
     },
+
+    shareButtonsContainer: {
+      display: 'flex',
+      marginBottom: '8px',
+    },
+
+    shareIcon: {
+      height: '100%',
+      width: '100%',
+    },
+
+    shareButton: {
+      height: '30px',
+      display: 'flex',
+      margin: theme.spacing(0.5),
+      overflow: 'hidden',
+      borderRadius: theme.shape.borderRadius,
+    }
   };
 });
