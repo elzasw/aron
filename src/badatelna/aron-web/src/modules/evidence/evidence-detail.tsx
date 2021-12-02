@@ -376,14 +376,14 @@ export function EvidenceDetail({
                   )}
                 </div>
               </div>
-              <DoubleArrowIcon
+              {configuration.allowDetailExpand && <DoubleArrowIcon
                 className={classNames(
                   classes.evidenceDetailTopIcon,
                   open && classes.evidenceDetailTopIconOpen,
                   spacingClasses.marginBottom
                 )}
                 onClick={() => setOpen(!open)}
-              />
+              />}
             </div>
           ) : (
             <></>

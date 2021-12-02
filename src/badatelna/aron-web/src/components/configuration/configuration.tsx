@@ -2,6 +2,7 @@ import React, { FC, useContext, createContext } from 'react';
 import { AppHeaderItemCode } from '../../enums';
 
 export interface ConfigurationType {
+    allowDetailExpand?: boolean,
     alternativeItemLabel?: boolean;
     compactAppHeader?: boolean;
     showAppLogo?: boolean,
@@ -14,6 +15,7 @@ export interface ConfigurationType {
 
 
 const defaultConfiguration:ConfigurationType = {
+    allowDetailExpand: true,
     alternativeItemLabel: false,
     compactAppHeader: false,
     showAppLogo: true,

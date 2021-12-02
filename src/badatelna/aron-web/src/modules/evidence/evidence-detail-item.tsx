@@ -55,6 +55,26 @@ export function EvidenceDetailItem({
 
   const isGrouped = viewType === ApuPartViewType.GROUPED;
 
+  const renderGroupedItems = () => {
+    return <div
+      className={classNames(
+        classes.evidenceDetailItemText,
+        classes.bold,
+        open && spacingClasses.paddingBottomSmall
+      )}
+      style={configuration.allowDetailExpand ? { cursor: 'pointer' } : {}}
+      onClick={() => configuration.allowDetailExpand && setOpen(!open)}
+    >
+      {items
+        .filter(({ type }) => type !== ApuPartItemDataType.APU_REF)
+        .map(({ value, type }, i) => (
+          <React.Fragment key={`${value}-${i}`}>
+            <EvidenceDetailItemValue {...{ value, type }} />{' '}
+          </React.Fragment>
+        ))}
+    </div>
+  }
+
   return (
     <div
       className={classNames(
@@ -79,34 +99,16 @@ export function EvidenceDetailItem({
                 {name}
             </div>
         }
-        {isGrouped ? (
-          <Tooltip
+        {isGrouped && (
+          configuration.allowDetailExpand ? <Tooltip
             title={
               <FormattedMessage
                 id={open ? Message.CLICK_TO_COLLAPSE : Message.CLICK_TO_EXPAND}
               />
             }
           >
-            <div
-              className={classNames(
-                classes.evidenceDetailItemText,
-                classes.bold,
-                open && spacingClasses.paddingBottomSmall
-              )}
-              style={{ cursor: 'pointer' }}
-              onClick={() => setOpen(!open)}
-            >
-              {items
-                .filter(({ type }) => type !== ApuPartItemDataType.APU_REF)
-                .map(({ value, type }, i) => (
-                  <React.Fragment key={`${value}-${i}`}>
-                    <EvidenceDetailItemValue {...{ value, type }} />{' '}
-                  </React.Fragment>
-                ))}
-            </div>
-          </Tooltip>
-        ) : (
-          <div />
+            {renderGroupedItems()}
+          </Tooltip> : renderGroupedItems()
         )}
       </div>
       {open ? (
