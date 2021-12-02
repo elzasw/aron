@@ -10,6 +10,10 @@ export const Footer = ({ pageTemplate }: Props) => {
   const classes = useStyles();
   const spacingClasses = useSpacingStyles();
 
+  if( !pageTemplate?.homepage?.footerCenter && !pageTemplate?.homepage?.footerRight) { 
+    return <></>; 
+  }
+
   return (
     <div className={classes.mainFooter}>
       <div className={spacingClasses.padding}>
@@ -20,14 +24,14 @@ export const Footer = ({ pageTemplate }: Props) => {
                 pageTemplate.homepage.footerCenter,
                 pageTemplate.homepage.footerRight,
               ].map((item) => (
-                <div
+                item ? <div
                   key={item}
                   className={classNames(
                     classes.mainFooterSection,
                     spacingClasses.padding
                   )}
                   dangerouslySetInnerHTML={{ __html: item }}
-                />
+                /> : <></>
               ))}
             </div>
           ) : (
