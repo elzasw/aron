@@ -63,6 +63,7 @@ export const useGetOptionsBySource = (
   apiFilters: Filter[]
 ) => {
   const field = isApuRef ? `${source}~ID~LABEL` : source;
+  const fieldLabel = isApuRef ? `${source}~LABEL` : source;
 
   const [result, loading] = useApiList(ApiUrl.APU, {
     json: {
@@ -83,7 +84,7 @@ export const useGetOptionsBySource = (
         ...(query
           ? [
               {
-                field,
+                field: fieldLabel,
                 operation: ApiFilterOperation.CONTAINS,
                 value: query,
               },

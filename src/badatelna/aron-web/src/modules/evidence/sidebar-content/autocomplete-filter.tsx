@@ -67,7 +67,10 @@ export function AutocompleteFilter({
   }));
 
   const options = allOptions
-    .filter(({ name }: { name: string }) => !query || name.indexOf(query) >= 0)
+    .filter(({ name }: { name: string }) => {
+      const decomposedName = name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // remove diacritical marks
+      return !query || decomposedName.toLowerCase().indexOf(query.toLowerCase()) >= 0
+    })
     .map((option: { id: string; name: string; value: string }) => ({
       id: option.id,
       name: `${option.name} (${option.value})`,
