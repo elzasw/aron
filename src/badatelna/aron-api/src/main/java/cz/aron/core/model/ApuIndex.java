@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.TEXT_LONG_KEYWORD;
 import static org.springframework.data.elasticsearch.core.document.Document.parse;
@@ -97,7 +98,10 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
             fieldProperties.put("type", dataType);
             customMapping.put(allItemType.getCode(), fieldProperties);
             if (allItemType.getType() == DataType.APU_REF) {
-                customMapping.put(allItemType.getCode() + "~LABEL", fieldProperties);
+                Map<String, Object> labelFieldProperties = new HashMap<>();
+                labelFieldProperties.put("analyzer", FOLDING_AND_TOKENIZING);
+                labelFieldProperties.put("type", "text");
+                customMapping.put(allItemType.getCode() + "~LABEL", labelFieldProperties);
                 customMapping.put(allItemType.getCode() + "~ID~LABEL", fieldProperties);
             }
         }
@@ -157,8 +161,8 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
 
             if (allItemType.getType() == DataType.APU_REF) {
                 String labelFieldName = fieldName + "~LABEL";
-                indexedFieldProps = new IndexedFieldProps(fieldType, true, null, false);
-                IndexFieldLeafNode indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, false, 1.0f, new HashSet<>());
+                indexedFieldProps = new IndexedFieldProps(FieldType.Text, true, FOLDING_AND_TOKENIZING, false);
+                IndexFieldLeafNode indexLabelFieldLeafNode = new IndexFieldLeafNode(IndexedApu.class, labelFieldName, String.class, indexedFieldProps, null, true, 1.0f, new HashSet<>());
                 dynamicFields.put(labelFieldName, indexLabelFieldLeafNode);
                 labelFieldName = fieldName + "~ID~LABEL";
                 indexedFieldProps = new IndexedFieldProps(fieldType, true, null, false);
