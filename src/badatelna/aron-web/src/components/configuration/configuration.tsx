@@ -1,5 +1,5 @@
 import React, { FC, useContext, createContext } from 'react';
-import { AppHeaderItemCode } from '../../enums';
+import { AppHeaderItemCode, SearchOption } from '../../enums';
 
 export interface ConfigurationType {
     allowDetailExpand?: boolean,
@@ -10,7 +10,8 @@ export interface ConfigurationType {
     showShareButtons?: boolean;
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
-    headerItems?: Array<AppHeaderItemCode>;
+    headerItems?: AppHeaderItemCode[];
+    searchOptions?: SearchOption[];
 }
 
 
@@ -31,6 +32,13 @@ const defaultConfiguration:ConfigurationType = {
         AppHeaderItemCode.NEWS,
         AppHeaderItemCode.HELP,
     ],
+    searchOptions: [
+        SearchOption.ARCH_DESC_DAO_ONLY,
+        SearchOption.ARCH_DESC,
+        SearchOption.FUND,
+        SearchOption.FINDING_AID,
+        SearchOption.ENTITY,
+    ]
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)

@@ -9,3 +9,4 @@ export * from './module';
 export * from './navigation';
 export * from './evidence';
 export * from './json';
+export * from './search-option';

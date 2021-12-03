@@ -1,19 +1,55 @@
+import { ApiFilterOperation } from '@eas/common-web';
 import { useIntl } from 'react-intl';
+import { useConfiguration } from '../components';
+import { FacetType, Message, ModulePath, SearchOption } from '../enums';
 
-import {
-  ModulePath,
-  Message,
-  // FacetType
-} from '../enums';
-// import { ApiFilterOperation } from '../types';
+interface SearchOptionFilter {
+    source: string;
+    type?: FacetType;
+    operation?: ApiFilterOperation;
+    value: (boolean | string)[];
+}
+
+interface SearchOptionType {
+    path: string;
+    name: string;
+    filters?: SearchOptionFilter[];
+}
 
 export function useSearchOptions() {
   const { formatMessage } = useIntl();
+  const configuration = useConfiguration();
 
-  return [
-    {
-      name: formatMessage({ id: Message.ARCH_DESC_DAO_ONLY }),
+  if(!configuration.searchOptions){return []}
+
+  const searchOptions:Partial<Record<SearchOption, SearchOptionType>> = {
+    ARCHIVE: {
+      path: ModulePath.ARCHIVE,
+      name: formatMessage({id: Message.ARCHIVES}),
+    },
+    FUND: {
+      path: ModulePath.FUND,
+      name: formatMessage({id: Message.FUND}),
+    },
+    FINDING_AID: {
+      path: ModulePath.FINDING_AID,
+      name: formatMessage({id: Message.FINDING_AID}),
+    },
+    ARCH_DESC: {
       path: ModulePath.ARCH_DESC,
+      name: formatMessage({id: Message.ARCH_DESC}),
+    },
+    ENTITY: {
+      path: ModulePath.ENTITY,
+      name: formatMessage({id: Message.ENTITY}),
+    },
+    ORIGINATOR: {
+      path: ModulePath.ORIGINATOR,
+      name: formatMessage({id: Message.ORIGINATORS}),
+    },
+    ARCH_DESC_DAO_ONLY: {
+      path: ModulePath.ARCH_DESC,
+      name: formatMessage({ id: Message.ARCH_DESC_DAO_ONLY }),
       filters: [
         // {
         //   source: 'containsDigitalObjects',
@@ -26,16 +62,18 @@ export function useSearchOptions() {
           value: ['Ano'],
         },
       ],
-    },
-    {
-      name: formatMessage({ id: Message.ARCH_DESC }),
-      path: ModulePath.ARCH_DESC,
-    },
-    { name: formatMessage({ id: Message.FUND }), path: ModulePath.FUND },
-    {
-      name: formatMessage({ id: Message.FINDING_AID }),
-      path: ModulePath.FINDING_AID,
-    },
-    { name: formatMessage({ id: Message.ENTITY }), path: ModulePath.ENTITY },
-  ];
+    }
+  };
+
+  const items:SearchOptionType[] = [];
+
+  configuration.searchOptions.forEach((itemCode)=>{
+      const item = searchOptions[itemCode];
+      if(item){
+        items.push(item);
+      }
+    }
+  )
+
+  return items;
 }
