@@ -193,6 +193,11 @@ export const getPathSpecificFilters = (path: ModulePath) => {
                 operation: ApiFilterOperation.EQ,
                 value: "ANO",
             }];
+        case ModulePath.ARCHIVE:
+          return [{
+            field: "INST~CODE",
+            operation: ApiFilterOperation.NOT_NULL,
+          }];
         default:
             return [];
     }
@@ -296,7 +301,8 @@ export const filterApiFilters = (filters?: any[]): any[] =>
 
           return (item.value && !isAndOrNot) ||
             (isAndOrNot && filtersOk) ||
-            item.operation === ApiFilterOperation.RANGE
+            item.operation === ApiFilterOperation.RANGE ||
+            item.operation === ApiFilterOperation.NOT_NULL
             ? {
                 ...omit(item, isAndOrNot ? ['field', 'value'] : []),
                 ...(filtersOk ? { filters: filterApiFilters(filters) } : {}),
