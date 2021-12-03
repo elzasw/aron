@@ -62,9 +62,16 @@ public class FileImportService implements SmartLifecycle {
             }
     	}
     }
+    
+    private void logProcessors() {
+    	for(var importProcessor: importProcessors) {
+    		log.info("Import processor={}, priority={}",importProcessor.getClass(),importProcessor.getPriority());
+    	}
+    }
 
     public void run() {
         log.info("Import service is running.");
+        logProcessors();
         
         while (status == ThreadStatus.RUNNING) {
             try {
@@ -113,7 +120,7 @@ public class FileImportService implements SmartLifecycle {
 	    for(int i=0; i<importProcessors.size(); i++) {
 	        var p = importProcessors.get(i);
 	        if(importProcessor.getPriority()>p.getPriority()) {
-	            importProcessors.add(0, importProcessor);
+	            importProcessors.add(i, importProcessor);
 	            return;
 	        }		
 	    }

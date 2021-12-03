@@ -9,6 +9,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -22,14 +23,14 @@ import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
-@ConditionalOnProperty(value = "peva2.importFindingAidCopy")
+@ConditionalOnProperty(value = "peva2.url")
 public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportFindingAidCopy.class);
 	
 	public Peva2ImportFindingAidCopy(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService) {
-		super("FINDINGAID_COPY", peva2, propertyRepository, config, tt, storageService);
+			TransactionTemplate tt, StorageService storageService, @Value("${peva2.importFindingAidCopy:false}") boolean active) {
+		super("FINDINGAID_COPY", peva2, propertyRepository, config, tt, storageService, active);	
 	}
 
 	@Override
@@ -92,6 +93,5 @@ public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 			}
 		}
 	}
-
 
 }

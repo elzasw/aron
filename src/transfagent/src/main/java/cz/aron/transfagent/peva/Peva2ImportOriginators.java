@@ -9,12 +9,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.Dynasty;
 import cz.aron.peva2.wsdl.Event;
+import cz.aron.peva2.wsdl.GetOriginatorRequest;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.ListOriginatorRequest;
 import cz.aron.peva2.wsdl.Originator;
@@ -26,7 +28,7 @@ import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
 
 @Service
-@ConditionalOnProperty(value = "peva2.importOriginators")
+@ConditionalOnProperty(value = "peva2.url")
 public class Peva2ImportOriginators extends Peva2Downloader {
 
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportOriginators.class);
@@ -34,8 +36,9 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 	public static final String PREFIX = "pevaoriginator-";
 
 	public Peva2ImportOriginators(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService) {
-		super("ORIGINATOR", peva2, propertyRepository, config, tt, storageService);
+			TransactionTemplate tt, StorageService storageService,
+			@Value("${peva2.importOriginator:false}") boolean active) {
+		super("ORIGINATOR", peva2, propertyRepository, config, tt, storageService, active);
 	}
 
 	@Override
@@ -114,6 +117,36 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 				log.error("Fail to store peva originator {} to input dir", originator.getId(), e);
 			}
 		}
+	}
+
+	@Override
+	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {	
+		var fileName = path.getFileName().toString();
+		if (!fileName.startsWith(PREFIX)) {
+			// not my command
+			return false;
+		}
+		var id = fileName.substring(PREFIX.length());		
+		var goReq = new GetOriginatorRequest();
+		goReq.setId(id);
+		var goResp = peva2.getOriginator(goReq);
+		
+		Originator originator = goResp.getDynasty();
+		if (originator==null) {
+			originator = goResp.getEvent();
+		}
+		if (originator==null) {
+			originator = goResp.getPartyGroup();
+		}
+		if (originator==null) {
+			originator = goResp.getPerson();
+		}
+		if (originator==null) {
+			log.error("Fail to process command {}",path);
+			return true;
+		}		
+		patchOriginatorsBatch(Collections.singletonList(originator),codeListProvider.getCodeLists());		
+		return true;
 	}
 
 }

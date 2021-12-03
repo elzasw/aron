@@ -27,6 +27,7 @@ import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Fund;
+import cz.aron.transfagent.peva.ImportPevaFundInfo.FundIgnored;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundProvider;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -152,6 +153,8 @@ public class ImportPevaFund implements FundImporter, FundProvider {
         } catch (JAXBException e) {
         	log.error("Fail to import fund, fail to parse data, path={}",fundXml,e);
             throw new IllegalStateException(e);
+        } catch (FundIgnored fu) {
+        	return true;
         }
         
 		var attachments = new ArrayList<Path>();
@@ -225,8 +228,14 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 	public NadPrimarySheet getFundByUUID(UUID uuid) throws IOException, JAXBException {		
 		var path = tt.execute(t->{
 			var fund = fundRepository.findByUuid(uuid);
+			if (fund==null) {
+				return null;
+			}
 			return storageService.getDataPath().resolve(fund.getApuSource().getDataDir());				
 		});
+		if (path==null) {
+			return null;
+		}
 		return readPevaFundFromDir(path);
 	}
 	

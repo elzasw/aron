@@ -105,7 +105,7 @@ public class ImportPevaOriginator implements OriginatorImporter {
 			log.error("Fail to import originator", e);
 			throw new IllegalStateException(e);
 		}
-		return false;
+		return true;
 	}
 	
 	@Override

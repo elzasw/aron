@@ -41,7 +41,12 @@ public class ImportOriginatorService extends ImportDirProcessor implements Reimp
     void register() {
         reimportService.registerReimportProcessor(this);
         fileImportService.registerImportProcessor(this);
-    }
+    }	
+
+	@Override
+	public int getPriority() {
+		return 9;
+	}
 
 	@Override
 	public Result reimport(ApuSource apuSource) {

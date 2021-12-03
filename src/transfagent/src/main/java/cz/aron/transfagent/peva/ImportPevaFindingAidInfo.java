@@ -177,7 +177,7 @@ public class ImportPevaFindingAidInfo {
 	private String createFindingAidName(InstitutionInfo institutionInfo, FindingAid findingAid) {
 		if (findingAidProperties.isComposedFindingAidName()) {
 			var findingAidType = codeLists.getFindingAidType(findingAid.getType());
-			if (StringUtils.isNotEmpty(findingAidType)) {
+			if (StringUtils.isEmpty(findingAidType)) {
 				findingAidType = "";
 			}
 			var formTypes = getFormTypes(findingAid); 			

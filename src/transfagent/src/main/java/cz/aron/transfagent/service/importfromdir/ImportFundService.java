@@ -82,6 +82,7 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     		ImportResult importResult = fundImporter.processPath(dir);
     		switch(importResult) {
     		case IMPORTED:
+    		case IGNORED:
     			imported = true;
     			break out;
     		case FAIL:
@@ -122,7 +123,8 @@ public class ImportFundService extends ImportDirProcessor implements ReimportPro
     	enum ImportResult {
     		IMPORTED,
     		FAIL,
-    		UNSUPPORTED
+    		UNSUPPORTED,
+    		IGNORED
     	}
     	
     	/**

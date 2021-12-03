@@ -11,6 +11,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -39,10 +40,10 @@ public class Peva2ImportFunds extends Peva2Downloader {
 	private LRUMap<String,String> fundUUIDToJaFa = null;
 
 	public Peva2ImportFunds(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService) {
-		super("FUND", peva2, propertyRepository, config, tt, storageService);
+			TransactionTemplate tt, StorageService storageService, @Value("${peva2.importFund:false}") boolean active) {
+		super("FUND", peva2, propertyRepository, config, tt, storageService, active);
 	}
-    
+   
 	@Override
     protected int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial, Peva2CodeListProvider codeListProvider) {                        
         String searchAfter = searchAfterInitial;
@@ -62,23 +63,15 @@ public class Peva2ImportFunds extends Peva2Downloader {
                         
             fundUUIDToJaFa = new LRUMap<String,String>(10000);            
             int numUpdatedFromBatch = 0;
-            try {
-            	if (config.getFundProperties().isImportAsCommand()) {
-            		createCommands(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet());
-            	} else {
-            		patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());
-            	}
+            try {            	
+            	patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());            	
                 numUpdatedFromBatch+=lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
             } catch (Exception e) {
                 log.error("Fail to update fund batch", e);
                 // zkusim to po jednom
                 for (NadSheet nadSheet : lnsResp.getItems().getNadPrimarySheetOrNadSubsheet()) {
                     try {
-                    	if (config.getFundProperties().isImportAsCommand()) {
-                    		createCommands(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet());   
-                    	} else {
-                    		patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
-                    	}
+                    	patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
                         numUpdatedFromBatch++;
                     } catch (Exception e1) {
                         log.error("Fail to update fund {}", nadSheet.getId(), e1);
@@ -98,9 +91,12 @@ public class Peva2ImportFunds extends Peva2Downloader {
     
     private void patchFundBatch(List<NadSheet> nadSheets, Peva2CodeLists codeLists) {    	
     	Path fundsInputDir = storageService.getInputPath().resolve("fund");
-		for (NadSheet nadSheet : nadSheets) {			
-			if (nadSheet instanceof NadPrimarySheet) {
-				NadPrimarySheet nps = (NadPrimarySheet)nadSheet;
+		for (NadSheet nadSheetId : nadSheets) {			
+			var gnsReqMain = new GetNadSheetRequest();
+			gnsReqMain.setId(nadSheetId.getId());
+			var gnsRespMain = peva2.getNadSheet(gnsReqMain);									
+			if (gnsRespMain.getNadPrimarySheet()!=null) {
+				NadPrimarySheet nps = gnsRespMain.getNadPrimarySheet();
 				InstitutionReference ir = nps.getInstitution();
 				String fundId = ArchiveFundId.createJaFaId(ir.getExternalId(),nps.getEvidenceNumber(),null);				
 				Path fundDir = fundsInputDir.resolve(PREFIX_DASH+fundId);			
@@ -111,20 +107,20 @@ public class Peva2ImportFunds extends Peva2Downloader {
 					gnsr.setNadPrimarySheet(nps);					
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
 				} catch (Exception e) {
-					log.error("Fail to store pevafund {} to input dir",nadSheet.getId(),e);
+					log.error("Fail to store pevafund {} to input dir",gnsRespMain.getNadPrimarySheet().getId(),e);
 					throw new IllegalStateException(e);
 				}
 				fundUUIDToJaFa.put(nps.getId(), nps.getEvidenceNumber());
-			} else if (nadSheet instanceof NadSubsheet) {
-				NadSubsheet nss = (NadSubsheet)nadSheet;
+			} else if (gnsRespMain.getNadSubsheet()!=null) {
+				NadSubsheet nss = gnsRespMain.getNadSubsheet();
 				var parentUUID = nss.getParent();				
 				var evidenceNumber = fundUUIDToJaFa.get(parentUUID);
 				if (evidenceNumber==null) {
-					var gnsReq = new GetNadSheetRequest();
-					gnsReq.setId(parentUUID);
-					var gnsResp = peva2.getNadSheet(gnsReq);
-					evidenceNumber = gnsResp.getNadPrimarySheet().getEvidenceNumber();
-					fundUUIDToJaFa.put(gnsResp.getNadPrimarySheet().getId(), evidenceNumber);
+					var gnsReqParent = new GetNadSheetRequest();
+					gnsReqParent.setId(parentUUID);
+					var gnsRespParent = peva2.getNadSheet(gnsReqParent);
+					evidenceNumber = gnsRespParent.getNadPrimarySheet().getEvidenceNumber();
+					fundUUIDToJaFa.put(gnsRespParent.getNadPrimarySheet().getId(), evidenceNumber);
 				}												
 				InstitutionReference ir = nss.getInstitution();
 				var fundId = ArchiveFundId.createJaFaId(ir.getExternalId(),evidenceNumber,""+nss.getNumber());				
@@ -136,7 +132,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 					gnsr.setNadSubsheet(nss);					
 					Peva2XmlReader.marshalGetNadSheetResponse(gnsr, name);
 				} catch (Exception e) {
-					log.error("Fail to store pevafund {} to input dir",nadSheet.getId(),e);
+					log.error("Fail to store pevafund {} to input dir",gnsRespMain.getNadSubsheet().getId(),e);
 					throw new IllegalStateException(e);
 				}
 			}

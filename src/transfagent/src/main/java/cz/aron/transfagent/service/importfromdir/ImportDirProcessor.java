@@ -30,10 +30,14 @@ public abstract class ImportDirProcessor implements ImportProcessor {
 		Path inputDir = getInputDir();
 		try {			
 			List<Path> dirs = FileHelper.getOrderedDirectories(inputDir);
+			if (!dirs.isEmpty()) {
+				log.info("Files to process {}, processor {}", dirs.size(), this.getClass());
+			}
 
 			for (Path dir : dirs) {
 	    		if(!processDirectory(dir)) {
 	    			ic.setFailed(true);
+					log.warn("Fail to process directory {}, processor  {}", dir, this.getClass());
 	    			return;
 	    		}
 	    		ic.addProcessed();

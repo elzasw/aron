@@ -21,7 +21,6 @@ import cz.aron.transfagent.elza.ApTypeService;
 import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportGeoService.GeoImporter;
-import cz.aron.transfagent.service.importfromdir.ImportOriginatorService.OriginatorImporter.ImportResult;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
@@ -29,7 +28,7 @@ import cz.aron.transfagent.transformation.DatabaseDataProvider;
 @ConditionalOnProperty(value = "peva2.url")
 public class ImportPevaGeo implements GeoImporter {
 	
-private static final Logger log = LoggerFactory.getLogger(ImportPevaOriginator.class);
+	private static final Logger log = LoggerFactory.getLogger(ImportPevaOriginator.class);
 	
 	public static final String ENTITY_CLASS = "pevageo";
 	
@@ -105,7 +104,7 @@ private static final Logger log = LoggerFactory.getLogger(ImportPevaOriginator.c
 			log.error("Fail to import originator", e);
 			throw new IllegalStateException(e);
 		}
-		return false;
+		return true;
 	}
 
 	@Override

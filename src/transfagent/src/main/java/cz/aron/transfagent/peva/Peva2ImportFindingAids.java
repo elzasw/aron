@@ -14,9 +14,9 @@ import java.util.regex.Pattern;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.collections4.map.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -24,9 +24,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.peva2.wsdl.FindingAid;
 import cz.aron.peva2.wsdl.GetFindingAidRequest;
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
-import cz.aron.peva2.wsdl.GetNadSheetRequest;
 import cz.aron.peva2.wsdl.ListFindingAidRequest;
-import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
@@ -41,8 +39,9 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 	private static final String PREFIX_DASH = "pevafa-";
 
 	public Peva2ImportFindingAids(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService) {
-		super("FINDINGAID", peva2, propertyRepository, config, tt, storageService);
+			TransactionTemplate tt, StorageService storageService,
+			@Value("${peva2.importFindingAid:false}") boolean active) {
+		super("FINDINGAID", peva2, propertyRepository, config, tt, storageService, active);
 	}
 
 	@Override

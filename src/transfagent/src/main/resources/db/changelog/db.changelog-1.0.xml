@@ -366,4 +366,55 @@
 
   </changeSet>
 
+  <changeSet  id="3" author="karel.zacek@lightcomp.cz">
+    <createIndex indexName="idx_archival_entity_apusource_id" tableName="archival_entity">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_archival_entity_parent_id" tableName="archival_entity">
+      <column name="parent_entity_id" />
+    </createIndex>
+    <createIndex indexName="idx_entity_source_apusource_id" tableName="entity_source">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_entity_source_entity_id" tableName="entity_source">
+      <column name="entity_id" />
+    </createIndex>
+    <createIndex indexName="idx_attachment_apusource_id" tableName="attachment">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_dao_apusource_id" tableName="dao">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_fund_code" tableName="fund">
+      <column name="code" />
+    </createIndex>
+    <createIndex indexName="idx_fund_uuid" tableName="fund">
+      <column name="uuid" />
+    </createIndex>
+    <createIndex indexName="idx_fund_apusource_id" tableName="fund">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_arch_desc_fund_id" tableName="arch_desc">
+      <column name="fund_id" />
+    </createIndex>
+    <createIndex indexName="idx_arch_desc_apusource_id" tableName="arch_desc">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_finding_aid_uuid" tableName="finding_aid">
+      <column name="uuid" />
+    </createIndex>
+    <createIndex indexName="idx_finding_aid_code" tableName="finding_aid">
+      <column name="code" />
+    </createIndex>
+    <createIndex indexName="idx_finding_aid_apusource_id" tableName="finding_aid">
+      <column name="apusource_id" />
+    </createIndex>
+    <createIndex indexName="idx_finding_aid_fund_finding_aid_id" tableName="finding_aid_fund">
+      <column name="finding_aid_id" />
+    </createIndex>
+    <createIndex indexName="idx_finding_aid_fund_fund_id" tableName="finding_aid_fund">
+      <column name="fund_id" />
+    </createIndex>
+  </changeSet>
+
 </databaseChangeLog>

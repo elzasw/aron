@@ -33,14 +33,17 @@ public abstract class Peva2Downloader {
 	protected final TransactionTemplate tt;
 
 	protected final StorageService storageService;
+	
+	private final boolean active;
 
 	public Peva2Downloader(String agendaName, PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService) {
+			TransactionTemplate tt, StorageService storageService, boolean active) {
 		this.peva2 = peva2;
 		this.propertyRepository = propertyRepository;
 		this.config = config;
 		this.tt = tt;
 		this.storageService = storageService;
+		this.active = active;
 		updateAfterPropertyName = "PEVA2_" + agendaName + "_UPDATE_AFTER";
 		searchAfterPropertyName = "PEVA2_" + agendaName + "_SEARCH_AFTER";
 	}
@@ -125,4 +128,11 @@ public abstract class Peva2Downloader {
 		return false;
 	}
 
+	/**
+	 * Update agendas when true. Process commands only otherwise. 
+	 * @return true active, false not active
+	 */
+	protected boolean isActive() {
+		return active;
+	}
 }

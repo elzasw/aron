@@ -1,28 +1,42 @@
 package cz.aron.transfagent.peva;
 
-import java.util.Map;
-
-import cz.aron.transfagent.peva.Peva2CodeLists.Peva2Geo;
+import cz.aron.transfagent.peva.codelist.AccessibilityProvider;
+import cz.aron.transfagent.peva.codelist.DatingMethodProvider;
+import cz.aron.transfagent.peva.codelist.EvidenceUnitTypeProvider;
+import cz.aron.transfagent.peva.codelist.FindingAidFormTypeProvider;
+import cz.aron.transfagent.peva.codelist.FindingAidTypeProvider;
+import cz.aron.transfagent.peva.codelist.GeoObjectTypeProvider;
+import cz.aron.transfagent.peva.codelist.IntegrityProvider;
+import cz.aron.transfagent.peva.codelist.LanguageProvider;
+import cz.aron.transfagent.peva.codelist.OriginatorSubClassProvider;
+import cz.aron.transfagent.peva.codelist.Peva2DatingMethod;
+import cz.aron.transfagent.peva.codelist.Peva2EvidenceUnitType;
+import cz.aron.transfagent.peva.codelist.Peva2GeoObjectType;
+import cz.aron.transfagent.peva.codelist.Peva2Language;
+import cz.aron.transfagent.peva.codelist.Peva2OriginatorSubclass;
+import cz.aron.transfagent.peva.codelist.Peva2ThematicEvidenceGroup;
+import cz.aron.transfagent.peva.codelist.PhysicalStateProvider;
+import cz.aron.transfagent.peva.codelist.ThematicEvidenceGroupProvider;
 
 public class Peva2CodeLists {
     
-    private final Map<String,String> accessibilities;
-    private final Map<String,String> physicalStates;
-    private final Map<String,String> integrity;    
-    private final Map<String, String> findingAidTypes;
-    private final Map<String, Peva2Language> languages;
-    private final Map<String, Peva2EvidenceUnitType> evidenceUnitTypes;
-    private final Map<String, String> findingAidFormTypes;
-    private final Map<String,Peva2OriginatorSubclass> originatorSubClasses;
-    private final Map<String,Peva2DatingMethod> datingMethods;
-    private final Map<String, Peva2ThematicGroup> thematicGroups;
-    private final Map<String, Peva2Geo> geoTypes;
+    private final AccessibilityProvider accessibilities;
+    private final PhysicalStateProvider physicalStates;
+    private final IntegrityProvider integrity;    
+    private final FindingAidTypeProvider findingAidTypes;
+    private final LanguageProvider languages;
+    private final EvidenceUnitTypeProvider evidenceUnitTypes;
+    private final FindingAidFormTypeProvider findingAidFormTypes;
+    private final OriginatorSubClassProvider originatorSubClasses;
+    private final DatingMethodProvider datingMethods;
+    private final ThematicEvidenceGroupProvider thematicGroups;
+    private final GeoObjectTypeProvider geoTypes;
     
-	public Peva2CodeLists(Map<String, String> accessibilities, Map<String, String> physicalStates,
-			Map<String, String> integrity, Map<String, String> findingAidTypes, Map<String, Peva2Language> languages,
-			Map<String, Peva2EvidenceUnitType> evidenceUnitTypes, Map<String, String> findingAidFormTypes,
-			Map<String,Peva2OriginatorSubclass> originatorSubClasses, Map<String,Peva2DatingMethod> datingMethods,
-			Map<String, Peva2ThematicGroup> thematicGroups, Map<String, Peva2Geo> geoTypes) {
+	public Peva2CodeLists(AccessibilityProvider accessibilities, PhysicalStateProvider physicalStates,
+			IntegrityProvider integrity, FindingAidTypeProvider findingAidTypes, LanguageProvider languages,
+			EvidenceUnitTypeProvider evidenceUnitTypes, FindingAidFormTypeProvider findingAidFormTypes,
+			OriginatorSubClassProvider originatorSubClasses, DatingMethodProvider datingMethods,
+			ThematicEvidenceGroupProvider thematicGroups, GeoObjectTypeProvider geoTypes) {
 		this.accessibilities = accessibilities;
 		this.physicalStates = physicalStates;
 		this.integrity = integrity;
@@ -37,177 +51,47 @@ public class Peva2CodeLists {
 	}
 
     public String getAccessibilityName(String id) {
-        return accessibilities.get(id);
+        return accessibilities.getItemById(id);
     }
 
     public String getPhysicalStateName(String id) {
-        return physicalStates.get(id);
+        return physicalStates.getItemById(id);
     }
 
     public String getIntegrityName(String id) {
-        return integrity.get(id);
+        return integrity.getItemById(id);
     }
 
     public String getFindingAidType(String id) {
-    	return findingAidTypes.get(id);
+    	return findingAidTypes.getItemById(id);
     }
     
     public String getFindingAidFormType(String id) {
-    	return findingAidFormTypes.get(id);
+    	return findingAidFormTypes.getItemById(id);
     }
     
 	public Peva2Language getLanguage(String id) {
-		return languages.get(id);
+		return languages.getItemById(id);
 	}
 	
 	public Peva2EvidenceUnitType getEvidenceUnitType(String id) {
-		return evidenceUnitTypes.get(id);
+		return evidenceUnitTypes.getItemById(id);
 	}
 	
 	public Peva2OriginatorSubclass getOriginatorSubClass(String id) {
-		return originatorSubClasses.get(id);
+		return originatorSubClasses.getItemById(id);
 	}
 	
 	public Peva2DatingMethod getDatingMethod(String id) {
-		return datingMethods.get(id);
+		return datingMethods.getItemById(id);
 	}
 	
-	public Peva2ThematicGroup getThematicGroup(String id) {
-		return thematicGroups.get(id);
+	public Peva2ThematicEvidenceGroup getThematicGroup(String id) {
+		return thematicGroups.getItemById(id);
 	}
 	
-	public Peva2Geo getGeoType(String id) {
-		return geoTypes.get(id);
-	}
-
-	public static class Peva2Language {
-		private final String code;
-		private final String name;
-		public Peva2Language(String code, String name) {
-			super();
-			this.code = code;
-			this.name = name;
-		}
-		public String getCode() {
-			return code;
-		}
-		public String getName() {
-			return name;
-		}		
-	}
-
-	public static class Peva2EvidenceUnitType {
-		
-		private final String name;
-		
-		private final String mainEUTId;
-
-		public Peva2EvidenceUnitType(String name, String mainEUTId) {
-			this.name = name;
-			this.mainEUTId = mainEUTId;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getMainEUTId() {
-			return mainEUTId;
-		}
-
-	}
-	
-	public static class Peva2OriginatorSubclass {
-		private final String oClass;
-		private final String name;
-		private final String camCode;
-
-		public Peva2OriginatorSubclass(String oClass, String name, String camCode) {
-			this.oClass = oClass;
-			this.name = name;
-			this.camCode = camCode;
-		}
-
-		public String getoClass() {
-			return oClass;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getCamCode() {
-			return camCode;
-		}
-		
-	}
-	
-	public static class Peva2DatingMethod {
-		private final String name;
-		private final String type;
-		private final String camCode;
-
-		public Peva2DatingMethod(String name, String type, String camCode) {
-			this.name = name;
-			this.type = type;
-			this.camCode = camCode;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getType() {
-			return type;
-		}
-
-		public String getCamCode() {
-			return camCode;
-		}
-
-	}
-	
-	public static class Peva2ThematicGroup {
-		
-		private final String name;
-		
-		private final String code;
-
-		public Peva2ThematicGroup(String name, String code) {
-			super();
-			this.name = name;
-			this.code = code;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getCode() {
-			return code;
-		}
-
-	}
-	
-	public static class Peva2Geo {
-		
-		private final String name;
-		
-		private final String oSubclass;
-		
-		public Peva2Geo(String name, String oSubclass) {
-			this.name = name;
-			this.oSubclass = oSubclass;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public String getoSubclass() {
-			return oSubclass;
-		}
-		
+	public Peva2GeoObjectType getGeoType(String id) {
+		return geoTypes.getItemById(id);
 	}
 
 }

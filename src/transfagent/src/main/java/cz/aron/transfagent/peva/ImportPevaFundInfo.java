@@ -113,6 +113,10 @@ public class ImportPevaFundInfo {
 		} else {
 			var parentUUID = gnsr.getNadSubsheet().getParent();
 			NadPrimarySheet primarySheet = fundProvider.getFundByUUID(UUID.fromString(parentUUID));
+			if (primarySheet==null) {
+				log.info("Fund ignored for now {}", inputFile.getFileName().toString());
+				throw new FundIgnored();				
+			}
 			importNadSubsheet(gnsr.getNadSubsheet(), primarySheet);
 		}
 		return apusBuilder;
@@ -830,4 +834,7 @@ public class ImportPevaFundInfo {
 		NadPrimarySheet getFundByUUID(UUID uuid) throws IOException, JAXBException;		
 	}
 
+	public static class FundIgnored extends RuntimeException {
+		
+	}
 }

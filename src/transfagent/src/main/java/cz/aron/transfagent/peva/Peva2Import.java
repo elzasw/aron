@@ -16,22 +16,20 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
 import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
-import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.ThreadStatus;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
-import cz.aron.transfagent.service.importfromdir.ImportProcessor;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
-public class Peva2Import implements ImportProcessor {
+public class Peva2Import implements  SmartLifecycle {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2Import.class);
-
-	private final FileImportService importService;
 
 	private final ConfigPeva2 config;
 
@@ -46,11 +44,14 @@ public class Peva2Import implements ImportProcessor {
 	private final StorageService storageService;
 
 	private OffsetDateTime nextRun = null;
+	
+	private ThreadStatus status;
+	
+	private long importInterval = 5000;
 
-	public Peva2Import(FileImportService importService, ConfigPeva2 config, PEvA peva2,
+	public Peva2Import(ConfigPeva2 config, PEvA peva2,
 			Peva2CodeListProvider codeListProvider, ApplicationContext applicationContext,
 			StorageService storageService) {
-		this.importService = importService;
 		this.config = config;
 		this.peva2 = peva2;
 		this.codeListProvider = codeListProvider;
@@ -61,25 +62,16 @@ public class Peva2Import implements ImportProcessor {
 
 	@PostConstruct
 	void init() {
-		// create downloaders		
-		try {
-			// conditional bean
-			downloaders.add(applicationContext.getBean(Peva2ImportOriginators.class));
-		} catch (NoSuchBeanDefinitionException e) {
-			log.info("Import originators disabled.");
-		}
-		try {
-			// conditional bean
-			downloaders.add(applicationContext.getBean(Peva2ImportFindingAidCopy.class));	
-		} catch (NoSuchBeanDefinitionException e) {
-			log.info("Import finding aid copies disabled.");
-		}
+		downloaders.add(applicationContext.getBean(Peva2ImportOriginators.class));
+		downloaders.add(applicationContext.getBean(Peva2ImportGeo.class));
+		downloaders.add(applicationContext.getBean(Peva2ImportFindingAidCopy.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFunds.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAids.class));
-		importService.registerImportProcessor(this);
+		for (Peva2Downloader downloader : downloaders) {
+			log.info("Downloader {}, status={}", downloader.getClass(), downloader.isActive());
+		}
 	}
 
-	@Override
 	public void importData(ImportContext ic) {
 
 		final OffsetDateTime nowTime = OffsetDateTime.now();
@@ -93,7 +85,9 @@ public class Peva2Import implements ImportProcessor {
 		
 		codeListProvider.reset();
 		for (var downloader : downloaders) {
-			downloader.importDataInternal(ic, codeListProvider);
+			if (downloader.isActive()) {
+				downloader.importDataInternal(ic, codeListProvider);
+			}
 		}
 
 		// po uspesne synchronizaci nastavim dalsi cas synchronizace
@@ -133,6 +127,48 @@ public class Peva2Import implements ImportProcessor {
 
 	public Peva2CodeLists getCodeLists() {
 		return codeListProvider.getCodeLists();
+	}
+
+    public void run() {
+        log.info("Import service is running.");
+        
+        while (status == ThreadStatus.RUNNING) {
+            try {
+            	ImportContext ic = new ImportContext();
+                importData(ic);
+                if(ic.isFailed()||ic.getNumProcessed()==0) {
+                	Thread.sleep(importInterval);
+                }
+            } catch (Exception e) {
+                log.error("Error in import file. ", e);
+                try {
+					Thread.sleep(importInterval);
+				} catch (InterruptedException e1) {
+					Thread.currentThread().interrupt();
+					return;
+				}
+            }
+        }
+        log.info("Import service stopped.");
+        status = ThreadStatus.STOPPED;
+    }
+	
+	@Override
+	public void start() {
+		 status = ThreadStatus.RUNNING;
+	        new Thread(() -> {
+	            run();
+	        }).start();
+	}
+
+	@Override
+	public void stop() {
+		status = ThreadStatus.STOP_REQUEST;		
+	}
+
+	@Override
+	public boolean isRunning() {
+		return status == ThreadStatus.RUNNING;
 	}
 	
 }

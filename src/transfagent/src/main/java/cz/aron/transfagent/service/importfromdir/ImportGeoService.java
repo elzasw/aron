@@ -5,12 +5,15 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.springframework.stereotype.Service;
+
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportGeoService.GeoImporter.ImportResult;
 
+@Service
 public class ImportGeoService  extends ImportDirProcessor implements ReimportProcessor {
 	
     private final ReimportService reimportService;
@@ -32,10 +35,15 @@ public class ImportGeoService  extends ImportDirProcessor implements ReimportPro
 	}
 
 	@PostConstruct
-    void register() {
-        reimportService.registerReimportProcessor(this);
-        fileImportService.registerImportProcessor(this);
-    }
+	void register() {
+		reimportService.registerReimportProcessor(this);
+		fileImportService.registerImportProcessor(this);
+	}	
+
+	@Override
+	public int getPriority() {
+		return 9;
+	}
 
 	@Override
 	public Result reimport(ApuSource apuSource) {
