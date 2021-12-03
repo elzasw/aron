@@ -113,8 +113,11 @@ export function EvidenceDetailItem({
       </div>
       {open ? (
         <div className={spacingClasses.paddingBottomSmall}>
-          {items.map((item, i) =>
-            item.type !== ApuPartItemDataType.APU_REF ||
+          {items.map((item, i) => {
+            const prevItem = items[i-1];
+            const isSameTypeAsPrev = prevItem && prevItem.code === item.code;
+
+            return item.type !== ApuPartItemDataType.APU_REF ||
             find(apus, ({ id }) => id === item.value) ? (
               <div key={`${item.name}-${i}`} className={layoutClasses.flex}>
                 <div
@@ -124,7 +127,7 @@ export function EvidenceDetailItem({
                     i && spacingClasses.paddingTopSmall
                   )}
                 >
-                  {item.name}
+                  {!isSameTypeAsPrev && item.name}
                 </div>
                 <div
                   className={classNames(
@@ -138,6 +141,7 @@ export function EvidenceDetailItem({
             ) : (
               <div key={`${item.name}-${i}`} />
             )
+            }
           )}
         </div>
       ) : (
