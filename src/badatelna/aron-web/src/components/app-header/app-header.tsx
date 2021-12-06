@@ -86,7 +86,11 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
               </Link>
             )
           )}
-          {hasLanguages && <Language className={spacingClasses.marginLeft} />}
+          {hasLanguages && 
+             <Language 
+               localizations={pageTemplate?.localizations} 
+               className={spacingClasses.marginLeft} 
+             />}
         </div>
         <>
           <div className={classNames(classes.mobileMenu, layoutClasses.flex)}>

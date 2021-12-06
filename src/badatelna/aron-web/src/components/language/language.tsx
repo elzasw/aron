@@ -8,28 +8,41 @@ import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles';
 import { Props } from './types';
 
-const locales = [
-  {
+interface LocaleDef {
+    name: LocaleName,
+    Flag: any,
+}
+const locales:Record<string, LocaleDef> = {
+  'en_US':{
     name: LocaleName.en,
     Flag: Flags.GB,
   },
-  {
+  'cs_CZ':{
     name: LocaleName.cs,
     Flag: Flags.CZ,
   },
-  // {
-  //   name: LocaleName.de,
-  //   Flag: Flags.DE,
-  // }
-]
+  'de_DE':{
+    name: LocaleName.de,
+    Flag: Flags.DE,
+  }
+}
 
-export function Language({ className }: Props) {
+export function Language({ 
+    className, 
+    localizations = ['cs_CZ', 'en_US'],
+}: Props) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
 
   const { locale, switchLocale } = useContext(LocaleContext);
+  const availableLocales:LocaleDef[] = [];
 
-  locales.sort((a, b)=>{
+  localizations?.forEach((localization)=>{
+    const locale = locales[localization];
+    if(locale){availableLocales.push(locale)}
+  })
+
+  availableLocales.sort((a, b)=>{
     if(locale.name === a.name){return -1}
     if(locale.name === b.name){return 1}
     if(a.name < b.name){return -1}
@@ -37,15 +50,16 @@ export function Language({ className }: Props) {
     return 0;
   })
   
-  const CurrentFlag = locales.find(({name})=>name === locale.name)?.Flag;
+  const CurrentFlag = availableLocales.find(({name})=>name === locale.name)?.Flag;
 
   return (
     <div className={classNames(layoutClasses.flexCentered, className)}>
       <div className={classes.languageContainer}>
-        <CurrentFlag className={classes.flag}/>
+        {CurrentFlag && <CurrentFlag className={classes.flag}/>}
         <div className={classes.languageSelector}>
-          {locales.map(({name, Flag})=>{
+          {availableLocales.map(({name, Flag}, index)=>{
             return <Flag 
+              key={index}
               className={classes.flag} 
               onClick={()=>{switchLocale(name)}}
             />
