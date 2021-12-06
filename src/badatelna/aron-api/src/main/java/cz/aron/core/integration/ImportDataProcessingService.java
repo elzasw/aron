@@ -26,8 +26,8 @@ public class ImportDataProcessingService {
     public void processData(Path path, TransferType transferType) {
         Map<String, Path> filesMap = loadFilesMap(path);
         if (transferType == TransferType.APUSRC) {
-            try {
-                Path apuFilePath = Files.list(path).filter(child -> child.getFileName().toString().startsWith("apusrc-")).findFirst().orElseThrow();
+            try (var stream = Files.list(path)) {
+                Path apuFilePath = stream.filter(child -> child.getFileName().toString().startsWith("apusrc-")).findFirst().orElseThrow();
                 String metadata = Files.readString(apuFilePath, StandardCharsets.UTF_8);
                 apuProcessor.processApuAndFiles(metadata, filesMap);
             } catch (IOException e) {
@@ -36,9 +36,9 @@ public class ImportDataProcessingService {
             return;
         }
         if (transferType == TransferType.DAO) {
-            try {
+            try (var stream = Files.list(path)) {
                 String metadata;
-                Path apuFilePath = Files.list(path).filter(child -> child.getFileName().toString().startsWith("dao-")).findFirst().orElseThrow();
+                Path apuFilePath = stream.filter(child -> child.getFileName().toString().startsWith("dao-")).findFirst().orElseThrow();
                 metadata = Files.readString(apuFilePath, StandardCharsets.UTF_8);
                 daoInputProcessor.processDaoAndFiles(metadata, filesMap);
             } catch (IOException e) {
@@ -52,8 +52,8 @@ public class ImportDataProcessingService {
         if (!Files.exists(basePath.resolve("files"))) {
             return new HashMap<>();
         }
-        try {
-            files = Files.list(basePath.resolve("files")).collect(Collectors.toList());
+        try (var stream = Files.list(basePath.resolve("files"))) {
+            files = stream.collect(Collectors.toList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
