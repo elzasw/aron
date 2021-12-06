@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.ws.soap.SOAPFaultException;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
@@ -88,7 +89,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 		return ret.getValue();
 	}
 	
-	private Path downloadEntity(UUID uuid) {
+	private void downloadEntity(UUID uuid) {
 		Path tempDir = null;
 		try {
 			tempDir = storageService.createTempDir(ImportPevaGeo.PREFIX_DASH + uuid.toString());
@@ -103,22 +104,33 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 				var dataDir = storageService.moveToDataDir(tempDir);
 				archivalEntityService.createOrUpdateArchivalEntity(dataDir, tempDir,
 						UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ImportPevaGeo.ENTITY_CLASS);
+			} catch (SOAPFaultException sfEx) {
+				deleteTempDir(tempDir);
+				if ("DeletedObject".equals(sfEx.getMessage())) {
+					log.info("Geo entity {} is in deleted state", uuid);
+					archivalEntityService.entityNotAvailable(uuid);
+				} else {
+					log.error("Fail to download geo entity, uuid={}", uuid, sfEx);
+				}				
 			} catch (Exception e) {
 				log.error("Fail to import geo entity", e);
 				throw new IllegalStateException(e);
-			}
-			return tempDir;
+			}			
 		} catch (Exception e) {
-			try {
-				if (tempDir != null) {
-					FileSystemUtils.deleteRecursively(tempDir);
-				}
-			} catch (IOException e1) {
-				log.error("Fail to delete directory", e1);
-			}
+			deleteTempDir(tempDir);
 			log.error("Fail to download geo entity, uuid={}", uuid, e);
 			throw new IllegalStateException(e);
 		}
+	}
+	
+	private void deleteTempDir(Path tempDir) {
+		try {
+			if (tempDir != null) {
+				FileSystemUtils.deleteRecursively(tempDir);
+			}
+		} catch (IOException e1) {
+			log.error("Fail to delete directory", e1);
+		}	
 	}
 	
 	private GetGeoObjectResponse downloadEntity(UUID uuid, Path tempDir) {		

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.ws.soap.SOAPFaultException;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import cz.aron.apux.ApuValidator;
 import cz.aron.peva2.wsdl.GetOriginatorRequest;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.PEvA;
-import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.IdProjection;
@@ -40,8 +40,6 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	private static final Logger log = LoggerFactory.getLogger(Peva2EntityImporter.class);
 	
 	private final PEvA peva2;
-
-	private final ConfigPeva2 config;
 	
 	private final StorageService storageService;
 	
@@ -57,12 +55,11 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	
 	private final DatabaseDataProvider databaseDataProvider;
 
-	public Peva2EntityImporter(PEvA peva2, ConfigPeva2 config, StorageService storageService,
+	public Peva2EntityImporter(PEvA peva2, StorageService storageService,
 			ArchivalEntityRepository archivalEntityRepository, ArchivalEntityService archivalEntityService,
 			Peva2CodeListProvider codeListProvider, ApTypeService apTypeService,
 			ConfigurationLoader configurationLoader, DatabaseDataProvider databaseDataProvider) {
 		this.peva2 = peva2;
-		this.config = config;
 		this.storageService = storageService;
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.archivalEntityService = archivalEntityService;
@@ -91,7 +88,7 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 		return ret.getValue();
 	}
 	
-	private Path downloadEntity(UUID uuid) {
+	private void downloadEntity(UUID uuid) {
 		Path tempDir = null;
 		try {
 			tempDir = storageService.createTempDir(ImportPevaOriginator.PREFIX_DASH + uuid.toString());
@@ -103,25 +100,36 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 				try (var os = Files.newOutputStream(tempDir.resolve("apusrc.xml"))) {
 					apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
 				}
-				var dataDir = storageService.moveToDataDir(tempDir);
+				var dataDir = storageService.moveToDataDir(tempDir);				
 				archivalEntityService.createOrUpdateArchivalEntity(dataDir, tempDir,
 						UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ImportPevaOriginator.ENTITY_CLASS);
 			} catch (Exception e) {
 				log.error("Fail to import originator", e);
 				throw new IllegalStateException(e);
 			}
-			return tempDir;
+		} catch (SOAPFaultException sfEx) {
+			deleteTempDir(tempDir);
+			if ("DeletedObject".equals(sfEx.getMessage())) {
+				log.info("Originator {} is in deleted state", uuid);
+				archivalEntityService.entityNotAvailable(uuid);
+			} else {
+				log.error("Fail to download originator entity, uuid={}", uuid, sfEx);
+			}			
 		} catch (Exception e) {
-			try {
-				if (tempDir != null) {
-					FileSystemUtils.deleteRecursively(tempDir);
-				}
-			} catch (IOException e1) {
-				log.error("Fail to delete directory", e1);
-			}
+			deleteTempDir(tempDir);
 			log.error("Fail to download originator entity, uuid={}", uuid, e);
 			throw new IllegalStateException(e);
 		}
+	}
+	
+	private void deleteTempDir(Path tempDir) {
+		try {
+			if (tempDir != null) {
+				FileSystemUtils.deleteRecursively(tempDir);
+			}
+		} catch (IOException e1) {
+			log.error("Fail to delete directory", e1);
+		}	
 	}
 
 	private GetOriginatorResponse downloadEntity(UUID uuid, Path tempDir) {		

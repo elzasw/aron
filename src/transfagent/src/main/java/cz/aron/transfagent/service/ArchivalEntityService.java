@@ -256,5 +256,15 @@ public class ArchivalEntityService {
         return entitySourceRepository.save(es);
     }
 
+	@Transactional
+	public void entityNotAvailable(UUID uuid) {
+		Optional<ArchivalEntity> ae = archivalEntityRepository.findByUuid(uuid);
+		ae.ifPresentOrElse(e -> {
+			e.setStatus(EntityStatus.NOT_AVAILABLE);
+			log.info("Archival entity {} set to NOT_AVAILABLE state",uuid);
+		}, () -> {
+			log.error("Fail to set entity {} to NOT_AVAILABLE state. Entity not exist", uuid);
+		});
+	}
 
 }
