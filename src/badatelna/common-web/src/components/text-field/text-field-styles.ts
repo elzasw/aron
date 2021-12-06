@@ -11,6 +11,7 @@ export const useStyles = makeStyles(() => ({
 
   input: {
     padding: '2pt',
+    pointerEvents: 'none',
   },
   disabled: {
     whiteSpace: 'nowrap',
