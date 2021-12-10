@@ -93,7 +93,7 @@ export const Body: React.FC = () => {
       <div className={classes.mainBodyInner}>
         <div className={spacingClasses.paddingBottomBig} />
         <Search
-          main={true}
+          main={searchOptions.filter(so=>so.path===ModulePath.ARCH_DESC).length>0}
           placeholder={placeholder}
           onSearch={({ query }) => {
             const selectedPath = selectedOptions[0]?.path;
