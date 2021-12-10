@@ -2,7 +2,7 @@ export enum ModulePath {
   MAIN = '/',
   APU = '/apu',
   ARCHIVE = '/archive',
-  ORIGINATOR = '/origintaor',
+  ORIGINATOR = '/originator',
   FUND = '/fund',
   FINDING_AID = '/finding-aid',
   ARCH_DESC = '/arch-desc',
