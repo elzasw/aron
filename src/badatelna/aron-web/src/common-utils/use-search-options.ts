@@ -23,9 +23,9 @@ export function useSearchOptions() {
   if(!configuration.searchOptions){return []}
 
   const searchOptions:Partial<Record<SearchOption, SearchOptionType>> = {
-    ARCHIVE: {
-      path: ModulePath.ARCHIVE,
-      name: formatMessage({id: Message.ARCHIVES}),
+    INSTITUTION: {
+      path: ModulePath.INSTITUTION,
+      name: formatMessage({id: Message.INSTITUTION}),
     },
     FUND: {
       path: ModulePath.FUND,

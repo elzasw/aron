@@ -9,7 +9,7 @@ import { Message } from './message';
 import { ConfigurationType } from '../components'
 
 export enum AppHeaderItemCode {
-  ARCHIVE = "ARCHIVE",
+  INSTITUTION = "INSTITUTION",
   FUND = "FUND",
   FINDING_AID = "FINDING_AID",
   ARCH_DESC = "ARCH_DESC",
@@ -28,9 +28,9 @@ export interface NavigationItem {
 }
 
 export const appHeaderItems:Record<AppHeaderItemCode, NavigationItem> = {
-  ARCHIVE: {
-    path: ModulePath.ARCHIVE,
-    label: <FormattedMessage id={Message.ARCHIVES} />,
+  INSTITUTION: {
+    path: ModulePath.INSTITUTION,
+    label: <FormattedMessage id={Message.INSTITUTION} />,
     Component: Evidence,
   },
   FUND: {

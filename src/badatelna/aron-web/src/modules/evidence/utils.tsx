@@ -192,12 +192,7 @@ export const getPathSpecificFilters = (path: ModulePath) => {
                 field: "AE~ORIGINATOR",
                 operation: ApiFilterOperation.EQ,
                 value: "ANO",
-            }];
-        case ModulePath.ARCHIVE:
-          return [{
-            field: "INST~CODE",
-            operation: ApiFilterOperation.NOT_NULL,
-          }];
+            }];        
         default:
             return [];
     }

@@ -39,6 +39,7 @@ export const CZECH = {
   [M.FROM]: 'Od',
   [M.HELP]: 'Nápověda',
   [M.INACTIVE]: 'neaktivní',
+  [M.INSTITUTION]: 'Archivy',
   [M.INTRODUCTION]: 'Úvod',
   [M.LIST_OF_DAO]: 'Seznam DAO',
   [M.NEW_FILTER]: 'Nový filtr',

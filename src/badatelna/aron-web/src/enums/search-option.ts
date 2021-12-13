@@ -1,5 +1,5 @@
 export enum SearchOption {
-  ARCHIVE = "ARCHIVE",
+  INSTITUTION = "INSTITUTION",
   FUND = "FUND",
   FINDING_AID = "FINDING_AID",
   ARCH_DESC = "ARCH_DESC",

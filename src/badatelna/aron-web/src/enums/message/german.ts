@@ -40,6 +40,7 @@ export const GERMAN = {
   [M.HELP]: 'Help',
   [M.INACTIVE]: 'inactive',
   [M.INTRODUCTION]: 'Introduction',
+  [M.INSTITUTION]: 'Archives',
   [M.LIST_OF_DAO]: 'List of DAO',
   [M.NEW_FILTER]: 'New filter',
   [M.NEWS]: 'News',
