@@ -468,6 +468,7 @@ export const useStyles =  makeStyles((theme) => {
 
     shareButton: {
       height: '30px',
+      width: '30px',
       display: 'flex',
       margin: theme.spacing(0.5),
       overflow: 'hidden',
