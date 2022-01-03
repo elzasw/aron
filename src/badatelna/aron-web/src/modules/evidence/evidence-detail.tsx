@@ -37,7 +37,7 @@ import {
 } from './utils';
 import { EvidenceDetailDao } from './evidence-detail-dao';
 import { EvidenceDetailTree } from './evidence-detail-tree';
-import { getPathByType, useAppState } from '../../common-utils';
+import { getPathByItem, useAppState } from '../../common-utils';
 import { Module, Loading, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
@@ -245,7 +245,7 @@ export function EvidenceDetail({
   const type = item?.type;
 
 
-  const path = type ? getPathByType(type) : undefined;
+  const path = item ? getPathByItem(item) : undefined;
 
   useEffect(() => {
     if (evidencePath && path) {

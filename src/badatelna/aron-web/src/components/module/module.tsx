@@ -19,6 +19,8 @@ export function Module({ children, path, items, ...props }: Props) {
         case ModulePath.ARCH_DESC:
         case ModulePath.ENTITY:
         case ModulePath.FINDING_AID:
+        case ModulePath.ORIGINATOR:
+        case ModulePath.INSTITUTION:
         case ModulePath.FUND:
           newPath = path;
           break;

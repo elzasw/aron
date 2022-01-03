@@ -1,6 +1,6 @@
 import { ModulePath, ApuType } from '../enums';
 import { find } from 'lodash';
-import { ApuPartItemType } from '../types';
+import { ApuPartItemType, ApuEntity } from '../types';
 
 export const getTypeByPath = (path: ModulePath) => {
   switch (path) {
@@ -21,6 +21,24 @@ export const getTypeByPath = (path: ModulePath) => {
   }
 };
 
+export const getPathByItem = (item: ApuEntity) => {
+  const type = item.type;
+  switch (type) {
+    case ApuType.FUND:
+    case ApuType.FINDING_AID:
+    case ApuType.ARCH_DESC:
+    case ApuType.INSTITUTION:
+      return getPathByType(type);
+    case ApuType.ENTITY:
+      if(isApuOriginator(item)) {
+        return ModulePath.ORIGINATOR
+      }
+      return ModulePath.ENTITY;
+    default:
+      return ModulePath.APU;
+  }
+}
+
 export const getPathByType = (type: ApuType) => {
   switch (type) {
     case ApuType.FUND:
@@ -37,6 +55,15 @@ export const getPathByType = (type: ApuType) => {
       return ModulePath.APU;
   }
 };
+
+export const isApuOriginator = (item: ApuEntity) => {
+  return item.parts?.find((part)=>
+    part.items.find((partItem)=>
+      partItem.type === 'AE~ORIGINATOR' &&
+      partItem.value === 'ANO'
+    )
+  ) ? true : false;
+}
 
 export const getApuPartItemName = (
   apuPartItemTypes: ApuPartItemType[],
