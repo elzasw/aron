@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.JAXBException;
 
@@ -71,7 +70,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(dynasty.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, dynasty.getOClass().toString(), dynasty.getSubClass());
-		processOriginator(part, dynasty, false);
+		processOriginator(part, dynasty, false, null, null);
 	}
 
 	private void importEvent(Event event) {
@@ -80,7 +79,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(event.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, event.getOClass().toString(), event.getSubClass());
-		processOriginator(part, event, false);
+		processOriginator(part, event, false, null, null);
 	}
 
 	private void importPartyGroup(PartyGroup partyGroup) {
@@ -89,7 +88,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(partyGroup.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, partyGroup.getOClass().toString(), partyGroup.getSubClass());
-		processOriginator(part, partyGroup, false);
+		processOriginator(part, partyGroup, false, CoreTypes.CRC_RISE_DATE, null);
 	}
 
 	private void importPerson(Person person) {
@@ -98,7 +97,7 @@ public class ImportPevaOriginatorInfo {
 		apu.setDesc(person.getDescription());
 		var part = ApuSourceBuilder.addPart(apu, CoreTypes.PT_AE_INFO);
 		processClassSubclass(part, person.getOClass().toString(), person.getSubClass());
-		processOriginator(part, person, true);
+		processOriginator(part, person, true, null, null);
 	}
 
 	private void processClassSubclass(Part part, String oClass, String subclassId) {
@@ -114,24 +113,49 @@ public class ImportPevaOriginatorInfo {
 		ApuSourceBuilder.addEnum(part, "AE_ORIGINATOR", "ANO", false);		
 	}
 
-	private void processOriginator(Part part, Originator originator, boolean limitedDating) {
+	private void processOriginator(Part part, Originator originator, boolean limitedDating,
+			String defaultOriginDateType, String defaultEndDateType) {
 		apusBuilder.setUuid(UUID.fromString(originator.getId()));
 		if (StringUtils.isNotBlank(originator.getNote())) {
 			ApuSourceBuilder.addString(part, CoreTypes.NOTE, originator.getNote());
 		}
-		if (originator.getDating() != null&&!limitedDating) {
+		if (originator.getDating() != null && !limitedDating) {
 			var dating = originator.getDating();
 			if (dating.getOriginDate() != null) {
-				var datingMethod = codeLists.getCodeLists().getDatingMethod(dating.getOriginMethod());
-				var dateRange = parseOriginatorDating(dating.getOriginDate(), Peva2Utils.transformCamCode(datingMethod.getCamCode()));
-				ApuSourceBuilder.addDateRange(part, dateRange);
+				var originDateRange = createOriginatorDateRange(dating.getOriginDate(), dating.getOriginMethod(),
+						defaultOriginDateType);
+				if (originDateRange != null) {
+					ApuSourceBuilder.addDateRange(part, originDateRange);
+				}
 			}
 			if (dating.getEndDate() != null) {
-				var datingMethod = codeLists.getCodeLists().getDatingMethod(dating.getEndMethod());
-				var dateRange = parseOriginatorDating(dating.getEndDate(), Peva2Utils.transformCamCode(datingMethod.getCamCode()));
-				ApuSourceBuilder.addDateRange(part, dateRange);
+				var endDateRange = createOriginatorDateRange(dating.getEndDate(), dating.getEndMethod(),
+						defaultEndDateType);
+				if (endDateRange != null) {
+					ApuSourceBuilder.addDateRange(part, endDateRange);
+				}
 			}
 		}
+	}
+	
+	private ItemDateRange createOriginatorDateRange(String date, String method, String defaultType) {		
+		if (StringUtils.isBlank(date)) {
+			return null;
+		}		
+		String type = null;
+		if (StringUtils.isNotBlank(method)) {
+			var p2DatingMethod = codeLists.getCodeLists().getDatingMethod(method);
+			if (p2DatingMethod!=null) {
+				type = Peva2Utils.transformCamCode(p2DatingMethod.getCamCode());
+			}
+		}
+		if (type == null) {
+			type = defaultType;
+		}
+		if (type == null) {
+			return null;
+		}				
+		return Peva2Utils.parseDating(date, type);
 	}
 
 	private String getFullName(DynastyName dynastyName) {
@@ -212,35 +236,6 @@ public class ImportPevaOriginatorInfo {
 			sb.append(" ").append(supplements.toString());
 		}
 		return sb.toString();
-	}
-	
-	private static Pattern DATE_PATTERN = Pattern.compile("^(\\d{1,2}).(\\d{1,2}).(\\d+)$");
-	private static Pattern DATE_PATTERN_YEAR = Pattern.compile("^\\d+$");
-	
-	private ItemDateRange parseOriginatorDating(String date, String type) {
-		var idr = new ItemDateRange();
-		idr.setType(type);
-		var matcher = DATE_PATTERN_YEAR.matcher(date);
-		if (matcher.matches()) {			
-			idr.setFmt("Y-Y");
-			idr.setF(date);
-			idr.setFe(false);
-			idr.setTo(date);
-			idr.setToe(false);
-			idr.setVisible(true);
-			return idr;
-		}
-		matcher = DATE_PATTERN.matcher(date);
-		if (matcher.matches()) {
-			idr.setFmt("D-D");
-			idr.setF(date);
-			idr.setFe(false);
-			idr.setTo(date);
-			idr.setToe(false);
-			idr.setVisible(true);
-			return idr;	
-		}
-		return null;
 	}
 
 	public String getUuid() {

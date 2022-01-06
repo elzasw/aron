@@ -1,5 +1,8 @@
 package cz.aron.transfagent.peva;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -116,5 +119,45 @@ public class Peva2Utils {
 			return camCode;
 		}
 	}
+	
+	
+	private static Pattern DATE_PATTERN = Pattern.compile("^(\\d{1,2}).(\\d{1,2}).(\\d+)$");
+	private static Pattern DATE_PATTERN_YEAR = Pattern.compile("^\\d+$");
+	
+	/**
+	 * Prevede datum z formatu dd.mm.yyyy na ItemDateRange
+	 * @param date
+	 * @param type typ nastavovany 
+	 * @return
+	 */
+	public static ItemDateRange parseDating(String date, String type) {
+		var idr = new ItemDateRange();
+		idr.setType(type);
+		var matcher = DATE_PATTERN_YEAR.matcher(date);
+		if (matcher.matches()) {
+			var localDate = LocalDate.of(Integer.parseInt(matcher.group(0)), 1, 1);
+			idr.setFmt("Y-Y");
+			idr.setF(localDate.with(TemporalAdjusters.firstDayOfYear()).atTime(0,0,0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+			idr.setFe(false);
+			idr.setTo(localDate.with(TemporalAdjusters.lastDayOfYear()).atTime(23, 59, 59).toString());
+			idr.setToe(false);
+			idr.setVisible(true);
+			return idr;
+		}
+		matcher = DATE_PATTERN.matcher(date);
+		if (matcher.matches()) {
+			var localDate = LocalDate.of(Integer.parseInt(matcher.group(3)), Integer.parseInt(matcher.group(2)),
+					Integer.parseInt(matcher.group(1)));
+			idr.setFmt("D-D");
+			idr.setF(localDate.atTime(0,0,0).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+			idr.setFe(false);
+			idr.setTo(localDate.atTime(23, 59, 59).toString());
+			idr.setToe(false);
+			idr.setVisible(true);
+			return idr;
+		}
+		return null;
+	}
+
 	
 }

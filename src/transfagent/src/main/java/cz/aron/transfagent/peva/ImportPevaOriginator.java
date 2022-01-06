@@ -17,9 +17,11 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.ArchivalEntity;
 import cz.aron.transfagent.elza.ApTypeService;
 import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.service.importfromdir.ImportOriginatorService.OriginatorImporter;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
@@ -98,19 +100,42 @@ public class ImportPevaOriginator implements OriginatorImporter {
 			apuSourceBuilder = ipfi.importOriginator(originatorXml, contextDataProvider);
 			try (var os = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}			
-			var dataDir = storageService.moveToDataDir(dir);			
-			archivalEntityService.createOrUpdateArchivalEntity(dataDir, dir, UUID.fromString(apuSourceBuilder.getMainApu().getUuid()),ENTITY_CLASS);						
+			}
+			var dataDir = storageService.moveToDataDir(dir);
+			archivalEntityService.createOrUpdateArchivalEntity(dataDir, dir,
+					UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ENTITY_CLASS, true);
 		} catch (Exception e) {
 			log.error("Fail to import originator", e);
 			throw new IllegalStateException(e);
 		}
 		return true;
 	}
-	
+
+	/**
+	 * Reimportuje puvodce z existujicich dat v adresari (serializovana odpoved z pevy)
+	 */
 	@Override
-	public Result reimport(ApuSource apuSource) {
-		throw new UnsupportedOperationException("Not implemented yet");
+	public Result reimport(ApuSource apuSource, ArchivalEntity archivalEntity, Path apuPath) {
+		if (!apuPath.getFileName().toString().startsWith(PREFIX_DASH)) {
+			return ReimportProcessor.Result.UNSUPPORTED;
+		}
+		var fileName = PREFIX_DASH + apuSource.getUuid() + ".xml";
+		var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+		ApuSourceBuilder apuSourceBuilder;
+		var ipfi = new ImportPevaOriginatorInfo(apTypeService, codeLists);
+		try {
+			apuSourceBuilder = ipfi.importOriginator(apuPath.resolve(fileName), contextDataProvider);
+			try (var os = Files.newOutputStream(apuPath.resolve("apusrc.xml"))) {
+				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+			}
+			archivalEntityService.createOrUpdateArchivalEntity(apuPath, apuPath,
+					UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ENTITY_CLASS, false);
+		} catch (Exception e) {
+			log.error("Fail to reimport {}, dir={}", fileName, apuDir, e);
+			return ReimportProcessor.Result.FAILED;
+		}
+		log.info("Originator id={}, uuid={} reimported", archivalEntity.getId(), archivalEntity.getUuid());
+		return ReimportProcessor.Result.REIMPORTED;
 	}
 
 }

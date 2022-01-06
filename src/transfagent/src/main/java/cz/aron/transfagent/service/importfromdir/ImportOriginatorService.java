@@ -5,18 +5,26 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.ArchivalEntity;
+import cz.aron.transfagent.domain.SourceType;
+import cz.aron.transfagent.repository.ArchivalEntityRepository;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportOriginatorService.OriginatorImporter.ImportResult;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 
 // TODO neni to to same jako ImportArchDescService ?
 
 @Service
 public class ImportOriginatorService extends ImportDirProcessor implements ReimportProcessor {
+	
+	private static final Logger log = LoggerFactory.getLogger(ImportOriginatorService.class);
 	
     private final ReimportService reimportService;
     
@@ -26,15 +34,19 @@ public class ImportOriginatorService extends ImportDirProcessor implements Reimp
     
     private final List<OriginatorImporter> originatorImporters;
     
-    private final String ORIGINATOR_DIR = "originators";    
+    private final String ORIGINATOR_DIR = "originators";
+    
+    private final ArchivalEntityRepository archivalEntityRepository;
 	
 	public ImportOriginatorService(ReimportService reimportService, FileImportService fileImportService,
-			StorageService storageService, List<OriginatorImporter> originatorImporters) {
+			ArchivalEntityRepository archivalEntityRepository, StorageService storageService,
+			List<OriginatorImporter> originatorImporters) {
 		super();
 		this.reimportService = reimportService;
 		this.fileImportService = fileImportService;
 		this.storageService = storageService;
 		this.originatorImporters = originatorImporters;
+		this.archivalEntityRepository = archivalEntityRepository;
 	}
 
 	@PostConstruct
@@ -50,7 +62,25 @@ public class ImportOriginatorService extends ImportDirProcessor implements Reimp
 
 	@Override
 	public Result reimport(ApuSource apuSource) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		if (apuSource.getSourceType() != SourceType.ARCH_ENTITY)
+			return Result.UNSUPPORTED;
+
+		var archivalEntity = archivalEntityRepository.findByApuSource(apuSource);
+		if (archivalEntity == null) {
+			log.error("Missing archivalEntity: {}", apuSource.getId());
+			return Result.UNSUPPORTED;
+		}
+
+		var ret = Result.UNSUPPORTED;
+		var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+		for (var originatorImporter : originatorImporters) {
+			var fiRet = originatorImporter.reimport(apuSource, archivalEntity, apuDir);
+			if (fiRet != Result.UNSUPPORTED) {
+				ret = fiRet;
+				break;
+			}
+		}
+		return ret;
 	}
 
 	@Override
@@ -87,8 +117,8 @@ public class ImportOriginatorService extends ImportDirProcessor implements Reimp
     	
     	ImportResult processPath(Path path);
     	
-    	Result reimport(ApuSource apuSource);    	
+    	Result reimport(ApuSource apuSource, ArchivalEntity archivalEntity, Path apuPath);
 
-	}	
-	
+	}
+
 }

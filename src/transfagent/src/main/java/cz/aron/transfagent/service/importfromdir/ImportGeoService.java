@@ -47,7 +47,7 @@ public class ImportGeoService  extends ImportDirProcessor implements ReimportPro
 
 	@Override
 	public Result reimport(ApuSource apuSource) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		return Result.UNSUPPORTED;		
 	}
 
 	@Override

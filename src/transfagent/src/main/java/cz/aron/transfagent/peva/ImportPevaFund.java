@@ -287,7 +287,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		}
 		log.info("Fund id={}, uuid={} reimported", fund.getId(), fund.getUuid());
 		return ReimportProcessor.Result.REIMPORTED;
-	}	
+	}
 	
 	private List<Path> readAllAttachments(ApuSource apuSource, Fund fund, ApuSourceBuilder apuSourceBuilder) {
 		var ret = new ArrayList<Path>();

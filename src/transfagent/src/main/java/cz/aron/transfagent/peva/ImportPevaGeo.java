@@ -97,9 +97,10 @@ public class ImportPevaGeo implements GeoImporter {
 			apuSourceBuilder = ipfi.importGeo(originatorXml, contextDataProvider);
 			try (var os = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
 				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}			
-			var dataDir = storageService.moveToDataDir(dir);			
-			archivalEntityService.createOrUpdateArchivalEntity(dataDir, dir, UUID.fromString(apuSourceBuilder.getMainApu().getUuid()),ENTITY_CLASS);						
+			}
+			var dataDir = storageService.moveToDataDir(dir);
+			archivalEntityService.createOrUpdateArchivalEntity(dataDir, dir,
+					UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ENTITY_CLASS, true);
 		} catch (Exception e) {
 			log.error("Fail to import originator", e);
 			throw new IllegalStateException(e);

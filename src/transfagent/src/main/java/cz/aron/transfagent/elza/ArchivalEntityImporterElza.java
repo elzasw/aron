@@ -574,6 +574,10 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 			log.error("Missing archival entity: {}", apuSource.getId());
 			return Result.UNSUPPORTED;
 		}
+		if (archEntity.getEntityClass()!=null) {
+			// TODO nastavit entity_class
+			return Result.UNSUPPORTED;
+		}
 		if(archEntity.getStatus()!=EntityStatus.AVAILABLE) {
 			log.warn("Archival entity {} cannot be reimported, status: {}", apuSource.getId(), archEntity.getStatus());
 			return Result.NOCHANGES;

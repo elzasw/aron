@@ -103,7 +103,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 				}
 				var dataDir = storageService.moveToDataDir(tempDir);
 				archivalEntityService.createOrUpdateArchivalEntity(dataDir, tempDir,
-						UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ImportPevaGeo.ENTITY_CLASS);
+						UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ImportPevaGeo.ENTITY_CLASS, true);
 			} catch (SOAPFaultException sfEx) {
 				deleteTempDir(tempDir);
 				if ("DeletedObject".equals(sfEx.getMessage())) {
@@ -111,11 +111,11 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 					archivalEntityService.entityNotAvailable(uuid);
 				} else {
 					log.error("Fail to download geo entity, uuid={}", uuid, sfEx);
-				}				
+				}
 			} catch (Exception e) {
 				log.error("Fail to import geo entity", e);
 				throw new IllegalStateException(e);
-			}			
+			}
 		} catch (Exception e) {
 			deleteTempDir(tempDir);
 			log.error("Fail to download geo entity, uuid={}", uuid, e);

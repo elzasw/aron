@@ -44,6 +44,8 @@ public class CoreQueueService implements SmartLifecycle {
     private final StorageService storageService;
 
     private ThreadStatus status;
+    
+    private Client client = null;
 
     public CoreQueueService(CoreQueueRepository coreQueueRepository, AttachmentRepository attachmentRepository, ConfigAronCore configAronCore, CoreAronClient coreAronClient, StorageService storageService) {
         this.coreQueueRepository = coreQueueRepository;
@@ -56,23 +58,47 @@ public class CoreQueueService implements SmartLifecycle {
     /**
      * Odeslání dat do jádra
      */
-    private void sendData() {
-    	
-    	while(true) {
-    		var events = coreQueueRepository.findFirst1000ByOrderById();
-    		if (events.isEmpty()) {
-    			// nothing to send
-    			return;
-    		}
-    		for(var item:events) {
-    		    uploadOrDeleteData(item);
-                coreQueueRepository.delete(item);
-                if (status!=ThreadStatus.RUNNING) {
-                	return;
-                }    			
-    		}
-    	}
-    }
+	private void sendData() {
+
+		while (true) {
+			var events = coreQueueRepository.findFirst1000ByOrderById();
+			if (events.isEmpty()) {
+				// nothing to send
+				return;
+			}
+
+			try {
+				createClient();
+				for (var item : events) {
+					uploadOrDeleteData(item);
+					coreQueueRepository.delete(item);
+					if (status != ThreadStatus.RUNNING) {
+						return;
+					}
+				}
+
+			} finally {				
+				if (client!=null) {
+					try {
+						client.stop();
+					} catch (Exception e) {
+						log.error("Fail to stop filetransfer client",e);
+					}
+				}
+				client = null;
+			}
+		}
+	}
+	
+	/**
+	 * Create filetransfer client
+	 */
+	private void createClient() {
+        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
+        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
+        clientConfig.setRecoveryDelay(1);
+        client = FileTransfer.createClient(clientConfig);
+	}
 
     /**
      * Přenos dat pomocí FileTransfer nebo mazání přes WSDL dotaz
@@ -113,12 +139,6 @@ public class CoreQueueService implements SmartLifecycle {
      * @param item
      */
     private void uploadItemData(CoreQueue item) {
-        // vytváření Clienta
-        ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
-        clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
-        clientConfig.setRecoveryDelay(1);
-        Client client = FileTransfer.createClient(clientConfig);
-
         List<SourceItem> sourceItems = createSourceItems(item);
         UploadRequestImpl request = UploadRequestImpl.buildRequest(new ListReader(sourceItems),""+item.getId());
         try {
@@ -139,6 +159,7 @@ public class CoreQueueService implements SmartLifecycle {
             item.setErrorMessage(errorMsg);
             coreQueueRepository.save(item);
             log.error(errorMsg);
+            // diky vyhozeni exception bude zastaven a zrusen client
             throw new IllegalStateException(errorMsg);
         }
         log.info("Uploaded apusrc={}, type={}", item.getApuSource().getUuid(), item.getApuSource().getSourceType());

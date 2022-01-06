@@ -54,15 +54,15 @@ public class ArchivalEntityService {
 	}
 	
 	@Transactional
-	public void createOrUpdateArchivalEntity(Path dataDir, Path origDir, UUID uuid, String entityClass) {		
+	public void createOrUpdateArchivalEntity(Path dataDir, Path origDir, UUID uuid, String entityClass, boolean insertToCoreQueue) {		
 		Optional<ArchivalEntity> ae = archivalEntityRepository.findByUuid(uuid);
 		if (ae.isPresent()) {
-			updateArchivalEntity(ae.get(), dataDir, origDir, uuid);
+			updateArchivalEntity(ae.get(), dataDir, origDir, uuid, insertToCoreQueue);
 		} else {								
-			createArchivalEntity(dataDir, origDir, uuid, entityClass);
-		}				
+			createArchivalEntity(dataDir, origDir, uuid, entityClass, insertToCoreQueue);
+		}
 	}
-	
+
 	/**
 	 * Vytvori novou archivni entitu. Vytvori k ni udalost do CoreQueue
 	 * Nastavi status na AVAILABLE
@@ -71,8 +71,7 @@ public class ArchivalEntityService {
 	 * @param origDir       puvodni cesta k adresari/zipu s daty
 	 * @param apusrcBuilder apu builder
 	 */
-	private void createArchivalEntity(Path dataDir, Path origDir, UUID apuSourceUuid, String entityClass) {
-		
+	private void createArchivalEntity(Path dataDir, Path origDir, UUID apuSourceUuid, String entityClass, boolean insertToCoreQueue) {		
 		var apuSource = apuSourceService.createApuSource(apuSourceUuid, SourceType.ARCH_ENTITY, dataDir,
 				origDir.getFileName().toString());
 		
@@ -83,12 +82,10 @@ public class ArchivalEntityService {
 		archivalEntity.setStatus(EntityStatus.AVAILABLE);
 		archivalEntity.setLastUpdate(ZonedDateTime.now());
 		archivalEntity.setUuid(apuSourceUuid);		
-		archivalEntity = archivalEntityRepository.save(archivalEntity);
-		
-		var coreQueue = new CoreQueue();
-		coreQueue.setApuSource(apuSource);
-		coreQueueRepository.save(coreQueue);
-
+		archivalEntity = archivalEntityRepository.save(archivalEntity);		
+		if (insertToCoreQueue) {
+			insertToCoreQueue(apuSource);
+		}
 		log.info("Archival entity created, uuid={}", apuSourceUuid);
 	}
 	
@@ -101,7 +98,7 @@ public class ArchivalEntityService {
 	 * @param dataDir adresar/zip s daty
 	 * @param origDir puvodni adresar/zip s daty
 	 */
-	private void updateArchivalEntity(ArchivalEntity archivalEntity, Path dataDir, Path origDir, UUID apuSourceUuid) {		
+	private void updateArchivalEntity(ArchivalEntity archivalEntity, Path dataDir, Path origDir, UUID apuSourceUuid, boolean insertToCoreQueue) {		
 		var apuSource = archivalEntity.getApuSource();
 		if (apuSource!=null) {
 			// aktualizace apusource
@@ -113,10 +110,16 @@ public class ArchivalEntityService {
 			archivalEntity.setApuSource(apuSource);
 		}
 		archivalEntity.setStatus(EntityStatus.AVAILABLE);
+		if (insertToCoreQueue) {
+			insertToCoreQueue(apuSource);
+		}
+		log.info("Archival entity updated, uuid={}", apuSourceUuid);
+	}
+	
+	private void insertToCoreQueue(ApuSource apuSource) {
 		var coreQueue = new CoreQueue();
 		coreQueue.setApuSource(apuSource);
-		coreQueueRepository.save(coreQueue);				
-		log.info("Archival entity updated, uuid={}", apuSourceUuid);
+		coreQueueRepository.save(coreQueue);
 	}
 
 	/**
