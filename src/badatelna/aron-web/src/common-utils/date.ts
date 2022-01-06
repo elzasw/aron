@@ -1,12 +1,8 @@
-import { format } from 'date-fns';
 import { get } from 'lodash';
 
 import { DateFormat } from '../enums';
 
-const yearFormat = 'yyyy';
-const yearMonthFormat = 'MM. yyyy';
-const dateFormat = 'dd. MM. yyyy';
-const dateTimeFormat = 'dd. MM. yyyy HH:mm';
+const locale = 'cs'
 
 export const getISOStringFromYear = (year: number) =>
   new Date(year, 1).toISOString();
@@ -14,20 +10,26 @@ export const getISOStringFromYear = (year: number) =>
 export const getYearFromISOString = (ISO: string) =>
   new Date(ISO).getFullYear();
 
-const formatFn = (dateString: string, printFormat: string) =>
-  format(new Date(dateString), printFormat);
-
 export const formatDate = (dateString: string) =>
-  formatFn(dateString, dateFormat);
+  new Date(dateString).toLocaleDateString(locale)
 
 export const formatDateTime = (dateString: string) =>
-  formatFn(dateString, dateTimeFormat);
+  new Date(dateString).toLocaleString(locale, {
+    year: 'numeric', 
+    month: 'numeric', 
+    day: 'numeric', 
+    hour: 'numeric', 
+    minute: 'numeric',
+  })
 
 export const formatYear = (dateString: string) =>
-  formatFn(dateString, yearFormat);
+  new Date(dateString).getFullYear().toString()
 
 export const formatYearMonth = (dateString: string) =>
-  formatFn(dateString, yearMonthFormat);
+  new Date(dateString).toLocaleDateString(locale, {
+    month: 'numeric', 
+    year: 'numeric'
+  })
 
 export const formatCentury = (dateString: string) =>
   `${Math.ceil(new Date(dateString).getFullYear() / 100)}. století`;
