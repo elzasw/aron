@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import classNames from 'classnames';
 import SearchIcon from '@material-ui/icons/Search';
+import IconButton from '@material-ui/core/IconButton';
 import { useIntl } from 'react-intl';
 
 import { TextField } from '../text-field';
@@ -16,7 +17,7 @@ import { usePrevious } from '../../common-utils';
 export function Search({
   main,
   onSearch,
-  value = '',
+  value,
   placeholder = Message.SEARCH,
 }: Props) {
   const classes = useStyles();
@@ -29,7 +30,7 @@ export function Search({
 
   const prevValue = usePrevious(value);
 
-  const [searchValue, setSearchValue] = useState<string>(value);
+  const [searchValue, setSearchValue] = useState<string>(value || '');
 
   useEffect(() => {
     if (prevValue !== value && value !== searchValue) {
@@ -39,9 +40,19 @@ export function Search({
 
   const handleInputChange = (
     value: string | React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>
-  ) => typeof value === 'string' && setSearchValue(value);
+  ) => {
+    if(value == ''){
+      handleSearchReset(); 
+      return;
+    }
+      typeof value === 'string' && setSearchValue(value)
+  };
 
   const handleSearch = () => onSearch({ query: searchValue });
+  const handleSearchReset = () => {
+    onSearch({ query: '' });
+    setSearchValue('');
+  }
 
   return (
     <div className={classes.search}>
@@ -52,24 +63,37 @@ export function Search({
           layoutClasses.flexCentered
         )}
       >
-        <TextField
-          className={classes.searchTextField}
-          value={searchValue}
-          onChange={handleInputChange}
-          placeholder={formatMessage({
-            id: placeholder,
-          })}
-          InputProps={{
-            startAdornment: (
-              <SearchIcon className={classes.searchIcon} color="disabled" />
-            ),
-          }}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              handleSearch();
-            }
-          }}
-        />
+        <div className={classNames(classes.searchTextFieldWrapper, layoutClasses.flexCentered)}>
+          <TextField
+            className={classNames(classes.searchTextField, searchValue && classes.searchTextInserted)}
+            value={searchValue}
+            onChange={handleInputChange}
+            placeholder={formatMessage({
+              id: placeholder,
+            })}
+            InputProps={{
+              startAdornment: (
+                <SearchIcon className={classes.searchIcon} color="disabled" />
+              ),
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSearch();
+              }
+            }}
+          />
+          {(value || searchValue) && 
+            <IconButton 
+              aria-label='delete' 
+              onClick={handleSearchReset}
+              type='button'
+              size='small'
+              className={classes.searchResetButton}
+            >
+              <span className='fas fa-times'/>
+            </IconButton>
+          }
+        </div>
         <Button
           className={classes.searchButton}
           label={formatMessage({ id: Message.SEARCH_BTN })}

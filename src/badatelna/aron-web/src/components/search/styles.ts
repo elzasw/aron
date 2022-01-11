@@ -48,6 +48,21 @@ export const useStyles = makeStyles((theme) => {
       height: '100%',
       borderRadius: '0 5px 5px 0 !important',
     },
+    searchResetButton: {
+      position: 'absolute',
+      right: '5px',
+      borderRadius: '20px',
+      width: '25px',
+      height: '25px',
+    },
+    searchTextFieldWrapper: {
+      position: 'relative',
+    },
+    searchTextInserted: {
+      '& .MuiInputBase-input': {
+        paddingRight: '35px',
+      },
+    },
     searchTextField: {
       flexGrow: 1,
       borderRadius: 5,
