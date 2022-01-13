@@ -1,5 +1,6 @@
 package cz.aron.transfagent.peva;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -177,7 +178,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
-        try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
+        try (var fos = Files.newOutputStream(dir.resolve(StorageService.APUSRC_XML))) {
             apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
         } catch (IOException ioEx) {
         	log.error("Fail to import fund, path={}", fundXml,ioEx);
@@ -263,10 +264,18 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 					throw new IllegalStateException("Fund not exist id="+fund.getId());
 				});
 
-			});						
-			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
-				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+			});
+
+			// compare original apusrc.xml and newly generated
+			var apuSrcXmlPath = apuDir.resolve(StorageService.APUSRC_XML);			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			apuSourceBuilder.build(baos, new ApuValidator(configurationLoader.getConfig()));
+			byte [] newContent = baos.toByteArray();
+			if (!StorageService.isContentEqual(apuPath, newContent)) {
+				return ReimportProcessor.Result.NOCHANGES;
 			}
+			Files.write(apuSrcXmlPath, newContent);
+			
 			tt.executeWithoutResult(t -> {
 				// reload
 				fundRepository.findById(fund.getId()).ifPresentOrElse(f -> {

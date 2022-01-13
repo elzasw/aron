@@ -1,9 +1,9 @@
 package cz.aron.transfagent.service;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -16,7 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class StorageService {
 
-    private static Logger log = LoggerFactory.getLogger(StorageService.class);
+	private static Logger log = LoggerFactory.getLogger(StorageService.class);
+
+	public static final String APUSRC_XML = "apusrc.xml";
 
 	private final Path workDir;
 
@@ -29,10 +31,10 @@ public class StorageService {
 	private final Path daoPath;
 
 	private final AtomicLong counter = new AtomicLong(0);
-	
+
 	private final Tika tika = new Tika();
 
-	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir.path}")String daoFolderStr) {
+	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir.path}") String daoFolderStr) {
 		this.workDir = Path.of(workDirStr);
 		this.inputPath = workDir.resolve("input");
 		this.dataPath = workDir.resolve("data");
@@ -58,23 +60,24 @@ public class StorageService {
 
 	/**
 	 * Move directory to data directory
+	 * 
 	 * @param sourceDir dir to move
-	 * @return {@link Path} relative to data directory 
+	 * @return {@link Path} relative to data directory
 	 * @throws IOException
 	 */
 	public Path moveToDataDir(Path sourceDir) throws IOException {
 		return moveToDir(dataPath, sourceDir);
 	}
 
-    public Path moveToErrorDir(Path sourceDir) throws IOException {
-        return moveToDir(errorPath, sourceDir);
-    }
+	public Path moveToErrorDir(Path sourceDir) throws IOException {
+		return moveToDir(errorPath, sourceDir);
+	}
 
-    public Path moveToProcessed(Path sourceDir) throws IOException {
-        return moveToDir(inputPath.resolve("processed"), sourceDir);
-    }
+	public Path moveToProcessed(Path sourceDir) throws IOException {
+		return moveToDir(inputPath.resolve("processed"), sourceDir);
+	}
 
-    private Path moveToDir(Path targetDir, Path movedDir) throws IOException {
+	private Path moveToDir(Path targetDir, Path movedDir) throws IOException {
 		Path parentDir = targetDir.resolve(String.format("%1$tY%1$tm%1$td", new Date()));
 		Files.createDirectories(parentDir);
 		String dirName = movedDir.getFileName().toString();
@@ -94,6 +97,7 @@ public class StorageService {
 
 	/**
 	 * Return absolute path to apu datadir
+	 * 
 	 * @param dataDir relative path of directory
 	 * @return {@link Path}
 	 */
@@ -117,15 +121,33 @@ public class StorageService {
 		Files.createDirectory(tmpDir);
 		return tmpDir;
 	}
-	
+
 	/**
-	 * Detekuje mimetype souboru 
+	 * Detekuje mimetype souboru
+	 * 
 	 * @param file soubor k detekci
 	 * @return String s mimetype
 	 * @throws IOException
 	 */
 	public String detectMimetype(Path file) throws IOException {
 		return tika.detect(file);
+	}
+
+	/**
+	 * Porovna obsah souboru se zadanym polem
+	 * @param existingFile cesta k souboru
+	 * @param content obsah k porovnani
+	 * @return true - jsou shodne, false - jsou rozdilne nebo se nepodarilo soubor nacist
+	 */
+	public static final boolean isContentEqual(Path existingFile, byte [] content) {		
+		byte [] existingFileContent = null;
+		try {
+			existingFileContent = Files.readAllBytes(existingFile);			
+		} catch (Exception e) {
+			log.warn("Fail to read file {} to compare content.",existingFile,e);
+			return false;
+		}	
+		return Arrays.equals(existingFileContent, content);
 	}
 	
 }
