@@ -29,6 +29,7 @@ export interface RangeFilterProps extends GenericFilterProps {
 
 export interface InputFilterProps extends GenericFilterProps {
   value: string;
+  foldedFilter?: boolean;
 }
 
 export interface AutocompleteFilterProps extends GenericFilterProps {

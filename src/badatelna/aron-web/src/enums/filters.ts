@@ -1,5 +1,6 @@
 export enum FacetType {
   FULLTEXT = 'FULLTEXT',
+  FULLTEXTF = 'FULLTEXTF',
   ENUM = 'ENUM',
   ENUM_SINGLE = 'ENUM_SINGLE',
   MULTI_REF = 'MULTI_REF',

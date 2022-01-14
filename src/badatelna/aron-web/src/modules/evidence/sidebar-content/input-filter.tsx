@@ -17,6 +17,7 @@ export function InputFilter({
   description,
   inDialog,
   apiFilters,
+  foldedFilter = false,
 }: InputFilterProps): ReactElement {
   const classes = useStyles();
   const classesEvidence = useEvidenceStyles();
@@ -53,7 +54,7 @@ export function InputFilter({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  const [result, loading] = useGetCountInput(source, value, apiFilters);
+  const [result, loading] = useGetCountInput(source, value, apiFilters, foldedFilter);
 
   return (
     <>

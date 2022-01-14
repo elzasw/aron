@@ -12,6 +12,7 @@ export enum ApiFilterOperation {
   'GTE' = 'GTE',
   'LTE' = 'LTE',
   'FTX' = 'FTX',
+  'FTXF' = 'FTXF',
   'AND' = 'AND',
   'OR' = 'OR',
   'NOT' = 'NOT',

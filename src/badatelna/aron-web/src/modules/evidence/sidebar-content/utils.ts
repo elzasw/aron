@@ -51,9 +51,11 @@ export const useGetCountRange = (
 export const useGetCountInput = (
   field: string,
   value: string,
-  apiFilters: Filter[]
-) =>
-  useApiList<{ count: number }>(ApiUrl.APU, {
+  apiFilters: Filter[], 
+  foldedFilter?: boolean,
+) => {
+  const operation = foldedFilter ? ApiFilterOperation.FTXF : ApiFilterOperation.CONTAINS;
+  return useApiList<{ count: number }>(ApiUrl.APU, {
     json: {
       size: 0,
       filters: compact([
@@ -63,11 +65,12 @@ export const useGetCountInput = (
           ? [
               {
                 field,
-                operation: ApiFilterOperation.CONTAINS,
+                operation,
                 value,
-              },
+              }
             ]
           : []),
       ]),
     },
   });
+}

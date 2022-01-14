@@ -48,6 +48,8 @@ export const FilterComponent = (props: any) => {
     case FacetType.FULLTEXT:
       CFilter = InputFilter;
       break;
+    case FacetType.FULLTEXTF:
+      return <InputFilter foldedFilter={true} {...props} />;
     case FacetType.MULTI_REF:
       CFilter = AutocompleteFilter;
       break;
@@ -275,7 +277,7 @@ export const createApiFilters = (filters: FilterConfig[]) => {
                   operation ||
                   (type === FacetType.FULLTEXT
                     ? ApiFilterOperation.CONTAINS
-                    : ApiFilterOperation.EQ),
+                    : (type === FacetType.FULLTEXTF ? ApiFilterOperation.FTXF : ApiFilterOperation.EQ)),
                 value,
               });
         })
