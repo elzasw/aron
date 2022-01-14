@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { identity } from 'lodash';
 
-import { Autocomplete as EasAutocomplete } from '@eas/common-web';
+import { Autocomplete as EasAutocomplete, AutocompleteSource } from '@eas/common-web';
 
 import { Option } from '../../types';
 
@@ -22,7 +22,7 @@ export function Autocomplete({
   loading,
   multiple = false,
 }: Props): ReactElement {
-  const source = {
+  const source: AutocompleteSource<Option> = {
     setSearchQuery: onQueryChange,
     hasNextPage: () => false,
     isDataValid: () => true,
@@ -34,6 +34,7 @@ export function Autocomplete({
     reset: () => null,
     items: options,
     count: options.length,
+    setLoading: () => loading,
   };
   return <EasAutocomplete {...{ value, onChange, source, multiple }} />;
 }
