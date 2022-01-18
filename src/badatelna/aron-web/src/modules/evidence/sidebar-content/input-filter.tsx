@@ -38,7 +38,7 @@ export function InputFilter({
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const updateFilterValueDebounced = useCallback(
-    debounce(updateFilterValue, 300),
+    debounce(updateFilterValue, 700),
     [updateFilterValue]
   );
 
