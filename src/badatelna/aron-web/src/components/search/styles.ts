@@ -57,6 +57,7 @@ export const useStyles = makeStyles((theme) => {
     },
     searchTextFieldWrapper: {
       position: 'relative',
+      flexGrow: 1,
     },
     searchTextInserted: {
       '& .MuiInputBase-input': {
