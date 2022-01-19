@@ -139,10 +139,6 @@ itemTypes:
     name: Stručná charakteristika
     type: STRING
     indexed: false
-  - code: AE_BRIEF_DESC
-    name: Stručná charakteristika
-    type: STRING
-    indexed: false
   - code: AE_GEO_ADMIN_REF
     name: Administrativní zařazení
     type: APU_REF
@@ -664,9 +660,6 @@ itemTypes:
   - code: FUND_LENGTH
     name: Metráž
     type: STRING
-  - code: FUND_LENGTH
-    name: Metráž
-    type: STRING
   - code: FUND_DIGITAL_LENGTH
     name: Velikost
     type: STRING
@@ -733,6 +726,9 @@ itemTypes:
     name: Autor
     type: APU_REF
     indexed: true
+  - code: FINDINGAID_AUTHOR_TEXT
+    name: Autor
+    type: STRING
   - code: FINDINGAID_COPY
     name: Stejnopis
     type: STRING
@@ -879,12 +875,12 @@ itemTypes:
     name: Název autorského díla
     type: APU_REF
     indexed: true
-  - name: Jazyk
-    code: LANGUAGE
+  - code: LANGUAGE
+    name: Jazyk
     type: ENUM
     indexed: true
-  - name: Jazyk
-    code: LANGUAGE_TEXT
+  - code: LANGUAGE_TEXT
+    name: Jazyk
     type: STRING
   - code: SCALE
     name: Měřítko

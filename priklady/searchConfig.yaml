@@ -364,6 +364,13 @@ facets:
   - when:
       apuType: ENTITY
     type: ENUM
+    source: AE_ORIGINATOR
+    display: ALWAYS
+    # Max pocet zobrazenych itemu
+    displayedItems: 30
+  - when:
+      apuType: ENTITY
+    type: ENUM
     source: AE_CLASS
     display: ALWAYS
     # Max pocet zobrazenych itemu
