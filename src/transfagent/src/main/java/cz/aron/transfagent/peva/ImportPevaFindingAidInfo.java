@@ -41,6 +41,8 @@ public class ImportPevaFindingAidInfo {
 
 	private List<UUID> fundUUIDs = new ArrayList<>();
 	
+	private List<String> authorUUIDs = new ArrayList<>();
+	
 	private UUID findingAidUUID;
 	
 	public ImportPevaFindingAidInfo(Peva2CodeLists codeLists, ConfigPeva2FindingAidProperties findingAidProperties) {
@@ -83,7 +85,7 @@ public class ImportPevaFindingAidInfo {
 				institutionCode);
 
 		// add info part
-		Part partInfo = apusBuilder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
+		Part partInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
 		ApuSourceBuilder.addString(partInfo, CoreTypes.FINDINGAID_ID, findingAid.getEvidenceNumber());
 		
 		/**
@@ -94,7 +96,7 @@ public class ImportPevaFindingAidInfo {
 						
 		var findingAidType = codeLists.getFindingAidType(findingAid.getType());
 		if (StringUtils.isNotEmpty(findingAidType)) {
-			apusBuilder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, findingAidType);
+			ApuSourceBuilder.addEnum(partInfo, CoreTypes.FINDINGAID_TYPE, findingAidType);
 		}
 		var formTypes = getFormTypes(findingAid);
 		if (StringUtils.isNotBlank(formTypes)) {
@@ -123,13 +125,20 @@ public class ImportPevaFindingAidInfo {
 			apusBuilder.addString(partInfo, CoreTypes.FINDINGAID_UNITS_AMOUNT, unitsAmount);
 		}*/
 
-		// add references part		
-		var partRef = apusBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
-		for(var fundUUID:fundUUIDs) {
-			apusBuilder.addApuRef(partRef, "FUND_REF", fundUUID);
+		if (findingAidProperties.isReferencesPart()) {
+			// add references part		
+			var partRef = ApuSourceBuilder.addPart(apu, CoreTypes.PT_ARCH_DESC_FUND);
+			processRefs(partRef, fundUUIDs, instInfo.getUuid());
+		} else {
+			processRefs(partInfo, fundUUIDs, instInfo.getUuid());
 		}
-		apusBuilder.addApuRef(partRef, "FUND_INST_REF", instInfo.getUuid());
-
+	}
+	
+	private void processRefs(Part part, List<UUID> fundUUIDs, UUID instUUID) {
+		for(var fundUUID:fundUUIDs) {
+			apusBuilder.addApuRef(part, "FUND_REF", fundUUID);
+		}
+		apusBuilder.addApuRef(part, "FUND_INST_REF", instUUID);
 	}
 	
 	private void processAddenums(FindingAid findingAid, Part partInfo) {
@@ -163,10 +172,16 @@ public class ImportPevaFindingAidInfo {
 		}
 	}
 	
-	private void processAuthors(FindingAid findingAid, Part partInfo) {
-		for(var authorRecord:findingAid.getAuthorRecords().getAuthorRecord()) {
-			var author = authorRecord.getAuthor();			
-			apusBuilder.addApuRef(partInfo, "FINDINGAID_AUTHOR_REF", UUID.fromString(author));
+	private void processAuthors(FindingAid findingAid, Part partInfo) {		
+		if (findingAidProperties.isAuhorRef()) {
+			for(var authorRecord:findingAid.getAuthorRecords().getAuthorRecord()) {
+				var author = authorRecord.getAuthor();			
+				apusBuilder.addApuRef(partInfo, "FINDINGAID_AUTHOR_REF", UUID.fromString(author));
+			}	
+		} else {
+			for(var authorRecord:findingAid.getAuthorRecords().getAuthorRecord()) {							
+				authorUUIDs.add(authorRecord.getAuthor());
+			}
 		}
 	}
 
@@ -218,6 +233,10 @@ public class ImportPevaFindingAidInfo {
 
 	public UUID getFindingAidUUID() {
 		return findingAidUUID;
+	}
+	
+	public List<String> getAuthorUUIDs() {
+		return authorUUIDs;
 	}
 
 }

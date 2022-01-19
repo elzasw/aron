@@ -1,11 +1,16 @@
 package cz.aron.transfagent.peva;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -20,9 +25,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.apux._2020.Part;
+import cz.aron.peva2.wsdl.FindingAidAuthor;
 import cz.aron.peva2.wsdl.FindingAidCopy;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
+import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
@@ -30,7 +38,9 @@ import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.FindingAidService;
 import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService.FindingAidImporter;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
@@ -162,16 +172,8 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
 
-		var findingAidCopies = readFindingAidCopies(findingaidUuid.toString());
-		if (!findingAidCopies.isEmpty()) {
-			var apu = builder.getMainApu();
-			Part partInfo = ApuSourceBuilder.getFirstPart(apu, CoreTypes.PT_FINDINGAID_INFO);			
-			for (var findingAidCopy : findingAidCopies) {
-				var institutionInfo = databaseDataProvider.getInstitutionApu(findingAidCopy.getInstitution().getExternalId());				
-				ApuSourceBuilder.addString(partInfo, "FINDINGAID_COPY", institutionInfo.getName() + ": " + findingAidCopy.getEvidenceNumber());
-			}
-		}
-        
+        processFindingAidCopies(builder, findingaidUuid);
+        processFindingAidAuthors(builder, ifai.getAuthorUUIDs());
         List<Path> attachments = readAllAttachments(dir, builder);
         try (var fos = Files.newOutputStream(dir.resolve("apusrc.xml"))) {
             builder.setUuid(apusourceUuid);
@@ -189,10 +191,7 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 			dataDir = storageService.moveToDataDir(dir);
 			protocol.setLogPath(storageService.getDataPath().resolve(dataDir));
 			// change directory of attachments
-			if (attachments != null) {
-				attachments = attachments.stream().map(p -> dataDir.resolve(p.getFileName()))
-						.collect(Collectors.toList());
-			}
+			attachments = createRelativeAttachmentPaths(attachments, dataDir);
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
@@ -209,6 +208,46 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 	}
 	
 	
+	private List<Path> createRelativeAttachmentPaths(List<Path> attachments, Path dataDir) {
+		if (attachments != null) {
+			return attachments.stream().map(p -> dataDir.resolve(p.getFileName())).collect(Collectors.toList());
+		} else {
+			return attachments;
+		}
+	}
+	
+	/*
+	 * Prida nazvy stejnopisu
+	 */
+	private void processFindingAidCopies(ApuSourceBuilder builder, UUID findingaidUuid) {
+		var findingAidCopies = readFindingAidCopies(findingaidUuid.toString());
+		if (!findingAidCopies.isEmpty()) {
+			var apu = builder.getMainApu();
+			Part partInfo = ApuSourceBuilder.getFirstPart(apu, CoreTypes.PT_FINDINGAID_INFO);			
+			for (var findingAidCopy : findingAidCopies) {
+				var institutionInfo = databaseDataProvider.getInstitutionApu(findingAidCopy.getInstitution().getExternalId());				
+				ApuSourceBuilder.addString(partInfo, "FINDINGAID_COPY", institutionInfo.getName() + ": " + findingAidCopy.getEvidenceNumber());
+			}
+		}
+	}
+	
+	/**
+	 * Prida jmena autoru pomucky jako text
+	 */
+	private void processFindingAidAuthors(ApuSourceBuilder builder, List<String> authorUUIDs) {
+		if (!authorUUIDs.isEmpty()) {
+			var apu = builder.getMainApu();
+			Part partInfo = ApuSourceBuilder.getFirstPart(apu, CoreTypes.PT_FINDINGAID_INFO);
+			StringJoiner sj = new StringJoiner(", ");
+			for(var faAuthor:readFindingAidAuthors(authorUUIDs)) {
+				sj.add(faAuthor.getName());
+			}
+			if (sj.length()>0) {				
+				ApuSourceBuilder.addString(partInfo, "FINDINGAID_AUTHOR_TEXT", sj.toString());
+			}
+		}		
+	}
+	
 	private List<Path> readAllAttachments(Path dir, ApuSourceBuilder builder) {
 		// get root apu
 		var apu = builder.getMainApu();
@@ -217,7 +256,8 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 		try (var stream = Files.list(dir)) {
 			stream.forEach(f -> {
 				if (Files.isRegularFile(f) && !f.getFileName().toString().startsWith(PEVA_FINDING_AID_DASH)
-						&& !"protokol.txt".equals(f.getFileName().toString())) {
+						&& !"protokol.txt".equals(f.getFileName().toString())
+						&& !StorageService.APUSRC_XML.equals(f.getFileName().toString())) {
 
 					String mimetype = null;
 					try {
@@ -258,6 +298,66 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 			}
 		}
 		return ret;
+	}
+	
+	private List<FindingAidAuthor> readFindingAidAuthors(List<String> authorUUIDs) {
+		var ret = new ArrayList<FindingAidAuthor>();
+		var dir = storageService.getInputPath().resolve("faauthors");
+		for (var authorUUID : authorUUIDs) {
+			try {
+				var faaResp = Peva2XmlReader.unmarshalGetFindingAidAuthorResponse(dir.resolve(authorUUID + ".xml"));
+				ret.add(faaResp.getFindingAidAuthor());
+			} catch (FileNotFoundException|NoSuchFileException fnfEx) {
+				// ignore
+				log.warn("Missing author {}", authorUUID);
+			} catch (IOException | JAXBException e) {
+				log.error("Fail to read author {}", authorUUID, e);
+			}
+		}
+		return ret;
+	}	
+
+	@Override
+	public Result reimport(ApuSource apuSource, FindingAid findingAid, Path apuPath) {
+
+		if (!apuPath.getFileName().toString().startsWith(PEVA_FINDING_AID_DASH)) {
+			return ReimportProcessor.Result.UNSUPPORTED;
+		}
+
+		var relativeDataDir = Paths.get(apuSource.getDataDir());
+		var fileName = PEVA_FINDING_AID_DASH + findingAid.getCode() + ".xml";
+		ApuSourceBuilder builder;
+		try {
+			var ifai = new ImportPevaFindingAidInfo(codeListProvider.getCodeLists(),
+					configPeva2.getFindingAidProperties());
+			builder = ifai.importFindingAidInfo(apuPath.resolve(fileName), databaseDataProvider);
+			processFindingAidCopies(builder, findingAid.getUuid());
+			processFindingAidAuthors(builder, ifai.getAuthorUUIDs());
+			List<Path> attachments = createRelativeAttachmentPaths(readAllAttachments(apuPath, builder),
+					relativeDataDir);
+
+			// compare original apusrc.xml and newly generated
+			var apuSrcXmlPath = apuPath.resolve(StorageService.APUSRC_XML);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			builder.build(baos, new ApuValidator(configurationLoader.getConfig()));
+			byte[] newContent = baos.toByteArray();
+			if (StorageService.isContentEqual(apuSrcXmlPath, newContent)) {
+				return ReimportProcessor.Result.NOCHANGES;
+			}
+			Files.write(apuSrcXmlPath, newContent);
+
+			boolean send = !configPeva2.getFindingAidProperties().isDontSend();
+			transactionTemplate.executeWithoutResult(c -> {
+				findingAidService.updateFindingAid(findingAid, relativeDataDir, apuPath, builder, attachments,
+						configPeva2.getFundProperties().isAggregateAttachments(), send);
+			});
+		} catch (Exception e) {
+			log.error("Fail to process downloaded {}, dir={}", fileName, apuPath, e);
+			return ReimportProcessor.Result.FAILED;
+		}
+
+		log.info("FindingAid id={}, uuid={} reimported", findingAid.getId(), findingAid.getUuid());
+		return ReimportProcessor.Result.REIMPORTED;
 	}
 
 }

@@ -32,6 +32,9 @@ public class ConfigPeva2FundProperties {
     // do popisu fondu v prehledu prida jako description poznaku    
     private boolean noteAsDescription;
     
+    // do popisu fondu prida poznamku
+    private boolean note;
+    
     // do popisu fondu v prehledu prida jako description prvni radek z interni zmeny
     private boolean parseInternalChangesAsDescription;
     
@@ -220,6 +223,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setFindingAids(boolean findingAids) {
 		this.findingAids = findingAids;
+	}
+
+	public boolean isNote() {
+		return note;
+	}
+
+	public void setNote(boolean note) {
+		this.note = note;
 	}
 
 }

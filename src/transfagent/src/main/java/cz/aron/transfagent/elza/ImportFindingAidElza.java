@@ -12,16 +12,21 @@ import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.config.ConfigurationLoader;
+import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.Attachment;
+import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.ead3.ImportFindingAidInfo;
+import cz.aron.transfagent.repository.AttachmentRepository;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -29,6 +34,7 @@ import cz.aron.transfagent.service.FindingAidService;
 import cz.aron.transfagent.service.ImportProtocol;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFindingAidService.FindingAidImporter;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -55,11 +61,14 @@ public class ImportFindingAidElza implements FindingAidImporter {
 	private final ConfigurationLoader configurationLoader;
 	
 	private final TransactionTemplate transactionTemplate;
+	
+	private final AttachmentRepository attachmentRepository;
 
 	public ImportFindingAidElza(FundRepository fundRepository, FindingAidRepository findingAidRepository,
 			InstitutionRepository institutionRepository, StorageService storageService,
 			FindingAidService findingAidService, DatabaseDataProvider databaseDataProvider,
-			ConfigurationLoader configurationLoader, TransactionTemplate transactionTemplate) {
+			ConfigurationLoader configurationLoader, TransactionTemplate transactionTemplate,
+			AttachmentRepository attachmentRepository) {
 		super();
 		this.fundRepository = fundRepository;
 		this.findingAidRepository = findingAidRepository;
@@ -69,6 +78,7 @@ public class ImportFindingAidElza implements FindingAidImporter {
 		this.databaseDataProvider = databaseDataProvider;
 		this.configurationLoader = configurationLoader;
 		this.transactionTemplate = transactionTemplate;
+		this.attachmentRepository = attachmentRepository;
 	}
 
 	@Override
@@ -207,6 +217,73 @@ public class ImportFindingAidElza implements FindingAidImporter {
 	private Path getPdfPath(Path parentPath, String findingAidCode) {
 		var filePdf = FINDING_AID_DASH + findingAidCode + ".pdf";
 		return parentPath.resolve(filePdf);
+	}
+
+	@Override
+	public Result reimport(ApuSource apuSource, FindingAid findingAid, Path apuPath) {
+		
+		if (!apuPath.getFileName().toString().startsWith(FINDING_AID_DASH)) {
+			return Result.UNSUPPORTED;
+		}
+
+        var protocol = new ImportProtocol(apuPath);
+        protocol.add("Zahájení reimportu");
+        String fileXml = FINDING_AID_DASH + findingAid.getCode() + ".xml";
+
+        ApuSourceBuilder builder;
+        var ifai = new ImportFindingAidInfo(findingAid.getCode());
+        try {
+            builder = ifai.importFindingAidInfo(apuPath.resolve(fileXml), findingAid.getUuid(), databaseDataProvider);
+            builder.setUuid(apuSource.getUuid());
+            try (var os = Files.newOutputStream(apuPath.resolve("apusrc.xml"))) {
+                builder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            }            
+            var attachments = readAttachments(apuPath, findingAid.getCode(), builder);
+            updateAttachments(findingAid, builder, attachments);            
+        } catch (Exception e) {
+            log.error("Fail to process downloaded {}, dir={}", fileXml, apuPath, e);
+            protocol.add("Chyba " + e.getMessage());
+            return Result.FAILED;
+        }
+
+        protocol.add("Reimport byl úspěšně dokončen");
+        return Result.REIMPORTED;
+	}
+	
+	private void updateAttachments(FindingAid findingAid, ApuSourceBuilder builder, List<Path> attachments) {
+		var dbAttachments = attachmentRepository.findByApuSource(findingAid.getApuSource());
+		if (dbAttachments.size() > 0) {
+			// drop old attachment
+			attachmentRepository.deleteInBatch(dbAttachments);
+		}
+
+		if (CollectionUtils.isNotEmpty(attachments)) {
+			var mainApu = builder.getMainApu();
+			Validate.isTrue(attachments.size() == mainApu.getAttchs().size(),
+					"Attachment size does not match, attachments: %i, xml: %i", attachments.size(),
+					mainApu.getAttchs().size());
+
+			var attIt = mainApu.getAttchs().iterator();
+			var fileIt = attachments.iterator();
+			while (attIt.hasNext() && fileIt.hasNext()) {
+				var att = attIt.next();
+				var attPath = fileIt.next();
+
+				Validate.notNull(att.getFile(), "DaoFile is null");
+				Validate.notNull(att.getFile().getUuid(), "DaoFile without UUID");
+
+				createAttachment(findingAid.getApuSource(), attPath.getFileName().toString(),
+						UUID.fromString(att.getFile().getUuid()));
+			}
+		}
+	}
+	
+	private void createAttachment(ApuSource apuSource, String fileName, UUID uuid) {
+		var attachment = new Attachment();
+		attachment.setApuSource(apuSource);
+		attachment.setFileName(fileName);
+		attachment.setUuid(uuid);
+		attachment = attachmentRepository.save(attachment);
 	}
 
 }

@@ -251,7 +251,7 @@ public class ImportPevaFundInfo {
 	private void processAdditionalInfo(NadSheet nadSheet, Part partFundInfo) {
 		var additionalInfo = nadSheet.getAdditionalInfo();
 		if (additionalInfo != null) {
-			if (StringUtils.isNotBlank(additionalInfo.getNote())) {
+			if (fundProperties.isNote()&&StringUtils.isNotBlank(additionalInfo.getNote())) {
 				ApuSourceBuilder.addString(partFundInfo, "FUND_NOTE", correctString(additionalInfo.getNote()));
 			}
 			if (StringUtils.isNotBlank(additionalInfo.getOriginator())) {

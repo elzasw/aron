@@ -248,12 +248,11 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 			return ReimportProcessor.Result.UNSUPPORTED;
 		}
 		
-		var fileName = PREFIX + fund.getCode() + ".xml";
-		var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
+		var fileName = PREFIX + fund.getCode() + ".xml";		
 		ApuSourceBuilder apuSourceBuilder;
 		var ifi = new ImportPevaFundInfo(configPeva2.getFundProperties());
 		try {
-			apuSourceBuilder = ifi.importFundInfo(apuDir.resolve(fileName), fund.getUuid(), databaseDataProvider, this,
+			apuSourceBuilder = ifi.importFundInfo(apuPath.resolve(fileName), fund.getUuid(), databaseDataProvider, this,
 					codeListProvider, entityDownloader);
 			apuSourceBuilder.setUuid(apuSource.getUuid());
 			var attachments = new ArrayList<Path>();
@@ -267,11 +266,11 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 			});
 
 			// compare original apusrc.xml and newly generated
-			var apuSrcXmlPath = apuDir.resolve(StorageService.APUSRC_XML);			
+			var apuSrcXmlPath = apuPath.resolve(StorageService.APUSRC_XML);			
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			apuSourceBuilder.build(baos, new ApuValidator(configurationLoader.getConfig()));
 			byte [] newContent = baos.toByteArray();
-			if (!StorageService.isContentEqual(apuPath, newContent)) {
+			if (StorageService.isContentEqual(apuSrcXmlPath, newContent)) {
 				return ReimportProcessor.Result.NOCHANGES;
 			}
 			Files.write(apuSrcXmlPath, newContent);
@@ -291,7 +290,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 				});
 			});
 		} catch (Exception e) {
-			log.error("Fail to process downloaded {}, dir={}", fileName, apuDir, e);
+			log.error("Fail to reimport {}, dir={}", fileName, apuPath, e);
 			return ReimportProcessor.Result.FAILED;
 		}
 		log.info("Fund id={}, uuid={} reimported", fund.getId(), fund.getUuid());

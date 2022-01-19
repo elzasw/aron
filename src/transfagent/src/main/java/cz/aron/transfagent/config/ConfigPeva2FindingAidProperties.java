@@ -7,6 +7,12 @@ public class ConfigPeva2FindingAidProperties {
     
     // neodesila pomucku do arona, pouze ji nacte
     private boolean dontSend;
+    
+    // odkaz na archivni soubor a instituci vygeneruje do samostatneho partu
+    private boolean referencesPart;
+    
+    // vyplni autory jako odkaz na entitu, jinak vyplnuje textovou hodnotu
+    private boolean auhorRef;
 
 	public boolean isComposedFindingAidName() {
 		return composedFindingAidName;
@@ -22,6 +28,22 @@ public class ConfigPeva2FindingAidProperties {
 
 	public void setDontSend(boolean dontSend) {
 		this.dontSend = dontSend;
+	}
+
+	public boolean isReferencesPart() {
+		return referencesPart;
+	}
+
+	public void setReferencesPart(boolean referencesPart) {
+		this.referencesPart = referencesPart;
+	}
+
+	public boolean isAuhorRef() {
+		return auhorRef;
+	}
+
+	public void setAuhorRef(boolean auhorRef) {
+		this.auhorRef = auhorRef;
 	}	
-    
+
 }

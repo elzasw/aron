@@ -5,6 +5,7 @@ package cz.aron.core.facets.dto;
  */
 public enum FacetType {
     FULLTEXT,
+    FULLTEXTF,
     ENUM,
     MULTI_REF,
     UNITDATE,

@@ -64,6 +64,7 @@ public class Peva2Import implements  SmartLifecycle {
 	void init() {
 		downloaders.add(applicationContext.getBean(Peva2ImportOriginators.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportGeo.class));
+		downloaders.add(applicationContext.getBean(Peva2ImportFindingAidAuthor.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAidCopy.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFunds.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAids.class));
