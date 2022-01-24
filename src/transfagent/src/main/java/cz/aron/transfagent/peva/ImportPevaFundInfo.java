@@ -392,10 +392,14 @@ public class ImportPevaFundInfo {
 			if (type.getMainEUTId() != null) {
 				var main = map.get(type.getMainEUTId());
 				if (main == null) {
-					log.error("Undefined main evidence unit type {}", type.getMainEUTId());
-					throw new IllegalStateException("Undefined main evidence unit type:" + type.getMainEUTId());
-				}
-				main.getPartial().add(evidenceUnit);
+					log.error("Undefined main evidence unit type {}, for partial type {}", type.getMainEUTId(),
+							evidenceUnit.getEvidenceUnitType().getValue());
+					// pokud nemam main evidence unit, zaradim ji na uroven main 
+					map.put(evidenceUnit.getEvidenceUnitType().getValue(), new EUSort(evidenceUnit));
+					//throw new IllegalStateException("Undefined main evidence unit type:" + type.getMainEUTId());
+				} else {
+					main.getPartial().add(evidenceUnit);	
+				}				
 			}
 		}
 		map.forEach((k, v) -> {

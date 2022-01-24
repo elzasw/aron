@@ -35,7 +35,7 @@ public class EvidenceUnitTypeProvider extends CodeProvider<Peva2EvidenceUnitType
 				}
 			}
 		}
-		log.info("Evidence unit types downloaded.");
+		log.info("Evidence unit types downloaded {}.", meutResp.getMainEvidenceUnitTypes().getMainEvidenceUnitType().size());
 		return new EvidenceUnitTypeProvider(peva2,ret);
 	}
 	

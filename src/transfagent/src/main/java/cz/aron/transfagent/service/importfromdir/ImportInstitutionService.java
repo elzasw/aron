@@ -280,6 +280,10 @@ public class ImportInstitutionService extends ImportDirProcessor implements Reim
 			apuSourceRepository.save(apuSource);
 			institutionRepository.save(institution);
 			coreQueueRepository.save(coreQueue);
+			
+			// TODO podminit konfiguraci aby se nevolalo zbytecne
+			apuSourceRepository.reimportFundAidByInstitution(institution.getId());
+			apuSourceRepository.reimportFindingAidByInstitution(institution.getId());
 			return null;
 		});
 		log.info("Institution updated code={}, uuid={}, original data dir {}", institutionCode, institution.getUuid(), origData);

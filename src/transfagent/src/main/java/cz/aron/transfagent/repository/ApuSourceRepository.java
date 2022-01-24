@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -18,8 +19,22 @@ public interface ApuSourceRepository extends JpaRepository<ApuSource, Integer> {
 
     List<ApuSource> findFirst1000ByReimport(boolean reimport);
 
+    @Modifying
     @Query(nativeQuery = true, value = "UPDATE apu_source AS a "
-            + "SET a.reimport = true FROM archival_entity ae "
+            + "SET reimport = true FROM archival_entity ae "
             + "WHERE ae.apusource_id = a.apusource_id AND ae.entity_id in :ids")
-    void setReimportTrueByIds(@Param("ids") List<Integer> ids); 
+    void setReimportTrueByIds(@Param("ids") List<Integer> ids);
+    
+    @Modifying
+	@Query(nativeQuery = true, value = "UPDATE apu_source AS a "
+			+ "SET reimport = true FROM finding_aid fa "
+			+ "WHERE fa.apusource_id = a.apusource_id AND fa.institution_id = :id")
+	void reimportFindingAidByInstitution(@Param("id") Integer id);
+	
+    @Modifying
+	@Query(nativeQuery = true, value = "UPDATE apu_source AS a "
+			+ "SET reimport = true FROM fund fu "
+			+ "WHERE fu.apusource_id = a.apusource_id AND fu.institution_id = :id")
+	void reimportFundAidByInstitution(@Param("id") Integer id);
+    
 }

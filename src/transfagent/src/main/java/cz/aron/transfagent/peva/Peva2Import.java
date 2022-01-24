@@ -131,7 +131,7 @@ public class Peva2Import implements  SmartLifecycle {
 	}
 
     public void run() {
-        log.info("Import service is running.");
+        log.info("Import peva2 service is running.");
         
         while (status == ThreadStatus.RUNNING) {
             try {
@@ -150,7 +150,7 @@ public class Peva2Import implements  SmartLifecycle {
 				}
             }
         }
-        log.info("Import service stopped.");
+        log.info("Import peva2 service stopped.");
         status = ThreadStatus.STOPPED;
     }
 	

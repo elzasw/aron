@@ -123,7 +123,7 @@ public class ParImport implements ImportProcessor {
 				numUpdated++;
 			}
 		}
-		log.info("Update funds from par, num updated {}", numUpdated);
+		log.info("Update archives from par, num updated {}", numUpdated);
 		// po uspesne synchronizaci nastavim dalsi cas synchronizace
 		nextRun = nowTime.plusSeconds(config.getInterval());
 	}

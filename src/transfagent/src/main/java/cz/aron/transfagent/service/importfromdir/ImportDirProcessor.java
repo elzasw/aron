@@ -28,26 +28,30 @@ public abstract class ImportDirProcessor implements ImportProcessor {
 	@Override
 	public void importData(ImportContext ic) {
 		Path inputDir = getInputDir();
-		try {			
+		try {
 			List<Path> dirs = FileHelper.getOrderedDirectories(inputDir);
 			if (!dirs.isEmpty()) {
 				log.info("Files to process {}, processor {}", dirs.size(), this.getClass());
 			}
 
 			for (Path dir : dirs) {
-	    		if(!processDirectory(dir)) {
-	    			ic.setFailed(true);
-					log.warn("Fail to process directory {}, processor  {}", dir, this.getClass());
-	    			return;
-	    		}
-	    		ic.addProcessed();
-	    	}
-			
+				try {
+					if (!processDirectory(dir)) {
+						ic.setFailed(true);
+						log.warn("Fail to process directory {}, processor  {}", dir, this.getClass());
+						return;
+					}
+					ic.addProcessed();
+				} catch (Exception e) {
+					log.error("Failed to import data, path: {}", dir, e);
+					ic.setFailed(true);
+					return;
+				}
+			}
 		} catch (Exception e) {
 			log.error("Failed to import data, path: {}", inputDir.toString(), e);
 			ic.setFailed(true);
 		}
-		
 	}
 
 	/**

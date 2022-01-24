@@ -1,19 +1,11 @@
 package cz.aron.transfagent.peva;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
-import cz.aron.peva2.wsdl.Integrity;
-import cz.aron.peva2.wsdl.ListIntegrityRequest;
-import cz.aron.peva2.wsdl.ListPhysicalStateRequest;
-import cz.aron.peva2.wsdl.ListThematicEvidenceGroupRequest;
 import cz.aron.peva2.wsdl.PEvA;
-import cz.aron.peva2.wsdl.PhysicalState;
 import cz.aron.transfagent.peva.codelist.AccessibilityProvider;
 import cz.aron.transfagent.peva.codelist.DatingMethodProvider;
 import cz.aron.transfagent.peva.codelist.EvidenceUnitTypeProvider;
