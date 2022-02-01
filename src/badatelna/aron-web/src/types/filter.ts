@@ -25,6 +25,7 @@ export interface BasicFilterConfig {
   value?: FilterConfigValue;
   options?: any[];
   order?: string[];
+  title?: string;
 }
 
 export interface FilterConfig {
@@ -88,6 +89,7 @@ export interface Facet {
     apuType?: ApuType;
     all?: FacetAllItem[];
   };
+  title?: string;
 }
 
 export interface AggregationItem {

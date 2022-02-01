@@ -185,6 +185,8 @@ export function useMapFilters() {
             ? formatMessage({ id: Message.DAO_ONLY })
             : item.type === FacetType.RELATED_APUS
             ? `${formatMessage({ id: Message.RELATED_TO })}: ${item.value}`
+            : item.title 
+            ? item.title 
             : find(apuPartItemTypes, { code: item.source })?.name || '_',
         value:
           item.value ||

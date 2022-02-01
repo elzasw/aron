@@ -16,6 +16,7 @@ public class FacetConfigDto {
     private Object when;
     private FacetType type;
     private String source;
+    private String title;
     private DisplayType display = DisplayType.ALWAYS;
     private int maxItems;
     private int displayedItems;
