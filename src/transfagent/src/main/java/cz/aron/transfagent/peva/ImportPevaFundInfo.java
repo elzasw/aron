@@ -229,8 +229,12 @@ public class ImportPevaFundInfo {
 		
 		var additionalInfo = nadSheet.getAdditionalInfo();		
 		// prida popis puvodce do main apu
-		if (fundProperties.isOriginatorAsDescription()&&StringUtils.isNotBlank(additionalInfo.getOriginator())) {
-			sj.add(correctString(additionalInfo.getOriginator()));
+		if (fundProperties.isOriginatorAsDescription()&&StringUtils.isNotBlank(additionalInfo.getOriginator())) {			
+			var originator = correctString(additionalInfo.getOriginator());
+			if (fundProperties.isOriginatorNoteRemovePrefix()) {
+				originator = removePrefixCaseInsensitive(originator,nadSheet.getHeader().getName());
+			}
+			sj.add(originator);
 			add = true;
 		}
 		if (fundProperties.isNoteAsDescription()&&StringUtil.isNotBlank(additionalInfo.getNote())) {
@@ -247,16 +251,30 @@ public class ImportPevaFundInfo {
 			apusBuilder.getMainApu().setDesc(sj.toString());
 		}
 	}
-    
+	
+	
+	private String removePrefixCaseInsensitive(String text, String prefix) {
+		var textLowerCase = text.toLowerCase();
+		var prefixLowerCase = prefix.toLowerCase();
+		if (textLowerCase.startsWith(prefixLowerCase)) {
+			text = text.substring(prefixLowerCase.length()).trim();
+		}
+		return text;
+	}
+
 	private void processAdditionalInfo(NadSheet nadSheet, Part partFundInfo) {
 		var additionalInfo = nadSheet.getAdditionalInfo();
 		if (additionalInfo != null) {
 			if (fundProperties.isNote()&&StringUtils.isNotBlank(additionalInfo.getNote())) {
 				ApuSourceBuilder.addString(partFundInfo, "FUND_NOTE", correctString(additionalInfo.getNote()));
 			}
-			if (StringUtils.isNotBlank(additionalInfo.getOriginator())) {
+			if (fundProperties.isOriginatorNote()&&StringUtils.isNotBlank(additionalInfo.getOriginator())) {				
+				var origNote = additionalInfo.getOriginator();
+				if (fundProperties.isOriginatorNoteRemovePrefix()) {
+					origNote = removePrefixCaseInsensitive(origNote,nadSheet.getHeader().getName());
+				}				
 				ApuSourceBuilder.addString(partFundInfo, "FUND_ORIG_NOTE",
-						correctString(additionalInfo.getOriginator()));
+						correctString(origNote));
 			}
 			if (StringUtils.isNotBlank(additionalInfo.getThematicDescription())) {
 				ApuSourceBuilder.addString(partFundInfo, "FUND_TOPIC",
@@ -295,12 +313,14 @@ public class ImportPevaFundInfo {
 	}
     
 	private void processOriginators(NadSheet nadSheet, Part partFundInfo) {
-		var originators = nadSheet.getOriginators();
-		if (originators != null && originators.getOriginator() != null) {
-			originators.getOriginator().forEach(o -> {
-				apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, UUID.fromString(o));
-				this.originators.add(o);
-			});
+		if (fundProperties.isOriginators()) {
+			var originators = nadSheet.getOriginators();
+			if (originators != null && originators.getOriginator() != null) {
+				originators.getOriginator().forEach(o -> {
+					apusBuilder.addApuRef(partFundInfo, CoreTypes.ORIGINATOR_REF, UUID.fromString(o));
+					this.originators.add(o);
+				});
+			}
 		}
 	}
 

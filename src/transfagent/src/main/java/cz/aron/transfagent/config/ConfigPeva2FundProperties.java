@@ -35,6 +35,12 @@ public class ConfigPeva2FundProperties {
     // do popisu fondu prida poznamku
     private boolean note;
     
+    // do popisu fondu prida popis puvodce "O puvodci"
+    private boolean originatorNote;
+    
+    // odstrani prefix nazvu fondu z "O puvodci"
+    private boolean originatorNoteRemovePrefix;
+    
     // do popisu fondu v prehledu prida jako description prvni radek z interni zmeny
     private boolean parseInternalChangesAsDescription;
     
@@ -64,6 +70,9 @@ public class ConfigPeva2FundProperties {
 
     // posle reference na pomucky
     private boolean findingAids;
+    
+    // posle reference na puvodce
+    private boolean originators;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -231,6 +240,30 @@ public class ConfigPeva2FundProperties {
 
 	public void setNote(boolean note) {
 		this.note = note;
+	}
+
+	public boolean isOriginators() {
+		return originators;
+	}
+
+	public void setOriginators(boolean originators) {
+		this.originators = originators;
+	}
+
+	public boolean isOriginatorNote() {
+		return originatorNote;
+	}
+
+	public void setOriginatorNote(boolean originatorNote) {
+		this.originatorNote = originatorNote;
+	}
+
+	public boolean isOriginatorNoteRemovePrefix() {
+		return originatorNoteRemovePrefix;
+	}
+
+	public void setOriginatorNoteRemovePrefix(boolean originatorNoteRemovePrefix) {
+		this.originatorNoteRemovePrefix = originatorNoteRemovePrefix;
 	}
 
 }
