@@ -123,17 +123,13 @@ public class ImportPevaFundInfo {
 	}
     
     private void importNadSubsheet(NadSubsheet subsheet, NadPrimarySheet primarySheet)  throws IOException, JAXBException {
-
     	var instInfo = getInstitutionInfo(subsheet);
         var nadHeader = subsheet.getHeader();
-        var fundName = nadHeader.getName();        
         var fullFundName = createFundName(instInfo, subsheet);
 
     	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(subsheet.getId()));
-    	Part partName = ApuSourceBuilder.addPart(apu, CoreTypes.PT_TITLE);
-		partName.setValue(fundName);
-		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
-		
+    	createTitlePart(apu, nadHeader);
+
 		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
 
@@ -142,18 +138,13 @@ public class ImportPevaFundInfo {
         processNadSheetSubNadSheetCommon(subsheet, partFundInfo);
     }
     
-    
-    private void importPrimarySheet(NadPrimarySheet primarySheet) {
-    	
+    private void importPrimarySheet(NadPrimarySheet primarySheet) {    	
     	var instInfo = getInstitutionInfo(primarySheet);   
         var nadHeader = primarySheet.getHeader();
-        var fundName = nadHeader.getName();
         var fullFundName = createFundName(instInfo, primarySheet);
 
     	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(primarySheet.getId()));
-    	Part partName = ApuSourceBuilder.addPart(apu, CoreTypes.PT_TITLE);
-		partName.setValue(fundName);
-		ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
+    	createTitlePart(apu, nadHeader);
 
 		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
@@ -163,6 +154,15 @@ public class ImportPevaFundInfo {
 		processNadSheetSubNadSheetCommon(primarySheet, partFundInfo);        
     }
     
+	private void createTitlePart(Apu apu, NadHeader nadHeader) {
+		if (fundProperties.isTitlePart()) {
+			var fundName = nadHeader.getName();
+			Part partName = ApuSourceBuilder.addPart(apu, CoreTypes.PT_TITLE);
+			partName.setValue(fundName);
+			ApuSourceBuilder.addString(partName, CoreTypes.TITLE, fundName);
+		}
+	}
+
 	private InstitutionInfo getInstitutionInfo(NadSheet nadSheet) {
 		var instInfo = dataProvider.getInstitutionApu(nadSheet.getInstitution().getExternalId());
 		if (instInfo == null) {

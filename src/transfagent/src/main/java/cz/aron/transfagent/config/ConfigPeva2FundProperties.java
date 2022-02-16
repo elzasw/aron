@@ -73,6 +73,8 @@ public class ConfigPeva2FundProperties {
     
     // posle reference na puvodce
     private boolean originators;
+    
+    private boolean titlePart = true;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -266,4 +268,12 @@ public class ConfigPeva2FundProperties {
 		this.originatorNoteRemovePrefix = originatorNoteRemovePrefix;
 	}
 
+	public boolean isTitlePart() {
+		return titlePart;
+	}
+
+	public void setTitlePart(boolean titlePart) {
+		this.titlePart = titlePart;
+	}
+	
 }
