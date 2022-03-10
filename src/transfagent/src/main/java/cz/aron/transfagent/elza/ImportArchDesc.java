@@ -43,6 +43,7 @@ import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
+import cz.aron.transfagent.service.DaoFileStoreService;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
@@ -76,7 +77,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	final Map<UUID, ArchEntityInfo> apRefs = new HashMap<>();
 	final Map<UUID, ArchEntityInfo> apLevelRefs = new HashMap<>();
 
-	final Set<String> daoRefs = new HashSet<>();    
+	/**
+	 * Dao odkazovane z archivniho popisu
+	 */
+	private final Set<String> daoRefs = new HashSet<>();
+	
+	/**
+	 * Dao pripojene pripojene z disku parovane na uuid urovne popisu
+	 */
+	private final Set<String> externalDaoRefs = new HashSet<>();
 
 	private UUID instApuUuid;
 	private UUID fundApuUuid;
@@ -112,10 +121,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
     Map<String, EdxItemConvertor> stringTypeMap;
 
     private final ApTypeService apTypeService;
+    
+    private final DaoFileStoreService daoFileStoreService;
 
-    public ImportArchDesc(ApTypeService apTypeService) {
-        this.apTypeService = apTypeService;
-    }
+	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService) {
+		this.apTypeService = apTypeService;
+		this.daoFileStoreService = daoFileStoreService;		
+	}
 
     public Set<UUID> getApRefs() {
         return apRefs.keySet();
@@ -124,6 +136,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
     public Set<String> getDaoRefs() {
         return daoRefs;
     }
+    
+    public Set<String> getExternalDaoRefs() {
+    	return externalDaoRefs;
+    }
 
     public String getInstitutionCode() {
         return institutionCode;
@@ -131,7 +147,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService());
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null);
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -164,6 +180,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
     }
 
     private ApuSourceBuilder importArchDesc() {
+    	initConvertor();
         Sections sections = elzaXmlReader.getEdx().getFs();
         if(sections==null||sections.getS().size()==0) {
             throw new RuntimeException("Missing section data");
@@ -195,7 +212,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         // add dates to siblings
         for (Entry<String, Apu> item : apuMap.entrySet()) {
             var apu = item.getValue();
-            var ranges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+            var ranges = ApuSourceBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             if (ranges.isEmpty()) {
                 copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             }
@@ -233,39 +250,47 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
         apuMap.put(lvl.getId(), apu);
 
-        activateArchDescPart(apu);
-        initConvertor();
+        activateArchDescPart(apu);        
 
         // add items
         for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
             addItem(apu, item);
         }
 
-        // daos
-        DigitalArchivalObjects daos = lvl.getDaos();
-        if(daos!=null&&daos.getDao().size()>0) {
-            int numExistingDaos = 0;
-            
-            for(DigitalArchivalObject dao: daos.getDao()) {
-                var daoHandle = dao.getDoid();
-                daoRefs.add(daoHandle);
-                
-                UUID daoUuid = dataProvider.getDao(daoHandle);
-                if(daoUuid!=null) {
-                    ApuSourceBuilder.addDao(activeApu, daoUuid);
-                    numExistingDaos++;
-                }
-            }
-            if(numExistingDaos>0) {
-                ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
-            }
+		// daos
+		boolean daoExist = false;
+		DigitalArchivalObjects daos = lvl.getDaos();
+		if (daos != null && daos.getDao().size() > 0) {
+			for (DigitalArchivalObject dao : daos.getDao()) {
+				var daoHandle = dao.getDoid();
+				daoRefs.add(daoHandle);
+
+				UUID daoUuid = dataProvider.getDao(daoHandle);
+				if (daoUuid != null) {
+					ApuSourceBuilder.addDao(activeApu, daoUuid);
+					daoExist = true;
+				}
+			}
+		}
+
+        // external daos
+        if (daoFileStoreService!=null) {
+        	if (daoFileStoreService.getDaoDir(lvl.getUuid())!=null) {
+        		externalDaoRefs.add(lvl.getUuid());
+				ApuSourceBuilder.addDao(activeApu, UUID.fromString(lvl.getUuid()));
+				daoExist = true;
+        	}
+        }
+        
+        if(daoExist) {
+            ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
         }
 
         // copy values from parent
         if(parentApu!=null) {
-            List<ItemEnum> itemEnums = apusBuilder.getItemEnums(parentApu, ApuType.ARCH_DESC, CoreTypes.UNIT_TYPE);
+            List<ItemEnum> itemEnums = ApuSourceBuilder.getItemEnums(parentApu, ApuType.ARCH_DESC, CoreTypes.UNIT_TYPE);
             if(CollectionUtils.isNotEmpty(itemEnums)) {
-                apusBuilder.copyEnums(activePart, itemEnums);
+            	ApuSourceBuilder.copyEnums(activePart, itemEnums);
             }
         }
 
@@ -279,7 +304,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         deactivatePart(apu);
 
         // add date to parent(s)
-        var itemDateRanges = apusBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+        var itemDateRanges = ApuSourceBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
         for(ItemDateRange item : itemDateRanges) {
             Apu apuParent = parentApu;
             while(apuParent != null) {
@@ -411,20 +436,22 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
     }
 
-    private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
-        var apuParent = apuParentMap.get(apu);
-        while(apuParent!=null) {
-            var rangesParent = apusBuilder.getItemDateRanges(apuParent, partType, CoreTypes.UNIT_DATE);
-            if(rangesParent.size()>0) {
-                Part part = apusBuilder.getFirstPart(apu, partType);
-                if(part==null) {
-                    part = apusBuilder.addPart(apu, partType);
-                }
-                apusBuilder.copyDateRanges(part, rangesParent);
-                return;
-            }
-        }
-    }
+	private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
+		var apuParent = apuParentMap.get(apu);
+		while (apuParent != null) {
+			var rangesParent = ApuSourceBuilder.getItemDateRanges(apuParent, partType, CoreTypes.UNIT_DATE);
+			if (rangesParent.size() > 0) {
+				Part part = ApuSourceBuilder.getFirstPart(apu, partType);
+				if (part == null) {
+					part = ApuSourceBuilder.addPart(apu, partType);
+				}
+				ApuSourceBuilder.copyDateRanges(part, rangesParent);
+				return;
+			} else {
+				apuParent = apuParentMap.get(apuParent);
+			}
+		}
+	}
 
     private void deactivatePart(Apu apu) {
         if(activePart!=null) {
@@ -455,7 +482,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             }
         }
         if(activePart==null) {
-            activePart = apusBuilder.addPart(apu, partName);
+            activePart = ApuSourceBuilder.addPart(apu, partName);
         }
     }
 

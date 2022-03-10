@@ -45,6 +45,9 @@ public class Dao {
     @Enumerated(EnumType.STRING)
     @Column(name = "state", nullable = false)
     private DaoState state;
+    
+    @Column(nullable = false)
+    private String source;
 
     public Integer getId() {
         return id;
@@ -109,5 +112,13 @@ public class Dao {
     public void setState(DaoState state) {
         this.state = state;
     }
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
+	}
 
 }

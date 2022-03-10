@@ -211,6 +211,7 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
                 Dao daoFile = new Dao();
                 daoFile.setApuSource(storedApuSource);
                 daoFile.setDataDir("");
+                daoFile.setSource("");
                 daoFile.setState(DaoState.ACCESSIBLE);
                 daoFile.setTransferred(false);
                 daoFile.setUuid(daoUuid);
@@ -246,7 +247,8 @@ public class ImportDirectService extends ImportDirProcessor implements ReimportP
 
             daoUuidsSet.stream().forEach(daoUuid -> {
                 Dao daoFile = new Dao();
-                daoFile.setApuSource(updatedApuSource);                
+                daoFile.setApuSource(updatedApuSource);
+                daoFile.setSource("");
                 daoFile.setState(DaoState.ACCESSIBLE);
                 daoFile.setTransferred(false);
                 daoFile.setUuid(daoUuid);

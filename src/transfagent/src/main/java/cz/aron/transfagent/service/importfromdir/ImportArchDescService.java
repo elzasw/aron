@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -36,6 +39,9 @@ import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.DSpaceImportService;
+import cz.aron.transfagent.service.DaoFileStoreService;
+import cz.aron.transfagent.service.DaoImportService;
+import cz.aron.transfagent.service.DaoImportService.DaoSource;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
@@ -74,7 +80,10 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     
     private final FileImportService fileImportService;
     
-    private final DSpaceImportService dSpaceImportService;
+    private final DaoImportService daoImportService;
+    
+    // TODO some interface like  'LocalDaoSource'
+    private final DaoFileStoreService daoFileStoreService;
 
     final private String ARCHDESC_DIR = "archdesc";
 
@@ -86,7 +95,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             ConfigurationLoader configurationLoader,
             ArchivalEntityService archivalEntityService,
             FileImportService fileImportService,
-            DSpaceImportService dSpaceImportService) {
+            DaoImportService daoImportService,
+            DaoFileStoreService daoFileStoreService) {
         this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -101,7 +111,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.configurationLoader = configurationLoader;
         this.archivalEntityService = archivalEntityService;
         this.fileImportService = fileImportService;
-        this.dSpaceImportService = dSpaceImportService;
+        this.daoImportService = daoImportService;
+        this.daoFileStoreService = daoFileStoreService;
     }
 
     @PostConstruct
@@ -168,7 +179,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
      */
     private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
 
-        var iad = new ImportArchDesc(apTypeService);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService);
         ApuSourceBuilder apusrcBuilder;
 
         try {
@@ -219,11 +230,22 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         // Request entities and store refs
         Set<UUID> uuids = iad.getApRefs();        
-        archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
-        
-        dSpaceImportService.updateDaos(archDesc.getApuSource(), iad.getDaoRefs());
+        archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);                        
+        daoImportService.updateDaos(archDesc.getApuSource(), getDaoSources(iad));
     }
 
+    
+	private List<DaoSource> getDaoSources(ImportArchDesc iad) {
+		var daoSources = new ArrayList<DaoSource>();
+		if (!iad.getDaoRefs().isEmpty()) {
+			daoSources.add(new DaoSource("dspace", false, iad.getDaoRefs()));
+		}
+		if (!iad.getExternalDaoRefs().isEmpty()) {
+			daoSources.add(new DaoSource("files", true, iad.getExternalDaoRefs()));
+		}
+		return daoSources;
+	}    
+    
     private ArchDesc createArchDesc(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
     	
         var archDescUuid = UUID.randomUUID();
@@ -282,7 +304,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var inputFile = apuDir.resolve(fileName);
              
         ApuSourceBuilder apuSourceBuilder;
-        var iad = new ImportArchDesc(apTypeService);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService);
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());
@@ -291,7 +313,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             }
             // Request entities and store refs
             Set<UUID> uuids = iad.getApRefs();        
-            archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);        
+            archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
+            daoImportService.updateDaos(archDesc.getApuSource(), getDaoSources(iad));
         } catch (Exception e) {
             log.error("Fail to process, file: {}", inputFile, e);
             return Result.FAILED;

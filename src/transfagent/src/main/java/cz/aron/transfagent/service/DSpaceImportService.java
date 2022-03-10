@@ -48,7 +48,8 @@ import cz.aron.transfagent.service.importfromdir.TransformService;
 import cz.aron.transfagent.transformation.DSpaceConsts;
 import liquibase.util.Validate;
 
-@Service
+// TODO change to DaoImporter
+//@Service
 public class DSpaceImportService implements ImportProcessor {
 
     private static Logger log = LoggerFactory.getLogger(DSpaceImportService.class);
@@ -381,6 +382,8 @@ public class DSpaceImportService implements ImportProcessor {
         }
     }
 
+    
+    /*
     public void updateDaos(ApuSource apuSource, Set<String> daoRefs) {
         var daos = daoRepository.findByApuSource(apuSource);
         Map<String, Dao> daoLookup = new HashMap<>();
@@ -414,5 +417,6 @@ public class DSpaceImportService implements ImportProcessor {
             daoRepository.save(dao);
         }
     }
+    */
 
 }
