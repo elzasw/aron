@@ -102,6 +102,7 @@ public class DaoImportService implements ImportProcessor  {
             try {
             	Files.createDirectories(daoPath);
             	daoImporter.importDaoFile(dao, daoPath);
+            	dao.setDataDir(dao.getUuid().toString());
             } catch(Exception e) {
                 ic.setFailed(true);
                 log.error("Dao file not imported: {}.", dao.getId(), e);
@@ -110,7 +111,7 @@ public class DaoImportService implements ImportProcessor  {
             transactionTemplate.executeWithoutResult(c->saveDao(dao));            
             ic.addProcessed();
         }
-		
+
 	}
 	
     private void saveDao(Dao dao) {

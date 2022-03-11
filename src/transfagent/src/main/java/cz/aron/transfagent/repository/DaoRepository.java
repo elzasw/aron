@@ -12,15 +12,14 @@ import org.springframework.data.jpa.repository.Query;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
-import cz.aron.transfagent.domain.IdProjection;
 
 public interface DaoRepository extends JpaRepository<Dao, Integer> {
 
-    @Query("select d from Dao d join fetch d.apuSource a " +
-            "where not exists(select q from CoreQueue q where q.apuSource = a) " +
-            "and d.state = ?1 and d.transferred = ?2 and a.reimport is false " +
-            "order by d.id")
-    List<IdProjection> findTopByStateAndTransferredOrderById(DaoState state, boolean transferred, Pageable limit);
+    @Query("SELECT d.id FROM Dao d JOIN d.apuSource a " +
+            "WHERE NOT EXISTS(SELECT q FROM CoreQueue q WHERE q.apuSource = a) " +
+            "AND d.state = ?1 AND d.transferred = ?2 AND a.reimport is false " +
+            "ORDER BY d.id")
+    List<Integer> findTopByStateAndTransferredOrderById(DaoState state, boolean transferred, Pageable limit);
 
     @EntityGraph(attributePaths = { "apuSource" })
     Optional<Dao> findById(int id);

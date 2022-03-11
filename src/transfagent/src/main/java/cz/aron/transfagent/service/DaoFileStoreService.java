@@ -11,6 +11,7 @@ import org.springframework.util.FileSystemUtils;
 
 import cz.aron.transfagent.config.ConfigDaoFileStore;
 import cz.aron.transfagent.domain.Dao;
+import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.service.DaoImportService.DaoImporter;
 import cz.aron.transfagent.service.importfromdir.TransformService;
 
@@ -57,9 +58,10 @@ public class DaoFileStoreService implements DaoImporter {
 		Path dataDir = getDaoDir(dao.getUuid().toString());				
 		try {
 			FileSystemUtils.copyRecursively(dataDir, daoDir);
-			if (!transformService.transform(dataDir)) {
+			if (!transformService.transform(daoDir)) {
 				// delete empty dir
 			}
+			dao.setState(DaoState.READY);
 		} catch (Exception e) {
 			log.error("Fail to import dao {}", dao.getUuid(), e);
 		}		

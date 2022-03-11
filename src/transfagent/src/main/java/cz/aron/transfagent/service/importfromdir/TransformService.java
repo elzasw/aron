@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -246,8 +247,10 @@ public class TransformService {
                     @Override
                     public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
                         try {
+                        	StringJoiner sj = new StringJoiner("/");
                             Path targetFile = tempDir.relativize(file);
-                            outputStream.putNextEntry(new ZipEntry(targetFile.toString()));
+                            targetFile.forEach(p->sj.add(p.toString()));                                                        
+                            outputStream.putNextEntry(new ZipEntry(sj.toString()));
                             Files.copy(file, outputStream);
                             outputStream.closeEntry();
                         } catch (IOException e) {

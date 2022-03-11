@@ -43,7 +43,7 @@ public class DaoSendService implements SmartLifecycle {
 		var ids = daoRepository.findTopByStateAndTransferredOrderById(DaoState.READY, false, PageRequest.of(0, 1000));
 		while (!ids.isEmpty()) {
 			for (var id : ids) {
-				uploadDao(id.getId());
+				uploadDao(id);
 				if (status != ThreadStatus.RUNNING) {
 					return;
 				}
@@ -63,7 +63,7 @@ public class DaoSendService implements SmartLifecycle {
 			clientConfig.setRecoveryDelay(3);
 			Client client = FileTransfer.createClient(clientConfig);
 
-			var daoPath = storageService.getDaoPath().resolve(dao.getDataDir());
+			var daoPath = storageService.getDataPath().resolve(dao.getDataDir());
 			UploadRequestImpl request = UploadRequestImpl.buildDaoRequest(new DirReader(daoPath), dao.getUuid().toString());
 			try {
 				client.uploadSync(request);

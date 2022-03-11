@@ -241,7 +241,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 			daoSources.add(new DaoSource("dspace", false, iad.getDaoRefs()));
 		}
 		if (!iad.getExternalDaoRefs().isEmpty()) {
-			daoSources.add(new DaoSource("files", true, iad.getExternalDaoRefs()));
+			daoSources.add(new DaoSource("file", true, iad.getExternalDaoRefs()));
 		}
 		return daoSources;
 	}    
