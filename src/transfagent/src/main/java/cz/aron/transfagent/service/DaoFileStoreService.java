@@ -1,9 +1,16 @@
 package cz.aron.transfagent.service;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -28,9 +35,12 @@ public class DaoFileStoreService implements DaoImporter {
 	
 	private final TransformService transformService;
 	
-	public DaoFileStoreService(ConfigDaoFileStore config, TransformService transformService) {
+	private final Map<String,Path> uuidToPath;
+	
+	public DaoFileStoreService(ConfigDaoFileStore config, TransformService transformService) throws IOException {
 		this.config = config;
 		this.transformService = transformService;
+		this.uuidToPath = init();
 	}
 
 	/**
@@ -40,7 +50,11 @@ public class DaoFileStoreService implements DaoImporter {
 	 * @return Path nebo null pokud Dao neexistuje
 	 */
 	public Path getDaoDir(String id) {
-		Path daoDir = config.getPath().resolve(id);
+		Path relativePath = uuidToPath.get(id);
+		if (relativePath == null) {
+			return null;
+		}
+		Path daoDir = config.getPath().resolve(relativePath);
 		if (Files.isDirectory(daoDir)) {
 			return daoDir;
 		} else {
@@ -65,6 +79,22 @@ public class DaoFileStoreService implements DaoImporter {
 		} catch (Exception e) {
 			log.error("Fail to import dao {}", dao.getUuid(), e);
 		}		
+	}
+	
+	private Map<String, Path> init() throws IOException {
+		Map<String, Path> map = new HashMap<>();
+		Path mappingFile = config.getPath().resolve("data.csv");
+		if (!Files.isRegularFile(mappingFile)) {
+			return map;
+		}
+		Reader in = new FileReader(mappingFile.toFile());
+		Iterable<CSVRecord> records = CSVFormat.DEFAULT.builder().setDelimiter(';').setTrim(true).build().parse(in);
+		for (CSVRecord record : records) {
+			String uuid = record.get(0);
+			String path = record.get(1);
+			map.put(uuid, Paths.get(path));
+		}
+		return map;
 	}
 
 }

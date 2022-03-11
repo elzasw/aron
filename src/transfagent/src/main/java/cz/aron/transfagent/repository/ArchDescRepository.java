@@ -1,5 +1,6 @@
 package cz.aron.transfagent.repository;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import cz.aron.transfagent.domain.ApuSource;
@@ -10,6 +11,7 @@ public interface ArchDescRepository extends JpaRepository<ArchDesc, Integer> {
 
     ArchDesc findByFund(Fund fund);
 
+    @EntityGraph(attributePaths = {"apuSource","fund"})
     ArchDesc findByApuSource(ApuSource apuSource);
 
 }
