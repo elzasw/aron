@@ -83,16 +83,18 @@ public class DaoFileStoreService implements DaoImporter {
 	
 	private Map<String, Path> init() throws IOException {
 		Map<String, Path> map = new HashMap<>();
-		Path mappingFile = config.getPath().resolve("data.csv");
-		if (!Files.isRegularFile(mappingFile)) {
-			return map;
-		}
-		Reader in = new FileReader(mappingFile.toFile());
-		Iterable<CSVRecord> records = CSVFormat.DEFAULT.builder().setDelimiter(';').setTrim(true).build().parse(in);
-		for (CSVRecord record : records) {
-			String uuid = record.get(0);
-			String path = record.get(1);
-			map.put(uuid, Paths.get(path));
+		if (config.getPath() != null) {
+			Path mappingFile = config.getPath().resolve("data.csv");
+			if (!Files.isRegularFile(mappingFile)) {
+				return map;
+			}
+			Reader in = new FileReader(mappingFile.toFile());
+			Iterable<CSVRecord> records = CSVFormat.DEFAULT.builder().setDelimiter(';').setTrim(true).build().parse(in);
+			for (CSVRecord record : records) {
+				String uuid = record.get(0);
+				String path = record.get(1);
+				map.put(uuid, Paths.get(path));
+			}
 		}
 		return map;
 	}

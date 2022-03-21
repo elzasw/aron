@@ -145,10 +145,17 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             protocol.add("Chyba " + e.getMessage());
             throw new IllegalStateException(e);
         }
+        
+        var institutionCode = ifai.getInstitutionCode();
+        var institution = institutionRepository.findByCode(institutionCode);
+        if (institution == null) {
+            protocol.add("The entry Institution code={" + institutionCode + "} must exist.");
+            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
+        }
 
         var funds = new ArrayList<Fund>();
         for (var fundUUID:ifai.getFundUUIDs()) {
-        	var fund = fundRepository.findByUuid(fundUUID);
+        	var fund = fundRepository.findByUuidAndInstitution(fundUUID, institution);
         	if (fund == null) {
                 protocol.add("The entry Fund code={" + findingAidCode + "} must exist.");
                 //throw new IllegalStateException("The entry Fund code={" + findingAidCode + "} must exist.");
@@ -165,12 +172,6 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             apusourceUuid = UUID.randomUUID();
         }
 
-        var institutionCode = ifai.getInstitutionCode();
-        var institution = institutionRepository.findByCode(institutionCode);
-        if (institution == null) {
-            protocol.add("The entry Institution code={" + institutionCode + "} must exist.");
-            throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
-        }
 
         processFindingAidCopies(builder, findingaidUuid);
         processFindingAidAuthors(builder, ifai.getAuthorUUIDs());

@@ -81,7 +81,7 @@ public class ImportPevaFindingAidInfo {
 				log.error("FindingAid uuid={}, missing fund {}",findingAid.getId(),fundCode);
 			}						
 		}
-		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
+		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %s, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
 				institutionCode);
 
 		// add info part

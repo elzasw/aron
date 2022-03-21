@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cz.aron.peva2.wsdl.GetMainEvidenceUnitTypeRequest;
 import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
 import cz.aron.peva2.wsdl.PEvA;
 
@@ -19,7 +20,19 @@ public class EvidenceUnitTypeProvider extends CodeProvider<Peva2EvidenceUnitType
 
 	@Override
 	public Peva2EvidenceUnitType downloadItem(String id) {
-		throw new UnsupportedOperationException("Not implemented yet");
+		var gmeutReq = new GetMainEvidenceUnitTypeRequest();
+		gmeutReq.setId(id);
+		var gmeutResp = peva2.getMainEvidenceUnitType(gmeutReq);
+		var meut = gmeutResp.getMainEvidenceUnitType();
+		if (meut.getPartialEvidenceUnitTypes() != null) {
+			// vysledkem muze byt vice hodnot, main evidence unit vratim jako vysledek,
+			// podrizene hodnoty zapisu primo do cache
+			// predpokladam, ze nejprve se zepta na main evidence unit type
+			for (var partial : meut.getPartialEvidenceUnitTypes()) {
+				cache.put(partial.getId(), new Peva2EvidenceUnitType(partial.getName(), meut.getId()));
+			}
+		}
+		return new Peva2EvidenceUnitType(meut.getName(), meut.getId());
 	}
 
 	public static EvidenceUnitTypeProvider create(PEvA peva2) {

@@ -106,7 +106,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 						UUID.fromString(apuSourceBuilder.getMainApu().getUuid()), ImportPevaGeo.ENTITY_CLASS, true);
 			} catch (SOAPFaultException sfEx) {
 				deleteTempDir(tempDir);
-				if ("DeletedObject".equals(sfEx.getMessage())) {
+				if (Peva2Constants.DELETED_OBJECT.equals(sfEx.getMessage())) {
 					log.info("Geo entity {} is in deleted state", uuid);
 					archivalEntityService.entityNotAvailable(uuid);
 				} else {

@@ -8,12 +8,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -196,12 +198,23 @@ public class ImportPevaFund implements FundImporter, FundProvider {
             throw new IllegalStateException(e);
         }                
         
-        tt.executeWithoutResult(t->{        	
+        tt.executeWithoutResult(t->{        	        	        	
         	var fnd = fund;        	
         	if (fnd == null) {
                 fnd = fundService.createFund(institution, dataDir, dir, apusrcBuilder, fundCode, FUND_SOURCE);            
             } else {
-                fundService.updateFund(fnd, dataDir, dir, true);
+            	// aktualizace uuid fondu, doporuceno pro vyvojovou instanci
+				if (configPeva2.getFundProperties() != null && configPeva2.getFundProperties().isUpdateUUID()) {
+					var fundUUIDStr = apusrcBuilder.getMainApu().getUuid();
+					if (StringUtils.isNotBlank(fundUUIDStr)
+							&& !Objects.equals(fund.getUuid(), UUID.fromString(fundUUIDStr))) {
+						log.info("Fund {} uuid updated {}->{}", fund.getCode(), fund.getUuid(), fundUUIDStr);
+						fundRepository.findById(fund.getId()).ifPresent(f -> {
+							f.setUuid(UUID.fromString(fundUUIDStr));
+						});
+					}
+				}
+				fundService.updateFund(fnd, dataDir, dir, true);
             }
             var originatorUuids = ifi.getOriginatorIds().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
             archivalEntityService.registerAccessibleEntities(originatorUuids, ImportPevaOriginator.ENTITY_CLASS, fnd.getApuSource());

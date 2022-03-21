@@ -75,6 +75,9 @@ public class ConfigPeva2FundProperties {
     private boolean originators;
     
     private boolean titlePart = true;
+    
+    // aktualizace UUID pro testovaci instanci
+    private boolean updateUUID = false;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -275,5 +278,13 @@ public class ConfigPeva2FundProperties {
 	public void setTitlePart(boolean titlePart) {
 		this.titlePart = titlePart;
 	}
-	
+
+	public boolean isUpdateUUID() {
+		return updateUUID;
+	}
+
+	public void setUpdateUUID(boolean updateUUID) {
+		this.updateUUID = updateUUID;
+	}
+
 }

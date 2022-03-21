@@ -110,7 +110,7 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 			}
 		} catch (SOAPFaultException sfEx) {
 			deleteTempDir(tempDir);
-			if ("DeletedObject".equals(sfEx.getMessage())) {
+			if (Peva2Constants.DELETED_OBJECT.equals(sfEx.getMessage())) {
 				log.info("Originator {} is in deleted state", uuid);
 				archivalEntityService.entityNotAvailable(uuid);
 			} else {
