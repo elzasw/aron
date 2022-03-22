@@ -19,8 +19,7 @@ aron:
   fileImportDisabled: true
 
 dao:
-  dir:
-    path: target/test-resources/daos
+  dir: target/test-resources/daos
 
 # Parametry přístupu k jádru
 aronCore:

@@ -40,11 +40,18 @@ dspace:
   #bundleName: ORIGINAL
   disabled: true
 
+# Dao ulozene na disku
+# V adresari musi byt soubor data.csv s mapovanim level(uuid)->adresar
+filestore:
+  path: D:/projects/aron/data/transfagent/input_folder/filedao
+
+
 dao:
-  dir:
-    path: /opt/daos
+  dir: /opt/daos
   # Pocet sekund pro novy pokus o odeslani
   sendInterval: 60
+  # Mazani dao po odeslani
+  deleteSent: false
 
 logging:
   file: 
