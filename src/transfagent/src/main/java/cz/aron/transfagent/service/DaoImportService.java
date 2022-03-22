@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.transfagent.config.ConfigDao;
@@ -91,26 +90,33 @@ public class DaoImportService implements ImportProcessor  {
 
 		reportedMissingImporter = null;
 		
-        var daos = daoRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
-        for (var dao : daos) {        	
-        	var daoImporter = daoImporters.get(dao.getSource());
-        	if (daoImporter==null) {
-                logMissingImporter(dao.getSource());
-        		continue;
-        	}        	
-        	Path daoPath = storageService.getDaoPath().resolve(dao.getUuid().toString());        	        	        	
-            try {
-            	Files.createDirectories(daoPath);
-            	daoImporter.importDaoFile(dao, daoPath);
-            	dao.setDataDir(dao.getUuid().toString());
-            } catch(Exception e) {
-                ic.setFailed(true);
-                log.error("Dao file not imported: {}.", dao.getId(), e);
-                return;
-            }            
-            transactionTemplate.executeWithoutResult(c->saveDao(dao));            
-            ic.addProcessed();
-        }
+		var daos = daoRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
+		for (var dao : daos) {
+			var daoImporter = daoImporters.get(dao.getSource());
+			if (daoImporter == null) {
+				logMissingImporter(dao.getSource());
+				continue;
+			}			
+			var uuidStr = dao.getUuid().toString();
+			Path daoPath;
+			if (configDao.isUseSubdirs()) {
+				var subdir = uuidStr.substring(6, 8);			
+				daoPath = storageService.getDaoPath().resolve(subdir).resolve(uuidStr);
+			} else {
+				daoPath = storageService.getDaoPath().resolve(uuidStr);
+			}
+			try {
+				Files.createDirectories(daoPath);
+				daoImporter.importDaoFile(dao, daoPath);
+				dao.setDataDir(dao.getUuid().toString());
+			} catch (Exception e) {
+				ic.setFailed(true);
+				log.error("Dao file not imported: {}.", dao.getId(), e);
+				return;
+			}
+			transactionTemplate.executeWithoutResult(c -> saveDao(dao));
+			ic.addProcessed();
+		}
 
 	}
 	

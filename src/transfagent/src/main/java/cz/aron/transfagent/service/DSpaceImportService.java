@@ -9,17 +9,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.json.Json;
 import javax.json.JsonValue;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +24,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.LinkedMultiValueMap;
@@ -37,7 +32,6 @@ import org.springframework.web.client.RestTemplate;
 
 import cz.aron.transfagent.config.ConfigDao;
 import cz.aron.transfagent.config.ConfigDspace;
-import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Dao;
 import cz.aron.transfagent.domain.DaoState;
 import cz.aron.transfagent.repository.ApuSourceRepository;
@@ -85,13 +79,13 @@ public class DSpaceImportService implements ImportProcessor {
         service.configDspace.setDisabled(false);
 
         service.configDao = new ConfigDao();
-        service.configDao.setPath("C:/temp/transfagent/daos");
+        service.configDao.setDir("C:/temp/transfagent/daos");
 
         // http://10.2.0.27:8088/rest/handle/<handle>
         // http://10.2.0.27:8088/rest/items/<uuid>/bitstreams
 
         var itemUuid = "61259486-3786-4877-85b5-f845ee038132";
-        var saveDir = Files.createDirectories(Path.of(service.configDao.getPath()).resolve(itemUuid));
+        var saveDir = Files.createDirectories(Path.of(service.configDao.getDir()).resolve(itemUuid));
         var sessionId = service.getJSessionId();
         service.downloadBitstreamInfo(saveDir, sessionId);
     }
@@ -136,7 +130,7 @@ public class DSpaceImportService implements ImportProcessor {
         }
 
         // TODO: use dates in path to split in multiple dirs
-        var saveDir = Path.of(configDao.getPath()).resolve(uuid);
+        var saveDir = Path.of(configDao.getDir()).resolve(uuid);
         if (!Files.exists(saveDir)) {
             try {
                 Files.createDirectories(saveDir);

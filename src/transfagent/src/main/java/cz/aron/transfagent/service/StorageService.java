@@ -34,7 +34,7 @@ public class StorageService {
 
 	private final Tika tika = new Tika();
 
-	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir.path}") String daoFolderStr) {
+	public StorageService(@Value("${aron.workDir}") String workDirStr, @Value("${dao.dir}") String daoFolderStr) {
 		this.workDir = Path.of(workDirStr);
 		this.inputPath = workDir.resolve("input");
 		this.dataPath = workDir.resolve("data");
