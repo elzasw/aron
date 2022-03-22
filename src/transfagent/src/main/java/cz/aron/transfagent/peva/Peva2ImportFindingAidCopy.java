@@ -46,7 +46,7 @@ public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 			var lfacResp = peva2.listFindingAidCopy(lfacReq);
 			searchAfter = lfacResp.getSearchAfter();
 			long count = lfacResp.getFindingAidCopies().getFindingAidCopy().size();
-			log.info("Downloaded {} finding aid copies to update", count);
+			log.info("Downloaded {} finding aid copies to update after {}", count, updateAfter);
 			if (count == 0) {
 				break;
 			}

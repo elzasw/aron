@@ -54,7 +54,7 @@ public class Peva2ImportGeo extends Peva2Downloader {
 			var loResp = peva2.listGeoObject(lgor);
 			searchAfter = loResp.getSearchAfter();
 			long count = loResp.getGeoObjects().getGeoObject().size();
-			log.info("Downloaded {} geo objects to update", count);
+			log.info("Downloaded {} geo objects to update after", count, updateAfter);
 			if (count == 0) {
 				break;
 			}

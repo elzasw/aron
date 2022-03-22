@@ -45,49 +45,50 @@ public class Peva2ImportFunds extends Peva2Downloader {
 	}
    
 	@Override
-    protected int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial, Peva2CodeListProvider codeListProvider) {                        
-        String searchAfter = searchAfterInitial;
-        int numUpdated = 0;
-        while (true) {
-            ListNadSheetRequest lnsr = new ListNadSheetRequest();
-            lnsr.setSize(config.getBatchSize());
-            lnsr.setUpdatedAfter(updateAfter);
-            lnsr.setSearchAfter(searchAfter);
-            ListNadSheetResponse lnsResp = peva2.listNadSheet(lnsr);
-            log.info("Downloaded {} funds to update", lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size());
-            searchAfter = lnsResp.getSearchAfter();
-            long count = lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
-            if (count == 0) {
-                break;
-            }
-                        
-            fundUUIDToJaFa = new LRUMap<String,String>(10000);            
-            int numUpdatedFromBatch = 0;
-            try {            	
-            	patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());            	
-                numUpdatedFromBatch+=lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
-            } catch (Exception e) {
-                log.error("Fail to update fund batch", e);
-                // zkusim to po jednom
-                for (NadSheet nadSheet : lnsResp.getItems().getNadPrimarySheetOrNadSubsheet()) {
-                    try {
-                    	patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
-                        numUpdatedFromBatch++;
-                    } catch (Exception e1) {
-                        log.error("Fail to update fund {}", nadSheet.getId(), e1);
-                    }
-                }                
-            }
+	protected int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial,
+			Peva2CodeListProvider codeListProvider) {
+		String searchAfter = searchAfterInitial;
+		int numUpdated = 0;
+		while (true) {
+			ListNadSheetRequest lnsr = new ListNadSheetRequest();
+			lnsr.setSize(config.getBatchSize());
+			lnsr.setUpdatedAfter(updateAfter);
+			lnsr.setSearchAfter(searchAfter);
+			ListNadSheetResponse lnsResp = peva2.listNadSheet(lnsr);
+			log.info("Downloaded {} funds to update after {}",
+					lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size(), updateAfter);
+			searchAfter = lnsResp.getSearchAfter();
+			long count = lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
+			if (count == 0) {
+				break;
+			}
 
-            storeSearchAfter(searchAfter);            
-            numUpdated += numUpdatedFromBatch;
-            log.info("Updated {}/{} funds", numUpdated,
-                     lnsResp.getCount());
-        }
-        log.info("Funds synchronized");
-        fundUUIDToJaFa = null;
-        return numUpdated;
-    }
+			fundUUIDToJaFa = new LRUMap<String, String>(10000);
+			int numUpdatedFromBatch = 0;
+			try {
+				patchFundBatch(lnsResp.getItems().getNadPrimarySheetOrNadSubsheet(), codeListProvider.getCodeLists());
+				numUpdatedFromBatch += lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size();
+			} catch (Exception e) {
+				log.error("Fail to update fund batch", e);
+				// zkusim to po jednom
+				for (NadSheet nadSheet : lnsResp.getItems().getNadPrimarySheetOrNadSubsheet()) {
+					try {
+						patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
+						numUpdatedFromBatch++;
+					} catch (Exception e1) {
+						log.error("Fail to update fund {}", nadSheet.getId(), e1);
+					}
+				}
+			}
+
+			storeSearchAfter(searchAfter);
+			numUpdated += numUpdatedFromBatch;
+			log.info("Updated {}/{} funds", numUpdated, lnsResp.getCount());
+		}
+		log.info("Funds synchronized");
+		fundUUIDToJaFa = null;
+		return numUpdated;
+	}
     
     private void patchFundBatch(List<NadSheet> nadSheets, Peva2CodeLists codeLists) {    	
     	Path fundsInputDir = storageService.getInputPath().resolve("fund");

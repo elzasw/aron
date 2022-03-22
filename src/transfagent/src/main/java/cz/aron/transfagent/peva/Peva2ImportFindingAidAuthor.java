@@ -49,7 +49,7 @@ public class Peva2ImportFindingAidAuthor extends Peva2Downloader {
 			var lfaaResp = peva2.listFindingAidAuthor(lfaaReq);
 			searchAfter = lfaaResp.getSearchAfter();
 			long count = lfaaResp.getFindingAidAuthors().getFindingAidAuthor().size();
-			log.info("Downloaded {} finding aid authors to update", count);
+			log.info("Downloaded {} finding aid authors to update after {}", count, updateAfter);
 			if (count == 0) {
 				break;
 			}

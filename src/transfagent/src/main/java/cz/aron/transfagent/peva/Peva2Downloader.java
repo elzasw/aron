@@ -1,7 +1,9 @@
 package cz.aron.transfagent.peva;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeConstants;
@@ -82,13 +84,15 @@ public abstract class Peva2Downloader {
 				propertyRepository.save(sa);
 			}
 			var ua = propertyRepository.findByName(updateAfterPropertyName);
-			if (ua != null) {
-				ua.setValue(nowTime.toString());
-			} else {
+			if (ua == null) {
 				ua = new Property();
 				ua.setName(updateAfterPropertyName);
-				ua.setValue(nowTime.toString());
 			}
+			// posunu zpet o offset, do PEvA neprenesu zonu a databaze ji asi interne
+			// pouziva
+			var offsetSeconds = ZonedDateTime.now().getOffset().getTotalSeconds();
+			var newRun = nowTime.minusSeconds(offsetSeconds);
+			ua.setValue(newRun.toString());
 			propertyRepository.save(ua);
 			return null;
 		});
@@ -135,4 +139,35 @@ public abstract class Peva2Downloader {
 	protected boolean isActive() {
 		return active;
 	}
+	
+	
+	public static void main(String [] args) {
+		
+		
+		System.out.println(""+ZonedDateTime.now().getOffset().getTotalSeconds());
+		
+		var odt = OffsetDateTime.now();
+		var ldt = LocalDateTime.now();
+		var zdt = ZonedDateTime.now();
+		
+		System.out.println(""+odt);
+		System.out.println(""+ldt);
+		System.out.println(""+zdt);
+		
+		parse(""+odt);
+		parse(""+ldt);
+		parse(""+zdt);
+	}
+	
+	private static void parse(String str) {
+		try {
+			var tmp = DatatypeFactory.newInstance().newXMLGregorianCalendar(str);
+			// chyba v PEvA2, pokud je zadana casova zona, tak je updatedAfter ignorovano
+			tmp.setTimezone(DatatypeConstants.FIELD_UNDEFINED);
+			System.out.println(""+str+" -> "+tmp);
+		} catch (DatatypeConfigurationException e) {
+			System.out.println("Fail to parse "+str);
+		}
+	}
+	
 }

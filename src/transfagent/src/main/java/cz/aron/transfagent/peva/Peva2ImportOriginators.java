@@ -55,7 +55,7 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 			var loResp = peva2.listOriginator(lor);
 			searchAfter = loResp.getSearchAfter();
 			long count = loResp.getOriginators().getDynastyOrEventOrPartyGroup().size();
-			log.info("Downloaded {} originators to update", count);
+			log.info("Downloaded {} originators to update after {}", count, updateAfter);
 			if (count == 0) {
 				break;
 			}
