@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,10 @@ public class DaoFileStoreService implements DaoImporter {
 	
 	private final Map<String,Path> uuidToPath;
 	
+	private FileTime lastModification = null;
+	
+	private long lastCheck = 0;
+	
 	public DaoFileStoreService(ConfigDaoFileStore config, TransformService transformService) throws IOException {
 		this.config = config;
 		this.transformService = transformService;
@@ -49,7 +54,8 @@ public class DaoFileStoreService implements DaoImporter {
 	 * @param id identifikator Dao
 	 * @return Path nebo null pokud Dao neexistuje
 	 */
-	public Path getDaoDir(String id) {
+	public synchronized Path getDaoDir(String id) {		
+		checkMapping();		
 		Path relativePath = uuidToPath.get(id);
 		if (relativePath == null) {
 			return null;
@@ -86,8 +92,10 @@ public class DaoFileStoreService implements DaoImporter {
 		if (config.getPath() != null) {
 			Path mappingFile = config.getPath().resolve("data.csv");
 			if (!Files.isRegularFile(mappingFile)) {
+				log.warn("File data.csv not found.");
 				return map;
 			}
+			lastModification = Files.getLastModifiedTime(mappingFile);
 			Reader in = new FileReader(mappingFile.toFile());
 			Iterable<CSVRecord> records = CSVFormat.DEFAULT.builder().setDelimiter(';').setTrim(true).build().parse(in);
 			for (CSVRecord record : records) {
@@ -95,8 +103,29 @@ public class DaoFileStoreService implements DaoImporter {
 				String path = record.get(1);
 				map.put(uuid, Paths.get(path));
 			}
-		}
+			log.info("File data.csv read, num mappings:",map.size());
+		}		
 		return map;
+	}
+	
+	private void checkMapping() {
+		if (config.getPath() != null && (System.currentTimeMillis() - lastCheck) > 5000) {
+			lastCheck = System.currentTimeMillis();
+			Path mappingFile = config.getPath().resolve("data.csv");
+			if (!Files.isRegularFile(mappingFile)) {
+				return;
+			}
+			try {
+				FileTime lastMod = Files.getLastModifiedTime(mappingFile);
+				if (lastMod.compareTo(lastModification) != 0) {
+					uuidToPath.clear();
+					uuidToPath.putAll(init());
+					log.info("Dao mapping updated from data.csv");
+				}
+			} catch (IOException ioEx) {
+				log.error("Fail to update mapping from data.csv", ioEx);
+			}			
+		}
 	}
 
 }
