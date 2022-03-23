@@ -33,6 +33,8 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		
 	private final Map<String, ArchivalEntityImporter> entityImportersMap = new HashMap<>();
 	
+	private final ArchivalEntityImporter defaultImporter;
+	
 	private final List<ArchivalEntityImporter> entityImporters;
 	
 	private final EntitySourceRepository entitySourceRepository;
@@ -42,12 +44,19 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 			EntitySourceRepository entitySourceRepository) {
 		this.archivalEntityRepository = archivalEntityRepository;
 		this.importService = importService;
-		this.reimportService = reimportService;
+		this.reimportService = reimportService;		
 		importers.forEach(importer -> {
 			importer.importedClasses().forEach(cls -> {
 				entityImportersMap.put(cls, importer);
 			});
 		});
+		ArchivalEntityImporter tmpDefaultImporter = null;
+		for(var importer:importers) {
+			if (importer.isDefault()) {
+				tmpDefaultImporter = importer;
+			}
+		}
+		this.defaultImporter = tmpDefaultImporter;
 		this.entityImporters = importers;
 		this.entitySourceRepository = entitySourceRepository;
 	}
@@ -78,29 +87,42 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
 		return ret;
 	}
 
-    @Override
-    public void importData(ImportContext ic) {
-                
-        var ids = archivalEntityRepository.findTop1000ByStatusOrderById(EntityStatus.ACCESSIBLE);
-        for(var id: ids) {
-        	var entityImporter = entityImportersMap.get(id.getEntityClass());
-        	if (entityImporter!=null) {
-        		try {
-        			if (!entityImporter.importEntity(id)) {
-        				ic.setFailed(false);
-        			}
-                } catch(Exception e) {
-                    ic.setFailed(true);
-                    log.error("Entity not imported: {}", id, e);
-                    return;
-                }
-                ic.addProcessed();	
-        	} else {
-        		log.warn("No importer for id={}, class={}", id.getId(), id.getEntityClass());
-        	}
-        }
-    }
-    
+	@Override
+	public void importData(ImportContext ic) {
+		var ids = archivalEntityRepository.findTop1000ByStatusOrderById(EntityStatus.ACCESSIBLE);
+		for (var id : ids) {
+			var entityImporter = entityImportersMap.get(id.getEntityClass());
+			if (entityImporter != null) {
+				try {
+					if (!entityImporter.importEntity(id)) {
+						ic.setFailed(false);
+					}
+				} catch (Exception e) {
+					ic.setFailed(true);
+					log.error("Entity not imported: {}", id, e);
+					return;
+				}
+				ic.addProcessed();
+			} else {
+				// default importer
+				if (this.defaultImporter != null) {
+					try {
+						if (!this.defaultImporter.importEntity(id)) {
+							ic.setFailed(false);
+						}
+					} catch (Exception e) {
+						ic.setFailed(true);
+						log.error("Entity not imported: {}", id, e);
+						return;
+					}
+					ic.addProcessed();
+				} else {
+					log.warn("No importer for id={}, class={}", id.getId(), id.getEntityClass());
+				}
+			}
+		}
+	}
+
     public interface ArchivalEntityImporter {
     	
     	List<String> importedClasses();
@@ -108,6 +130,12 @@ public class ArchivalEntityImportService implements /*SmartLifecycle,*/ Reimport
     	boolean importEntity(IdProjection id);
     	
     	Result reimport(ApuSource apuSource);
+    	
+    	// hack pro entity z Elza
+    	// TODO odstranit pokryt null a vsechny hodnoty
+    	default boolean isDefault() {
+    		return false;
+    	}
 
     }
 

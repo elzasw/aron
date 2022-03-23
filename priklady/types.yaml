@@ -1355,6 +1355,50 @@ itemTypes:
     name: obecný pojem vztahující se k jednotce popisu
     type: APU_REF
     indexed: true
+  - code: ENTITY_ROLE_73
+    name: vyznamenání/cena
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_74
+    name: nositel vyznamenání/ceny
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_75
+    name: navrhovatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_76
+    name: předávající
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_77
+    name: osoba jmenovaná / ustanovená do funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_78
+    name: funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_79
+    name: korporace výkonu funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_80
+    name: místo výkonu funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_81
+    name: katalogizační záznam
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_82
+    name: matriční místo
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_83
+    name: sekundární klasifikace
+    type: APU_REF
+    indexed: true
   - code: ROLE
     name: Role
     type: ENUM
@@ -1507,6 +1551,17 @@ itemGroups:
       - ENTITY_ROLE_70
       - ENTITY_ROLE_71
       - ENTITY_ROLE_72
+      - ENTITY_ROLE_73
+      - ENTITY_ROLE_74
+      - ENTITY_ROLE_75
+      - ENTITY_ROLE_76
+      - ENTITY_ROLE_77
+      - ENTITY_ROLE_78
+      - ENTITY_ROLE_79
+      - ENTITY_ROLE_80
+      - ENTITY_ROLE_81
+      - ENTITY_ROLE_82
+      - ENTITY_ROLE_83
   # vztahy u archivních entit
   - code: AE_VIRT_REF
     items:

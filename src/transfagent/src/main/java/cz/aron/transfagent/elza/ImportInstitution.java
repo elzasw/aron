@@ -20,7 +20,6 @@ import cz.tacr.elza.schema.v2.AccessPoint;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
 import cz.tacr.elza.schema.v2.Institution;
-import cz.tacr.elza.schema.v2.Institutions;
 
 public class ImportInstitution {
 	

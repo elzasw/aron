@@ -54,6 +54,8 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	
 	private static final Logger log = LoggerFactory.getLogger(ArchivalEntityImporterElza.class);
 	
+	public static final String ENTITY_CLASS_ELZA = "elza";
+	
 	private final ApuSourceService apuSourceService;
 	
 	private final StorageService storageService;
@@ -90,8 +92,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 
 	@Override
 	public List<String> importedClasses() {
-		// TODO elza classes
-		return Collections.emptyList();
+		return Collections.singletonList(ENTITY_CLASS_ELZA);
 	}
 
 	@Override
@@ -524,26 +525,28 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	}
 	
 	private Path downloadEntity(ArchivalEntity ae) throws NotAvailableException {
-	    Path tempDir = null;
+		Path tempDir = null;
 		try {
-			tempDir = storageService.createTempDir("ae-"+ae.getId().toString());
+			tempDir = storageService.createTempDir("ae-" + ae.getId().toString());
 			downloadEntity(ae, tempDir);
 			return tempDir;
 		} catch (Exception e) {
-            try {
-                if(tempDir!=null) {
-                    FileSystemUtils.deleteRecursively(tempDir);
-                }
-            } catch (IOException e1) {
-                log.error("Fail to delete directory",e1);
-            }
-			log.error("Fail to download entity, id={}", ae.getId() ,e);
-			if(e instanceof NotAvailableException) {
-			    throw (NotAvailableException)e;
-			} else 
-			if(e instanceof RuntimeException) {
-			    throw (RuntimeException)e;
+			try {
+				if (tempDir != null) {
+					FileSystemUtils.deleteRecursively(tempDir);
+				}
+			} catch (IOException e1) {
+				log.error("Fail to delete directory", e1);
 			}
+			
+			if (e instanceof NotAvailableException) {
+				log.warn("Fail to download entity, not exist in Elza, id={}, uuid={}", ae.getId(), ae.getUuid());
+				throw (NotAvailableException) e;
+			} else if (e instanceof RuntimeException) {
+				log.error("Fail to download entity, id={}", ae.getId(), e);
+				throw (RuntimeException) e;
+			}
+			log.error("Fail to download entity, id={}", ae.getId(), e);
 			throw new IllegalStateException(e);
 		}
 	}
@@ -641,6 +644,11 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 			return Result.FAILED;
 		}
 		return Result.REIMPORTED;
+	}
+
+	@Override
+	public boolean isDefault() {
+		return true;
 	}
 
 
