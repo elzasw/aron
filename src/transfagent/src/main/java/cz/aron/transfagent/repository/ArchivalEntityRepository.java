@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -30,6 +31,7 @@ public interface ArchivalEntityRepository extends JpaRepository<ArchivalEntity, 
 
 	List<ArchivalEntity> findAllByParentEntity(ArchivalEntity archivalEntity);
 
+	@EntityGraph(attributePaths = {"parentEntity"})
 	ArchivalEntity findByApuSource(ApuSource apuSource);
 
 	@Modifying

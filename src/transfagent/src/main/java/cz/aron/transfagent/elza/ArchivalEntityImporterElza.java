@@ -73,12 +73,14 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	private final ConfigurationLoader configurationLoader;
 	
 	private final DatabaseDataProvider databaseDataProvider;
+	
+	private final ApTypeService apTypeService;
 
 	public ArchivalEntityImporterElza(ApuSourceService apuSourceService, StorageService storageService,
 			ElzaExportService elzaExportService, ArchivalEntityRepository archivalEntityRepository,
 			EntitySourceRepository entitySourceRepository, CoreQueueRepository coreQueueRepository,
 			TransactionTemplate transactionTemplate, ConfigurationLoader configurationLoader,
-			DatabaseDataProvider databaseDataProvider) {
+			DatabaseDataProvider databaseDataProvider, ApTypeService apTypeService) {
 		this.apuSourceService = apuSourceService;
 		this.storageService = storageService;
 		this.elzaExportService = elzaExportService;
@@ -88,6 +90,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 		this.transactionTemplate = transactionTemplate;
 		this.configurationLoader = configurationLoader;
 		this.databaseDataProvider = databaseDataProvider;
+		this.apTypeService = apTypeService;
 	}
 
 	@Override
@@ -577,8 +580,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 			log.error("Missing archival entity: {}", apuSource.getId());
 			return Result.UNSUPPORTED;
 		}
-		if (archEntity.getEntityClass()!=null) {
-			// TODO nastavit entity_class
+		if (archEntity.getEntityClass()!=null&&apTypeService.getTypeName(archEntity.getEntityClass())==null) {
 			return Result.UNSUPPORTED;
 		}
 		if(archEntity.getStatus()!=EntityStatus.AVAILABLE) {
@@ -645,7 +647,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 		}
 		return Result.REIMPORTED;
 	}
-
+	
 	@Override
 	public boolean isDefault() {
 		return true;
