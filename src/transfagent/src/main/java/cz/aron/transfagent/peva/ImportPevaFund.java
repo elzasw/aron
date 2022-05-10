@@ -24,14 +24,17 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
+import cz.aron.apux._2020.ApuType;
 import cz.aron.peva2.wsdl.GetNadSheetResponse;
 import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
+import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundIgnored;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundProvider;
+import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ArchivalEntityService;
@@ -54,6 +57,8 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 	
     private final FundRepository fundRepository;
     
+    private final ArchDescRepository archDescRepository;
+    
     private final InstitutionRepository institutionRepository;
 
     private final DatabaseDataProvider databaseDataProvider;
@@ -75,12 +80,13 @@ public class ImportPevaFund implements FundImporter, FundProvider {
     private final ArchivalEntityService archivalEntityService;
     
     private final AttachmentService attachmentService;
-    
+
 	public ImportPevaFund(FundRepository fundRepository, InstitutionRepository institutionRepository,
 			DatabaseDataProvider databaseDataProvider, ConfigurationLoader configurationLoader, ConfigPeva2 configPeva2,
 			FundService fundService, StorageService storageService, TransactionTemplate tt,
 			Peva2CodeListDownloader codeListDownloader, Peva2CachedEntityDownloader entityDownloader,
-			ArchivalEntityService archivalEntityService, AttachmentService attachmentService) {
+			ArchivalEntityService archivalEntityService, AttachmentService attachmentService,
+			ArchDescRepository archDescRepository) {
 		super();
 		this.fundRepository = fundRepository;
 		this.institutionRepository = institutionRepository;
@@ -94,6 +100,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		this.entityDownloader = entityDownloader;
 		this.archivalEntityService = archivalEntityService;
 		this.attachmentService = attachmentService;
+		this.archDescRepository = archDescRepository;
 	}
     
 	@Override
@@ -144,21 +151,24 @@ public class ImportPevaFund implements FundImporter, FundProvider {
         
         var fund = fundRepository.findByCode(fundCode);
         UUID fundUuid = (fund!=null)?fund.getUuid():null;
+        
+        var archDescRoot = getArchDescUUID(fund);
 
         var ifi = new ImportPevaFundInfo(configPeva2.getFundProperties());
         ApuSourceBuilder apusrcBuilder;
  
-        try {
-            apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider, this, codeListProvider, entityDownloader);
-        } catch (IOException e) {
-        	log.error("Fail to import fund, path={}",fundXml,e);
-            throw new UncheckedIOException(e);
-        } catch (JAXBException e) {
-        	log.error("Fail to import fund, fail to parse data, path={}",fundXml,e);
-            throw new IllegalStateException(e);
-        } catch (FundIgnored fu) {
-        	return true;
-        }
+		try {
+			apusrcBuilder = ifi.importFundInfo(fundXml, fundUuid, databaseDataProvider, this, codeListProvider,
+					entityDownloader, archDescRoot);
+		} catch (IOException e) {
+			log.error("Fail to import fund, path={}", fundXml, e);
+			throw new UncheckedIOException(e);
+		} catch (JAXBException e) {
+			log.error("Fail to import fund, fail to parse data, path={}", fundXml, e);
+			throw new IllegalStateException(e);
+		} catch (FundIgnored fu) {
+			return true;
+		}
         
 		var attachments = new ArrayList<Path>();
 		if (fund != null) {
@@ -266,7 +276,7 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		var ifi = new ImportPevaFundInfo(configPeva2.getFundProperties());
 		try {
 			apuSourceBuilder = ifi.importFundInfo(apuPath.resolve(fileName), fund.getUuid(), databaseDataProvider, this,
-					codeListProvider, entityDownloader);
+					codeListProvider, entityDownloader, getArchDescUUID(fund));
 			apuSourceBuilder.setUuid(apuSource.getUuid());
 			var attachments = new ArrayList<Path>();
 			tt.executeWithoutResult(t -> {
@@ -362,6 +372,31 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 			}
 		}
 		return ret;
+	}
+
+	private UUID getArchDescUUID(Fund fund) {
+		ArchDesc archDesc = null;
+		if (fund != null) {
+			archDesc = archDescRepository.findByFund(fund);
+			if (archDesc != null) {
+				var apuSrcPath = storageService.getApuDataDir(archDesc.getApuSource().getDataDir())
+						.resolve(StorageService.APUSRC_XML);
+				try {
+					var apuSource = ApuSourceBuilder.read(apuSrcPath);
+					var apus = apuSource.getApus().getApu();
+					if (!apus.isEmpty()) {
+						var apu = apus.get(0);
+						if (apu.getType() == ApuType.ARCH_DESC) {
+							return UUID.fromString(apu.getUuid());
+						}
+					}
+				} catch (JAXBException e) {
+					log.error("Fail to read apusource {}", apuSrcPath, e);
+					return null;
+				}
+			}
+		}
+		return null;
 	}
 
 }

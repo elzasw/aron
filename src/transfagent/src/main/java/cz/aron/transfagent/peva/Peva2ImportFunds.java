@@ -1,6 +1,5 @@
 package cz.aron.transfagent.peva;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -35,7 +34,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
     
     private static final Logger log = LoggerFactory.getLogger(Peva2ImportFunds.class);
     
-    private static final String PREFIX_DASH = "pevafund-";
+    public static final String PREFIX_DASH = "pevafund-";
 	
 	private LRUMap<String,String> fundUUIDToJaFa = null;
 
@@ -138,20 +137,6 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				}
 			}
 		}
-    }
-    
-    private void createCommands(List<NadSheet> nadSheets) {
-    	Path commandsInputDir = storageService.getInputPath().resolve("commands");
-    	for (NadSheet nadSheet : nadSheets) {
-    		var commandFile = commandsInputDir.resolve(PREFIX_DASH+nadSheet.getId());
-    		if (!Files.isRegularFile(commandFile)) {
-    			try {
-    				Files.createFile(commandFile);
-    			} catch (IOException e) {
-    				log.error("Fail to create command file {}",commandFile,e);
-    			}
-    		}
-    	}    	
     }
 
 	@Override

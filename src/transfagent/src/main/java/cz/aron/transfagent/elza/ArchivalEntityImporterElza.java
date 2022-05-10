@@ -26,6 +26,7 @@ import org.springframework.util.FileSystemUtils;
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.transfagent.common.BulkOperation;
+import cz.aron.transfagent.config.ConfigElza;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchivalEntity;
@@ -75,12 +76,15 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	private final DatabaseDataProvider databaseDataProvider;
 	
 	private final ApTypeService apTypeService;
+	
+	private final ConfigElza configElza;
 
 	public ArchivalEntityImporterElza(ApuSourceService apuSourceService, StorageService storageService,
 			ElzaExportService elzaExportService, ArchivalEntityRepository archivalEntityRepository,
 			EntitySourceRepository entitySourceRepository, CoreQueueRepository coreQueueRepository,
 			TransactionTemplate transactionTemplate, ConfigurationLoader configurationLoader,
-			DatabaseDataProvider databaseDataProvider, ApTypeService apTypeService) {
+			DatabaseDataProvider databaseDataProvider, ApTypeService apTypeService,
+			ConfigElza configElza) {
 		this.apuSourceService = apuSourceService;
 		this.storageService = storageService;
 		this.elzaExportService = elzaExportService;
@@ -91,6 +95,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 		this.configurationLoader = configurationLoader;
 		this.databaseDataProvider = databaseDataProvider;
 		this.apTypeService = apTypeService;
+		this.configElza = configElza;
 	}
 
 	@Override
@@ -650,7 +655,11 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	
 	@Override
 	public boolean isDefault() {
-		return true;
+		if (configElza!=null&&configElza.isDisabled()) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 

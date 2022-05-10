@@ -9,6 +9,7 @@ import cz.aron.transfagent.domain.Fund;
 
 public interface ArchDescRepository extends JpaRepository<ArchDesc, Integer> {
 
+	@EntityGraph(attributePaths = {"apuSource","fund"})
     ArchDesc findByFund(Fund fund);
 
     @EntityGraph(attributePaths = {"apuSource","fund"})

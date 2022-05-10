@@ -241,7 +241,7 @@ public class TransformService {
             ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
             FilesArchiver archiver = new DirectoryArchiver(tempDir.toFile());
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
-            spb.buildPyramid(pir, "image", archiver, 1);
+            spb.buildPyramid(pir, "image", archiver, Runtime.getRuntime().availableProcessors());
             try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(targetFile))) {
                 Files.walkFileTree(tempDir, new SimpleFileVisitor<Path>() {
                     @Override

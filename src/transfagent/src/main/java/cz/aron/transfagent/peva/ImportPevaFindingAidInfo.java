@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
@@ -81,6 +82,13 @@ public class ImportPevaFindingAidInfo {
 				log.error("FindingAid uuid={}, missing fund {}",findingAid.getId(),fundCode);
 			}						
 		}
+		
+		if (fundUUIDs.isEmpty()) {
+			log.error("Fainding aid code: {}, institution:{} not related to any fund", findingAid.getEvidenceNumber(),
+					institutionCode);
+			throw new PevaFundNotExist(findingAid.getNadSheets().getNadSheet().stream().collect(Collectors.toList()));
+		}
+		
 		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %s, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
 				institutionCode);
 
@@ -239,4 +247,18 @@ public class ImportPevaFindingAidInfo {
 		return authorUUIDs;
 	}
 
+	public static class PevaFundNotExist extends RuntimeException {
+		
+		private final List<String> fundIds;
+		
+		public PevaFundNotExist(List<String> fundIds) {
+			this.fundIds = fundIds;
+		}
+
+		public List<String> getFundIds() {
+			return fundIds;
+		}
+
+	}
+	
 }

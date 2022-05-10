@@ -1,6 +1,7 @@
 package cz.aron.apux;
 
 import java.io.OutputStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +69,16 @@ public class ApuSourceBuilder {
 		JAXBElement<ApuSource> apusrc = build();
 		Marshaller marshaller = ApuxFactory.createMarshaller();
 		marshaller.marshal(apusrc, fos);
+	}
+	
+	public static ApuSource read(Path path) throws JAXBException {
+		JAXBElement<ApuSource> apusrc = (JAXBElement<ApuSource>) ApuxFactory.createUnmarshaller()
+				.unmarshal(path.toFile());
+		if (apusrc != null) {
+			return apusrc.getValue();
+		} else {
+			return null;
+		}
 	}
 
 	public Apu createApu(String name, ApuType apuType) {

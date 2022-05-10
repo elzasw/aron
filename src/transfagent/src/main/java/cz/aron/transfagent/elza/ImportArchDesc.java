@@ -3,6 +3,7 @@ package cz.aron.transfagent.elza;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -43,6 +45,9 @@ import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
+import cz.aron.transfagent.peva.ArchiveFundId;
+import cz.aron.transfagent.service.DaoFileStore2Service;
+import cz.aron.transfagent.service.DaoFileStore2Service.ArchiveFundDao;
 import cz.aron.transfagent.service.DaoFileStoreService;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
@@ -76,16 +81,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	final Map<UUID, ArchEntityInfo> apRefs = new HashMap<>();
 	final Map<UUID, ArchEntityInfo> apLevelRefs = new HashMap<>();
-
-	/**
-	 * Dao odkazovane z archivniho popisu
-	 */
-	private final Set<String> daoRefs = new HashSet<>();
 	
 	/**
-	 * Dao pripojene pripojene z disku parovane na uuid urovne popisu
+	 * Mapa (source,daos)
 	 */
-	private final Set<String> externalDaoRefs = new HashSet<>();
+	private final Map<String,Set<ArchDescDaoRef>> daoRefs = new HashMap<>();
+	
 
 	private UUID instApuUuid;
 	private UUID fundApuUuid;
@@ -95,6 +96,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	private String institutionCode;
 
 	private String institutionName;
+	
+	private Integer fundId;
 
 	private Apu activeApu;
 
@@ -112,8 +115,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_RESTRICTED_ACCESS_TYPE",
             // geo souradnice - neumime prevest
             ElzaTypes.ZP2015_POSITION,
-            "ZP2015_DAO_ID"
+            "ZP2015_DAO_ID",             
     // TODO: k zapracovani:
+            "ZP2015_AMOUNT"
     };
 
     /**
@@ -124,31 +128,35 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final ApTypeService apTypeService;
     
     private final DaoFileStoreService daoFileStoreService;
+    
+    private final DaoFileStore2Service daoFileStoreService2;
 
-	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService) {
+	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
+			DaoFileStore2Service daoFileStoreService2) {
 		this.apTypeService = apTypeService;
-		this.daoFileStoreService = daoFileStoreService;		
+		this.daoFileStoreService = daoFileStoreService;
+		this.daoFileStoreService2 = daoFileStoreService2;
 	}
 
     public Set<UUID> getApRefs() {
         return apRefs.keySet();
     }
-    
-    public Set<String> getDaoRefs() {
-        return daoRefs;
-    }
-    
-    public Set<String> getExternalDaoRefs() {
-    	return externalDaoRefs;
-    }
 
     public String getInstitutionCode() {
         return institutionCode;
     }
+    
+    public Integer getFundId() {
+    	return fundId;
+    }
+    
+    public Map<String,Set<ArchDescDaoRef>> getDaoRefs() {
+    	return daoRefs;
+    }
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null);
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null);
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -202,8 +210,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
         institutionName = institutionInfo.getName();
         Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
 
-        fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
-        Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s", fi.getC(), institutionCode);       
+		if (fi.getC() != null) {
+			fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
+		} else if (fi.getNum() != null) {
+			fundId = fi.getNum().intValue();
+			fundApuUuid = dataProvider.getFundApu(institutionCode,
+					ArchiveFundId.createJaFaId(institutionCode, fi.getNum().toString(), null));
+		}
+		Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s,%s", fi.getC(), fi.getNum(),
+				institutionCode);
 
         Levels lvls = sect.getLvls();
         for(Level lvl: lvls.getLvl()) {
@@ -264,8 +279,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		if (daos != null && daos.getDao().size() > 0) {
 			for (DigitalArchivalObject dao : daos.getDao()) {
 				var daoHandle = dao.getDoid();
-				daoRefs.add(daoHandle);
-
+				addDaoRef("dspace", null, daoHandle);
 				UUID daoUuid = dataProvider.getDao(daoHandle);
 				if (daoUuid != null) {
 					ApuSourceBuilder.addDao(activeApu, daoUuid);
@@ -273,15 +287,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				}
 			}
 		}
-
-        // external daos
-        if (daoFileStoreService!=null) {
-        	if (daoFileStoreService.getDaoDir(lvl.getUuid())!=null) {
-        		externalDaoRefs.add(lvl.getUuid());
-				ApuSourceBuilder.addDao(activeApu, UUID.fromString(lvl.getUuid()));
-				daoExist = true;
-        	}
-        }
+		
+		daoExist = daoExist || processExternalDaos(lvl);
         
         if(daoExist) {
             ApuSourceBuilder.addEnum(activePart, "DIGITAL", "Ano", false);
@@ -315,6 +322,55 @@ public class ImportArchDesc implements EdxItemCovertContext {
             }
         }
     }
+    
+	private boolean processExternalDaos(Level lvl) {
+		boolean daoExist = false;
+		if (daoFileStoreService != null) {
+			if (daoFileStoreService.getDaoDir(lvl.getUuid()) != null) {
+				addDaoRef(daoFileStoreService.getName(), UUID.fromString(lvl.getUuid()), lvl.getUuid());
+				ApuSourceBuilder.addDao(activeApu, UUID.fromString(lvl.getUuid()));
+				daoExist = true;
+			}
+		}
+		if (daoFileStoreService2 != null) {
+			for (DescriptionItem di : lvl.getDdOrDoOrDp()) {
+				if (di instanceof DescriptionItemString) {
+					DescriptionItemString ds = (DescriptionItemString) di;
+					if ("ZP2015_DAO_ID".equals(ds.getT())) {
+						String id = ds.getV();
+						try {
+							ArchiveFundDao afd = new ArchiveFundDao(institutionCode, fundId, id);
+							List<Path> paths = daoFileStoreService2.getDaos(afd);
+							if (CollectionUtils.isNotEmpty(paths)) {
+								// podivam se jestli uz dao neexistuje abych negeneroval nove uuid a neposlal ho
+								// opakovane
+								// TODO doresit situaci kdy by neexistujici dao bylo odkazovano z vice urovni (nakesovat nove vytvarena uuid)
+								UUID uuid = dataProvider.getDao(afd.toString());
+								if (uuid == null) {
+									uuid = UUID.randomUUID();
+								}
+								addDaoRef(daoFileStoreService2.getName(), uuid, afd.toString());
+								ApuSourceBuilder.addDao(activeApu, uuid);
+								daoExist = true;
+							}
+						} catch (IOException e) {
+							throw new UncheckedIOException(e);
+						}
+					}
+				}
+			}
+		}
+		return daoExist;
+	}
+	
+	private void addDaoRef(String source, UUID uuid, String handle) {
+		Set<ArchDescDaoRef> sourceDaoRefs = daoRefs.get(source);
+		if (sourceDaoRefs == null) {
+			sourceDaoRefs = new HashSet<>();
+			daoRefs.put(source, sourceDaoRefs);
+		}
+		sourceDaoRefs.add(new ArchDescDaoRef(handle, uuid));
+	}
 
     private void initConvertor() {
 	    stringTypeMap = new HashMap<>();
@@ -624,4 +680,43 @@ public class ImportArchDesc implements EdxItemCovertContext {
         apRefs.put(aei.getUuid(), aei);
         apLevelRefs.put(aei.getUuid(), aei);
     }
+    
+    public static class ArchDescDaoRef {
+    	
+    	private final String handle;
+    	
+    	private final UUID uuid;
+    	
+    	public ArchDescDaoRef(String handle, UUID uuid) {
+    		this.handle = handle;
+    		this.uuid = uuid;
+    	}
+
+		public String getHandle() {
+			return handle;
+		}
+
+		public UUID getUuid() {
+			return uuid;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(handle, uuid);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ArchDescDaoRef other = (ArchDescDaoRef) obj;
+			return Objects.equals(handle, other.handle) && Objects.equals(uuid, other.uuid);
+		}    	
+    			
+    }
+    
 }

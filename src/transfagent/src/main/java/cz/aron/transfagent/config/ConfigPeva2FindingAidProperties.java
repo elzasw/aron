@@ -13,6 +13,9 @@ public class ConfigPeva2FindingAidProperties {
     
     // vyplni autory jako odkaz na entitu, jinak vyplnuje textovou hodnotu
     private boolean auhorRef;
+    
+    // pokud nenajde fond, tak se ho pokusi importovat jako command
+    private boolean importMissingFund;
 
 	public boolean isComposedFindingAidName() {
 		return composedFindingAidName;
@@ -44,6 +47,14 @@ public class ConfigPeva2FindingAidProperties {
 
 	public void setAuhorRef(boolean auhorRef) {
 		this.auhorRef = auhorRef;
+	}
+
+	public boolean isImportMissingFund() {
+		return importMissingFund;
+	}
+
+	public void setImportMissingFund(boolean importMissingFund) {
+		this.importMissingFund = importMissingFund;
 	}	
 
 }

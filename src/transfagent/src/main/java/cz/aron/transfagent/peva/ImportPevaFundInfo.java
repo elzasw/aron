@@ -63,6 +63,8 @@ public class ImportPevaFundInfo {
     
     private String institutionCode;
     
+    private UUID archDescRoot;
+    
     private final List<String> originators = new ArrayList<>();
     
     private final List<String> findingAids = new ArrayList<>();
@@ -99,60 +101,64 @@ public class ImportPevaFundInfo {
         Path propPath = Paths.get(propFile);
         pdp.load(propPath);
         
-        return importFundInfo(inputFile, null, pdp, null, null, null);
+        return importFundInfo(inputFile, null, pdp, null, null, null, null);
     }
 
 	public ApuSourceBuilder importFundInfo(final Path inputFile, UUID uuid, final ContextDataProvider cdp,
-			final FundProvider fundProvider, final Peva2CodeListProvider codeListProvider, Peva2CachedEntityDownloader entityDownloader)
-			throws IOException, JAXBException {
+			final FundProvider fundProvider, final Peva2CodeListProvider codeListProvider,
+			Peva2CachedEntityDownloader entityDownloader, UUID archDescRoot) throws IOException, JAXBException {
 		dataProvider = cdp;
 		this.codeListProvider = codeListProvider;
+		this.archDescRoot = archDescRoot;
 		GetNadSheetResponse gnsr = Peva2XmlReader.unmarshalGetNadSheetResponse(inputFile);
 		if (gnsr.getNadPrimarySheet() != null) {
 			importPrimarySheet(gnsr.getNadPrimarySheet());
 		} else {
 			var parentUUID = gnsr.getNadSubsheet().getParent();
 			NadPrimarySheet primarySheet = fundProvider.getFundByUUID(UUID.fromString(parentUUID));
-			if (primarySheet==null) {
+			if (primarySheet == null) {
 				log.info("Fund ignored for now {}", inputFile.getFileName().toString());
-				throw new FundIgnored();				
+				throw new FundIgnored();
 			}
 			importNadSubsheet(gnsr.getNadSubsheet(), primarySheet);
 		}
 		return apusBuilder;
 	}
     
-    private void importNadSubsheet(NadSubsheet subsheet, NadPrimarySheet primarySheet)  throws IOException, JAXBException {
-    	var instInfo = getInstitutionInfo(subsheet);
-        var nadHeader = subsheet.getHeader();
-        var fullFundName = createFundName(instInfo, subsheet);
+	private void importNadSubsheet(NadSubsheet subsheet, NadPrimarySheet primarySheet)
+			throws IOException, JAXBException {
+		var instInfo = getInstitutionInfo(subsheet);
+		var nadHeader = subsheet.getHeader();
+		var fullFundName = createFundName(instInfo, subsheet);
 
-    	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(subsheet.getId()));
-    	createTitlePart(apu, nadHeader);
+		Apu apu = apusBuilder.createApu(fullFundName, ApuType.FUND, UUID.fromString(subsheet.getId()));
+		createTitlePart(apu, nadHeader);
+
+		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
+		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
+
+		processArchDesc(partFundInfo);
+		processEvidenceNumber(primarySheet, subsheet, partFundInfo);
+		processNadHeaderCommon(nadHeader, partFundInfo);
+		processNadSheetSubNadSheetCommon(subsheet, partFundInfo);
+	}
+
+	private void importPrimarySheet(NadPrimarySheet primarySheet) {
+		var instInfo = getInstitutionInfo(primarySheet);
+		var nadHeader = primarySheet.getHeader();
+		var fullFundName = createFundName(instInfo, primarySheet);
+
+		Apu apu = apusBuilder.createApu(fullFundName, ApuType.FUND, UUID.fromString(primarySheet.getId()));
+		createTitlePart(apu, nadHeader);
 
 		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
 		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
 
-        processEvidenceNumber(primarySheet,subsheet,partFundInfo);
-        processNadHeaderCommon(nadHeader, partFundInfo);
-        processNadSheetSubNadSheetCommon(subsheet, partFundInfo);
-    }
-    
-    private void importPrimarySheet(NadPrimarySheet primarySheet) {    	
-    	var instInfo = getInstitutionInfo(primarySheet);   
-        var nadHeader = primarySheet.getHeader();
-        var fullFundName = createFundName(instInfo, primarySheet);
-
-    	Apu apu = apusBuilder.createApu(fullFundName,ApuType.FUND, UUID.fromString(primarySheet.getId()));
-    	createTitlePart(apu, nadHeader);
-
-		Part partFundInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FUND_INFO);
-		apusBuilder.addApuRef(partFundInfo, "INST_REF", instInfo.getUuid());
-	
-		processEvidenceNumber(primarySheet, null, partFundInfo);	
-        processNadHeaderCommon(nadHeader, partFundInfo);
-		processNadSheetSubNadSheetCommon(primarySheet, partFundInfo);        
-    }
+		processArchDesc(partFundInfo);
+		processEvidenceNumber(primarySheet, null, partFundInfo);
+		processNadHeaderCommon(nadHeader, partFundInfo);
+		processNadSheetSubNadSheetCommon(primarySheet, partFundInfo);
+	}
     
 	private void createTitlePart(Apu apu, NadHeader nadHeader) {
 		if (fundProperties.isTitlePart()) {
@@ -178,6 +184,12 @@ public class ImportPevaFundInfo {
 					+ (nadSheet.getHeader().getTimeRange()!=null?Peva2Utils.getAsString(nadSheet.getHeader().getTimeRange()):"");
 		} else {
 			return nadSheet.getHeader().getName();
+		}
+	}
+	
+	private void processArchDesc(Part partFundInfo) {
+		if (archDescRoot != null) {
+			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", archDescRoot);
 		}
 	}
 

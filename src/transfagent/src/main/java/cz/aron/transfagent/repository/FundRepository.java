@@ -14,6 +14,7 @@ public interface FundRepository extends JpaRepository<Fund, Integer> {
     @EntityGraph(attributePaths = { "apuSource" })
     Fund findByCode(String code);
 
+    @EntityGraph(attributePaths = { "apuSource" })
     Fund findByCodeAndInstitution(String code, Institution institution);
     
     Fund findByUuidAndInstitution(UUID uuid, Institution institution);

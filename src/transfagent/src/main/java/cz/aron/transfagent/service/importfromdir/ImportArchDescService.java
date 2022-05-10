@@ -5,9 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -17,6 +15,7 @@ import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -31,6 +30,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ApTypeService;
 import cz.aron.transfagent.elza.ImportArchDesc;
+import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.CoreQueueRepository;
@@ -38,10 +38,11 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.ArchivalEntityService;
-import cz.aron.transfagent.service.DSpaceImportService;
+import cz.aron.transfagent.service.DaoFileStore2Service;
 import cz.aron.transfagent.service.DaoFileStoreService;
 import cz.aron.transfagent.service.DaoImportService;
 import cz.aron.transfagent.service.DaoImportService.DaoSource;
+import cz.aron.transfagent.service.DaoImportService.DaoSourceRef;
 import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
@@ -84,6 +85,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     
     // TODO some interface like  'LocalDaoSource'
     private final DaoFileStoreService daoFileStoreService;
+    private final DaoFileStore2Service daoFileStore2Service;
 
     final private String ARCHDESC_DIR = "archdesc";
 
@@ -96,7 +98,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             ArchivalEntityService archivalEntityService,
             FileImportService fileImportService,
             DaoImportService daoImportService,
-            DaoFileStoreService daoFileStoreService) {
+            @Nullable DaoFileStoreService daoFileStoreService,
+            @Nullable DaoFileStore2Service daoFileStore2Service) {
         this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -113,6 +116,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.fileImportService = fileImportService;
         this.daoImportService = daoImportService;
         this.daoFileStoreService = daoFileStoreService;
+        this.daoFileStore2Service = daoFileStore2Service;
     }
 
     @PostConstruct
@@ -179,7 +183,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
      */
     private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
 
-        var iad = new ImportArchDesc(apTypeService, daoFileStoreService);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service);
         ApuSourceBuilder apusrcBuilder;
 
         try {
@@ -197,8 +201,16 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 
         var fund = fundRepository.findByCodeAndInstitution(fundCode, institution);
         if (fund == null) {
-            throw new IllegalStateException("The entry Fund code={" + fundCode + "} must exist.");
+        	if (iad.getFundId()!=null) {
+        		fund = fundRepository.findByCodeAndInstitution(ArchiveFundId.createJaFaId(iad.getInstitutionCode(), iad.getFundId().toString(), null), institution);
+        	}
+        	if (fund==null) {
+        		throw new IllegalStateException("The entry Fund code={" + fundCode + "} must exist.");
+        	}
         }
+        
+        // reimportuji fond, aby se vytvorila vazba fond->archdescs
+        fund.getApuSource().setReimport(true);
 
         var archDesc = archDescRepository.findByFund(fund);
 
@@ -237,15 +249,21 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     
 	private List<DaoSource> getDaoSources(ImportArchDesc iad) {
 		var daoSources = new ArrayList<DaoSource>();
-		if (!iad.getDaoRefs().isEmpty()) {
-			daoSources.add(new DaoSource("dspace", false, iad.getDaoRefs()));
-		}
-		if (!iad.getExternalDaoRefs().isEmpty()) {
-			daoSources.add(new DaoSource("file", true, iad.getExternalDaoRefs()));
-		}
+		iad.getDaoRefs().forEach((s, r) -> {
+			switch (s) {
+			case "dspace":
+			case "file":
+			case "file2":
+				daoSources.add(new DaoSource(s,
+						r.stream().map(x -> new DaoSourceRef(x.getUuid(), x.getHandle())).collect(Collectors.toSet())));
+				break;
+			default:
+				throw new IllegalArgumentException("Unknown dao source " + s);
+			}
+		});
 		return daoSources;
-	}    
-    
+	}
+
     private ArchDesc createArchDesc(Fund fund, Path dataDir, Path origDir, ApuSourceBuilder apusrcBuilder) {
     	
         var archDescUuid = UUID.randomUUID();
@@ -304,7 +322,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var inputFile = apuDir.resolve(fileName);
              
         ApuSourceBuilder apuSourceBuilder;
-        var iad = new ImportArchDesc(apTypeService, daoFileStoreService);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service);
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());

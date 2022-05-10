@@ -32,6 +32,7 @@ import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.FindingAid;
 import cz.aron.transfagent.domain.Fund;
+import cz.aron.transfagent.peva.ImportPevaFindingAidInfo.PevaFundNotExist;
 import cz.aron.transfagent.repository.FindingAidRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -144,6 +145,11 @@ public class ImportPevaFindingAid implements FindingAidImporter {
         } catch (JAXBException e) {
             protocol.add("Chyba " + e.getMessage());
             throw new IllegalStateException(e);
+        } catch (PevaFundNotExist pfneEx) {        	
+        	if (configPeva2.getFindingAidProperties().isImportMissingFund()) {
+        		createFundCommands(pfneEx);
+        	}        	
+        	throw new IllegalStateException(pfneEx);
         }
         
         var institutionCode = ifai.getInstitutionCode();
@@ -361,4 +367,19 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 		return ReimportProcessor.Result.REIMPORTED;
 	}
 
+	private void createFundCommands(PevaFundNotExist fne) {
+    	Path commandsInputDir = storageService.getInputPath().resolve("commands");
+		for (var fundId : fne.getFundIds()) {
+    		var commandFile = commandsInputDir.resolve(Peva2ImportFunds.PREFIX_DASH+fundId);
+    		if (!Files.isRegularFile(commandFile)) {
+    			try {
+    				Files.createFile(commandFile);
+    			} catch (IOException e) {
+    				log.error("Fail to create command file {}",commandFile,e);
+    			}
+    		}
+    	}    	
+    }
+
+	
 }

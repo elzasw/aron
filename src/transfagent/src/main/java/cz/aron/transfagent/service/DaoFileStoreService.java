@@ -14,6 +14,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
@@ -25,8 +26,9 @@ import cz.aron.transfagent.service.importfromdir.TransformService;
 
 
 /**
- * Sluzba zpristupnujici Dao ulozene na disku
+ * Sluzba zpristupnujici Dao ulozene na disku. Seznam souboru je v koreni v souboru data.csv ve formatu (uuid;cesta)
  */
+@ConditionalOnProperty(value="filestore.path")
 @Service
 public class DaoFileStoreService implements DaoImporter {
 	

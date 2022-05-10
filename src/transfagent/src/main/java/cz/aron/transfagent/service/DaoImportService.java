@@ -155,18 +155,14 @@ public class DaoImportService implements ImportProcessor  {
 	}
 	
 	public static class DaoSource {
-		
-		private final String name;
-		
-		// uuid dao jsou finalni buou vyplnena do sloupce uuid
-		private final boolean finalUUID;
-		
-		private final Set<String> daoRefs;
 
-		public DaoSource(String name, boolean finalUUID, Set<String> daoRefs) {
+		private final String name;
+
+		private final Set<DaoSourceRef> daoRefs;
+
+		public DaoSource(String name, Set<DaoSourceRef> daoRefs) {
 			super();
 			this.name = name;
-			this.finalUUID = finalUUID;
 			this.daoRefs = daoRefs;
 		}
 
@@ -174,20 +170,56 @@ public class DaoImportService implements ImportProcessor  {
 			return name;
 		}
 
-		public boolean isFinalUUID() {
-			return finalUUID;
-		}
-
-		public Set<String> getDaoRefs() {
+		public Set<DaoSourceRef> getDaoRefs() {
 			return daoRefs;
 		}
 
+	}	
+	
+	public static class DaoSourceRef {
+		
+		private final UUID uuid;
+		
+		private final String handle;
+		
+		public DaoSourceRef(UUID uuid, String handle) {
+			this.uuid = uuid;
+			this.handle = handle;
+		}
+
+		public UUID getUuid() {
+			return uuid;
+		}
+
+		public String getHandle() {
+			return handle;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(handle, uuid);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			DaoSourceRef other = (DaoSourceRef) obj;
+			return Objects.equals(handle, other.handle) && Objects.equals(uuid, other.uuid);
+		}		
+		
 	}
 	
 	/**
-	 * Aktualizuje Dao. Vytvori chybejici, deaktivuje nepristupne nebo jiz neexistujici. 
-	 * @param apuSource 
-	 * @param daoRefs mapa zdroj seznam identifikatoru dao
+	 * Aktualizuje Dao. Vytvori chybejici, deaktivuje nepristupne nebo jiz
+	 * neexistujici. Existujici Dao se vyhledavaji podle handle
+	 * 
+	 * @param apuSource
+	 * @param daoRefs   mapa zdroj seznam identifikatoru dao
 	 */
     public void updateDaos(ApuSource apuSource, Collection<DaoSource> daoRefs) {
         var daos = daoRepository.findByApuSource(apuSource);
@@ -200,7 +232,7 @@ public class DaoImportService implements ImportProcessor  {
 
         for(var daoSource:daoRefs) {
         	for(var daoRef:daoSource.getDaoRefs()) {
-        		var dao = daoLookup.get(daoRef);
+        		var dao = daoLookup.get(daoRef.getHandle());
         		if (dao != null && Objects.equals(daoSource.getName(), dao.getSource())) {
         			if (dao.getState() == DaoState.INACCESSIBLE) {
                         dao.setState(DaoState.ACCESSIBLE);
@@ -210,14 +242,12 @@ public class DaoImportService implements ImportProcessor  {
         		} else {
         			// store new dao
                     dao = new Dao();
-                    dao.setHandle(daoRef);
+                    dao.setHandle(daoRef.getHandle());
                     dao.setApuSource(apuSource);
                     dao.setTransferred(false);
                     dao.setSource(daoSource.getName());
-                    dao.setState(DaoState.ACCESSIBLE);
-                    if (daoSource.isFinalUUID()) {
-                    	dao.setUuid(UUID.fromString(daoRef));
-                    }
+                    dao.setState(DaoState.ACCESSIBLE);                    
+                    dao.setUuid(daoRef.getUuid());
                     daoRepository.save(dao);
         		}        		
         	}
