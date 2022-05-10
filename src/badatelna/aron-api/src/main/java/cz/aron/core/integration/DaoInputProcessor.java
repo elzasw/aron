@@ -3,6 +3,7 @@ package cz.aron.core.integration;
 import cz.aron.apux._2020.Dao;
 import cz.aron.apux._2020.DaoBundle;
 import cz.aron.apux._2020.DaoFile;
+import cz.aron.core.image.tile.TilesManager;
 import cz.aron.core.model.DigitalObject;
 import cz.aron.core.model.DigitalObjectStore;
 import cz.aron.core.model.DigitalObjectType;
@@ -30,9 +31,7 @@ import java.util.zip.ZipInputStream;
 public class DaoInputProcessor {
     @Inject private DigitalObjectStore digitalObjectStore;
     @Inject private FileInputProcessor fileInputProcessor;
-
-    @Value("${tile.folder}")
-    private String tileFolder;
+    @Inject private TilesManager tilesManager;
 
     public void processDaoAndFiles(String metadata, Map<String, Path> filesMap) {
         Dao dao;
@@ -51,7 +50,7 @@ public class DaoInputProcessor {
             if (digitalObjectType == DigitalObjectType.TILE) {  //unzip into folder, besides normal processing
                 for (DaoFile daoFile : daoBundle.getFile()) {
                     Path uploadedFile = filesMap.get(daoFile.getUuid());
-                    unzipTiles(uploadedFile, Path.of(tileFolder, daoFile.getUuid()));
+                    unzipTiles(uploadedFile, tilesManager.getTilesPath(daoFile.getUuid()));
                 }
             }
             for (DaoFile daoFile : daoBundle.getFile()) {
