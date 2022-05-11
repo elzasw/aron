@@ -92,9 +92,9 @@ public class DaoFileStoreService implements DaoImporter {
 	private Map<String, Path> init() throws IOException {
 		Map<String, Path> map = new HashMap<>();
 		if (config.getPath() != null) {
-			Path mappingFile = config.getPath().resolve("data.csv");
+			Path mappingFile = config.getPath().resolve("dao.csv");
 			if (!Files.isRegularFile(mappingFile)) {
-				log.warn("File data.csv not found.");
+				log.warn("File data.csv not found {}.", mappingFile);
 				return map;
 			}
 			lastModification = Files.getLastModifiedTime(mappingFile);
@@ -105,7 +105,7 @@ public class DaoFileStoreService implements DaoImporter {
 				String path = record.get(1);
 				map.put(uuid, Paths.get(path));
 			}
-			log.info("File data.csv read, num mappings:",map.size());
+			log.info("File data.csv read, num mappings:{}, path:{}",map.size(), mappingFile);
 		}		
 		return map;
 	}
