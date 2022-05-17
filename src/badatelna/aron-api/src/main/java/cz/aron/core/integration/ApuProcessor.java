@@ -13,6 +13,7 @@ import cz.aron.core.relation.RelationRepository;
 import cz.aron.core.relation.RelationStore;
 import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,7 @@ public class ApuProcessor {
     @Inject private ApuSourceRepository apuSourceRepository;
     @Inject private ApuRepository apuRepository;
     @Inject private ApuStore apuStore;
+    @Inject private DigitalObjectStore daoStore;
     @Inject private FileInputProcessor fileInputProcessor;
     @Inject private ObjectMapper objectMapper;
     @Inject private RelationRepository relationRepository;
@@ -46,8 +48,9 @@ public class ApuProcessor {
     private Set<Relation> relationsAddCache = new HashSet<>();
     private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
     private Set<String> apuIdsProcessed = new HashSet<>();
+    private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
-    private static final int CACHE_SIZE = 1000;
+    private static final int CACHE_SIZE = 100;
 
     private int apuOrderCounter;
 
@@ -65,6 +68,7 @@ public class ApuProcessor {
             ourApuSource.setId(apuSource.getUuid());
         }
         else {
+            daoStore.disconnectDaosByApuSourceId(apuSource.getUuid());
             List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(apuSource.getUuid());
             apuRepository.delete(apusToDelete);
         }
@@ -76,12 +80,18 @@ public class ApuProcessor {
         else {
             apuSourceRepository.update(ourApuSource);
         }
+
+        ApuSource finalApuSource = ourApuSource;
         apuOrderCounter = 0;
-        for (Apu apu : apuSource.getApus().getApu()) {
-            processApu(apu, ourApuSource, filesMap);
-        }
-        flush();
+        ListUtils.partition(apuSource.getApus().getApu(), CACHE_SIZE).forEach(partition -> {
+            fillDaoCache(partition.stream().map(apu->apu.getUuid()).collect(Collectors.toList()));
+            for (Apu apu : partition) {
+                processApu(apu, finalApuSource, filesMap);
+            }
+            flush();
+        });
         apuIdsProcessed.clear();
+        existingDaos.clear();
         apuRequestQueue.sendRequests();
     }
 
@@ -116,18 +126,23 @@ public class ApuProcessor {
         if (apu.getDaos() != null) {
             int i = 0;
             for (String daoUuid : apu.getDaos().getUuid()) {
-                DigitalObject digitalObject = new DigitalObject();
-                digitalObject.setId(daoUuid);
-                digitalObject.setApu(apuEntity);
-                digitalObject.setOrder(++i);
-                apuEntity.getDigitalObjects().add(digitalObject);
+                DigitalObject insertedDao = existingDaos.get(daoUuid);
+                if (insertedDao == null) {
+                    insertedDao = new DigitalObject();
+                    insertedDao.setId(daoUuid);
+                }
+                insertedDao.setApu(apuEntity);
+                insertedDao.setOrder(++i);
+                apuEntity.getDigitalObjects().add(insertedDao);
             }
         }
         saveCache.put(apuEntity.getId(), apuEntity);
         apusToHaveIncomingRelsUpdated.add(apuEntity.getId());
+        /*
         if (saveCache.size() > CACHE_SIZE) {
             flush();
         }
+        */
         recordRelations(apuEntity);
         apuRequestQueue.removeForApuId(apuEntity.getId());
     }
@@ -252,9 +267,10 @@ public class ApuProcessor {
                 }
             }
         }
+        /*
         if (relationsDeleteCache.size() > CACHE_SIZE || relationsAddCache.size() > CACHE_SIZE) {
             flush();
-        }
+        }*/
     }
 
     private void flush() {
@@ -282,4 +298,10 @@ public class ApuProcessor {
         apuRepository.reindex(new ArrayList<>(apusToHaveIncomingRelsUpdated));
         apusToHaveIncomingRelsUpdated.clear();
     }
+
+    private void fillDaoCache(List<String> daoIds) {
+        existingDaos.clear();
+        daoStore.listByIds(daoIds).forEach(dao->existingDaos.put(dao.getId(),dao));
+    }
+
 }

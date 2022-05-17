@@ -12,4 +12,12 @@ public class DigitalObjectStore extends DomainStore<DigitalObject, DigitalObject
     public DigitalObjectStore() {
         super(DigitalObject.class);
     }
+
+    public long disconnectDaosByApuSourceId(String id) {
+        long numModified = entityManager.createQuery("UPDATE DigitalObject do SET do.apu=NULL WHERE do IN (SELECT do FROM DigitalObject do INNER JOIN ApuEntity ae ON do.apu=ae WHERE ae.source.id=?1)")
+        .setParameter(1,id).executeUpdate();
+        entityManager.flush();
+        return numModified;
+    }
+
 }

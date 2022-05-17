@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -141,21 +142,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     @Override
     public boolean processDirectory(Path dir) {
 
-        List<Path> xmls;
-        try (var stream = Files.list(dir)) {
-            xmls = stream
-                    .filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith("archdesc")
-                            && f.getFileName().toString().endsWith(".xml"))
-                    .collect(Collectors.toList());
-        } catch (IOException ioEx) {
-            throw new UncheckedIOException(ioEx);
-        }
-
-        var archdescXml = xmls.stream()
-                .filter(p -> p.getFileName().toString().startsWith("archdesc-")
-                        && p.getFileName().toString().endsWith(".xml"))
-                .findFirst();
-
+        var archdescXml = getArchDesc(dir);
         if (archdescXml.isEmpty()) {
             log.warn("Directory is empty {}", dir);
             return false;
@@ -170,6 +157,17 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
            return null;
         });
         return true;
+    }
+    
+    private Optional<Path> getArchDesc(Path dir) {
+    	 try (var stream = Files.list(dir)) {
+             return stream
+                     .filter(f -> Files.isRegularFile(f) && f.getFileName().toString().startsWith("archdesc")
+                             && f.getFileName().toString().endsWith(".xml"))
+                     .findFirst();
+         } catch (IOException ioEx) {
+             throw new UncheckedIOException(ioEx);
+         }
     }
 
     /**
@@ -314,12 +312,15 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         if (archDesc == null) {
             log.error("Missing archive description: {}", apuSource.getId());
             return Result.UNSUPPORTED;
-        }
-        var fund = archDesc.getFund();
-        var fileName = "archdesc-"+fund.getCode()+".xml";
-        
+        }        
         var apuDir = storageService.getApuDataDir(apuSource.getDataDir());
-        var inputFile = apuDir.resolve(fileName);
+        
+        var archDescFile = getArchDesc(apuDir);
+        if (archDescFile.isEmpty()) {
+        	log.error("Fail to reimport archdesc, missing archdes-CODE.xml, dir={}", apuDir);
+        	return Result.FAILED;        	
+        }                
+        var inputFile = archDescFile.get();
              
         ApuSourceBuilder apuSourceBuilder;
         var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service);
