@@ -50,16 +50,23 @@ public class DaoInputProcessor {
             if (digitalObjectType == DigitalObjectType.TILE) {  //unzip into folder, besides normal processing
                 for (DaoFile daoFile : daoBundle.getFile()) {
                     Path uploadedFile = filesMap.get(daoFile.getUuid());
-                    unzipTiles(uploadedFile, tilesManager.getTilesPath(daoFile.getUuid()));
+                    if (!FileInputProcessor.isReference(daoFile)) {
+                        unzipTiles(uploadedFile, tilesManager.getTilesPath(daoFile.getUuid()));
+                    }
+                    fileInputProcessor.processFileReference(
+                        daoFile,
+                        digitalObjectType,
+                        digitalObject);
                 }
-            }
-            for (DaoFile daoFile : daoBundle.getFile()) {
-                fileInputProcessor.processFile(
+            } else {
+                for (DaoFile daoFile : daoBundle.getFile()) {
+                    fileInputProcessor.processFile(
                         daoFile,
                         digitalObjectType,
                         null,
                         digitalObject,
                         filesMap);
+                }
             }
         }
         digitalObjectStore.update(digitalObject);

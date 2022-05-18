@@ -72,4 +72,38 @@ public class FileInputProcessor {
             throw new RuntimeException(e);
         }
     }
+
+    public void processFileReference(DaoFile daoFile, DigitalObjectType digitalObjectType, DigitalObject digitalObject) {
+        DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
+        digitalObjectFile.setId(daoFile.getUuid());
+        digitalObjectFile.setType(digitalObjectType);
+        digitalObjectFile.setOrder(daoFile.getPos());
+        digitalObjectFile.setPermalink(daoFile.getPrmLnk());
+        digitalObjectFile.setDigitalObject(digitalObject);
+        digitalObject.getFiles().add(digitalObjectFile);
+        if (daoFile.getMtdt() != null) {
+            for (MetadataItem itm : daoFile.getMtdt().getItms()) {
+                if (!"reference".equals(itm.getCode())) {
+                    Metadatum metadatum = new Metadatum();
+                    metadatum.setType(itm.getCode());
+                    metadatum.setValue(itm.getValue());
+                    metadatum.setFile(digitalObjectFile);
+                    digitalObjectFile.getMetadata().add(metadatum);
+                }
+            }
+        }
+    }
+
+    public static boolean isReference(DaoFile daoFile) {
+        if (daoFile.getMtdt() != null) {
+            for (MetadataItem itm : daoFile.getMtdt().getItms()) {
+                if ("reference".equals(itm.getCode()) && "1".equals(itm.getValue())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
 }
