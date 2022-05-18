@@ -59,6 +59,10 @@ public class DaoBuilder {
     public static void addMimeType(DaoFile daoFile, String mimeType) {
         getMetadata(daoFile).getItms().add(createMetadataItem("mimeType", mimeType));
     }
+    
+    public static void addReferenceFlag(DaoFile daoFile) {
+    	getMetadata(daoFile).getItms().add(createMetadataItem("reference", "1"));
+    }
 
     public static DaoFile createDaoFile(int pos, String mimetype) {
         return createDaoFile(null, null, pos, mimetype);

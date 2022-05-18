@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
@@ -26,6 +27,7 @@ import org.apache.tika.Tika;
 import org.jsoup.helper.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileSystemUtils;
 
@@ -47,10 +49,18 @@ import net.coobird.thumbnailator.Thumbnails;
 public class TransformService {
 
     private static final Logger log = LoggerFactory.getLogger(TransformService.class);
+    
+    private static final int DIR_NAME_LENGTH = 2;
 
     private final StorageService storageService;
 
     private final ConfigDspace configDspace;
+    
+    @Value("${tile.folder:#{NULL}}")
+    private String tileFolder;
+
+    @Value("${tile.level:2}")
+    private int hierarchicalLevel;
 
     public TransformService(StorageService storageService, ConfigDspace configDspace) {
         this.storageService = storageService;
@@ -203,9 +213,13 @@ public class TransformService {
     private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) {
         var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream");
         var uuid = daoFile.getUuid();
-
-        hiResView.getFile().add(daoFile);
-        createDzi(file, filesDir.resolve("file-" + uuid));
+        hiResView.getFile().add(daoFile);        
+        if (tileFolder != null) {
+        	createDziOut(file, uuid);
+        	DaoBuilder.addReferenceFlag(daoFile);
+        } else {
+        	createDzi(file, filesDir.resolve("file-" + uuid));	
+        }        
     }
 
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
@@ -280,6 +294,53 @@ public class TransformService {
                 throw new RuntimeException(e);
             }
         }
+    }
+    
+    
+    private void createDziOut(Path sourceImage, String id) {
+    	log.debug("Creating hiResView file {}", id);
+    	
+    	Path path = getPath(id);
+        try {
+            Files.createDirectories(path);
+        } catch (IOException e) {
+            log.error("Error creating dir prefix={} ", path, e);
+            throw new RuntimeException(e);
+        }
+
+        boolean deleteCreated = true;
+        try {
+            ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
+            FilesArchiver archiver = new DirectoryArchiver(path.toFile());
+            PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
+            spb.buildPyramid(pir, "image", archiver, Runtime.getRuntime().availableProcessors());
+            deleteCreated = false;
+        } catch (IOException e) {
+            log.error("Error in creating dzi {}", path, e);
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (deleteCreated) {
+                    log.debug("Deleting file {}", path);
+                    if (!FileSystemUtils.deleteRecursively(path)) {
+                        log.warn("Fail to delete dzi directory", path);
+                    }
+                }
+            } catch (IOException e) {
+                log.error("Error deleting unused file(s) ", e);
+                throw new RuntimeException(e);
+            }
+        }    	
+    }
+
+    private Path getPath(String id) {
+        String[] path = new String[hierarchicalLevel + 1];
+        path[hierarchicalLevel] = id;
+        String uuid = id.replaceAll("-", "");
+        for (int i = 0; i < hierarchicalLevel; i++) {
+            path[i] = uuid.substring(i * DIR_NAME_LENGTH, i * DIR_NAME_LENGTH + DIR_NAME_LENGTH);
+        }
+        return Paths.get(tileFolder, path);
     }
 
 }

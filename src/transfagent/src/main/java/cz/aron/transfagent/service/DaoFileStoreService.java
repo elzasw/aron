@@ -113,7 +113,7 @@ public class DaoFileStoreService implements DaoImporter {
 	private void checkMapping() {
 		if (config.getPath() != null && (System.currentTimeMillis() - lastCheck) > 5000) {
 			lastCheck = System.currentTimeMillis();
-			Path mappingFile = config.getPath().resolve("data.csv");
+			Path mappingFile = config.getPath().resolve("dao.csv");
 			if (!Files.isRegularFile(mappingFile)) {
 				return;
 			}
