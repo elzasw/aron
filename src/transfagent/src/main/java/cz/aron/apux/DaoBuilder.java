@@ -65,12 +65,20 @@ public class DaoBuilder {
     }
 
     public static DaoFile createDaoFile(int pos, String mimetype) {
-        return createDaoFile(null, null, pos, mimetype);
+        return createDaoFile(null, null, pos, mimetype, null);
+    }
+    
+    public static DaoFile createDaoFile(int pos, String mimetype, String uuid) {
+        return createDaoFile(null, null, pos, mimetype, uuid);
     }
 
-    public static DaoFile createDaoFile(String name, Long size, int pos, String mimetype) {
+    public static DaoFile createDaoFile(String name, Long size, int pos, String mimetype, String uuid) {
         DaoFile daoFile = ApuxFactory.getObjFactory().createDaoFile();
-        daoFile.setUuid(UUID.randomUUID().toString());
+        if (uuid!=null) {
+        	daoFile.setUuid(uuid);
+        } else {
+        	daoFile.setUuid(UUID.randomUUID().toString());
+        }
         daoFile.setPos(pos);
 
         if (name != null) {

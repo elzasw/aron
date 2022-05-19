@@ -425,4 +425,33 @@
     </addColumn>
   </changeSet>
 
+  <changeSet  id="5" author="karel.zacek@lightcomp.cz">
+    <createTable tableName="transform">
+      <column name="transform_id" type="int" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="dao_uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="file_uuid" type="uuid">
+        <constraints nullable="false" />
+      </column>
+      <column name="file" type="varchar(512)">
+        <constraints nullable="false" />
+      </column>
+      <column name="state" type="varchar(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="type" type="varchar(50)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+    <createIndex indexName="idx_transform_dao_uuid" tableName="transform">
+      <column name="dao_uuid" />
+    </createIndex>
+    <createIndex indexName="idx_transform_state" tableName="transform">
+      <column name="state" />
+    </createIndex>
+  </changeSet>
+
 </databaseChangeLog>

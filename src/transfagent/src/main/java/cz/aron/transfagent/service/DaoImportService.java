@@ -28,7 +28,6 @@ import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.DaoRepository;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
 import cz.aron.transfagent.service.importfromdir.ImportProcessor;
-import cz.aron.transfagent.service.importfromdir.TransformService;
 
 @Service
 public class DaoImportService implements ImportProcessor  {
@@ -47,16 +46,13 @@ public class DaoImportService implements ImportProcessor  {
 	
 	private final TransactionTemplate transactionTemplate;
 	
-	private final TransformService transformService;
-	
 	private final Map<String,DaoImporter> daoImporters;
 	
 	private Set<String> reportedMissingImporter;
 
 	public DaoImportService(ApuSourceRepository apuSourceRepository, ConfigDao configDao,
 			FileImportService importService, DaoRepository daoRepository, StorageService storageService,
-			TransactionTemplate transactionTemplate, TransformService transformService,
-			List<DaoImporter> daoImporters) {
+			TransactionTemplate transactionTemplate, List<DaoImporter> daoImporters) {
 		super();
 		this.apuSourceRepository = apuSourceRepository;
 		this.configDao = configDao;
@@ -64,7 +60,6 @@ public class DaoImportService implements ImportProcessor  {
 		this.daoRepository = daoRepository;
 		this.storageService = storageService;
 		this.transactionTemplate = transactionTemplate;
-		this.transformService = transformService;
 
 		var importersMap = new HashMap<String, DaoImporter>();
 		if (CollectionUtils.isNotEmpty(daoImporters)) {
@@ -75,7 +70,7 @@ public class DaoImportService implements ImportProcessor  {
 		}
 		this.daoImporters = importersMap;
 	}
-	
+
     @PostConstruct
     void init() {
         importService.registerImportProcessor(this);

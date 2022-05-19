@@ -11,9 +11,11 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -29,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.FileSystemUtils;
 
 import cz.aron.apux.ApuxFactory;
@@ -36,6 +39,9 @@ import cz.aron.apux.DaoBuilder;
 import cz.aron.apux._2020.DaoBundle;
 import cz.aron.apux._2020.DaoBundleType;
 import cz.aron.transfagent.config.ConfigDspace;
+import cz.aron.transfagent.domain.Transform;
+import cz.aron.transfagent.domain.TransformState;
+import cz.aron.transfagent.repository.TransformRepository;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.transformation.DSpaceConsts;
 import gov.nist.isg.archiver.DirectoryArchiver;
@@ -56,16 +62,26 @@ public class TransformService {
 
     private final ConfigDspace configDspace;
     
+    private final TransformRepository transformRepository;
+    
+    private final TransactionTemplate transactionTemplate;
+    
     @Value("${tile.folder:#{NULL}}")
     private String tileFolder;
 
     @Value("${tile.level:2}")
     private int hierarchicalLevel;
+    
+    @Value("${tile.async:false}")
+    private boolean async;
 
-    public TransformService(StorageService storageService, ConfigDspace configDspace) {
-        this.storageService = storageService;
-        this.configDspace = configDspace;
-    }
+	public TransformService(StorageService storageService, ConfigDspace configDspace,
+			TransformRepository transformRepository, TransactionTemplate transactionTemplate) {
+		this.storageService = storageService;
+		this.configDspace = configDspace;
+		this.transformRepository = transformRepository;
+		this.transactionTemplate = transactionTemplate;
+	}
 
     public boolean transform(Path dir) throws JAXBException, IOException {
 
@@ -104,6 +120,14 @@ public class TransformService {
 
         // originalni soubory k presunu, klic je novy nazev 
         var filesToMove = new HashMap<String, Path>();
+        // mapovani nazev souboru->pridelene uuid
+        var filesToTransformAsync = new HashMap<String, String>();
+        if (async) {
+        	var transforms = transformRepository.findAllByDaoUuid(UUID.fromString(daoUuid));
+        	for(var transform:transforms) {
+        		filesToTransformAsync.put(transform.getFile(), transform.getFileUuid().toString());
+        	}
+        }
 
         var pos = 1;
         for (Path file : files) {
@@ -116,7 +140,7 @@ public class TransformService {
                     hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
                     thumbnail = daoBuilder.createDaoBundle(DaoBundleType.THUMBNAIL);
                 }
-                processHiResView(file, filesDir, hiResView, pos);
+                processHiResView(file, filesDir, hiResView, pos, filesToTransformAsync);
                 processThumbNail(file, filesDir, thumbnail, pos);
             }
             pos++;
@@ -133,6 +157,28 @@ public class TransformService {
         log.debug("Moving all files to {}", filesDir);
         for (var entry : filesToMove.entrySet()) {
             Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
+        }
+
+        // plan async transforms
+        if (!filesToTransformAsync.isEmpty()) {
+			transactionTemplate.executeWithoutResult(c -> {
+				var transforms = transformRepository.findAllByDaoUuid(UUID.fromString(daoUuid));
+				var existingTransforms = new HashSet<String>();
+				for(var transform:transforms) {
+					existingTransforms.add(transform.getFileUuid().toString());
+				}				
+				for(var entry:filesToTransformAsync.entrySet()) {
+					if (!existingTransforms.contains(entry.getValue())) {
+						var transform = new Transform();
+						transform.setDaoUuid(UUID.fromString(daoUuid));
+						transform.setFile(entry.getKey());
+						transform.setFileUuid(UUID.fromString(entry.getValue()));
+						transform.setState(TransformState.READY);
+						transform.setType("dzi");
+						transformRepository.save(transform);	
+					}					
+				}
+			});        	        	
         }
         return true;
     }
@@ -210,17 +256,26 @@ public class TransformService {
         }
     }
 
-    private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos) {
-        var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream");
-        var uuid = daoFile.getUuid();
-        hiResView.getFile().add(daoFile);        
-        if (tileFolder != null) {
-        	createDziOut(file, uuid);
-        	DaoBuilder.addReferenceFlag(daoFile);
-        } else {
-        	createDzi(file, filesDir.resolve("file-" + uuid));	
-        }        
-    }
+	private void processHiResView(Path file, Path filesDir, DaoBundle hiResView, int pos,
+			Map<String, String> filesToTransformAsync) {
+		
+		var fileName = file.getFileName().toString();
+		var existingUuid = filesToTransformAsync.get(fileName);		
+		
+		var daoFile = DaoBuilder.createDaoFile(pos, "application/octetstream", existingUuid);
+		var uuid = daoFile.getUuid();
+		hiResView.getFile().add(daoFile);
+		if (tileFolder != null) {
+			if (async) {
+				filesToTransformAsync.put(file.getFileName().toString(), uuid);
+			} else {
+				createDziOut(file, uuid);
+			}
+			DaoBuilder.addReferenceFlag(daoFile);
+		} else {
+			createDzi(file, filesDir.resolve("file-" + uuid));
+		}
+	}
 
     private void processPublished(Path file, DaoBundle published, int pos, Map<String, Path> filesToMove, String mimeType) {
         var fileName = file.getFileName().toString();
@@ -231,7 +286,7 @@ public class TransformService {
             log.error("Failed to read file size, path: {} ", file, e);
             throw new RuntimeException(e);
         }
-        var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType);
+        var daoFile = DaoBuilder.createDaoFile(fileName, fileSize, pos, mimeType, null);
         var uuid = daoFile.getUuid();
 
         filesToMove.put("file-" + uuid, file);
@@ -297,7 +352,7 @@ public class TransformService {
     }
     
     
-    private void createDziOut(Path sourceImage, String id) {
+    public void createDziOut(Path sourceImage, String id) {
     	log.debug("Creating hiResView file {}", id);
     	
     	Path path = getPath(id);
@@ -315,6 +370,7 @@ public class TransformService {
             PartialImageReader pir = new BufferedImageReader(sourceImage.toFile());
             spb.buildPyramid(pir, "image", archiver, Runtime.getRuntime().availableProcessors());
             deleteCreated = false;
+            log.info("Dzi created for id {}", id);
         } catch (IOException e) {
             log.error("Error in creating dzi {}", path, e);
             throw new RuntimeException(e);

@@ -116,7 +116,7 @@ public class DaoSendService implements SmartLifecycle {
 	private void createClient() {
 		ClientConfig clientConfig = new ClientConfig(configAronCore.getFt().getUrl());
 		clientConfig.setSoapLogging(configAronCore.getFt().getSoapLogging());
-		clientConfig.setRecoveryDelay(3);
+		clientConfig.setRecoveryDelay(1);
 		client = FileTransfer.createClient(clientConfig);
 	}
 
