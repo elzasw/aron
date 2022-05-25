@@ -12,6 +12,7 @@ export interface ConfigurationType {
     showMainPageBreadcrumb?: boolean;
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
+    localeCookieName?: string;
 }
 
 
@@ -24,6 +25,7 @@ const defaultConfiguration:ConfigurationType = {
     showShareButtons: false,
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
+    // localeCookieName: "pll_language",
     headerItems: [
         AppHeaderItemCode.FUND,
         AppHeaderItemCode.ARCH_DESC,

@@ -44,7 +44,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
   const handleHelp = () =>
     result && typeof result === 'string' && openUrl(result);
 
-  const hasLanguages = localizations && localizations.length > 1;
+  const showLanguages = localizations && localizations.length > 1 && !configuration.localeCookieName;
 
   return (
     <div className={classes.appHeader}>
@@ -86,7 +86,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
               </Link>
             )
           )}
-          {hasLanguages && 
+          {showLanguages && 
              <Language 
                localizations={pageTemplate?.localizations} 
                className={spacingClasses.marginLeft} 
@@ -100,7 +100,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
             >
               <MenuIcon />
             </IconButton>
-            {hasLanguages && <Language className={spacingClasses.marginLeft} />}
+            {showLanguages && <Language className={spacingClasses.marginLeft} />}
           </div>
           {open ? (
             <div

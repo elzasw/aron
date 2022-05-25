@@ -11,7 +11,7 @@ import {
   LocaleName,
 } from '@eas/common-web';
 
-import { AppWrapper, Loading, ConfigurationProvider, useConfiguration } from './components';
+import { AppWrapper, Loading, ConfigurationProvider, useConfiguration, getLocaleFromCookie } from './components';
 import { getNavigationItems, ApiUrl, messages, Message } from './enums';
 import {
   useGet,
@@ -128,30 +128,35 @@ function AppComponent() {
   );
 }
 
-export function App() {
+function AppWithConfiguration() {
   const classes = useAppStyles();
+  const configuration = useConfiguration();
 
+  return <ThemeProvider {...{ primary, editing, highlight, fontSize, fontFamily }}>
+    <LocaleProvider
+      defaultLocale={getLocaleFromCookie(configuration.localeCookieName) || LocaleName.cs}
+      messages={messages}
+      translationsUrl=""
+    >
+      <div className={classes.app}>
+        <SnackbarProvider timeout={3000}>
+          <AppStateProvider>
+            <BrowserRouter {...{ basename: process.env.URL_PREFIX }}>
+              <NavigationProvider>
+                <AppComponent />
+              </NavigationProvider>
+            </BrowserRouter>
+          </AppStateProvider>
+        </SnackbarProvider>
+      </div>
+    </LocaleProvider>
+  </ThemeProvider>
+}
+
+export function App() {
   return (
     <ConfigurationProvider>
-      <ThemeProvider {...{ primary, editing, highlight, fontSize, fontFamily }}>
-        <LocaleProvider
-          defaultLocale={LocaleName.cs}
-          messages={messages}
-          translationsUrl=""
-        >
-          <div className={classes.app}>
-            <SnackbarProvider timeout={3000}>
-              <AppStateProvider>
-                <BrowserRouter {...{ basename: process.env.URL_PREFIX }}>
-                  <NavigationProvider>
-                    <AppComponent />
-                  </NavigationProvider>
-                </BrowserRouter>
-              </AppStateProvider>
-            </SnackbarProvider>
-          </div>
-        </LocaleProvider>
-      </ThemeProvider>
+      <AppWithConfiguration/>
     </ConfigurationProvider>
   );
 }
