@@ -36,7 +36,7 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
   useEffect(() => {
     onResize();
     // eslint-disable-next-line
-  }, []);
+  }, [items.length]);
 
   useEffect(() => {
     window.addEventListener('resize', () => onResize());
