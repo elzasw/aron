@@ -5,6 +5,7 @@ export enum LocaleName {
   en = 'en',
   de = 'de',
   sk = 'sk',
+  fr = 'fr',
 }
 
 export interface LocaleProviderProps {

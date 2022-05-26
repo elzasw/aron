@@ -24,6 +24,10 @@ const locales:Record<string, LocaleDef> = {
   'de_DE':{
     name: LocaleName.de,
     Flag: Flags.DE,
+  },
+  'fr_FR':{
+    name: LocaleName.fr,
+    Flag: Flags.FR,
   }
 }
 

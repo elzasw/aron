@@ -4,6 +4,7 @@ import csLocale from 'date-fns/locale/cs';
 import enLocale from 'date-fns/locale/en-GB';
 import deLocale from 'date-fns/locale/de';
 import skLocale from 'date-fns/locale/sk';
+import frLocale from 'date-fns/locale/fr';
 import { useEventCallback } from 'utils/event-callback-hook';
 import { LocaleContext } from './locale-context';
 import { callLoadTranslations } from './locale-api';
@@ -95,5 +96,14 @@ const localeMap: Record<LocaleName, Locale> = {
     dateFnsLocale: skLocale,
     intlLocale: 'sk',
     easLanguage: 'SLOVAK',
+  },
+  [LocaleName.fr]: {
+    name: 'fr',
+    dateFormat: 'dd/MM/yyyy',
+    dateTimeFormat: 'dd/MM/yyyy HH:mm:ss',
+    timeFormat: 'HH:mm:ss',
+    dateFnsLocale: frLocale,
+    intlLocale: 'fr',
+    easLanguage: 'FRENCH',
   },
 };
