@@ -65,6 +65,8 @@ export const CZECH = {
   [M.SEARCH_ENTITY]: 'Vyhledávání v rejstříkových heslech a klíčových slovech',
   [M.SEARCH_FINDING_AID]: 'Vyhledávání v archivních pomůckách',
   [M.SEARCH_FUND]: 'Vyhledávání v archivních souborech',
+  [M.SEARCH_ORIGINATOR]: 'Vyhledávání v původcích',
+  [M.SEARCH_INSTITUTION]: 'Vyhledávání v archivech',
   [M.SEARCH_NO_FILTER]: 'Vyhledávání bez filtru',
   [M.SHARE_THROUGH_EMAIL]: 'Sdílet prostřednictvím e-mailu',
   [M.SHARE_THROUGH_FACEBOOK]: 'Sdílet na Facebook',

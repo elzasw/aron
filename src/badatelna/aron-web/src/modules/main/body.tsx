@@ -73,6 +73,12 @@ export const Body: React.FC = () => {
         case ModulePath.FUND:
           placeholder = Message.SEARCH_FUND;
           break;
+        case ModulePath.ORIGINATOR:
+          placeholder = Message.SEARCH_ORIGINATOR;
+          break;
+        case ModulePath.INSTITUTION:
+          placeholder = Message.SEARCH_INSTITUTION;
+          break;
         default:
           break;
       }

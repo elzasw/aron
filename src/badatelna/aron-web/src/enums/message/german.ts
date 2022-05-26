@@ -65,6 +65,8 @@ export const GERMAN = {
   [M.SEARCH_ENTITY]: 'Search in in index entries and keywords',
   [M.SEARCH_FINDING_AID]: 'Search in archival lists',
   [M.SEARCH_FUND]: 'Search in funds',
+  [M.SEARCH_ORIGINATOR]: 'Search in originators',
+  [M.SEARCH_INSTITUTION]: 'Search in archives',
   [M.SEARCH_NO_FILTER]: 'Search without filter',
   [M.SHARE_THROUGH_EMAIL]: 'Share through e-mail',
   [M.SHARE_THROUGH_FACEBOOK]: 'Share on Facebook',
