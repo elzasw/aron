@@ -17,7 +17,7 @@ import { SnackbarContext, SnackbarVariant } from '@eas/common-web';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { DetailDaoDialogProps } from './types';
-import { FileViewer, FileViewerWrapper, Loading } from '../../components';
+import { FileViewer, FileViewerWrapper, Loading, useConfiguration } from '../../components';
 import { Dao, DaoFile } from '../../types';
 import { Message, DaoBundleType } from '../../enums';
 import {
@@ -295,6 +295,7 @@ export function EvidenceDetailDaoDialog({
   const files = getFiles(item);
 
   const { formatMessage } = useIntl();
+  const configuration = useConfiguration();
 
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
@@ -311,6 +312,7 @@ export function EvidenceDetailDaoDialog({
 
   const metadataId = file?.published?.id;
   const metadata = file?.published?.metadata;
+  const showMetadata = metadata?.length && configuration.showMetadataInImageViewer;
 
   const maxHeight = height - 120; // - titles, toolbar, bottom space
 
@@ -447,7 +449,8 @@ export function EvidenceDetailDaoDialog({
             className={classNames(
               classes.daoDialogSection,
               classes.daoDialogCenter,
-              !open && classes.daoDialogCenterOpen
+              !open && classes.daoDialogCenterOpen,
+              !showMetadata && classes.daoDialogCenterNoSidebar
             )}
           >
             {files.length ? (
@@ -463,60 +466,56 @@ export function EvidenceDetailDaoDialog({
               </div>
             )}
           </div>
-          <div
+          {showMetadata && <div
             className={classNames(
               classes.daoDialogSection,
               classes.daoDialogSide,
-              classes.daoDialogRight,
+              showMetadata && classes.daoDialogRight,
               open && classes.daoDialogSideOpen
             )}
           >
-            {metadata && metadata.length ? (
-              <div
-                className={classNames(
-                  classes.daoDialogMetadata,
-                  spacingClasses.paddingSmall
-                )}
-              >
-                <div className={layoutClasses.flex}>
-                  <div className={classes.bold}>Metadata</div>
-                  <Tooltip
-                    {...{
-                      title: formatMessage({ id: Message.DOWNLOAD_METADATA }),
-                    }}
-                  >
-                    <GetAppIcon
-                      className={classNames(
-                        classes.icon,
-                        spacingClasses.marginLeft
-                      )}
-                      onClick={() =>
-                        downloadFileByUrl(
-                          `/digitalObjectFile/${metadataId}/metadata/csv`,
-                          `dao_${item.id}_metadata.csv`
-                        )
-                      }
+            <div
+              className={classNames(
+                classes.daoDialogMetadata,
+                spacingClasses.paddingSmall
+              )}
+            >
+              <div className={layoutClasses.flex}>
+                <div className={classes.bold}>Metadata</div>
+                <Tooltip
+                  {...{
+                    title: formatMessage({ id: Message.DOWNLOAD_METADATA }),
+                  }}
+                >
+                  <GetAppIcon
+                    className={classNames(
+                      classes.icon,
+                      spacingClasses.marginLeft
+                    )}
+                    onClick={() =>
+                      downloadFileByUrl(
+                        `/digitalObjectFile/${metadataId}/metadata/csv`,
+                        `dao_${item.id}_metadata.csv`
+                      )
+                  }
                     />
-                  </Tooltip>
-                </div>
-                {metadata.map(({ id, value, type }) => (
-                  <div {...{ key: id, className: layoutClasses.flex }}>
-                    <div
-                      className={classNames(
-                        classes.bold,
-                        classes.daoDialogMetadataLabel
-                      )}
-                    >
-                      {type}:
-                    </div>
-                    <div>{value}</div>
-                  </div>
-                ))}
+                </Tooltip>
               </div>
-            ) : (
-              <></>
-            )}
-          </div>
+              {metadata?.map(({ id, value, type }) => (
+                <div {...{ key: id, className: layoutClasses.flex }}>
+                  <div
+                    className={classNames(
+                      classes.bold,
+                      classes.daoDialogMetadataLabel
+                    )}
+                  >
+                    {type}:
+                  </div>
+                  <div>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>}
         </div>
       )}
     </FileViewerWrapper>

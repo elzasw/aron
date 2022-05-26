@@ -13,6 +13,7 @@ export interface ConfigurationType {
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
     localeCookieName?: string;
+    showMetadataInImageViewer?: boolean;
 }
 
 

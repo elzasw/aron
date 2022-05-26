@@ -326,6 +326,13 @@ export const useStyles =  makeStyles((theme) => {
         display: 'block',
       },
     },
+    daoDialogCenterNoSidebar: {
+      [md]: {
+        width: '80%',
+        left: '20%',
+        display: 'block',
+      },
+    },
     daoDialogRight: {
       right: 0,
       padding: '30px 16px 8px 8px',
