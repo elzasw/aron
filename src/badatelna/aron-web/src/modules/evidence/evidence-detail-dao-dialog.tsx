@@ -2,14 +2,18 @@ import React, { useState, useContext } from 'react';
 import classNames from 'classnames';
 import { get, map, find, sortBy, findIndex } from 'lodash';
 import Tooltip from '@material-ui/core/Tooltip';
-import CloseIcon from '@material-ui/icons/Close';
-import MenuIcon from '@material-ui/icons/Menu';
 import KeyboardArrowLeftIcon from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
-import ZoomInIcon from '@material-ui/icons/ZoomIn';
-import ZoomOutIcon from '@material-ui/icons/ZoomOut';
-import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
-import GetAppIcon from '@material-ui/icons/GetApp';
+import { 
+    Close as CloseIcon,
+    Menu as MenuIcon,
+    RotateLeft,
+    RotateRight,
+    ZoomIn as ZoomInIcon, 
+    ZoomOut as ZoomOutIcon, 
+    ZoomOutMap as ZoomOutMapIcon,
+    GetApp as GetAppIcon,
+} from "@material-ui/icons";
 import { useIntl, FormattedMessage } from 'react-intl';
 
 import { SnackbarContext, SnackbarVariant } from '@eas/common-web';
@@ -50,6 +54,8 @@ interface ToolbarProps {
   zoomIn: () => void;
   zoomOut: () => void;
   reset: () => void;
+  rotateLeft: () => void;
+  rotateRight: () => void;
   previousEnabled: boolean;
   nextEnabled: boolean;
   previousDisabled: boolean;
@@ -160,6 +166,8 @@ export function Toolbar({
   zoomIn,
   zoomOut,
   reset,
+  rotateLeft,
+  rotateRight,
   previousEnabled,
   nextEnabled,
   previousDisabled,
@@ -214,6 +222,20 @@ export function Toolbar({
               onClick: next,
               visible: !noView && nextEnabled,
               disabled: nextDisabled,
+            },
+            {
+              title: "rotate left",
+              Component: RotateLeft,
+              onClick: rotateLeft,
+              visible: !noView && !noAction,
+              disabled: zoomInDisabled,
+            },
+            {
+              title: "rotate right",
+              Component: RotateRight,
+              onClick: rotateRight,
+              visible: !noView && !noAction,
+              disabled: zoomInDisabled,
             },
             {
               title: Message.ZOOM_IN,

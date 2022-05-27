@@ -45,6 +45,20 @@ function Component({
     }
   }, [viewer, getZoom]);
 
+  const rotateRight = useCallback(() => {
+    if(viewer){
+      const currentRotation = viewer.viewport.getRotation()
+      viewer.viewport.setRotation(currentRotation + 90)
+    }
+  }, [viewer])
+
+  const rotateLeft = useCallback(() => {
+    if(viewer){
+      const currentRotation = viewer.viewport.getRotation()
+      viewer.viewport.setRotation(currentRotation - 90)
+    }
+  }, [viewer])
+
   const reset = useCallback(() => viewer && viewer.viewport.goHome(), [viewer]);
 
   useEffect(() => {
@@ -68,6 +82,8 @@ function Component({
       {...{
         zoomIn,
         zoomOut,
+        rotateLeft,
+        rotateRight,
         reset,
         fileViewerProps: { fileType, viewerRef },
       }}
