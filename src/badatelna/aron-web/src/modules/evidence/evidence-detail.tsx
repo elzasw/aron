@@ -352,6 +352,7 @@ export function EvidenceDetail({
                       }}
                       className={classNames(
                         classes.link,
+                        !(item && path === ModulePath.ARCH_DESC && root) && classes.archdescRootLink,
                         layoutClasses.flexAlignCenter,
                         spacingClasses.marginTop
                       )}

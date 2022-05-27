@@ -2,11 +2,14 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import {
   // appHeaderHeight,
   // breadcrumbsHeight,
+  colorBlueDark,
   colorBlueVeryLight,
   colorGrey,
   colorGreyLight,
+  colorWhite,
   border,
   borderBold,
+  colorBlue,
 } from '../../styles';
 
 const sidebarWidth = 300;
@@ -226,6 +229,27 @@ export const useStyles =  makeStyles((theme) => {
 
       '&:active': {
         color: 'rgba(0, 0, 0, 0.87)',
+      },
+    },
+    archdescRootLink: {
+      padding: '10px',
+      textDecoration: 'none',
+      background: colorBlue,
+      color: colorWhite,
+      fontSize: '1.1rem',
+      borderRadius: '5px',
+
+      '&:hover': {
+        background: colorBlueDark,
+        color: colorWhite,
+      },
+
+      '&:visited': {
+        color: colorWhite,
+      },
+
+      '&:active': {
+        color: colorWhite,
       },
     },
     icon: {
