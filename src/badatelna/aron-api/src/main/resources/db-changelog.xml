@@ -184,5 +184,14 @@
             <column name="target" />
         </createIndex>
     </changeSet>
-
+    <changeSet id="aron:7" author="zacek@lightcomp.cz">
+        <createIndex indexName="idx_metadatum_file_id"
+            tableName="metadatum" unique="false">
+            <column name="file_id" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_apu_id"
+            tableName="digital_object" unique="false">
+            <column name="apu_id" />
+        </createIndex>
+    </changeSet>
 </databaseChangeLog>
