@@ -20,6 +20,11 @@ public class ConfigDao {
     private int sendInterval = 60;
     
     /**
+     * Maximalni pocet neodeslanych dao
+     */
+    private int queueSize = -1;
+    
+    /**
      * Pouziva podadresare pro ulozeni nahledu
      */
     private boolean useSubdirs = false;
@@ -54,6 +59,14 @@ public class ConfigDao {
 
 	public void setUseSubdirs(boolean useSubdirs) {
 		this.useSubdirs = useSubdirs;
+	}
+
+	public int getQueueSize() {
+		return queueSize;
+	}
+
+	public void setQueueSize(int queueSize) {
+		this.queueSize = queueSize;
 	}
 
 }

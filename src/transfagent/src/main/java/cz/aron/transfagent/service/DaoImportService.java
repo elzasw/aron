@@ -85,7 +85,19 @@ public class DaoImportService implements ImportProcessor  {
 
 		reportedMissingImporter = null;
 		
-		var daos = daoRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);
+		int numToSend = 0;
+		if (configDao.getQueueSize()!=-1) {
+			var numExistingToSend = daoRepository.countByStateAndTransferred(DaoState.READY, false);
+			if (numExistingToSend!=null) {
+				numToSend = numExistingToSend;
+				if (numToSend>configDao.getQueueSize()) {
+					log.info("Import dao paused, exists {} daos prepared to be sent", numToSend);
+					return;
+				}
+			}
+		}
+
+		var daos = daoRepository.findTop1000ByStateOrderById(DaoState.ACCESSIBLE);		
 		for (var dao : daos) {
 			var daoImporter = daoImporters.get(dao.getSource());
 			if (daoImporter == null) {
@@ -111,6 +123,12 @@ public class DaoImportService implements ImportProcessor  {
 			}
 			transactionTemplate.executeWithoutResult(c -> saveDao(dao));
 			ic.addProcessed();
+			
+			numToSend++;
+			if (numToSend>configDao.getQueueSize()) {
+				log.info("Import dao paused, exists {} daos prepared to be sent", numToSend);
+				return;
+			}
 		}
 
 	}

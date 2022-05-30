@@ -52,6 +52,14 @@ dao:
   sendInterval: 60
   # Mazani dao po odeslani
   deleteSent: false
+  # maximalni pocet dao vygenerovanych na disku cekajicich na odeslani
+  queueSize: 10
+
+tile:
+  # slozka s tiles, pokud je nastaveno generuji se tiles primo do vysledne slozky a do aroncore se prenasi pouze reference
+  folder: D:/projects/aron/data/tiles
+  # pokud je nastaveno na true generuji se tiles asynchronne
+  async: false
 
 logging:
   file: 

@@ -251,7 +251,7 @@ public class TransformService {
                     .size(120, 120)
                     .toOutputStream(os);
         } catch (IOException e) {
-            log.error("Error creating thumbnails {} ", thumbnailsFile, e);
+            log.error("Error creating thumbnails src={}, target={} ", file, thumbnailsFile, e);
             throw new RuntimeException(e);
         }
     }

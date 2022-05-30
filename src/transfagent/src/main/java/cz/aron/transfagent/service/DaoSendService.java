@@ -100,6 +100,7 @@ public class DaoSendService implements SmartLifecycle {
 				} catch (IOException e) {
 					log.error("Fail to delete dao directory {}", daoPath, e);
 				}
+				dao.setDataDir(null);
 			}
 			
 			dao.setTransferred(true);

@@ -20,6 +20,8 @@ public interface DaoRepository extends JpaRepository<Dao, Integer> {
             "AND d.state = ?1 AND d.transferred = ?2 AND a.reimport is false " +
             "ORDER BY d.id")
     List<Integer> findTopByStateAndTransferredOrderById(DaoState state, boolean transferred, Pageable limit);
+    
+    Integer countByStateAndTransferred(DaoState state, boolean transferred);
 
     @EntityGraph(attributePaths = { "apuSource" })
     Optional<Dao> findById(int id);
