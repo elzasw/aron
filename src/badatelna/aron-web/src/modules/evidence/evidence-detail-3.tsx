@@ -28,7 +28,6 @@ import {
   ApuPartItem,
   ApuLocale,
   ApuPart,
-  Dao,
 } from '../../types';
 import {
   findApuParts,
@@ -88,9 +87,6 @@ export function EvidenceDetail3({
   }, []);
 
   const [root, setRoot] = useState<ApuEntity | undefined>(findRoot(item));
-
-  const [dao, setDao] = useState<Dao | null>(null);
-  console.log(dao)
 
   const { formatMessage } = useIntl();
 
@@ -297,7 +293,7 @@ export function EvidenceDetail3({
               height: '100%',
               flexGrow: 1,
             }}>
-              <EvidenceDetailDaoDialog items={daos} item={daos[0]} setItem={setDao} embed={true}/>
+              <EvidenceDetailDaoDialog items={daos} item={daos[0]} setItem={() => {}} embed={true}/>
             </div>
           }
           <div 
