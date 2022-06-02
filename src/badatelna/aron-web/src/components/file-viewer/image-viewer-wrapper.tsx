@@ -72,6 +72,7 @@ function Component({
           showHomeControl: false,
           showFullPageControl: false,
           tileSources: `${API_URL}/tile/${id}/image.dzi`,
+          maxZoomPixelRatio: 5,
         })
       );
     }
