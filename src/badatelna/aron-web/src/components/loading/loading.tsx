@@ -7,9 +7,7 @@ import { useStyles } from './styles';
 export function Loading({ loading }: Props) {
   const classes = useStyles();
 
-  return loading ? (
-    <LinearProgress />
-  ) : (
-    <div className={classes.loadingPlaceholder} />
-  );
+  return <div className={classes.loadingPlaceholder}>
+    {loading ? <LinearProgress /> : <></>}
+  </div>
 }
