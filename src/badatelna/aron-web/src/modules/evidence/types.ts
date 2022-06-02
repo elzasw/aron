@@ -62,11 +62,13 @@ export interface DetailDaoDialogProps {
   item: Dao;
   items: Dao[];
   setItem: (item: Dao | null) => void;
+  embed?: boolean;
 }
 
 export interface DetailTreeProps {
   item: ApuEntity;
   id: string;
+  verticalResize?: boolean;
 }
 
 export interface DetailAttachmentsProps {

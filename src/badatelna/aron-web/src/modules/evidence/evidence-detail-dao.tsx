@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState/*, useCallback, useEffect*/ } from 'react';
 import classNames from 'classnames';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import { FormattedMessage } from 'react-intl';
@@ -21,37 +21,39 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
 
   const [item, setItem] = useState<Dao | null>(null);
 
-  const [maxCount, setMaxCount] = useState(0);
+  // const [maxCount, setMaxCount] = useState(10);
+  const maxCount = 5;
 
-  const onResize = useCallback(() => {
-    const element = document.getElementById(ID);
+  // const onResize = useCallback(() => {
+    // const element = document.getElementById(ID);
 
-    setMaxCount(
-      element
-        ? Math.floor((element.getBoundingClientRect().width - 80) / 160)
-        : 0
-    );
-  }, []);
+    // setMaxCount(items.length)
+    // setMaxCount(
+    //   element
+    //     ? Math.floor((element.getBoundingClientRect().height - 80) / 160)
+    //     : 10
+    // );
+  // }, []);
 
-  useEffect(() => {
-    onResize();
+  // useEffect(() => {
+    // onResize();
     // eslint-disable-next-line
-  }, [items.length]);
+  // }, [items.length]);
 
-  useEffect(() => {
-    window.addEventListener('resize', () => onResize());
+  // useEffect(() => {
+  //   window.addEventListener('resize', () => onResize());
 
-    return () => {
-      window.removeEventListener('resize', () => onResize());
-    };
-  }, [onResize]);
+  //   return () => {
+  //     window.removeEventListener('resize', () => onResize());
+  //   };
+  // }, [onResize]);
 
   return items.length ? (
-    <div id={ID} className={spacingClasses.marginTopBig}>
+    <div id={ID} style={{height: "100%"}} className={classes.daoContainer}>
       <h3 className={spacingClasses.marginBottomSmall}>
         <FormattedMessage id={Message.DAOS} />
       </h3>
-      <div className={layoutClasses.flex}>
+      <div className={layoutClasses.flex} style={{flexDirection: "column"}}>
         {maxCount ? (
           items.slice(0, maxCount).map((item) => {
             const thumbnailID = item.files

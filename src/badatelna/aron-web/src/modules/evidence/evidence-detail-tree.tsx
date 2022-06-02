@@ -22,7 +22,7 @@ const getParentId = (item: ApuEntity): string => {
   return `${item.parent ? `${getParentId(item.parent)}__` : ''}${item.id}`;
 };
 
-export function EvidenceDetailTree({ item, id }: DetailTreeProps) {
+export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTreeProps) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
@@ -96,13 +96,13 @@ export function EvidenceDetailTree({ item, id }: DetailTreeProps) {
     <Resizable
       size={{
         width: '100%',
-        height: appState.evidenceDetailTreeHeight,
+        height: verticalResize ? appState.evidenceDetailTreeHeight : '100%',
       }}
       minHeight={50}
       enable={{
         top: false,
         right: false,
-        bottom: true,
+        bottom: verticalResize,
         left: false,
         topRight: false,
         bottomRight: false,
@@ -127,7 +127,7 @@ export function EvidenceDetailTree({ item, id }: DetailTreeProps) {
           </div>
         ),
       }}
-      className={spacingClasses.marginBottomBig}
+      className={verticalResize ? spacingClasses.marginBottomBig : undefined}
     >
       <div
         id={WRAPPER_ID}

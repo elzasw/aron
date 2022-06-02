@@ -256,6 +256,10 @@ export const useStyles =  makeStyles((theme) => {
       cursor: 'pointer',
     },
 
+    daoContainer: {
+      padding: 10,
+      borderBottom: border,
+    },
     dao: {},
     daoPreview: {
       width: 150,
@@ -289,20 +293,36 @@ export const useStyles =  makeStyles((theme) => {
       },
     },
     daoDialog: {
+      position: 'relative',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: 'rgba(0, 0, 0)',
+      height: '100%',
+    },
+    daoDialogFixed: {
       position: 'fixed',
       top: 0,
       bottom: 0,
       left: 0,
       right: 0,
       background: 'rgba(0, 0, 0, 0.85)',
-      zIndex: 10000,
+      height: '100vh',
+      width: '100vw',
+      zIndex: 100,
     },
     daoDialogToolbar: {
-      height: daoDialogToolbarHeight,
-      width: '100vw',
+      // height: daoDialogToolbarHeight,
+      // width: '100vw',
+      padding: '10px',
+      width: '100%',
+      position: 'absolute',
+      background: '#0009',
+      zIndex: 100,
     },
     daoDialogToolbarInner: {
-      height: 'calc(100% - 8px)',
+      // height: 'calc(100% - 8px)',
     },
     loadingPlaceholder: {
       height: 4,
@@ -331,13 +351,12 @@ export const useStyles =  makeStyles((theme) => {
       display: 'none',
 
       [md]: {
-        width: '20%',
+        width: '160px',
         display: 'block',
       },
     },
     daoDialogLeft: {
-      left: 0,
-      padding: '0 8px 8px 16px',
+      zIndex: 10,
     },
     daoDialogCenter: {
       left: 0,
@@ -352,8 +371,10 @@ export const useStyles =  makeStyles((theme) => {
     },
     daoDialogCenterNoSidebar: {
       [md]: {
-        width: '80%',
-        left: '20%',
+        width: 'calc(100% - 160px)',
+        height: '100%',
+        top: 0,
+        left: '160px',
         display: 'block',
       },
     },
@@ -372,32 +393,43 @@ export const useStyles =  makeStyles((theme) => {
       width: '100%',
       height: '100%',
     },
-    daoDialogSectionPart: {},
+    daoDialogSectionPart: {
+      background: '#0009',
+      height: '100%',
+      overflowY: 'auto',
+    },
     daoDialogSectionPartLabel: {
       color: '#fff',
       height: 30,
     },
     daoDialogSectionPartContent: {
-      background: '#fff',
-      overflowY: 'auto',
+      padding: '10px',
+      overflow: 'auto',
+    },
+    daoDialogSectionPartThumbnail: {
+      width: '100%',
+      margin: '2px',
+      borderRadius: '5px',
+      overflow: 'hidden',
+      filter: 'brightness(0.6)',
+      cursor: 'pointer',
+      alignItems: 'center',
+      display: 'flex',
 
-      '& div': {
-        cursor: 'pointer',
-        height: 30,
-        padding: '0 8px',
-        display: 'flex',
-        alignItems: 'center',
-
-        '&:hover': {
-          color: '#fff',
-          background: theme.palette.primary.main,
-        },
+      '&:hover': {
+        color: '#fff',
+        background: theme.palette.primary.main,
+        filter: 'brightness(1)',
       },
+
+      '& > img': {
+        width: '100%',
+      }
     },
     daoDialogSectionPartActive: {
       cursor: 'auto',
+      filter: 'brightness(1)',
       color: '#fff',
-      background: theme.palette.primary.main,
     },
     daoDialogMetadata: {
       background: '#fff',
@@ -425,9 +457,10 @@ export const useStyles =  makeStyles((theme) => {
 
     treeWrapper: {
       width: '100%',
-      minWidth: 'fit-content',
+      // minWidth: 'fit-content',
       height: '100%',
-      overflow: 'auto',
+      overflow: 'hidden',
+      overflowY: 'auto',
     },
     treeResizeHandle: {
       width: '100%',

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import classNames from 'classnames';
 import { get, map, find, sortBy, findIndex } from 'lodash';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -28,8 +28,8 @@ import {
   downloadFile,
   downloadFileByUrl,
   useWindowSize,
-  isUUID,
 } from '../../common-utils';
+import { ImageLoad } from '../../components/image-load';
 
 interface FileObject {
   id: string;
@@ -67,6 +67,7 @@ interface ToolbarProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   file: FileObject;
+  showCloseButton?: boolean;
 }
 
 const getExistingFile = (fileObject: FileObject, publishedFirst = false) => {
@@ -179,6 +180,7 @@ export function Toolbar({
   open,
   setOpen,
   file,
+  showCloseButton = true,
 }: ToolbarProps) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
@@ -200,13 +202,16 @@ export function Toolbar({
           layoutClasses.flexSpaceBetween
         )}
       >
-        <Icon
-          {...{
-            title: formatMessage({ id: Message.CLOSE }),
-            Component: CloseIcon,
-            onClick: () => setItem(null),
-          }}
-        />
+        {showCloseButton &&
+          <Icon
+            {...{
+              title: formatMessage({ id: Message.CLOSE }),
+              Component: CloseIcon,
+              onClick: () => setItem(null),
+            }}
+            />
+        }
+        <div style={{flex: 1}}/>
         <div className={layoutClasses.flex}>
           {[
             {
@@ -295,6 +300,7 @@ export function Toolbar({
               )
           )}
         </div>
+        <div style={{flex: 1}}/>
         <Icon
           {...{
             title: '',
@@ -313,8 +319,9 @@ export function EvidenceDetailDaoDialog({
   item,
   items,
   setItem,
+  embed = false,
 }: DetailDaoDialogProps) {
-  const files = getFiles(item);
+  const [files, setFiles] = useState(getFiles(item));
 
   const { formatMessage } = useIntl();
   const configuration = useConfiguration();
@@ -327,6 +334,12 @@ export function EvidenceDetailDaoDialog({
 
   const [file, setFile] = useState(files[0]);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const files = getFiles(item);
+    setFiles(files)
+    if(files.length > 0) {setFile(files[0])}
+  }, [item])
 
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
 
@@ -359,7 +372,10 @@ export function EvidenceDetailDaoDialog({
       }}
     >
       {({ fileViewerProps, ...toolbarProps }) => (
-        <div className={classes.daoDialog}>
+        <div className={classNames(
+          classes.daoDialog,
+          !embed && classes.daoDialogFixed
+        )}>
           <Toolbar
             {...{
               ...toolbarProps,
@@ -374,8 +390,10 @@ export function EvidenceDetailDaoDialog({
               open,
               setOpen,
               file,
+              showCloseButton: !embed,
             }}
           />
+            <div>
           <div
             className={classNames(
               classes.daoDialogSection,
@@ -395,7 +413,7 @@ export function EvidenceDetailDaoDialog({
                 },
                 active: item,
                 height: getSectionHeight(items.length, files.length),
-                visible: true,
+                visible: false,
               },
               {
                 label: Message.FILES_IN_DAO,
@@ -426,39 +444,36 @@ export function EvidenceDetailDaoDialog({
                     className={classes.daoDialogSectionPart}
                   >
                     <div
-                      className={classNames(
-                        classes.daoDialogSectionPartLabel,
-                        layoutClasses.flexAlignCenter
-                      )}
-                    >
-                      {formatMessage({ id: label })}
-                    </div>
-                    <div
                       className={classes.daoDialogSectionPartContent}
-                      style={{ height, maxHeight: height }}
                     >
                       {map(items, (item: any, i) => {
                         const isActive = active && active.id === item.id;
-
-                        const value = get(item, mapper ? mapper(item) : 'name');
 
                         return (
                           <div
                             {...{
                               key: item.id,
-                              className: classNames(
-                                isActive && classes.daoDialogSectionPartActive
-                              ),
                             }}
                             onClick={() => !isActive && onClick(item)}
+                            style={{position: 'relative'}}
                           >
-                            {value && !isUUID(value) ? (
-                              value
-                            ) : (
-                              <span>
-                                {i + 1}. <FormattedMessage id={defaultId} />
-                              </span>
-                            )}
+                            <div style={{
+                                color: 'white',
+                                position: 'absolute',
+                                zIndex: 10,
+                                margin: '5px',
+                                textShadow: '0px 0px 8px black',
+                                fontWeight: 'bold',
+                              }}>{i+1}</div>
+                            <ImageLoad
+                              key={item.id}
+                              id={item?.thumbnail?.file?.id}
+                              alternativeImage={<div/>}
+                              className={classNames(
+                                isActive && classes.daoDialogSectionPartActive,
+                                classes.daoDialogSectionPartThumbnail
+                              )}
+                              />
                           </div>
                         );
                       })}
@@ -487,6 +502,7 @@ export function EvidenceDetailDaoDialog({
                 <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
               </div>
             )}
+          </div>
           </div>
           {showMetadata && <div
             className={classNames(

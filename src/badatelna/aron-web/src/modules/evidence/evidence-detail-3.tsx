@@ -28,6 +28,7 @@ import {
   ApuPartItem,
   ApuLocale,
   ApuPart,
+  Dao,
 } from '../../types';
 import {
   findApuParts,
@@ -35,17 +36,16 @@ import {
   getRelatedApusFilter,
   getParentBreadcrumbs,
 } from './utils';
-import { EvidenceDetailDao } from './evidence-detail-dao';
+import { EvidenceDetailDaoDialog } from './evidence-detail-dao-dialog';
 import { EvidenceDetailTree } from './evidence-detail-tree';
 import { getPathByItem, useAppState } from '../../common-utils';
 import { Module, Loading, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
-import { EvidenceIcon } from './evidence-icon';
 import { LocaleContext } from '@eas/common-web';
 import { EvidenceShareButtons } from './evidence-share-buttons';
 
-export function EvidenceDetail({
+export function EvidenceDetail3({
   apuPartTypes,
   apuPartItemTypes,
 }: DetailProps) {
@@ -88,6 +88,9 @@ export function EvidenceDetail({
   }, []);
 
   const [root, setRoot] = useState<ApuEntity | undefined>(findRoot(item));
+
+  const [dao, setDao] = useState<Dao | null>(null);
+  console.log(dao)
 
   const { formatMessage } = useIntl();
 
@@ -242,10 +245,8 @@ export function EvidenceDetail({
     }
   }, [items]);
 
-  const type = item?.type;
-
-
   const path = item ? getPathByItem(item) : undefined;
+  const daos = item ? sortBy(item.digitalObjects, 'order') : [];
 
   useEffect(() => {
     if (evidencePath && path) {
@@ -272,17 +273,42 @@ export function EvidenceDetail({
         ],
       }}
     >
-      <div className={classes.evidenceDetail}>
+      <div style={{height: '100%'}}>
         <Loading {...{ loading }} />
-        <div className={spacingClasses.paddingBig}>
+        <div style={{display: "flex", height: '100%'}}>
           {item && path === ModulePath.ARCH_DESC && root ? (
-            <>
-              <EvidenceDetailTree {...{ item, id: root.id }} />
+            <div style={{ 
+              width: '25%',
+              height: '100%',
+              flexGrow: 0,
+              padding: '10px',
+              paddingRight: '0',
+              borderRight: '1px solid #ddd',
+            }}>
+              <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
               <div className={spacingClasses.paddingBottom} />
-            </>
+            </div>
           ) : (
             <></>
           )}
+          {daos?.length > 0 &&
+            <div style={{
+              width: "50%", 
+              height: '100%',
+              flexGrow: 1,
+            }}>
+              <EvidenceDetailDaoDialog items={daos} item={daos[0]} setItem={setDao} embed={true}/>
+            </div>
+          }
+          <div 
+            className={spacingClasses.paddingBig} 
+            style={{ 
+              width: '25%', 
+              height: '100%',
+              overflowY: 'auto',
+              flexGrow: 1,
+              borderLeft: '1px solid #ddd',
+            }}>
           {item ? (
             <div
               className={classNames(
@@ -292,14 +318,10 @@ export function EvidenceDetail({
               )}
             >
               <div className={layoutClasses.flex}>
-                <div
-                  className={classNames(
-                    layoutClasses.flexColumnCenter,
-                    spacingClasses.marginRightBig,
-                    spacingClasses.marginBottomSmall
-                  )}
-                >
-                  {type && <EvidenceIcon type={type}/>}
+                <div className={spacingClasses.paddingBottomSmall}>
+                  <h3 className={spacingClasses.marginBottomSmall}>
+                    {item.name}
+                  </h3>
                   <Button
                     className={classes.findRelatedButton}
                     label={formatMessage({ id: Message.FIND_RELATED })}
@@ -315,11 +337,6 @@ export function EvidenceDetail({
                       );
                     }}
                   />
-                </div>
-                <div className={spacingClasses.paddingBottomSmall}>
-                  <h3 className={spacingClasses.marginBottomSmall}>
-                    {item.name}
-                  </h3>
                   {item.description ? (
                     path === ModulePath.ARCH_DESC ||
                     path === ModulePath.ENTITY ? (
@@ -389,32 +406,36 @@ export function EvidenceDetail({
           ) : (
             <></>
           )}
-          {item && (
-            <EvidenceDetailDao items={sortBy(item.digitalObjects, 'order')} />
-          )}
-          {items
-            .map(({ items, ...item }) => ({
-              ...item,
-              items: items.filter(({ visible, value }) => visible && value),
-            }))
-            .filter(({ items }) => !isEmpty(items))
-            .map((item, index) => (
-              <EvidenceDetailItem
-                {...{
-                  key: `${item.name}-${index}`,
-                  ...item,
-                  index,
-                  open,
-                  apus,
-                }}
-              />
-            ))}
-          {item && (
-            <EvidenceDetailAttachments
-              items={sortBy(item.attachments, 'order')}
-              setLoading={setLoading}
-            />
-          )}
+          <div style={{display: "flex"}}>
+            <div style={{flexGrow: 1}}>
+              {items
+              .map(({ items, ...item }) => ({
+                ...item,
+                items: items.filter(({ visible, value }) => visible && value),
+              }))
+              .filter(({ items }) => !isEmpty(items))
+              .map((item, index) => (
+                <EvidenceDetailItem
+                  {...{
+                    key: `${item.name}-${index}`,
+                    ...item,
+                    index,
+                    open,
+                    apus,
+                  }}
+                  />
+              ))}
+            </div>
+            <div style={{flexShrink: 0}}>
+              {item && (
+                <EvidenceDetailAttachments
+                  items={sortBy(item.attachments, 'order')}
+                  setLoading={setLoading}
+                  />
+              )}
+            </div>
+          </div>
+          </div>
         </div>
       </div>
     </Module>

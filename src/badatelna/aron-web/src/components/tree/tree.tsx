@@ -23,7 +23,13 @@ export function Tree({
 
   const renderItems = (items: any[], parentId?: string) =>
     items.map((item) => {
-      const label = labelMapper(item);
+      const label = <div style={{
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        width: "calc( 100% - 20px )",
+        paddingRight: "10px",
+      }}>{labelMapper(item)}</div>;
       const nodeId = `${parentId ? `${parentId}__` : ''}${idMapper(item)}`;
       const { children } = item;
 
