@@ -57,6 +57,8 @@ export const ENGLISH = {
   [M.RELATIONSHIP_TYPE_CONSTRAINT]: 'Relationship type constraint',
   [M.RELATIONSHIPS]: 'Relationships',
   [M.REMOVE_FILTERS]: 'Remove filters',
+  [M.ROTATE_LEFT]: 'Rotate left',
+  [M.ROTATE_RIGHT]: 'Rotate right',
   [M.SEARCH]: 'Search',
   [M.SEARCH_ARCH_DESC]: 'Search in archival materials',
   [M.SEARCH_ARCH_DESC_DAO_ONLY]:

@@ -58,6 +58,8 @@ export const CZECH = {
   [M.RELATIONSHIP_TYPE_CONSTRAINT]: 'Omezení typu vztahu',
   [M.RELATIONSHIPS]: 'Vztahy',
   [M.REMOVE_FILTERS]: 'Zrušit filtry',
+  [M.ROTATE_LEFT]: 'Otočit vlevo',
+  [M.ROTATE_RIGHT]: 'Otočit vpravo',
   [M.SEARCH]: 'Vyhledávání',
   [M.SEARCH_ARCH_DESC]: 'Vyhledávání v archiváliích',
   [M.SEARCH_ARCH_DESC_DAO_ONLY]: 'Vyhledávání v archiváliích s digitalizáty',

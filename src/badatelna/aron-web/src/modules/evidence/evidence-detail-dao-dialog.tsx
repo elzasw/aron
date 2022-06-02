@@ -229,14 +229,14 @@ export function Toolbar({
               disabled: nextDisabled,
             },
             {
-              title: "rotate left",
+              title: Message.ROTATE_LEFT,
               Component: RotateLeft,
               onClick: rotateLeft,
               visible: !noView && !noAction,
               disabled: zoomInDisabled,
             },
             {
-              title: "rotate right",
+              title: Message.ROTATE_RIGHT,
               Component: RotateRight,
               onClick: rotateRight,
               visible: !noView && !noAction,
