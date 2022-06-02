@@ -5,6 +5,6 @@ export const useStyles = makeStyles({
     height: 4,
     position: "absolute",
     width: "100%",
-    zIndex: 100,
+    zIndex: 10,
   },
 });

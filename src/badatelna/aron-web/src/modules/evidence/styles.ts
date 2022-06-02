@@ -319,7 +319,7 @@ export const useStyles =  makeStyles((theme) => {
       width: '100%',
       position: 'absolute',
       background: '#0009',
-      zIndex: 100,
+      zIndex: 1,
     },
     daoDialogToolbarInner: {
       // height: 'calc(100% - 8px)',
