@@ -406,17 +406,21 @@ export const useStyles =  makeStyles((theme) => {
       padding: '10px',
       overflow: 'auto',
     },
-    daoDialogSectionPartThumbnail: {
+    daoThumbnailContainer: {
       width: '100%',
-      margin: '2px',
       borderRadius: '5px',
       overflow: 'hidden',
-      filter: 'brightness(0.6)',
       cursor: 'pointer',
+      position: 'relative',
+      marginBottom: '4px'
+    },
+    daoThumbnail: {
+      width: '100%',
+      filter: 'brightness(0.6)',
       alignItems: 'center',
       display: 'flex',
 
-      '&:hover': {
+      '$daoThumbnailContainer:hover &': {
         color: '#fff',
         background: theme.palette.primary.main,
         filter: 'brightness(1)',
@@ -427,9 +431,13 @@ export const useStyles =  makeStyles((theme) => {
       }
     },
     daoDialogSectionPartActive: {
-      cursor: 'auto',
-      filter: 'brightness(1)',
-      color: '#fff',
+      outline: `2px solid ${theme.palette.primary.main}`,
+
+      '& $daoThumbnail': {
+        cursor: 'auto',
+        filter: 'brightness(1)',
+        color: '#fff',
+      }
     },
     daoDialogMetadata: {
       background: '#fff',

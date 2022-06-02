@@ -448,6 +448,8 @@ export function EvidenceDetailDaoDialog({
                     >
                       {map(items, (item: any, i) => {
                         const isActive = active && active.id === item.id;
+                        console.log(item)
+                        const name = item.published?.metadata?.find((item: any) => item.type === "name")?.value;
 
                         return (
                           <div
@@ -455,24 +457,34 @@ export function EvidenceDetailDaoDialog({
                               key: item.id,
                             }}
                             onClick={() => !isActive && onClick(item)}
-                            style={{position: 'relative'}}
+                            className={classNames(
+                              isActive && classes.daoDialogSectionPartActive,
+                              classes.daoThumbnailContainer
+                            )}
                           >
-                            <div style={{
+                            <div title={name} style={{
                                 color: 'white',
                                 position: 'absolute',
                                 zIndex: 10,
-                                margin: '5px',
+                                padding: '5px 10px',
                                 textShadow: '0px 0px 8px black',
-                                fontWeight: 'bold',
-                              }}>{i+1}</div>
+                                bottom: 0,
+                                lineHeight: '1em',
+                                width: '100%',
+                                background: '#0007',
+                                maxHeight: '100%',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                              }}>
+                                {i+1}
+                                {name && ` - ${name}`}
+                              </div>
                             <ImageLoad
                               key={item.id}
                               id={item?.thumbnail?.file?.id}
                               alternativeImage={<div/>}
-                              className={classNames(
-                                isActive && classes.daoDialogSectionPartActive,
-                                classes.daoDialogSectionPartThumbnail
-                              )}
+                              className={classNames( classes.daoThumbnail)}
                               />
                           </div>
                         );
