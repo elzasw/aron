@@ -14,6 +14,7 @@ export interface ConfigurationType {
     searchOptions?: SearchOption[];
     localeCookieName?: string;
     showMetadataInImageViewer?: boolean;
+    disableDownloads?: boolean;
 }
 
 
@@ -26,6 +27,7 @@ const defaultConfiguration:ConfigurationType = {
     showShareButtons: false,
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
+    disableDownloads: false,
     // localeCookieName: "pll_language",
     headerItems: [
         AppHeaderItemCode.FUND,

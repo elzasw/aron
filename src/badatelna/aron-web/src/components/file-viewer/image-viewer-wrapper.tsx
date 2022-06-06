@@ -78,6 +78,14 @@ function Component({
     }
   }, [current, id, setViewer]);
 
+  // disable context menu to prevent image saving
+  useEffect(() => {
+    viewer?.element?.addEventListener("contextmenu", (event) => { 
+      console.log("test");
+      event.preventDefault();
+    })  
+  },[viewer])
+
   return (
     <Children
       {...{

@@ -152,7 +152,6 @@ export function EvidenceDetailDaoDialog({
                     >
                       {map(items, (item: any, i) => {
                         const isActive = active && active.id === item.id;
-                        console.log(item)
                         const name = item.published?.metadata?.find((item: any) => item.type === "name")?.value;
 
                         return (

@@ -15,7 +15,7 @@ import { get } from 'lodash';
 import React, { useContext, useState } from 'react';
 import { useIntl } from 'react-intl';
 import { downloadFile } from '../../../common-utils';
-import { Loading } from '../../../components';
+import { Loading, useConfiguration } from '../../../components';
 import { Message } from '../../../enums';
 import { useLayoutStyles } from '../../../styles';
 import { useStyles } from './styles';
@@ -47,6 +47,7 @@ export function Toolbar({
   showCloseButton = true,
 }: ToolbarProps) {
   const classes = useStyles();
+  const { disableDownloads } = useConfiguration();
   const layoutClasses = useLayoutStyles();
 
   const { showSnackbar } = useContext(SnackbarContext);
@@ -144,7 +145,7 @@ export function Toolbar({
                 setLoading(false);
               },
               visible: fileDownload,
-              disabled: loading,
+              disabled: disableDownloads ? true : loading,
             },
             // {
             //   title: Message.DOWNLOAD_ALL,
