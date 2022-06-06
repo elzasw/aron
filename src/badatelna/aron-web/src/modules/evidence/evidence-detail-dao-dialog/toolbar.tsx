@@ -45,6 +45,9 @@ export function Toolbar({
   setOpen,
   file,
   showCloseButton = true,
+  customActionsLeft,
+  customActionsRight,
+  customActionsCenter,
 }: ToolbarProps) {
   const classes = useStyles();
   const { disableDownloads } = useConfiguration();
@@ -76,6 +79,7 @@ export function Toolbar({
             }}
             />
         }
+        {customActionsLeft}
         <div style={{flex: 1}}/>
         <div className={layoutClasses.flex}>
           {[
@@ -164,8 +168,10 @@ export function Toolbar({
                 />
               )
           )}
+          {customActionsCenter}
         </div>
         <div style={{flex: 1}}/>
+        {customActionsRight}
         <Icon
           {...{
             title: '',
@@ -174,7 +180,6 @@ export function Toolbar({
             className: classes.daoDialogMenu,
           }}
         />
-        <div className={classes.daoDialogMenuPlaceholder} />
       </div>
     </div>
   );

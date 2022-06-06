@@ -4,6 +4,7 @@ import { get, find, flatten, compact, isEmpty, sortBy } from 'lodash';
 import classNames from 'classnames';
 import DoubleArrowIcon from '@material-ui/icons/DoubleArrow';
 import AccountTreeIcon from '@material-ui/icons/AccountTree';
+import { ArrowLeft, ArrowRight } from '@material-ui/icons';
 import { useIntl } from 'react-intl';
 
 import {
@@ -35,7 +36,7 @@ import {
   getRelatedApusFilter,
   getParentBreadcrumbs,
 } from './utils';
-import { EvidenceDetailDaoDialog } from './evidence-detail-dao-dialog';
+import { EvidenceDetailDaoDialog, Icon } from './evidence-detail-dao-dialog';
 import { EvidenceDetailTree } from './evidence-detail-tree';
 import { getPathByItem, useAppState } from '../../common-utils';
 import { Module, Loading, Button, useConfiguration } from '../../components';
@@ -62,6 +63,7 @@ export function EvidenceDetail2({
   const navigateTo = useEvidenceNavigation();
 
   const [open, setOpen] = useState(false);
+  const [showTree, setShowTree] = useState(true);
 
   const [loadingBasic, setLoading] = useState(false);
 
@@ -276,7 +278,7 @@ export function EvidenceDetail2({
       <div style={{height: '100%'}}>
         <Loading {...{ loading }} />
         <div style={{display: "flex", height: "100%"}}>
-          {item && path === ModulePath.ARCH_DESC && root ? (
+          {item && path === ModulePath.ARCH_DESC && root && showTree ? (
             <div style={{
               width: '33.333%', 
               height: '100%',
@@ -299,7 +301,19 @@ export function EvidenceDetail2({
           }}>
           {daos?.length > 0 && 
               <div style={{height: '80%'}}>
-            <EvidenceDetailDaoDialog items={daos} item={daos[0]} setItem={() => {}} embed={true}/>
+            <EvidenceDetailDaoDialog 
+                  items={daos} 
+                  customActionsLeft={({fullscreen}) => <>
+                    {!fullscreen && <Icon 
+                      onClick={() => setShowTree(!showTree)}
+                      Component={showTree ? ArrowLeft : ArrowRight}
+                      title={formatMessage({id: showTree ? Message.TREE_HIDE : Message.TREE_SHOW})}
+                      />}
+                    </>}
+                  item={daos[0]} 
+                  setItem={() => {}} 
+                  embed={true}
+                  />
             </div>
           }
           <div className={spacingClasses.paddingBig}>

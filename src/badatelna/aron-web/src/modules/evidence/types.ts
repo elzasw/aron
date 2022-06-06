@@ -58,13 +58,6 @@ export interface DetailDaoProps {
   items: Dao[];
 }
 
-export interface DetailDaoDialogProps {
-  item: Dao;
-  items: Dao[];
-  setItem: (item: Dao | null) => void;
-  embed?: boolean;
-}
-
 export interface DetailTreeProps {
   item: ApuEntity;
   id: string;

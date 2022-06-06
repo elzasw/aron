@@ -1,5 +1,5 @@
 import Tooltip from '@material-ui/core/Tooltip';
-import { GetApp as GetAppIcon } from "@material-ui/icons";
+import { GetApp as GetAppIcon, Fullscreen, FullscreenExit } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex, map } from 'lodash';
 import React, { useEffect, useState } from 'react';
@@ -13,10 +13,10 @@ import { ImageLoad } from '../../../components/image-load';
 import { Message } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
 import { Dao } from '../../../types';
+import { Icon } from './icon';
 import { useStyles } from './styles';
-import { DetailDaoDialogProps } from '../types';
 import { Toolbar } from './toolbar';
-import { FileObject } from './types';
+import { DetailDaoDialogProps, FileObject } from './types';
 import { getExistingFile, getFiles } from './utils';
 
 export function EvidenceDetailDaoDialog({
@@ -24,6 +24,9 @@ export function EvidenceDetailDaoDialog({
   items,
   setItem,
   embed = false,
+  customActionsLeft,
+  customActionsRight,
+  customActionsCenter,
 }: DetailDaoDialogProps) {
   const [files, setFiles] = useState(getFiles(item));
 
@@ -38,6 +41,7 @@ export function EvidenceDetailDaoDialog({
 
   const [file, setFile] = useState(files[0]);
   const [open, setOpen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(!embed);
 
   useEffect(() => {
     const files = getFiles(item);
@@ -78,7 +82,7 @@ export function EvidenceDetailDaoDialog({
       {({ fileViewerProps, ...toolbarProps }) => (
         <div className={classNames(
           classes.daoDialog,
-          !embed && classes.daoDialogFixed
+          fullscreen && classes.daoDialogFixed
         )}>
           <Toolbar
             {...{
@@ -95,6 +99,16 @@ export function EvidenceDetailDaoDialog({
               setOpen,
               file,
               showCloseButton: !embed,
+              customActionsLeft: customActionsLeft?.({fullscreen}),
+              customActionsRight: customActionsRight?.({fullscreen}),
+              customActionsCenter: <>
+                {embed && <Icon 
+                  Component={fullscreen ? FullscreenExit : Fullscreen} 
+                  onClick={() => setFullscreen(!fullscreen)}
+                  title={formatMessage({id: fullscreen ? Message.FULLSCREEN_EXIT : Message.FULLSCREEN})}
+                  />}
+                {customActionsCenter?.({fullscreen})}
+                </>,
             }}
           />
             <div>

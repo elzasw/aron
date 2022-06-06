@@ -16,6 +16,10 @@ export interface IconProps {
   disabled?: boolean;
 }
 
+export interface ActionsRenderProps {
+  fullscreen?: boolean;
+}
+
 export interface ToolbarProps {
   noView?: boolean;
   noAction?: boolean;
@@ -38,4 +42,17 @@ export interface ToolbarProps {
   setOpen: (open: boolean) => void;
   file: FileObject;
   showCloseButton?: boolean;
+  customActionsLeft?: React.ReactNode;
+  customActionsRight?: React.ReactNode;
+  customActionsCenter?: React.ReactNode;
+}
+
+export interface DetailDaoDialogProps {
+  item: Dao;
+  items: Dao[];
+  setItem: (item: Dao | null) => void;
+  embed?: boolean;
+  customActionsLeft?: (props: ActionsRenderProps) => React.ReactNode;
+  customActionsRight?: (props: ActionsRenderProps) => React.ReactNode;
+  customActionsCenter?: (props: ActionsRenderProps) => React.ReactNode;
 }
