@@ -17,7 +17,7 @@ export function Evidence(props: Props) {
 
   useEffect(() => {
     const mdQuery = window.matchMedia(theme.breakpoints.up('md').replace('@media', ''));
-    const lgQuery = window.matchMedia(theme.breakpoints.up('xl').replace('@media', ''));
+    const lgQuery = window.matchMedia(theme.breakpoints.up('lg').replace('@media', ''));
     setLayout(mdQuery.matches ? lgQuery.matches ? "3_COLUMN" : "2_COLUMN" : undefined);
 
     function handleQueryChange() {
