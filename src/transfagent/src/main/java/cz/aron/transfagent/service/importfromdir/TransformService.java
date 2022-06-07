@@ -399,4 +399,8 @@ public class TransformService {
         return Paths.get(tileFolder, path);
     }
 
+    public Path getTileDir(String id) {
+    	return getPath(id);
+    }
+
 }
