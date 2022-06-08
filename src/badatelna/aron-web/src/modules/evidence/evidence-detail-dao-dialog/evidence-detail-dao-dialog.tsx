@@ -263,7 +263,7 @@ export function EvidenceDetailDaoDialog({
                           textShadow: '0px 0px 8px black',
                           bottom: 0,
                           lineHeight: '1em',
-                          width: '130px',
+                          width: '100%',
                           background: '#0007',
                           maxHeight: '100%',
                           whiteSpace: 'nowrap',

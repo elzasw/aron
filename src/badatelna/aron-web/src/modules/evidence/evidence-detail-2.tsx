@@ -45,6 +45,7 @@ import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { EvidenceIcon } from './evidence-icon';
 import { LocaleContext } from '@eas/common-web';
 import { EvidenceShareButtons } from './evidence-share-buttons';
+import { Resizable } from 're-resizable';
 
 export function EvidenceDetail2({
   apuPartTypes,
@@ -278,17 +279,26 @@ export function EvidenceDetail2({
       <div style={{height: '100%'}}>
         <Loading {...{ loading }} />
         <div style={{display: "flex", height: "100%"}}>
-          {item && path === ModulePath.ARCH_DESC && root && showTree ? (
-            <div style={{
-              width: '33.333%', 
-              height: '100%',
-              padding: '10px',
-              paddingRight: '0',
-              borderRight: '1px solid #ddd',
-            }}>
-              <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
-              <div className={spacingClasses.paddingBottom} />
-            </div>
+          {item && path === ModulePath.ARCH_DESC && root ? (
+            <Resizable 
+              enable={{right: true}} 
+              defaultSize={{width: '30%', height: '100%'}}
+              maxWidth='50%'
+              style={{
+                display: showTree ? undefined : 'none',
+              }}
+            >
+              <div style={{
+                width: '100%', 
+                height: '100%',
+                padding: '10px',
+                paddingRight: '0',
+                borderRight: '1px solid #ddd',
+              }}>
+                <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
+                <div className={spacingClasses.paddingBottom} />
+              </div>
+            </Resizable>
           ) : (
             <></>
           )}
