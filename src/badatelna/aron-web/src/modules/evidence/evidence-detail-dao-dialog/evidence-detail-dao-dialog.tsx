@@ -31,7 +31,10 @@ export function EvidenceDetailDaoDialog({
   const [files, setFiles] = useState(getFiles(item));
 
   const { formatMessage } = useIntl();
-  const configuration = useConfiguration();
+  const {
+    showMetadataInImageViewer,
+    daoFooter,
+  } = useConfiguration();
 
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
@@ -55,7 +58,7 @@ export function EvidenceDetailDaoDialog({
 
   const metadataId = file?.published?.id;
   const metadata = file?.published?.metadata;
-  const showMetadata = metadata?.length && configuration.showMetadataInImageViewer;
+  const showMetadata = metadata?.length && showMetadataInImageViewer;
 
   const maxHeight = height - 120; // - titles, toolbar, bottom space
 
@@ -133,6 +136,36 @@ export function EvidenceDetailDaoDialog({
                       <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
                     </div>
                   )}
+                {daoFooter && 
+                  <div style={{
+                    position: 'absolute', 
+                    bottom: 0,
+                    right: 0,
+                    color: 'white',
+                    background: '#0008',
+                    padding: '8px 5px',
+                  }}>
+                    <span style={{
+                      paddingRight: '10px', 
+                      borderRight: '1px solid currentColor', 
+                      margin: '0 5px'
+                    }}>
+                      {daoFooter.copyrightText}
+                    </span>
+                    {daoFooter.links?.map((link)=>{
+                      return <a 
+                        target='_' 
+                        style={{
+                          margin: '0 5px', 
+                          color: 'white'
+                        }} 
+                        href={link.url}
+                      >
+                        {link.text}
+                      </a>
+                    })}
+                  </div>
+                }
               </div>
             </div>
             {showMetadata && <div

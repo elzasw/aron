@@ -1,6 +1,16 @@
 import React, { FC, useContext, createContext } from 'react';
 import { AppHeaderItemCode, SearchOption } from '../../enums';
 
+interface DaoFooterDef {
+  copyrightText?: string;
+  links?: DaoFooterLinkDef[];
+}
+
+interface DaoFooterLinkDef {
+  text?: string;
+  url?: string;
+}
+
 export interface ConfigurationType {
     allowDetailExpand?: boolean,
     alternativeItemLabel?: boolean;
@@ -15,6 +25,7 @@ export interface ConfigurationType {
     localeCookieName?: string;
     showMetadataInImageViewer?: boolean;
     disableDownloads?: boolean;
+    daoFooter?: DaoFooterDef;
 }
 
 
@@ -43,7 +54,14 @@ const defaultConfiguration:ConfigurationType = {
         SearchOption.FUND,
         SearchOption.FINDING_AID,
         SearchOption.ENTITY,
-    ]
+    ],
+    // daoFooter: {
+    //   copyrightText: 'Držitel licence: Literární archiv Památníku národního písemnictví, ' + new Date().getFullYear(),
+    //   links: [{
+    //     text: 'Smluvní podmínky',
+    //     url: 'https://www.google.com',
+    //   }]
+    // },
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)
