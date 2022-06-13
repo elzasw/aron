@@ -136,6 +136,7 @@ module.exports = (env, argv) => {
             to: 'hoist-non-react-statics.umd.js',
           },
           { from: path.resolve(__dirname, 'public', '.htaccess'), to: '.' },
+          { from: path.resolve(__dirname, 'public', 'configuration.js'), to: '.' },
         ],
       }),
       new HtmlWebpackPlugin({
