@@ -230,9 +230,9 @@ export const getFileByUrl = async (url: string) => {
   return {};
 };
 
-export const getFile = async (id?: string) => {
+export const getFile = async (id?: string, referencedFile?: boolean) => {
   if (id) {
-    return await getFileByUrl(`${ApiUrl.FILE}/${id}`);
+    return await getFileByUrl(`${referencedFile ? ApiUrl.REFERENCED_FILES : ApiUrl.FILE}/${id}`);
   }
 
   return {};

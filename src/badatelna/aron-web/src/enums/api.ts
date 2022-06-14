@@ -6,6 +6,7 @@ export enum ApiUrl {
   APU_PART_ITEM_TYPE = '/apuPartItemType',
   FACETS = '/facets',
   FILE = '/file',
+  REFERENCED_FILES = '/referencedfiles',
   HELP = '/help',
   ME = '/me',
   NEWS = '/news',

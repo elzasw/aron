@@ -276,6 +276,7 @@ export function EvidenceDetailDaoDialog({
                   {map(items, (item: any, i) => {
                     const isActive = active && active.id === item.id;
                     const name = item.published?.metadata?.find((item: any) => item.type === "name")?.value;
+                    const isReferencedFile = !!item?.thumbnail?.name;
 
                     return (
                       <div
@@ -308,7 +309,8 @@ export function EvidenceDetailDaoDialog({
                         </div>
                         <ImageLoad
                           key={item.id}
-                          id={item?.thumbnail?.file?.id}
+                          id={isReferencedFile ? item?.thumbnail?.id : item?.thumbnail?.file?.id}
+                          referencedFile={isReferencedFile}
                           alternativeImage={<div/>}
                           className={classNames( classes.daoThumbnail)}
                           />
