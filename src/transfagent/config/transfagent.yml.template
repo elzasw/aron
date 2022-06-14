@@ -41,10 +41,11 @@ dspace:
   disabled: true
 
 # Dao ulozene na disku
-# V adresari musi byt soubor data.csv s mapovanim level(uuid)->adresar
+# V adresari musi byt soubor dao.csv s mapovanim level(uuid)->adresar
 filestore:
   path: D:/projects/aron/data/transfagent/input_folder/filedao
-
+## alternativni nazev souboru dao.csv
+#  mappingName: dao2.csv
 
 dao:
   dir: /opt/daos
