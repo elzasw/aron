@@ -105,13 +105,13 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 
 	@Override
 	public boolean importEntity(IdProjection id) {
-
 		var ret = new MutableBoolean();
 		var archivalEntityId = id.getId();
 		var archivalEntity = archivalEntityRepository.findById(archivalEntityId);
 		archivalEntity.ifPresentOrElse(ae -> {
-			importEntity(ae);
-			log.info("ArchivalEntity imported {}", archivalEntityId);
+			if (importEntity(ae)) {
+				log.info("ArchivalEntity imported {}", archivalEntityId);
+			}
 			ret.setTrue();
 		}, () -> {
 			log.error("ArchivalEntity id={}, not exist", archivalEntityId);
@@ -119,26 +119,35 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 		});
 		return ret.getValue();
 	}
-	
-	private void importEntity(final ArchivalEntity ae) {
+
+	private boolean importEntity(final ArchivalEntity ae) {
 		Path tmpDir;
-        try {
-            tmpDir = downloadEntity(ae);
-        } catch (NotAvailableException e) {
-            transactionTemplate.executeWithoutResult(t-> {
-                markEntityAsNotAvailable(ae); 
-            });            
-            return;
-        }
-		
-		transactionTemplate.execute(t -> {
-		    importEntityTrans(t, tmpDir, ae);
-		    return null;
-		});
+		try {
+			tmpDir = downloadEntity(ae);
+		} catch (NotAvailableException e) {
+			transactionTemplate.executeWithoutResult(t -> {
+				markEntityAsNotAvailable(ae);
+			});
+			return false;
+		}
+
+		try {
+			transactionTemplate.execute(t -> {
+				importEntityTrans(t, tmpDir, ae);
+				return null;
+			});
+		} catch (ImportAp.MarkAsNonAvailableException e) {
+			log.error("Entity not imported, id={}, uuid={}, elzaId={}", ae.getId(), ae.getUuid(), ae.getElzaId(), e);
+			transactionTemplate.executeWithoutResult(t -> {
+				markEntityAsNotAvailable(ae);
+			});
+			return false;
+		}
+		return true;
 	}
-	
+
 	private void markEntityAsNotAvailable(ArchivalEntity ae) {
-	    log.info("Marking entit as not available, id={}", ae.getId());
+	    log.info("Marking entity as not available, id={}", ae.getId());
 	    
         ArchivalEntity dbEntity = archivalEntityRepository.getOne(ae.getId());
         dbEntity.setStatus(EntityStatus.NOT_AVAILABLE);
@@ -146,32 +155,35 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
     }
 	
 	private void importEntityTrans(TransactionStatus t, final Path tmpDir, final ArchivalEntity ae) {
-        ApuSourceBuilder apuSourceBuilder;
-        final var importAp = new ImportAp();
-        Path dataDir;
-        try {
-            apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), 
-                                                 ae.getUuid(),
-                            databaseDataProvider);
-            try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
-                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-            }
-            dataDir = storageService.moveToDataDir(tmpDir);
-            
-            saveEntity(dataDir, importAp, apuSourceBuilder, ae, importAp.getRequiredEntities(),
-                       apuSourceBuilder.getReferencedEntities());
-            
-        } catch (Exception e) {         
-            log.error("Fail to process downloaded ap.xml, dir={}, elzaId={}, uuid={}", tmpDir, 
-                      ae.getElzaId(), ae.getUuid(), e);
-            try {
-                FileSystemUtils.deleteRecursively(tmpDir);
-            } catch (IOException e1) {
-                log.error("Fail to delete directory {}", tmpDir, e1);
-            }
-            throw new IllegalStateException(e);
-        }
-        
+		ApuSourceBuilder apuSourceBuilder;
+		final var importAp = new ImportAp();
+		Path dataDir;
+
+		boolean deleteTmpDirectory = true;
+		try {
+			apuSourceBuilder = importAp.importAp(tmpDir.resolve("ap.xml"), ae.getUuid(), databaseDataProvider);
+			try (var os = Files.newOutputStream(tmpDir.resolve("apusrc.xml"))) {
+				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+			}
+			dataDir = storageService.moveToDataDir(tmpDir);
+			saveEntity(dataDir, importAp, apuSourceBuilder, ae, importAp.getRequiredEntities(),
+					apuSourceBuilder.getReferencedEntities());
+			deleteTmpDirectory = false;
+		} catch (ImportAp.MarkAsNonAvailableException e) {
+			// vyhodim dale
+			throw e;
+		} catch (Exception e) {
+			log.error("Fail to process downloaded ap.xml, dir={}, elzaId={}, uuid={}", tmpDir, ae.getElzaId(),
+					ae.getUuid(), e);
+			throw new IllegalStateException(e);
+		} finally {
+			if (deleteTmpDirectory)
+				try {
+					FileSystemUtils.deleteRecursively(tmpDir);
+				} catch (IOException e1) {
+					log.error("Fail to delete directory {}", tmpDir, e1);
+				}
+		}
 	}
 
     /**
@@ -567,9 +579,6 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
             this.entity = entity;
         }
 
-        /**
-         * 
-         */
         private static final long serialVersionUID = 1L;
 	};
 	

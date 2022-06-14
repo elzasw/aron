@@ -150,8 +150,8 @@ public class ImportAp implements EdxItemCovertContext {
 
         // oznaceni
         Fragments frgs = ap.getFrgs();
-        if(frgs==null) {
-            throw new IllegalStateException("AP without fragments, uuid: "+apUuid + ", elzaId: "+elzaId);
+        if(frgs==null) {        	
+        	throw new MarkAsNonAvailableException("AP without fragments, uuid: "+apUuid + ", elzaId: "+elzaId);        
         }
         for(Fragment frg: frgs.getFrg()) {
             switch(frg.getT()) {
@@ -459,6 +459,9 @@ public class ImportAp implements EdxItemCovertContext {
         case "WHOIS_CISLO_UK":
             // processed idents
             break;
+        case "AUT":
+        	identType = "Autority NKP";
+        	break;
         default:
             throw new IllegalStateException("Unrecognized identifier: "+identType + ", value: "+identValue);
         }
@@ -563,4 +566,18 @@ public class ImportAp implements EdxItemCovertContext {
     @Override
     public void addArchEntityRef(ArchEntityInfo aei) {        
     }
+    
+    /**
+     * Vyhodit tuto vyjimku pokud dojde k chybe kterou 
+     */
+    public static class MarkAsNonAvailableException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+		
+		public MarkAsNonAvailableException(String message) {
+			super(message);
+		}
+
+    }
+    
+    
 }

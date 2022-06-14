@@ -115,7 +115,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_RESTRICTED_ACCESS_TYPE",
             // geo souradnice - neumime prevest
             ElzaTypes.ZP2015_POSITION,
-            "ZP2015_DAO_ID",             
+            "ZP2015_DAO_ID",
+            "ZP2015_CONNECTED_RECORD",
+            "ZP2015_INVALID_RECORD",
+            "ZP2015_ITEM_LINK",
+            "ZP2015_TITLE_PUBLIC",                         
     // TODO: k zapracovani:
             "ZP2015_AMOUNT"
     };

@@ -175,7 +175,9 @@ public class ImportFundInfo {
         List<ItemDateRange> items = new ArrayList<>();
         for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
             if(item.getT().equals("ZP2015_UNIT_DATE")) {
-                items.add(fromDescriptionItemUnitDate((DescriptionItemUnitDate) item));
+            	if (item instanceof DescriptionItemUnitDate) {
+            		items.add(fromDescriptionItemUnitDate((DescriptionItemUnitDate) item));
+            	}
             }
         }
         return items;
