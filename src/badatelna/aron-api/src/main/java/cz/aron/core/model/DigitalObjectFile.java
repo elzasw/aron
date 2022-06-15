@@ -43,4 +43,12 @@ public class DigitalObjectFile extends DomainObject<DigitalObjectFile> {
     @Fetch(FetchMode.SELECT)
     @JsonIgnore
     private ApuAttachment attachment;
+
+    private String name;
+
+    private String referencedFile;
+
+    private String contentType;
+
+    private Long size;
 }

@@ -194,4 +194,12 @@
             <column name="apu_id" />
         </createIndex>
     </changeSet>
+    <changeSet id="aron:8" author="zacek@lightcomp.cz">
+        <addColumn tableName="digital_object_file">
+            <column name="name" type="nvarchar(2048)"/>
+            <column name="referenced_file" type="nvarchar(2048)"/>
+            <column name="content_type" type="varchar(255)"/>
+            <column name="size" type="bigint"/>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

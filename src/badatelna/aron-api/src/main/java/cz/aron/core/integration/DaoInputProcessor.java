@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -45,6 +46,7 @@ public class DaoInputProcessor {
         digitalObject.setId(dao.getUuid());
         digitalObject.setName(dao.getName());
         digitalObject.setPermalink(dao.getPrmLnk());
+        var usedUuids = new HashSet<String>();
         for (DaoBundle daoBundle : dao.getBndl()) {
             DigitalObjectType digitalObjectType = DigitalObjectType.fromXmlType(daoBundle.getType());
             if (digitalObjectType == DigitalObjectType.TILE) {  //unzip into folder, besides normal processing
@@ -60,13 +62,31 @@ public class DaoInputProcessor {
                 }
             } else {
                 for (DaoFile daoFile : daoBundle.getFile()) {
-                    fileInputProcessor.processFile(
-                        daoFile,
-                        digitalObjectType,
-                        null,
-                        digitalObject,
-                        filesMap);
+                    if (FileInputProcessor.isReference(daoFile)) {
+                        fileInputProcessor.processFileReference(
+                            daoFile,
+                            digitalObjectType,
+                            digitalObject);
+                    } else {
+                        fileInputProcessor.processFile(
+                            daoFile,
+                            digitalObjectType,
+                            null,
+                            digitalObject,
+                            filesMap);
+                    }
                 }
+            }
+            for (DaoFile daoFile : daoBundle.getFile()) {
+                usedUuids.add(daoFile.getUuid());
+            }
+        }
+        // remove unused                
+        var it = digitalObject.getFiles().iterator();
+        while(it.hasNext()) {
+            var digitalObjectFile = it.next();
+            if (!usedUuids.contains(digitalObjectFile.getId())) {
+                it.remove();
             }
         }
         digitalObjectStore.update(digitalObject);

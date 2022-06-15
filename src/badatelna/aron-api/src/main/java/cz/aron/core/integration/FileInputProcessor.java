@@ -13,7 +13,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.UUID;
 
 /**
@@ -22,14 +25,27 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class FileInputProcessor {
+
+    // full path to file on local filesystem
+    private static String ATTR_PATH = "path";
+    // mimetype of file
+    private static String ATTR_MIMETYPE = "mimeType";
+    // reference flag, no data only uuid and/or path
+    private static String ATTR_REFERENCE = "reference";
+    // size of file
+    private static String ATTR_SIZE = "size";
+
     @Inject private FileManager fileManager;
 
     public void processFile(DaoFile daoFile, DigitalObjectType digitalObjectType, ApuAttachment apuAttachment, DigitalObject digitalObject, Map<String, Path> filesMap) {
-        DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
-        digitalObjectFile.setId(daoFile.getUuid());
+        DigitalObjectFile digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
         digitalObjectFile.setType(digitalObjectType);
         digitalObjectFile.setOrder(daoFile.getPos());
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
+        digitalObjectFile.setReferencedFile(null);
+        digitalObjectFile.setContentType(null);
+        digitalObjectFile.setName(null);
+        digitalObjectFile.setSize(null);
         String name;
         if (apuAttachment != null) {
             digitalObjectFile.setAttachment(apuAttachment);
@@ -44,7 +60,12 @@ public class FileInputProcessor {
         else {
             throw new RuntimeException("missing parent object");
         }
-        String mimeType = "application/octet-stream";
+
+        var attributes = processMetadata(daoFile, digitalObjectFile);
+        var mimeType = attributes.get(ATTR_MIMETYPE);
+        if (mimeType==null) {
+            mimeType = "application/octet-stream";
+        }
         if (daoFile.getMtdt() != null) {
             for (MetadataItem itm : daoFile.getMtdt().getItms()) {
                 Metadatum metadatum = new Metadatum();
@@ -74,36 +95,94 @@ public class FileInputProcessor {
     }
 
     public void processFileReference(DaoFile daoFile, DigitalObjectType digitalObjectType, DigitalObject digitalObject) {
-        DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
-        digitalObjectFile.setId(daoFile.getUuid());
+        DigitalObjectFile digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
         digitalObjectFile.setType(digitalObjectType);
         digitalObjectFile.setOrder(daoFile.getPos());
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
         digitalObjectFile.setDigitalObject(digitalObject);
+        digitalObjectFile.setFile(null);
         digitalObject.getFiles().add(digitalObjectFile);
+
+        var attributes = processMetadata(daoFile, digitalObjectFile);
+        digitalObjectFile.setReferencedFile(attributes.get(ATTR_PATH));
+        digitalObjectFile.setContentType(attributes.get(ATTR_MIMETYPE));
+        var size = attributes.get(ATTR_SIZE);
+        if (size!=null) {
+             digitalObjectFile.setSize(Long.parseLong(size));
+        } else {
+             digitalObjectFile.setSize(null);
+        }
+        //TODO transfer filename from transformagent
+        String name = null;
+        if (name==null&&digitalObjectFile.getReferencedFile()!=null) {
+            name = Paths.get(digitalObjectFile.getReferencedFile()).getFileName().toString();
+        }
+        digitalObjectFile.setName(name);
+    }
+
+    /**
+     * Add metadata. Remove unused when exist
+     */
+    private Map<String, String> processMetadata(DaoFile daoFile, DigitalObjectFile digitalObjectFile) {
+        var attributes = new HashMap<String,String>();
+        var usedMetadata = new HashSet<String>();
         if (daoFile.getMtdt() != null) {
             for (MetadataItem itm : daoFile.getMtdt().getItms()) {
-                if (!"reference".equals(itm.getCode())) {
-                    Metadatum metadatum = new Metadatum();
-                    metadatum.setType(itm.getCode());
+                attributes.put(itm.getCode(), itm.getValue());
+                if (!ATTR_PATH.equals(itm.getCode())&&!ATTR_REFERENCE.equals(itm.getCode())) {
+                    usedMetadata.add(itm.getCode());
+                    attributes.put(itm.getCode(), itm.getValue());
+                    Metadatum metadatum = getNewOrExisting(digitalObjectFile, itm.getCode());
                     metadatum.setValue(itm.getValue());
-                    metadatum.setFile(digitalObjectFile);
-                    digitalObjectFile.getMetadata().add(metadatum);
                 }
             }
         }
+
+        // remove unused metadata
+        var it = digitalObjectFile.getMetadata().iterator();
+        while(it.hasNext()) {
+            var metadatum = it.next();
+            if (!usedMetadata.contains(metadatum.getType())) {
+                it.remove();
+            }
+        }
+        return attributes;
+    }
+
+    private DigitalObjectFile getNewOrExisting(DigitalObject digitalObject, String uuid) {
+	for(DigitalObjectFile digitalObjectFile:digitalObject.getFiles()) {
+            if (uuid.equals(digitalObjectFile.getId())) {
+                return digitalObjectFile;
+            }
+        }
+        DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
+        digitalObjectFile.setId(uuid);
+        digitalObjectFile.setDigitalObject(digitalObject);
+        return digitalObjectFile;
+    }
+
+    private Metadatum getNewOrExisting(DigitalObjectFile digitalObjectFile, String code) {
+        for(Metadatum metadatum:digitalObjectFile.getMetadata()) {
+            if (code.equals(metadatum.getType())) {
+                return metadatum;
+            }
+        }
+        Metadatum metadatum = new Metadatum();
+        metadatum.setType(code);
+        metadatum.setFile(digitalObjectFile);
+        digitalObjectFile.getMetadata().add(metadatum);
+        return metadatum;
     }
 
     public static boolean isReference(DaoFile daoFile) {
         if (daoFile.getMtdt() != null) {
             for (MetadataItem itm : daoFile.getMtdt().getItms()) {
-                if ("reference".equals(itm.getCode()) && "1".equals(itm.getValue())) {
+                if (ATTR_REFERENCE.equals(itm.getCode()) && "1".equals(itm.getValue())) {
                     return true;
                 }
             }
         }
         return false;
     }
-
 
 }
