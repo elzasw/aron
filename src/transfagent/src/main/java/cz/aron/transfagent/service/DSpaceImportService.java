@@ -143,7 +143,7 @@ public class DSpaceImportService implements ImportProcessor {
         downloadBitstreamInfo(saveDir, sessionId);
 
         try {
-            if(!transformService.transform(saveDir)) {
+            if(!transformService.transform(saveDir, null)) {
                 // delete empty dir
             }
         } catch (Exception e) {

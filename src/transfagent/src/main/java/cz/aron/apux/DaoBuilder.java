@@ -63,6 +63,10 @@ public class DaoBuilder {
     public static void addReferenceFlag(DaoFile daoFile) {
     	getMetadata(daoFile).getItms().add(createMetadataItem("reference", "1"));
     }
+    
+    public static void addPath(DaoFile daoFile, String path) {
+    	getMetadata(daoFile).getItms().add(createMetadataItem("path", path));
+    }
 
     public static DaoFile createDaoFile(int pos, String mimetype) {
         return createDaoFile(null, null, pos, mimetype, null);

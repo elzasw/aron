@@ -35,7 +35,7 @@ public class TransformServiceTest extends AbstractCommonTest {
         var daoInputDir = destDataDir.resolve(DAO_UUID);
 
         FileUtils.copyDirectory(srcDataDir.toFile(), daoInputDir.toFile());
-        transformService.transform(daoInputDir);
+        transformService.transform(daoInputDir, null);
 
         Path daoUuidXml = daoInputDir.resolve("dao-" + DAO_UUID + ".xml");
 

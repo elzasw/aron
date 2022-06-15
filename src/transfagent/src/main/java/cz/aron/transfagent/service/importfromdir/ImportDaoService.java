@@ -106,7 +106,7 @@ public class ImportDaoService extends ImportDirProcessor {
 
     private void transformAndImportDao(Dao daoFile, Path path) {	    
         try {
-            if (transformService.transform(path)) {
+            if (transformService.transform(path, null)) {
                 importCompleteDao(daoFile, path);
             }
         } catch (Exception e) {

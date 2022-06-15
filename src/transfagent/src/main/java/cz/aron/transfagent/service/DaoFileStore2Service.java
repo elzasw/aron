@@ -71,7 +71,7 @@ public class DaoFileStore2Service  implements DaoImporter {
 			for (Path daoPath : daoPaths) {
 				Files.copy(daoPath, daoDir.resolve(daoPath.getFileName()), StandardCopyOption.REPLACE_EXISTING);
 			}
-			if (!transformService.transform(daoDir)) {
+			if (!transformService.transform(daoDir, null)) {
 				// delete empty dir
 			}
 			dao.setState(DaoState.READY);

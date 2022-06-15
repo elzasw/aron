@@ -28,6 +28,8 @@ public class ConfigDao {
      * Pouziva podadresare pro ulozeni nahledu
      */
     private boolean useSubdirs = false;
+    
+    private SendType send = SendType.data;
 
     public String getDir() {
         return dir;
@@ -67,6 +69,20 @@ public class ConfigDao {
 
 	public void setQueueSize(int queueSize) {
 		this.queueSize = queueSize;
+	}
+
+	public SendType getSend() {
+		return send;
+	}
+
+	public void setSend(SendType send) {
+		this.send = send;
+	}
+
+	public static enum SendType {
+		reference,
+		data,
+		none
 	}
 
 }
