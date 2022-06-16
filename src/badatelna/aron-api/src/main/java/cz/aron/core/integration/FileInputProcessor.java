@@ -38,7 +38,21 @@ public class FileInputProcessor {
     @Inject private FileManager fileManager;
 
     public void processFile(DaoFile daoFile, DigitalObjectType digitalObjectType, ApuAttachment apuAttachment, DigitalObject digitalObject, Map<String, Path> filesMap) {
-        DigitalObjectFile digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
+
+        String name;
+        DigitalObjectFile digitalObjectFile;
+        if (apuAttachment != null) {
+            digitalObjectFile = getNewOrExisting(apuAttachment, daoFile.getUuid());
+            name = apuAttachment.getName();
+        }
+        else if (digitalObject != null) {
+            digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
+            name = digitalObject.getName();
+        }
+        else {
+            throw new RuntimeException("missing parent object");
+        }
+
         digitalObjectFile.setType(digitalObjectType);
         digitalObjectFile.setOrder(daoFile.getPos());
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
@@ -46,20 +60,6 @@ public class FileInputProcessor {
         digitalObjectFile.setContentType(null);
         digitalObjectFile.setName(null);
         digitalObjectFile.setSize(null);
-        String name;
-        if (apuAttachment != null) {
-            digitalObjectFile.setAttachment(apuAttachment);
-            apuAttachment.setFile(digitalObjectFile);
-            name = apuAttachment.getName();
-        }
-        else if (digitalObject != null) {
-            digitalObjectFile.setDigitalObject(digitalObject);
-            digitalObject.getFiles().add(digitalObjectFile);
-            name = digitalObject.getName();
-        }
-        else {
-            throw new RuntimeException("missing parent object");
-        }
 
         var attributes = processMetadata(daoFile, digitalObjectFile);
         var mimeType = attributes.get(ATTR_MIMETYPE);
@@ -101,7 +101,6 @@ public class FileInputProcessor {
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
         digitalObjectFile.setDigitalObject(digitalObject);
         digitalObjectFile.setFile(null);
-        digitalObject.getFiles().add(digitalObjectFile);
 
         var attributes = processMetadata(daoFile, digitalObjectFile);
         digitalObjectFile.setReferencedFile(attributes.get(ATTR_PATH));
@@ -158,6 +157,19 @@ public class FileInputProcessor {
         DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
         digitalObjectFile.setId(uuid);
         digitalObjectFile.setDigitalObject(digitalObject);
+        digitalObject.getFiles().add(digitalObjectFile);
+        return digitalObjectFile;
+    }
+
+    private DigitalObjectFile getNewOrExisting(ApuAttachment apuAttachment, String uuid) {
+        DigitalObjectFile digitalObjectFile = apuAttachment.getFile();
+        if (digitalObjectFile!=null && uuid.equals(digitalObjectFile.getId())) {
+            return digitalObjectFile;
+        }
+        digitalObjectFile = new DigitalObjectFile();
+        digitalObjectFile.setId(uuid);
+        digitalObjectFile.setAttachment(apuAttachment);
+        apuAttachment.setFile(digitalObjectFile);
         return digitalObjectFile;
     }
 
