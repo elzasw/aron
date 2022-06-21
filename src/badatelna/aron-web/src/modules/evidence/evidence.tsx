@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch } from 'react-router-dom';
-import { EvidenceDetail } from './evidence-detail-3';
+import { EvidenceDetail } from './evidence-detail';
 import { EvidenceMain } from './evidence-main';
 import { Props } from './types';
 
