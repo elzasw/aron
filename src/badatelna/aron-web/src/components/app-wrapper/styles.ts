@@ -4,9 +4,6 @@ export const useStyles = makeStyles((theme) => {
   const md = theme.breakpoints.up('md');
   return {
     appWrapper: {
-      width: '100vw',
-      minWidth: '100vw',
-      maxWidth: '100vw',
       // minHeight: '100vh',
       overflowY: 'auto',
       background: '#fff',
@@ -17,6 +14,9 @@ export const useStyles = makeStyles((theme) => {
       [md]: {
         overflowY: 'hidden',
         height: '100%',
+        width: '100vw',
+        minWidth: '100vw',
+        maxWidth: '100vw',
       },
     },
    

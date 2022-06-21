@@ -37,16 +37,17 @@ import {
   getParentBreadcrumbs,
 } from './utils';
 import { EvidenceDetailDaoDialog, Icon } from './evidence-detail-dao-dialog';
+import { EvidenceDetailDao } from './evidence-detail-dao';
 import { EvidenceDetailTree } from './evidence-detail-tree';
 import { getPathByItem, useAppState } from '../../common-utils';
-import { Module, Loading, Button, useConfiguration } from '../../components';
+import { Module, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { LocaleContext } from '@eas/common-web';
 import { EvidenceShareButtons } from './evidence-share-buttons';
-import { Resizable } from 're-resizable';
+import { EvidenceLayout, LayoutType } from './evidence-layout';
 
-export function EvidenceDetail3({
+export function EvidenceDetail({
   apuPartTypes,
   apuPartItemTypes,
 }: DetailProps) {
@@ -273,89 +274,53 @@ export function EvidenceDetail3({
         ],
       }}
     >
-      <div style={{height: '100%'}}>
-        <Loading {...{ loading }} />
-        <div style={{display: "flex", height: '100%'}}>
-          {item && path === ModulePath.ARCH_DESC && root ? (
-            <Resizable 
-              enable={{right: true}} 
-              defaultSize={{width: '25%', height: '100%'}}
-              maxWidth='32%'
-              style={{
-                display: showTree ? undefined : 'none',
-              }}
-            >
-              <div style={{ 
-                width: '100%',
-                height: '100%',
-                flexGrow: 0,
-                padding: '10px',
-                paddingRight: '0',
-                borderRight: '1px solid #ddd',
-              }}>
-                <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
-                <div className={spacingClasses.paddingBottom} />
-              </div>
-            </Resizable>
-          ) : (
-              <></>
-            )}
-          {daos?.length > 0 &&
-            <div style={{
-              width: "50%", 
-              height: '100%',
-              minWidth: '500px',
-              flexGrow: 2,
-            }}>
-              <EvidenceDetailDaoDialog 
-                items={daos} 
-                item={daos[0]} 
-                setItem={() => {}} 
-                embed={true}
-                customActionsLeft={({fullscreen}) => <>
-                  {!fullscreen && <Icon 
-                    onClick={() => setShowTree(!showTree)}
-                    Component={showTree ? ArrowLeft : ArrowRight}
-                    title={formatMessage({id: showTree ? Message.TREE_HIDE : Message.TREE_SHOW})}
-                    />}
-                  </>}
-                customActionsRight={({fullscreen}) => <>
-                  {!fullscreen && <Icon 
-                    onClick={() => setShowDescription(!showDescription)}
-                    Component={showDescription ? ArrowRight : ArrowLeft}
-                    title={formatMessage({id: showDescription ? Message.DESCRIPTION_HIDE : Message.DESCRIPTION_SHOW})}
-                    />}
-                  </>}
-                />
-            </div>
-        }
-          {(showDescription || daos.length === 0) && 
-            <Resizable
-              enable={{left: !!daos?.length}} 
-              defaultSize={{width: '25%', height: '100%'}}
-              maxWidth={!!daos?.length ? '32%' : undefined}
-              style={{
-                display: showDescription ? undefined : 'none',
-                overflowX: 'auto',
-                flexGrow: !daos?.length ? 1 : undefined,
-              }}
-            >
-              <div 
-                className={spacingClasses.paddingBig} 
-                style={{ 
-                  width: '100%', 
-                  height: '100%',
-                  minWidth: '350px',
-                  overflowY: 'auto',
-                  flexGrow: 1,
-                  borderLeft: '1px solid #ddd',
-                }}>
+      <EvidenceLayout
+        isLoading={loading}
+        showTree={showTree}
+        renderTree={
+        item && path === ModulePath.ARCH_DESC && root ? 
+          () => <>
+            <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
+            <div className={spacingClasses.paddingBottom} />
+            </>
+          : undefined
+      } 
+        renderDao={
+         daos?.length > 0 ?
+         ({layoutType}) => layoutType !== LayoutType.ONE_COLUMN ? <EvidenceDetailDaoDialog 
+            items={daos} 
+            item={daos[0]} 
+            setItem={() => {}} 
+            embed={true}
+            customActionsLeft={({fullscreen}) => <>
+              {!fullscreen && <Icon 
+                onClick={() => setShowTree(!showTree)}
+                Component={showTree ? ArrowLeft : ArrowRight}
+                title={formatMessage({id: showTree ? Message.TREE_HIDE : Message.TREE_SHOW})}
+                />}
+              </>}
+            customActionsRight={({fullscreen}) => <>
+              {!fullscreen 
+                && layoutType === LayoutType.THREE_COLUMN 
+                && <Icon 
+                  onClick={() => setShowDescription(!showDescription)}
+                  Component={showDescription ? ArrowRight : ArrowLeft}
+                  title={formatMessage({id: showDescription ? Message.DESCRIPTION_HIDE : Message.DESCRIPTION_SHOW})}
+                  />}
+              </>}
+            /> : 
+            <EvidenceDetailDao items={sortBy(daos, 'order')} />
+          : undefined
+      }
+        showDesc={showDescription || daos.length === 0}
+        renderDesc={() => 
+          <div style={{minWidth: '300px'}} className={spacingClasses.paddingBig}>
                 {item ? (
                   <div
                     className={classNames(
                       classes.evidenceDetailTop,
                       layoutClasses.flexSpaceBetweenBottom,
-                      spacingClasses.marginBottom
+                      spacingClasses.marginBottom,
                     )}
                   >
                     <div className={layoutClasses.flex}>
@@ -476,11 +441,8 @@ export function EvidenceDetail3({
                     )}
                   </div>
                 </div>
-              </div>
-            </Resizable>
-        }
-        </div>
-      </div>
+            </div>}
+        />
     </Module>
   );
 }

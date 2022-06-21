@@ -152,8 +152,9 @@ export function EvidenceDetailDaoDialog({
                     }}>
                       {daoFooter.copyrightText}
                     </span>
-                    {daoFooter.links?.map((link)=>{
+                    {daoFooter.links?.map((link, index)=>{
                       return <a 
+                        key={index}
                         target='_' 
                         style={{
                           margin: '0 5px', 
