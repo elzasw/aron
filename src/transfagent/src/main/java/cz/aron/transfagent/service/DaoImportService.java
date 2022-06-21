@@ -92,6 +92,7 @@ public class DaoImportService implements ImportProcessor  {
 				numToSend = numExistingToSend;
 				if (numToSend>configDao.getQueueSize()) {
 					log.info("Import dao paused, exists {} daos prepared to be sent", numToSend);
+					ic.setFailed(true);  // set failed to pause and restart execution of importers from beginning
 					return;
 				}
 			}

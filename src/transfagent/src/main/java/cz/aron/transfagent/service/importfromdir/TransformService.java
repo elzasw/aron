@@ -194,6 +194,19 @@ public class TransformService {
 		for (var entry : filesToMove.entrySet()) {
 			Files.move(entry.getValue(), filesDir.resolve(entry.getKey()));
 		}
+		
+		// delete remaining files
+		try (Stream<Path> stream = Files.list(daoDir)) {
+			stream.forEach(p -> {
+				try {
+					if (!Files.isDirectory(p) && !Files.isSameFile(p, daoUuidXmlFile)) {
+						Files.delete(p);
+					}
+				} catch (IOException e) {
+					log.error("Fail to delete file {}", p);
+				}
+			});
+		}
 
 		scheduleAsyncTransforms(daoUuid, filesToTransformAsync);
 		return true;
