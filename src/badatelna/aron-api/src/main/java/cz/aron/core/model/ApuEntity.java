@@ -25,8 +25,9 @@ public class ApuEntity extends DomainObject<ApuEntity> {
     private int order;
     private boolean published;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @Fetch(FetchMode.SELECT)
+    @JsonIgnore
     private ApuSource source;
 
     @ManyToOne
