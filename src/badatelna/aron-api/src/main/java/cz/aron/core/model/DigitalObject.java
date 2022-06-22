@@ -9,6 +9,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,7 +26,7 @@ public class DigitalObject extends DomainObject<DigitalObject> {
     @OneToMany(mappedBy = "digitalObject", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Fetch(FetchMode.SELECT)
     @BatchSize(size = 100)
-    private List<DigitalObjectFile> files;
+    private List<DigitalObjectFile> files = new ArrayList<>();
 
     @ManyToOne
     @Fetch(FetchMode.SELECT)
