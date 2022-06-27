@@ -185,7 +185,7 @@ export function EvidenceLayout({
               style={{
                 display: !showDesc ? 'none' : undefined,
                 overflow: 'visible',
-                flexGrow: 1,
+                flexGrow: !renderDao ? 1 : undefined,
                 zIndex: 10,
                 marginLeft: layoutType === LayoutType.THREE_COLUMN ? '5px' : undefined,
               }}

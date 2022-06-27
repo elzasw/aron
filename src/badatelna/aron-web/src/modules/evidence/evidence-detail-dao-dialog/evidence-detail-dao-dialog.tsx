@@ -2,13 +2,14 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { GetApp as GetAppIcon, Fullscreen, FullscreenExit } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex, map } from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import {
     downloadFileByUrl,
     useWindowSize
 } from '../../../common-utils';
-import { FileViewer, FileViewerWrapper, useConfiguration } from '../../../components';
+import { useConfiguration } from '../../../components';
+import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/file-viewer/image-viewer';
 import { ImageLoad } from '../../../components/image-load';
 import { Message } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
@@ -29,6 +30,7 @@ export function EvidenceDetailDaoDialog({
   customActionsCenter,
 }: DetailDaoDialogProps) {
   const [files, setFiles] = useState(getFiles(item));
+  const viewerRef = useRef<ImageViewerExposedFunctions>(null);
 
   const { formatMessage } = useIntl();
   const {
@@ -74,154 +76,154 @@ export function EvidenceDetailDaoDialog({
   };
 
   const isTile = !!(file && file.tile);
+  const fileId = isTile ? existingFile?.id : existingFile?.file.id
 
   return (
     <div className={classNames(
       classes.daoDialog,
       fullscreen && classes.daoDialogFixed
     )}>
-      <FileViewerWrapper
-        {...{
-          id: isTile ? existingFile?.id : existingFile?.file.id,
-          highResImage: isTile,
-        }}
-      >
-        {({ fileViewerProps, ...toolbarProps }) => (
-          <>
-            <Toolbar
-              {...{
-                ...toolbarProps,
-                previousEnabled: true,
-                nextEnabled: true,
-                previousDisabled: fileIndex <= 0,
-                nextDisabled: fileIndex < 0 || fileIndex >= files.length - 1,
-                previous: () => setFile(files[fileIndex - 1]),
-                next: () => setFile(files[fileIndex + 1]),
-                item,
-                setItem,
-                open,
-                setOpen,
-                file,
-                showCloseButton: !embed,
-                customActionsLeft: customActionsLeft?.({fullscreen}),
-                customActionsRight: customActionsRight?.({fullscreen}),
-                customActionsCenter: <>
-                  {embed && <Icon 
-                    Component={fullscreen ? FullscreenExit : Fullscreen} 
-                    onClick={() => setFullscreen(!fullscreen)}
-                    title={formatMessage({id: fullscreen ? Message.FULLSCREEN_EXIT : Message.FULLSCREEN})}
-                    />}
-                  {customActionsCenter?.({fullscreen})}
-                  </>,
-              }}
-              />
-            <div>
-              <div
-                className={classNames(
-                  classes.daoDialogSection,
-                  classes.daoDialogCenter,
-                  !open && classes.daoDialogCenterOpen,
-                  !showMetadata && classes.daoDialogCenterNoSidebar
-                )}
-              >
-                {files.length ? (
-                  <FileViewer {...fileViewerProps} />
-                ) : (
-                    <div
-                      className={classNames(
-                        classes.daoDialogNoFiles,
-                        layoutClasses.flexCentered
-                      )}
-                    >
-                      <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
-                    </div>
+      <>
+        {viewerRef.current && 
+          <Toolbar
+            {...{
+              zoomIn: () => viewerRef.current?.zoomIn(),
+              zoomOut: () => viewerRef.current?.zoomOut(),
+              zoomInDisabled: false,
+              zoomOutDisabled: false,
+              rotateLeft: () => viewerRef.current?.rotateLeft(),
+              rotateRight: () => viewerRef.current?.rotateRight(),
+              reset: () => viewerRef.current?.reset(),
+              previousEnabled: true,
+              nextEnabled: true,
+              previousDisabled: fileIndex <= 0,
+              nextDisabled: fileIndex < 0 || fileIndex >= files.length - 1,
+              previous: () => setFile(files[fileIndex - 1]),
+              next: () => setFile(files[fileIndex + 1]),
+              item,
+              setItem,
+              open,
+              setOpen,
+              file,
+              showCloseButton: !embed,
+              customActionsLeft: customActionsLeft?.({fullscreen}),
+              customActionsRight: customActionsRight?.({fullscreen}),
+              customActionsCenter: <>
+                {embed && <Icon 
+                  Component={fullscreen ? FullscreenExit : Fullscreen} 
+                  onClick={() => setFullscreen(!fullscreen)}
+                  title={formatMessage({id: fullscreen ? Message.FULLSCREEN_EXIT : Message.FULLSCREEN})}
+                  />}
+                {customActionsCenter?.({fullscreen})}
+                </>,
+            }}
+            />
+      }
+        <div>
+          <div
+            className={classNames(
+              classes.daoDialogSection,
+              classes.daoDialogCenter,
+              !open && classes.daoDialogCenterOpen,
+              !showMetadata && classes.daoDialogCenterNoSidebar
+            )}
+          >
+            {files.length && fileId ? (
+              <ImageViewer ref={viewerRef} id={fileId} />
+            ) : (
+                <div
+                  className={classNames(
+                    classes.daoDialogNoFiles,
+                    layoutClasses.flexCentered
                   )}
-                {daoFooter && 
-                  <div style={{
-                    position: 'absolute', 
-                    bottom: 0,
-                    right: 0,
-                    color: 'white',
-                    background: '#0008',
-                    padding: '8px 5px',
-                  }}>
-                    <span style={{
-                      paddingRight: '10px', 
-                      borderRight: '1px solid currentColor', 
-                      margin: '0 5px'
-                    }}>
-                      {daoFooter.copyrightText}
-                    </span>
-                    {daoFooter.links?.map((link, index)=>{
-                      return <a 
-                        key={index}
-                        target='_' 
-                        style={{
-                          margin: '0 5px', 
-                          color: 'white'
-                        }} 
-                        href={link.url}
-                      >
-                        {link.text}
-                      </a>
-                    })}
-                  </div>
-                }
-              </div>
-            </div>
-            {showMetadata && <div
-              className={classNames(
-                classes.daoDialogSection,
-                classes.daoDialogSide,
-                showMetadata && classes.daoDialogRight,
-                open && classes.daoDialogSideOpen
-              )}
-            >
-              <div
-                className={classNames(
-                  classes.daoDialogMetadata,
-                  spacingClasses.paddingSmall
-                )}
-              >
-                <div className={layoutClasses.flex}>
-                  <div className={classes.bold}>Metadata</div>
-                  <Tooltip
-                    {...{
-                      title: formatMessage({ id: Message.DOWNLOAD_METADATA }),
-                    }}
-                  >
-                    <GetAppIcon
-                      className={classNames(
-                        classes.icon,
-                        spacingClasses.marginLeft
-                      )}
-                      onClick={() =>
-                        downloadFileByUrl(
-                          `/digitalObjectFile/${metadataId}/metadata/csv`,
-                          `dao_${item.id}_metadata.csv`
-                        )
-                    }
-                      />
-                  </Tooltip>
+                >
+                  <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
                 </div>
-                {metadata?.map(({ id, value, type }) => (
-                  <div {...{ key: id, className: layoutClasses.flex }}>
-                    <div
-                      className={classNames(
-                        classes.bold,
-                        classes.daoDialogMetadataLabel
-                      )}
-                    >
-                      {type}:
-                    </div>
-                    <div>{value}</div>
-                  </div>
-                ))}
+              )}
+            {daoFooter && 
+              <div style={{
+                position: 'absolute', 
+                bottom: 0,
+                right: 0,
+                color: 'white',
+                background: '#0008',
+                padding: '8px 5px',
+              }}>
+                <span style={{
+                  paddingRight: '10px', 
+                  borderRight: '1px solid currentColor', 
+                  margin: '0 5px'
+                }}>
+                  {daoFooter.copyrightText}
+                </span>
+                {daoFooter.links?.map((link, index)=>{
+                  return <a 
+                    key={index}
+                    target='_' 
+                    style={{
+                      margin: '0 5px', 
+                      color: 'white'
+                    }} 
+                    href={link.url}
+                  >
+                    {link.text}
+                  </a>
+                })}
               </div>
-            </div>}
-            </>
-        )}
-      </FileViewerWrapper>
+          }
+          </div>
+        </div>
+        {showMetadata && <div
+          className={classNames(
+            classes.daoDialogSection,
+            classes.daoDialogSide,
+            showMetadata && classes.daoDialogRight,
+            open && classes.daoDialogSideOpen
+          )}
+        >
+          <div
+            className={classNames(
+              classes.daoDialogMetadata,
+              spacingClasses.paddingSmall
+            )}
+          >
+            <div className={layoutClasses.flex}>
+              <div className={classes.bold}>Metadata</div>
+              <Tooltip
+                {...{
+                  title: formatMessage({ id: Message.DOWNLOAD_METADATA }),
+                }}
+              >
+                <GetAppIcon
+                  className={classNames(
+                    classes.icon,
+                    spacingClasses.marginLeft
+                  )}
+                  onClick={() =>
+                    downloadFileByUrl(
+                      `/digitalObjectFile/${metadataId}/metadata/csv`,
+                      `dao_${item.id}_metadata.csv`
+                    )
+                }
+                  />
+              </Tooltip>
+            </div>
+            {metadata?.map(({ id, value, type }) => (
+              <div {...{ key: id, className: layoutClasses.flex }}>
+                <div
+                  className={classNames(
+                    classes.bold,
+                    classes.daoDialogMetadataLabel
+                  )}
+                >
+                  {type}:
+                </div>
+                <div>{value}</div>
+              </div>
+            ))}
+          </div>
+        </div>}
+        </>
       <div
         className={classNames(
           classes.daoDialogSection,
@@ -248,12 +250,12 @@ export function EvidenceDetailDaoDialog({
             defaultId: Message.FILE,
             mapper: (item: FileObject) =>
               `${
-                item.tile
-                ? 'tile'
-                : item.published
-                ? 'published'
-                : 'thumbnail'
-              }.file.name`,
+item.tile
+? 'tile'
+: item.published
+? 'published'
+: 'thumbnail'
+}.file.name`,
             items: files,
             onClick: setFile,
             active: file,
