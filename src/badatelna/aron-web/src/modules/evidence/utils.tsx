@@ -12,7 +12,6 @@ import {
 import { FacetType, ModulePath } from '../../enums';
 import { getTypeByPath } from '../../common-utils';
 import {
-  ApiFilterOperation,
   Facet,
   FilterConfig,
   Relationship,
@@ -20,6 +19,7 @@ import {
   ApuEntity,
   Option,
 } from '../../types';
+import { ApiFilterOperation } from '@eas/common-web';
 import {
   SelectionFilter,
   RangeFilter,

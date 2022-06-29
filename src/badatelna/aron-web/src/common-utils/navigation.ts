@@ -1,6 +1,6 @@
 import { map, compact } from 'lodash';
 
-import { ApiFilterOperation } from '../types';
+import { ApiFilterOperation } from '@eas/common-web';
 
 export const createUrlParams = (params: any) => {
   const query = map(params, (value, key) =>

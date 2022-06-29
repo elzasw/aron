@@ -20,10 +20,10 @@ import {
 import { ModulePath, FacetType } from '../../enums';
 import {
   Facet,
-  ApiFilterOperation,
   FilterConfig,
   Relationship,
 } from '../../types';
+import { ApiFilterOperation } from '@eas/common-web';
 import {
   createApiFilters,
   filterApiFilters,

@@ -1,5 +1,6 @@
 import { ApuType, FacetType, FacetDisplay } from '../enums';
-import { ApiFilterOperation, Filter } from './api';
+import { Filter } from './api';
+import { ApiFilterOperation } from '@eas/common-web';
 import { Option } from './option';
 
 type FilterConfigValue =

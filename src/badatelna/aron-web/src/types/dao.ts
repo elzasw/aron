@@ -11,6 +11,7 @@ export interface DaoFile extends LinkedEntity {
   metadata: MetadataItem[];
   type: DaoBundleType;
   file: DaoFileFileType;
+  name?: string;
 }
 
 interface DaoFileFileType {

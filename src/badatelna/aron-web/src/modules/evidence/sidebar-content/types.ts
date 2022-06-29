@@ -1,7 +1,6 @@
 import { FilterChangeCallBack } from '../types';
 import { FacetType, ModulePath } from '../../../enums';
 import {
-  ApiFilterOperation,
   Filter,
   Relationship,
   ApuPartItemType,
@@ -9,6 +8,7 @@ import {
   Facet,
   Option,
 } from '../../../types';
+import { ApiFilterOperation } from '@eas/common-web';
 
 interface GenericFilterProps {
   source: string;

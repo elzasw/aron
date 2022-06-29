@@ -1,7 +1,8 @@
 import { isEmpty, compact } from 'lodash';
 
 import { useApiList } from '../../../common-utils';
-import { ApiFilterOperation, Filter } from '../../../types';
+import { Filter } from '../../../types';
+import { ApiFilterOperation } from '@eas/common-web';
 import { ApiUrl, DEFAULT_RANGE } from '../../../enums';
 
 export const toStrRange = (numberRange: [number, number]): [string, string] => [
