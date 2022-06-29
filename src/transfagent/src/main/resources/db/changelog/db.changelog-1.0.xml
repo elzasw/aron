@@ -454,4 +454,10 @@
     </createIndex>
   </changeSet>
 
+  <changeSet  id="6" author="karel.zacek@lightcomp.cz">
+    <addColumn tableName="transform">
+      <column name="last_update" type="timestamp with time zone" />
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

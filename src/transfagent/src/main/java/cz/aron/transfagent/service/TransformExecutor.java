@@ -1,10 +1,13 @@
 package cz.aron.transfagent.service;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.jetty.client.HttpClient;
@@ -22,6 +25,7 @@ import org.springframework.util.CollectionUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.primitives.Ints;
 
 import cz.aron.transfagent.domain.Transform;
 import cz.aron.transfagent.domain.TransformState;
@@ -68,8 +72,8 @@ public class TransformExecutor implements SmartLifecycle {
 	
 	private void transformByWorkers() {
 
-		Set<Integer> justSending = Collections.synchronizedSet(new HashSet<>());
-		justSending.add(-1);
+		var justSending = Collections.synchronizedSet(new HashSet<Integer>());
+		justSending.add(-1); // fiktivni id, aby nebyl Set prazdny
 		
 		var transforms = transformRepository.findTop1000ByStateAndIdNotInOrderById(TransformState.READY,
 				justSending);
@@ -78,47 +82,54 @@ public class TransformExecutor implements SmartLifecycle {
 		}
 
 		HttpClient client = new HttpClient();
+		client.setFollowRedirects(false);
 		try {
 			client.start();
 		} catch (Exception e) {
+		    log.error("Fail to start http client.");
 			throw new RuntimeException(e);
 		}
 		
 		try {
-			ArrayBlockingQueue<SendContext> queue = new ArrayBlockingQueue<SendContext>(workers.size());
+			var queue = new DelayQueue<SendContext>();
 			workers.forEach(w -> {
 				queue.add(new SendContext(w, true));
 			});
-			do {
-				for (var transform : transforms) {
-					if (!TransformService.TRANSFORM_DZI.equals(transform.getType())
-							&& !TransformService.TRANSFORM_THUMBNAIL.equals(transform.getType())) {
-						// neznama transformace
-						transactionTemplate.executeWithoutResult(t -> {
-							transform.setState(TransformState.FAIL);
-							transformRepository.save(transform);
-						});
-						continue;
-					}
-					// vyzvednu workera z fronty
-					SendContext sendContext;
-					try {
-						sendContext = queue.take();
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						throw new RuntimeException(e);
-					}
-					sendRequest(transform, sendContext, client, queue, justSending);
-					if (!isRunning()) {
-						return;
-					}
-				}
-				transforms = transformRepository.findTop1000ByStateAndIdNotInOrderById(TransformState.READY,
-						justSending);
-			} while (!CollectionUtils.isEmpty(transforms));
+            do {
+                for (var transform : transforms) {
+                    if (!TransformService.TRANSFORM_DZI.equals(transform.getType())
+                            && !TransformService.TRANSFORM_THUMBNAIL.equals(transform.getType())) {
+                        // neznama transformace
+                        changeTransformState(transform, TransformState.FAIL);
+                        continue;
+                    }
+                    // vyzvednu workera z fronty
+                    SendContext sendContext;
+                    try {
+                        sendContext = queue.take();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException(e);
+                    }
+                    sendRequest(transform, sendContext, client, queue, justSending);
+                    if (!isRunning()) {
+                        return;
+                    }
+                }
+                Set<Integer> justSendingCopy;  // iterace pres synchronized set neni synchronized, musim udelat kopii
+                synchronized (justSending) {
+                    justSendingCopy = new HashSet<Integer>(justSending);
+                }
+                if (justSendingCopy.size() > (workers.size()+1)) { // plus 1 je fiktivni id -1
+                    log.warn("Just sending higher than workers count, justSending={}, workers={}", justSendingCopy
+                            .size(), workers.size());
+                }
+                transforms = transformRepository.findTop1000ByStateAndIdNotInOrderById(TransformState.READY,
+                                                                                       justSendingCopy);
+            } while (!CollectionUtils.isEmpty(transforms));
 			
-			// pockam nez bude vse odeslano, max jednu minutu
-			long minuteMillis = TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
+			// pockam nez bude vse odeslano, max 2 minuty
+			long minuteMillis = TimeUnit.MILLISECONDS.convert(2, TimeUnit.MINUTES);
 			long start = System.currentTimeMillis();
 			while(queue.size()!=workers.size()&&System.currentTimeMillis()-start<minuteMillis) {
 				try {
@@ -139,7 +150,7 @@ public class TransformExecutor implements SmartLifecycle {
 	}
 	
 	private void sendRequest(Transform transform, SendContext sendContext, HttpClient client,
-			ArrayBlockingQueue<SendContext> queue, Set<Integer> justSending) {
+	                         DelayQueue<SendContext> queue, Set<Integer> justSending) {
 
 		String transformType = null;
 		Object requestBody = null;
@@ -182,52 +193,62 @@ public class TransformExecutor implements SmartLifecycle {
 	 * @param transformType typ transformace 
 	 * @param body telo pozadavku
 	 */
-	private void sendData(Transform transform, ArrayBlockingQueue<SendContext> queue, Set<Integer> justSending,
-			HttpClient client, SendContext sendContext, String transformType, byte[] body) {
-		boolean removeJustSending = true;
-		try {
-			justSending.add(transform.getId());
-			var url = sendContext.getUrl() + "/transform/" + transformType;
-			client.newRequest(url).method(HttpMethod.POST).timeout(60, TimeUnit.SECONDS)
-					.content(new BytesContentProvider(body), "application/json").send(result -> {
-						justSending.remove(transform.getId());
-						if (result.isSucceeded()) {
-							transactionTemplate.executeWithoutResult(t -> {
-								transform.setState(TransformState.TRANSFORMED);
-								transformRepository.save(transform);
-							});
-							log.info("Transformed id={}, uuid={}, file={}, type={}, executor={}", transform.getId(),
-									transform.getFileUuid(), transform.getFile(), transform.getType(), url);
-						} else {
-							if (result.getResponse().getStatus()==HttpStatus.UNPROCESSABLE_ENTITY_422) {
-								transactionTemplate.executeWithoutResult(t -> {
-									transform.setState(TransformState.FAIL);
-									transformRepository.save(transform);
-									log.info("Fail to transform id={}, uuid={}, file={}, type={}, set to FAIL state",
-											transform.getId(), transform.getFileUuid(), transform.getFile(),
-											transform.getType());
-								});
-							} else {
-								log.error("Fail to transform id={}, uuid={}, file={}, type={}, executor={}",
-										transform.getId(), transform.getFileUuid(), transform.getFile(),
-										transform.getType(), url, result.getFailure());
-							}
-						}
-						// vratim workera do fronty
-						try {
-							queue.put(sendContext);
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							throw new RuntimeException(e);
-						}
-					});
-			removeJustSending = false;
-		} finally {
-			if (removeJustSending) {
-				justSending.remove(transform.getId());
-			}
-		}
-	}
+    private void sendData(Transform transform, DelayQueue<SendContext> queue, Set<Integer> justSending,
+                          HttpClient client, SendContext sendContext, String transformType, byte[] body) {
+        boolean removeJustSending = true;
+        try {
+            // vyradim id ze zpracovani
+            justSending.add(transform.getId());
+            var url = sendContext.getUrl() + "/transform/" + transformType;
+            client.newRequest(url).method(HttpMethod.POST).timeout(60, TimeUnit.SECONDS)
+                    .content(new BytesContentProvider(body), "application/json").send(result -> {
+                        sendContext.setStartTime(0);  // pokud vse dopadne dobre kontext muze byt ihned pouzit                      
+                        try {
+                            if (result.isSucceeded()) {
+                                changeTransformState(transform, TransformState.TRANSFORMED);                                
+                                log.info("Transformed id={}, uuid={}, file={}, type={}, executor={}", transform.getId(),
+                                         transform.getFileUuid(), transform.getFile(), transform.getType(), url);
+                            } else {
+                                if (result.getResponse().getStatus() == HttpStatus.UNPROCESSABLE_ENTITY_422) {
+                                    changeTransformState(transform, TransformState.FAIL);
+                                    log.info("Fail to transform id={}, uuid={}, file={}, type={}, set to FAIL state",
+                                             transform.getId(), transform.getFileUuid(), transform.getFile(),
+                                             transform.getType());
+                                } else if (result.getResponse().getStatus() == HttpStatus.TOO_MANY_REQUESTS_429) {
+                                    sendContext.setStartTime(Instant.now().plusSeconds(5).toEpochMilli());
+                                    log.info("Fail to transform id={}, uuid={}, file={}, type={}, executor={}, TOO many requests",
+                                             transform.getId(), transform.getFileUuid(), transform.getFile(),
+                                             transform.getType(), url);
+                                } else {
+                                    sendContext.setStartTime(Instant.now().plusSeconds(10).toEpochMilli());
+                                    log.error("Fail to transform id={}, uuid={}, file={}, type={}, executor={}, result={}",
+                                              transform.getId(), transform.getFileUuid(), transform.getFile(),
+                                              transform.getType(), url, result.getResponse().getStatus(), result
+                                                      .getFailure());
+                                }                                
+                            }
+                        } finally {
+                            // vratim id ke pracovani pokud nebyl zmenen stav v databazi
+                            justSending.remove(transform.getId());
+                            // vratim workera do fronty                            
+                            queue.put(sendContext);
+                        }
+                    });
+            removeJustSending = false;
+        } finally {
+            if (removeJustSending) {
+                justSending.remove(transform.getId());
+            }
+        }
+    }
+	
+    private Transform changeTransformState(Transform transform, TransformState newState) {
+        return transactionTemplate.execute(t -> {
+            transform.setState(newState);
+            transform.setLastUpdate(ZonedDateTime.now());
+            return transformRepository.save(transform);
+        });
+    }
 
 	static class TransformRequestDzi {
 		private String srcFile;
@@ -277,28 +298,49 @@ public class TransformExecutor implements SmartLifecycle {
 		}		
 	}
 
-	static class SendContext {
-		private final String url;
-		private boolean lastSuccess;
-		
-		public SendContext(String url, boolean lastSuccess) {
-			this.url = url;
-			this.lastSuccess = lastSuccess;
-		}
+    static class SendContext implements Delayed {
+        private final String url;
+        private boolean lastSuccess;
+        private long startTime;
 
-		public boolean isLastSuccess() {
-			return lastSuccess;
-		}
+        public SendContext(String url, boolean lastSuccess) {
+            this.url = url;
+            this.lastSuccess = lastSuccess;
+            startTime = 0;
+        }
 
-		public void setLastSuccess(boolean lastSuccess) {
-			this.lastSuccess = lastSuccess;
-		}
+        public boolean isLastSuccess() {
+            return lastSuccess;
+        }
 
-		public String getUrl() {
-			return url;
-		}		
-		
-	}
+        public void setLastSuccess(boolean lastSuccess) {
+            this.lastSuccess = lastSuccess;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public long getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(long startTime) {
+            this.startTime = startTime;
+        }
+
+        @Override
+        public int compareTo(Delayed o) {
+            return Ints.saturatedCast(this.startTime - ((SendContext) o).startTime);
+        }
+
+        @Override
+        public long getDelay(TimeUnit unit) {
+            long diff = startTime - System.currentTimeMillis();
+            return unit.convert(diff, TimeUnit.MILLISECONDS);
+        }
+
+    }
 
 	/**
 	 * Provedeni transformace lokalne
@@ -311,34 +353,19 @@ public class TransformExecutor implements SmartLifecycle {
 			if (TransformService.TRANSFORM_DZI.equals(transform.getType())) {
 				try {
 					transformService.createDziOut(filePath, transform.getFileUuid().toString());
-					transactionTemplate.executeWithoutResult(t -> {
-						transform.setState(TransformState.TRANSFORMED);
-						transformRepository.save(transform);
-					});
+					changeTransformState(transform, TransformState.TRANSFORMED);
 				} catch (TransformService.UntransformableEntityException e) {
-					transactionTemplate.executeWithoutResult(t -> {
-						transform.setState(TransformState.FAIL);
-						transformRepository.save(transform);
-					});
+				    changeTransformState(transform,TransformState.FAIL);
 				}
 			} else if (TransformService.TRANSFORM_THUMBNAIL.equals(transform.getType())) {
 				try {
 					transformService.createThumbnailOut(filePath, transform.getFileUuid().toString());
-					transactionTemplate.executeWithoutResult(t -> {
-						transform.setState(TransformState.TRANSFORMED);
-						transformRepository.save(transform);
-					});
+					changeTransformState(transform, TransformState.TRANSFORMED);
 				} catch (TransformService.UntransformableEntityException e) {
-					transactionTemplate.executeWithoutResult(t -> {
-						transform.setState(TransformState.FAIL);
-						transformRepository.save(transform);
-					});
+				    changeTransformState(transform,TransformState.FAIL);
 				}
 			} else {
-				transactionTemplate.executeWithoutResult(t -> {
-					transform.setState(TransformState.FAIL);
-					transformRepository.save(transform);
-				});
+			    changeTransformState(transform,TransformState.FAIL);
 			}
 		}
 	}
@@ -349,7 +376,7 @@ public class TransformExecutor implements SmartLifecycle {
 				transform();
 				Thread.sleep(5000);
 			} catch (Exception e) {
-				log.error("Error in import file. ", e);
+				log.error("Fail to transform. ", e);
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException e1) {

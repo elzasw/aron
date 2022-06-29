@@ -1,5 +1,6 @@
 package cz.aron.transfagent.elza;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +43,7 @@ import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.ArchivalEntityImportService.ArchivalEntityImporter;
 import cz.aron.transfagent.service.ElzaExportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor.Result;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 import cz.tacr.elza.ws.core.v1.ExportRequestException;
@@ -622,9 +624,16 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 		try {
 			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid(), databaseDataProvider);
 			apuSourceBuilder.setUuid(apuSource.getUuid());
-			try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
-				apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
-			}
+				
+			var apuSrcChanged = false;
+			var apuSrcXmlPath = apuDir.resolve(StorageService.APUSRC_XML);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            apuSourceBuilder.build(baos, new ApuValidator(configurationLoader.getConfig()));
+            byte [] newContent = baos.toByteArray();
+            if (!StorageService.isContentEqual(apuSrcXmlPath, newContent)) {
+                Files.write(apuSrcXmlPath, newContent);
+                apuSrcChanged = true;
+            }
 			
 			// update parent ref
 			boolean parentChanged = false;
@@ -655,6 +664,10 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 			
 			List<EntitySource> ess = storeReqEnts(apuSource, importAp.getRequiredEntities());
 			this.updateSourceEntityLinks(apuSource, apuSourceBuilder.getReferencedEntities(), ess);
+			
+            if (!apuSrcChanged) {
+                return ReimportProcessor.Result.NOCHANGES;
+            }
 		} catch (Exception e) {
 			log.error("Fail to process downloaded ap.xml, dir={}", apuDir, e);
 			return Result.FAILED;

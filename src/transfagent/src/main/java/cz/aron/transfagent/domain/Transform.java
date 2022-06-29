@@ -1,5 +1,6 @@
 package cz.aron.transfagent.domain;
 
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -35,6 +36,9 @@ public class Transform {
     
     @Column(name = "type", nullable = false)
     private String type;
+    
+    @Column(name = "last_update", nullable = true)
+    private ZonedDateTime lastUpdate;
 
 	public Integer getId() {
 		return id;
@@ -82,6 +86,14 @@ public class Transform {
 
 	public void setType(String type) {
 		this.type = type;
-	}	
+	}
+
+    public ZonedDateTime getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(ZonedDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }	
 
 }
