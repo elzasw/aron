@@ -58,12 +58,14 @@ export enum ApiFilterOperation {
   'GTE' = 'GTE',
   'LTE' = 'LTE',
   'FTX' = 'FTX',
+  'FTXF' = 'FTXF',
   'AND' = 'AND',
   'OR' = 'OR',
   'NOT' = 'NOT',
   'CUSTOM' = 'CUSTOM',
   'IDS' = 'IDS',
-  'IN' = 'IN',
+  'AKF' = 'AKF',
+  'RANGE' = 'RANGE',
 }
 
 export interface Filter {
