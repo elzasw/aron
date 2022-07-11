@@ -42,7 +42,7 @@ function ItemsList() {
       offset: (page - 1) * pageSize,
       size: pageSize,
     },
-  });
+  }, "evidence-list");
 
   const [infoEnabled, setInfoEnabled] = useState(false);
 

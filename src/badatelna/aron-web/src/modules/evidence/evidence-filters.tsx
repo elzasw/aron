@@ -144,7 +144,7 @@ function useFiltersContext({
 
   const apiFilters = useMemo(
     () => filterApiFilters([typeFilter, queryFilter, ...pathSpecificFilters, ...apiFiltersOnly]),
-    [typeFilter, queryFilter, pathSpecificFilters, apiFiltersOnly]
+    [typeFilter, pathSpecificFilters, apiFiltersOnly]
   );
 
   /*********************************
@@ -279,7 +279,6 @@ function useFiltersContext({
     } catch (error) {
       newFiltersFromUrl = [];
     }
-
     const mappedFilters = await mapFilters(
       facets,
       apuPartItemTypes,
@@ -358,7 +357,6 @@ function useFiltersContext({
 
   useEffect(() => {
     setTimeout(parseFacets);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersString, query]);
 

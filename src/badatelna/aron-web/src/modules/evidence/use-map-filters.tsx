@@ -22,6 +22,10 @@ import {
   AggregationItems,
   BasicFilterConfig,
   Filter,
+  ApuEntity,
+  AggregationItem,
+  Relationship,
+  Option,
 } from '../../types';
 import { filterApiFilters, createApiFilters } from './utils';
 import { TextWithCount } from '../../components';
@@ -36,20 +40,20 @@ const isFilterWithOptions = (type: FacetType) => {
   }
 };
 
+interface ApiListResponse {
+  aggregations: AggregationItems;
+  count: number;
+  items: ApuEntity[];
+  searchAfter: unknown | null;
+}
+
 const getEnumOptions = async (
   source: string,
   apuPartItemTypes: ApuPartItemType[],
-  filters: FilterConfig[],
+  _filters: FilterConfig[],
   additionalFilters: Filter[],
-) => {
-  const response = await fetch(createUrl(`${ApiUrl.APU}/list`), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      size: 0,
-      aggregations: [
+):Promise<ApiListResponse> => {
+  const aggregations = [
         {
           family: 'BUCKET',
           aggregator: 'TERMS',
@@ -61,11 +65,22 @@ const getEnumOptions = async (
               : source,
           size: 9999,
         },
-      ],
-      filters: filterApiFilters([
+      ]
+
+  const filters = filterApiFilters([
         ...additionalFilters,
-        ...createApiFilters(filters.filter((f) => f.source !== source)),
-      ]),
+        ...createApiFilters(_filters.filter((f) => f.source !== source)),
+      ]);
+
+  const response = await fetch(createUrl(`${ApiUrl.APU}/list?listType=${source}`), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      size: 0,
+      aggregations,
+      filters,
     }),
   });
 
@@ -77,21 +92,21 @@ export const getEnumsOptions = async (
   apuPartItemTypes: ApuPartItemType[],
   filters: FilterConfig[],
   additionalFilters: Filter[],
-) => {
+):Promise<AggregationItems> => {
   try {
-    const promisses = sources.map((source) =>
+    const promises = sources.map((source) =>
       getEnumOptions(source, apuPartItemTypes, filters, additionalFilters)
     );
 
-    let result = {};
-
-    compact(await Promise.all(promisses)).forEach(
-      (item) => (result = { ...result, ...item.aggregations })
-    );
+    const responses = await Promise.all(promises);
+    let result:AggregationItems = {};
+    compact(responses).forEach((response)=>{
+      result = {...result, ...response.aggregations}
+    })
 
     return result;
   } catch (e) {
-    console.log(e);
+    console.error(e);
     return {};
   }
 };
@@ -203,6 +218,24 @@ export function useMapFilters() {
       mapped,
       additionalFilters
     );
+
+    // add selected, but unavailable enum options 
+    filters.forEach((filter)=>{
+      const availableOptions = [...enumsOptions[filter.source]] || [];
+      const values = isArray(filter.value) ? filter.value : [filter.value];
+      const emptyValues:AggregationItem[] = [];
+
+      values.forEach((value: boolean | string | Relationship | Option)=>{
+        if(!availableOptions.find((f) => f.key === value || f.key.toString().startsWith(value.toString()))){
+          emptyValues.push({
+            key: value.toString(),
+            value: "0",
+          })
+        }
+      })
+      availableOptions.unshift(...emptyValues);
+      enumsOptions[filter.source] = availableOptions;
+    })
 
     // add options
     return mapped

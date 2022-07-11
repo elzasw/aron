@@ -38,8 +38,8 @@ export function usePost<T>(url: string, options: Options = {}) {
   });
 }
 
-export function useApiList<T>(url: string, options: Options = {}) {
-  return usePost<T>(`${url}/list`, {
+export function useApiList<T>(url: string, options: Options = {}, callSource?: string) {
+  return usePost<T>(`${url}/list?listType=${(callSource)?.toUpperCase()}`, {
     ...options,
     json: { size: -1, flipDirection: false, ...(options.json || {}) },
   });
@@ -92,7 +92,7 @@ export const useGetOptionsBySource = (
           : []),
       ],
     },
-  });
+  }, "get-options-by-source");
 
   return [get(result, 'aggregations.items', []), loading];
 };
@@ -125,14 +125,14 @@ export const useGetMatchingName = (query: string, group?: string) =>
       ],
       size: 10,
     },
-  });
+  }, "get-matching-name");
 
 export const useGetEntityRelationships = (
   id = '',
   apiFilters: Filter[],
   group?: string
 ) => {
-  const [postResult, postLoading] = usePost(`${ApiUrl.APU}/list`, {
+  const [postResult, postLoading] = usePost(`${ApiUrl.APU}/list`+`?listType=GET-ENTITY-RELATIONSHIPS_${(group)?.toUpperCase()}`, {
     json: {
       size: 0,
       aggregations: [
@@ -274,7 +274,7 @@ const useGetDateLimit = (
         ({ field: filterField }) => field !== filterField
       ),
     },
-  });
+  }, (`get-date-limit_${sortMode}`).toUpperCase());
 
   const items: any[] = get(response, 'items', []);
 

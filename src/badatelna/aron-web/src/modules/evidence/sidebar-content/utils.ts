@@ -47,7 +47,7 @@ export const useGetCountRange = (
         },
       ]),
     },
-  });
+  }, "get-count-range");
 
 export const useGetCountInput = (
   field: string,
@@ -73,5 +73,5 @@ export const useGetCountInput = (
           : []),
       ]),
     },
-  });
+  }, "get-count-input");
 }
