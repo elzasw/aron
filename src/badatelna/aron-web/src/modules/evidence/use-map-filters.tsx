@@ -221,7 +221,7 @@ export function useMapFilters() {
 
     // add selected, but unavailable enum options 
     filters.forEach((filter)=>{
-      const availableOptions = [...enumsOptions[filter.source]] || [];
+      const availableOptions = enumsOptions[filter.source] ? [...enumsOptions[filter.source]] : [];
       const values = isArray(filter.value) ? filter.value : [filter.value];
       const emptyValues:AggregationItem[] = [];
 
