@@ -14,6 +14,12 @@ export interface ApuEntity extends LinkedEntity {
   digitalObjects?: Dao[];
 }
 
+export interface ApuEntitySimplified extends Entity {
+  name: string | null;
+  description?: string | null;
+  order: number;
+}
+
 export interface ApuPart extends Entity {
   value: string;
   type: string;

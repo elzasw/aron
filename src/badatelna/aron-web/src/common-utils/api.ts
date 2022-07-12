@@ -6,7 +6,7 @@ import { useFetch, ApiFilterOperation } from '@eas/common-web';
 
 import { API_URL, ApiUrl, SortMode } from '../enums';
 import { downloadFileFromUrl } from './file';
-import { Filter, ApuPart, ApuPartItem } from '../types';
+import { Filter, ApuPart, ApuPartItem, ApuEntity, AggregationItems, ApuEntitySimplified } from '../types';
 import { getUnitDatePart } from './date';
 
 type Options = any;
@@ -38,8 +38,29 @@ export function usePost<T>(url: string, options: Options = {}) {
   });
 }
 
-export function useApiList<T>(url: string, options: Options = {}, callSource?: string) {
-  return usePost<T>(`${url}/list?listType=${(callSource)?.toUpperCase()}`, {
+export interface ApiListResponse {
+  aggregations: AggregationItems;
+  count: number;
+  items: ApuEntity[];
+  searchAfter: unknown | null;
+}
+
+export interface ApiListSimplifiedResponse {
+  aggregations: AggregationItems;
+  count: number;
+  items: ApuEntitySimplified[];
+  searchAfter: unknown | null;
+}
+
+export function useApiList(url: string, options: Options = {}, callSource?: string) {
+  return usePost<ApiListResponse>(`${url}/list?listType=${(callSource)?.toUpperCase()}`, {
+    ...options,
+    json: { size: -1, flipDirection: false, ...(options.json || {}) },
+  });
+}
+
+export function useApiListSimple(url: string, options: Options = {}, callSource?: string) {
+  return usePost<ApiListSimplifiedResponse>(`${url}/listview?listType=${(callSource)?.toUpperCase()}`, {
     ...options,
     json: { size: -1, flipDirection: false, ...(options.json || {}) },
   });
@@ -65,7 +86,7 @@ export const useGetOptionsBySource = (
   const field = isApuRef ? `${source}~ID~LABEL` : source;
   const fieldLabel = isApuRef ? `${source}~LABEL` : source;
 
-  const [result, loading] = useApiList(ApiUrl.APU, {
+  const [result, loading] = useApiListSimple(ApiUrl.APU, {
     json: {
       size: 0,
       aggregations: [
@@ -98,7 +119,7 @@ export const useGetOptionsBySource = (
 };
 
 export const useGetMatchingName = (query: string, group?: string) =>
-  useApiList(ApiUrl.APU, {
+  useApiListSimple(ApiUrl.APU, {
     json: {
       filters: [
         group

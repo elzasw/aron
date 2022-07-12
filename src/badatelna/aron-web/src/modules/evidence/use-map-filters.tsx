@@ -14,6 +14,7 @@ import {
   parseApuRefOptionId,
   parseApuRefOptionLabel,
   createUrl,
+  ApiListResponse,
 } from '../../common-utils';
 import {
   Facet,
@@ -22,7 +23,6 @@ import {
   AggregationItems,
   BasicFilterConfig,
   Filter,
-  ApuEntity,
   AggregationItem,
   Relationship,
   Option,
@@ -40,12 +40,6 @@ const isFilterWithOptions = (type: FacetType) => {
   }
 };
 
-interface ApiListResponse {
-  aggregations: AggregationItems;
-  count: number;
-  items: ApuEntity[];
-  searchAfter: unknown | null;
-}
 
 const getEnumOptions = async (
   source: string,
@@ -72,7 +66,7 @@ const getEnumOptions = async (
         ...createApiFilters(_filters.filter((f) => f.source !== source)),
       ]);
 
-  const response = await fetch(createUrl(`${ApiUrl.APU}/list?listType=${source}`), {
+  const response = await fetch(createUrl(`${ApiUrl.APU}/listview?listType=${source}`), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

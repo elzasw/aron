@@ -1,6 +1,6 @@
 import { isEmpty, compact } from 'lodash';
 
-import { useApiList } from '../../../common-utils';
+import { useApiListSimple } from '../../../common-utils';
 import { Filter } from '../../../types';
 import { ApiFilterOperation } from '@eas/common-web';
 import { ApiUrl, DEFAULT_RANGE } from '../../../enums';
@@ -33,7 +33,7 @@ export const useGetCountRange = (
   value: [number, number],
   apiFilters: Filter[]
 ) =>
-  useApiList<{ count: number }>(ApiUrl.APU, {
+  useApiListSimple(ApiUrl.APU, {
     json: {
       size: 0,
       filters: compact([
@@ -56,7 +56,7 @@ export const useGetCountInput = (
   foldedFilter?: boolean,
 ) => {
   const operation = foldedFilter ? ApiFilterOperation.FTXF : ApiFilterOperation.CONTAINS;
-  return useApiList<{ count: number }>(ApiUrl.APU, {
+  return useApiListSimple(ApiUrl.APU, {
     json: {
       size: 0,
       filters: compact([

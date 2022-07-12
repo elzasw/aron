@@ -11,9 +11,9 @@ import { useLayoutStyles } from '../../styles/layout';
 import { useSpacingStyles } from '../../styles';
 import { ModulePath, pageSizeOptions, Message, ApiUrl } from '../../enums';
 import { Select, Loading } from '../../components';
-import { useWindowSize, useApiList } from '../../common-utils';
+import { useWindowSize, useApiListSimple } from '../../common-utils';
 import { useFilters } from './evidence-filters';
-import { ApuEntity } from '../../types';
+import { ApuEntitySimplified } from '../../types';
 
 function ItemsList() {
   const classes = useStyles();
@@ -28,7 +28,7 @@ function ItemsList() {
     updatePageSize,
   } = useFilters();
 
-  const [result, loading] = useApiList(ApiUrl.APU, {
+  const [result, loading] = useApiListSimple(ApiUrl.APU, {
     json: {
       filters: apiFilters,
       sort: [
@@ -56,7 +56,7 @@ function ItemsList() {
     }
   }, [loading]);
 
-  const items: ApuEntity[] = get(result, 'items', []);
+  const items: ApuEntitySimplified[] = result?.items || [];
   const count = get(result, 'count');
 
   return (
