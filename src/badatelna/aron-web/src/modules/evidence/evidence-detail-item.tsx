@@ -8,7 +8,7 @@ import { ApuPartViewType, ApuPartItemDataType, Message } from '../../enums';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { usePrevious } from '../../common-utils';
-import { ApuEntity } from '../../types';
+import { ApuEntitySimplified } from '../../types';
 import { EvidenceDetailItemValue } from './evidence-detail-item-value';
 import { useConfiguration } from '../../components';
 
@@ -25,7 +25,7 @@ export function EvidenceDetailItem({
   items: any[];
   open: boolean;
   index: number;
-  apus: ApuEntity[];
+  apus: ApuEntitySimplified[];
 }) {
   const configuration = useConfiguration();
   const classes = useStyles({alternativeItemLabel: configuration.alternativeItemLabel});

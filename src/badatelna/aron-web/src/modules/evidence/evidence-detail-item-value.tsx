@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 import { ModulePath, ApuPartItemDataType } from '../../enums';
 import { useStyles } from './styles';
-import { ApuEntity } from '../../types';
+import { ApuEntitySimplified } from '../../types';
 import { formatUnitDate } from '../../common-utils';
 import { EvidenceJSONDisplay } from './evidence-json-display';
 
@@ -17,7 +17,7 @@ export function EvidenceDetailItemValue({
   value: string;
   type: ApuPartItemDataType;
   href?: string;
-  apus?: ApuEntity[];
+  apus?: ApuEntitySimplified[];
 }) {
   const classes = useStyles();
 

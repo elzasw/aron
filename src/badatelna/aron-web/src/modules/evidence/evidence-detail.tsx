@@ -29,6 +29,7 @@ import {
   ApuPartItem,
   ApuLocale,
   ApuPart,
+  ApuEntitySimplified,
 } from '../../types';
 import {
   findApuParts,
@@ -69,7 +70,7 @@ export function EvidenceDetail({
 
   const [loadingBasic, setLoading] = useState(false);
 
-  const [apus, setApus] = useState<ApuEntity[]>([]);
+  const [apus, setApus] = useState<ApuEntitySimplified[]>([]);
 
   const [archdescRootRefLoading, setArchdescRootRefLoading] = useState(false);
 
@@ -228,7 +229,7 @@ export function EvidenceDetail({
 
           const promisses = filteredItems.map(getApu);
 
-          let result: ApuEntity[] = [];
+          let result: ApuEntitySimplified[] = [];
           try {
             result = compact(await Promise.all(promisses));
           } catch (error) {

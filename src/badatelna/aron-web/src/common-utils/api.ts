@@ -66,9 +66,9 @@ export function useApiListSimple(url: string, options: Options = {}, callSource?
   });
 }
 
-export const getApu = async (id: string) => {
+export const getApu = async (id: string):Promise<ApuEntitySimplified | null> => {
   try {
-    const response = await fetch(createUrl(`${ApiUrl.APU}/${id}`));
+    const response = await fetch(createUrl(`${ApiUrl.APU}/${id}/view`));
 
     return response.ok ? await response.json() : null;
   } catch (error) {
