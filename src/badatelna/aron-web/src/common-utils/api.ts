@@ -85,6 +85,7 @@ export const useGetOptionsBySource = (
 ) => {
   const field = isApuRef ? `${source}~ID~LABEL` : source;
   const fieldLabel = isApuRef ? `${source}~LABEL` : source;
+  const operation = isApuRef ? ApiFilterOperation.FTX : ApiFilterOperation.CONTAINS;
 
   const [result, loading] = useApiListSimple(ApiUrl.APU, {
     json: {
@@ -106,7 +107,7 @@ export const useGetOptionsBySource = (
           ? [
               {
                 field: fieldLabel,
-                operation: ApiFilterOperation.CONTAINS,
+                operation: operation,
                 value: query,
               },
             ]

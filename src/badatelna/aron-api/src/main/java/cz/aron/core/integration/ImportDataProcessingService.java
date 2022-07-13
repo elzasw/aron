@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -19,6 +20,11 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ImportDataProcessingService {
+    
+    private final ReentrantLock apuLock = new ReentrantLock();
+    
+    private final ReentrantLock daoLock = new ReentrantLock();
+    
     @Inject private ApuProcessor apuProcessor;
     @Inject private DaoInputProcessor daoInputProcessor;
 
@@ -27,9 +33,15 @@ public class ImportDataProcessingService {
         Map<String, Path> filesMap = loadFilesMap(path);
         if (transferType == TransferType.APUSRC) {
             try (var stream = Files.list(path)) {
-                Path apuFilePath = stream.filter(child -> child.getFileName().toString().startsWith("apusrc-")).findFirst().orElseThrow();
-                String metadata = Files.readString(apuFilePath, StandardCharsets.UTF_8);
-                apuProcessor.processApuAndFiles(metadata, filesMap);
+                Path apuFilePath = stream.filter(child -> child.getFileName().toString().startsWith("apusrc-")).findFirst().orElseThrow();                
+                if (!apuLock.tryLock()) {
+                    throw new RuntimeException("Concurrent apu upload is running");
+                }
+                try {                    
+                    apuProcessor.processApuAndFiles(apuFilePath, filesMap);    
+                } finally {
+                    apuLock.unlock();
+                }                
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -40,7 +52,14 @@ public class ImportDataProcessingService {
                 String metadata;
                 Path apuFilePath = stream.filter(child -> child.getFileName().toString().startsWith("dao-")).findFirst().orElseThrow();
                 metadata = Files.readString(apuFilePath, StandardCharsets.UTF_8);
-                daoInputProcessor.processDaoAndFiles(metadata, filesMap);
+                if (!daoLock.tryLock()) {
+                    throw new RuntimeException("Concurrent dao upload is running");
+                }
+                try {
+                    daoInputProcessor.processDaoAndFiles(metadata, filesMap);
+                } finally {
+                    daoLock.unlock();
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

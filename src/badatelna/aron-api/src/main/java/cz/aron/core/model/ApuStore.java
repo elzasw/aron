@@ -5,6 +5,8 @@ import com.querydsl.core.types.Projections;
 import cz.inqool.eas.common.domain.store.DomainStore;
 import org.springframework.stereotype.Repository;
 
+import com.google.common.collect.Iterables;
+
 import java.util.*;
 
 /**
@@ -12,6 +14,8 @@ import java.util.*;
  */
 @Repository
 public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
+
+    private static final int BATCH_SIZE = 1000;
 
     public ApuStore() {
         super(ApuEntity.class);
@@ -42,6 +46,10 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
     }
 
     public List<IdLabelDto> mapNames(Collection<String> ids) {
-        return query().select(Projections.constructor(IdLabelDto.class, metaModel.id, metaModel.name)).from(metaModel).where(metaModel.id.in(ids)).fetch();
+        var ret = new ArrayList<IdLabelDto>(ids.size());
+        Iterables.partition(ids, BATCH_SIZE).forEach(partition -> {
+            ret.addAll(query().select(Projections.constructor(IdLabelDto.class, metaModel.id, metaModel.name)).from(metaModel).where(metaModel.id.in(ids)).fetch());
+        });
+        return ret;
     }
 }

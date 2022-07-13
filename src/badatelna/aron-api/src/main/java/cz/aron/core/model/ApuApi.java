@@ -3,6 +3,7 @@ package cz.aron.core.model;
 import cz.inqool.eas.common.domain.DomainApi;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
+import cz.inqool.eas.common.exception.MissingObject;
 
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +13,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 import static cz.inqool.eas.common.utils.AssertionUtils.coalesce;
+import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
 
 /**
  * @author Lukas Jane (inQool) 03.11.2020.
@@ -51,5 +53,12 @@ public class ApuApi extends DomainApi<
         return new Result<>(items, idsResult.getCount(), idsResult.getSearchAfter(), idsResult.getAggregations());
     }
     
+    @GetMapping(value = "/{id}/view")
+    public ApuEntityView getView(@PathVariable("id") String id) {                        
+        ApuEntityView view = apuEntityViewStore.find(id);        
+        notNull(view, () -> new MissingObject(ApuEntityView.class, id));
+        return view;
+    }
+
 }
 

@@ -57,29 +57,21 @@ public class PostInitializer implements ApplicationListener<ApplicationReadyEven
             else {
                 reindexService.reindex(null);
                 log.info("Loading example data...");
-                if (environment.startsWith("docker")) {
-                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/institutions.xml"))) {
-                        apuProcessor.processTestingInputStream(inputStream);
-                    }
+                if (environment.startsWith("docker")) {                    
+                    apuProcessor.processTestingInputStream(Path.of("./init-data/examples/institutions.xml"));                    
                     log.info("next file...");
-                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/institutionEntities.xml"))) {
-                        apuProcessor.processTestingInputStream(inputStream);
-                    }
+                    apuProcessor.processTestingInputStream(Path.of("./init-data/examples/institutionEntities.xml"));
                     log.info("next file...");
-                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/archdesc-1820.xml"))) {
-                        apuProcessor.processTestingInputStream(inputStream);
-                    }
+                    apuProcessor.processTestingInputStream(Path.of("./init-data/examples/archdesc-1820.xml"));
                     log.info("next file...");
-                    try (InputStream inputStream = Files.newInputStream(Path.of("./init-data/examples/fund-1820.xml"))) {
-                        apuProcessor.processTestingInputStream(inputStream);
-                    }
+                    apuProcessor.processTestingInputStream(Path.of("./init-data/examples/fund-1820.xml"));
                 }
                 else if (Files.exists(Path.of("./init-data/sample"))) {
                     Files.list(Path.of("./init-data/sample")).forEach(
                             path -> {
                                 log.info(" - " + path.getFileName().toString() + "...");
-                                try (InputStream inputStream = Files.newInputStream(path)) {
-                                    apuProcessor.processTestingInputStream(inputStream);
+                                try {
+                                    apuProcessor.processTestingInputStream(path);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }

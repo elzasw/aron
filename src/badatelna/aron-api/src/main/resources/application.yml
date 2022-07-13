@@ -55,6 +55,9 @@ spring:
         jdbc:
           batch_size: 100
         generate_statistics: false
+        query:
+          plan_cache_max_size: 256
+          plan_parameter_metadata_max_size: 32
   security:
 
 eas:

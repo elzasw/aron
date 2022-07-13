@@ -22,6 +22,8 @@ import javax.xml.bind.JAXB;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,50 +56,58 @@ public class ApuProcessor {
 
     private int apuOrderCounter;
 
-    public void processApuAndFiles(String metadata, Map<String, Path> filesMap) {
-        cz.aron.apux._2020.ApuSource apuSource;
-        try (StringReader reader = new StringReader(metadata)) {
-            apuSource = JAXB.unmarshal(reader, cz.aron.apux._2020.ApuSource.class);
-        }
-        log.debug("Processing apu source " + apuSource.getUuid());
-        ApuSource ourApuSource = apuSourceRepository.find(apuSource.getUuid());
-        boolean create = false;
-        if (ourApuSource == null) {
-            create = true;
-            ourApuSource = new cz.aron.core.model.ApuSource();
-            ourApuSource.setId(apuSource.getUuid());
-        }
-        else {
-            daoStore.disconnectDaosByApuSourceId(apuSource.getUuid());
-            List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(apuSource.getUuid());
-            apuRepository.delete(apusToDelete);
-        }
-        ourApuSource.setData(metadata);
+    public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
+                
+        try(ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
+            log.debug("Processing apu source " + reader.getUuid());
 
-        if (create) {
-            apuSourceRepository.create(ourApuSource);
-        }
-        else {
-            apuSourceRepository.update(ourApuSource);
-        }
-
-        ApuSource finalApuSource = ourApuSource;
-        apuOrderCounter = 0;
-        ListUtils.partition(apuSource.getApus().getApu(), CACHE_SIZE).forEach(partition -> {
-            fillDaoCache(partition.stream().map(apu->apu.getUuid()).collect(Collectors.toList()));
-            for (Apu apu : partition) {
-                processApu(apu, finalApuSource, filesMap);
+            // read apusrc.xml as String to be stored to database
+            String metadata = Files.readString(apuSrcPath, StandardCharsets.UTF_8);
+            
+            ApuSource ourApuSource = apuSourceRepository.find(reader.getUuid());
+            boolean create = false;
+            if (ourApuSource == null) {
+                create = true;
+                ourApuSource = new cz.aron.core.model.ApuSource();
+                ourApuSource.setId(reader.getUuid());
             }
-            flush();
-        });
-        apuIdsProcessed.clear();
-        existingDaos.clear();
-        apuRequestQueue.sendRequests();
+            else {
+                daoStore.disconnectDaosByApuSourceId(reader.getUuid());
+                List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(reader.getUuid());
+                apuRepository.delete(apusToDelete);
+            }
+            ourApuSource.setData(metadata);
+
+            if (create) {
+                apuSourceRepository.create(ourApuSource);
+            }
+            else {
+                apuSourceRepository.update(ourApuSource);
+            }
+            // hold only reference, ApuSource.data are potentialy large
+            var apuSourceRef = apuSourceRepository.getRef(ourApuSource.getId());
+
+            apuOrderCounter = 0;
+            reader.process(apus->{
+                fillDaoCache(apus.stream().map(apu->apu.getUuid()).collect(Collectors.toList()));
+                for (Apu apu : apus) {
+                    processApu(apu, apuSourceRef, filesMap);
+                }
+                flush();
+            }, CACHE_SIZE);
+
+            apuIdsProcessed.clear();
+            existingDaos.clear();
+            apuRequestQueue.sendRequests();            
+        } catch (Exception e) {
+            log.error("Fail to import apusource ", e);
+            throw new RuntimeException(e);
+        }
+        
     }
 
-    public void processTestingInputStream(InputStream path) throws IOException {
-        String data = Streams.asString(path);
-        processApuAndFiles(data, null);
+    public void processTestingInputStream(Path path) throws IOException {        
+        processApuAndFiles(path, null);
     }
 
     public void processApu(Apu apu, cz.aron.core.model.ApuSource apuSource, Map<String, Path> filesMap) {
