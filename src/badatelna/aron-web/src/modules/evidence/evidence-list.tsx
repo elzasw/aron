@@ -9,7 +9,7 @@ import { NavigationContext } from '@eas/common-web';
 import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles/layout';
 import { useSpacingStyles } from '../../styles';
-import { ModulePath, pageSizeOptions, Message, ApiUrl } from '../../enums';
+import { ModulePath, pageSizeOptions, Message } from '../../enums';
 import { Select, Loading } from '../../components';
 import { useWindowSize, useApiListSimple } from '../../common-utils';
 import { useFilters } from './evidence-filters';
@@ -28,21 +28,20 @@ function ItemsList() {
     updatePageSize,
   } = useFilters();
 
-  const [result, loading] = useApiListSimple(ApiUrl.APU, {
-    json: {
-      filters: apiFilters,
-      sort: [
-        {
-          field: 'name',
-          type: 'FIELD',
-          order: 'ASC',
-          sortMode: 'MIN',
-        },
-      ],
-      offset: (page - 1) * pageSize,
-      size: pageSize,
-    },
-  }, "evidence-list");
+  const [result, loading] = useApiListSimple({
+    filters: apiFilters,
+    sort: [
+      {
+        field: 'name',
+        type: 'FIELD',
+        order: 'ASC',
+        sortMode: 'MIN',
+      },
+    ],
+    offset: (page - 1) * pageSize,
+    size: pageSize,
+    source: "evidence-list"
+  });
 
   const [infoEnabled, setInfoEnabled] = useState(false);
 

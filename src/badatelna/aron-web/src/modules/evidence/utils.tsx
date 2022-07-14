@@ -285,7 +285,7 @@ export const createApiFilters = (filters: FilterConfig[]) => {
     : [];
 };
 
-export const filterApiFilters = (filters?: any[]): any[] =>
+export const filterApiFilters = (filters?: Filter[]): Filter[] =>
   filters
     ? compact(
         filters.map(({ filters, ...item }) => {

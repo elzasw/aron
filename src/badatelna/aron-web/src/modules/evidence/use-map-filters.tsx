@@ -7,14 +7,14 @@ import {
   FacetDisplay,
   Message,
   ApuPartItemDataType,
-  ApiUrl,
 } from '../../enums';
 import {
   getApuPartItemType,
-  parseApuRefOptionId,
+  // parseApuRefOptionId,
   parseApuRefOptionLabel,
-  createUrl,
   ApiListResponse,
+  getApiList,
+  AggregationConfig,
 } from '../../common-utils';
 import {
   Facet,
@@ -40,14 +40,13 @@ const isFilterWithOptions = (type: FacetType) => {
   }
 };
 
-
 const getEnumOptions = async (
   source: string,
   apuPartItemTypes: ApuPartItemType[],
-  _filters: FilterConfig[],
+  filterConfig: FilterConfig[],
   additionalFilters: Filter[],
 ):Promise<ApiListResponse> => {
-  const aggregations = [
+  const aggregations: AggregationConfig[] = [
         {
           family: 'BUCKET',
           aggregator: 'TERMS',
@@ -63,20 +62,10 @@ const getEnumOptions = async (
 
   const filters = filterApiFilters([
         ...additionalFilters,
-        ...createApiFilters(_filters.filter((f) => f.source !== source)),
+        ...createApiFilters(filterConfig.filter((f) => f.source !== source)),
       ]);
 
-  const response = await fetch(createUrl(`${ApiUrl.APU}/listview?listType=${source}`), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      size: 0,
-      aggregations,
-      filters,
-    }),
-  });
+  const response = await getApiList(aggregations, filters, source);
 
   return await response.json();
 };
@@ -130,9 +119,7 @@ export function useMapFilters() {
                 <TextWithCount text={labelString} count={optionItem.value} />
               ),
               labelString,
-              value: isApuRef
-                ? parseApuRefOptionId(optionItem.key)
-                : optionItem.key,
+              value: optionItem.key,
               count: parseInt(optionItem.value, 10),
             };
           }),
@@ -227,6 +214,7 @@ export function useMapFilters() {
           })
         }
       })
+      console.log("emptyValues", emptyValues, availableOptions)
       availableOptions.unshift(...emptyValues);
       enumsOptions[filter.source] = availableOptions;
     })

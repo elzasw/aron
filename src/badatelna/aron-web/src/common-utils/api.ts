@@ -45,6 +45,14 @@ export interface ApiListResponse {
   searchAfter: unknown | null;
 }
 
+export interface AggregationConfig {
+  family: string;
+  aggregator: string;
+  name: string;
+  field: string;
+  size?: number;
+}
+
 export interface ApiListSimplifiedResponse {
   aggregations: AggregationItems;
   count: number;
@@ -52,18 +60,95 @@ export interface ApiListSimplifiedResponse {
   searchAfter: unknown | null;
 }
 
-export function useApiList(url: string, options: Options = {}, callSource?: string) {
-  return usePost<ApiListResponse>(`${url}/list?listType=${(callSource)?.toUpperCase()}`, {
-    ...options,
-    json: { size: -1, flipDirection: false, ...(options.json || {}) },
+interface SortConfig {
+  field: string;
+  type: string;
+  order: string;
+  sortMode: string;
+}
+
+interface ApiListProps {
+  filters?: Filter[];
+  sort?: SortConfig[];
+  offset?: number;
+  size?: number;
+  aggregations?: AggregationConfig[];
+  flipDirection?: boolean;
+  simplified?: boolean;
+  source?: string;
+}
+
+export const transformFilters = (filters:Filter[]):Filter[] => {
+  return filters.map((filter) => {
+    if(filter.filters){
+      return {
+        ...filter,
+        filters: transformFilters(filter.filters)
+      };
+    }
+    else if(filter.field === "FUND~INST~REF"){
+      const value = filter.value?.split("|")[0] || undefined;
+      return {
+        ...filter,
+        value,
+      }
+    }
+    return filter;
+  })
+}
+
+export async function getApiList(aggregations: AggregationConfig[], filters: Filter[], callSource?: string) {
+  return await fetch(createUrl(`${ApiUrl.APU}/listview?listType=${callSource}`), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      size: 0,
+      aggregations,
+      filters,
+    }),
   });
 }
 
-export function useApiListSimple(url: string, options: Options = {}, callSource?: string) {
-  return usePost<ApiListSimplifiedResponse>(`${url}/listview?listType=${(callSource)?.toUpperCase()}`, {
-    ...options,
-    json: { size: -1, flipDirection: false, ...(options.json || {}) },
-  });
+export function useApiList({
+  filters = [], 
+  sort = [], 
+  offset, 
+  size = -1, 
+  aggregations = [],
+  flipDirection = false,
+  source,
+}: ApiListProps) {
+  const json = { 
+    aggregations, 
+    filters: transformFilters(filters), 
+    sort, 
+    offset, 
+    flipDirection, 
+    size 
+  };
+  return usePost<ApiListResponse>(`${ApiUrl.APU}/list?listType=${(source)?.toUpperCase()}`, { json });
+}
+
+export function useApiListSimple({
+  filters = [], 
+  sort = [], 
+  offset, 
+  size = -1, 
+  aggregations = [],
+  flipDirection = false,
+  source,
+}: ApiListProps) {
+  const json = { 
+    aggregations, 
+    filters: transformFilters(filters), 
+    sort, 
+    offset, 
+    flipDirection, 
+    size 
+  };
+  return usePost<ApiListSimplifiedResponse>(`${ApiUrl.APU}/listview?listType=${(source)?.toUpperCase()}`, { json });
 }
 
 export const getApu = async (id: string):Promise<ApuEntitySimplified | null> => {
@@ -87,8 +172,7 @@ export const useGetOptionsBySource = (
   const fieldLabel = isApuRef ? `${source}~LABEL` : source;
   const operation = isApuRef ? ApiFilterOperation.FTX : ApiFilterOperation.CONTAINS;
 
-  const [result, loading] = useApiListSimple(ApiUrl.APU, {
-    json: {
+  const [result, loading] = useApiListSimple({
       size: 0,
       aggregations: [
         {
@@ -113,15 +197,14 @@ export const useGetOptionsBySource = (
             ]
           : []),
       ],
-    },
-  }, "get-options-by-source");
+    source: "get-options-by-source"
+  });
 
   return [get(result, 'aggregations.items', []), loading];
 };
 
 export const useGetMatchingName = (query: string, group?: string) =>
-  useApiListSimple(ApiUrl.APU, {
-    json: {
+  useApiListSimple({
       filters: [
         group
           ? {
@@ -146,8 +229,8 @@ export const useGetMatchingName = (query: string, group?: string) =>
             },
       ],
       size: 10,
-    },
-  }, "get-matching-name");
+    source: "get-matching-name" 
+  });
 
 export const useGetEntityRelationships = (
   id = '',
@@ -280,8 +363,7 @@ const useGetDateLimit = (
   filters: Filter[],
   field: string
 ): [number | null, boolean] => {
-  const [response, loading] = useApiList(ApiUrl.APU, {
-    json: {
+  const [response, loading] = useApiList({
       size: 1,
       sort: [
         {
@@ -295,8 +377,8 @@ const useGetDateLimit = (
       filters: filters.filter(
         ({ field: filterField }) => field !== filterField
       ),
-    },
-  }, (`get-date-limit_${sortMode}`).toUpperCase());
+    source: (`get-date-limit_${sortMode}`).toUpperCase()
+  });
 
   const items: any[] = get(response, 'items', []);
 

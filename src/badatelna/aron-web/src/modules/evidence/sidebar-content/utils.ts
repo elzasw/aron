@@ -3,7 +3,7 @@ import { isEmpty, compact } from 'lodash';
 import { useApiListSimple } from '../../../common-utils';
 import { Filter } from '../../../types';
 import { ApiFilterOperation } from '@eas/common-web';
-import { ApiUrl, DEFAULT_RANGE } from '../../../enums';
+import { DEFAULT_RANGE } from '../../../enums';
 
 export const toStrRange = (numberRange: [number, number]): [string, string] => [
   numberRange[0].toString(),
@@ -33,8 +33,7 @@ export const useGetCountRange = (
   value: [number, number],
   apiFilters: Filter[]
 ) =>
-  useApiListSimple(ApiUrl.APU, {
-    json: {
+  useApiListSimple({
       size: 0,
       filters: compact([
         // remove current field from filters
@@ -46,8 +45,8 @@ export const useGetCountRange = (
           lte: yearInISO(Math.min(value[1], DEFAULT_RANGE[1])),
         },
       ]),
-    },
-  }, "get-count-range");
+      source: "get-count-range",
+  });
 
 export const useGetCountInput = (
   field: string,
@@ -56,22 +55,19 @@ export const useGetCountInput = (
   foldedFilter?: boolean,
 ) => {
   const operation = foldedFilter ? ApiFilterOperation.FTXF : ApiFilterOperation.CONTAINS;
-  return useApiListSimple(ApiUrl.APU, {
-    json: {
+  return useApiListSimple({
       size: 0,
       filters: compact([
         // remove current field from filters
         ...apiFilters.filter((item) => item.field !== field),
         ...(value
-          ? [
-              {
+          ? [{
                 field,
                 operation,
                 value,
-              }
-            ]
+              }]
           : []),
       ]),
-    },
-  }, "get-count-input");
+      source: "get-count-input",
+  });
 }
