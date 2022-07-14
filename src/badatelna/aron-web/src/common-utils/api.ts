@@ -106,7 +106,7 @@ export async function getApiList(aggregations: AggregationConfig[], filters: Fil
     body: JSON.stringify({
       size: 0,
       aggregations,
-      filters,
+      filters: transformFilters(filters),
     }),
   });
 }
