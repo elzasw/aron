@@ -237,6 +237,7 @@ export const useStyles =  makeStyles((theme) => {
       color: colorWhite,
       fontSize: '1.1rem',
       borderRadius: '5px',
+      display: 'inline-flex',
 
       '&:hover': {
         background: colorBlueDark,

@@ -370,32 +370,34 @@ export function EvidenceDetail({
                           )}
                         <EvidenceShareButtons item={item}/>
                         {archdescRootRef ? (
-                          <Link
-                            to={{
-                              pathname: `${ModulePath.APU}/${archdescRootRef.value}`,
-                            }}
-                            className={classNames(
-                              classes.link,
-                              !(item && path === ModulePath.ARCH_DESC && root) && classes.archdescRootLink,
-                              layoutClasses.flexAlignCenter,
-                              spacingClasses.marginTop
-                            )}
-                          >
-                            <AccountTreeIcon
-                              className={spacingClasses.marginRightSmall}
-                              />
-                            {get(
-                              find(
-                                apuPartItemTypes,
-                                ({ code }) =>
-                                  code === ApuPartItemEnum.ARCHDESC_ROOT_REF
-                              ),
-                              'name',
-                              formatMessage({
-                                id: Message.TREE_VIEW_CURRENT_STATE,
-                              })
-                            )}
-                          </Link>
+                          <div>
+                            <Link
+                              to={{
+                                pathname: `${ModulePath.APU}/${archdescRootRef.value}`,
+                              }}
+                              className={classNames(
+                                classes.link,
+                                !(item && path === ModulePath.ARCH_DESC && root) && classes.archdescRootLink,
+                                layoutClasses.flexAlignCenter,
+                                spacingClasses.marginTop
+                              )}
+                            >
+                              <AccountTreeIcon
+                                className={spacingClasses.marginRightSmall}
+                                />
+                              {get(
+                                find(
+                                  apuPartItemTypes,
+                                  ({ code }) =>
+                                    code === ApuPartItemEnum.ARCHDESC_ROOT_REF
+                                ),
+                                'name',
+                                formatMessage({
+                                  id: Message.TREE_VIEW_CURRENT_STATE,
+                                })
+                              )}
+                            </Link>
+                          </div>
                         ) : (
                             <></>
                           )}
