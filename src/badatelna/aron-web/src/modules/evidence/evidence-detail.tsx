@@ -413,7 +413,7 @@ export function EvidenceDetail({
                 ) : (
                     <></>
                   )}
-                <div style={{display: "flex"}}>
+                <div style={{display: "flex", flexDirection: "column"}}>
                   <div style={{flexGrow: 1}}>
                     {items
                     .map(({ items, ...item }) => ({
