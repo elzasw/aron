@@ -86,7 +86,11 @@ export const transformFilters = (filters:Filter[]):Filter[] => {
         filters: transformFilters(filter.filters)
       };
     }
-    else if(filter.field === "FUND~INST~REF"){
+    // remove name from institution ref value
+    else if(
+      filter.field === "FUND~INST~REF" 
+      || filter.field === "INST~REF"
+    ){
       const value = filter.value?.split("|")[0] || undefined;
       return {
         ...filter,
