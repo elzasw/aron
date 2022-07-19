@@ -176,8 +176,19 @@ export const useStyles =  makeStyles((theme) => {
       marginTop: 0,
       marginBottom: 0,
       whiteSpace: "pre-wrap",
+      display: 'flex',
+      flexDirection: 'column',
     },
-
+    evidenceDetailItemExpandButtonWrapper: {
+      display: 'flex',
+    },
+    evidenceDetailItemExpandButton: {
+      border: 'none',
+      background: 'transparent',
+      color: '#616161',
+      cursor: 'pointer',
+      padding: 0,
+    },
     toggleSidebarButtonOpen: {
       transform: 'rotate(180deg)',
       transition: 'transform 500ms ease',

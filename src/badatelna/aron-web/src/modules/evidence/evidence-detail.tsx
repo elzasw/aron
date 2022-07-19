@@ -10,7 +10,6 @@ import { useIntl } from 'react-intl';
 import {
   ApiUrl,
   ModulePath,
-  ApuPartItemDataType,
   ApuPartItemEnum,
   Message,
   getNavigationItems,
@@ -29,7 +28,6 @@ import {
   ApuPartItem,
   ApuLocale,
   ApuPart,
-  ApuEntitySimplified,
 } from '../../types';
 import {
   findApuParts,
@@ -69,8 +67,6 @@ export function EvidenceDetail({
   const [showDescription, setShowDescription] = useState(true);
 
   const [loadingBasic, setLoading] = useState(false);
-
-  const [apus, setApus] = useState<ApuEntitySimplified[]>([]);
 
   const [archdescRootRefLoading, setArchdescRootRefLoading] = useState(false);
 
@@ -208,44 +204,6 @@ export function EvidenceDetail({
     () => item ? getApuParts(item) : [],
     [item, apuPartTypes, apuPartItemTypes, locale]
   );
-
-  useEffect(() => {
-    if (items && items.length) {
-      const filteredItems: string[] = [];
-
-      items.forEach(
-        ({ items }) =>
-          items &&
-          items.forEach(
-            (item) =>
-              item.type === ApuPartItemDataType.APU_REF &&
-              filteredItems.push(item.value)
-          )
-      );
-
-      if (filteredItems.length) {
-        const load = async () => {
-          setLoading(true);
-
-          const promisses = filteredItems.map(getApu);
-
-          let result: ApuEntitySimplified[] = [];
-          try {
-            result = compact(await Promise.all(promisses));
-          } catch (error) {
-            console.log(error);
-            result = [];
-          }
-
-          setLoading(false);
-
-          setApus(result);
-        };
-
-        load();
-      }
-    }
-  }, [items]);
 
   const path = item ? getPathByItem(item) : undefined;
   const daos = item ? sortBy(item.digitalObjects, 'order') : [];
@@ -430,7 +388,6 @@ export function EvidenceDetail({
                           ...item,
                           index,
                           open,
-                          apus,
                         }}
                         />
                     ))}

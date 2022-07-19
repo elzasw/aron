@@ -1,16 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { find } from 'lodash';
-import classNames from 'classnames';
 import Tooltip from '@material-ui/core/Tooltip';
+import classNames from 'classnames';
+import React, { useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-
-import { ApuPartViewType, ApuPartItemDataType, Message } from '../../enums';
-import { useStyles } from './styles';
-import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { usePrevious } from '../../common-utils';
-import { ApuEntitySimplified } from '../../types';
-import { EvidenceDetailItemValue } from './evidence-detail-item-value';
 import { useConfiguration } from '../../components';
+import { ApuPartItemDataType, ApuPartViewType, Message } from '../../enums';
+import { useLayoutStyles, useSpacingStyles } from '../../styles';
+import { EvidenceDetailItemGroup } from './evidence-detail-item-group';
+import { EvidenceDetailItemValue } from './evidence-detail-item-value';
+import { useStyles } from './styles';
 
 export function EvidenceDetailItem({
   name,
@@ -18,14 +16,12 @@ export function EvidenceDetailItem({
   items,
   open: outterOpen,
   index,
-  apus,
 }: {
   name: string;
   viewType: ApuPartViewType;
   items: any[];
   open: boolean;
   index: number;
-  apus: ApuEntitySimplified[];
 }) {
   const configuration = useConfiguration();
   const classes = useStyles({alternativeItemLabel: configuration.alternativeItemLabel});
@@ -75,6 +71,25 @@ export function EvidenceDetailItem({
     </div>
   }
 
+  const groupItemsByCode = (items:any[]):[Record<string,any[]>, string[]] => {
+    const groupedItems:Record<string, any[]> = {};
+    const groupOrder:string[] = [];
+    items.forEach((item)=>{
+      const code:string = item.code;
+      const existingGroup = groupedItems[code];
+      if(!existingGroup){
+        groupOrder.push(code)
+        groupedItems[code] = [item];
+      } else {
+        groupedItems[code].push(item);
+      }
+    })
+    return [groupedItems, groupOrder];
+  }
+
+  const [groupedItems, groupOrder] = groupItemsByCode(items);
+
+
   return (
     <div
       className={classNames(
@@ -113,35 +128,10 @@ export function EvidenceDetailItem({
       </div>
       {open ? (
         <div className={spacingClasses.paddingBottomSmall}>
-          {items.map((item, i) => {
-            const prevItem = items[i-1];
-            const isSameTypeAsPrev = prevItem && prevItem.code === item.code;
-
-            return item.type !== ApuPartItemDataType.APU_REF ||
-            find(apus, ({ id }) => id === item.value) ? (
-              <div key={`${item.name}-${i}`} className={layoutClasses.flex}>
-                <div
-                  className={classNames(
-                    labelClassName,
-                    classes.evidenceDetailItemLabelBorder,
-                    i && spacingClasses.paddingTopSmall
-                  )}
-                >
-                  {!isSameTypeAsPrev && item.name}
-                </div>
-                <div
-                  className={classNames(
-                    classes.evidenceDetailItemText,
-                    i && spacingClasses.paddingTopSmall
-                  )}
-                >
-                  <EvidenceDetailItemValue {...{ ...item, apus }} />
-                </div>
-              </div>
-            ) : (
-              <div key={`${item.name}-${i}`} />
-            )
-            }
+          {groupOrder.map((groupName, i) => {
+            const items = groupedItems[groupName];
+            return <EvidenceDetailItemGroup key={`${groupName}-${i}`} {...{items}} />
+          }
           )}
         </div>
       ) : (
