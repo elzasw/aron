@@ -44,7 +44,7 @@ export const useStyles =  makeStyles((theme) => {
       overflow: 'hidden',
     },
     daoDialogSide: {
-      width: '50%',
+      width: '100%',
       display: 'none',
 
       [md]: {
@@ -58,7 +58,6 @@ export const useStyles =  makeStyles((theme) => {
     daoDialogCenter: {
       left: 0,
       width: '100%',
-      display: 'none',
 
       [md]: {
         width: '60%',
@@ -82,9 +81,6 @@ export const useStyles =  makeStyles((theme) => {
     daoDialogSideOpen: {
       display: 'block',
     },
-    daoDialogCenterOpen: {
-      display: 'block',
-    },
     daoDialogNoFiles: {
       color: '#fff',
       width: '100%',
@@ -100,8 +96,11 @@ export const useStyles =  makeStyles((theme) => {
       height: 30,
     },
     daoDialogSectionPartContent: {
-      padding: '10px',
+      padding: '10px 25%',
       overflow: 'auto',
+      [md]: {
+        padding: '10px',
+      }
     },
     daoThumbnailContainer: {
       width: '100%',
@@ -110,6 +109,21 @@ export const useStyles =  makeStyles((theme) => {
       cursor: 'pointer',
       position: 'relative',
       marginBottom: '4px'
+    },
+    daoThumbnailTitle: {
+      color: 'white',
+      position: 'absolute',
+      zIndex: 10,
+      padding: '5px 10px',
+      textShadow: '0px 0px 8px black',
+      bottom: 0,
+      lineHeight: '1em',
+      width: '100%',
+      background: '#0007',
+      maxHeight: '100%',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
     },
     daoThumbnail: {
       width: '100%',

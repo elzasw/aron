@@ -1,28 +1,96 @@
 import Tooltip from '@material-ui/core/Tooltip';
-import { GetApp as GetAppIcon, Fullscreen, FullscreenExit } from "@material-ui/icons";
+import { Fullscreen, FullscreenExit, GetApp as GetAppIcon } from "@material-ui/icons";
 import classNames from 'classnames';
-import { findIndex, map } from 'lodash';
-import React, { useEffect, useState, useRef } from 'react';
+import { findIndex } from 'lodash';
+import React, { useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import {
-    downloadFileByUrl,
-    useWindowSize
-} from '../../../common-utils';
+import { downloadFileByUrl } from '../../../common-utils';
 import { useConfiguration } from '../../../components';
 import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/file-viewer/image-viewer';
 import { ImageLoad } from '../../../components/image-load';
 import { Message } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
-import { Dao } from '../../../types';
 import { Icon } from './icon';
 import { useStyles } from './styles';
 import { Toolbar } from './toolbar';
 import { DetailDaoDialogProps, FileObject } from './types';
 import { getExistingFile, getFiles } from './utils';
 
+function Thumbnail({
+  file,
+  index,
+  isActive,
+  onClick = () => console.error('"onClick" not defined in Thumbnail'),
+}:{
+  file: FileObject;
+  index: number;
+  isActive?: boolean;
+  onClick?: (file: FileObject) => void;
+}){
+  const classes = useStyles();
+  const name = file.published?.metadata?.find((item) => item.type === "name")?.value;
+  const isReferencedFile = !!file?.thumbnail?.name;
+
+  return (
+    <div
+      {...{
+        key: file.id,
+      }}
+      onClick={() => !isActive && onClick(file)}
+      className={classNames(
+        isActive && classes.daoDialogSectionPartActive,
+        classes.daoThumbnailContainer
+      )}
+    >
+      <div 
+        title={name} 
+        className={classes.daoThumbnailTitle}
+      >
+        {index+1}
+        {name && ` - ${name}`}
+      </div>
+      <ImageLoad
+        key={file.id}
+        id={isReferencedFile ? file?.thumbnail?.id : file?.thumbnail?.file?.id}
+        referencedFile={isReferencedFile}
+        alternativeImage={<div/>}
+        className={classNames( classes.daoThumbnail)}
+        />
+    </div>
+  );
+}
+
+function ImageList({
+  activeFile,
+  files,
+  label,
+  onClick = () => console.error('"onClick" not defined in ImageList'),
+}:{
+  activeFile: FileObject;
+  files: FileObject[];
+  label?: string;
+  onClick?: (file: FileObject) => void;
+}){
+  const classes = useStyles();
+  return <div
+    key={`${label}`}
+    className={classes.daoDialogSectionPart}
+  >
+    <div
+      className={classes.daoDialogSectionPartContent}
+    >
+      {files.map((item, i) => {
+        const isActive = activeFile && activeFile.id === item.id;
+
+        return <Thumbnail key={i} isActive={isActive} index={i} file={item} onClick={onClick}/>
+      })}
+    </div>
+  </div>
+}
+
 export function EvidenceDetailDaoDialog({
   item,
-  items,
+  // items,
   setItem,
   embed = false,
   customActionsLeft,
@@ -42,8 +110,6 @@ export function EvidenceDetailDaoDialog({
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
-  const { height } = useWindowSize();
-
   const [file, setFile] = useState(files[0]);
   const [open, setOpen] = useState(false);
   const [fullscreen, setFullscreen] = useState(!embed);
@@ -62,21 +128,13 @@ export function EvidenceDetailDaoDialog({
   const metadata = file?.published?.metadata;
   const showMetadata = metadata?.length && showMetadataInImageViewer;
 
-  const maxHeight = height - 120; // - titles, toolbar, bottom space
-
-  const getSectionHeight = (count: number, restCount: number) => {
-    const fullHeight = count * 30;
-    const restFullHeight = restCount * 30;
-
-    return fullHeight < maxHeight / 2 || fullHeight + restFullHeight < maxHeight
-      ? fullHeight
-      : restFullHeight < maxHeight / 2
-      ? maxHeight - restFullHeight
-      : maxHeight / 2;
-  };
-
   const isTile = !!(file && file.tile);
   const fileId = isTile ? existingFile?.id : existingFile?.file.id
+
+  const handleClickThumbnail = (file: FileObject) => {
+    setFile(file);
+    if(open){setOpen(false);}
+  }
 
   return (
     <div className={classNames(
@@ -124,7 +182,6 @@ export function EvidenceDetailDaoDialog({
             className={classNames(
               classes.daoDialogSection,
               classes.daoDialogCenter,
-              !open && classes.daoDialogCenterOpen,
               !showMetadata && classes.daoDialogCenterNoSidebar
             )}
           >
@@ -232,98 +289,7 @@ export function EvidenceDetailDaoDialog({
           open && classes.daoDialogSideOpen
         )}
       >
-        {[
-          {
-            label: Message.LIST_OF_DAO,
-            defaultId: Message.DAO,
-            items,
-            onClick: (item: Dao) => {
-              setItem(item);
-              setFile(getFiles(item)[0]);
-            },
-            active: item,
-            height: getSectionHeight(items.length, files.length),
-            visible: false,
-          },
-          {
-            label: Message.FILES_IN_DAO,
-            defaultId: Message.FILE,
-            mapper: (item: FileObject) =>
-              `${
-item.tile
-? 'tile'
-: item.published
-? 'published'
-: 'thumbnail'
-}.file.name`,
-            items: files,
-            onClick: setFile,
-            active: file,
-            height: getSectionHeight(files.length, items.length),
-            visible: files.length,
-          },
-        ]
-        .filter(({ visible }) => visible)
-        .map(
-          (
-            { label, defaultId, items, onClick, active, height, mapper },
-            i
-          ) => (
-              <div
-                key={`${label}-${i}`}
-                className={classes.daoDialogSectionPart}
-              >
-                <div
-                  className={classes.daoDialogSectionPartContent}
-                >
-                  {map(items, (item: any, i) => {
-                    const isActive = active && active.id === item.id;
-                    const name = item.published?.metadata?.find((item: any) => item.type === "name")?.value;
-                    const isReferencedFile = !!item?.thumbnail?.name;
-
-                    return (
-                      <div
-                        {...{
-                          key: item.id,
-                        }}
-                        onClick={() => !isActive && onClick(item)}
-                        className={classNames(
-                          isActive && classes.daoDialogSectionPartActive,
-                          classes.daoThumbnailContainer
-                        )}
-                      >
-                        <div title={name} style={{
-                          color: 'white',
-                          position: 'absolute',
-                          zIndex: 10,
-                          padding: '5px 10px',
-                          textShadow: '0px 0px 8px black',
-                          bottom: 0,
-                          lineHeight: '1em',
-                          width: '100%',
-                          background: '#0007',
-                          maxHeight: '100%',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}>
-                          {i+1}
-                          {name && ` - ${name}`}
-                        </div>
-                        <ImageLoad
-                          key={item.id}
-                          id={isReferencedFile ? item?.thumbnail?.id : item?.thumbnail?.file?.id}
-                          referencedFile={isReferencedFile}
-                          alternativeImage={<div/>}
-                          className={classNames( classes.daoThumbnail)}
-                          />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )
-        )}
+        <ImageList files={files} activeFile={file} onClick={handleClickThumbnail} />
       </div>
     </div>
   );
