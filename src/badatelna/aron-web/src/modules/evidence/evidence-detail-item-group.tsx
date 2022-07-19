@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { compact } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useIntl } from 'react-intl';
-import { getApu } from '../../common-utils';
+import { getApus } from '../../common-utils';
 import { ApuPartItemDataType, Message } from '../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { ApuEntitySimplified } from '../../types';
@@ -47,11 +47,21 @@ export function EvidenceDetailItemGroup({
       setApusLoading(true);
       const start = apus?.length || 0; // leave out existing apus
       const end = showAllItems ? items.length : initialItemLimit;
-      const newApus = await Promise.all(
-        items.slice(start, end)
-          .map((item) => getApu(item.value))
-      );
-      setApus(compact([...apus, ...newApus]));
+
+      function splitArrayIntoChunks<T>(arr: Array<T>, chunk: number) {
+        const segmentedArray = [];
+        for (let i=0; i < arr.length; i += chunk) {
+          segmentedArray.push(arr.slice(i, i + chunk));
+        }
+        return segmentedArray;
+      }
+
+      const apuList = items.slice(start, end).map((item) => item.value);
+      const segmentedApuList = splitArrayIntoChunks(apuList, 100);
+      const newApus = apuList.length > 0 
+        && await Promise.all(segmentedApuList.map((listSegment) => getApus(listSegment))) 
+        || [];
+      setApus(apus.concat(...compact(newApus)));
       setApusLoaded(true);
       setApusLoading(false);
       setApusAllLoaded(showAllItems);
@@ -94,9 +104,12 @@ export function EvidenceDetailItemGroup({
       )}
     >
       {(!hasApus || apusLoaded) && items.slice(0, showAllItems && apusAllLoaded ? items.length : initialItemLimit).map((item, i) => 
-        hasApus && !apus.find((apu)=> apu.id === item.value) // hide missing apus
-          ? <></> 
-          : <EvidenceDetailItemValue key={i} {...item} apus={apus}/>
+      {
+          const apu = apus.find((apu)=> apu.id === item.value);
+          return hasApus && !apu // hide missing apus
+            ? <></> 
+            : <EvidenceDetailItemValue key={i} {...item} apus={apu ? [apu] : []}/>
+        }
       )}
       {apusLoading && `${formatMessage({id: Message.LOADING})}...`}
       {items.length > initialItemLimit && 
