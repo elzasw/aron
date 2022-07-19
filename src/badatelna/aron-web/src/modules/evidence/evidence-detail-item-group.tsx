@@ -72,6 +72,11 @@ export function EvidenceDetailItemGroup({
     spacingClasses.paddingRight
   );
 
+  // hide the whole group when no apus in apu_ref
+  if(hasApus && apus.length === 0){
+    return <></>; 
+  }
+
   return <div key={`${code}`} className={layoutClasses.flex}>
     <div
       className={classNames(
@@ -89,7 +94,9 @@ export function EvidenceDetailItemGroup({
       )}
     >
       {(!hasApus || apusLoaded) && items.slice(0, showAllItems && apusAllLoaded ? items.length : initialItemLimit).map((item, i) => 
-        <EvidenceDetailItemValue key={i} {...item} apus={apus}/>
+        hasApus && !apus.find((apu)=> apu.id === item.value) // hide missing apus
+          ? <></> 
+          : <EvidenceDetailItemValue key={i} {...item} apus={apus}/>
       )}
       {apusLoading && `${formatMessage({id: Message.LOADING})}...`}
       {items.length > initialItemLimit && 
