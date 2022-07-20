@@ -46,6 +46,7 @@ export const GERMAN = {
   [M.INSTITUTION]: 'Archiv',
   [M.LIST_OF_DAO]: 'Liste der DAOs',
   [M.LOADING]: 'Loading',
+  [M.METADATA]: 'Metadata',
   [M.NEW_FILTER]: 'Neuer Filter',
   [M.NEWS]: 'Aktuelles',
   [M.NEXT_PAGE]: 'Nächste Seite',

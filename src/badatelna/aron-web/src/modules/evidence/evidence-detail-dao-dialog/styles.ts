@@ -150,15 +150,36 @@ export const useStyles =  makeStyles((theme) => {
         color: '#fff',
       }
     },
+    daoDialogMetadataContainer: {
+      right: 0,
+      width: 'auto',
+      height: 'auto'
+    },
     daoDialogMetadata: {
-      background: '#fff',
       maxHeight: `calc(100vh - ${daoDialogToolbarHeight}px - 30px - 8px)`,
       overflowY: 'auto',
+      background: '#222',
+      color: 'white',
+      margin: '10px',
+      padding: '20px',
+      borderRadius: '10px',
+      boxShadow: '4px 4px 10px #0008',
+      width: 'auto',
+      right: 0,
     },
     daoDialogMetadataLabel: {
-      width: 'calc(50% - 8px)',
+      width: 'auto',
       paddingRight: 8,
       textAlign: 'right',
+    },
+    daoDialogMetadataButton: {
+      padding: '5px',
+      borderRadius: '5px',
+      background: '#444',
+      marginBottom: '10px',
+      display: 'inline-flex',
+      alignItems: 'center',
+      cursor: 'pointer',
     },
     daoDialogMenu: {
       [md]: {

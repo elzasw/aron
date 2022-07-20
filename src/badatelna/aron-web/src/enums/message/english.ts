@@ -46,6 +46,7 @@ export const ENGLISH = {
   [M.INSTITUTION]: 'Archives',
   [M.LIST_OF_DAO]: 'List of DAO',
   [M.LOADING]: 'Loading',
+  [M.METADATA]: 'Metadata',
   [M.NEW_FILTER]: 'New filter',
   [M.NEWS]: 'News',
   [M.NEXT_PAGE]: 'Next page',

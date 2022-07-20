@@ -46,6 +46,7 @@ export const FRENCH = {
   [M.INSTITUTION]: 'Archives',
   [M.LIST_OF_DAO]: 'Liste de DAO',
   [M.LOADING]: 'Loading',
+  [M.METADATA]: 'Metadata',
   [M.NEW_FILTER]: 'Filtre nouveau',
   [M.NEWS]: 'Actualités',
   [M.NEXT_PAGE]: 'Page suivante',

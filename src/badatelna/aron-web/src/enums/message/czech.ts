@@ -47,6 +47,7 @@ export const CZECH = {
   [M.INTRODUCTION]: 'Úvod',
   [M.LIST_OF_DAO]: 'Seznam DAO',
   [M.LOADING]: 'Načítání',
+  [M.METADATA]: 'Metadata',
   [M.NEW_FILTER]: 'Nový filtr',
   [M.NEWS]: 'Aktuality',
   [M.NEXT_PAGE]: 'Další strana',
