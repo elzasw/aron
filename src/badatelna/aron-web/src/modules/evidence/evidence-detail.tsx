@@ -200,7 +200,7 @@ export function EvidenceDetail({
     )
   }
 
-  const items = useMemo(
+  const parts = useMemo(
     () => item ? getApuParts(item) : [],
     [item, apuPartTypes, apuPartItemTypes, locale]
   );
@@ -375,19 +375,20 @@ export function EvidenceDetail({
                   )}
                 <div style={{display: "flex", flexDirection: "column"}}>
                   <div style={{flexGrow: 1}}>
-                    {items
-                    .map(({ items, ...item }) => ({
-                      ...item,
+                    {parts
+                    .map(({ items, ...part }) => ({
+                      ...part,
                       items: items.filter(({ visible, value }) => visible && value),
                     }))
                     .filter(({ items }) => !isEmpty(items))
-                    .map((item, index) => (
+                    .map((partItem, index) => (
                       <EvidenceDetailItem
                         {...{
-                          key: `${item.name}-${index}`,
-                          ...item,
+                          key: `${id}-${partItem.name}-${index}`,
+                          ...partItem,
                           index,
                           open,
+                          apuId: item?.id,
                         }}
                         />
                     ))}

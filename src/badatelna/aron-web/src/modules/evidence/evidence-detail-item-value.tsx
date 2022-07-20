@@ -1,5 +1,5 @@
 import React from 'react';
-import { get, find } from 'lodash';
+import { get } from 'lodash';
 import { Link } from 'react-router-dom';
 
 import { ModulePath, ApuPartItemDataType } from '../../enums';
@@ -12,20 +12,16 @@ export function EvidenceDetailItemValue({
   value,
   type,
   href,
-  apus,
+  apu,
 }: {
   value: string;
   type: ApuPartItemDataType;
   href?: string;
-  apus?: ApuEntitySimplified[];
+  apu?: ApuEntitySimplified;
 }) {
   const classes = useStyles();
 
   let result: string | JSX.Element = value;
-  const apu =
-    type === ApuPartItemDataType.APU_REF
-      ? find(apus, ({ id }) => id === value)
-      : null;
 
   switch (type) {
     case ApuPartItemDataType.UNITDATE:

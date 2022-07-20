@@ -16,10 +16,33 @@ interface EvidenceDetailItem {
   value: string;
   code?: string;
 }
+
+function splitArrayIntoChunks<T>(arr: Array<T>, chunk: number) {
+  const segmentedArray = [];
+  for (let i=0; i < arr.length; i += chunk) {
+    segmentedArray.push(arr.slice(i, i + chunk));
+  }
+  return segmentedArray;
+}
+
+const fetchApus = async (items: EvidenceDetailItem[], currentApus: ApuEntitySimplified[], itemLimit: number) => {
+  const start = currentApus.length; // leave out existing apus
+  const end = itemLimit || items.length;
+
+  const apuList = [...items].slice(start, end).map((item) => item.value);
+  const segmentedApuList = splitArrayIntoChunks(apuList, 100);
+  const newApus = apuList.length > 0 
+    && await Promise.all(segmentedApuList.map((listSegment) => getApus(listSegment))) 
+    || [];
+  return currentApus.concat(...compact(newApus));
+}
+
 export function EvidenceDetailItemGroup({
+  apuId,
   items,
   initialItemLimit = 10,
 }: {
+  apuId?: string,
   items: EvidenceDetailItem[];
   initialItemLimit?: number;
 }) {
@@ -34,45 +57,36 @@ export function EvidenceDetailItemGroup({
   const name = items[0]?.name;
   const hasApus = type === ApuPartItemDataType.APU_REF;
 
-  const [apus, setApus] = useState<ApuEntitySimplified[]>([]);
+  const [apus, setApus] = useState<ApuEntitySimplified[]>();
   const [apusLoading, setApusLoading] = useState(false);
-  const [apusLoaded, setApusLoaded] = useState(false);
   const [apusAllLoaded, setApusAllLoaded] = useState(false);
   const [showAllItems, setShowAllItems] = useState(false);
   
   useEffect(()=>{
-    if(!hasApus){return;}
-
-    const loadApus = async () => {
-      setApusLoading(true);
-      const start = apus?.length || 0; // leave out existing apus
-      const end = showAllItems ? items.length : initialItemLimit;
-
-      function splitArrayIntoChunks<T>(arr: Array<T>, chunk: number) {
-        const segmentedArray = [];
-        for (let i=0; i < arr.length; i += chunk) {
-          segmentedArray.push(arr.slice(i, i + chunk));
-        }
-        return segmentedArray;
-      }
-
-      const apuList = items.slice(start, end).map((item) => item.value);
-      const segmentedApuList = splitArrayIntoChunks(apuList, 100);
-      const newApus = apuList.length > 0 
-        && await Promise.all(segmentedApuList.map((listSegment) => getApus(listSegment))) 
-        || [];
-      setApus(apus.concat(...compact(newApus)));
-      setApusLoaded(true);
+    if(!hasApus || apus || apusLoading){return;}
+    setApusLoading(true);
+    (async () => {
+      const newApus = await fetchApus(items, [], initialItemLimit);
+      setApus(newApus);
       setApusLoading(false);
-      setApusAllLoaded(showAllItems);
-    }
-    if((!apusLoaded || !apusAllLoaded) && !apusLoading){
-      loadApus();
-    }
-  }, [items, showAllItems])
+    })()
+  }, [apuId])
 
   const handleShowAllItems = () => {
-    if(!apusLoading){setShowAllItems(!showAllItems);}
+    if(apusAllLoaded){ 
+      setShowAllItems(!showAllItems); 
+      return;
+    }
+    if(!apusAllLoaded && apus && !showAllItems){
+      setApusLoading(true);
+      (async () => {
+        const newApus = await fetchApus(items, apus, items.length);
+        setApus(newApus);
+        setApusLoading(false);
+        setApusAllLoaded(true);
+        setShowAllItems(true);
+      })()
+    }
   }
 
   const labelClassName = classNames(
@@ -83,7 +97,7 @@ export function EvidenceDetailItemGroup({
   );
 
   // hide the whole group when no apus in apu_ref
-  if(hasApus && apus.length === 0){
+  if(hasApus && apus?.length === 0){
     return <></>; 
   }
 
@@ -103,14 +117,15 @@ export function EvidenceDetailItemGroup({
         spacingClasses.paddingTopSmall
       )}
     >
-      {(!hasApus || apusLoaded) && items.slice(0, showAllItems && apusAllLoaded ? items.length : initialItemLimit).map((item, i) => 
+      {(!hasApus || apus) && items.slice(0, showAllItems && apusAllLoaded ? items.length : initialItemLimit).map((item, i) => 
       {
-          const apu = apus.find((apu)=> apu.id === item.value);
-          return hasApus && !apu // hide missing apus
-            ? <></> 
-            : <EvidenceDetailItemValue key={i} {...item} apus={apu ? [apu] : []}/>
+          if(!hasApus){return <EvidenceDetailItemValue key={`${item.value}-${i}`} {...item}/>}
+          const apu = apus?.find((apu)=> apu.id === item.value);
+          if(apu){return <EvidenceDetailItemValue key={`${item.value}-${i}`} {...item} apu={apu}/>}
+          return undefined;
         }
       )}
+
       {apusLoading && `${formatMessage({id: Message.LOADING})}...`}
       {items.length > initialItemLimit && 
         <div className={classes.evidenceDetailItemExpandButtonWrapper}>

@@ -11,12 +11,14 @@ import { EvidenceDetailItemValue } from './evidence-detail-item-value';
 import { useStyles } from './styles';
 
 export function EvidenceDetailItem({
+  apuId,
   name,
   viewType,
   items,
   open: outterOpen,
   index,
 }: {
+  apuId?: string;
   name: string;
   viewType: ApuPartViewType;
   items: any[];
@@ -130,7 +132,13 @@ export function EvidenceDetailItem({
         <div className={spacingClasses.paddingBottomSmall}>
           {groupOrder.map((groupName, i) => {
             const items = groupedItems[groupName];
-            return <EvidenceDetailItemGroup key={`${groupName}-${i}`} {...{items}} />
+            return <EvidenceDetailItemGroup 
+              {...{
+                items,
+                apuId,
+                key: `${apuId}-${groupName}-${i}`
+              }} 
+              />
           }
           )}
         </div>
