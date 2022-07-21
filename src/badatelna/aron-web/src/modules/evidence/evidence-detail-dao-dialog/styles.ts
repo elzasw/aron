@@ -181,6 +181,12 @@ export const useStyles =  makeStyles((theme) => {
       alignItems: 'center',
       cursor: 'pointer',
     },
+    daoDialogFloatingOverlay: {
+      position: 'absolute', 
+      color: 'white',
+      background: '#0008',
+      padding: '8px 5px',
+    },
     daoDialogMenu: {
       [md]: {
         display: 'none',
@@ -210,13 +216,17 @@ export const useStyles =  makeStyles((theme) => {
     daoDialogToolbar: {
       // height: daoDialogToolbarHeight,
       // width: '100vw',
-      padding: '10px',
       width: '100%',
       position: 'absolute',
       background: '#0009',
       zIndex: 1,
+      overflowX: 'auto',
+      [md]: {
+        overflowX: 'hidden',
+      }
     },
     daoDialogToolbarInner: {
+      padding: '10px',
       // height: 'calc(100% - 8px)',
     },
   };

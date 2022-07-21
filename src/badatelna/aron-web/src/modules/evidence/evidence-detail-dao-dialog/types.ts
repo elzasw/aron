@@ -55,4 +55,8 @@ export interface DetailDaoDialogProps {
   customActionsLeft?: (props: ActionsRenderProps) => React.ReactNode;
   customActionsRight?: (props: ActionsRenderProps) => React.ReactNode;
   customActionsCenter?: (props: ActionsRenderProps) => React.ReactNode;
+  apuInfo?: {
+    name?: string,
+    description?: string,
+  };
 }

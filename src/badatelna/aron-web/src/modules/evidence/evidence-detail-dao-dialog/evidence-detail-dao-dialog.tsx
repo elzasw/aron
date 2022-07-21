@@ -95,6 +95,7 @@ export function EvidenceDetailDaoDialog({
   customActionsLeft,
   customActionsRight,
   customActionsCenter,
+  apuInfo,
 }: DetailDaoDialogProps) {
   const [files, setFiles] = useState(getFiles(item));
   const viewerRef = useRef<ImageViewerExposedFunctions>(null);
@@ -201,15 +202,29 @@ export function EvidenceDetailDaoDialog({
                   <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
                 </div>
               )}
+            {apuInfo && 
+              <div 
+                className={classes.daoDialogFloatingOverlay} 
+                style={{ top: 0, right: 0 }}
+              >
+                <div className={classes.bold}>
+                  {apuInfo.name}
+                </div>
+                {apuInfo.description && <div style={{
+                  marginTop: '5px',
+                }}>
+                  {apuInfo.description.length > 150 
+                    ? `${apuInfo.description?.slice(0, 150)}...`
+                    : apuInfo.description
+                  }
+                </div>}
+              </div>
+          }
             {daoFooter && 
-              <div style={{
-                position: 'absolute', 
-                bottom: 0,
-                right: 0,
-                color: 'white',
-                background: '#0008',
-                padding: '8px 5px',
-              }}>
+              <div
+                className={classes.daoDialogFloatingOverlay} 
+                style={{ bottom: 0, right: 0 }}
+              >
                 <span style={{
                   paddingRight: '10px', 
                   borderRight: '1px solid currentColor', 

@@ -268,7 +268,10 @@ export function EvidenceDetail({
                   />}
               </>}
             /> : 
-            <EvidenceDetailDao items={sortBy(daos, 'order')} />
+            <EvidenceDetailDao apuInfo={{
+              name: item?.name,
+              description: item?.description,
+            }} items={sortBy(daos, 'order')} />
           : undefined
       }
         showDesc={showDescription || daos.length === 0}

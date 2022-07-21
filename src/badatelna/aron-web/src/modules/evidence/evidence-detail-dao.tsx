@@ -14,7 +14,7 @@ import { ImageLoad } from '../../components/image-load/';
 
 const ID = 'evidence-detail-dao';
 
-export function EvidenceDetailDao({ items }: DetailDaoProps) {
+export function EvidenceDetailDao({ items, apuInfo }: DetailDaoProps) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
@@ -119,6 +119,7 @@ export function EvidenceDetailDao({ items }: DetailDaoProps) {
             item,
             items,
             setItem,
+            apuInfo,
           }}
         />
       ) : (

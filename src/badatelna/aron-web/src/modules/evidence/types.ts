@@ -55,6 +55,10 @@ export interface ListProps {
 }
 
 export interface DetailDaoProps {
+  apuInfo?: {
+    name?: string,
+    description?: string,
+  };
   items: Dao[];
 }
 
