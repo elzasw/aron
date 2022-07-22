@@ -8,6 +8,7 @@ import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { ApuEntitySimplified } from '../../types';
 import { EvidenceDetailItemValue } from './evidence-detail-item-value';
 import { useStyles } from './styles';
+import { useConfiguration } from '../../components';
 
 interface EvidenceDetailItem {
   name?: string;
@@ -48,7 +49,8 @@ export function EvidenceDetailItemGroup({
 }) {
   const { formatMessage } = useIntl();
 
-  const classes = useStyles();
+  const { alternativeItemLabel } = useConfiguration();
+  const classes = useStyles({ alternativeItemLabel });
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
