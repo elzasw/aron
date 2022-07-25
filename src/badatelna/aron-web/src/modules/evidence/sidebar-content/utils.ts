@@ -23,7 +23,7 @@ export const isOutsideRange = (value: string) => {
 
 export const yearInISO = (value: number | null, isGTE = false) =>
   value
-    ? `${`0${value}`.slice(-4)}-${
+    ? `${`0000${value}`.slice(-4)}-${
         isGTE ? `01-01T00:00:00.000Z` : `12-31T23:59:59.999Z`
       }`
     : null;
