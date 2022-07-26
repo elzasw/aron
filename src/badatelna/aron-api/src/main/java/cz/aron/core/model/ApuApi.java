@@ -3,6 +3,7 @@ package cz.aron.core.model;
 import cz.inqool.eas.common.domain.DomainApi;
 import cz.inqool.eas.common.domain.index.dto.Result;
 import cz.inqool.eas.common.domain.index.dto.params.Params;
+import cz.inqool.eas.common.exception.InvalidArgument;
 import cz.inqool.eas.common.exception.MissingObject;
 
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 import static cz.inqool.eas.common.utils.AssertionUtils.coalesce;
+import static cz.inqool.eas.common.utils.AssertionUtils.lte;
 import static cz.inqool.eas.common.utils.AssertionUtils.notNull;
 
 /**
@@ -58,6 +60,12 @@ public class ApuApi extends DomainApi<
         ApuEntityView view = apuEntityViewStore.find(id);        
         notNull(view, () -> new MissingObject(ApuEntityView.class, id));
         return view;
+    }
+    
+    @PostMapping(value = "/views")
+    public List<ApuEntityView> getViews(@RequestBody List<String> ids) {        
+        lte(ids.size(),100, ()-> new InvalidArgument("ids", InvalidArgument.ErrorCode.SIZE_TOO_BIG));        
+        return apuEntityViewStore.listByIds(ids);
     }
 
 }
