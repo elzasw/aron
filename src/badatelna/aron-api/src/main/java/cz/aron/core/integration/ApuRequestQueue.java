@@ -29,28 +29,29 @@ public class ApuRequestQueue {
         queuedApuStore.create(queuedApu);
     }
 
+    /**
+     * Send batch of apu requests to transformagent
+     * @return true - some apus were requested, false - nothing to send
+     * 
+     * Note: call repeatedly until return false
+     */
     @Transactional(Transactional.TxType.REQUIRES_NEW)
-    @Async
-    public void sendRequests() {
-        try {
-            List<QueuedApu> batchToResolve = queuedApuStore.getBatchToResolve();
-            if (batchToResolve.isEmpty()) {
-                return;
-            }
-            List<String> requestedIdsList = new ArrayList<>();
-            for (QueuedApu apu : batchToResolve) {
-                requestedIdsList.add(apu.getApuId());
-                apu.setRequestSent(true);
-            }
-            transformAgentClient.requestApus(requestedIdsList);
-            queuedApuStore.update(batchToResolve);
+    public boolean sendRequestsBatch() {
+        List<QueuedApu> batchToResolve = queuedApuStore.getBatchToResolve();
+        if (batchToResolve.isEmpty()) {
+            return false;
         }
-        catch (Exception e) {
-            log.error("Failed to send related APU requests.", e);
+        List<String> requestedIdsList = new ArrayList<>();
+        for (QueuedApu apu : batchToResolve) {
+            requestedIdsList.add(apu.getApuId());
+            apu.setRequestSent(true);
         }
+        transformAgentClient.requestApus(requestedIdsList);
+        queuedApuStore.update(batchToResolve);
+        return true;
     }
-
-    public void removeForApuId(String apuId) {
-        queuedApuStore.removeForApuId(apuId);
+    
+    public long removeForApuId(String apuId) {
+        return queuedApuStore.removeForApuId(apuId);
     }
 }

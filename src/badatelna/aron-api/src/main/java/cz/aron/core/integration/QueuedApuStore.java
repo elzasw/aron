@@ -16,12 +16,12 @@ public class QueuedApuStore extends DomainStore<QueuedApu, QueuedApu, QQueuedApu
     }
 
     public List<QueuedApu> getBatchToResolve() {
-        List<QueuedApu> results = query().from(metaModel).select(metaModel).where(metaModel.requestSent.isFalse()).fetch();
+        List<QueuedApu> results = query().from(metaModel).limit(1000).select(metaModel).where(metaModel.requestSent.isFalse()).fetch();
         detachAll();
         return results;
     }
 
-    public void removeForApuId(String apuId) {
-        queryFactory.delete(metaModel).where(metaModel.apuId.eq(apuId)).execute();
+    public long removeForApuId(String apuId) {
+        return queryFactory.delete(metaModel).where(metaModel.apuId.eq(apuId)).execute();
     }
 }

@@ -15,6 +15,7 @@ import cz.inqool.eas.common.domain.store.DomainObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.inject.Inject;
@@ -103,12 +104,20 @@ public class ApuProcessor {
 
             apuIdsProcessed.clear();
             existingDaos.clear();
-            apuRequestQueue.sendRequests();            
         } catch (Exception e) {
             log.error("Fail to import apusource ", e);
             throw new RuntimeException(e);
         }
         
+    }
+    
+    @Scheduled(fixedDelay = 60000)
+    public void sendRequests() {        
+        try {
+            while(apuRequestQueue.sendRequestsBatch());
+        } catch (Exception e) {
+            log.error("Fail to send apu requests batch", e);
+        }        
     }
 
     public void processTestingInputStream(Path path) throws IOException {        
@@ -159,7 +168,7 @@ public class ApuProcessor {
         }
         */
         recordRelations(apuEntity);
-        apuRequestQueue.removeForApuId(apuEntity.getId());
+        apuRequestQueue.removeForApuId(apuEntity.getId());        
     }
 
     private void processParts(List<Part> parts, ApuEntity apuEntity) {

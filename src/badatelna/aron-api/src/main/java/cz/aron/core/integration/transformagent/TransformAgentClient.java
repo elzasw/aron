@@ -18,6 +18,6 @@ public class TransformAgentClient extends WebServiceGatewaySupport {
         uuidList.getUuid().addAll(apuIds);
         Object whateverCame = getWebServiceTemplate()
                 .marshalSendAndReceive(objectFactory.createRequestApus(uuidList));  //they crash on action
-        log.info("we made it to end");
+        log.info("{} apus requested from transform agent", apuIds.size());
     }
 }
