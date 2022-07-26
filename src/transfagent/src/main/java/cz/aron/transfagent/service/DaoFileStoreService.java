@@ -68,7 +68,7 @@ public class DaoFileStoreService implements DaoImporter {
 			return null;
 		}
 		Path daoDir = config.getPath().resolve(relativePath);
-		if (Files.isDirectory(daoDir)) {
+		if (!config.isCheckExistency()||Files.isDirectory(daoDir)) {
 			return daoDir;
 		} else {
 			return null;
@@ -90,7 +90,17 @@ public class DaoFileStoreService implements DaoImporter {
 			}
 			dao.setState(DaoState.READY);
 		} catch (Exception e) {
-			log.error("Fail to import dao {}", dao.getUuid(), e);
+		    if (!config.isCheckExistency()&&!Files.isDirectory(dataDir)) {
+		        dao.setState(DaoState.INACCESSIBLE);
+		        try {
+                    FileSystemUtils.deleteRecursively(daoDir);
+                } catch (IOException e1) {
+                    log.warn("Fail to delete directory {}", daoDir);
+                }
+		        log.warn("Dao handle={} not exist.", dao.getHandle());
+		    } else {
+		        log.error("Fail to import dao {}", dao.getUuid(), e);
+		    }
 		}		
 	}
 	

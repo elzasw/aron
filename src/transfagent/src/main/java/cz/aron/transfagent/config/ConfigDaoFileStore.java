@@ -13,6 +13,8 @@ public class ConfigDaoFileStore {
 	private Path path;
 	
 	private String mappingName;
+	
+	private boolean checkExistency = true;
 
 	public Path getPath() {
 		return path;
@@ -29,5 +31,13 @@ public class ConfigDaoFileStore {
 	public void setMappingName(String mappingName) {
 		this.mappingName = mappingName;
 	}
+
+    public boolean isCheckExistency() {
+        return checkExistency;
+    }
+
+    public void setCheckExistency(boolean checkExistency) {
+        this.checkExistency = checkExistency;
+    }
 
 }
