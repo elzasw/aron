@@ -59,7 +59,7 @@ public class ApuProcessor {
     public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
                 
         try(ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
-            log.debug("Processing apu source " + reader.getUuid());
+            log.debug("Processing apu source {}", reader.getUuid());
 
             // read apusrc.xml as String to be stored to database
             String metadata = Files.readString(apuSrcPath, StandardCharsets.UTF_8);
@@ -72,9 +72,11 @@ public class ApuProcessor {
                 ourApuSource.setId(reader.getUuid());
             }
             else {
-                daoStore.disconnectDaosByApuSourceId(reader.getUuid());
+                long numDisconnected = daoStore.disconnectDaosByApuSourceId(reader.getUuid());
+                log.debug("Processing apu source {}, disconnect {} existing daos ", reader.getUuid(), numDisconnected);
                 List<String> apusToDelete = apuStore.findIdsBySourceIdBottomUp(reader.getUuid());
                 apuRepository.delete(apusToDelete);
+                log.debug("Processing apu source {}, original data deleted", reader.getUuid());
             }
             ourApuSource.setData(metadata);
 
@@ -88,12 +90,15 @@ public class ApuProcessor {
             var apuSourceRef = apuSourceRepository.getRef(ourApuSource.getId());
 
             apuOrderCounter = 0;
-            reader.process(apus->{
-                fillDaoCache(apus.stream().map(apu->apu.getUuid()).collect(Collectors.toList()));
+            reader.process(apus->{                               
+                fillDaoCache(apus.stream().filter(apu -> apu.getDaos() != null).flatMap(apu -> apu.getDaos()
+                        .getUuid().stream())
+                        .collect(Collectors.toList()));
                 for (Apu apu : apus) {
                     processApu(apu, apuSourceRef, filesMap);
                 }
                 flush();
+                log.debug("Processing apu source {}, process chunk of size {}", reader.getUuid(), apus.size());                
             }, CACHE_SIZE);
 
             apuIdsProcessed.clear();
@@ -311,7 +316,9 @@ public class ApuProcessor {
 
     private void fillDaoCache(List<String> daoIds) {
         existingDaos.clear();
-        daoStore.listByIds(daoIds).forEach(dao->existingDaos.put(dao.getId(),dao));
+        if (!daoIds.isEmpty()) {
+            daoStore.listByIds(daoIds).forEach(dao -> existingDaos.put(dao.getId(), dao));
+        }
     }
 
 }
