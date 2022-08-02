@@ -101,14 +101,22 @@ public class ApuProcessor {
                 flush();
                 log.debug("Processing apu source {}, process chunk of size {}", reader.getUuid(), apus.size());                
             }, CACHE_SIZE);
-
-            apuIdsProcessed.clear();
-            existingDaos.clear();
         } catch (Exception e) {
             log.error("Fail to import apusource ", e);
             throw new RuntimeException(e);
+        } finally {
+            clearInternalState();
         }
         
+    }
+
+    private void clearInternalState() {
+        saveCache.clear();
+        relationsDeleteCache.clear();
+        relationsAddCache.clear();
+        apusToHaveIncomingRelsUpdated.clear();
+        apuIdsProcessed.clear();
+        existingDaos.clear();
     }
     
     @Scheduled(fixedDelay = 60000)
