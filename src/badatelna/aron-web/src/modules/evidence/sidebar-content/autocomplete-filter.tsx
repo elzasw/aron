@@ -69,7 +69,7 @@ export function AutocompleteFilter({
   const options = allOptions
     .filter(({ name }: { name: string }) => {
       const decomposedName = name.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // remove diacritical marks
-      return !query || decomposedName.toLowerCase().indexOf(query.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()) >= 0
+      return !query || isApuRef || decomposedName.toLowerCase().indexOf(query.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()) >= 0
     })
     .map((option: { id: string; name: string; value: string }) => ({
       id: option.id,

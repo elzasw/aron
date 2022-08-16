@@ -150,7 +150,7 @@ export function useApiListSimple({
     sort, 
     offset, 
     flipDirection, 
-    size 
+    size,
   };
   return usePost<ApiListSimplifiedResponse>(`${ApiUrl.APU}/listview?listType=${(source)?.toUpperCase()}`, { json });
 }
@@ -189,18 +189,102 @@ export const useGetOptionsBySource = (
   isApuRef: boolean,
   apiFilters: Filter[]
 ) => {
-  const field = isApuRef ? `${source}~ID~LABEL` : source;
-  const fieldLabel = isApuRef ? `${source}~LABEL` : source;
-  const operation = isApuRef ? ApiFilterOperation.FTX : ApiFilterOperation.CONTAINS;
+  
+  const [result, loading] = isApuRef ? useGetReferenceOptionsBySource(source, query, apiFilters) :
+                                       useGetFieldOptionsBySource(source, query, apiFilters);
+  
+  return [result, loading];
+};
+
+const useGetFieldOptionsBySource = (
+  source: string,
+  query: string,
+  apiFilters: Filter[]
+) => {
+
+  const field = `${source}~ID~LABEL`;
+  const fieldLabel = `${source}~LABEL`;
 
   const [result, loading] = useApiListSimple({
+    size: 0,
+    aggregations: [
+      {
+        family: 'BUCKET',
+        aggregator: 'TERMS',
+        name: 'items',
+        field,
+      },
+    ],
+    filters: [
+      ...apiFilters.filter(
+        ({ filters }) =>
+          !filters || !filters.length || filters[0].field !== source
+      ),
+      ...(query
+        ? [
+            {
+              field: fieldLabel,
+              operation: ApiFilterOperation.CONTAINS,
+              value: query,
+            },
+          ]
+        : []),
+    ],
+    source: "get-options-by-source"
+  });
+  return [get(result, 'aggregations.items', []), loading];
+}
+
+const useGetReferenceOptionsBySource = (
+  source: string,
+  query: string,
+  apiFilters: Filter[]
+) => {
+  //const field = `${source}~ID~LABEL`;
+  const fieldLabel = `${source}~LABEL`;
+
+  const [postResult, postLoading] = usePost(`${ApiUrl.APU}/list`+`?listType=GET-OPTIONSREL-BY_SOURCE_${(source)?.toUpperCase()}`, {
+    json: {
       size: 0,
       aggregations: [
         {
-          family: 'BUCKET',
-          aggregator: 'TERMS',
-          name: 'items',
-          field,
+        name: 'items',
+        family: 'BUCKET',
+        aggregator: 'NESTED',
+        path: 'rels',
+        aggregations: [
+          {
+            family: 'BUCKET',
+            aggregator: 'FILTER',
+            name: 'relsFilterAgg',
+            filter:
+              {
+                  operation: ApiFilterOperation.AND,
+                  filters: [
+                    {
+                      field: 'rels.type',
+                      operation: ApiFilterOperation.EQ,
+                      value: source,
+                      nestedQueryEnabled: false,
+                    },
+                    {
+                      operation: ApiFilterOperation.FTXF,
+                      field: 'rels.label',
+                      value: query,
+                      nestedQueryEnabled: false,
+                    },
+                  ],
+                },              
+            aggregations: [
+              {
+                family: 'BUCKET',
+                aggregator: 'TERMS',
+                name: 'idLabel',
+                field: 'rels.idLabel',
+              },
+            ],
+          },
+        ]
         },
       ],
       filters: [
@@ -212,17 +296,23 @@ export const useGetOptionsBySource = (
           ? [
               {
                 field: fieldLabel,
-                operation: operation,
+                operation: ApiFilterOperation.FTXF,
                 value: query,
               },
             ]
           : []),
       ],
-    source: "get-options-by-source"
+    source: "get-options-by-source"      
+    }
   });
 
-  return [get(result, 'aggregations.items', []), loading];
-};
+  const fields =
+  (postResult as any)?.aggregations?.items[0]?.aggregations
+    ?.relsFilterAgg[0]?.aggregations
+    ?.idLabel || [];
+  return [fields, postLoading];
+
+}
 
 export const useGetMatchingName = (query: string, group?: string) =>
   useApiListSimple({

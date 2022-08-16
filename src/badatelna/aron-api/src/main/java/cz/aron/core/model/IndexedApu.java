@@ -73,6 +73,10 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
         private String type;
         @Field(type = FieldType.Keyword)
         private List<String> groups;
+        @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP)
+        private String label;
+        @Field(type = FieldType.Keyword)
+        private String idLabel;
     }
 
     @Transient
@@ -132,7 +136,7 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
                 additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
                 if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
                     List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
-                    rels.add(new Relation((String) data, item.getType(), itemTypeGroups));
+                    rels.add(new Relation((String) data, item.getType(), itemTypeGroups, item.getTargetLabel(), data + "|" + item.getTargetLabel()));
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(item.getTargetLabel());
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + item.getTargetLabel());
                 }
