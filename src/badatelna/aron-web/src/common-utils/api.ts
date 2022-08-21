@@ -204,6 +204,7 @@ const useGetFieldOptionsBySource = (
 
   const field = `${source}~ID~LABEL`;
   const fieldLabel = `${source}~LABEL`;
+  const filters = transformFilters(apiFilters);
 
   const [result, loading] = useApiListSimple({
     size: 0,
@@ -216,7 +217,7 @@ const useGetFieldOptionsBySource = (
       },
     ],
     filters: [
-      ...apiFilters.filter(
+      ...filters.filter(
         ({ filters }) =>
           !filters || !filters.length || filters[0].field !== source
       ),
@@ -242,6 +243,7 @@ const useGetReferenceOptionsBySource = (
 ) => {
   //const field = `${source}~ID~LABEL`;
   const fieldLabel = `${source}~LABEL`;
+  const filters = transformFilters(apiFilters);
 
   const [postResult, postLoading] = usePost(`${ApiUrl.APU}/list`+`?listType=GET-OPTIONSREL-BY_SOURCE_${(source)?.toUpperCase()}`, {
     json: {
@@ -288,7 +290,7 @@ const useGetReferenceOptionsBySource = (
         },
       ],
       filters: [
-        ...apiFilters.filter(
+        ...filters.filter(
           ({ filters }) =>
             !filters || !filters.length || filters[0].field !== source
         ),
