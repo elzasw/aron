@@ -17,7 +17,7 @@ public interface DaoRepository extends JpaRepository<Dao, Integer> {
 
     @Query("SELECT d.id FROM Dao d JOIN d.apuSource a " +
             "WHERE NOT EXISTS(SELECT q FROM CoreQueue q WHERE q.apuSource = a) " +
-            "AND d.state = ?1 AND d.transferred = ?2 AND a.reimport is false " +
+            "AND d.state = ?1 AND d.transferred = ?2 " +
             "ORDER BY d.id")
     List<Integer> findTopByStateAndTransferredOrderById(DaoState state, boolean transferred, Pageable limit);
     

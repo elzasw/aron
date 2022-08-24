@@ -74,7 +74,8 @@ public class DaoSendService implements SmartLifecycle {
 
 	private void uploadDao(int id) {		
 		var daoOpt = daoRepository.findById(id);
-		daoOpt.ifPresentOrElse(dao -> {						
+		daoOpt.ifPresentOrElse(dao -> {
+		    log.info("Dao uuid={}, start sending", dao.getUuid());
 			var daoPath = storageService.getDaoPath().resolve(dao.getDataDir());
 			UploadRequestImpl request = UploadRequestImpl.buildDaoRequest(new DirReader(daoPath), dao.getUuid().toString());
 			try {
@@ -84,11 +85,11 @@ public class DaoSendService implements SmartLifecycle {
 			}
 
 			if (request.isCanceled()) {
-				log.error("transfer to server canceled.");
+				log.error("Dao uuid={}, transfer to server canceled.", dao.getUuid());
 				throw new IllegalStateException();
 			}
 			if (request.isFailed()) {
-				log.error("transfer to server failed.");
+				log.error("Dao uuid={}, transfer to server failed.", dao.getUuid());
 				throw new IllegalStateException();
 			}
 			
@@ -121,31 +122,32 @@ public class DaoSendService implements SmartLifecycle {
 		client = FileTransfer.createClient(clientConfig);
 	}
 
-	public void run() {
+    public void run() {
         while (status == ThreadStatus.RUNNING) {
             try {
                 uploadDaos();
-                Thread.sleep(5000);
             } catch (Exception e) {
-                log.error("Error in import file. ", e);
-                try {
-					Thread.sleep(5000);
-				} catch (InterruptedException e1) {
-					Thread.currentThread().interrupt();
-					return;
-				}
+                log.error("Error in sending dao. ", e);
+            }
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e1) {
+                Thread.currentThread().interrupt();
+                log.error("Dao send service, thread interrupted", e1);
+                return;
             }
         }
         status = ThreadStatus.STOPPED;
     }
 
-
     @Override
     public void start() {
         if (configAronCore.isDisabled()) {
+            log.info("Dao send service is disabled.");
             status = ThreadStatus.STOPPED;
             return;
         }
+        log.info("Starting dao send service.");
         status = ThreadStatus.RUNNING;
         new Thread(() -> {
             run();
