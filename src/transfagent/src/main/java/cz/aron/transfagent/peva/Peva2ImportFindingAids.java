@@ -110,15 +110,14 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 			var faDir = faInputDir.resolve(PREFIX_DASH + id);
 			try {
 				Files.createDirectories(faDir);
-				Path name = faDir.resolve(PREFIX_DASH + id + ".xml");
-				Peva2XmlReader.marshalGetFindingAidResponse(gfar, name);
-
 				var attachmentFiles = attachments.get(findingAid.getEvidenceNumber());
 				if (attachmentFiles != null) {
 					for (var attachmentFile : attachmentFiles) {
 						Files.copy(attachmentFile, faDir.resolve(attachmentFile.getFileName()));
 					}
 				}
+                Path name = faDir.resolve(PREFIX_DASH + id + ".xml");
+                Peva2XmlReader.marshalGetFindingAidResponse(gfar, name);
 			} catch (Exception e) {
 				log.error("Fail to store peva finding aid {} to input dir", findingAid.getId(), e);
 			}
