@@ -615,6 +615,7 @@ itemTypes:
     name: Značka archivního souboru
     type: STRING
     indexed: true
+    indexFolding: false
   - code: ORIG_PLACES_REF
     name: Místa vzniku
     type: APU_REF
@@ -886,6 +887,10 @@ itemTypes:
     name: Měřítko
     type: STRING
     indexed: true
+    indexFolding: false
+  - code: UNIT_COUNT
+    name: Počet
+    type: STRING
   - code: SIZE
     name: Rozměry, velikost
     type: STRING

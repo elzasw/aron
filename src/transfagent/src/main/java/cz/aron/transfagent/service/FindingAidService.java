@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,9 +101,11 @@ public class FindingAidService {
 	}
 
     @Transactional
-	public void updateFindingAid(FindingAid findingAid, Path dataDir, Path origDir, ApuSourceBuilder builder,
+	public void updateFindingAid(FindingAid findingAidSrc, Path dataDir, Path origDir, ApuSourceBuilder builder,
 			List<Path> attachments, boolean reimportFund, boolean send) {
-
+        
+        FindingAid findingAid = findingAidRepository.findById(findingAidSrc.getId()).orElseThrow(()->new EntityNotFoundException());
+        
 		var apuSource = findingAid.getApuSource();
 		apuSource.setDataDir(dataDir.toString());
 		apuSource.setOrigDir(origDir.getFileName().toString());
