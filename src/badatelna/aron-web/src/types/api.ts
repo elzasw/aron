@@ -6,4 +6,5 @@ export interface Filter {
   operation: ApiFilterOperation;
   ids?: string[];
   filters?: Filter[];
+  caseInsensitive?: boolean;
 }

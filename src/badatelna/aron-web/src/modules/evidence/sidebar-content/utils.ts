@@ -55,6 +55,7 @@ export const useGetCountInput = (
   foldedFilter?: boolean,
 ) => {
   const operation = foldedFilter ? ApiFilterOperation.FTXF : ApiFilterOperation.CONTAINS;
+  const filter = apiFilters.find((item) => item.field === field);
   return useApiListSimple({
       size: 0,
       filters: compact([
@@ -65,6 +66,7 @@ export const useGetCountInput = (
                 field,
                 operation,
                 value,
+                caseInsensitive: filter?.caseInsensitive,
               }]
           : []),
       ]),

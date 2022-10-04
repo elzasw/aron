@@ -30,6 +30,7 @@ export interface BasicFilterConfig {
 }
 
 export interface FilterConfig {
+  caseInsensitive?: boolean;
   type?: FacetType;
   label?: string;
   tootlip?: string;

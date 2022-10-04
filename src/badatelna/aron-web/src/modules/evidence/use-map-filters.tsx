@@ -170,6 +170,7 @@ export function useMapFilters() {
     });
 
     const mapped = merged.map((item) => {
+      const apuPartItemType = find(apuPartItemTypes, { code: item.source })
       return {
         display: FacetDisplay.ALWAYS,
         displayedItems: 0,
@@ -183,7 +184,8 @@ export function useMapFilters() {
             ? `${formatMessage({ id: Message.RELATED_TO })}: ${item.value}`
             : item.title 
             ? item.title 
-            : find(apuPartItemTypes, { code: item.source })?.name || '_',
+            : apuPartItemType?.name || '_',
+        caseInsensitive: apuPartItemType?.caseInsensitive || false,
         value:
           item.value ||
           find(filters, ({ source }) => source === item.source)?.value ||
@@ -214,7 +216,6 @@ export function useMapFilters() {
           })
         }
       })
-      console.log("emptyValues", emptyValues, availableOptions)
       availableOptions.unshift(...emptyValues);
       enumsOptions[filter.source] = availableOptions;
     })

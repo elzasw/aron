@@ -203,11 +203,12 @@ export const getPathSpecificFilters = (path: ModulePath) => {
 export const createApiFilters = (filters: FilterConfig[]) => {
   return filters.length
     ? compact(
-        filters.map(({ source, operation, value, type, filters }) => {
+        filters.map(({ source, operation, value, type, filters, caseInsensitive }) => {
           const createFilter = (params: Filter) => ({
             field: source,
             ...(filters ? { filters } : {}),
             ...params,
+            caseInsensitive,
           });
 
           if (type === FacetType.UNITDATE) {
@@ -232,6 +233,7 @@ export const createApiFilters = (filters: FilterConfig[]) => {
                     field: source,
                     operation: ApiFilterOperation.CONTAINS,
                     value: id,
+                    caseInsensitive,
                   })),
                 };
               }

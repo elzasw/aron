@@ -97,6 +97,14 @@ export const transformFilters = (filters:Filter[]):Filter[] => {
         value,
       }
     }
+    if(filter.caseInsensitive){
+        if(typeof filter.value === "string"){
+          return {
+            ...filter,
+            value: filter.value.toLowerCase()
+          }
+        }
+    }
     return filter;
   })
 }

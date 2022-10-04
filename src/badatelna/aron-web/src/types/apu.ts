@@ -76,6 +76,7 @@ export interface ApuPartItemType extends Entity {
   type: ApuPartItemDataType;
   lang: ApuLocale[];
   viewOrder: number;
+  caseInsensitive: boolean;
 }
 
 export interface ApuTree extends Entity {
