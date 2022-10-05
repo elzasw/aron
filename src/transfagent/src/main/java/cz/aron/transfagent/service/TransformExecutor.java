@@ -204,7 +204,7 @@ public class TransformExecutor implements SmartLifecycle {
                     .content(new BytesContentProvider(body), "application/json").send(result -> {
                         sendContext.setStartTime(0);  // pokud vse dopadne dobre kontext muze byt ihned pouzit                      
                         try {
-                            if (result.isSucceeded()) {
+                            if (result.isSucceeded()&&result.getResponse().getStatus()==HttpStatus.OK_200) {
                                 changeTransformState(transform, TransformState.TRANSFORMED);                                
                                 log.info("Transformed id={}, uuid={}, file={}, type={}, executor={}", transform.getId(),
                                          transform.getFileUuid(), transform.getFile(), transform.getType(), url);
