@@ -5,11 +5,12 @@ import { Body } from './body';
 import { Footer } from './footer';
 import { useStyles } from './styles';
 import { useLayoutStyles } from '../../styles';
-import { Icon } from '../../components';
+import { Icon, useConfiguration } from '../../components';
 import { Props } from './types';
 
 export const Main = (props: Props) => {
-  const classes = useStyles();
+  const {compactAppHeader} = useConfiguration();
+  const classes = useStyles({compactAppHeader});
   const layoutClasses = useLayoutStyles();
 
   return (

@@ -12,7 +12,6 @@ export const useStyles = makeStyles((theme) => {
       flexDirection: 'column',
    
       [md]: {
-        overflowY: 'hidden',
         height: '100%',
         width: '100vw',
         minWidth: '100vw',

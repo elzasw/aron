@@ -1,12 +1,17 @@
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import { colorBlueVeryLight } from '../../styles';
+import { colorBlueVeryLight, appHeaderHeight as _appHeaderHeight, compactAppHeaderHeight } from '../../styles';
 
-export const useStyles = makeStyles((theme) => {
+export interface StyleConfiguration {
+    compactAppHeader?: boolean;
+}
+
+export const useStyles = (configuration?: StyleConfiguration ) => makeStyles((theme) => {
+  const appHeaderHeight = configuration?.compactAppHeader ? compactAppHeaderHeight : _appHeaderHeight;
   return {
     main: {
       position: 'relative',
       background: colorBlueVeryLight,
-      minHeight: `calc(100%)`,
+      minHeight: `calc(100% - ${appHeaderHeight})`,
     },
     mainBackgroundIcon: {
       transform: 'rotate(15deg)',
@@ -114,4 +119,4 @@ export const useStyles = makeStyles((theme) => {
       },
     },
   };
-});
+})();
