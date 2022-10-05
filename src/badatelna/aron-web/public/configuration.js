@@ -3,6 +3,7 @@ var _configuration = {
   // alternativeItemLabel: false,
   // compactAppHeader: false,
   // showAppLogo: true,
+  // showAppTopImage: false,
   // showHeader: true,
   // showShareButtons: false,
   // showStandalonePartName: true,

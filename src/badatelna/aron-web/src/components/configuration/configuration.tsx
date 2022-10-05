@@ -16,6 +16,7 @@ export interface ConfigurationType {
     alternativeItemLabel?: boolean;
     compactAppHeader?: boolean;
     showAppLogo?: boolean,
+    showAppTopImage?: boolean,
     showHeader?: boolean;
     showShareButtons?: boolean;
     showStandalonePartName?: boolean;
@@ -34,6 +35,7 @@ const defaultConfiguration:ConfigurationType = {
     alternativeItemLabel: false,
     compactAppHeader: false,
     showAppLogo: true,
+    showAppTopImage: false,
     showHeader: true,
     showShareButtons: false,
     showStandalonePartName: true,

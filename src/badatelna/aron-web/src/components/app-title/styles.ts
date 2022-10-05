@@ -12,6 +12,9 @@ export const useStyles = (configuration?: StyleConfiguration ) => makeStyles((th
   appTitle: {
     fontSize: '1.2rem',
     color: '#fff',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
   },
   appTitleFull: {
     flex: 1,
@@ -47,6 +50,8 @@ export const useStyles = (configuration?: StyleConfiguration ) => makeStyles((th
   },
   appTitleTopImage: {
     maxHeight: appHeaderHeight,
+    padding: '0.5rem',
+    marginLeft: '0.5rem',
     display: 'none',
 
     [theme.breakpoints.up('sm')]: {

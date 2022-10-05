@@ -10,9 +10,13 @@ import { useStyles } from './styles';
 import { Props } from './types';
 import { useConfiguration } from '../configuration'
 
-export function AppTitle({ appLogo }: Props) {
-  const configuration = useConfiguration();
-  const classes = useStyles({compactAppHeader: configuration.compactAppHeader});
+export function AppTitle({ appLogo, appTopImage }: Props) {
+  const {
+    compactAppHeader, 
+    showAppTopImage, 
+    showAppLogo
+  } = useConfiguration();
+  const classes = useStyles({compactAppHeader});
   const location = useLocation();
 
   const { navigate } = useContext(NavigationContext);
@@ -27,7 +31,7 @@ export function AppTitle({ appLogo }: Props) {
       )}
       onClick={() => isClickable && !appLogo && navigate(ModulePath.MAIN)}
     >
-      {configuration.showAppLogo &&
+      {showAppLogo &&
         (appLogo ? (
           <img
             src={appLogo}
@@ -46,6 +50,9 @@ export function AppTitle({ appLogo }: Props) {
             <FormattedMessage id={Message.ONLINE} />
           </>
       ))}
+      {showAppTopImage && !compactAppHeader && 
+        <img className={classes.appTitleTopImage} src={appTopImage}/>
+      }
       <div />
     </div>
   );
