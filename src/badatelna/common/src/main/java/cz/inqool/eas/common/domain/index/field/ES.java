@@ -31,6 +31,15 @@ public interface ES {
         String TEXT_LONG_KEYWORD = "text_long_keyword";
 
         /**
+         * Analyzer for long text fields. Will treat them as keywords - lowercase, without tokenizing and folding. Limits the
+         * length of the string to 200 chars.
+         * <p>
+         * Can be used on fields where exact comparison is not needed (such as long descriptions or notes) and only
+         * full-text search is used.
+         */
+        String TEXT_LONG_KEYWORD_CI = "text_long_keyword_ci";
+
+        /**
          * Applies ICU filters (lowercase, folding, ...) and not tokenize words (Keyword indexing).
          */
         String FOLDING = "folding";

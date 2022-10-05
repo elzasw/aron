@@ -17,6 +17,7 @@ public class ItemType {
     private DataType type;
     private boolean indexed = true;
     private Boolean indexFolding;
+    private Boolean caseInsensitive;
     private Boolean indexBoost;
     private List<LocalizedItem> lang = new ArrayList<>();
     private int viewOrder;

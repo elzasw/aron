@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.SORTING;
 import static cz.inqool.eas.common.domain.index.field.ES.Suffix.SORT;
@@ -73,7 +74,7 @@ public class IndexedApu extends DomainIndexedObject<ApuEntity, ApuEntity> {
         private String type;
         @Field(type = FieldType.Keyword)
         private List<String> groups;
-        @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING_STOP)
+        @Field(type = FieldType.Text, analyzer = FOLDING_AND_TOKENIZING)
         private String label;
         @Field(type = FieldType.Keyword)
         private String idLabel;

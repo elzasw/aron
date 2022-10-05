@@ -21,6 +21,7 @@ import java.util.Map;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.FOLDING_AND_TOKENIZING_STOP;
 import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.TEXT_LONG_KEYWORD;
+import static cz.inqool.eas.common.domain.index.field.ES.Analyzer.TEXT_LONG_KEYWORD_CI;
 import static org.springframework.data.elasticsearch.core.document.Document.parse;
 
 /**
@@ -70,8 +71,10 @@ public class ApuIndex extends DomainIndex<ApuEntity, ApuEntity, IndexedApu> impl
                     dataType = "text";
                     if (allItemType.getIndexFolding() == null || allItemType.getIndexFolding()) { //defaults to folded
                         fieldProperties.put("analyzer", FOLDING_AND_TOKENIZING_STOP);
-                    }
-                    else {  //unfolded also means untokenized for us
+                    } else if (Boolean.FALSE.equals(allItemType.getIndexFolding())&&Boolean.TRUE.equals(allItemType.getCaseInsensitive())) {
+                        fieldProperties.put("analyzer", TEXT_LONG_KEYWORD_CI);
+                        fieldProperties.put("search_analyzer", TEXT_LONG_KEYWORD_CI);
+                    } else {  //unfolded also means untokenized for us
                         fieldProperties.put("analyzer", TEXT_LONG_KEYWORD);
                     }
                     break;

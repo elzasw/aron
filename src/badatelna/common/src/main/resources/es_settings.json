@@ -12,6 +12,12 @@
           "tokenizer": "keyword",
           "filter":  ["200_char_trunc"]
         },
+        "text_long_keyword_ci": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "char_filter": ["icu_normalizer"],
+          "filter":  ["200_char_trunc"]
+        },
         "folding": {
           "type": "custom",
           "tokenizer": "keyword",
