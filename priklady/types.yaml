@@ -616,6 +616,7 @@ itemTypes:
     type: STRING
     indexed: true
     indexFolding: false
+    caseInsensitive: true
   - code: ORIG_PLACES_REF
     name: Místa vzniku
     type: APU_REF
@@ -1397,7 +1398,7 @@ itemTypes:
     type: APU_REF
     indexed: true
   - code: ENTITY_ROLE_82
-    name: matriční místo
+    name: Matriční místo
     type: APU_REF
     indexed: true
   - code: ENTITY_ROLE_83
