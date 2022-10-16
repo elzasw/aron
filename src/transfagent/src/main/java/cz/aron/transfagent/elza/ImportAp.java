@@ -403,7 +403,7 @@ public class ImportAp implements EdxItemCovertContext {
         Integer apElzaId = Integer.valueOf(apRef.getApid());
 
         // Set parent relation for taxonomical categories
-        if(apRef.getS().equals("RT_CATEGORY")) {
+        if(apRef.getS().equals("RT_CATEGORY")&&"TERM_TAXONOMY".equals(entityClass)) {
             Validate.isTrue(this.parentElzaId==null);
             parentElzaId = apElzaId;
         }
