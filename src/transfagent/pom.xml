@@ -86,7 +86,7 @@
 		<dependency>
 			<groupId>com.lightcomp.ft</groupId>
 			<artifactId>file-transfer</artifactId>
-			<version>1.8-SNAPSHOT</version>
+			<version>1.7</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
