@@ -122,4 +122,10 @@ public class ApuRepository extends DomainRepository<
             }
         }
     }
+
+    @Override
+    public int getReindexBatchSize() {
+        return 1000;
+    }
+
 }
