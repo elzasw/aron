@@ -18,6 +18,7 @@ public class ItemTypeConfig {
     private Types type;
     private boolean indexed;
     private Boolean indexFolding;
+    private Boolean caseInsensitive;
 
     public Boolean getIndexFolding() {
         return indexFolding;
@@ -62,4 +63,12 @@ public class ItemTypeConfig {
         this.indexed = indexed;
     }
 
+    public Boolean getCaseInsensitive() {
+        return caseInsensitive;
+    }
+
+    public void setCaseInsensitive(Boolean caseInsensitive) {
+        this.caseInsensitive = caseInsensitive;
+    }
+    
 }

@@ -50,6 +50,7 @@ import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.service.DaoFileStore2Service;
 import cz.aron.transfagent.service.DaoFileStore2Service.ArchiveFundDao;
 import cz.aron.transfagent.service.DaoFileStoreService;
+import cz.aron.transfagent.service.LevelEnrichmentService;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
 import cz.aron.transfagent.transformation.CoreTypes;
@@ -135,12 +136,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final DaoFileStoreService daoFileStoreService;
     
     private final DaoFileStore2Service daoFileStoreService2;
+    
+    private final LevelEnrichmentService levelEnrichmentService;
 
 	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
-			DaoFileStore2Service daoFileStoreService2) {
+			DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService) {
 		this.apTypeService = apTypeService;
 		this.daoFileStoreService = daoFileStoreService;
 		this.daoFileStoreService2 = daoFileStoreService2;
+		this.levelEnrichmentService = levelEnrichmentService;
 	}
 
     public Set<UUID> getApRefs() {
@@ -161,7 +165,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null);
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null);
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -271,12 +275,14 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
         apuMap.put(lvl.getId(), apu);
 
-        activateArchDescPart(apu);        
+        activateArchDescPart(apu);                
 
         // add items
         for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
             addItem(apu, item);
         }
+        
+        processLevelEnrichment(lvl);
 
 		// daos
 		boolean daoExist = false;
@@ -367,6 +373,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 		return daoExist;
 	}
+	
+    private void processLevelEnrichment(Level lvl) {
+        if (levelEnrichmentService != null) {
+            String url = levelEnrichmentService.getUrlForLevel(lvl.getUuid());
+            if (url != null) {
+                ApuSourceBuilder.addLink(activePart, "URL", url, levelEnrichmentService.getLabel());
+            }
+        }
+    }
 	
 	private void addDaoRef(String source, UUID uuid, String handle) {
 		Set<ArchDescDaoRef> sourceDaoRefs = daoRefs.get(source);
