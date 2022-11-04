@@ -47,6 +47,11 @@ filestore:
 ## alternativni nazev souboru dao.csv
 #  mappingName: dao2.csv
 
+#levelEnrichment:
+#  levelUrls: D:/projects/aron/data/transfagent/input_folder/filedao/url.csv
+#  levelUrlsPrefix: https://storage.vychodoceskearchivy.cz/
+#  levelUrlsLabel: Stáhnout digitalizáty 
+
 dao:
   dir: /opt/daos
   # Pocet sekund pro novy pokus o odeslani
