@@ -1,5 +1,5 @@
 import React, { FC, useContext, createContext } from 'react';
-import { AppHeaderItemCode, SearchOption } from '../../enums';
+import { AppHeaderItemCode, SearchOption, Message } from '../../enums';
 
 interface DaoFooterDef {
   copyrightText?: string;
@@ -24,6 +24,7 @@ export interface ConfigurationType {
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
     localeCookieName?: string;
+    localeOverride?: Record<string, Partial<Record<Message, string>>>;
     showMetadataInImageViewer?: boolean;
     disableDownloads?: boolean;
     daoFooter?: DaoFooterDef;
@@ -57,6 +58,11 @@ const defaultConfiguration:ConfigurationType = {
         SearchOption.FINDING_AID,
         SearchOption.ENTITY,
     ],
+    // localeOverride: {
+    //     CZECH: {
+    //         ARON_ENTITY: "Rejstříková hesla",
+    //     },
+    // }
     // daoFooter: {
     //   copyrightText: 'Držitel licence: Literární archiv Památníku národního písemnictví, ' + new Date().getFullYear(),
     //   links: [{

@@ -11,7 +11,7 @@ import {
   LocaleName,
 } from '@eas/common-web';
 
-import { AppWrapper, Loading, ConfigurationProvider, useConfiguration, getLocaleFromCookie } from './components';
+import { AppWrapper, Loading, ConfigurationProvider, useConfiguration, getLocaleFromCookie, ConfigurationType } from './components';
 import { getNavigationItems, ApiUrl, messages, Message } from './enums';
 import {
   useGet,
@@ -37,6 +37,19 @@ const fontFamily = [
   'Arial',
   'sans-serif',
 ];
+
+const overrideLocale = (messages: Record<string, Record<Message, string>>, configuration: ConfigurationType) => {
+  const newMessages = {...messages};
+
+  Object.entries(newMessages).forEach(([locale, messages])=>{
+    newMessages[locale] = {
+      ...messages,
+      ...(configuration.localeOverride?.[locale] || {})
+    }
+  })
+
+  return newMessages;
+}
 
 function AppComponent() {
   const classes = useAppStyles();
@@ -135,7 +148,7 @@ function AppWithConfiguration() {
   return <ThemeProvider {...{ primary, editing, highlight, fontSize, fontFamily }}>
     <LocaleProvider
       defaultLocale={getLocaleFromCookie(configuration.localeCookieName) || LocaleName.cs}
-      messages={messages}
+      messages={overrideLocale(messages, configuration)}
       translationsUrl=""
     >
       <div className={classes.app}>

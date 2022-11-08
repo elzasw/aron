@@ -37,4 +37,9 @@ var _configuration = {
   //     url: 'https://www.google.com',
   //   }]
   // }
+  // localeOverride: {
+  //   CZECH: {
+  //     ARON_ENTITY: "Rejstříková hesla",
+  //   },
+  // }
 }
