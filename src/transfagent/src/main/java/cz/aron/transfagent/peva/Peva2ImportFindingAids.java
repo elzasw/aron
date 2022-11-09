@@ -18,31 +18,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.FindingAid;
 import cz.aron.peva2.wsdl.GetFindingAidRequest;
 import cz.aron.peva2.wsdl.GetFindingAidResponse;
 import cz.aron.peva2.wsdl.ListFindingAidRequest;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
 
-@Service
-@ConditionalOnProperty(value = "peva2.url")
 public class Peva2ImportFindingAids extends Peva2Downloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportFindingAids.class);
 	
 	private static final String PREFIX_DASH = "pevafa-";
+	
+	private final String institutionPrefix;
 
-	public Peva2ImportFindingAids(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService,
-			@Value("${peva2.importFindingAid:false}") boolean active) {
-		super("FINDINGAID", peva2, propertyRepository, config, tt, storageService, active);
-	}
+    public Peva2ImportFindingAids(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+                                  TransactionTemplate tt, StorageService storageService,
+                                  @Value("${peva2.importFindingAid:false}") boolean active) {
+        super("FINDINGAID", peva2, propertyRepository, config, tt, storageService, active);
+        institutionPrefix = PREFIX_DASH + peva2.getInstitutionId() + "-";
+    }
 
 	@Override
 	protected int synchronizeAgenda(XMLGregorianCalendar updateAfter, long eventId, String searchAfterInitial, Peva2CodeListProvider codeListProvider) {		
@@ -55,7 +57,7 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
             lfar.setSize(config.getBatchSize());
             lfar.setUpdatedAfter(updateAfter);
             lfar.setSearchAfter(searchAfter);
-            var lfaResp = peva2.listFindingAid(lfar);            
+            var lfaResp = peva2.getPeva().listFindingAid(lfar);            
             searchAfter = lfaResp.getSearchAfter();
             long count = lfaResp.getFindingAids().getFindingAid().size();
             log.info("Downloaded {} finding aids to update after {}", count, updateAfter);
@@ -167,22 +169,62 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 		}
 	}
 
-	@Override
-	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
-		var fileName = path.getFileName().toString();
-		if (!fileName.startsWith(PREFIX_DASH)) {
-			// not my command
-			return false;
-		}
-		var id = fileName.substring(PREFIX_DASH.length());
-		var gfaReq = new GetFindingAidRequest();
-		gfaReq.setId(id);
-		var gfaResp = peva2.getFindingAid(gfaReq);
-		var attMap = initAttachments();
-		patchFindingAidsBatch(Collections.singletonList(gfaResp.getFindingAid()), codeListProvider.getCodeLists(),
-				attMap);
-		return true;
-	}
+    @Override
+    protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
+        var fileName = path.getFileName().toString();
+        String id;
+        if (fileName.startsWith(institutionPrefix)) {
+            id = fileName.substring(institutionPrefix.length());
+        } else if (peva2.isMainConnection() && fileName.startsWith(PREFIX_DASH)) {
+            id = fileName.substring(PREFIX_DASH.length());
+        } else {
+            // not my command
+            return false;
+        }        
+        var gfaReq = new GetFindingAidRequest();
+        gfaReq.setId(id);
+        var gfaResp = peva2.getPeva().getFindingAid(gfaReq);
+        var attMap = initAttachments();
+        patchFindingAidsBatch(Collections.singletonList(gfaResp.getFindingAid()), codeListProvider.getCodeLists(),
+                              attMap);
+        return true;
+    }
 
+    @Override
+    protected String getName() {
+        return super.getName() + "-" + peva2.getInstitutionId();
+    }
+    
+    @Configuration
+    @ConditionalOnProperty(value = "peva2.url")
+    public static class Peva2ImportFindingAidsConfig {
+
+        private final PropertyRepository propertyRepository;
+
+        private final ConfigPeva2 config;
+
+        private final TransactionTemplate tt;
+
+        private final StorageService storageService;
+
+        private final boolean active;
+
+        public Peva2ImportFindingAidsConfig(PropertyRepository propertyRepository, ConfigPeva2 config,
+                                            TransactionTemplate tt, StorageService storageService,
+                                            @Value("${peva2.importFindingAid:false}") boolean active) {
+            this.propertyRepository = propertyRepository;
+            this.config = config;
+            this.tt = tt;
+            this.storageService = storageService;
+            this.active = active;
+        }
+
+        @Bean
+        @Scope("prototype")
+        public Peva2ImportFindingAids importFindingAids(PEvA2Connection peva2) {
+            return new Peva2ImportFindingAids(peva2, propertyRepository, config, tt, storageService, active);
+        }
+
+    }
 
 }

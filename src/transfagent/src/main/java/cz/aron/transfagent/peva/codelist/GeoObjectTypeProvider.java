@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import cz.aron.peva2.wsdl.GetGeoObjectTypeRequest;
 import cz.aron.peva2.wsdl.ListGeoObjectTypeRequest;
-import cz.aron.peva2.wsdl.PEvA;
+import cz.aron.transfagent.peva.PEvA2Connection;
 
 public class GeoObjectTypeProvider extends CodeProvider<Peva2GeoObjectType> {
 
 	private static final Logger log = LoggerFactory.getLogger(GeoObjectTypeProvider.class);
 
-	public GeoObjectTypeProvider(PEvA peva2, Map<String, Peva2GeoObjectType> cached) {
+	public GeoObjectTypeProvider(PEvA2Connection peva2, Map<String, Peva2GeoObjectType> cached) {
 		super(peva2, cached);
 	}
 
@@ -22,17 +22,17 @@ public class GeoObjectTypeProvider extends CodeProvider<Peva2GeoObjectType> {
 	public Peva2GeoObjectType downloadItem(String id) {
 		var ggotReq = new GetGeoObjectTypeRequest();
 		ggotReq.setId(id);
-		var ggotResp = peva2.getGeoObjectType(ggotReq);
+		var ggotResp = peva2.getPeva().getGeoObjectType(ggotReq);
 		var got = ggotResp.getGeoObjectType();
 		log.info("Geo object type downloaded, uuid={}, name={}", got.getId(), got.getName());
 		return new Peva2GeoObjectType(got.getName(), got.getOSubClass());
 	}
 
-	public static GeoObjectTypeProvider create(PEvA peva2) {
+	public static GeoObjectTypeProvider create(PEvA2Connection peva2) {
 		Map<String, Peva2GeoObjectType> ret = new HashMap<>();
 		var lgotReq = new ListGeoObjectTypeRequest();
 		lgotReq.setSize(1000);
-		var lgotResp = peva2.listGeoObjectType(lgotReq);
+		var lgotResp = peva2.getPeva().listGeoObjectType(lgotReq);
 		for (var lgot : lgotResp.getGeoObjectTypes().getGeoObjectType()) {
 			ret.put(lgot.getId(), new Peva2GeoObjectType(lgot.getName(), lgot.getOSubClass()));
 		}

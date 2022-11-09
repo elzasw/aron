@@ -86,7 +86,7 @@ public class ImportPevaFindingAidInfo {
 		if (fundUUIDs.isEmpty()) {
 			log.error("Fainding aid code: {}, institution:{} not related to any fund", findingAid.getEvidenceNumber(),
 					institutionCode);
-			throw new PevaFundNotExist(findingAid.getNadSheets().getNadSheet().stream().collect(Collectors.toList()));
+			throw new PevaFundNotExist(findingAid.getInstitution().getId(), findingAid.getNadSheets().getNadSheet().stream().collect(Collectors.toList()));
 		}
 		
 		Validate.isTrue(!fundUUIDs.isEmpty(), "Fainding aid code: %s, institution:%s not related to any fund", findingAid.getEvidenceNumber(),
@@ -248,14 +248,21 @@ public class ImportPevaFindingAidInfo {
 	}
 
 	public static class PevaFundNotExist extends RuntimeException {
+	    
+	    private final String institutionUUID;
 		
 		private final List<String> fundIds;
 		
-		public PevaFundNotExist(List<String> fundIds) {
+		public PevaFundNotExist(String institutionUUID, List<String> fundIds) {
+		    this.institutionUUID = institutionUUID;
 			this.fundIds = fundIds;
-		}
+		}				
 
-		public List<String> getFundIds() {
+		public String getInstitutionUUID() {
+            return institutionUUID;
+        }
+
+        public List<String> getFundIds() {
 			return fundIds;
 		}
 

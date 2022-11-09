@@ -18,7 +18,6 @@ import cz.aron.peva2.wsdl.GeoObject;
 import cz.aron.peva2.wsdl.GetGeoObjectRequest;
 import cz.aron.peva2.wsdl.GetGeoObjectResponse;
 import cz.aron.peva2.wsdl.ListGeoObjectRequest;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
@@ -36,7 +35,7 @@ public class Peva2ImportGeo extends Peva2Downloader {
 	public static final String PREFIX = "pevageo-";
 
 
-	public Peva2ImportGeo(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config, TransactionTemplate tt,
+	public Peva2ImportGeo(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config, TransactionTemplate tt,
 			StorageService storageService, @Value("${peva2.importGeoObject:false}") boolean active) {
 		super("GEO", peva2, propertyRepository, config, tt, storageService, active);
 	}
@@ -51,7 +50,7 @@ public class Peva2ImportGeo extends Peva2Downloader {
 			lgor.setSize(config.getBatchSize());
 			lgor.setUpdatedAfter(updateAfter);
 			lgor.setSearchAfter(searchAfter);
-			var loResp = peva2.listGeoObject(lgor);
+			var loResp = peva2.getPeva().listGeoObject(lgor);
 			searchAfter = loResp.getSearchAfter();
 			long count = loResp.getGeoObjects().getGeoObject().size();
 			log.info("Downloaded {} geo objects to update after", count, updateAfter);
@@ -113,7 +112,7 @@ public class Peva2ImportGeo extends Peva2Downloader {
 		var id = fileName.substring(PREFIX.length());		
 		var ggoReq = new GetGeoObjectRequest();
 		ggoReq.setId(id);
-		var ggoResp = peva2.getGeoObject(ggoReq);					
+		var ggoResp = peva2.getPeva().getGeoObject(ggoReq);					
 		patchGeoBatch(Collections.singletonList(ggoResp.getGeoObject()),codeListProvider.getCodeLists());		
 		return true;
 	}

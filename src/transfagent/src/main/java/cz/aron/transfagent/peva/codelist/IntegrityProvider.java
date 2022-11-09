@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 import cz.aron.peva2.wsdl.GetIntegrityRequest;
 import cz.aron.peva2.wsdl.Integrity;
 import cz.aron.peva2.wsdl.ListIntegrityRequest;
-import cz.aron.peva2.wsdl.PEvA;
+import cz.aron.transfagent.peva.PEvA2Connection;
 
 public class IntegrityProvider extends CodeProvider<String> {
 	
 	private static final Logger log = LoggerFactory.getLogger(IntegrityProvider.class);
 
-	public IntegrityProvider(PEvA peva2, Map<String, String> cached) {
+	public IntegrityProvider(PEvA2Connection peva2, Map<String, String> cached) {
 		super(peva2, cached);
 	}
 
@@ -23,17 +23,17 @@ public class IntegrityProvider extends CodeProvider<String> {
 	public String downloadItem(String id) {
 		var giReq = new GetIntegrityRequest();
 		giReq.setId(id);
-		var giResp = peva2.getIntegrity(giReq);
+		var giResp = peva2.getPeva().getIntegrity(giReq);
 		var i = giResp.getIntegrity();
 		log.info("Integrity downloaded, uuid={}, name={}", i.getId(), i.getName());
 		return i.getName();
 	}
 
-	public static IntegrityProvider create(PEvA peva2) {
+	public static IntegrityProvider create(PEvA2Connection peva2) {
 		Map<String, String> ret = new HashMap<>();
         var liReq = new ListIntegrityRequest();
         liReq.setSize(100);
-        var liResp = peva2.listIntegrity(liReq);
+        var liResp = peva2.getPeva().listIntegrity(liReq);
         for (Integrity integrity : liResp.getIntegrities().getIntegrity()) {
             ret.put(integrity.getId(), integrity.getName());
         }

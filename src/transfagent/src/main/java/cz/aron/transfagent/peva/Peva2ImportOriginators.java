@@ -20,7 +20,6 @@ import cz.aron.peva2.wsdl.GetOriginatorRequest;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
 import cz.aron.peva2.wsdl.ListOriginatorRequest;
 import cz.aron.peva2.wsdl.Originator;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.peva2.wsdl.PartyGroup;
 import cz.aron.peva2.wsdl.Person;
 import cz.aron.transfagent.config.ConfigPeva2;
@@ -35,7 +34,7 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 
 	public static final String PREFIX = "pevaoriginator-";
 
-	public Peva2ImportOriginators(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+	public Peva2ImportOriginators(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
 			TransactionTemplate tt, StorageService storageService,
 			@Value("${peva2.importOriginator:false}") boolean active) {
 		super("ORIGINATOR", peva2, propertyRepository, config, tt, storageService, active);
@@ -52,7 +51,7 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 			lor.setSize(config.getBatchSize());
 			lor.setUpdatedAfter(updateAfter);
 			lor.setSearchAfter(searchAfter);
-			var loResp = peva2.listOriginator(lor);
+			var loResp = peva2.getPeva().listOriginator(lor);
 			searchAfter = loResp.getSearchAfter();
 			long count = loResp.getOriginators().getDynastyOrEventOrPartyGroup().size();
 			log.info("Downloaded {} originators to update after {}", count, updateAfter);
@@ -129,7 +128,7 @@ public class Peva2ImportOriginators extends Peva2Downloader {
 		var id = fileName.substring(PREFIX.length());		
 		var goReq = new GetOriginatorRequest();
 		goReq.setId(id);
-		var goResp = peva2.getOriginator(goReq);
+		var goResp = peva2.getPeva().getOriginator(goReq);
 		
 		Originator originator = goResp.getDynasty();
 		if (originator==null) {

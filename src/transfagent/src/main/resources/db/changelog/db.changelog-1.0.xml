@@ -460,4 +460,11 @@
     </addColumn>
   </changeSet>
 
+  <changeSet  id="7" author="karel.zacek@lightcomp.cz">
+    <modifyDataType columnName="name"
+        newDataType="varchar(255)"
+        tableName="property"/>
+
+  </changeSet>
+
 </databaseChangeLog>

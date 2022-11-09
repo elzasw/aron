@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import cz.aron.peva2.wsdl.GetDatingMethodRequest;
 import cz.aron.peva2.wsdl.ListDatingMethodRequest;
-import cz.aron.peva2.wsdl.PEvA;
+import cz.aron.transfagent.peva.PEvA2Connection;
 
 public class DatingMethodProvider extends CodeProvider<Peva2DatingMethod> {
 
 	private static final Logger log = LoggerFactory.getLogger(DatingMethodProvider.class);
 
-	public DatingMethodProvider(PEvA peva2, Map<String, Peva2DatingMethod> cached) {
+	public DatingMethodProvider(PEvA2Connection peva2, Map<String, Peva2DatingMethod> cached) {
 		super(peva2, cached);
 	}
 
@@ -22,17 +22,17 @@ public class DatingMethodProvider extends CodeProvider<Peva2DatingMethod> {
 	public Peva2DatingMethod downloadItem(String id) {
 		var gdmReq = new GetDatingMethodRequest();
 		gdmReq.setId(id);
-		var gdmResp = peva2.getDatingMethod(gdmReq);
+		var gdmResp = peva2.getPeva().getDatingMethod(gdmReq);
 		var dm = gdmResp.getDatingMethod();
 		log.info("Dating method downloaded uuid={}, name={}", dm.getId(), dm.getName());
 		return new Peva2DatingMethod(dm.getName(), dm.getType().toString(), dm.getCamCode());
 	}
 
-	public static DatingMethodProvider create(PEvA peva2) {
+	public static DatingMethodProvider create(PEvA2Connection peva2) {
 		Map<String, Peva2DatingMethod> ret = new HashMap<>();
 		var ldmReq = new ListDatingMethodRequest();
 		ldmReq.setSize(100);
-		var ldmResp = peva2.listDatingMethod(ldmReq);
+		var ldmResp = peva2.getPeva().listDatingMethod(ldmReq);
 		for (var dm : ldmResp.getDatingMethods().getDatingMethod()) {
 			ret.put(dm.getId(), new Peva2DatingMethod(dm.getName(), dm.getType().toString(), dm.getCamCode()));
 		}

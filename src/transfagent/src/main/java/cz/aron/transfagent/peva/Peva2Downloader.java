@@ -13,7 +13,6 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.domain.Property;
 import cz.aron.transfagent.repository.PropertyRepository;
@@ -26,7 +25,7 @@ public abstract class Peva2Downloader {
 
 	private final String searchAfterPropertyName;
 
-	protected final PEvA peva2;
+	protected final PEvA2Connection peva2;
 
 	protected final PropertyRepository propertyRepository;
 
@@ -38,7 +37,7 @@ public abstract class Peva2Downloader {
 	
 	private final boolean active;
 
-	public Peva2Downloader(String agendaName, PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+	public Peva2Downloader(String agendaName, PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
 			TransactionTemplate tt, StorageService storageService, boolean active) {
 		this.peva2 = peva2;
 		this.propertyRepository = propertyRepository;
@@ -46,8 +45,13 @@ public abstract class Peva2Downloader {
 		this.tt = tt;
 		this.storageService = storageService;
 		this.active = active;
-		updateAfterPropertyName = "PEVA2_" + agendaName + "_UPDATE_AFTER";
-		searchAfterPropertyName = "PEVA2_" + agendaName + "_SEARCH_AFTER";
+		if (peva2.isMainConnection()) {
+		    updateAfterPropertyName = "PEVA2_" + agendaName + "_UPDATE_AFTER";
+		    searchAfterPropertyName = "PEVA2_" + agendaName + "_SEARCH_AFTER";
+		} else {
+		    updateAfterPropertyName = "PEVA2_" + agendaName + "_" + peva2.getInstitutionId() + "_UPDATE_AFTER";
+            searchAfterPropertyName = "PEVA2_" + agendaName + "_" + peva2.getInstitutionId() + "_SEARCH_AFTER";
+		}
 	}
 
 	public void importDataInternal(ImportContext ic, Peva2CodeListProvider codeListProvider) {
@@ -140,6 +144,13 @@ public abstract class Peva2Downloader {
 		return active;
 	}
 	
+	/**
+	 * Return downloader name. Overwrite when name is instance dependent.
+	 * @return String
+	 */
+	protected String getName() {
+	    return this.getClass().getName();
+	}
 	
 	public static void main(String [] args) {
 		

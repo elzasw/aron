@@ -7,18 +7,18 @@ import javax.xml.ws.soap.SOAPFaultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cz.aron.peva2.wsdl.PEvA;
+import cz.aron.transfagent.peva.PEvA2Connection;
 import cz.aron.transfagent.peva.Peva2Constants;
 
 public abstract class CodeProvider<T> {
 	
 	private static final Logger log = LoggerFactory.getLogger(CodeProvider.class);
 
-	protected final PEvA peva2;
+	protected final PEvA2Connection peva2;
 
 	protected final Map<String, T> cache;
 
-	public CodeProvider(PEvA peva2, Map<String, T> cached) {
+	public CodeProvider(PEvA2Connection peva2, Map<String, T> cached) {
 		this.peva2 = peva2;
 		this.cache = cached;
 	}

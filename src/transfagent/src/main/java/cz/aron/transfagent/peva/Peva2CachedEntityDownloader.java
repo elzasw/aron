@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import cz.aron.peva2.wsdl.GeoObject;
 import cz.aron.peva2.wsdl.GetGeoObjectRequest;
-import cz.aron.peva2.wsdl.PEvA;
 
 @Service
 @ConditionalOnProperty(value = "peva2.url")
@@ -16,15 +15,15 @@ public class Peva2CachedEntityDownloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2CachedEntityDownloader.class);
 	
-	private final PEvA peva2;
+	private final PEvA2Connection peva2;
 	
 	private LRUMap<String,GeoObject> geoObjects = new LRUMap<>(1000);
 
-	public Peva2CachedEntityDownloader(PEvA peva2) {
+	public Peva2CachedEntityDownloader(PEvA2Connection peva2) {
 		super();
 		this.peva2 = peva2;						
 	}
-	
+
 	public synchronized void clearAll() {
 		geoObjects.clear();
 	}
@@ -35,7 +34,7 @@ public class Peva2CachedEntityDownloader {
 			return geoObject;
 		}		
 		var goReq = new GetGeoObjectRequest();
-		var goResp = peva2.getGeoObject(goReq);
+		var goResp = peva2.getPeva().getGeoObject(goReq);
 		if (goResp.getGeoObject()==null) {
 			log.error("Geo object not exist {}", id);
 			throw new IllegalStateException();

@@ -21,7 +21,6 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.peva2.wsdl.GetGeoObjectRequest;
 import cz.aron.peva2.wsdl.GetGeoObjectResponse;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.IdProjection;
@@ -39,7 +38,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2GeoEntityImporter.class);
 	
-	private final PEvA peva2;
+	private final PEvA2Connection peva2;
 	
 	private final StorageService storageService;
 	
@@ -55,7 +54,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 	
 	private final DatabaseDataProvider databaseDataProvider;
 
-	public Peva2GeoEntityImporter(PEvA peva2, StorageService storageService,
+	public Peva2GeoEntityImporter(PEvA2Connection peva2, StorageService storageService,
 			ArchivalEntityRepository archivalEntityRepository, ArchivalEntityService archivalEntityService,
 			Peva2CodeListProvider codeListProvider, ApTypeService apTypeService,
 			ConfigurationLoader configurationLoader, DatabaseDataProvider databaseDataProvider) {
@@ -136,7 +135,7 @@ public class Peva2GeoEntityImporter implements ArchivalEntityImporter {
 	private GetGeoObjectResponse downloadEntity(UUID uuid, Path tempDir) {		
 		var ggoReq = new GetGeoObjectRequest();
 		ggoReq.setId(uuid.toString());				
-		var ggoResp = peva2.getGeoObject(ggoReq);
+		var ggoResp = peva2.getPeva().getGeoObject(ggoReq);
 		try {
 			Peva2XmlReader.marshalGetGeoObjectResponse(ggoResp, tempDir.resolve(ImportPevaGeo.PREFIX_DASH+uuid+".xml"));
 		} catch (JAXBException e) {

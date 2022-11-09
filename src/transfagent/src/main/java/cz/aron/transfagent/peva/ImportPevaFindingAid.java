@@ -147,7 +147,7 @@ public class ImportPevaFindingAid implements FindingAidImporter {
             throw new IllegalStateException(e);
         } catch (PevaFundNotExist pfneEx) {        	
         	if (configPeva2.getFindingAidProperties().isImportMissingFund()) {
-        		createFundCommands(pfneEx);
+        		createFundCommands(pfneEx);        		
         	}        	
         	throw new IllegalStateException(pfneEx);
         }
@@ -370,7 +370,7 @@ public class ImportPevaFindingAid implements FindingAidImporter {
 	private void createFundCommands(PevaFundNotExist fne) {
     	Path commandsInputDir = storageService.getInputPath().resolve("commands");
 		for (var fundId : fne.getFundIds()) {
-    		var commandFile = commandsInputDir.resolve(Peva2ImportFunds.PREFIX_DASH+fundId);
+    		var commandFile = commandsInputDir.resolve(Peva2ImportFunds.createCommand(fne.getInstitutionUUID(), fundId));
     		if (!Files.isRegularFile(commandFile)) {
     			try {
     				Files.createFile(commandFile);

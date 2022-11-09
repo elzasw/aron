@@ -21,7 +21,6 @@ import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux.ApuValidator;
 import cz.aron.peva2.wsdl.GetOriginatorRequest;
 import cz.aron.peva2.wsdl.GetOriginatorResponse;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.IdProjection;
@@ -39,7 +38,7 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2EntityImporter.class);
 	
-	private final PEvA peva2;
+	private final PEvA2Connection peva2;
 	
 	private final StorageService storageService;
 	
@@ -55,7 +54,7 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	
 	private final DatabaseDataProvider databaseDataProvider;
 
-	public Peva2EntityImporter(PEvA peva2, StorageService storageService,
+	public Peva2EntityImporter(PEvA2Connection peva2, StorageService storageService,
 			ArchivalEntityRepository archivalEntityRepository, ArchivalEntityService archivalEntityService,
 			Peva2CodeListProvider codeListProvider, ApTypeService apTypeService,
 			ConfigurationLoader configurationLoader, DatabaseDataProvider databaseDataProvider) {
@@ -136,7 +135,7 @@ public class Peva2EntityImporter implements ArchivalEntityImporter {
 	private GetOriginatorResponse downloadEntity(UUID uuid, Path tempDir) {		
 		var goReq = new GetOriginatorRequest();
 		goReq.setId(uuid.toString());				
-		var goResp = peva2.getOriginator(goReq);
+		var goResp = peva2.getPeva().getOriginator(goReq);
 		try {
 			Peva2XmlReader.marshalGetOriginatorResponse(goResp, tempDir.resolve(ImportPevaOriginator.PREFIX_DASH+uuid+".xml"));
 		} catch (JAXBException e) {

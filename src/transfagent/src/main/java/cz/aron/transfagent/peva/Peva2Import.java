@@ -6,21 +6,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Service;
 
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
+import cz.aron.transfagent.config.ConfigPeva2InstitutionCredentials;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.ThreadStatus;
 import cz.aron.transfagent.service.importfromdir.ImportContext;
@@ -32,8 +33,6 @@ public class Peva2Import implements  SmartLifecycle {
 	private static final Logger log = LoggerFactory.getLogger(Peva2Import.class);
 
 	private final ConfigPeva2 config;
-
-	private final PEvA peva2;
 
 	private final List<Peva2Downloader> downloaders = new ArrayList<>();
 	
@@ -49,29 +48,54 @@ public class Peva2Import implements  SmartLifecycle {
 	
 	private long importInterval = 5000;
 
-	public Peva2Import(ConfigPeva2 config, PEvA peva2,
-			Peva2CodeListProvider codeListProvider, ApplicationContext applicationContext,
-			StorageService storageService) {
-		this.config = config;
-		this.peva2 = peva2;
-		this.codeListProvider = codeListProvider;
-		this.applicationContext = applicationContext;
-		this.storageService = storageService;
-		PEvA2Client.fillHeaders(peva2, config);		
-	}
+    public Peva2Import(ConfigPeva2 config,
+                       Peva2CodeListProvider codeListProvider, ApplicationContext applicationContext,
+                       StorageService storageService) {
+        this.config = config;
+        this.codeListProvider = codeListProvider;
+        this.applicationContext = applicationContext;
+        this.storageService = storageService;
+    }
 
 	@PostConstruct
 	void init() {
 		downloaders.add(applicationContext.getBean(Peva2ImportOriginators.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportGeo.class));
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAidAuthor.class));
+		createInstitutionDownloaders(Peva2ImportFindingAidAuthor.class);
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAidCopy.class));
+						
 		downloaders.add(applicationContext.getBean(Peva2ImportFunds.class));
+		createInstitutionDownloaders(Peva2ImportFunds.class);		
 		downloaders.add(applicationContext.getBean(Peva2ImportFindingAids.class));
+		createInstitutionDownloaders(Peva2ImportFindingAids.class);
+				
 		for (Peva2Downloader downloader : downloaders) {
-			log.info("Downloader {}, status={}", downloader.getClass(), downloader.isActive());
+			log.info("Downloader {}, status={}", downloader.getName(), downloader.isActive());
 		}
+		pevas.clear();
 	}
+	
+	private void createInstitutionDownloaders(Class<? extends Peva2Downloader> cls) {
+	    if (config.getInstitutions()!=null) {
+            for(ConfigPeva2InstitutionCredentials credentials: config.getInstitutions()) {
+                PEvA2Connection peva2 = getForInstitution(credentials);
+                downloaders.add(applicationContext.getBean(cls,peva2));                
+            }
+        }
+	}
+
+	private Map<String,PEvA2Connection> pevas = new HashMap<>();
+	
+    private PEvA2Connection getForInstitution(ConfigPeva2InstitutionCredentials credentials) {
+        PEvA2Connection peva2 = pevas.get(credentials.getInstitutionId());
+        if (peva2 != null) {
+            return peva2;
+        }
+        peva2 = (PEvA2Connection) applicationContext.getBean(PEvA2Client.PEVA2_INST_BEAN_NAME, config, credentials);
+        pevas.put(credentials.getInstitutionId(), peva2);
+        return peva2;
+    }
 
 	public void importData(ImportContext ic) {
 

@@ -12,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.GetNadSheetRequest;
@@ -23,24 +25,24 @@ import cz.aron.peva2.wsdl.ListNadSheetResponse;
 import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
 
-@Service
-@ConditionalOnProperty(value = "peva2.url")
 public class Peva2ImportFunds extends Peva2Downloader {
     
     private static final Logger log = LoggerFactory.getLogger(Peva2ImportFunds.class);
     
-    public static final String PREFIX_DASH = "pevafund-";
+    private static final String PREFIX_DASH = "pevafund-";
+    
+    private final String institutionPrefix;
 	
 	private LRUMap<String,String> fundUUIDToJaFa = null;
 
-	public Peva2ImportFunds(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+	public Peva2ImportFunds(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
 			TransactionTemplate tt, StorageService storageService, @Value("${peva2.importFund:false}") boolean active) {
 		super("FUND", peva2, propertyRepository, config, tt, storageService, active);
+		institutionPrefix = PREFIX_DASH + peva2.getInstitutionId() + "-";
 	}
    
 	@Override
@@ -53,7 +55,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 			lnsr.setSize(config.getBatchSize());
 			lnsr.setUpdatedAfter(updateAfter);
 			lnsr.setSearchAfter(searchAfter);
-			ListNadSheetResponse lnsResp = peva2.listNadSheet(lnsr);
+			ListNadSheetResponse lnsResp = peva2.getPeva().listNadSheet(lnsr);
 			log.info("Downloaded {} funds to update after {}",
 					lnsResp.getItems().getNadPrimarySheetOrNadSubsheet().size(), updateAfter);
 			searchAfter = lnsResp.getSearchAfter();
@@ -94,7 +96,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 		for (NadSheet nadSheetId : nadSheets) {			
 			var gnsReqMain = new GetNadSheetRequest();
 			gnsReqMain.setId(nadSheetId.getId());
-			var gnsRespMain = peva2.getNadSheet(gnsReqMain);									
+			var gnsRespMain = peva2.getPeva().getNadSheet(gnsReqMain);									
 			if (gnsRespMain.getNadPrimarySheet()!=null) {
 				NadPrimarySheet nps = gnsRespMain.getNadPrimarySheet();
 				InstitutionReference ir = nps.getInstitution();
@@ -118,7 +120,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				if (evidenceNumber==null) {
 					var gnsReqParent = new GetNadSheetRequest();
 					gnsReqParent.setId(parentUUID);
-					var gnsRespParent = peva2.getNadSheet(gnsReqParent);
+					var gnsRespParent = peva2.getPeva().getNadSheet(gnsReqParent);
 					evidenceNumber = gnsRespParent.getNadPrimarySheet().getEvidenceNumber();
 					fundUUIDToJaFa.put(gnsRespParent.getNadPrimarySheet().getId(), evidenceNumber);
 				}												
@@ -139,34 +141,75 @@ public class Peva2ImportFunds extends Peva2Downloader {
 		}
     }
 
-	@Override
-	protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {		
-		var fileName = path.getFileName().toString();
-		if (!fileName.startsWith(PREFIX_DASH)) {
-			// not my command
-			return false;
-		}
-		
-		var id = fileName.substring(PREFIX_DASH.length());		
-		var gnsReq = new GetNadSheetRequest();
-		gnsReq.setId(id);
-		var gnsResp = peva2.getNadSheet(gnsReq);
-		
-		NadSheet nadSheet = gnsResp.getNadPrimarySheet();
-		if (nadSheet==null) {
-			nadSheet = gnsResp.getNadSubsheet();
-		}
-		
-		fundUUIDToJaFa = new LRUMap<String,String>(10000);
-		try {
-			patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
-		} finally {
-			fundUUIDToJaFa = null;
-		}
-		return true;
-	}
+    @Override
+    protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
+        var fileName = path.getFileName().toString();
+        String id;
+        if (fileName.startsWith(institutionPrefix)) {
+            id = fileName.substring(institutionPrefix.length());
+        } else if (peva2.isMainConnection() && fileName.startsWith(PREFIX_DASH)) {
+            id = fileName.substring(PREFIX_DASH.length());
+        } else {
+            // not my command
+            return false;
+        }
+
+        var gnsReq = new GetNadSheetRequest();
+        gnsReq.setId(id);
+        var gnsResp = peva2.getPeva().getNadSheet(gnsReq);
+        NadSheet nadSheet = gnsResp.getNadPrimarySheet();
+        if (nadSheet == null) {
+            nadSheet = gnsResp.getNadSubsheet();
+        }
+        fundUUIDToJaFa = new LRUMap<String, String>(10000);
+        try {
+            patchFundBatch(Collections.singletonList(nadSheet), codeListProvider.getCodeLists());
+        } finally {
+            fundUUIDToJaFa = null;
+        }
+        return true;
+    }
+
+    @Override
+    protected String getName() {
+        return super.getName() + "-" + peva2.getInstitutionId();
+    }
     
+    protected static final String createCommand(String institutionId, String fundId) {
+        return PREFIX_DASH + institutionId + "-" + fundId;
+    }
     
-    
+    @Configuration
+    @ConditionalOnProperty(value = "peva2.url")
+    public static class Peva2ImportFundsConfig {
+        
+        private final PropertyRepository propertyRepository;
+        
+        private final ConfigPeva2 config;
+        
+        private final TransactionTemplate tt;
+        
+        private final StorageService storageService;
+        
+        private final boolean active;
+        
+        public Peva2ImportFundsConfig(PropertyRepository propertyRepository, ConfigPeva2 config,
+                                      TransactionTemplate tt, StorageService storageService,
+                                      @Value("${peva2.importFund:false}") boolean active) {
+            this.propertyRepository = propertyRepository;
+            this.config = config;
+            this.tt = tt;
+            this.storageService = storageService;
+            this.active = active;
+        }
+
+        @Bean
+        @Scope("prototype")
+        public Peva2ImportFunds importFunds(PEvA2Connection peva2) {
+            return new Peva2ImportFunds(peva2, propertyRepository, config, tt, storageService, active); 
+        }
+
+    }
+        
     
 }

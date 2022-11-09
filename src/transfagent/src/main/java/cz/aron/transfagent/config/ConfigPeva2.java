@@ -1,5 +1,7 @@
 package cz.aron.transfagent.config;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +32,8 @@ public class ConfigPeva2 {
     private ConfigPeva2FundProperties fundProperties;
     
     private ConfigPeva2FindingAidProperties findingAidProperties;
+    
+    private List<ConfigPeva2InstitutionCredentials> institutions;
     
     public ConfigPeva2() {
     	// default values
@@ -132,5 +136,13 @@ public class ConfigPeva2 {
 	public void setFindingAidProperties(ConfigPeva2FindingAidProperties findingAidProperties) {
 		this.findingAidProperties = findingAidProperties;
 	}
-	
+
+    public List<ConfigPeva2InstitutionCredentials> getInstitutions() {
+        return institutions;
+    }
+
+    public void setInstitutions(List<ConfigPeva2InstitutionCredentials> institutions) {
+        this.institutions = institutions;
+    }
+
 }

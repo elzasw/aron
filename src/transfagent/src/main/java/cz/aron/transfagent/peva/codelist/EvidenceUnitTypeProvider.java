@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory;
 
 import cz.aron.peva2.wsdl.GetMainEvidenceUnitTypeRequest;
 import cz.aron.peva2.wsdl.ListMainEvidenceUnitTypeRequest;
-import cz.aron.peva2.wsdl.PEvA;
+import cz.aron.transfagent.peva.PEvA2Connection;
 
 public class EvidenceUnitTypeProvider extends CodeProvider<Peva2EvidenceUnitType> {
 	
 	private static final Logger log = LoggerFactory.getLogger(EvidenceUnitTypeProvider.class);
 
-	public EvidenceUnitTypeProvider(PEvA peva2, Map<String, Peva2EvidenceUnitType> cached) {
+	public EvidenceUnitTypeProvider(PEvA2Connection peva2, Map<String, Peva2EvidenceUnitType> cached) {
 		super(peva2, cached);
 	}
 
@@ -22,7 +22,7 @@ public class EvidenceUnitTypeProvider extends CodeProvider<Peva2EvidenceUnitType
 	public Peva2EvidenceUnitType downloadItem(String id) {
 		var gmeutReq = new GetMainEvidenceUnitTypeRequest();
 		gmeutReq.setId(id);
-		var gmeutResp = peva2.getMainEvidenceUnitType(gmeutReq);
+		var gmeutResp = peva2.getPeva().getMainEvidenceUnitType(gmeutReq);
 		var meut = gmeutResp.getMainEvidenceUnitType();
 		if (meut.getPartialEvidenceUnitTypes() != null) {
 			// vysledkem muze byt vice hodnot, main evidence unit vratim jako vysledek,
@@ -35,11 +35,11 @@ public class EvidenceUnitTypeProvider extends CodeProvider<Peva2EvidenceUnitType
 		return new Peva2EvidenceUnitType(meut.getName(), meut.getId());
 	}
 
-	public static EvidenceUnitTypeProvider create(PEvA peva2) {
+	public static EvidenceUnitTypeProvider create(PEvA2Connection peva2) {
 		Map<String, Peva2EvidenceUnitType> ret = new HashMap<>();
 		var meutReq = new ListMainEvidenceUnitTypeRequest();
 		meutReq.setSize(100);
-		var meutResp = peva2.listMainEvidenceUnitType(meutReq);
+		var meutResp = peva2.getPeva().listMainEvidenceUnitType(meutReq);
 		for (var meut : meutResp.getMainEvidenceUnitTypes().getMainEvidenceUnitType()) {
 			ret.put(meut.getId(), new Peva2EvidenceUnitType(meut.getName(), null));
 			if (meut.getPartialEvidenceUnitTypes() != null) {

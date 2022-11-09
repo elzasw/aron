@@ -17,7 +17,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import cz.aron.peva2.wsdl.FindingAidCopy;
 import cz.aron.peva2.wsdl.GetFindingAidCopyResponse;
 import cz.aron.peva2.wsdl.ListFindingAidCopyRequest;
-import cz.aron.peva2.wsdl.PEvA;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
 import cz.aron.transfagent.service.StorageService;
@@ -28,7 +27,7 @@ public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 	
 	private static final Logger log = LoggerFactory.getLogger(Peva2ImportFindingAidCopy.class);
 	
-	public Peva2ImportFindingAidCopy(PEvA peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
+	public Peva2ImportFindingAidCopy(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
 			TransactionTemplate tt, StorageService storageService, @Value("${peva2.importFindingAidCopy:false}") boolean active) {
 		super("FINDINGAID_COPY", peva2, propertyRepository, config, tt, storageService, active);	
 	}
@@ -43,7 +42,7 @@ public class Peva2ImportFindingAidCopy extends Peva2Downloader {
 			lfacReq.setSize(config.getBatchSize());
 			lfacReq.setUpdatedAfter(updateAfter);
 			lfacReq.setSearchAfter(searchAfter);
-			var lfacResp = peva2.listFindingAidCopy(lfacReq);
+			var lfacResp = peva2.getPeva().listFindingAidCopy(lfacReq);
 			searchAfter = lfacResp.getSearchAfter();
 			long count = lfacResp.getFindingAidCopies().getFindingAidCopy().size();
 			log.info("Downloaded {} finding aid copies to update after {}", count, updateAfter);
