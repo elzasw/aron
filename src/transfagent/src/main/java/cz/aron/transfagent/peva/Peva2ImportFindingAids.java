@@ -29,6 +29,7 @@ import cz.aron.peva2.wsdl.GetFindingAidResponse;
 import cz.aron.peva2.wsdl.ListFindingAidRequest;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
+import cz.aron.transfagent.service.AttachmentSource;
 import cz.aron.transfagent.service.StorageService;
 
 public class Peva2ImportFindingAids extends Peva2Downloader {
@@ -38,12 +39,15 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 	private static final String PREFIX_DASH = "pevafa-";
 	
 	private final String institutionPrefix;
+	
+	private final AttachmentSource attachmentSource;
 
     public Peva2ImportFindingAids(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-                                  TransactionTemplate tt, StorageService storageService,
-                                  @Value("${peva2.importFindingAid:false}") boolean active) {
+                                  TransactionTemplate tt, StorageService storageService, AttachmentSource attachmentSource,
+                                  boolean active) {
         super("FINDINGAID", peva2, propertyRepository, config, tt, storageService, active);
         institutionPrefix = PREFIX_DASH + peva2.getInstitutionId() + "-";
+        this.attachmentSource = attachmentSource;
     }
 
 	@Override
@@ -113,11 +117,13 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 			try {
 				Files.createDirectories(faDir);
 				var attachmentFiles = attachments.get(findingAid.getEvidenceNumber());
+				//TODO refactor as attachmentSource
 				if (attachmentFiles != null) {
 					for (var attachmentFile : attachmentFiles) {
 						Files.copy(attachmentFile, faDir.resolve(attachmentFile.getFileName()));
 					}
 				}
+				copyAttachments(findingAid.getInstitution().getExternalId(), findingAid.getEvidenceNumber(), faDir);
                 Path name = faDir.resolve(PREFIX_DASH + id + ".xml");
                 Peva2XmlReader.marshalGetFindingAidResponse(gfar, name);
 			} catch (Exception e) {
@@ -168,6 +174,17 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 			return ret;
 		}
 	}
+	
+    private void copyAttachments(String institutionCode, String findingAidCode, Path findingAidDir)
+            throws IOException {
+        if (attachmentSource == null) {
+            return;
+        }
+        var attachments = attachmentSource.getFindingAidAttachments(institutionCode, findingAidCode);
+        for (var attachment : attachments) {
+            Files.copy(attachment.getPath(), findingAidDir.resolve(attachment.getName()));
+        }
+    }
 
     @Override
     protected boolean processCommand(Path path, Peva2CodeListProvider codeListProvider) {
@@ -206,23 +223,28 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
         private final TransactionTemplate tt;
 
         private final StorageService storageService;
+        
+        private final AttachmentSource attachmentSource;
 
         private final boolean active;
 
         public Peva2ImportFindingAidsConfig(PropertyRepository propertyRepository, ConfigPeva2 config,
                                             TransactionTemplate tt, StorageService storageService,
+                                            AttachmentSource attachmentSource,
                                             @Value("${peva2.importFindingAid:false}") boolean active) {
             this.propertyRepository = propertyRepository;
             this.config = config;
             this.tt = tt;
             this.storageService = storageService;
+            this.attachmentSource = attachmentSource;
             this.active = active;
         }
 
         @Bean
         @Scope("prototype")
         public Peva2ImportFindingAids importFindingAids(PEvA2Connection peva2) {
-            return new Peva2ImportFindingAids(peva2, propertyRepository, config, tt, storageService, active);
+            return new Peva2ImportFindingAids(peva2, propertyRepository, config, tt, storageService, attachmentSource,
+                    active);
         }
 
     }
