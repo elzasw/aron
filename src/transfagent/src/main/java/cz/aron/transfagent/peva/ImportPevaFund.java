@@ -370,6 +370,31 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 				log.error("Fund, fail to import funding aid attachment, fund={}",fund.getUuid(),e);
 				throw new UncheckedIOException(e);
 			}
+		} else {
+		    //TODO mix all together
+		    // read own attachment from dir
+		    // get root apu
+	        var apu = apuSourceBuilder.getMainApu();	        
+	        try (var stream = Files.list(targetDir)) {
+	            stream.forEach(f -> {
+	                if (Files.isRegularFile(f) && !f.getFileName().toString().startsWith(PREFIX)
+	                        && !"protokol.txt".equals(f.getFileName().toString())
+	                        && !StorageService.APUSRC_XML.equals(f.getFileName().toString())) {
+
+	                    String mimetype = null;
+	                    try {
+	                        mimetype = this.storageService.detectMimetype(f);
+	                    } catch (IOException e) {
+	                        throw new UncheckedIOException(e);
+	                    }
+	                    apuSourceBuilder.addAttachment(apu, f.getFileName().toString(), mimetype);
+	                    ret.add(f);
+	                }
+	            });
+	        } catch (IOException e) {
+	            log.error("Fail to read attachments from directory {}", targetDir);
+	            throw new UncheckedIOException(e);
+	        }		    
 		}
 		return ret;
 	}

@@ -30,13 +30,16 @@ public class FundService {
 	private final FundRepository fundRepository;
 
 	private final CoreQueueRepository coreQueueRepository;
+	
+	private final AttachmentService attachmentService;
 
 	public FundService(ApuSourceService apuSourceService, ApuSourceRepository apuSourceRepository,
-			FundRepository fundRepository, CoreQueueRepository coreQueueRepository) {
+			FundRepository fundRepository, CoreQueueRepository coreQueueRepository, AttachmentService attachmentService) {
 		this.apuSourceService = apuSourceService;
 		this.apuSourceRepository = apuSourceRepository;
 		this.fundRepository = fundRepository;
 		this.coreQueueRepository = coreQueueRepository;
+		this.attachmentService = attachmentService;
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package cz.aron.transfagent.peva;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.GetNadSheetRequest;
@@ -27,6 +29,7 @@ import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
 import cz.aron.transfagent.config.ConfigPeva2;
 import cz.aron.transfagent.repository.PropertyRepository;
+import cz.aron.transfagent.service.AttachmentSource;
 import cz.aron.transfagent.service.StorageService;
 
 public class Peva2ImportFunds extends Peva2Downloader {
@@ -36,12 +39,15 @@ public class Peva2ImportFunds extends Peva2Downloader {
     private static final String PREFIX_DASH = "pevafund-";
     
     private final String institutionPrefix;
+    
+    private final AttachmentSource attachmentSource;
 	
 	private LRUMap<String,String> fundUUIDToJaFa = null;
 
 	public Peva2ImportFunds(PEvA2Connection peva2, PropertyRepository propertyRepository, ConfigPeva2 config,
-			TransactionTemplate tt, StorageService storageService, @Value("${peva2.importFund:false}") boolean active) {
+			TransactionTemplate tt, StorageService storageService, AttachmentSource attachmentSource, boolean active) {
 		super("FUND", peva2, propertyRepository, config, tt, storageService, active);
+		this.attachmentSource = attachmentSource;
 		institutionPrefix = PREFIX_DASH + peva2.getInstitutionId() + "-";
 	}
    
@@ -96,7 +102,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 		for (NadSheet nadSheetId : nadSheets) {			
 			var gnsReqMain = new GetNadSheetRequest();
 			gnsReqMain.setId(nadSheetId.getId());
-			var gnsRespMain = peva2.getPeva().getNadSheet(gnsReqMain);									
+			var gnsRespMain = peva2.getPeva().getNadSheet(gnsReqMain);
 			if (gnsRespMain.getNadPrimarySheet()!=null) {
 				NadPrimarySheet nps = gnsRespMain.getNadPrimarySheet();
 				InstitutionReference ir = nps.getInstitution();
@@ -104,6 +110,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				Path fundDir = fundsInputDir.resolve(PREFIX_DASH+fundId);			
 				try {
 					Files.createDirectories(fundDir);
+					copyAttachments(ir.getExternalId(),nps.getEvidenceNumber(),null,fundDir);
 					Path name = fundDir.resolve(PREFIX_DASH+fundId+".xml");					
 					GetNadSheetResponse gnsr = new GetNadSheetResponse();
 					gnsr.setNadPrimarySheet(nps);					
@@ -129,6 +136,7 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				Path fundDir = fundsInputDir.resolve(PREFIX_DASH+fundId);			
 				try {
 					Files.createDirectories(fundDir);
+					copyAttachments(ir.getExternalId(),evidenceNumber,nss.getNumber(),fundDir);
 					Path name = fundDir.resolve(PREFIX_DASH+fundId+".xml");					
 					GetNadSheetResponse gnsr = new GetNadSheetResponse();
 					gnsr.setNadSubsheet(nss);					
@@ -139,6 +147,17 @@ public class Peva2ImportFunds extends Peva2Downloader {
 				}
 			}
 		}
+    }
+    
+    private void copyAttachments(String institutionCode, String fundCode, Integer subFundCode, Path fundDir)
+            throws IOException {
+        if (attachmentSource == null) {
+            return;
+        }
+        var attachments = attachmentSource.getFundAttachments(institutionCode, fundCode, subFundCode);
+        for (var attachment : attachments) {
+            Files.copy(attachment.getPath(), fundDir.resolve(attachment.getName()));
+        }
     }
 
     @Override
@@ -191,22 +210,26 @@ public class Peva2ImportFunds extends Peva2Downloader {
         
         private final StorageService storageService;
         
+        private final AttachmentSource attachmentSource;
+        
         private final boolean active;
         
         public Peva2ImportFundsConfig(PropertyRepository propertyRepository, ConfigPeva2 config,
                                       TransactionTemplate tt, StorageService storageService,
+                                      @Nullable AttachmentSource attachmentSource,
                                       @Value("${peva2.importFund:false}") boolean active) {
             this.propertyRepository = propertyRepository;
             this.config = config;
             this.tt = tt;
             this.storageService = storageService;
+            this.attachmentSource = attachmentSource;
             this.active = active;
         }
 
         @Bean
         @Scope("prototype")
         public Peva2ImportFunds importFunds(PEvA2Connection peva2) {
-            return new Peva2ImportFunds(peva2, propertyRepository, config, tt, storageService, active); 
+            return new Peva2ImportFunds(peva2, propertyRepository, config, tt, storageService, attachmentSource, active); 
         }
 
     }
