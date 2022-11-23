@@ -132,12 +132,12 @@ export const EvidenceSidebar: React.FC<SidebarProps> = ({
                 <p>
                   {formatMessage({ id: Message.TRY_REFINING_YOUR_SEARCH_AREA })}
                 </p>
-                {searchOptions.map(({ path, name, filters }) => (
+                {searchOptions.map(({ path, name, filters: searchOptionFilters }) => (
                   <Button
                     key={name}
                     contained={true}
                     label={name}
-                    onClick={() => navigateTo(path, 1, 10, query, filters)}
+                    onClick={() => navigateTo(path, 1, 10, query, [...filters, ...(searchOptionFilters || [])])} // doplneni filtru ze searchOptions o prave pouzivane filtry
                     className={classNames(
                       classes.sidebarButton,
                       spacingClasses.marginBottom
