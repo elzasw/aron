@@ -467,9 +467,10 @@ export const getFile = async (id?: string, referencedFile?: boolean) => {
 export const downloadFile = async (
   id: string,
   filename?: string,
-  blank?: boolean
+  referencedFile?: boolean,
+  blank?: boolean,
 ) => {
-  const { blob, name } = await getFile(id);
+  const { blob, name } = await getFile(id, referencedFile);
 
   if (blob) {
     downloadFileFromUrl(URL.createObjectURL(blob), name || filename, blank);

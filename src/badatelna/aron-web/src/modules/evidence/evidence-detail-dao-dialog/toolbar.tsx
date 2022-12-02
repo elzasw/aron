@@ -59,7 +59,8 @@ export function Toolbar({
 
   const [loading, setLoading] = useState(false);
 
-  const fileDownload = get(getExistingFile(file, true), 'file.id');
+  const isReferencedFile = !!file?.published?.name;
+  const fileDownload = get(getExistingFile(file, true), isReferencedFile ? 'id' : 'file.id');
 
   return (
     <div className={classes.daoDialogToolbar}>
@@ -138,7 +139,8 @@ export function Toolbar({
                 setLoading(true);
                 const ok = await downloadFile(
                   fileDownload,
-                  `dao_${item.id}.jpg`
+                  `dao_${item.id}.jpg`,
+                  isReferencedFile,
                 );
                 if (!ok) {
                   showSnackbar(
