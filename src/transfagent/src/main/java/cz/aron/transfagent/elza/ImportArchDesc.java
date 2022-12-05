@@ -221,7 +221,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		if (fi.getC() != null) {
 			fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
-		} else if (fi.getNum() != null) {
+		}
+		if (fundApuUuid==null&&fi.getNum() != null) {
 			fundId = fi.getNum().intValue();
 			fundApuUuid = dataProvider.getFundApu(institutionCode,
 					ArchiveFundId.createJaFaId(institutionCode, fi.getNum().toString(), null));
