@@ -18,14 +18,16 @@ public abstract class ElzaTypes {
     public static final String NM_SUP_GEN = "NM_SUP_GEN";
     public static final String NM_SUP_CHRO = "NM_SUP_CHRO";
     public static final String NM_SUP_GEO = "NM_SUP_GEO";
+    public static final String NM_SUP_DIFF = "NM_SUP_DIFF";
+    public static final String NM_SUP_PRIV = "NM_SUP_PRIV";
 
     public static final String NM_TYPE = "NM_TYPE";
     public static final String NT_ACRONYM = "NT_ACRONYM";
 
     public static final String NM_SUPS[] = {
             NM_SUP_GEN, NM_SUP_CHRO, NM_SUP_GEO
-    };
-
+    };    
+    
     public static final String IDN_TYPE = "IDN_TYPE";
     public static final String IDN_VALUE = "IDN_VALUE";
 

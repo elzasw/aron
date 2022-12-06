@@ -158,7 +158,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
 	
 	private void importEntityTrans(TransactionStatus t, final Path tmpDir, final ArchivalEntity ae) {
 		ApuSourceBuilder apuSourceBuilder;
-		final var importAp = new ImportAp();
+		final var importAp = new ImportAp(apTypeService, new ElzaNameBuilder(apTypeService));
 		Path dataDir;
 
 		boolean deleteTmpDirectory = true;
@@ -620,7 +620,7 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
         }
 
 		ApuSourceBuilder apuSourceBuilder;
-		final var importAp = new ImportAp();
+		final var importAp = new ImportAp(apTypeService, new ElzaNameBuilder(apTypeService));
 		try {
 			apuSourceBuilder = importAp.importAp(apuDir.resolve("ap.xml"), archEntity.getUuid(), databaseDataProvider);
 			apuSourceBuilder.setUuid(apuSource.getUuid());

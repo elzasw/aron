@@ -46,7 +46,9 @@ public class ImportAp implements EdxItemCovertContext {
 
     ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 
-    static ApTypeService apTypeService = new ApTypeService();
+    private final ApTypeService apTypeService;
+    
+    private final ElzaNameBuilder nameBuilder;
 
     private ContextDataProvider dataProvider;
 
@@ -67,7 +69,9 @@ public class ImportAp implements EdxItemCovertContext {
 
     private Apu apu;
 
-    public ImportAp() {
+    public ImportAp(ApTypeService apTypeService, ElzaNameBuilder nameBuilder) {
+        this.apTypeService = apTypeService;
+        this.nameBuilder = nameBuilder;
     }
 
     public UUID getApUuid() {
@@ -83,8 +87,10 @@ public class ImportAp implements EdxItemCovertContext {
     }
 
     public static void main(String[] args) {
-        Path inputFile = Path.of(args[0]);
-        ImportAp iap = new ImportAp();
+        Path inputFile = Path.of(args[0]);        
+        ApTypeService apTypeService = new ApTypeService();
+        ElzaNameBuilder nameBuilder = new ElzaNameBuilder(apTypeService);        
+        ImportAp iap = new ImportAp(apTypeService, nameBuilder);
         try {
             ApuSourceBuilder apusrcBuilder = iap.importAp(inputFile, args[1]);
             Path ouputPath = Paths.get(args[2]);
@@ -526,14 +532,13 @@ public class ImportAp implements EdxItemCovertContext {
     }
 
     private void importName(Apu apu, Fragment frg) {
-		String fullName = ElzaXmlReader.getFullName(frg);
-		// add name
-		if(apu.getName()==null) {
-			apu.setName(fullName);
-		}
-
-		apusBuilder.addName(apu, fullName);
-	}
+        String fullName = nameBuilder.createFullName(frg, entityClass);
+        // add name
+        if (apu.getName() == null) {
+            apu.setName(fullName);
+        }
+        apusBuilder.addName(apu, fullName);
+    }
 
 	public Integer getParentElzaId() {
 		return parentElzaId;

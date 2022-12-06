@@ -45,12 +45,12 @@ import cz.tacr.elza.schema.v2.StructuredObject;
 
 public class ElzaXmlReader {
 	
-	static Logger log = LoggerFactory.getLogger(ElzaXmlReader.class);
+	private static Logger log = LoggerFactory.getLogger(ElzaXmlReader.class);
 
-	static JAXBContext jaxbContext;
-	static Schema schemaElza;
+	private static JAXBContext jaxbContext;
+	private static Schema schemaElza;
 	
-	static ObjectFactory OBJECT_FACTORY = new ObjectFactory();
+	private static ObjectFactory OBJECT_FACTORY = new ObjectFactory();
 
 	static {
 		try {
@@ -65,13 +65,13 @@ public class ElzaXmlReader {
 		}
 	}
 
-	Map<String, AccessPoint> apMap = null;
+	private Map<String, AccessPoint> apMap = null;
 	
-	Map<String, StructuredObject> soMap = null;
+	private Map<String, StructuredObject> soMap = null;
 
-	final ElzaDataExchange edx;
+	private final ElzaDataExchange edx;
 
-    public ElzaXmlReader(final ElzaDataExchange edx) {
+    public ElzaXmlReader(ElzaDataExchange edx) {
         this.edx = edx;
     }
 
@@ -234,8 +234,10 @@ public class ElzaXmlReader {
 		return null;
 	}
 	
-	
-
+	/**
+	 * Use ElzaNameBuilder
+	 */
+	@Deprecated
 	public static String getFullName(Fragment frg) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getStringType(frg, ElzaTypes.NM_MAIN));
