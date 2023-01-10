@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.lang.Nullable;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import cz.aron.peva2.wsdl.FindingAid;
@@ -230,7 +231,7 @@ public class Peva2ImportFindingAids extends Peva2Downloader {
 
         public Peva2ImportFindingAidsConfig(PropertyRepository propertyRepository, ConfigPeva2 config,
                                             TransactionTemplate tt, StorageService storageService,
-                                            AttachmentSource attachmentSource,
+                                            @Nullable AttachmentSource attachmentSource,
                                             @Value("${peva2.importFindingAid:false}") boolean active) {
             this.propertyRepository = propertyRepository;
             this.config = config;
