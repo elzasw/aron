@@ -16,6 +16,8 @@ public class ConfigElza {
     private String password;
 
     private boolean soapLogging;
+    
+    private int maxChildElements = 0;
 
     public boolean isDisabled() {
         return disabled;
@@ -55,6 +57,14 @@ public class ConfigElza {
 
     public void setSoapLogging(boolean soapLogging) {
         this.soapLogging = soapLogging;
+    }
+
+    public int getMaxChildElements() {
+        return maxChildElements;
+    }
+
+    public void setMaxChildElements(int maxChildElements) {
+        this.maxChildElements = maxChildElements;
     }
 
 }

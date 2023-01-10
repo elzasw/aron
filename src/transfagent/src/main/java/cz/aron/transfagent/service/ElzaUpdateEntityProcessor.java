@@ -43,9 +43,11 @@ public class ElzaUpdateEntityProcessor implements ImportProcessor {
 
     private final PropertyRepository propertyRepository;
     
-    private final TransactionTemplate transactionTemplate;    
+    private final TransactionTemplate transactionTemplate;
     
-    static public final String ELZA_LAST_TRANSACTION = "ELZA_LAST_TRANSACTION"; 
+    private long lastUpdate = 0;
+    
+    public static final String ELZA_LAST_TRANSACTION = "ELZA_LAST_TRANSACTION"; 
 
     public ElzaUpdateEntityProcessor(final ElzaExportService elzaExportService, 
                                      final FileImportService importService,
@@ -79,9 +81,15 @@ public class ElzaUpdateEntityProcessor implements ImportProcessor {
             log.debug("Elza is disabled");
             return;
         }
+        if (System.currentTimeMillis()-lastUpdate<60*60*1000l) {
+            // update jednou za hodinu
+            return;
+        }
         log.debug("Checking Elza updates");
         
         this.transactionTemplate.executeWithoutResult(ts -> importDataTrans(ts, ic));
+        
+        lastUpdate = System.currentTimeMillis();
         
         log.debug("Elza updates check finished");
     }
