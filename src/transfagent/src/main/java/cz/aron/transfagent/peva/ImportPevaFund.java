@@ -7,6 +7,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -19,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -32,6 +36,7 @@ import cz.aron.transfagent.config.ConfigurationLoader;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.ArchDesc;
 import cz.aron.transfagent.domain.Fund;
+import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundIgnored;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundProvider;
 import cz.aron.transfagent.repository.ArchDescRepository;
@@ -39,10 +44,15 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ArchivalEntityService;
 import cz.aron.transfagent.service.AttachmentService;
+import cz.aron.transfagent.service.DaoFileStore3Service;
+import cz.aron.transfagent.service.DaoImportService;
+import cz.aron.transfagent.service.DaoImportService.DaoSource;
+import cz.aron.transfagent.service.DaoImportService.DaoSourceRef;
 import cz.aron.transfagent.service.FundService;
 import cz.aron.transfagent.service.StorageService;
 import cz.aron.transfagent.service.importfromdir.ImportFundService.FundImporter;
 import cz.aron.transfagent.service.importfromdir.ReimportProcessor;
+import cz.aron.transfagent.transformation.CoreTypes;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -80,13 +90,18 @@ public class ImportPevaFund implements FundImporter, FundProvider {
     private final ArchivalEntityService archivalEntityService;
     
     private final AttachmentService attachmentService;
+    
+    private final DaoImportService daoImportService;
+    
+    private final DaoFileStore3Service daoFileStore3Service;
 
 	public ImportPevaFund(FundRepository fundRepository, InstitutionRepository institutionRepository,
 			DatabaseDataProvider databaseDataProvider, ConfigurationLoader configurationLoader, ConfigPeva2 configPeva2,
 			FundService fundService, StorageService storageService, TransactionTemplate tt,
 			Peva2CodeListDownloader codeListDownloader, Peva2CachedEntityDownloader entityDownloader,
 			ArchivalEntityService archivalEntityService, AttachmentService attachmentService,
-			ArchDescRepository archDescRepository) {
+			ArchDescRepository archDescRepository, DaoImportService daoImportService,
+			@Nullable DaoFileStore3Service daoFileStore3Service) {
 		super();
 		this.fundRepository = fundRepository;
 		this.institutionRepository = institutionRepository;
@@ -101,6 +116,8 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		this.archivalEntityService = archivalEntityService;
 		this.attachmentService = attachmentService;
 		this.archDescRepository = archDescRepository;
+		this.daoImportService = daoImportService;
+		this.daoFileStore3Service = daoFileStore3Service;
 	}
     
 	@Override
@@ -189,6 +206,8 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 			log.error("Fail to import fund, institution not exist, path={}, institution={}", fundXml, institutionCode);
             throw new IllegalStateException("The entry Institution code={" + institutionCode + "} must exist.");
         }
+        
+        var daos = addDaos(apusrcBuilder, ifi.getInstitutionCode(), ifi.getNadNumber());
 
         try (var fos = Files.newOutputStream(dir.resolve(StorageService.APUSRC_XML))) {
             apusrcBuilder.build(fos, new ApuValidator(configurationLoader.getConfig()));
@@ -231,6 +250,9 @@ public class ImportPevaFund implements FundImporter, FundProvider {
             var geoUuids = ifi.getGeos().stream().map(id->UUID.fromString(id)).collect(Collectors.toList());
             archivalEntityService.registerAccessibleEntities(geoUuids, ImportPevaGeo.ENTITY_CLASS, fnd.getApuSource());
             attachmentService.updateAttachments(fnd.getApuSource(), apusrcBuilder, attachments);
+            if (daoFileStore3Service!=null) {
+                daoImportService.updateDaos(fnd.getApuSource(), daos);
+            }
         });
         return true;
     }
@@ -288,6 +310,8 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 
 			});
 
+			var daos = addDaos(apuSourceBuilder, ifi.getInstitutionCode(), ifi.getNadNumber());
+			
 			// compare original apusrc.xml and newly generated
 			var apuSrcXmlPath = apuPath.resolve(StorageService.APUSRC_XML);			
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -307,6 +331,9 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 					archivalEntityService.registerAccessibleEntities(uuids, ImportPevaOriginator.ENTITY_CLASS,
 							fund.getApuSource());
 					attachmentService.updateAttachments(apuSource, apuSourceBuilder, attachments);
+					if (daoFileStore3Service!=null) {
+					    daoImportService.updateDaos(apuSource,daos);
+					}
 				}, () -> {
 					log.error("Fund not exist id={}",fund.getId());
 					throw new IllegalStateException();
@@ -399,6 +426,23 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		return ret;
 	}
 
+    private Collection<DaoSource> addDaos(ApuSourceBuilder apuSourceBuilder, String archiveCode, String fundCode) {
+        if (daoFileStore3Service != null) {
+            var handle = daoFileStore3Service.getFundDaoHandle(archiveCode, fundCode, null);
+            if (handle != null) {
+                var mainUUID = UUID.fromString(apuSourceBuilder.getMainApu().getUuid());
+                var daoRefs = new HashSet<DaoSourceRef>();                
+                daoRefs.add(new DaoSourceRef(mainUUID,handle));                
+                var daoSource = new DaoSource(daoFileStore3Service.getName(),daoRefs);
+                ApuSourceBuilder.addDao(apuSourceBuilder.getMainApu(), mainUUID);
+                var part = ApuSourceBuilder.getFirstPart(apuSourceBuilder.getMainApu(), CoreTypes.PT_FUND_INFO);
+                ApuSourceBuilder.addEnum(part, "DIGITAL", "Ano", false);
+                return Collections.singletonList(daoSource);
+            }
+        }
+        return Collections.emptyList();
+    }
+
 	private UUID getArchDescUUID(Fund fund) {
 		ArchDesc archDesc = null;
 		if (fund != null) {
@@ -424,4 +468,22 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 		return null;
 	}
 
+	
+	private List<DaoSource> getDaoSources(ImportArchDesc iad) {
+        var daoSources = new ArrayList<DaoSource>();
+        iad.getDaoRefs().forEach((s, r) -> {
+            switch (s) {
+            case "dspace":
+            case "file":
+            case "file2":
+                daoSources.add(new DaoSource(s,
+                        r.stream().map(x -> new DaoSourceRef(x.getUuid(), x.getHandle())).collect(Collectors.toSet())));
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown dao source " + s);
+            }
+        });
+        return daoSources;
+    }
+	
 }

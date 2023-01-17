@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 public class AttachmentFileStoreService implements AttachmentSource {
 
     private final Path attachmentsDir;
+    
+    private final boolean ignoreImages = true;
 
     public AttachmentFileStoreService(@Value("${attachmentstore.path}") Path attachmentsDir) {
         this.attachmentsDir = attachmentsDir;
@@ -40,8 +42,12 @@ public class AttachmentFileStoreService implements AttachmentSource {
             return Collections.emptyList();
         }
         try (var stream = Files.list(path)) {
-            return stream.filter(p -> !Files.isDirectory(p)).map(p -> new AttachmentDesc(p, p.getFileName()
-                    .toString())).collect(Collectors.toList());
+            return stream.filter(p -> !Files.isDirectory(p) && (!ignoreImages || !DaoFileStore3Service.isImage(p))).map(
+                                                                                                                        p -> new AttachmentDesc(
+                                                                                                                                p,
+                                                                                                                                p.getFileName()
+                                                                                                                                        .toString()))
+                    .collect(Collectors.toList());
         }
     }
 

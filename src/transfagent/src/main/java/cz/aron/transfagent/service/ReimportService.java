@@ -61,15 +61,17 @@ public class ReimportService implements ImportProcessor {
 			}
 			apuSourceLabel: for (var apuSource : reimportRequests) {
 				log.debug("Reimporting apuSource: {}", apuSource.getId());
+				Result result = null;
 				for (var proc : processors) {
-					var result = proc.reimport(apuSource);
-					if (result == Result.REIMPORTED || result == Result.NOCHANGES || result == Result.UNSUPPORTED ) {
-						log.info("Reimported apuSource: id={}, uuid={}, status={}", apuSource.getId(), apuSource.getUuid(), result);						
+					result = proc.reimport(apuSource);
+					if (result == Result.REIMPORTED || result == Result.NOCHANGES) {
+						log.info("Reimported apuSource: id={}, uuid={}, status={}", apuSource.getId(), apuSource.getUuid(), result);
+						boolean send = result == Result.REIMPORTED; 
 						transactionTemplate.executeWithoutResult(t->{
 							apuSource.setReimport(false);
 							apuSource.setDateImported(ZonedDateTime.now());
 							apuSourceRepository.save(apuSource);
-							if (result == Result.REIMPORTED) {
+							if (send) {
 								// send to Core
 								CoreQueue cq = new CoreQueue();
 								cq.setApuSource(apuSource);
@@ -80,8 +82,19 @@ public class ReimportService implements ImportProcessor {
 					} else if (result == Result.FAILED) {
 						log.error("Reimport failed, id={}, uuid={}",apuSource.getId(), apuSource.getUuid());
 						break;
+					} else if (result==Result.UNSUPPORTED) {
+					    // ignore
 					}
 				}
+
+				if (result==Result.UNSUPPORTED) {
+				    // some processor exist and all processors return UNSUPPORTED
+				    transactionTemplate.executeWithoutResult(t->{
+				        apuSource.setReimport(false);
+				        apuSource.setDateImported(ZonedDateTime.now());
+				        apuSourceRepository.save(apuSource);                    
+				    });
+				}				
 				log.error("Item cannot be reimported: id={}, uuid={}", apuSource.getId(), apuSource.getUuid());
 				ic.setFailed(true);
 				break;

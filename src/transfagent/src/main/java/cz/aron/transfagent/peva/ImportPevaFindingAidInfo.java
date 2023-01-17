@@ -39,6 +39,8 @@ public class ImportPevaFindingAidInfo {
 	private final ConfigPeva2FindingAidProperties findingAidProperties;
 
 	private String institutionCode;
+	
+	private String findingAidCode;
 
 	private List<UUID> fundUUIDs = new ArrayList<>();
 	
@@ -95,6 +97,7 @@ public class ImportPevaFindingAidInfo {
 		// add info part
 		Part partInfo = ApuSourceBuilder.addPart(apu, CoreTypes.PT_FINDINGAID_INFO);
 		ApuSourceBuilder.addString(partInfo, CoreTypes.FINDINGAID_ID, findingAid.getEvidenceNumber());
+		findingAidCode = findingAid.getEvidenceNumber();
 		
 		/**
 		var releaseDatePlace = ead3XmlReader.getReleaseDatePlace();
@@ -233,6 +236,10 @@ public class ImportPevaFindingAidInfo {
 
 	public String getInstitutionCode() {
 		return institutionCode;
+	}
+	
+	public String getFindingAidCode() {
+	    return findingAidCode;
 	}
 	
 	public List<UUID> getFundUUIDs() {

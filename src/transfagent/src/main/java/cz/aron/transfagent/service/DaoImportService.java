@@ -276,9 +276,18 @@ public class DaoImportService implements ImportProcessor  {
 	
 	    
     public interface DaoImporter {
-    	
+
+        /**
+         * Nazev importeru, zapisuje se do databaze. Nazev se pouziva pri aktualizaci
+         * @return
+         */
     	public String getName();
     	
+    	/**
+    	 * Import dao do pripraveneho adresare.
+    	 * @param dao zaznam z databaze s pozadavkem na import. Obsahuje handle nebo jinou identifikaci dao,
+    	 * @param daoDir pracovni adresar, do ktereho se maji vygenerovat data k odeslani do AronCore
+    	 */
     	public void importDaoFile(Dao dao, Path daoDir);    		
     	
     }

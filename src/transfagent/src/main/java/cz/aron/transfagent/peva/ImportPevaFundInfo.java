@@ -63,6 +63,8 @@ public class ImportPevaFundInfo {
     
     private String institutionCode;
     
+    private String nadNumber;
+    
     private UUID archDescRoot;
     
     private final List<String> originators = new ArrayList<>();
@@ -197,8 +199,10 @@ public class ImportPevaFundInfo {
 		if (StringUtils.isNotBlank(primarySheet.getEvidenceNumber())) {
 			if (subsheet!=null&&subsheet.getNumber()!=null) {
 				ApuSourceBuilder.addString(partFundInfo, "CISLO_NAD", primarySheet.getEvidenceNumber()+"/"+subsheet.getNumber());
+				nadNumber = primarySheet.getEvidenceNumber()+"_"+subsheet.getNumber();
 			} else {
-				ApuSourceBuilder.addString(partFundInfo, "CISLO_NAD", primarySheet.getEvidenceNumber());			
+				ApuSourceBuilder.addString(partFundInfo, "CISLO_NAD", primarySheet.getEvidenceNumber());
+				nadNumber = primarySheet.getEvidenceNumber();
 			}
 		}		
 	}
@@ -853,6 +857,10 @@ public class ImportPevaFundInfo {
 		
     public String getInstitutionCode() {
     	return institutionCode;
+    }
+    
+    public String getNadNumber() {
+        return nadNumber;
     }
     
     public List<String> getOriginatorIds() {
