@@ -97,6 +97,8 @@ public abstract class ElzaTypes {
     public static final String ZP2015_MOVIE_LENGTH = "ZP2015_MOVIE_LENGTH";
     public static final String ZP2015_RECORD_LENGTH = "ZP2015_RECORD_LENGTH";
     public static final String ZP2015_ITEM_LINK = "ZP2015_ITEM_LINK";
+    public static final String ZP2015_DAO_LINK = "ZP2015_DAO_LINK";
+    public static final String ZP2015_RELATED_UNITS_LINK = "ZP2015_RELATED_UNITS_LINK";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {

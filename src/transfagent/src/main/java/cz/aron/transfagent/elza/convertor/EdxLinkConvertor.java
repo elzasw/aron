@@ -35,7 +35,7 @@ public class EdxLinkConvertor implements EdxItemConvertor {
             apusBuilder.addApuRef(ctx.getActivePart(), targetTypeRef, UUID.fromString(uuid));
         } else {
             // prepare external link
-            apusBuilder.addLink(ctx.getActivePart(), targetTypeLink, uriRef.getUri(), uriRef.getLbl());
+            ApuSourceBuilder.addLink(ctx.getActivePart(), targetTypeLink, uriRef.getUri(), uriRef.getLbl());
         }
     }
 
