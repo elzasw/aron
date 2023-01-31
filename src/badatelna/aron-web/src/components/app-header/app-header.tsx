@@ -100,7 +100,11 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
             >
               <MenuIcon />
             </IconButton>
-            {showLanguages && <Language className={spacingClasses.marginLeft} />}
+            {showLanguages && 
+              <Language 
+                localizations={pageTemplate?.localizations} 
+                className={spacingClasses.marginLeft} 
+              />}
           </div>
           {open ? (
             <div
