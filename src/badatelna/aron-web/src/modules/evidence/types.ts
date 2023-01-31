@@ -60,6 +60,8 @@ export interface DetailDaoProps {
     description?: string,
   };
   items: Dao[];
+  item: Dao | null;
+  setItem: (item: Dao | null) => void;
 }
 
 export interface DetailTreeProps {

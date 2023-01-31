@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useContext, ReactNode } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { get, find, flatten, compact, isEmpty, sortBy } from 'lodash';
 import classNames from 'classnames';
@@ -28,6 +28,7 @@ import {
   ApuPartItem,
   ApuLocale,
   ApuPart,
+  Dao,
 } from '../../types';
 import {
   findApuParts,
@@ -42,9 +43,63 @@ import { getPathByItem, useAppState } from '../../common-utils';
 import { Module, Button, useConfiguration } from '../../components';
 import { EvidenceDetailItem } from './evidence-detail-item';
 import { EvidenceDetailAttachments } from './evidence-detail-attachments';
-import { LocaleContext } from '@eas/common-web';
+import { LocaleContext, NavigationContext } from '@eas/common-web';
 import { EvidenceShareButtons } from './evidence-share-buttons';
 import { EvidenceLayout, LayoutType } from './evidence-layout';
+import { ActionsRenderProps } from './evidence-detail-dao-dialog/types';
+import { ApuPathParams, createApuDaoFileUrl } from './evidence';
+
+function EvidenceDao({
+  customActionsLeft,
+  customActionsRight,
+  layoutType,
+  items = [],
+  apuInfo = {},
+}:{
+    customActionsLeft?: (props: ActionsRenderProps) => ReactNode;
+    customActionsRight?: (props: ActionsRenderProps) => ReactNode;
+    layoutType: LayoutType;
+    items: Dao[];
+    apuInfo: {
+      name?: string;
+      description?: string;
+    };
+  }){
+  const { navigate } = useContext(NavigationContext);
+  const { daoId, id, fileId } = useParams<ApuPathParams>();
+  const [selectedDao, setSelectedDao] = useState<Dao | null>(null);
+
+  useEffect(() => {
+    const dao = items[0];
+    if(dao && daoId != undefined && fileId == undefined){
+      navigate(createApuDaoFileUrl(id, dao.id));
+    }
+  },[id])
+
+  useEffect(() => {
+    const dao = items.find((dao) => dao.id === daoId);
+    if(dao){
+      setSelectedDao(dao)
+    } 
+  }, [daoId])
+
+  return layoutType !== LayoutType.ONE_COLUMN ? <EvidenceDetailDaoDialog 
+    items={items} 
+    item={selectedDao || items[0]} 
+    setItem={() => {}} 
+    embed={true}
+    customActionsLeft={customActionsLeft}
+    customActionsRight={customActionsRight}
+  /> : 
+    <EvidenceDetailDao 
+      item={selectedDao} 
+      setItem={(dao) => {
+        navigate(createApuDaoFileUrl(id, dao?.id))
+      }} 
+      apuInfo={apuInfo} 
+      items={sortBy(items, 'order')} 
+    />
+}
 
 export function EvidenceDetail({
   apuPartTypes,
@@ -246,19 +301,16 @@ export function EvidenceDetail({
       } 
         renderDao={
          daos?.length > 0 ?
-         ({layoutType}) => layoutType !== LayoutType.ONE_COLUMN ? <EvidenceDetailDaoDialog 
-            items={daos} 
-            item={daos[0]} 
-            setItem={() => {}} 
-            embed={true}
-            customActionsLeft={({fullscreen}) => <>
+         ({layoutType}) => <EvidenceDao
+              layoutType={layoutType}
+              customActionsLeft={({fullscreen}) => <>
               {!fullscreen && <Icon 
                 onClick={() => setShowTree(!showTree)}
                 Component={showTree ? ArrowLeft : ArrowRight}
                 title={formatMessage({id: showTree ? Message.TREE_HIDE : Message.TREE_SHOW})}
                 />}
               </>}
-            customActionsRight={({fullscreen}) => <>
+              customActionsRight={({fullscreen}) => <>
               {!fullscreen 
                 && layoutType === LayoutType.THREE_COLUMN 
                 && <Icon 
@@ -267,12 +319,12 @@ export function EvidenceDetail({
                   title={formatMessage({id: showDescription ? Message.DESCRIPTION_HIDE : Message.DESCRIPTION_SHOW})}
                   />}
               </>}
-            /> : 
-            <EvidenceDetailDao apuInfo={{
-              name: item?.name,
-              description: item?.description,
-            }} items={sortBy(daos, 'order')} />
-          : undefined
+              apuInfo={{
+                name: item?.name,
+                description: item?.description,
+              }}
+              items={daos}
+            /> : undefined
       }
         showDesc={showDescription || daos.length === 0}
         renderDesc={() => 

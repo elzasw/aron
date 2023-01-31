@@ -1,7 +1,7 @@
 import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex } from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useContext } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { downloadFileByUrl } from '../../../common-utils';
 import { useConfiguration } from '../../../components';
@@ -14,6 +14,9 @@ import { useStyles } from './styles';
 import { Toolbar } from './toolbar';
 import { DetailDaoDialogProps, FileObject } from './types';
 import { getExistingFile, getFiles } from './utils';
+import { useParams } from "react-router-dom";
+import { NavigationContext } from "@eas/common-web";
+import { createApuDaoFileUrl, ApuPathParams } from "../evidence";
 
 function Thumbnail({
   file,
@@ -115,11 +118,25 @@ export function EvidenceDetailDaoDialog({
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullscreen, setFullscreen] = useState(!embed);
 
+  const { fileId, id } = useParams<ApuPathParams>();
+  const { navigate } = useContext(NavigationContext);
+
   useEffect(() => {
     const files = getFiles(item);
     setFiles(files)
-    if(files.length > 0) {setFile(files[0])}
+    if(files.length > 0 && !fileId) {
+      navigate(createApuDaoFileUrl(id, item.id, files[0].id));
+    }
   }, [item])
+  
+  useEffect(() => {
+    const newFile = files.find((file) => file.id == fileId )
+    if(newFile){
+      setFile(newFile);
+    } else if(files.length >= 0) {
+      navigate(createApuDaoFileUrl(id, item.id, files[0]?.id));
+    } 
+  },[fileId])
 
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
 
@@ -129,10 +146,11 @@ export function EvidenceDetailDaoDialog({
   const metadata = file?.published?.metadata;
 
   const isTile = !!(file && file.tile);
-  const fileId = isTile ? existingFile?.id : existingFile?.file.id
+  const fileUuid = isTile ? existingFile?.id : existingFile?.file.id
 
   const handleClickThumbnail = (file: FileObject) => {
     setFile(file);
+    navigate(createApuDaoFileUrl(id, item.id, file.id));
     if(open){setOpen(false);}
   }
 
@@ -160,8 +178,8 @@ export function EvidenceDetailDaoDialog({
               nextEnabled: true,
               previousDisabled: fileIndex <= 0,
               nextDisabled: fileIndex < 0 || fileIndex >= files.length - 1,
-              previous: () => setFile(files[fileIndex - 1]),
-              next: () => setFile(files[fileIndex + 1]),
+              previous: () => navigate(createApuDaoFileUrl(id, item.id, files[fileIndex - 1]?.id)),
+              next: () => navigate(createApuDaoFileUrl(id, item.id, files[fileIndex + 1]?.id)),
               item,
               setItem,
               open,
@@ -190,8 +208,8 @@ export function EvidenceDetailDaoDialog({
               classes.daoDialogCenterNoSidebar
             )}
           >
-            {files.length && fileId ? (
-              <ImageViewer ref={viewerRef} id={fileId} />
+            {files.length && fileUuid ? (
+              <ImageViewer ref={viewerRef} id={fileUuid} />
             ) : (
                 <div
                   className={classNames(

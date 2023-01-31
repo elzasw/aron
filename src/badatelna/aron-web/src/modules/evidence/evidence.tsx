@@ -3,6 +3,23 @@ import { Route, Switch } from 'react-router-dom';
 import { EvidenceDetail } from './evidence-detail';
 import { EvidenceMain } from './evidence-main';
 import { Props } from './types';
+import { ModulePath } from '../../enums';
+
+export function createApuDaoFileUrl(id: string, daoId?: string, fileId?: string) {
+  if(!daoId){
+    return `${ModulePath.APU}/${id}`
+  }
+  if(!fileId){
+    return `${ModulePath.APU}/${id}/dao/${daoId}`
+  }
+  return `${ModulePath.APU}/${id}/dao/${daoId}/file/${fileId}`
+}
+
+export interface ApuPathParams {
+  id: string;
+  daoId?: string;
+  fileId?: string;
+}
 
 export function Evidence(props: Props) {
   const { path } = props;
@@ -11,6 +28,8 @@ export function Evidence(props: Props) {
     <Switch>
       {[
         { path, Component: EvidenceMain, exact: true },
+        { path: `${ModulePath.APU}/:id/dao/:daoId/file/:fileId`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },// specific path for APU module
+        { path: `${ModulePath.APU}/:id/dao/:daoId`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },// specific path for APU module
         { path: `${path}/:id`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },
       ].map(({ Component, showLayoutSwitch, ...route }) => (
         <Route {...{ key: route.path, ...route }}>

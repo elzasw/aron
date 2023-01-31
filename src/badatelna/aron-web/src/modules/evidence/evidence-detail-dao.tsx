@@ -1,4 +1,4 @@
-import React, { useState/*, useCallback, useEffect*/ } from 'react';
+import React from 'react';
 import classNames from 'classnames';
 import InsertDriveFileIcon from '@material-ui/icons/InsertDriveFile';
 import { FormattedMessage } from 'react-intl';
@@ -7,46 +7,24 @@ import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { DetailDaoProps } from './types';
 import { EvidenceDetailDaoDialog } from './evidence-detail-dao-dialog';
-import { Dao, DaoFile } from '../../types';
+import { DaoFile } from '../../types';
 import { Message, DaoBundleType } from '../../enums';
 
 import { ImageLoad } from '../../components/image-load/';
 
 const ID = 'evidence-detail-dao';
 
-export function EvidenceDetailDao({ items, apuInfo }: DetailDaoProps) {
+export function EvidenceDetailDao({ 
+  items, 
+  apuInfo,
+  item,
+  setItem,
+}: DetailDaoProps) {
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
-  const [item, setItem] = useState<Dao | null>(null);
-
-  // const [maxCount, setMaxCount] = useState(10);
   const maxCount = 5;
-
-  // const onResize = useCallback(() => {
-    // const element = document.getElementById(ID);
-
-    // setMaxCount(items.length)
-    // setMaxCount(
-    //   element
-    //     ? Math.floor((element.getBoundingClientRect().height - 80) / 160)
-    //     : 10
-    // );
-  // }, []);
-
-  // useEffect(() => {
-    // onResize();
-    // eslint-disable-next-line
-  // }, [items.length]);
-
-  // useEffect(() => {
-  //   window.addEventListener('resize', () => onResize());
-
-  //   return () => {
-  //     window.removeEventListener('resize', () => onResize());
-  //   };
-  // }, [onResize]);
 
   return items.length ? (
     <div id={ID} style={{height: "100%"}} className={classes.daoContainer}>
