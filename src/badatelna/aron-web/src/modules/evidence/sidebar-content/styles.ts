@@ -47,15 +47,24 @@ export const useStyles = makeStyles((theme) => {
 
     filterDialog: {
       [md]: { width: '90vw' },
+      height: 600,
       maxWidth: 1200,
+      maxHeight: '70vh',
       margin: '-10px -24px -16px -24px', // TODO: for later: style common-web dialog and remove this
+      flex: 1,
+      overflow: 'hidden',
+      
     },
     filterDialogLeft: {
       width: '30%',
       borderRight: border,
+      overflow: 'auto',
+      height: '100%',
     },
     filterDialogRight: {
       width: '70%',
+      overflow: 'auto',
+      height: '100%',
     },
     filterDialogItem: {
       width: '100%',
