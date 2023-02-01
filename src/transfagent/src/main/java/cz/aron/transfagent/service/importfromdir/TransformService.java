@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.ImageIO;
 import javax.json.Json;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -583,4 +584,20 @@ public class TransformService {
 		
 	}
 
+	
+    public static void main(String[] args) throws Exception {
+        
+        var img = ImageIO.read(new File(
+                "D:\\projects\\aron\\data\\transfagent\\input_folder\\input\\attachments\\213000010\\AS\\20143\\soap-pn_ap0226_20081_vs-merklin_0010.jp2"));        
+        ImageIO.write(img, "jpg", new File("D:\\out.jpg"));
+        
+
+        ScalablePyramidBuilder spb = new ScalablePyramidBuilder(254, 1, "jpg", "dzi");
+        FilesArchiver archiver = new DirectoryArchiver(new File("D:\\out.dzi"));
+        PartialImageReader pir = new BufferedImageReader(new File(
+                "D:\\projects\\aron\\data\\transfagent\\input_folder\\input\\attachments\\213000010\\AS\\20143\\soap-pn_ap0226_20081_vs-merklin_0010.jp2"));
+        spb.buildPyramid(pir, "image", archiver, Runtime.getRuntime().availableProcessors());
+
+    }
+	
 }
