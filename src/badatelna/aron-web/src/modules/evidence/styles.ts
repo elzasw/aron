@@ -155,6 +155,7 @@ export const useStyles =  makeStyles((theme) => {
     },
     evidenceDetailDescription: {
       fontWeight: 400,
+      whiteSpace: 'pre-wrap',
     },
     evidenceDetailItem: {
       fontSize: 13,
