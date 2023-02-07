@@ -11,6 +11,7 @@ import {
 } from '../../types';
 import {JsonType} from '../../enums';
 import { TableData } from '../../components';
+import { FileObject } from './evidence-detail-dao-dialog/types';
 
 export interface FiltersChangeCallbackParams {
   query?: string;
@@ -55,12 +56,14 @@ export interface ListProps {
 }
 
 export interface DetailDaoProps {
-  apuInfo?: {
-    name?: string,
-    description?: string,
+  apuInfo: {
+    name?: string;
+    description?: string;
+    id: string;
   };
   items: Dao[];
   item: Dao | null;
+  file: FileObject | null;
   setItem: (item: Dao | null) => void;
 }
 

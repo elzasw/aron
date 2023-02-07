@@ -91,8 +91,10 @@ function ImageList({
 }
 
 export function EvidenceDetailDaoDialog({
-  item,
+  // item,
   // items,
+  dao,
+  file,
   setItem,
   embed = false,
   customActionsLeft,
@@ -100,7 +102,7 @@ export function EvidenceDetailDaoDialog({
   customActionsCenter,
   apuInfo,
 }: DetailDaoDialogProps) {
-  const [files, setFiles] = useState(getFiles(item));
+  const files = getFiles(dao);
   const viewerRef = useRef<ImageViewerExposedFunctions>(null);
 
   const { formatMessage } = useIntl();
@@ -113,30 +115,18 @@ export function EvidenceDetailDaoDialog({
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
-  const [file, setFile] = useState(files[0]);
   const [open, setOpen] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullscreen, setFullscreen] = useState(!embed);
 
-  const { fileId, id } = useParams<ApuPathParams>();
+  const { daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
-
-  useEffect(() => {
-    const files = getFiles(item);
-    setFiles(files)
-    if(files.length > 0 && !fileId) {
-      navigate(createApuDaoFileUrl(id, item.id, files[0].id));
-    }
-  }, [item])
   
   useEffect(() => {
-    const newFile = files.find((file) => file.id == fileId )
-    if(newFile){
-      setFile(newFile);
-    } else if(files.length >= 0) {
-      navigate(createApuDaoFileUrl(id, item.id, files[0]?.id));
-    } 
-  },[fileId])
+    if(!daoId || !fileId){
+      navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id));
+    }
+  },[dao, file])
 
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
 
@@ -149,8 +139,7 @@ export function EvidenceDetailDaoDialog({
   const fileUuid = isTile ? existingFile?.id : existingFile?.file.id
 
   const handleClickThumbnail = (file: FileObject) => {
-    setFile(file);
-    navigate(createApuDaoFileUrl(id, item.id, file.id));
+    navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id));
     if(open){setOpen(false);}
   }
 
@@ -178,9 +167,9 @@ export function EvidenceDetailDaoDialog({
               nextEnabled: true,
               previousDisabled: fileIndex <= 0,
               nextDisabled: fileIndex < 0 || fileIndex >= files.length - 1,
-              previous: () => navigate(createApuDaoFileUrl(id, item.id, files[fileIndex - 1]?.id)),
-              next: () => navigate(createApuDaoFileUrl(id, item.id, files[fileIndex + 1]?.id)),
-              item,
+              previous: () => navigate(createApuDaoFileUrl(apuInfo.id, dao.id, files[fileIndex - 1]?.id)),
+              next: () => navigate(createApuDaoFileUrl(apuInfo.id, dao.id, files[fileIndex + 1]?.id)),
+              item: dao,
               setItem,
               open,
               setOpen,
@@ -283,7 +272,7 @@ export function EvidenceDetailDaoDialog({
               onClick={() =>
                 downloadFileByUrl(
                   `/digitalObjectFile/${metadataId}/metadata/csv`,
-                  `dao_${item.id}_metadata.csv`
+                  `dao_${dao.id}_metadata.csv`
                 )}
               className={classes.daoDialogMetadataButton}
             >

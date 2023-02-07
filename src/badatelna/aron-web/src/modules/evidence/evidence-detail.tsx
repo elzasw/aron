@@ -46,15 +46,16 @@ import { EvidenceDetailAttachments } from './evidence-detail-attachments';
 import { LocaleContext, NavigationContext } from '@eas/common-web';
 import { EvidenceShareButtons } from './evidence-share-buttons';
 import { EvidenceLayout, LayoutType } from './evidence-layout';
-import { ActionsRenderProps } from './evidence-detail-dao-dialog/types';
+import { ActionsRenderProps, FileObject } from './evidence-detail-dao-dialog/types';
 import { ApuPathParams, createApuDaoFileUrl } from './evidence';
+import { getFiles } from './evidence-detail-dao-dialog/utils';
 
 function EvidenceDao({
   customActionsLeft,
   customActionsRight,
   layoutType,
   items = [],
-  apuInfo = {},
+  apuInfo,
 }:{
     customActionsLeft?: (props: ActionsRenderProps) => ReactNode;
     customActionsRight?: (props: ActionsRenderProps) => ReactNode;
@@ -63,36 +64,58 @@ function EvidenceDao({
     apuInfo: {
       name?: string;
       description?: string;
+      id: string;
     };
   }){
   const { navigate } = useContext(NavigationContext);
   const { daoId, id, fileId } = useParams<ApuPathParams>();
   const [selectedDao, setSelectedDao] = useState<Dao | null>(null);
+  const [selectedFile, setSelectedFile] = useState<FileObject | null>(null);
 
   useEffect(() => {
-    const dao = items[0];
-    if(dao && daoId != undefined && fileId == undefined){
-      navigate(createApuDaoFileUrl(id, dao.id));
+      setSelectedDao(null);
+      setSelectedFile(null);
+  },[apuInfo.id])
+
+  useEffect(() => {
+    // ignore change when apu id does not match
+    if(id !== apuInfo.id){
+      return;
     }
-  },[id])
 
-  useEffect(() => {
-    const dao = items.find((dao) => dao.id === daoId);
-    if(dao){
-      setSelectedDao(dao)
-    } 
-  }, [daoId])
+    let dao = selectedDao;
+
+    if(selectedDao?.id !== daoId){
+      dao = items.find((dao) => dao.id === daoId) || null;
+      setSelectedDao(dao);
+    }
+
+    if(!dao || !fileId || selectedFile?.id === fileId){ 
+      return; 
+    }
+
+    const file = getFiles(dao).find((file) => file.id === fileId);
+    if(file){
+      setSelectedFile(file);
+    }
+  }, [daoId, fileId])
+
+  const file = selectedFile || getFiles(selectedDao || items[0])[0];
+  const dao = selectedDao || items[0];
 
   return layoutType !== LayoutType.ONE_COLUMN ? <EvidenceDetailDaoDialog 
-    items={items} 
-    item={selectedDao || items[0]} 
+    // items={items} 
+    dao={dao} 
+    file={file}
     setItem={() => {}} 
     embed={true}
     customActionsLeft={customActionsLeft}
     customActionsRight={customActionsRight}
+    apuInfo={apuInfo}
   /> : 
     <EvidenceDetailDao 
       item={selectedDao} 
+      file={selectedFile}
       setItem={(dao) => {
         navigate(createApuDaoFileUrl(id, dao?.id))
       }} 
@@ -262,6 +285,7 @@ export function EvidenceDetail({
 
   const path = item ? getPathByItem(item) : undefined;
   const daos = item ? sortBy(item.digitalObjects, 'order') : [];
+  const daosHaveFiles = !!daos.find((dao) => dao.files.length > 0);
 
   useEffect(() => {
     if (evidencePath && path) {
@@ -300,7 +324,7 @@ export function EvidenceDetail({
           : undefined
       } 
         renderDao={
-         daos?.length > 0 ?
+         item && daos?.length > 0 && daosHaveFiles ?
          ({layoutType}) => <EvidenceDao
               layoutType={layoutType}
               customActionsLeft={({fullscreen}) => <>
@@ -320,8 +344,9 @@ export function EvidenceDetail({
                   />}
               </>}
               apuInfo={{
-                name: item?.name,
-                description: item?.description,
+                name: item.name,
+                description: item.description,
+                id: item.id,
               }}
               items={daos}
             /> : undefined

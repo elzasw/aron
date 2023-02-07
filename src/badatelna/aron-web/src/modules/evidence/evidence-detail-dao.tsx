@@ -11,6 +11,7 @@ import { DaoFile } from '../../types';
 import { Message, DaoBundleType } from '../../enums';
 
 import { ImageLoad } from '../../components/image-load/';
+import { getFiles } from './evidence-detail-dao-dialog/utils';
 
 const ID = 'evidence-detail-dao';
 
@@ -18,6 +19,7 @@ export function EvidenceDetailDao({
   items, 
   apuInfo,
   item,
+  file,
   setItem,
 }: DetailDaoProps) {
   const classes = useStyles();
@@ -94,7 +96,8 @@ export function EvidenceDetailDao({
       {item ? (
         <EvidenceDetailDaoDialog
           {...{
-            item,
+            dao: item,
+            file: file || getFiles(item)[0],
             items,
             setItem,
             apuInfo,

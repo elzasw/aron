@@ -48,15 +48,16 @@ export interface ToolbarProps {
 }
 
 export interface DetailDaoDialogProps {
-  item: Dao;
-  items: Dao[];
+  dao: Dao;
+  file: FileObject;
   setItem: (item: Dao | null) => void;
   embed?: boolean;
   customActionsLeft?: (props: ActionsRenderProps) => React.ReactNode;
   customActionsRight?: (props: ActionsRenderProps) => React.ReactNode;
   customActionsCenter?: (props: ActionsRenderProps) => React.ReactNode;
-  apuInfo?: {
-    name?: string,
-    description?: string,
+  apuInfo: {
+    name?: string;
+    description?: string;
+    id: string;
   };
 }

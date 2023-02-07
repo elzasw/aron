@@ -26,10 +26,15 @@ export function Evidence(props: Props) {
 
   return (
     <Switch>
+      <Route path={[
+        `${ModulePath.APU}/:id/dao/:daoId/file/:fileId`,
+        `${ModulePath.APU}/:id/dao/:daoId`, 
+        `${ModulePath.APU}/:id`
+      ]}>
+        <EvidenceDetail {...{...props, modulePath: path}}/>
+      </Route>
       {[
         { path, Component: EvidenceMain, exact: true },
-        { path: `${ModulePath.APU}/:id/dao/:daoId/file/:fileId`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },// specific path for APU module
-        { path: `${ModulePath.APU}/:id/dao/:daoId`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },// specific path for APU module
         { path: `${path}/:id`, Component: EvidenceDetail, exact: false, showLayoutSwitch: true },
       ].map(({ Component, showLayoutSwitch, ...route }) => (
         <Route {...{ key: route.path, ...route }}>
