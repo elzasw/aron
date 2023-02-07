@@ -100,7 +100,7 @@ public class ImportFundInfo {
 
 		Section sect = sections.getS().get(0);
 		FundInfo fi = sect.getFi();
-		String fundName = fi.getN();
+		String fundName = createName(fi);
 
 		Apu apu = apusBuilder.createApu(fundName,ApuType.FUND, uuid);
 		Part partName = apusBuilder.addPart(apu, CoreTypes.PT_TITLE);
@@ -169,6 +169,16 @@ public class ImportFundInfo {
         }
 
         return apusBuilder;
+    }
+	
+    private String createName(FundInfo fi) {
+        var sb = new StringBuilder();
+        sb.append(fi.getN());
+        var date = fi.getTr();
+        if (date != null) {
+            sb.append(", ").append(date);
+        }
+        return sb.toString();
     }
 
     private List<ItemDateRange> getItemDateRanges(Level lvl) {

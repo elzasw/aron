@@ -31,6 +31,7 @@ import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.Part;
+import cz.aron.transfagent.config.ConfigElzaArchDesc;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
 import cz.aron.transfagent.elza.convertor.EdxEnumConvertor;
@@ -45,6 +46,7 @@ import cz.aron.transfagent.elza.convertor.EdxStructureConvertor;
 import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
+import cz.aron.transfagent.elza.convertor.UnitDateConvertor;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.service.DaoFileStore2Service;
@@ -59,6 +61,7 @@ import cz.tacr.elza.schema.v2.DescriptionItem;
 import cz.tacr.elza.schema.v2.DescriptionItemInteger;
 import cz.tacr.elza.schema.v2.DescriptionItemString;
 import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
+import cz.tacr.elza.schema.v2.DescriptionItemUnitDate;
 import cz.tacr.elza.schema.v2.DigitalArchivalObject;
 import cz.tacr.elza.schema.v2.DigitalArchivalObjects;
 import cz.tacr.elza.schema.v2.FundInfo;
@@ -141,13 +144,17 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final DaoFileStore2Service daoFileStoreService2;
     
     private final LevelEnrichmentService levelEnrichmentService;
+    
+    private final ConfigElzaArchDesc configArchDesc;
 
 	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
-			DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService) {
+			DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService,
+			ConfigElzaArchDesc configArchDesc) {
 		this.apTypeService = apTypeService;
 		this.daoFileStoreService = daoFileStoreService;
 		this.daoFileStoreService2 = daoFileStoreService2;
 		this.levelEnrichmentService = levelEnrichmentService;
+		this.configArchDesc = configArchDesc;
 	}
 
     public Set<UUID> getApRefs() {
@@ -168,7 +175,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null);
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null, new ConfigElzaArchDesc());
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -271,10 +278,32 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
             // add name from parent if empty
             if(StringUtil.isEmpty(apu.getName())) {
-                apu.setName(parentApu.getName());
+                Apu tmpParent = parentApu;
+                while(tmpParent!=null) {
+                    if (StringUtil.isNotBlank(tmpParent.getName())) {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append(parentApu.getName());
+                        if (configArchDesc.isAddDateToName()) {
+                            
+                        }
+                        apu.setName(sb.toString());                                                
+                        break;
+                    } else {
+                        tmpParent = apuParentMap.get(tmpParent);
+                    }
+                }
+                
             }
             if(StringUtil.isEmpty(apu.getDesc())) {
-                apu.setDesc(parentApu.getDesc());
+                Apu tmpParent = parentApu;
+                while(tmpParent!=null) {
+                    if (StringUtils.isNotBlank(tmpParent.getDesc())) {
+                        apu.setDesc(parentApu.getDesc());
+                        break;
+                    } else {
+                        tmpParent = apuParentMap.get(tmpParent);
+                    }
+                }                
             }
         }
         apuMap.put(lvl.getId(), apu);
@@ -612,6 +641,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         String otherIdent = null;
         String otherIdentType = null;
         int otherIdentPriority = -1;
+        String datace = null;
         for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
             if(item.getT().equals("ZP2015_UNIT_ID")&&(item instanceof DescriptionItemString)) {
                 DescriptionItemString title = (DescriptionItemString)item;
@@ -632,6 +662,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
                     otherIdentType = ElzaTypes.otherIdNameMap.get(otherId.getS());
                     otherIdent = otherId.getV();
                 }
+            }
+            if(item.getT().equals(ElzaTypes.ZP2015_UNIT_DATE)&&(item instanceof DescriptionItemUnitDate)) {
+                DescriptionItemUnitDate dataceUnitDate = (DescriptionItemUnitDate)item;
+                datace = UnitDateConvertor.convertToString(dataceUnitDate);
             }
         }
 
@@ -656,7 +690,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
             // Variantne lze pridat UUID jako ident
             //sb.append(lvl.getUuid().toString());
         }
-
+        if(StringUtils.isNotBlank(datace)) {
+            sb.append(", ").append(datace);            
+        }
         return sb.toString();
     }
 
