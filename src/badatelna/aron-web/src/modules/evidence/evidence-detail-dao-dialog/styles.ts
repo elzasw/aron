@@ -108,7 +108,8 @@ export const useStyles =  makeStyles((theme) => {
       overflow: 'hidden',
       cursor: 'pointer',
       position: 'relative',
-      marginBottom: '4px'
+      marginBottom: '4px',
+      minHeight: '4em'
     },
     daoThumbnailTitle: {
       color: 'white',
