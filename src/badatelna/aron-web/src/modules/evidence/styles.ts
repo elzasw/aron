@@ -17,6 +17,7 @@ const sidebarMinWidth = 30;
 
 export interface StyleConfiguration {
   alternativeItemLabel?: boolean;
+  treeHorizontalScroll?: boolean;
 }
 
 export const useStyles =  makeStyles((theme) => {
@@ -304,13 +305,14 @@ export const useStyles =  makeStyles((theme) => {
         border: `1px solid ${colorGrey}`,
       },
     },
-    treeWrapper: {
+    treeWrapper: ({treeHorizontalScroll}:StyleConfiguration) => ({
       width: '100%',
       // minWidth: 'fit-content',
       height: '100%',
       overflow: 'hidden',
       overflowY: 'auto',
-    },
+      overflowX: treeHorizontalScroll ? 'auto' : 'hidden',
+    }),
     treeResizeHandle: {
       width: '100%',
       background: '#fff',

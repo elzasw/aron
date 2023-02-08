@@ -28,6 +28,7 @@ export interface ConfigurationType {
     showMetadataInImageViewer?: boolean;
     disableDownloads?: boolean;
     daoFooter?: DaoFooterDef;
+    treeHorizontalScroll?: boolean;
 }
 
 
@@ -70,6 +71,7 @@ const defaultConfiguration:ConfigurationType = {
     //     url: 'https://www.google.com',
     //   }]
     // },
+    treeHorizontalScroll: false,
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)

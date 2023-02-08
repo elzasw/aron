@@ -42,4 +42,5 @@ var _configuration = {
   //     ARON_ENTITY: "Rejstříková hesla",
   //   },
   // }
+  // treeHorizontalScroll: false,
 }

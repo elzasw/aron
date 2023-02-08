@@ -8,6 +8,7 @@ import RemoveIcon from '@material-ui/icons/Remove';
 
 import { Props } from './types';
 import { useStyles } from './styles';
+import { useConfiguration } from '../configuration';
 
 export function Tree({
   items,
@@ -20,16 +21,23 @@ export function Tree({
   ...props
 }: Props) {
   const classes = useStyles();
+  const {treeHorizontalScroll} = useConfiguration();
 
   const renderItems = (items: any[], parentId?: string) =>
     items.map((item) => {
-      const label = <div style={{
-        whiteSpace: "nowrap",
+
+      const optionalStyle = !treeHorizontalScroll ? {
         overflow: "hidden",
         textOverflow: "ellipsis",
         width: "calc( 100% - 20px )",
+      } : {};
+
+      const label = <div title={labelMapper(item)} style={{
+        whiteSpace: "nowrap",
         paddingRight: "10px",
+        ...optionalStyle
       }}>{labelMapper(item)}</div>;
+
       const nodeId = `${parentId ? `${parentId}__` : ''}${idMapper(item)}`;
       const { children } = item;
 

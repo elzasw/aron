@@ -12,7 +12,7 @@ import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { DetailTreeProps } from './types';
 import { useAppState, useGet } from '../../common-utils';
-import { Tree } from '../../components';
+import { Tree, useConfiguration } from '../../components';
 import { ModulePath, ApiUrl } from '../../enums';
 import { ApuEntity, ApuTree } from '../../types';
 
@@ -23,7 +23,8 @@ const getParentId = (item: ApuEntity): string => {
 };
 
 export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTreeProps) {
-  const classes = useStyles();
+  const {treeHorizontalScroll} = useConfiguration();
+  const classes = useStyles({treeHorizontalScroll});
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
 
