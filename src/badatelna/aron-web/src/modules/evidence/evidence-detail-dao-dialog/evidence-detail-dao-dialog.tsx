@@ -101,6 +101,7 @@ export function EvidenceDetailDaoDialog({
   customActionsRight,
   customActionsCenter,
   apuInfo,
+  showInfo,
 }: DetailDaoDialogProps) {
   const files = getFiles(dao);
   const viewerRef = useRef<ImageViewerExposedFunctions>(null);
@@ -209,7 +210,7 @@ export function EvidenceDetailDaoDialog({
                   <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
                 </div>
               )}
-            {apuInfo && 
+            {showInfo && 
               <div 
                 className={classes.daoDialogFloatingOverlay} 
                 style={{ top: 0, right: 0 }}

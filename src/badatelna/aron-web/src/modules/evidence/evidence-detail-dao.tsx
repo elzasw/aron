@@ -101,6 +101,7 @@ export function EvidenceDetailDao({
             items,
             setItem,
             apuInfo,
+            showInfo: true,
           }}
         />
       ) : (
