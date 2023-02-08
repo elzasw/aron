@@ -210,11 +210,11 @@ export function EvidenceDetailDaoDialog({
                   <FormattedMessage id={Message.NO_FILES_TO_DISPLAY} />
                 </div>
               )}
-            {showInfo && 
-              <div 
-                className={classes.daoDialogFloatingOverlay} 
-                style={{ top: 0, right: 0 }}
-              >
+            <div 
+              className={classes.daoDialogFloatingOverlay} 
+              style={{ top: '50px', right: 0, padding: '10px' }}
+            >
+              {showInfo && <>
                 <div className={classes.bold}>
                   {apuInfo.name}
                 </div>
@@ -226,8 +226,10 @@ export function EvidenceDetailDaoDialog({
                     : apuInfo.description
                   }
                 </div>}
-              </div>
-          }
+              </>
+              }
+              <div style={{marginTop: '5px'}}>{ file.published?.metadata?.find((item) => item.type === "name")?.value }</div>
+            </div>
             {daoFooter && 
               <div
                 className={classes.daoDialogFloatingOverlay} 

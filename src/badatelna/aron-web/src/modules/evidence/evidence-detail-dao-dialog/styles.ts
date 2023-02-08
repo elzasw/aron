@@ -58,6 +58,8 @@ export const useStyles =  makeStyles((theme) => {
     daoDialogCenter: {
       left: 0,
       width: '100%',
+      top: 0,
+      height: '100%',
 
       [md]: {
         width: '60%',
