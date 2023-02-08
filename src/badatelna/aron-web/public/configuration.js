@@ -36,11 +36,11 @@ var _configuration = {
   //     text: 'Smluvní podmínky',
   //     url: 'https://www.google.com',
   //   }]
-  // }
+  // },
   // localeOverride: {
   //   CZECH: {
   //     ARON_ENTITY: "Rejstříková hesla",
   //   },
-  // }
+  // },
   // treeHorizontalScroll: false,
 }
