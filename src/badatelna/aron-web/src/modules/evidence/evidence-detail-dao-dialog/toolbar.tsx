@@ -6,7 +6,8 @@ import {
     RotateRight,
     ZoomIn as ZoomInIcon,
     ZoomOut as ZoomOutIcon,
-    ZoomOutMap as ZoomOutMapIcon
+    ZoomOutMap as ZoomOutMapIcon,
+  Share as ShareIcon,
 } from "@material-ui/icons";
 import KeyboardArrowLeftIcon from '@material-ui/icons/KeyboardArrowLeft';
 import KeyboardArrowRightIcon from '@material-ui/icons/KeyboardArrowRight';
@@ -130,6 +131,19 @@ export function Toolbar({
               title: Message.CENTER,
               Component: ZoomOutMapIcon,
               onClick: reset,
+              visible: !noView && !noAction,
+            },
+            {
+              title: Message.COPY_LINK,
+              Component: ShareIcon,
+              onClick: async () => {
+                try {
+                  await navigator.clipboard.writeText(location.toString());
+                  showSnackbar(formatMessage({ id: Message.COPY_LINK_SUCCESS }), SnackbarVariant.INFO, true);
+                } catch(error) {
+                  showSnackbar(formatMessage({ id: Message.COPY_LINK_ERROR }), SnackbarVariant.ERROR, false);
+                }
+              },
               visible: !noView && !noAction,
             },
             {
