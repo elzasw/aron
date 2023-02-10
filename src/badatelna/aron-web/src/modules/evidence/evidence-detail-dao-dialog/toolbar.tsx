@@ -142,6 +142,7 @@ export function Toolbar({
                   showSnackbar(formatMessage({ id: Message.COPY_LINK_SUCCESS }), SnackbarVariant.INFO, true);
                 } catch(error) {
                   showSnackbar(formatMessage({ id: Message.COPY_LINK_ERROR }), SnackbarVariant.ERROR, false);
+                  throw error;
                 }
               },
               visible: !noView && !noAction,
