@@ -145,7 +145,7 @@ export function Toolbar({
                   throw error;
                 }
               },
-              visible: !noView && !noAction,
+              visible: !noView && !noAction && window.isSecureContext,
             },
             {
               title: Message.DOWNLOAD,
