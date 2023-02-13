@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { findIndex } from 'lodash';
 import React, { useEffect, useRef, useState, useContext } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { downloadFileByUrl } from '../../../common-utils';
+import { downloadFileByUrl, createUrlParams } from '../../../common-utils';
 import { useConfiguration } from '../../../components';
 import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/file-viewer/image-viewer';
 import { ImageLoad } from '../../../components/image-load';
@@ -90,6 +90,16 @@ function ImageList({
   </div>
 }
 
+const FULLSCREEN = "fullscreen"
+
+const getObjectFromUrlParams = (map: URLSearchParams) => {
+  const object: Record<string, string> = {};
+  map.forEach((value, key)=>{
+    object[key] = value.toString();
+  })
+  return object;
+}
+
 export function EvidenceDetailDaoDialog({
   // item,
   // items,
@@ -115,10 +125,12 @@ export function EvidenceDetailDaoDialog({
   const classes = useStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
+  const urlParams = getObjectFromUrlParams(new URLSearchParams(location.search));
+  const isFullscreen = urlParams[FULLSCREEN] === "true";
 
   const [open, setOpen] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
-  const [fullscreen, setFullscreen] = useState(!embed);
+  const [fullscreen, setFullscreen] = useState(!embed || isFullscreen);
 
   const { daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
@@ -128,6 +140,10 @@ export function EvidenceDetailDaoDialog({
       navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id));
     }
   },[dao, file])
+
+  useEffect(() => {
+    navigate(`${location.pathname}${createUrlParams({...urlParams, [FULLSCREEN]: fullscreen && embed})}`);
+  },[fullscreen])
 
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
 
@@ -140,7 +156,7 @@ export function EvidenceDetailDaoDialog({
   const fileUuid = isTile ? existingFile?.id : existingFile?.file.id
 
   const handleClickThumbnail = (file: FileObject) => {
-    navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id));
+    navigate(`${createApuDaoFileUrl(apuInfo.id, dao.id, file.id)}${createUrlParams(urlParams)}`);
     if(open){setOpen(false);}
   }
 
