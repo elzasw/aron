@@ -96,7 +96,7 @@ public class TransformService {
 	@Value("${thumbanil.level:2}")
 	private int thumbnailHierarchicalLevel;
 
-	@Value("${tile.async:false}")
+	@Value("${thumbnail.async:false}")
 	private boolean thumbnailAsync;
 
 	public TransformService(StorageService storageService, ConfigDspace configDspace, ConfigDao configDao,

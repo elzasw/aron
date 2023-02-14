@@ -1,5 +1,6 @@
 package cz.aron.transfagent.service.importfromdir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -40,6 +41,7 @@ import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
 import cz.aron.transfagent.service.ApuSourceService;
 import cz.aron.transfagent.service.ArchivalEntityService;
+import cz.aron.transfagent.service.AttachmentService;
 import cz.aron.transfagent.service.DaoFileStore2Service;
 import cz.aron.transfagent.service.DaoFileStoreService;
 import cz.aron.transfagent.service.DaoImportService;
@@ -93,6 +95,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     private final LevelEnrichmentService levelEnrichmentService;
     
     private final ConfigElzaArchDesc configArchDesc;
+    
+    private final AttachmentService attachmentService;
 
     final private String ARCHDESC_DIR = "archdesc";
 
@@ -108,7 +112,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             @Nullable DaoFileStoreService daoFileStoreService,
             @Nullable DaoFileStore2Service daoFileStore2Service,
             @Nullable LevelEnrichmentService levelEnrichmentService,
-            @Nullable ConfigElzaArchDesc configArchDesc) {
+            @Nullable ConfigElzaArchDesc configArchDesc,
+            AttachmentService attachmentService) {
         this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -127,6 +132,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         this.daoFileStoreService = daoFileStoreService;
         this.daoFileStore2Service = daoFileStore2Service;
         this.levelEnrichmentService = levelEnrichmentService;
+        this.attachmentService = attachmentService;
         if (configArchDesc==null) {
             // default config
             this.configArchDesc = new ConfigElzaArchDesc();
@@ -254,9 +260,11 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         }
 
         // Request entities and store refs
-        Set<UUID> uuids = iad.getApRefs();        
-        archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);                        
+        Set<UUID> uuids = iad.getApRefs();
+        archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
         daoImportService.updateDaos(archDesc.getApuSource(), getDaoSources(iad));
+        var attachmentPaths = iad.getAttachments().stream().map(a -> a.getPath()).collect(Collectors.toList());
+        attachmentService.updateAttachments(archDesc.getApuSource(), apusrcBuilder, attachmentPaths);
     }
 
     
@@ -342,13 +350,23 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());
-            try (var os = Files.newOutputStream(apuDir.resolve("apusrc.xml"))) {
-                apuSourceBuilder.build(os, new ApuValidator(configurationLoader.getConfig()));
+            
+            // compare original apusrc.xml and newly generated
+            var apuSrcXmlPath = apuDir.resolve(StorageService.APUSRC_XML);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            apuSourceBuilder.build(baos, new ApuValidator(configurationLoader.getConfig()));
+            byte [] newContent = baos.toByteArray();
+            if (StorageService.isContentEqual(apuSrcXmlPath, newContent)) {
+                return ReimportProcessor.Result.NOCHANGES;
             }
+            Files.write(apuSrcXmlPath, newContent);
+
             // Request entities and store refs
             Set<UUID> uuids = iad.getApRefs();        
             archivalEntityService.updateSourceEntityLinks(archDesc.getApuSource(), uuids, null);
-            daoImportService.updateDaos(archDesc.getApuSource(), getDaoSources(iad));
+            daoImportService.updateDaos(archDesc.getApuSource(), getDaoSources(iad));            
+            var attachmentPaths = iad.getAttachments().stream().map(a->a.getPath()).collect(Collectors.toList());            
+            attachmentService.updateAttachments(apuSource, apuSourceBuilder, attachmentPaths);
         } catch (Exception e) {
             log.error("Fail to process, file: {}", inputFile, e);
             return Result.FAILED;

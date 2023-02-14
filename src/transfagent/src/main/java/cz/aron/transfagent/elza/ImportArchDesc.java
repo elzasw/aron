@@ -7,6 +7,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -34,6 +35,7 @@ import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.config.ConfigElzaArchDesc;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
+import cz.aron.transfagent.elza.convertor.EdxAttachment;
 import cz.aron.transfagent.elza.convertor.EdxEnumConvertor;
 import cz.aron.transfagent.elza.convertor.EdxIntConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
@@ -64,6 +66,7 @@ import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 import cz.tacr.elza.schema.v2.DescriptionItemUnitDate;
 import cz.tacr.elza.schema.v2.DigitalArchivalObject;
 import cz.tacr.elza.schema.v2.DigitalArchivalObjects;
+import cz.tacr.elza.schema.v2.File;
 import cz.tacr.elza.schema.v2.FundInfo;
 import cz.tacr.elza.schema.v2.Level;
 import cz.tacr.elza.schema.v2.Levels;
@@ -72,7 +75,7 @@ import cz.tacr.elza.schema.v2.Sections;
 
 public class ImportArchDesc implements EdxItemCovertContext {
 
-    private final static Logger log = LoggerFactory.getLogger(ImportArchDesc.class); 
+    private final static Logger log = LoggerFactory.getLogger(ImportArchDesc.class);
 
 	ElzaXmlReader elzaXmlReader;
 
@@ -127,7 +130,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_INVALID_RECORD",
             "ZP2015_ITEM_LINK",
             "ZP2015_TITLE_PUBLIC",
-            "ZP2015_ATTACHMENT",
     // TODO: k zapracovani:
             "ZP2015_AMOUNT"
     };
@@ -146,6 +148,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final LevelEnrichmentService levelEnrichmentService;
     
     private final ConfigElzaArchDesc configArchDesc;
+    
+    private final List<String> attachmentIds = new ArrayList<>();
+    
+    private final List<ArchDescAttachment> attachments = new ArrayList<>();
 
 	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
 			DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService,
@@ -171,6 +177,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
     
     public Map<String,Set<ArchDescDaoRef>> getDaoRefs() {
     	return daoRefs;
+    }
+    
+    public List<ArchDescAttachment> getAttachments() {
+        return attachments;
     }
 
 	public static void main(String[] args) {
@@ -203,11 +213,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         try(InputStream is = Files.newInputStream(inputFile)) {
             elzaXmlReader = ElzaXmlReader.read(is);
-            return importArchDesc();
+            return importArchDesc(inputFile);
         }
     }
 
-    private ApuSourceBuilder importArchDesc() {
+    private ApuSourceBuilder importArchDesc(Path inputFile) {
     	initConvertor();
         Sections sections = elzaXmlReader.getEdx().getFs();
         if(sections==null||sections.getS().size()==0) {
@@ -253,7 +263,37 @@ public class ImportArchDesc implements EdxItemCovertContext {
                 copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             }
         }
+
+        if (configArchDesc.isImportAttachments()) {
+            Path dir = inputFile.getParent();
+            for (File f : sect.getFs().getF()) {
+                if (attachmentIds.contains(f.getId())) {
+                    var file = dir.resolve(f.getFn());
+                    try {
+                        Files.write(file, f.getD());
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    apusBuilder.addAttachment(apusBuilder.getMainApu(), f.getFn(), f.getMt());
+                    attachments.add(new ArchDescAttachment(file));
+                }
+            }
+        }
         return apusBuilder;
+    }
+    
+    
+    public static class ArchDescAttachment {
+        
+        private final Path path;
+        
+        public ArchDescAttachment(Path path) {
+            this.path = path;
+        }
+        
+        public Path getPath() {
+            return path;
+        }
     }
 
     private void processLevel(Section sect, Level lvl) {
@@ -481,7 +521,14 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE, new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap));
         stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxIntConvertor("UNIT_COUNT"));
         stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
-        stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));	    
+        stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));
+        
+        if (configArchDesc.isImportAttachments()) {
+            stringTypeMap.put("ZP2015_ATTACHMENT", new EdxAttachment(attachmentIds));
+        } else {
+            stringTypeMap.put("ZP2015_ATTACHMENT", new EdxNullConvertor());
+        }
+
     }
 
     private void addItem(Apu apu, DescriptionItem item) {
@@ -695,6 +742,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
         return sb.toString();
     }
+    
 
 	private String getDesc(Section sect, Level lvl) {
 	    if(lvl.getPid()==null) {
@@ -780,5 +828,5 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}    	
     			
     }
-    
+
 }

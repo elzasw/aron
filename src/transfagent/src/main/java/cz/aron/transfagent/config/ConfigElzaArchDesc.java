@@ -12,6 +12,8 @@ public class ConfigElzaArchDesc {
     
     // inherit name+date field from parent when name is empty
     public boolean inheritNameDate;
+        
+    public boolean importAttachments; 
 
     public boolean isAddDateToName() {
         return addDateToName;
@@ -27,6 +29,14 @@ public class ConfigElzaArchDesc {
 
     public void setInheritNameDate(boolean inheritNameDate) {
         this.inheritNameDate = inheritNameDate;
-    }    
+    }
+
+    public boolean isImportAttachments() {
+        return importAttachments;
+    }
+
+    public void setImportAttachments(boolean importAttachments) {
+        this.importAttachments = importAttachments;
+    }
 
 }
