@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import com.google.common.collect.Iterables;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -52,4 +53,9 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
         });
         return ret;
     }
+    
+    public LocalDateTime findApuSourcePublished(String id) {
+        return query().select(metaModel.source.published).from(metaModel).innerJoin(metaModel.source,QApuSource.apuSource).where(metaModel.id.eq(id)).fetchOne();
+    }
+
 }

@@ -69,6 +69,7 @@ public class ReferencedFileRS {
         String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(path.getFileName().toString());
 
         return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=604800")
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " + fileName + "; " + fileNameAsterisk)
                 .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(size))
                 .contentType(MediaType.parseMediaType(digitalObjectFile.getContentType()))

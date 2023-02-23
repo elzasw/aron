@@ -26,6 +26,7 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,6 +81,7 @@ public class ApuProcessor {
                 log.debug("Processing apu source {}, original data deleted", reader.getUuid());
             }
             ourApuSource.setData(metadata);
+            ourApuSource.setPublished(LocalDateTime.now());
 
             if (create) {
                 apuSourceRepository.create(ourApuSource);
