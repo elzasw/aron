@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,7 +23,6 @@ import javax.xml.bind.JAXBException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
-import org.eclipse.jetty.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +51,7 @@ import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.convertor.UnitDateConvertor;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.peva.ArchiveFundId;
+import cz.aron.transfagent.peva.ImportPevaGeo;
 import cz.aron.transfagent.service.DaoFileStore2Service;
 import cz.aron.transfagent.service.DaoFileStore2Service.ArchiveFundDao;
 import cz.aron.transfagent.service.DaoFileStoreService;
@@ -82,13 +83,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	ApuSourceBuilder apusBuilder = new ApuSourceBuilder();
 
 	ContextDataProvider dataProvider;
-
-	Map<Apu, Apu> apuParentMap = new HashMap<>();
 	
-	Map<String, Apu> apuMap = new HashMap<>();
+	private final Map<String, LevelContext> apuContexts = new LinkedHashMap<>();
 
-	final Map<UUID, ArchEntityInfo> apRefs = new HashMap<>();
-	final Map<UUID, ArchEntityInfo> apLevelRefs = new HashMap<>();
+	private final Map<UUID, ArchEntityInfo> apRefs = new HashMap<>();
+	private final Map<UUID, ArchEntityInfo> apLevelRefs = new HashMap<>();
 	
 	/**
 	 * Mapa (source,daos)
@@ -256,26 +255,29 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
 
         // add dates to siblings
-        for (Entry<String, Apu> item : apuMap.entrySet()) {
-            var apu = item.getValue();
+        for (Entry<String, LevelContext> item : apuContexts.entrySet()) {
+            var context = item.getValue(); 
+            var apu = context.getApu();
             var ranges = ApuSourceBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             if (ranges.isEmpty()) {
-                copyDateRangeFromParent(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
+                copyDateRangeFromParent(context, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
             }
-        }
+        }        
 
         if (configArchDesc.isImportAttachments()) {
             Path dir = inputFile.getParent();
-            for (File f : sect.getFs().getF()) {
-                if (attachmentIds.contains(f.getId())) {
-                    var file = dir.resolve(f.getFn());
-                    try {
-                        Files.write(file, f.getD());
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+            if (sect.getFs() != null) {
+                for (File f : sect.getFs().getF()) {
+                    if (attachmentIds.contains(f.getId())) {
+                        var file = dir.resolve(f.getFn());
+                        try {
+                            Files.write(file, f.getD());
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                        apusBuilder.addAttachment(apusBuilder.getMainApu(), f.getFn(), f.getMt());
+                        attachments.add(new ArchDescAttachment(file));
                     }
-                    apusBuilder.addAttachment(apusBuilder.getMainApu(), f.getFn(), f.getMt());
-                    attachments.add(new ArchDescAttachment(file));
                 }
             }
         }
@@ -297,56 +299,30 @@ public class ImportArchDesc implements EdxItemCovertContext {
     }
 
     private void processLevel(Section sect, Level lvl) {
-        log.debug("Importing level, id: {}, uuid: {}", lvl.getId(), lvl.getUuid());
+        log.debug("Importing level, id: {}, u2uid: {}", lvl.getId(), lvl.getUuid());
         apLevelRefs.clear();
+                
+        Apu apu = apusBuilder.createApu("", ApuType.ARCH_DESC);
+        apu.setUuid(lvl.getUuid());        
         
-        String name = getName(sect, lvl);
-        String desc = getDesc(sect, lvl);
-        Apu apu = apusBuilder.createApu(name, ApuType.ARCH_DESC);
-        apu.setDesc(desc);
-        apu.setUuid(lvl.getUuid());
-
         // set parent
+        LevelContext parentContext = null;
         Apu parentApu = null;
         if(lvl.getPid()!=null) {
-            parentApu = apuMap.get(lvl.getPid());
-            if(parentApu==null) {
+            parentContext = apuContexts.get(lvl.getPid());                       
+            if(parentContext==null) {
                 throw new RuntimeException("Missing parent for level: "+lvl.getPid());
             }
+            parentApu = parentContext.getApu();
             apu.setPrnt(parentApu.getUuid());
-            apuParentMap.put(apu, parentApu);
-
-            // add name from parent if empty
-            if(StringUtil.isEmpty(apu.getName())) {
-                Apu tmpParent = parentApu;
-                while(tmpParent!=null) {
-                    if (StringUtil.isNotBlank(tmpParent.getName())) {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(parentApu.getName());
-                        if (configArchDesc.isAddDateToName()) {
-                            
-                        }
-                        apu.setName(sb.toString());                                                
-                        break;
-                    } else {
-                        tmpParent = apuParentMap.get(tmpParent);
-                    }
-                }
-                
-            }
-            if(StringUtil.isEmpty(apu.getDesc())) {
-                Apu tmpParent = parentApu;
-                while(tmpParent!=null) {
-                    if (StringUtils.isNotBlank(tmpParent.getDesc())) {
-                        apu.setDesc(parentApu.getDesc());
-                        break;
-                    } else {
-                        tmpParent = apuParentMap.get(tmpParent);
-                    }
-                }                
-            }
         }
-        apuMap.put(lvl.getId(), apu);
+        var levelContext = new LevelContext(lvl,apu,parentContext);
+        apuContexts.put(lvl.getId(), levelContext);
+        
+        String name = getName(sect, lvl, parentContext);
+        apu.setName(name);
+        String desc = getDesc(sect, lvl, parentContext);
+        apu.setDesc(desc);
 
         activateArchDescPart(apu);                
 
@@ -397,12 +373,13 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         // add date to parent(s)
         var itemDateRanges = ApuSourceBuilder.getItemDateRanges(apu, CoreTypes.PT_ARCH_DESC, CoreTypes.UNIT_DATE);
-        for(ItemDateRange item : itemDateRanges) {
-            Apu apuParent = parentApu;
-            while(apuParent != null) {
+        for (ItemDateRange item : itemDateRanges) {
+            var context = parentContext;
+            while (context != null) {
+                var apuParent = context.getApu();
                 ItemDateRangeAppender dateRangeAppender = new ItemDateRangeAppender(item);
                 dateRangeAppender.appendTo(apuParent);
-                apuParent = apuParentMap.get(apuParent);
+                context = context.getParentContext();
             }
         }
     }
@@ -576,15 +553,17 @@ public class ImportArchDesc implements EdxItemCovertContext {
         rctMap.put("TERM", "REG_TERM_REF");
 
         for(var apr: apLevelRefs.values()) {
-            var parentCode = apTypeService.getParentCode(apr.getEntityClass());
-            Validate.notNull(parentCode, "Failed to get parent code for class: %s", apr.getEntityClass());
+            // TODO proc se navaze na geo entitu z pevy?
+            if (!ImportPevaGeo.ENTITY_CLASS.equals(apr.getEntityClass())) {
+                var parentCode = apTypeService.getParentCode(apr.getEntityClass());
+                Validate.notNull(parentCode, "Failed to get parent code for class: %s", apr.getEntityClass());
 
-            String itemType = rctMap.get(parentCode);
-            Validate.notNull(itemType, "Failed to get itemType for parentCode: %s", parentCode);
-            // Add APref
-            apusBuilder.addApuRef(part, itemType, apr.getUuid(), false);
-
-            rootClasses.add(parentCode);
+                String itemType = rctMap.get(parentCode);
+                Validate.notNull(itemType, "Failed to get itemType for parentCode: %s", parentCode);
+                // Add APref
+                apusBuilder.addApuRef(part, itemType, apr.getUuid(), false);
+                rootClasses.add(parentCode);                
+            }            
         }
 
         // add rootClasses
@@ -595,22 +574,24 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
     }
 
-	private void copyDateRangeFromParent(Apu apu, String partType, String itemType) {
-		var apuParent = apuParentMap.get(apu);
-		while (apuParent != null) {
-			var rangesParent = ApuSourceBuilder.getItemDateRanges(apuParent, partType, CoreTypes.UNIT_DATE);
-			if (rangesParent.size() > 0) {
-				Part part = ApuSourceBuilder.getFirstPart(apu, partType);
-				if (part == null) {
-					part = ApuSourceBuilder.addPart(apu, partType);
-				}
-				ApuSourceBuilder.copyDateRanges(part, rangesParent);
-				return;
-			} else {
-				apuParent = apuParentMap.get(apuParent);
-			}
-		}
-	}
+    private void copyDateRangeFromParent(LevelContext levelContext, String partType, String itemType) {
+        var parentContext = levelContext.getParentContext();
+        var apu = levelContext.getApu();
+        while (parentContext != null) {
+            var apuParent = parentContext.getApu();
+            var rangesParent = ApuSourceBuilder.getItemDateRanges(apuParent, partType, CoreTypes.UNIT_DATE);
+            if (rangesParent.size() > 0) {
+                Part part = ApuSourceBuilder.getFirstPart(apu, partType);
+                if (part == null) {
+                    part = ApuSourceBuilder.addPart(apu, partType);
+                }
+                ApuSourceBuilder.copyDateRanges(part, rangesParent);
+                return;
+            } else {
+                parentContext = parentContext.getParentContext();
+            }
+        }
+    }
 
     private void deactivatePart(Apu apu) {
         if(activePart!=null) {
@@ -670,7 +651,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
     }
     
 
-    private String getName(Section sect, Level lvl) {
+    private String getName(Section sect, Level lvl, LevelContext parentContext) {
         String parentId = lvl.getPid();
 
         StringBuilder sb = new StringBuilder();
@@ -715,6 +696,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
                 datace = UnitDateConvertor.convertToString(dataceUnitDate);
             }
         }
+        
+        if (StringUtils.isBlank(datace)) {
+            datace = inheritDatace(parentContext);
+        }
 
         if(StringUtils.isNotEmpty(refOzn)) {
             sb.append(", ").append(refOzn);
@@ -743,27 +728,82 @@ public class ImportArchDesc implements EdxItemCovertContext {
         return sb.toString();
     }
     
+    public String inheritTitle(LevelContext parentContext) {
+        if (parentContext==null) {
+            return null;
+        }        
+        for(DescriptionItem item : parentContext.getLevel().getDdOrDoOrDp()) {
+            if(item.getT().equals("ZP2015_TITLE")) {
+                DescriptionItemString title = (DescriptionItemString)item;
+                return title.getV();
+            }
+        }        
+        return null;
+    }
 
-	private String getDesc(Section sect, Level lvl) {
-	    if(lvl.getPid()==null) {
-	        // for root no description
-	        return null;
-	    }
-	    
-		StringBuilder sb = new StringBuilder();
+    /**
+     * Precte dataci z nadrizenych urvni
+     * 
+     * @param parentContext
+     *            context nadrizenych urovni, muze byt null
+     * @return textova reprezentace datace nebo null
+     */
+    public String inheritDatace(LevelContext parentContext) {
+        while (parentContext != null) {
+            for (DescriptionItem item : parentContext.getLevel().getDdOrDoOrDp()) {
+                if (item.getT().equals(ElzaTypes.ZP2015_UNIT_DATE) && (item instanceof DescriptionItemUnitDate)) {
+                    DescriptionItemUnitDate dataceUnitDate = (DescriptionItemUnitDate) item;
+                    return UnitDateConvertor.convertToString(dataceUnitDate);
+                }
+            }
+            parentContext = parentContext.getParentContext();
+        }
+        return null;
+    }
 
-		for(DescriptionItem item : lvl.getDdOrDoOrDp()) {
-			if(item.getT().equals("ZP2015_TITLE")) {
-				DescriptionItemString title = (DescriptionItemString)item;
-				sb.append(title.getV());
-			}
-		}
+    private String getDesc(Section sect, Level lvl, LevelContext parentContext) {
+        if (lvl.getPid() == null) {
+            // for root no description
+            return null;
+        }
 
-		if(sb.length()==0) {
-		    return null;
-		}
-		return sb.toString();
-	}
+        String titleStr = null;
+        String datace = null;
+        StringBuilder sb = new StringBuilder();
+        for (DescriptionItem item : lvl.getDdOrDoOrDp()) {
+            if (item.getT().equals("ZP2015_TITLE")) {
+                DescriptionItemString title = (DescriptionItemString) item;
+                titleStr = title.getV();
+            }
+            if (item.getT().equals(ElzaTypes.ZP2015_UNIT_DATE) && (item instanceof DescriptionItemUnitDate)) {
+                DescriptionItemUnitDate dataceUnitDate = (DescriptionItemUnitDate) item;
+                datace = UnitDateConvertor.convertToString(dataceUnitDate);
+            }
+        }
+
+        boolean titleInherited = false;
+        // inherit title and name when null
+        if (StringUtils.isBlank(titleStr)) {
+            titleStr = inheritTitle(parentContext);
+            titleInherited = true;
+        }
+        if (StringUtils.isBlank(datace) && configArchDesc.isInheritNameDate()) {
+            datace = inheritDatace(parentContext);
+        }
+
+        if (StringUtils.isNotBlank(titleStr)) {
+            sb.append(titleStr);
+        }
+        if (StringUtils.isNotBlank(datace) && (configArchDesc.isAddDateToName() || (configArchDesc.isInheritNameDate()
+                && titleInherited))) {
+            sb.append(", ").append(datace);
+        }
+
+        if (sb.length() == 0) {
+            return null;
+        }
+        return sb.toString();
+    }
 
 	@Override
 	public ApuSourceBuilder getApusBuilder() {
@@ -827,6 +867,32 @@ public class ImportArchDesc implements EdxItemCovertContext {
 			return Objects.equals(handle, other.handle) && Objects.equals(uuid, other.uuid);
 		}    	
     			
+    }
+    
+    private static class LevelContext {
+
+        private final Level level;
+        private final Apu apu;
+        private final LevelContext parentContext;
+
+        public LevelContext(Level level, Apu apu, LevelContext parentContext) {
+            this.level = level;
+            this.apu = apu;
+            this.parentContext = parentContext;
+        }
+
+        public Level getLevel() {
+            return level;
+        }
+
+        public Apu getApu() {
+            return apu;
+        }
+
+        public LevelContext getParentContext() {
+            return parentContext;
+        }
+
     }
 
 }
