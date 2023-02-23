@@ -17,6 +17,7 @@ import { getExistingFile, getFiles } from './utils';
 import { useParams } from "react-router-dom";
 import { NavigationContext } from "@eas/common-web";
 import { createApuDaoFileUrl, ApuPathParams } from "../evidence";
+import { DaoNamePlacement } from "../../../enums/dao-name-placement";
 
 function Thumbnail({
   file,
@@ -100,6 +101,21 @@ const getObjectFromUrlParams = (map: URLSearchParams) => {
   return object;
 }
 
+const getDaoPlacementStyle = (placement?: DaoNamePlacement) => {
+    if(!placement){placement = DaoNamePlacement.TOP_RIGHT}
+
+    const placementStyle = {
+        [DaoNamePlacement.TOP_LEFT]: {top: '50px', left: 0},
+        [DaoNamePlacement.TOP_RIGHT]: {top: '50px', right: 0},
+        [DaoNamePlacement.BOTTOM_RIGHT]: {bottom: 0, right: 0},
+        [DaoNamePlacement.BOTTOM_LEFT]: {bottom: 0, left: 0},
+    }[placement];
+
+    if(!placementStyle){throw `Undefined placement name: ${placement}`}
+
+    return placementStyle || {};
+}
+
 export function EvidenceDetailDaoDialog({
   // item,
   // items,
@@ -120,6 +136,7 @@ export function EvidenceDetailDaoDialog({
   const {
     showMetadataInImageViewer,
     daoFooter,
+    daoNamePlacement,
   } = useConfiguration();
 
   const classes = useStyles();
@@ -228,7 +245,7 @@ export function EvidenceDetailDaoDialog({
               )}
             <div 
               className={classes.daoDialogFloatingOverlay} 
-              style={{ top: '50px', right: 0, padding: '10px' }}
+              style={{ ...getDaoPlacementStyle(daoNamePlacement), padding: '10px' }}
             >
               {showInfo && <>
                 <div className={classes.bold}>

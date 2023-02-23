@@ -1,5 +1,6 @@
 import React, { FC, useContext, createContext } from 'react';
 import { AppHeaderItemCode, SearchOption, Message } from '../../enums';
+import { DaoNamePlacement } from '../../enums/dao-name-placement';
 
 interface DaoFooterDef {
   copyrightText?: string;
@@ -29,6 +30,7 @@ export interface ConfigurationType {
     disableDownloads?: boolean;
     daoFooter?: DaoFooterDef;
     treeHorizontalScroll?: boolean;
+    daoNamePlacement?: DaoNamePlacement;
 }
 
 
@@ -72,6 +74,7 @@ const defaultConfiguration:ConfigurationType = {
     //   }]
     // },
     treeHorizontalScroll: false,
+    daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)
