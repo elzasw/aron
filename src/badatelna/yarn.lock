@@ -1430,6 +1430,8 @@ __metadata:
     "@types/react-helmet": ^6.1.0
     "@types/react-pdf": ^5.0.0
     "@types/react-router-dom": ^5.1.5
+    "@types/react-virtualized-auto-sizer": ^1.0.1
+    "@types/react-window": ^1.8.5
     "@types/yup": ^0.29.6
     "@typescript-eslint/eslint-plugin": 3.2.0
     "@typescript-eslint/parser": 3.2.0
@@ -1465,6 +1467,8 @@ __metadata:
     react-pdf: 5.0.0
     react-router-dom: 5.2.0
     react-share: ^4.4.0
+    react-virtualized-auto-sizer: ^1.0.7
+    react-window: ^1.8.8
     regenerator-runtime: ^0.13.5
     style-loader: 1.1.3
     typescript: 3.9.3
@@ -2257,6 +2261,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/react-virtualized-auto-sizer@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@types/react-virtualized-auto-sizer@npm:1.0.1"
+  dependencies:
+    "@types/react": "*"
+  checksum: 67eff0670a1991c2b16992274ada5f0b3f9d5c2d6209ef38e8f8ae2c0218211a3292882f5b7dd6f09519000dc20847629f049c9acc267e000626b7141e5927a6
+  languageName: node
+  linkType: hard
+
 "@types/react-window-infinite-loader@npm:1.0.3":
   version: 1.0.3
   resolution: "@types/react-window-infinite-loader@npm:1.0.3"
@@ -2273,6 +2286,15 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: c127ed420d881510fe647539342e7c494802aab12fd6cb61f9f8ba47ef16d3683e632b7a6a07eb0d284ea8f0953ae7941eafa2c51c0bcb3b176d009eac09c79a
+  languageName: node
+  linkType: hard
+
+"@types/react-window@npm:^1.8.5":
+  version: 1.8.5
+  resolution: "@types/react-window@npm:1.8.5"
+  dependencies:
+    "@types/react": "*"
+  checksum: 5f519e1402300d11b6e6595223feb6499f3227e38da166cbc565773cd7f71862abcf855b7835d391b5119fcfacdfba79d73a965b45f60a293fc1ff25986319ed
   languageName: node
   linkType: hard
 
@@ -8508,6 +8530,16 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"react-virtualized-auto-sizer@npm:^1.0.7":
+  version: 1.0.7
+  resolution: "react-virtualized-auto-sizer@npm:1.0.7"
+  peerDependencies:
+    react: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
+    react-dom: ^15.3.0 || ^16.0.0-alpha || ^17.0.0 || ^18.0.0-rc
+  checksum: 7f2f013c422771828c6613c7890f792aa90a033ea2b41c489c67ca2c6793eefa94d25232c1050fdf69cdd626fad9e3821c5003d45fa6fc831184cd09232023c2
+  languageName: node
+  linkType: hard
+
 "react-window-infinite-loader@npm:1.0.5":
   version: 1.0.5
   resolution: "react-window-infinite-loader@npm:1.0.5"
@@ -8528,6 +8560,19 @@ fsevents@~2.1.2:
     react: ^15.0.0 || ^16.0.0
     react-dom: ^15.0.0 || ^16.0.0
   checksum: 9abd462c67aaa72669616017eda2cd660ff073c6ec9a85fead12e1689a2b6e55c8d5f863bf515dd83424c41786f60b4a70aefbf9d8ae1e0a569fc6ede63797c3
+  languageName: node
+  linkType: hard
+
+"react-window@npm:^1.8.8":
+  version: 1.8.8
+  resolution: "react-window@npm:1.8.8"
+  dependencies:
+    "@babel/runtime": ^7.0.0
+    memoize-one: ">=3.1.1 <6"
+  peerDependencies:
+    react: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+    react-dom: ^15.0.0 || ^16.0.0 || ^17.0.0 || ^18.0.0
+  checksum: a19f43b9015fb84e16db983617dac618a8b298881d2ca96ffc2fb00534afd958ee57a00fd0017733b56f8c34dd84e5be59337877aed3c66329ed3b84e8d018ba
   languageName: node
   linkType: hard
 

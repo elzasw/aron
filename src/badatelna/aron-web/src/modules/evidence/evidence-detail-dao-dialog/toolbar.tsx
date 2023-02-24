@@ -189,14 +189,14 @@ export function Toolbar({
         </div>
         <div style={{flex: 1}}/>
         {customActionsRight}
-        <Icon
+        {setOpen && <Icon
           {...{
             title: '',
             Component: MenuIcon,
             onClick: () => setOpen(!open),
             className: classes.daoDialogMenu,
           }}
-        />
+        />}
       </div>
     </div>
   );

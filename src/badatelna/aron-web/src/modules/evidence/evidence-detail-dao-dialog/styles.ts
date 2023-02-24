@@ -76,6 +76,12 @@ export const useStyles =  makeStyles((theme) => {
         display: 'block',
       },
     },
+    daoDialogCenterNoThumbnails: {
+      left: 0,
+      width: '100%',
+      top: 0,
+      height: '100%',
+    },
     daoDialogRight: {
       right: 0,
       padding: '30px 16px 8px 8px',
@@ -100,12 +106,14 @@ export const useStyles =  makeStyles((theme) => {
     daoDialogSectionPartContent: {
       padding: '10px 25%',
       overflow: 'auto',
+      height: '100%',
       [md]: {
-        padding: '10px',
+        padding: '0px',
       }
     },
     daoThumbnailContainer: {
       width: '100%',
+      height: '100%',
       borderRadius: '5px',
       overflow: 'hidden',
       cursor: 'pointer',
@@ -130,6 +138,7 @@ export const useStyles =  makeStyles((theme) => {
     },
     daoThumbnail: {
       width: '100%',
+      height: '100%',
       filter: 'brightness(0.6)',
       alignItems: 'center',
       display: 'flex',
@@ -142,6 +151,8 @@ export const useStyles =  makeStyles((theme) => {
 
       '& > img': {
         width: '100%',
+        height: '100%',
+        objectFit: 'cover',
       }
     },
     daoDialogSectionPartActive: {

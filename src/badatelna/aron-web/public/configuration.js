@@ -43,5 +43,6 @@ var _configuration = {
   //   },
   // },
   // treeHorizontalScroll: false,
-  daoNamePlacement: "bottom-right" // top-left, top-right, bottom-left, bottom-right
+  // daoNamePlacement: "top-right", // top-left, top-right, bottom-left, bottom-right
+  // hideThumbnails: false,
 }

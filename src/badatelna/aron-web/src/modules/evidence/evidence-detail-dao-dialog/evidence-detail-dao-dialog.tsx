@@ -18,6 +18,8 @@ import { useParams } from "react-router-dom";
 import { NavigationContext } from "@eas/common-web";
 import { createApuDaoFileUrl, ApuPathParams } from "../evidence";
 import { DaoNamePlacement } from "../../../enums/dao-name-placement";
+import { FixedSizeList, ListChildComponentProps } from "react-window";
+import AutoSizer from "react-virtualized-auto-sizer"
 
 function Thumbnail({
   file,
@@ -63,6 +65,23 @@ function Thumbnail({
   );
 }
 
+function ListItem({index, style, data}:ListChildComponentProps){
+  const item = data.files[index];
+  const isActive = data.activeFile && data.activeFile.id === item.id;
+  return <div 
+    key={index} 
+    style={{...style, overflow: "hidden", padding: "3px 8px"}}
+  >
+    <Thumbnail 
+      key={index} 
+      isActive={isActive} 
+      index={index} 
+      file={item} 
+      onClick={data.onClick}
+    />
+  </div>
+}
+
 function ImageList({
   activeFile,
   files,
@@ -82,11 +101,22 @@ function ImageList({
     <div
       className={classes.daoDialogSectionPartContent}
     >
-      {files.map((item, i) => {
-        const isActive = activeFile && activeFile.id === item.id;
-
-        return <Thumbnail key={i} isActive={isActive} index={i} file={item} onClick={onClick}/>
-      })}
+      <AutoSizer>
+        {({width, height})=>(
+          <FixedSizeList 
+            width={width} 
+            height={height} 
+            itemCount={files.length} 
+            itemSize={140} 
+            overscanCount={2}
+            itemData={{
+              files, activeFile, onClick
+            }}
+          >
+            {ListItem}
+          </FixedSizeList>
+        )}
+      </AutoSizer>
     </div>
   </div>
 }
@@ -137,6 +167,7 @@ export function EvidenceDetailDaoDialog({
     showMetadataInImageViewer,
     daoFooter,
     daoNamePlacement,
+    hideThumbnails,
   } = useConfiguration();
 
   const classes = useStyles();
@@ -206,7 +237,7 @@ export function EvidenceDetailDaoDialog({
               item: dao,
               setItem,
               open,
-              setOpen,
+              setOpen: hideThumbnails ? undefined : setOpen,
               file,
               showCloseButton: !embed,
               customActionsLeft: customActionsLeft?.({fullscreen}),
@@ -228,11 +259,15 @@ export function EvidenceDetailDaoDialog({
             className={classNames(
               classes.daoDialogSection,
               classes.daoDialogCenter,
-              classes.daoDialogCenterNoSidebar
+              classes.daoDialogCenterNoSidebar,
+              hideThumbnails && classes.daoDialogCenterNoThumbnails
             )}
           >
             {files.length && fileUuid ? (
-              <ImageViewer ref={viewerRef} id={fileUuid} />
+              <ImageViewer 
+                ref={viewerRef} 
+                id={fileUuid} 
+              />
             ) : (
                 <div
                   className={classNames(
@@ -261,7 +296,9 @@ export function EvidenceDetailDaoDialog({
                 </div>}
               </>
               }
-              <div style={{marginTop: '5px'}}>{ file.published?.metadata?.find((item) => item.type === "name")?.value }</div>
+              <div style={{marginTop: '5px'}}>
+                {fileIndex+1}/{files.length} - { file.published?.metadata?.find((item) => item.type === "name")?.value }
+              </div>
             </div>
             {daoFooter && 
               <div
@@ -336,7 +373,7 @@ export function EvidenceDetailDaoDialog({
           </div>
         </div>}
         </>
-      <div
+      {!hideThumbnails && <div
         className={classNames(
           classes.daoDialogSection,
           classes.daoDialogSide,
@@ -345,7 +382,7 @@ export function EvidenceDetailDaoDialog({
         )}
       >
         <ImageList files={files} activeFile={file} onClick={handleClickThumbnail} />
-      </div>
+      </div>}
     </div>
   );
 }

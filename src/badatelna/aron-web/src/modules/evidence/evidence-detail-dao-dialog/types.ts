@@ -39,7 +39,7 @@ export interface ToolbarProps {
   item: Dao;
   setItem: (item: Dao | null) => void;
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen?: (open: boolean) => void;
   file: FileObject;
   showCloseButton?: boolean;
   customActionsLeft?: React.ReactNode;

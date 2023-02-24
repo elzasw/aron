@@ -31,6 +31,7 @@ export interface ConfigurationType {
     daoFooter?: DaoFooterDef;
     treeHorizontalScroll?: boolean;
     daoNamePlacement?: DaoNamePlacement;
+    hideThumbnails?: boolean;
 }
 
 
@@ -75,6 +76,7 @@ const defaultConfiguration:ConfigurationType = {
     // },
     treeHorizontalScroll: false,
     daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
+    hideThumbnails: false,
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)
