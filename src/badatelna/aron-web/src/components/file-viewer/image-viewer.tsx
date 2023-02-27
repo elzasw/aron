@@ -15,10 +15,12 @@ export interface ImageViewerExposedFunctions {
 
 interface ImageViewerProps {
   id: number | string;
+  url?: string;
 }
 
 export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageViewerProps>(({
   id,
+  url,
 }, ref) => {
     const [viewer, setViewer] = useState<OpenSeadragon.Viewer>();
     const viewerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +75,7 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
             showZoomControl: false,
             showHomeControl: false,
             showFullPageControl: false,
-            tileSources: `${API_URL}/tile/${id}/image.dzi`,
+            tileSources: url ? url : `${API_URL}/tile/${id}/image.dzi`,
             maxZoomPixelRatio: 5,
           })
         );

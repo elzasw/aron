@@ -267,6 +267,7 @@ export function EvidenceDetailDaoDialog({
               <ImageViewer 
                 ref={viewerRef} 
                 id={fileUuid} 
+                url={file.tile?.referencedFile?.startsWith("http") ? file.tile.referencedFile : undefined}
               />
             ) : (
                 <div
