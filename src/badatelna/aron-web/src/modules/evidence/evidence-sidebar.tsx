@@ -158,11 +158,11 @@ export const EvidenceSidebar: React.FC<SidebarProps> = ({
                     ? value.length
                     : false)
               )
-              .map((f, key) => (
+              .map((f) => (
                 <FilterComponent
                   {...{
                     ...f,
-                    key,
+                    key: f.source,
                     onChange,
                     apuPartItemTypes,
                     apiFilters,
