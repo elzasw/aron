@@ -12,8 +12,12 @@ public class ConfigElzaArchDesc {
     
     // inherit name+date field from parent when name is empty
     public boolean inheritNameDate;
-        
-    public boolean importAttachments; 
+
+    // import attachments stored inside xml
+    public boolean importAttachments;
+    
+    // show ZP2015_APPLIED_RESTRICTION
+    public boolean showAccessRestrictions;
 
     public boolean isAddDateToName() {
         return addDateToName;
@@ -38,5 +42,13 @@ public class ConfigElzaArchDesc {
     public void setImportAttachments(boolean importAttachments) {
         this.importAttachments = importAttachments;
     }
+
+    public boolean isShowAccessRestrictions() {
+        return showAccessRestrictions;
+    }
+
+    public void setShowAccessRestrictions(boolean showAccessRestrictions) {
+        this.showAccessRestrictions = showAccessRestrictions;
+    }    
 
 }

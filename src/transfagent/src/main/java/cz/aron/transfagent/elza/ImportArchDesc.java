@@ -120,7 +120,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_RESTRICTION_ACCESS_NAME",
             "ZP2015_RESTRICTED_ACCESS_REASON",
             "ZP2015_RESTRICTED_ACCESS_TYPE",
-            "ZP2015_APPLIED_RESTRICTION",
             "ZP2015_RESTRICTION_ACCESS_INLINE",
             // geo souradnice - neumime prevest
             ElzaTypes.ZP2015_POSITION,
@@ -505,7 +504,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
         } else {
             stringTypeMap.put("ZP2015_ATTACHMENT", new EdxNullConvertor());
         }
-
+        if (configArchDesc.isShowAccessRestrictions()) {
+            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION, new EdxEnumConvertor("UNIT_RESTRICTION", ElzaTypes.APPLIED_ACCESS_RESTRICT_MAP));
+        } else {
+            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION, new EdxNullConvertor());
+        }
     }
 
     private void addItem(Apu apu, DescriptionItem item) {

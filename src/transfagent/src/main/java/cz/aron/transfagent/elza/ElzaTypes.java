@@ -99,6 +99,8 @@ public abstract class ElzaTypes {
     public static final String ZP2015_ITEM_LINK = "ZP2015_ITEM_LINK";
     public static final String ZP2015_DAO_LINK = "ZP2015_DAO_LINK";
     public static final String ZP2015_RELATED_UNITS_LINK = "ZP2015_RELATED_UNITS_LINK";
+    
+    public static final String ZP2015_APPLIED_RESTRICTION = "ZP2015_APPLIED_RESTRICTION";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {
@@ -672,6 +674,17 @@ public abstract class ElzaTypes {
         relEntityMap.put("RT_MENTION", "RT_MENTION");
         relEntityMap.put("RT_ORIGINATOR", "RT_ORIGINATOR");
         relEntityMap.put("RT_GEOPARTNER", "RT_GEOPARTNER");
+    }
+    
+    public static Map<String, String> APPLIED_ACCESS_RESTRICT_MAP = new HashMap<>();
+    static {
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_DAO","nepřístupný digitální archivní objekt");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_ZP2015_APPLIED_RESTRICTION_DAO_INPERS_ONLY","digitální archivní objekt přístupný jen v badatelně");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_ARCHMAT","nepřístupný originál analogové archiválie");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_ARCHMAT2","nepřístupná analogová archiválie a její analogová kopie");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_ABSTRACT","nepřístupný prvek obsah");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_LIMITED","použití prvků s omezením");
+        APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_ARCHENTITY","nepřístupné vztahy mezi jednotkou popisu a entitami");
     }
 
 }
