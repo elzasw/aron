@@ -33,6 +33,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.domain.SourceType;
 import cz.aron.transfagent.elza.ApTypeService;
 import cz.aron.transfagent.elza.ImportArchDesc;
+import cz.aron.transfagent.elza.dao.ArchDescLevelDaoImporter;
 import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.repository.ApuSourceRepository;
 import cz.aron.transfagent.repository.ArchDescRepository;
@@ -92,6 +93,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     private final DaoFileStoreService daoFileStoreService;
     private final DaoFileStore2Service daoFileStore2Service;
     
+    private final List<ArchDescLevelDaoImporter> archDescLevelDaoImporters;
+    
     private final LevelEnrichmentService levelEnrichmentService;
     
     private final ConfigElzaArchDesc configArchDesc;
@@ -113,7 +116,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
             @Nullable DaoFileStore2Service daoFileStore2Service,
             @Nullable LevelEnrichmentService levelEnrichmentService,
             @Nullable ConfigElzaArchDesc configArchDesc,
-            AttachmentService attachmentService) {
+            AttachmentService attachmentService,
+            List<ArchDescLevelDaoImporter> archDescLevelDaoImporters) {
         this.apTypeService = apTypeService;
         this.apuSourceService = apuSourceService;
         this.reimportService = reimportService;
@@ -139,6 +143,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         } else {
             this.configArchDesc = configArchDesc;
         }
+        this.archDescLevelDaoImporters = archDescLevelDaoImporters;
     }
 
     @PostConstruct
@@ -202,7 +207,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
      */
     private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
 
-        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service, levelEnrichmentService, configArchDesc);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service, levelEnrichmentService,
+                configArchDesc, archDescLevelDaoImporters);
         ApuSourceBuilder apusrcBuilder;
 
         try {
@@ -275,6 +281,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 			case "dspace":
 			case "file":
 			case "file2":
+			case "file4":
 				daoSources.add(new DaoSource(s,
 						r.stream().map(x -> new DaoSourceRef(x.getUuid(), x.getHandle())).collect(Collectors.toSet())));
 				break;
@@ -346,7 +353,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var inputFile = archDescFile.get();
              
         ApuSourceBuilder apuSourceBuilder;
-        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service, levelEnrichmentService, configArchDesc);
+        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, daoFileStore2Service, levelEnrichmentService, configArchDesc, archDescLevelDaoImporters);
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());

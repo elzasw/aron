@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.JAXBException;
@@ -47,7 +48,7 @@ public class ImportArchDescTest {
     public void testImportArchDesc() throws IOException, JAXBException {
         Path inputFile = Path.of(ARCHDESC_DIR, ARCHDESC_FILE);
 
-        ImportArchDesc iad = new ImportArchDesc(new ApTypeService(),null,null,null,new ConfigElzaArchDesc());
+        ImportArchDesc iad = new ImportArchDesc(new ApTypeService(),null,null,null,new ConfigElzaArchDesc(), Collections.emptyList());
         ApuSourceBuilder builder = iad.importArchDesc(inputFile, ARCHDESC_DIR + "/" + PROPERTIES_FILE);
 
         Path outputPath = Path.of(ARCHDESC_DIR, APUSRC_XML);

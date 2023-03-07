@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -49,6 +50,7 @@ import cz.aron.transfagent.elza.convertor.EdxTimeLenghtConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertor;
 import cz.aron.transfagent.elza.convertor.EdxUnitDateConvertorEnum;
 import cz.aron.transfagent.elza.convertor.UnitDateConvertor;
+import cz.aron.transfagent.elza.dao.ArchDescLevelDaoImporter;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.peva.ImportPevaGeo;
@@ -145,21 +147,24 @@ public class ImportArchDesc implements EdxItemCovertContext {
     
     private final LevelEnrichmentService levelEnrichmentService;
     
+    private final List<ArchDescLevelDaoImporter> levelDaoImporters;
+    
     private final ConfigElzaArchDesc configArchDesc;
     
     private final List<String> attachmentIds = new ArrayList<>();
     
     private final List<ArchDescAttachment> attachments = new ArrayList<>();
 
-	public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
-			DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService,
-			ConfigElzaArchDesc configArchDesc) {
-		this.apTypeService = apTypeService;
-		this.daoFileStoreService = daoFileStoreService;
-		this.daoFileStoreService2 = daoFileStoreService2;
-		this.levelEnrichmentService = levelEnrichmentService;
-		this.configArchDesc = configArchDesc;
-	}
+    public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
+                          DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService,
+                          ConfigElzaArchDesc configArchDesc, List<ArchDescLevelDaoImporter> levelDaoImporters) {
+        this.apTypeService = apTypeService;
+        this.daoFileStoreService = daoFileStoreService;
+        this.daoFileStoreService2 = daoFileStoreService2;
+        this.levelEnrichmentService = levelEnrichmentService;
+        this.configArchDesc = configArchDesc;
+        this.levelDaoImporters = levelDaoImporters;
+    }
 
     public Set<UUID> getApRefs() {
         return apRefs.keySet();
@@ -183,7 +188,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null, new ConfigElzaArchDesc());
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null, new ConfigElzaArchDesc(), Collections.emptyList());
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -419,8 +424,15 @@ public class ImportArchDesc implements EdxItemCovertContext {
 					}
 				}
 			}
-		}
-		return daoExist;
+		}		
+        for (ArchDescLevelDaoImporter daoImporter : levelDaoImporters) {
+            if (daoImporter.importDaos(lvl, activeApu, dataProvider, (source, handle, uuid) -> {
+                addDaoRef(source, uuid, handle);
+            }) > 0) {
+                daoExist = true;
+            }
+        }
+        return daoExist;
 	}
 	
     private void processLevelEnrichment(Level lvl) {

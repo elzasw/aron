@@ -212,6 +212,66 @@ public class TransformService {
 		scheduleAsyncTransforms(daoUuid, filesToTransformAsync);
 		return true;
 	}
+	
+	
+    public boolean transformHttpUrls(Path daoDir, List<String> urls) throws JAXBException, IOException {
+
+        if (urls.isEmpty()) {
+            return false;
+        }
+
+        var daoUuid = daoDir.getFileName().toString();
+        var daoUuidXmlFile = daoDir.resolve("dao-" + daoUuid + ".xml");
+        var filesDir = daoDir.resolve("files");
+        Files.createDirectories(filesDir);
+
+        // mapovani (nazev souboru,typ transformace)->pridelene uuid
+        var filesToTransformAsync = getExistingMappings(daoUuid);
+
+        DaoBuilder daoBuilder = new DaoBuilder();
+        daoBuilder.setUuid(daoUuid);
+        DaoBundle hiResView = daoBuilder.createDaoBundle(DaoBundleType.HIGH_RES_VIEW);
+
+        var pos = 1;
+        for (String url : urls) {
+            processHttp(url,filesDir, hiResView, pos, filesToTransformAsync);
+            pos++;
+        }
+
+        // vytvoreni dao-uuid.xml
+        log.debug("Creating file {}", daoUuidXmlFile);
+        Marshaller marshaller = ApuxFactory.createMarshaller();
+        try (OutputStream os = Files.newOutputStream(daoUuidXmlFile)) {
+            marshaller.marshal(daoBuilder.build(), os);
+        }
+
+        scheduleAsyncTransforms(daoUuid, filesToTransformAsync);
+        return true;
+    }
+
+    private void processHttp(String url, Path filesDir, DaoBundle hiResView, int pos,
+                             Map<FileTransformKey, String> filesToTransformAsync) {
+        if (url == null) {
+            throw new IllegalStateException(
+                    "Source dir cannot be empty whe sending reaferences to digital object file.");
+        }
+
+        var name = url;
+        var lastSlash = url.lastIndexOf('/');
+        if (lastSlash!=-1&&url.length()>lastSlash+1) {
+            name = url.substring(lastSlash+1);
+        }        
+        
+        var existingUuid = filesToTransformAsync.get(new FileTransformKey(name, TRANSFORM_IDENTITY));
+        var daoFile = DaoBuilder.createDaoFile(name, 0l, pos, "text/plain", existingUuid);
+        var uuid = daoFile.getUuid();
+        DaoBuilder.addReferenceFlag(daoFile);
+        DaoBuilder.addPath(daoFile, url);
+        hiResView.getFile().add(daoFile);
+        if (existingUuid==null) {
+            filesToTransformAsync.put(new FileTransformKey(url, TRANSFORM_IDENTITY), uuid);
+        }
+    }
 
 	private void scheduleAsyncTransforms(String daoUuid, Map<FileTransformKey, String> filesToTransformAsync) {
 		// plan async transforms
