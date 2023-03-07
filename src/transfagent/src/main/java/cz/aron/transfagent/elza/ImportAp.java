@@ -450,9 +450,12 @@ public class ImportAp implements EdxItemCovertContext {
         case "ARCHNUM":
             // ignored idents
             return;
-        case "IC":
+        case "IC":        
             identType = "IČ";
             break;
+        case "VAT":        
+            identType = "DIČ";
+            break;            
         case "INTERPI":
             identType = "INTERPI";
             break;
