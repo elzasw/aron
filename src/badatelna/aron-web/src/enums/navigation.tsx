@@ -27,47 +27,55 @@ export interface NavigationItem {
     url?: string;
 }
 
-export const appHeaderItems:Record<AppHeaderItemCode, NavigationItem> = {
-  INSTITUTION: {
+export const createAppHeaderItem:Record<AppHeaderItemCode, (configuration: ConfigurationType) => NavigationItem> = {
+  INSTITUTION: () => ({
     path: ModulePath.INSTITUTION,
     label: <FormattedMessage id={Message.INSTITUTION} />,
     Component: Evidence,
-  },
-  FUND: {
+  }),
+  FUND: () => ({
     path: ModulePath.FUND,
     label: <FormattedMessage id={Message.FUND} />,
     Component: Evidence,
-  },
-  FINDING_AID: {
+  }),
+  FINDING_AID: () => ({
     path: ModulePath.FINDING_AID,
     label: <FormattedMessage id={Message.FINDING_AID} />,
     Component: Evidence,
-  },
-  ARCH_DESC: {
+  }),
+  ARCH_DESC: () => ({
     path: ModulePath.ARCH_DESC,
     label: <FormattedMessage id={Message.ARCH_DESC} />,
     Component: Evidence,
-  },
-  ENTITY: {
+  }),
+  ENTITY: () => ({
     path: ModulePath.ENTITY,
     label: <FormattedMessage id={Message.ENTITY} />,
     Component: Evidence,
-  },
-  ORIGINATOR: {
+  }),
+  ORIGINATOR: () => ({
     path: ModulePath.ORIGINATOR,
     label: <FormattedMessage id={Message.ORIGINATORS} />,
     Component: Evidence,
-  },
-  NEWS: {
-    path: ModulePath.NEWS,
-    label: <FormattedMessage id={Message.NEWS} />,
-    Component: News,
-  },
-  HELP: {
+  }),
+  NEWS: ({newsUrl}) => {
+        if(newsUrl){
+            return {
+                label: <FormattedMessage id={Message.NEWS} />,
+                url: newsUrl
+            }
+        }
+
+        return {
+            path: ModulePath.NEWS,
+            label: <FormattedMessage id={Message.NEWS} />,
+            Component: News,
+        }
+    },
+  HELP: ({helpUrl}) => ({
     label: <FormattedMessage id={Message.HELP} />,
-    url:
-      'https://vychodoceskearchivy.cz/home/prezentace-archivu/e-vystava-archivalii/archiv-online-napoveda',
-  },
+    url: helpUrl,
+  }),
 };
 
 export const navigationItems:NavigationItem[] = [
@@ -88,7 +96,7 @@ export const navigationItems:NavigationItem[] = [
 export const getAppHeaderItems = (configuration: ConfigurationType) => {
     const headerItems = configuration.headerItems || [];
     return headerItems.map((code)=>{
-        return appHeaderItems[code]
+        return createAppHeaderItem[code](configuration);
     })
 }
 

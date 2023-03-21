@@ -32,6 +32,8 @@ export interface ConfigurationType {
     treeHorizontalScroll?: boolean;
     daoNamePlacement?: DaoNamePlacement;
     hideThumbnails?: boolean;
+    newsUrl?: string;
+    helpUrl?: string;
 }
 
 
@@ -77,6 +79,8 @@ const defaultConfiguration:ConfigurationType = {
     treeHorizontalScroll: false,
     daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
     hideThumbnails: false,
+    // newsUrl: 'https://www.seznam.cz',
+    // helpUrl: 'https://www.google.cz',
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)

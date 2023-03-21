@@ -45,4 +45,6 @@ var _configuration = {
   // treeHorizontalScroll: false,
   // daoNamePlacement: "top-right", // top-left, top-right, bottom-left, bottom-right
   // hideThumbnails: false,
+  // newsUrl: 'https://www.seznam.cz',
+  // helpUrl: 'https://www.google.cz',
 }

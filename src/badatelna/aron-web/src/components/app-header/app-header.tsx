@@ -6,12 +6,11 @@ import MenuIcon from '@material-ui/icons/Menu';
 
 import { LocaleContext, LocaleName } from '@eas/common-web';
 
-import { getAppHeaderItems, ApiUrl } from '../../enums';
+import { getAppHeaderItems } from '../../enums';
 import { AppTitle } from '../app-title';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { Language } from '../language';
-import { openUrl, useGet } from '../../common-utils';
 import { Props } from './types';
 import { useConfiguration } from '../configuration'
 
@@ -22,8 +21,6 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
   const spacingClasses = useSpacingStyles();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-
-  const [result] = useGet<string>(ApiUrl.HELP, { textResponse: true });
 
   const { switchLocale } = useContext(LocaleContext);
 
@@ -41,9 +38,6 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
     }
   }, [localizations, switchLocale]);
 
-  const handleHelp = () =>
-    result && typeof result === 'string' && openUrl(result);
-
   const showLanguages = localizations && localizations.length > 1 && !configuration.localeCookieName;
 
   return (
@@ -56,11 +50,12 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
       >
         <AppTitle {...props} />
         <div className={classes.appHeaderItems}>
-          {getAppHeaderItems(configuration).map(({ path, label }, i) =>
+          {getAppHeaderItems(configuration).map(({ path, label, url }, i) =>
             !path ? (
-              <div
+              <a
                 key={i}
-                onClick={handleHelp}
+                href={url}
+                target="blank"
                 className={classNames(
                   classes.appHeaderItem,
                   layoutClasses.flexCentered,
@@ -68,7 +63,7 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
                 )}
               >
                 {label}
-              </div>
+              </a>
             ) : (
               <Link
                 key={path}
@@ -111,15 +106,16 @@ export function AppHeader({ pageTemplate, ...props }: Props) {
               className={classes.appHeaderItemsMobile}
               onClick={() => setOpen(false)}
             >
-              {getAppHeaderItems(configuration).map(({ path, label }, i) =>
+              {getAppHeaderItems(configuration).map(({ path, label, url }, i) =>
                 !path ? (
-                  <div
+                  <a
                     key={i}
-                    onClick={handleHelp}
+                    href={url}
+                    target="blank"
                     className={classes.appHeaderItemMobile}
                   >
                     {label}
-                  </div>
+                  </a>
                 ) : (
                   <Link
                     key={path}
