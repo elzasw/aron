@@ -21,7 +21,7 @@ export function Tree({
   ...props
 }: Props) {
   const classes = useStyles();
-  const {treeHorizontalScroll} = useConfiguration();
+  const { treeHorizontalScroll } = useConfiguration();
 
   const renderItems = (items: any[], parentId?: string) =>
     items.map((item) => {
@@ -55,7 +55,7 @@ export function Tree({
             ),
             onLabelClick:
               onLabelClick &&
-              (!disableClick || idMapper(disableClick) !== idMapper(item))
+                (!disableClick || idMapper(disableClick) !== idMapper(item))
                 ? () => onLabelClick(item)
                 : undefined,
           }}
@@ -73,6 +73,10 @@ export function Tree({
         defaultCollapseIcon: <ExpandMoreIcon />,
         defaultExpandIcon: <ChevronRightIcon />,
         onNodeToggle: (_, expanded) => onNodeToggle(expanded),
+        onNodeSelect: (event: any, nodePath: any) => {
+          const nodeId = nodePath.split("__").pop();
+          onLabelClick?.({ id: nodeId });
+        },
       }}
     >
       {renderItems(items)}
