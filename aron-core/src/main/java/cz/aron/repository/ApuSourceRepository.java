@@ -1,0 +1,14 @@
+package cz.aron.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import cz.aron.domain.ApuSource;
+
+
+@Repository
+public interface ApuSourceRepository extends JpaRepository<ApuSource, Long> {
+		
+	ApuSource findByUuid(String uuid);
+
+}

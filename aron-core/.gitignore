@@ -1,0 +1,14 @@
+target/
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### Eclipse ###
+.classpath
+.project
+.settings
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr

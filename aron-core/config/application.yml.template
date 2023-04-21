@@ -1,0 +1,30 @@
+spring:
+  datasource:
+      url: jdbc:postgresql://localhost:5432/aron
+      username: postgres
+      password: postgres
+  jpa:
+    show-sql: true
+
+types-config: "./config/types.yaml"
+transformation-agent-url: "http://127.0.1:8088/ws/ApuTransformManager"
+
+files:
+  storage: c:/projects/crp/data/fileStorage
+  transfer:
+    path: c:/projects/crp/aronFileTransfer
+
+tile:
+  folder: c:/projects/crp/data/tiles
+  format: jpg
+
+
+webResources:
+  pageTemplate: ./config/pageTemplate.yaml
+  news: ./config/news.yaml
+  favoriteQueries: ./config/favoriteQueries.yaml
+  facets: ./config/searchConfig.yaml
+  logo: ./config/images/logo.svg
+  topImage: ./config/images/book.png
+
+help-url: https://seznam.cz

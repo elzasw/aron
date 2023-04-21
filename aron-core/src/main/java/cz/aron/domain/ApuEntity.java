@@ -1,0 +1,229 @@
+package cz.aron.domain;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+@NamedNativeQuery(name = "entityTree",
+query = """
+WITH RECURSIVE cte(uuid, name, description, ordr, type, apu_id, parent_id) AS
+(
+	SELECT uuid, name, description, ordr, type, apu_id, parent_id
+	FROM apu a
+	WHERE a.uuid=:uuid
+	UNION ALL
+	SELECT a.uuid, a.name, a.description, a.ordr, a.type, a.apu_id, a.parent_id
+	FROM cte
+	JOIN apu a ON a.parent_id=cte.apu_id			
+)
+SELECT uuid as uuid, name as name, description as description, ordr as ordr, type as type, apu_id as apu_id, parent_id as parent_id
+FROM cte
+""",
+resultSetMapping = "entityTreeResult")
+
+@SqlResultSetMapping(
+	    name="entityTreeResult",
+	    classes={
+	      @ConstructorResult(
+	        targetClass=cz.aron.domain.types.dto.ApuEntityViewType.class,
+	        columns={
+	          @ColumnResult(name="uuid", type=String.class),
+	          @ColumnResult(name="name", type=String.class),
+	          @ColumnResult(name="description", type=String.class),
+	          @ColumnResult(name="ordr", type=Integer.class),
+	          @ColumnResult(name="type", type=ApuType.class),
+	          @ColumnResult(name="apu_id", type=Long.class),
+	          @ColumnResult(name="parent_id", type=Long.class),})})
+
+@Entity
+@Table(name = "apu")
+public class ApuEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name="apu_id")
+	private long id;
+
+	private String uuid;
+
+	private String name;
+	private String description;
+	private String permalink;
+	
+	@Column(name = "ordr")
+	private int order;
+	
+	private boolean published;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@Fetch(FetchMode.SELECT)
+	@JoinColumn(name="apu_source_id")
+    @JsonIgnore
+	private ApuSource source;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="parent_id")
+	private ApuEntity parent;
+
+	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ApuPart> parts = new ArrayList<>();
+
+	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<ApuAttachment> attachments = new ArrayList<>();
+
+	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<DigitalObject> digitalObjects = new ArrayList<>();
+
+	@Enumerated(EnumType.STRING)
+	private ApuType type;
+
+	@Transient
+	private List<String> incomingRelTypeGroups = new ArrayList<>();
+
+	@Transient
+	private List<String> incomingRelTypes = new ArrayList<>();
+
+	public long getId() {
+		return id;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getPermalink() {
+		return permalink;
+	}
+
+	public void setPermalink(String permalink) {
+		this.permalink = permalink;
+	}
+
+	public int getOrder() {
+		return order;
+	}
+
+	public void setOrder(int order) {
+		this.order = order;
+	}
+
+	public boolean isPublished() {
+		return published;
+	}
+
+	public void setPublished(boolean published) {
+		this.published = published;
+	}
+
+	public ApuSource getSource() {
+		return source;
+	}
+
+	public void setSource(ApuSource source) {
+		this.source = source;
+	}
+
+	public ApuEntity getParent() {
+		return parent;
+	}
+
+	public void setParent(ApuEntity parent) {
+		this.parent = parent;
+	}
+
+	public List<ApuPart> getParts() {
+		return parts;
+	}
+
+	public void setParts(List<ApuPart> parts) {
+		this.parts = parts;
+	}
+
+	public List<ApuAttachment> getAttachments() {
+		return attachments;
+	}
+
+	public void setAttachments(List<ApuAttachment> attachments) {
+		this.attachments = attachments;
+	}
+
+	public List<DigitalObject> getDigitalObjects() {
+		return digitalObjects;
+	}
+
+	public void setDigitalObjects(List<DigitalObject> digitalObjects) {
+		this.digitalObjects = digitalObjects;
+	}
+
+	public ApuType getType() {
+		return type;
+	}
+
+	public void setType(ApuType type) {
+		this.type = type;
+	}
+
+	public List<String> getIncomingRelTypeGroups() {
+		return incomingRelTypeGroups;
+	}
+
+	public void setIncomingRelTypeGroups(List<String> incomingRelTypeGroups) {
+		this.incomingRelTypeGroups = incomingRelTypeGroups;
+	}
+
+	public List<String> getIncomingRelTypes() {
+		return incomingRelTypes;
+	}
+
+	public void setIncomingRelTypes(List<String> incomingRelTypes) {
+		this.incomingRelTypes = incomingRelTypes;
+	}
+
+}
