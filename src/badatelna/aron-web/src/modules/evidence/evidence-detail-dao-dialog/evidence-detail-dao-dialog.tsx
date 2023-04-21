@@ -7,7 +7,7 @@ import { downloadFileByUrl, createUrlParams } from '../../../common-utils';
 import { useConfiguration } from '../../../components';
 import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/file-viewer/image-viewer';
 import { ImageLoad } from '../../../components/image-load';
-import { Message } from '../../../enums';
+import { Message, API_URL } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
 import { Icon } from './icon';
 import { useStyles } from './styles';
@@ -195,8 +195,6 @@ export function EvidenceDetailDaoDialog({
     navigate(`${location.pathname}${createUrlParams({ ...urlParams, [FULLSCREEN]: fullscreen && embed })}`);
   }, [fullscreen])
 
-  useEffect(() => { console.log("evidence detail dao dialog mount") }, [])
-
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
 
   const existingFile = getExistingFile(file);
@@ -239,6 +237,15 @@ export function EvidenceDetailDaoDialog({
 
   const handleShowFirst = () => showFileByIndex(0);
   const handleShowLast = () => showFileByIndex(files.length - 1);
+
+  const createUrlsFromFiles = (files: FileObject[]) => {
+    return files.map((file) => {
+      const _file = getExistingFile(file);
+      const isTile = !!(file && file.tile);
+      const uuid = isTile ? _file?.id : _file?.file.id
+      return file.tile?.referencedFile?.startsWith("http") ? file.tile.referencedFile : `${API_URL}/tile/${uuid}/image.dzi`
+    })
+  }
 
   return (
     <div tabIndex={0} ref={daoDialogElement} className={classNames(
@@ -294,8 +301,11 @@ export function EvidenceDetailDaoDialog({
             {files.length && fileUuid ? (
               <ImageViewer
                 ref={viewerRef}
-                id={fileUuid}
-                url={file.tile?.referencedFile?.startsWith("http") ? file.tile.referencedFile : undefined}
+                parentId={dao.id}
+                urls={createUrlsFromFiles(files)}
+                page={files.findIndex((file) => {
+                  return fileUuid === file?.tile?.id || fileUuid === file?.id || fileUuid === file?.published?.id;
+                })}
               />
             ) : (
                 <div

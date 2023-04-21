@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import OpenSeadragon from 'openseadragon';
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { API_URL } from '../../enums';
 import { useLayoutStyles } from '../../styles';
 import { useStyles } from './styles';
 
@@ -14,13 +13,15 @@ export interface ImageViewerExposedFunctions {
 }
 
 interface ImageViewerProps {
-  id: number | string;
-  url?: string;
+  parentId: number | string;
+  urls?: string[];
+  page?: number;
 }
 
 export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageViewerProps>(({
-  id,
-  url,
+  parentId,
+  urls,
+  page = 0,
 }, ref) => {
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer>();
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -64,29 +65,43 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
     }, [viewer])
 
   useEffect(() => {
-    const tileSources = url ? url : `${API_URL}/tile/${id}/image.dzi`;
-    if (viewerRef.current && id) {
-      // viewer && viewer.destroy();
+    if (viewerRef.current) {
 
       if (!viewer) {
-        setViewer(
-          OpenSeadragon({
-            element: viewerRef.current,
-            showSequenceControl: false,
-            showNavigationControl: false,
-            showZoomControl: false,
-            showHomeControl: false,
-            showFullPageControl: false,
-            tileSources,
-            maxZoomPixelRatio: 5,
-          })
-        );
-      }
-      else {
-        viewer.open(tileSources);
+        const newViewer = OpenSeadragon({
+          tileSources: urls,
+          initialPage: page,
+          maxZoomPixelRatio: 5,
+          sequenceMode: true,
+          element: viewerRef.current,
+          showNavigationControl: false,
+          showZoomControl: false,
+          showHomeControl: false,
+          showFullPageControl: false,
+          showSequenceControl: false,
+        })
+        newViewer.addHandler("open", () => {
+          newViewer.setVisible(true);
+        })
+        newViewer.addHandler("open-failed", () => {
+          newViewer.setVisible(false);
+        })
+        setViewer(newViewer);
       }
     }
-  }, [id, setViewer, viewerRef.current]);
+  }, [setViewer, viewerRef.current]);
+
+  useEffect(() => {
+    if (viewer) {
+      viewer?.open(urls || [], page);
+    }
+  }, [parentId])
+
+  useEffect(() => {
+    if (viewer && page !== viewer.currentPage()) {
+      viewer?.goToPage(page)
+    }
+  }, [page])
 
   return <div className={classNames(classes.fileViewer, layoutClasses.flexCentered)}>
     <div {...{ ref: viewerRef, className: classes.imageViewer }} />;
