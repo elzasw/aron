@@ -94,7 +94,14 @@ function ImageList({
   label?: string;
   onClick?: (file: FileObject) => void;
 }) {
+  const listRef = useRef<FixedSizeList>(null);
   const classes = useStyles();
+
+  useEffect(() => {
+    const activeFileIndex = files.findIndex(({ id }) => id === activeFile.id);
+    listRef?.current?.scrollToItem(activeFileIndex, "auto");
+  }, [activeFile])
+
   return <div
     key={`${label}`}
     className={classes.daoDialogSectionPart}
@@ -105,6 +112,7 @@ function ImageList({
       <AutoSizer>
         {({ width, height }) => (
           <FixedSizeList
+            ref={listRef}
             width={width}
             height={height}
             itemCount={files.length}
