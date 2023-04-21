@@ -213,12 +213,35 @@ export function EvidenceDetailDaoDialog({
   const isTile = !!(file && file.tile);
   const fileUuid = isTile ? existingFile?.id : existingFile?.file.id
 
-  useKeyPress([{ key: "ArrowUp" }, { key: "ArrowLeft" }], () => handleSelectRelative(-1), daoDialogElement.current);
-  useKeyPress([{ key: "ArrowDown" }, { key: "ArrowRight" }], () => handleSelectRelative(1), daoDialogElement.current);
-  useKeyPress([{ key: "Home" }], () => handleShowFirst(), daoDialogElement.current);
-  useKeyPress([{ key: "End" }], () => handleShowLast(), daoDialogElement.current);
-  useKeyPress([{ key: "PageUp" }], () => handleSelectRelative(-10), daoDialogElement.current);
-  useKeyPress([{ key: "PageDown" }], () => handleSelectRelative(10), daoDialogElement.current);
+  useKeyPress([{ key: "ArrowUp" }, { key: "ArrowLeft" }], (event) => {
+    event.preventDefault();
+    handleSelectRelative(-1);
+  }, daoDialogElement.current);
+
+  useKeyPress([{ key: "ArrowDown" }, { key: "ArrowRight" }], (event) => {
+    event.preventDefault();
+    handleSelectRelative(1);
+  }, daoDialogElement.current);
+
+  useKeyPress([{ key: "Home" }], (event) => {
+    event.preventDefault();
+    handleShowFirst();
+  }, daoDialogElement.current);
+
+  useKeyPress([{ key: "End" }], (event) => {
+    event.preventDefault();
+    handleShowLast();
+  }, daoDialogElement.current);
+
+  useKeyPress([{ key: "PageUp" }], (event) => {
+    event.preventDefault();
+    handleSelectRelative(-10);
+  }, daoDialogElement.current);
+
+  useKeyPress([{ key: "PageDown" }], (event) => {
+    event.preventDefault();
+    handleSelectRelative(10);
+  }, daoDialogElement.current);
 
   const handleClickThumbnail = (file: FileObject) => {
     navigate(`${createApuDaoFileUrl(apuInfo.id, dao.id, file.id)}${createUrlParams(urlParams)}`);
