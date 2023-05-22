@@ -490,7 +490,7 @@ const useGetDateLimit = (
       sort: [
         {
           type: 'FIELD',
-          field: field,
+          field: sortMode === SortMode.MAX ? `${field}~H` : `${field}~L`,
           sortMode,
           order: sortMode === SortMode.MAX ? 'DESC' : 'ASC',
         },
