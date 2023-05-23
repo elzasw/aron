@@ -16,6 +16,7 @@ export const ENGLISH = {
   [M.BASIC_INFORMATION]: 'Basic information',
   [M.CANCEL]: 'Cancel',
   [M.CENTER]: 'Center',
+  [M.CENTURY]: "{century, selectordinal, one {#st} two {#nd} few {#rd} other {#th} } century",
   [M.CONFIRM]: 'Confirm',
   [M.CONTACT]: 'Contact',
   [M.COPY_LINK]: 'Copy link to clipboard',

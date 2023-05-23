@@ -16,6 +16,7 @@ export const CZECH = {
   [M.BASIC_INFORMATION]: 'Základní informace',
   [M.CANCEL]: 'Zrušit',
   [M.CENTER]: 'Vycentrovat',
+  [M.CENTURY]: "{century}. století",
   [M.CONFIRM]: 'Potvrdit',
   [M.CONTACT]: 'Kontakt',
   [M.COPY_LINK]: 'Zkopírovat odkaz do schránky',

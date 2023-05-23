@@ -16,6 +16,7 @@ export const GERMAN = {
   [M.BASIC_INFORMATION]: 'Grundinformation',
   [M.CANCEL]: 'Löschen',
   [M.CENTER]: 'Center',
+  [M.CENTURY]: "{century}. Jahrhundert",
   [M.CONFIRM]: 'Bestätigen',
   [M.CONTACT]: 'Kontakt',
   [M.COPY_LINK]: 'Copy link to clipboard',

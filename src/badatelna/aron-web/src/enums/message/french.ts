@@ -16,6 +16,7 @@ export const FRENCH = {
   [M.BASIC_INFORMATION]: 'Information de base',
   [M.CANCEL]: 'Annuler',
   [M.CENTER]: 'Centrer',
+  [M.CENTURY]: '{century, selectordinal, one {#er} other {#e} } siècle',
   [M.CONFIRM]: 'Confirmer',
   [M.CONTACT]: 'Contact',
   [M.COPY_LINK]: 'Copy link to clipboard',
