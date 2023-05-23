@@ -271,6 +271,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         if (configArchDesc.isImportAttachments()) {
             Path dir = inputFile.getParent();
             if (sect.getFs() != null) {
+            	int pos = 1;
                 for (File f : sect.getFs().getF()) {
                     if (attachmentIds.contains(f.getId())) {
                         var file = dir.resolve(f.getFn());
@@ -279,7 +280,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }
-                        apusBuilder.addAttachment(apusBuilder.getMainApu(), f.getFn(), f.getMt());
+                        apusBuilder.addAttachment(apusBuilder.getMainApu(), f.getN(), f.getMt(), pos++);
                         attachments.add(new ArchDescAttachment(file));
                     }
                 }
