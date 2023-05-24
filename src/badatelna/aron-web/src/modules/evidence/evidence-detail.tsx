@@ -296,8 +296,6 @@ export function EvidenceDetail({
     }
   }, [evidencePath, path, updateAppState]);
 
-  console.log(archdescRootRef, item);
-
   return (
     <Module
       {...{
