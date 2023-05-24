@@ -39,6 +39,7 @@ export const GERMAN = {
   [M.FILE]: 'Datei',
   [M.FILES_IN_DAO]: 'Dateien in DAO',
   [M.FIND_RELATED]: 'Verwandte finden',
+  [M.FIND_RECORDS_IN_FUND]: 'Find records in fund',
   [M.FINDING_AID]: 'Findhilfsmittel',
   [M.FROM]: 'Von',
   [M.FULLSCREEN]: 'Fullscreen',

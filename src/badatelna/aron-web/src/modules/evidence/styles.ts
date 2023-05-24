@@ -20,7 +20,7 @@ export interface StyleConfiguration {
   treeHorizontalScroll?: boolean;
 }
 
-export const useStyles =  makeStyles((theme) => {
+export const useStyles = makeStyles((theme) => {
   const md = theme.breakpoints.up('md');
   return {
     sidebar: {
@@ -164,7 +164,7 @@ export const useStyles =  makeStyles((theme) => {
     evidenceDetailItemNotFirst: {
       borderTop: border,
     },
-    evidenceDetailItemLabel: ({alternativeItemLabel}:StyleConfiguration) => ({
+    evidenceDetailItemLabel: ({ alternativeItemLabel }: StyleConfiguration) => ({
       width: 150,
       minWidth: 150,
       textTransform: alternativeItemLabel ? 'none' : 'uppercase',
@@ -265,6 +265,19 @@ export const useStyles =  makeStyles((theme) => {
         color: colorWhite,
       },
     },
+    searchLink: {
+      padding: '10px',
+      textDecoration: 'none',
+      background: 'transparent',
+      fontSize: '1.1rem',
+      borderRadius: '5px',
+      display: 'inline-flex',
+      border: `1px solid ${colorGreyLight}`,
+
+      '&:hover': {
+        background: colorGreyLight,
+      },
+    },
     icon: {
       cursor: 'pointer',
     },
@@ -305,7 +318,7 @@ export const useStyles =  makeStyles((theme) => {
         border: `1px solid ${colorGrey}`,
       },
     },
-    treeWrapper: ({treeHorizontalScroll}:StyleConfiguration) => ({
+    treeWrapper: ({ treeHorizontalScroll }: StyleConfiguration) => ({
       width: '100%',
       // minWidth: 'fit-content',
       height: '100%',

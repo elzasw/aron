@@ -8,6 +8,7 @@ var _configuration = {
   // showShareButtons: false,
   // showStandalonePartName: true,
   // showMainPageBreadcrumb: true,
+  // showFindRecordsInFundButton: false,
   // localeCookieName: "pll_language",
   // showMetadataInImageViewer: true,
   // disableDownloads: false,

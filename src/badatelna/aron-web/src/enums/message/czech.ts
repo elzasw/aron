@@ -39,6 +39,7 @@ export const CZECH = {
   [M.FILE]: 'soubor',
   [M.FILES_IN_DAO]: 'Soubory v DAO',
   [M.FIND_RELATED]: 'Najít související',
+  [M.FIND_RECORDS_IN_FUND]: 'Vyhledat archiválie v archivním souboru',
   [M.FINDING_AID]: 'Archivní pomůcky',
   [M.FROM]: 'Od',
   [M.FULLSCREEN]: 'Celá obrazovka',

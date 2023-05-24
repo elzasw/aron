@@ -39,6 +39,7 @@ export const FRENCH = {
   [M.FILE]: 'Ensemble',
   [M.FILES_IN_DAO]: 'Ensembles dans DAO',
   [M.FIND_RELATED]: 'Chercher les liaisons',
+  [M.FIND_RECORDS_IN_FUND]: 'Find records in fund',
   [M.FINDING_AID]: 'Instrument de recherche',
   [M.FROM]: 'De',
   [M.FULLSCREEN]: 'Fullscreen',

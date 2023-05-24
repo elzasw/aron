@@ -3,13 +3,13 @@ import { AppHeaderItemCode, SearchOption, Message } from '../../enums';
 import { DaoNamePlacement } from '../../enums/dao-name-placement';
 
 interface DaoFooterDef {
-  copyrightText?: string;
-  links?: DaoFooterLinkDef[];
+    copyrightText?: string;
+    links?: DaoFooterLinkDef[];
 }
 
 interface DaoFooterLinkDef {
-  text?: string;
-  url?: string;
+    text?: string;
+    url?: string;
 }
 
 export interface ConfigurationType {
@@ -22,6 +22,7 @@ export interface ConfigurationType {
     showShareButtons?: boolean;
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
+    showFindRecordsInFundButton?: boolean;
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
     localeCookieName?: string;
@@ -37,7 +38,7 @@ export interface ConfigurationType {
 }
 
 
-const defaultConfiguration:ConfigurationType = {
+const defaultConfiguration: ConfigurationType = {
     allowDetailExpand: true,
     alternativeItemLabel: false,
     compactAppHeader: false,
@@ -47,6 +48,7 @@ const defaultConfiguration:ConfigurationType = {
     showShareButtons: false,
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
+    showFindRecordsInFundButton: false,
     disableDownloads: false,
     // localeCookieName: "pll_language",
     headerItems: [
@@ -87,18 +89,18 @@ const ConfigurationContext = createContext<ConfigurationType>(defaultConfigurati
 
 export const useConfiguration = () => useContext(ConfigurationContext)
 
-export const ConfigurationProvider:FC = ({
+export const ConfigurationProvider: FC = ({
     children
 }) => {
-let configuration = {...defaultConfiguration}
-    try{
+    let configuration = { ...defaultConfiguration }
+    try {
         configuration = {
             ...configuration,
             //@ts-ignore load configuration from global variable
             ...(_configuration ? _configuration : {})
         }
     } catch {
-        configuration = {...defaultConfiguration}
+        configuration = { ...defaultConfiguration }
     }
     return <ConfigurationContext.Provider value={configuration}>
         {children}

@@ -39,6 +39,7 @@ export const ENGLISH = {
   [M.FILE]: 'File',
   [M.FILES_IN_DAO]: 'Files in DAO',
   [M.FIND_RELATED]: 'Find related',
+  [M.FIND_RECORDS_IN_FUND]: 'Find records in fund',
   [M.FINDING_AID]: 'Finding aids',
   [M.FROM]: 'From',
   [M.FULLSCREEN]: 'Fullscreen',
