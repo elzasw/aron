@@ -89,6 +89,10 @@ public class DaoFileStore4Service implements DaoImporter  {
 							dao.getUuid());
 					throw new RuntimeException();
 				}
+			} else {
+				log.error("Fail to import dao, no links to files, id={}, handle={}, uuid={}", dao.getId(),
+						dao.getHandle(), dao.getUuid());
+				dao.setState(DaoState.INACCESSIBLE);
 			}
 		} else {
 			dao.setState(DaoState.INACCESSIBLE);
@@ -190,7 +194,11 @@ public class DaoFileStore4Service implements DaoImporter  {
 				log.error("Fail to load dao links from path {}", monitoredPath, ioEx);
 				throw new UncheckedIOException(ioEx);
 			}
-			log.info("Dao links loaded from path {}", monitoredPath);
+			if (ret.isEmpty()) {
+				log.warn("Dao links loaded from path {} NO DATA!!!", monitoredPath);
+			} else {
+				log.info("Dao links loaded from path {}", monitoredPath);
+			}
 			return ret;
 		}
 
