@@ -26,6 +26,9 @@ public class ConfigPeva2FundProperties {
     // nazev fondu slozi z [nazevarchivu],[nazevfondu],[datace]
     private boolean composedFundName;
     
+    // nazev fondu slozi z [kratky_nazevarchivu],[nazevfondu],[datace]
+    private boolean composedShortFundName;
+    
     // do popisu fondu v prehledu prida jako description popis puvodce
     private boolean originatorAsDescription;
     
@@ -285,6 +288,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setUpdateUUID(boolean updateUUID) {
 		this.updateUUID = updateUUID;
+	}
+
+	public boolean isComposedShortFundName() {
+		return composedShortFundName;
+	}
+
+	public void setComposedShortFundName(boolean composedShortFundName) {
+		this.composedShortFundName = composedShortFundName;
 	}
 
 }

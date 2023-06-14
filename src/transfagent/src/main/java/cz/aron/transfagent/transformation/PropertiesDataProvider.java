@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -22,7 +21,7 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	@Override
 	public InstitutionInfo getInstitutionApu(String instCode) {
 		String propName = "institution." + instCode;
-		return new InstitutionInfo(UUID.fromString(getProperty(propName)), getProperty(propName));
+		return new InstitutionInfo(UUID.fromString(getProperty(propName)), getProperty(propName), getProperty(propName));
 	}
 
 	private String getProperty(String propName) {

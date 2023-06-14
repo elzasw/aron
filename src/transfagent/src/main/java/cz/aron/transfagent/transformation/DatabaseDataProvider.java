@@ -59,16 +59,13 @@ public class DatabaseDataProvider implements ContextDataProvider {
             ApuSource apuSrc = institution.getApuSource();
             Path fileXml = storageService.getDataPath().resolve(apuSrc.getDataDir()).resolve(apuSrc.getOrigDir() + ".xml");
             ImportInstitution ii = new ImportInstitution();
-            ApuSourceBuilder builder;
-            String name;
             try {
-                builder = ii.importInstitution(fileXml, instCode, uuid);
+                ii.importInstitution(fileXml, instCode, uuid);
             } catch (IOException | JAXBException e) {
                 log.error("Error processing file={} institution code={}", fileXml, instCode, e);
                 throw new RuntimeException(e);
-            }
-            name = builder.getMainApu().getName();
-            return new InstitutionInfo(uuid, name);
+            }                        
+            return new InstitutionInfo(uuid, ii.getFullName(), ii.getShortName());
         }
         return null;
     }

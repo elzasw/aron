@@ -184,6 +184,9 @@ public class ImportPevaFundInfo {
 		if (fundProperties.isComposedFundName()) {
 			return institutionInfo.getName() + ": " + nadSheet.getHeader().getName() + " "
 					+ (nadSheet.getHeader().getTimeRange()!=null?Peva2Utils.getAsString(nadSheet.getHeader().getTimeRange()):"");
+		} else if (fundProperties.isComposedShortFundName()) {
+			return institutionInfo.getShortName() + ": " + nadSheet.getHeader().getName() + " "
+					+ (nadSheet.getHeader().getTimeRange()!=null?Peva2Utils.getAsString(nadSheet.getHeader().getTimeRange()):"");
 		} else {
 			return nadSheet.getHeader().getName();
 		}
