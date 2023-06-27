@@ -9,7 +9,7 @@ import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/fi
 import { ImageLoad } from '../../../components/image-load';
 import { Message, API_URL } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
-import { Icon } from './icon';
+import { ToolbarButton } from './icon';
 import { useStyles } from './styles';
 import { Toolbar } from './toolbar';
 import { DetailDaoDialogProps, FileObject } from './types';
@@ -144,8 +144,8 @@ const getDaoPlacementStyle = (placement?: DaoNamePlacement) => {
   if (!placement) { placement = DaoNamePlacement.TOP_RIGHT }
 
   const placementStyle = {
-    [DaoNamePlacement.TOP_LEFT]: { top: '50px', left: 0 },
-    [DaoNamePlacement.TOP_RIGHT]: { top: '50px', right: 0 },
+    [DaoNamePlacement.TOP_LEFT]: { top: 0, left: 0 },
+    [DaoNamePlacement.TOP_RIGHT]: { top: 0, right: 0 },
     [DaoNamePlacement.BOTTOM_RIGHT]: { bottom: 0, right: 0 },
     [DaoNamePlacement.BOTTOM_LEFT]: { bottom: 0, left: 0 },
   }[placement];
@@ -213,12 +213,12 @@ export function EvidenceDetailDaoDialog({
   const isTile = !!(file && file.tile);
   const fileUuid = isTile ? existingFile?.id : existingFile?.file.id
 
-  useKeyPress([{ key: "ArrowUp" }, { key: "ArrowLeft" }], (event) => {
+  useKeyPress([{ key: "ArrowUp" }/* , { key: "ArrowLeft" }  - conflict with page number input */], (event) => {
     event.preventDefault();
     handleSelectRelative(-1);
   }, daoDialogElement.current);
 
-  useKeyPress([{ key: "ArrowDown" }, { key: "ArrowRight" }], (event) => {
+  useKeyPress([{ key: "ArrowDown" }/* , { key: "ArrowRight" }  - conflict with page number input */], (event) => {
     event.preventDefault();
     handleSelectRelative(1);
   }, daoDialogElement.current);
@@ -281,7 +281,8 @@ export function EvidenceDetailDaoDialog({
   return (
     <div tabIndex={0} ref={daoDialogElement} className={classNames(
       classes.daoDialog,
-      fullscreen && classes.daoDialogFixed
+      fullscreen && classes.daoDialogFixed,
+      layoutClasses.flexColumn,
     )}>
       <>
         {viewerRef.current &&
@@ -298,8 +299,10 @@ export function EvidenceDetailDaoDialog({
               nextEnabled: true,
               previousDisabled: fileIndex <= 0,
               nextDisabled: fileIndex < 0 || fileIndex >= files.length - 1,
-              previous: () => handleSelectRelative(-1),
-              next: () => handleSelectRelative(1),
+              selectRelative: handleSelectRelative,
+              selectIndex: showFileByIndex,
+              totalItemCount: files.length,
+              itemIndex: fileIndex,
               item: dao,
               setItem,
               open,
@@ -309,8 +312,8 @@ export function EvidenceDetailDaoDialog({
               customActionsLeft: customActionsLeft?.({ fullscreen }),
               customActionsRight: customActionsRight?.({ fullscreen }),
               customActionsCenter: <>
-                {showMetadataInImageViewer && <Icon Component={InfoOutlined} title={"info"} onClick={handleShowMetadata} />}
-                {embed && <Icon
+                {showMetadataInImageViewer && <ToolbarButton Component={InfoOutlined} title={"info"} onClick={handleShowMetadata} />}
+                {embed && <ToolbarButton
                   Component={fullscreen ? FullscreenExit : Fullscreen}
                   onClick={() => setFullscreen(!fullscreen)}
                   title={formatMessage({ id: fullscreen ? Message.FULLSCREEN_EXIT : Message.FULLSCREEN })}
@@ -320,13 +323,19 @@ export function EvidenceDetailDaoDialog({
             }}
           />
         }
-        <div>
+        <div className={classNames(layoutClasses.flexGrow1, layoutClasses.flex)}>
+          {!hideThumbnails && <div
+            className={classNames(
+              classes.daoDialogSide,
+              open && classes.daoDialogSideOpen
+            )}
+          >
+            <ImageList files={files} activeFile={file} onClick={handleClickThumbnail} />
+          </div>}
           <div
             className={classNames(
               classes.daoDialogSection,
-              classes.daoDialogCenter,
-              classes.daoDialogCenterNoSidebar,
-              hideThumbnails && classes.daoDialogCenterNoThumbnails
+              layoutClasses.flexGrow1,
             )}
           >
             {files.length && fileUuid ? (
@@ -398,61 +407,51 @@ export function EvidenceDetailDaoDialog({
               </div>
             }
           </div>
-        </div>
-        {showMetadata && <div
-          className={classNames(
-            classes.daoDialogSection,
-            classes.daoDialogMetadataContainer,
-          )}
-        >
-          <div
+          {showMetadata && <div
             className={classNames(
-              classes.daoDialogMetadata,
-              spacingClasses.paddingSmall
+              classes.daoDialogSection,
+              classes.daoDialogMetadataContainer,
             )}
           >
             <div
-              onClick={() =>
-                downloadFileByUrl(
-                  `/digitalObjectFile/${metadataId}/metadata/csv`,
-                  `dao_${dao.id}_metadata.csv`
-                )}
-              className={classes.daoDialogMetadataButton}
+              className={classNames(
+                classes.daoDialogMetadata,
+                spacingClasses.paddingSmall
+              )}
             >
-              <GetAppIcon className={classNames(classes.icon)} />
-              {formatMessage({ id: Message.DOWNLOAD_METADATA })}
-            </div>
-            <div className={layoutClasses.flex}>
-              <div className={classes.bold}>{formatMessage({ id: Message.METADATA })}</div>
-            </div>
-            <div>
-              {metadata?.map(({ id, value, type }) => (
-                <div {...{ key: id, className: layoutClasses.flex }}>
-                  <div
-                    className={classNames(
-                      classes.bold,
-                      classes.daoDialogMetadataLabel
-                    )}
-                  >
-                    {type}:
+              <div
+                onClick={() =>
+                  downloadFileByUrl(
+                    `/digitalObjectFile/${metadataId}/metadata/csv`,
+                    `dao_${dao.id}_metadata.csv`
+                  )}
+                className={classes.daoDialogMetadataButton}
+              >
+                <GetAppIcon className={classNames(classes.icon)} />
+                {formatMessage({ id: Message.DOWNLOAD_METADATA })}
+              </div>
+              <div className={layoutClasses.flex}>
+                <div className={classes.bold}>{formatMessage({ id: Message.METADATA })}</div>
+              </div>
+              <div>
+                {metadata?.map(({ id, value, type }) => (
+                  <div {...{ key: id, className: layoutClasses.flex }}>
+                    <div
+                      className={classNames(
+                        classes.bold,
+                        classes.daoDialogMetadataLabel
+                      )}
+                    >
+                      {type}:
                   </div>
-                  <div>{value}</div>
-                </div>
-              ))}
+                    <div>{value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>}
+          </div>}
+        </div>
       </>
-      {!hideThumbnails && <div
-        className={classNames(
-          classes.daoDialogSection,
-          classes.daoDialogSide,
-          classes.daoDialogLeft,
-          open && classes.daoDialogSideOpen
-        )}
-      >
-        <ImageList files={files} activeFile={file} onClick={handleClickThumbnail} />
-      </div>}
     </div>
   );
 }

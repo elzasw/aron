@@ -63,4 +63,19 @@ export const useLayoutStyles = makeStyles((theme) => ({
       flexDirection: 'row',
     },
   },
+  flexGrow0: {
+    flexGrow: 0
+  },
+  flexGrow1: {
+    flexGrow: 1
+  },
+  flexGrow2: {
+    flexGrow: 2
+  },
+  flexGrow3: {
+    flexGrow: 3
+  },
+  flexGrow4: {
+    flexGrow: 4
+  },
 }));
