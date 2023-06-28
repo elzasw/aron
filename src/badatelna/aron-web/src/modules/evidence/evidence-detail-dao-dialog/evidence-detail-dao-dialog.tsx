@@ -1,4 +1,4 @@
-import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined } from "@material-ui/icons";
+import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex } from 'lodash';
 import React, { useEffect, useRef, useState, useContext } from 'react';
@@ -189,6 +189,7 @@ export function EvidenceDetailDaoDialog({
   const [open, setOpen] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullscreen, setFullscreen] = useState(!embed || isFullscreen);
+  const [preserveViewportState, setPreserveViewportState] = useState<boolean | undefined>();
 
   const { daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
@@ -268,6 +269,7 @@ export function EvidenceDetailDaoDialog({
 
   const handleShowFirst = () => showFileByIndex(0);
   const handleShowLast = () => showFileByIndex(files.length - 1);
+  const handlePreserveViewportChange = (preserveViewportState: boolean) => setPreserveViewportState(preserveViewportState);
 
   const createUrlsFromFiles = (files: FileObject[]) => {
     return files.map((file) => {
@@ -312,6 +314,11 @@ export function EvidenceDetailDaoDialog({
               customActionsLeft: customActionsLeft?.({ fullscreen }),
               customActionsRight: customActionsRight?.({ fullscreen }),
               customActionsCenter: <>
+                {<ToolbarButton
+                  Component={preserveViewportState ? Lock : LockOpen}
+                  title={formatMessage({ id: Message.PRESERVE_VIEW })}
+                  onClick={() => { viewerRef.current?.togglePreserveViewport() }}
+                />}
                 {showMetadataInImageViewer && <ToolbarButton Component={InfoOutlined} title={"info"} onClick={handleShowMetadata} />}
                 {embed && <ToolbarButton
                   Component={fullscreen ? FullscreenExit : Fullscreen}
@@ -346,6 +353,7 @@ export function EvidenceDetailDaoDialog({
                 page={files.findIndex((file) => {
                   return fileUuid === file?.tile?.id || fileUuid === file?.id || fileUuid === file?.published?.id;
                 })}
+                onPreserveViewportChange={handlePreserveViewportChange}
               />
             ) : (
                 <div

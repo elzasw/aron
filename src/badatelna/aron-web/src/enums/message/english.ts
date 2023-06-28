@@ -65,6 +65,7 @@ export const ENGLISH = {
   [M.ORIGINATORS]: 'Creators',
   [M.OTHER_DAOS]: 'Other digital objects',
   [M.PER_PAGE]: 'Per page',
+  [M.PRESERVE_VIEW]: 'Preserve view',
   [M.PREVIOUS_PAGE]: 'Previous page',
   [M.RELATED_TO]: 'Related to',
   [M.RELATIONSHIP_NOT_FOUND]: 'Relationships not found',

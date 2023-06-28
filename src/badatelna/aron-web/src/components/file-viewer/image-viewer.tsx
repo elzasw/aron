@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import OpenSeadragon from 'openseadragon';
+import OpenSeadragon, { Viewer } from 'openseadragon';
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { useLayoutStyles } from '../../styles';
 import { useStyles } from './styles';
@@ -10,18 +10,21 @@ export interface ImageViewerExposedFunctions {
   rotateRight: () => void;
   rotateLeft: () => void;
   reset: () => void;
+  togglePreserveViewport: () => void;
 }
 
 interface ImageViewerProps {
   parentId: number | string;
   urls?: string[];
   page?: number;
+  onPreserveViewportChange?: (preserveViewportState: boolean) => void;
 }
 
 export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageViewerProps>(({
   parentId,
   urls,
   page = 0,
+  onPreserveViewportChange,
 }, ref) => {
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer>();
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -61,6 +64,16 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
           }
         },
         reset: () => viewer && viewer.viewport.goHome(),
+        togglePreserveViewport: () => {
+          if (!viewer) { return; }
+          const untypedViewer = viewer as (Viewer & { preserveViewport: boolean }); // incorrect types for Viewer class (missing 'preserveViewport')
+          const preserveViewport = untypedViewer.preserveViewport;
+
+          if (preserveViewport == undefined) { return; }
+
+          onPreserveViewportChange?.(!preserveViewport);
+          untypedViewer.preserveViewport = !preserveViewport;
+        }
       }
     }, [viewer])
 

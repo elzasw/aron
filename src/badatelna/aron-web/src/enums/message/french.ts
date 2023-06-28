@@ -65,6 +65,7 @@ export const FRENCH = {
   [M.ORIGINATORS]: 'Créateur',
   [M.OTHER_DAOS]: 'Documents numérisés suivants',
   [M.PER_PAGE]: 'Nombre àla page',
+  [M.PRESERVE_VIEW]: 'Preserve view',
   [M.PREVIOUS_PAGE]: 'Page précédente',
   [M.RELATED_TO]: 'N\'est pas en relation avec',
   [M.RELATIONSHIP_NOT_FOUND]: 'Aucun relation trouvée',

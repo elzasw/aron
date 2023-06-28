@@ -67,6 +67,7 @@ export const CZECH = {
   [M.ORIGINATORS]: 'Původci',
   [M.OTHER_DAOS]: 'Další digitalizáty',
   [M.PER_PAGE]: 'Počet na stránce',
+  [M.PRESERVE_VIEW]: 'Zachovat pohled',
   [M.PREVIOUS_PAGE]: 'Předchozí strana',
   [M.RELATED_TO]: 'Související s',
   [M.RELATIONSHIP_NOT_FOUND]: 'Žádný vztah nebyl nalezen',
