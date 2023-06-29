@@ -26,7 +26,7 @@ export function ToolbarButton({
             className: classNames(
               classes.daoDialogIcon,
               disabled && classes.daoDialogIconDisabled,
-              spacingClasses.marginHorizontalSmall,
+              spacingClasses.marginHorizontalExtraSmall,
               className
             ),
           }}

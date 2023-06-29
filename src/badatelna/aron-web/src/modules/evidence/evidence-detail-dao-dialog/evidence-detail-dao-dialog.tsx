@@ -1,4 +1,4 @@
-import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock } from "@material-ui/icons";
+import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock, Tune, Replay } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex } from 'lodash';
 import React, { useEffect, useRef, useState, useContext } from 'react';
@@ -21,6 +21,7 @@ import { DaoNamePlacement } from "../../../enums/dao-name-placement";
 import { FixedSizeList, ListChildComponentProps } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer"
 import { useKeyPress } from "../../../utils/useKeyPress";
+import Slider from "@material-ui/core/Slider";
 
 function Thumbnail({
   file,
@@ -155,6 +156,49 @@ const getDaoPlacementStyle = (placement?: DaoNamePlacement) => {
   return placementStyle || {};
 }
 
+const ImageSettingsWindow = ({
+  brightness = 100,
+  contrast = 100,
+  onBrightnessChange,
+  onContrastChange,
+}: {
+  brightness: number;
+  contrast: number;
+  onBrightnessChange: (brightness: number) => void;
+  onContrastChange: (contrast: number) => void;
+}) => {
+  return <div style={{ width: "100%", height: "100%" }}>
+    <div style={{ display: "flex", alignItems: "flex-end" }}>
+      <FormattedMessage id={Message.BRIGHTNESS} />
+      <Replay style={{ visibility: brightness !== 100 ? "visible" : "hidden", cursor: "pointer", marginLeft: "5px" }} onClick={() => { onBrightnessChange(100) }} />
+    </div>
+    <div>
+      <Slider
+        min={0}
+        max={200}
+        value={brightness}
+        valueLabelDisplay={"auto"}
+        onChange={(_, number) => { !Array.isArray(number) && onBrightnessChange(number) }}
+      />
+    </div>
+    <div style={{ display: "flex", alignItems: "flex-end" }}>
+      <FormattedMessage id={Message.CONTRAST} />
+      <Replay style={{ visibility: contrast !== 100 ? "visible" : "hidden", cursor: "pointer", marginLeft: "5px" }} onClick={() => { onContrastChange(100) }} />
+    </div>
+    <div>
+      <Slider
+        min={0}
+        max={200}
+        value={contrast}
+        valueLabelDisplay={"auto"}
+        onChange={(_, number) => { !Array.isArray(number) && onContrastChange(number) }}
+      />
+    </div>
+    {/* <input name="brightness" value={brightness} onChange={(e) => setBrightness(e.currentTarget.value)} /> */}
+    {/* <input name="contrast" value={contrast} onChange={(e) => setContrast(e.currentTarget.value)} /> */}
+  </div>
+}
+
 export function EvidenceDetailDaoDialog({
   // item,
   // items,
@@ -190,6 +234,9 @@ export function EvidenceDetailDaoDialog({
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullscreen, setFullscreen] = useState(!embed || isFullscreen);
   const [preserveViewportState, setPreserveViewportState] = useState<boolean | undefined>();
+  const [brightness, setBrightness] = useState(100);
+  const [contrast, setContrast] = useState(100);
+  const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
 
   const { daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
@@ -319,6 +366,32 @@ export function EvidenceDetailDaoDialog({
                   title={formatMessage({ id: Message.PRESERVE_VIEW })}
                   onClick={() => { viewerRef.current?.togglePreserveViewport() }}
                 />}
+                {
+                  <div style={{ position: "relative" }}>
+                    <ToolbarButton
+                      Component={Tune}
+                      title={formatMessage({ id: Message.IMAGE_SETTINGS })}
+                      onClick={() => { setImageSettingsOpen(!imageSettingsOpen); }}
+                    />
+                    {imageSettingsOpen &&
+                      <div style={{
+                        position: "absolute",
+                        background: "#000a",
+                        padding: "15px 20px",
+                        right: 0,
+                        color: "white",
+                        width: "250px",
+                        borderRadius: "5px",
+                      }}>
+                        <ImageSettingsWindow {...{
+                          brightness,
+                          contrast,
+                          onBrightnessChange: (level) => setBrightness(level),
+                          onContrastChange: (level) => setContrast(level),
+                        }} />
+                      </div>
+                    }
+                  </div>}
                 {showMetadataInImageViewer && <ToolbarButton Component={InfoOutlined} title={"info"} onClick={handleShowMetadata} />}
                 {embed && <ToolbarButton
                   Component={fullscreen ? FullscreenExit : Fullscreen}
@@ -344,17 +417,20 @@ export function EvidenceDetailDaoDialog({
               classes.daoDialogSection,
               layoutClasses.flexGrow1,
             )}
+            style={{ position: "relative" }}
           >
             {files.length && fileUuid ? (
-              <ImageViewer
-                ref={viewerRef}
-                parentId={dao.id}
-                urls={createUrlsFromFiles(files)}
-                page={files.findIndex((file) => {
-                  return fileUuid === file?.tile?.id || fileUuid === file?.id || fileUuid === file?.published?.id;
-                })}
-                onPreserveViewportChange={handlePreserveViewportChange}
-              />
+              <div style={{ width: "100%", height: "100%", filter: `brightness(${brightness / 100}) contrast(${contrast / 100})` }}>
+                <ImageViewer
+                  ref={viewerRef}
+                  parentId={dao.id}
+                  urls={createUrlsFromFiles(files)}
+                  page={files.findIndex((file) => {
+                    return fileUuid === file?.tile?.id || fileUuid === file?.id || fileUuid === file?.published?.id;
+                  })}
+                  onPreserveViewportChange={handlePreserveViewportChange}
+                />
+              </div>
             ) : (
                 <div
                   className={classNames(

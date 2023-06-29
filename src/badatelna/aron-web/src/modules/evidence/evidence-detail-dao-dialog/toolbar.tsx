@@ -88,7 +88,7 @@ export function Toolbar({
         {customActionsLeft}
         <div style={{ flex: 1 }} />
         <div className={classNames(layoutClasses.flex, layoutClasses.flexWrap)}>
-          <div className={classNames(layoutClasses.flex, layoutClasses.flexGrow1, layoutClasses.flexCentered, spacingClasses.paddingSmall)}>
+          <div className={classNames(layoutClasses.flex, layoutClasses.flexGrow1, layoutClasses.flexCentered, layoutClasses.flexWrap, spacingClasses.paddingSmall)}>
             {[
               {
                 key: "first-page",
@@ -189,7 +189,7 @@ export function Toolbar({
                 )
             )}
           </div>
-          <div className={classNames(layoutClasses.flex, layoutClasses.flexGrow1, layoutClasses.flexCentered, spacingClasses.paddingSmall)}>
+          <div className={classNames(layoutClasses.flex, layoutClasses.flexGrow1, layoutClasses.flexCentered, layoutClasses.flexWrap, spacingClasses.paddingSmall)}>
             {[
               {
                 key: "rotate-left",

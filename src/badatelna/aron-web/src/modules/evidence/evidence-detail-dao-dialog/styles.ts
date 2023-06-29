@@ -82,6 +82,7 @@ export const useStyles = makeStyles((theme) => {
     },
     daoDialogSideOpen: {
       display: 'block',
+      zIndex: 10,
     },
     daoDialogNoFiles: {
       color: '#fff',
@@ -224,9 +225,10 @@ export const useStyles = makeStyles((theme) => {
       width: '100%',
       background: '#0009',
       zIndex: 1,
-      overflowX: 'auto',
+      // overflowX: 'auto',
+      // overflowY: 'visible',
       [md]: {
-        overflowX: 'hidden',
+        // overflowX: 'hidden',
       }
     },
     daoDialogToolbarInner: {
