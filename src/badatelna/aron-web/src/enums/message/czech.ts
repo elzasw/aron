@@ -94,6 +94,7 @@ export const CZECH = {
   [M.SHARE_THROUGH_TWITTER]: 'Sdílet na Twitter',
   [M.SHOW_LESS]: 'Zobrazit méně',
   [M.SHOW_MORE]: 'Zobrazit více',
+  [M.SHOW_NAVIGATOR]: 'Zobrazit navigaci',
   [M.TREE_SHOW]: 'Zobrazit strom',
   [M.TREE_HIDE]: 'Skrýt strom',
   [M.DESCRIPTION_SHOW]: 'Zobrazit popis',

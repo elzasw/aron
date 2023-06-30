@@ -17,6 +17,7 @@ interface ImageViewerProps {
   parentId: number | string;
   urls?: string[];
   page?: number;
+  showNavigator?: boolean;
   onPreserveViewportChange?: (preserveViewportState: boolean) => void;
 }
 
@@ -25,6 +26,7 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
   urls,
   page = 0,
   onPreserveViewportChange,
+  showNavigator = false,
 }, ref) => {
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer>();
   const viewerRef = useRef<HTMLDivElement>(null);
@@ -92,7 +94,12 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
           showHomeControl: false,
           showFullPageControl: false,
           showSequenceControl: false,
+          showNavigator: true,
+          navigatorBorderColor: "transparent",
+          navigatorPosition: "BOTTOM_LEFT",
+          navigatorAutoFade: false,
         })
+        newViewer.navigator.element.style.visibility = showNavigator ? 'visible' : 'hidden';
         newViewer.addHandler("open", () => {
           newViewer.setVisible(true);
         })
@@ -109,6 +116,12 @@ export const ImageViewer = React.forwardRef<ImageViewerExposedFunctions, ImageVi
       viewer?.open(urls || [], page);
     }
   }, [parentId])
+
+  useEffect(() => {
+    if (viewer) {
+      viewer.navigator.element.style.visibility = showNavigator ? 'visible' : 'hidden';
+    }
+  }, [showNavigator])
 
   useEffect(() => {
     if (viewer && page !== viewer.currentPage()) {

@@ -93,6 +93,7 @@ export const ENGLISH = {
   [M.SHARE_THROUGH_TWITTER]: 'Share on Twitter',
   [M.SHOW_LESS]: 'Show less',
   [M.SHOW_MORE]: 'Show more',
+  [M.SHOW_NAVIGATOR]: 'Show navigator',
   [M.TREE_SHOW]: 'Show tree',
   [M.TREE_HIDE]: 'Hide tree',
   [M.DESCRIPTION_SHOW]: 'Show description',

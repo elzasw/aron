@@ -93,6 +93,7 @@ export const GERMAN = {
   [M.SHARE_THROUGH_TWITTER]: 'Auf Twitter teilen',
   [M.SHOW_LESS]: 'Weniger anzeigen',
   [M.SHOW_MORE]: 'Mehr anzeigen',
+  [M.SHOW_NAVIGATOR]: 'Show navigator',
   [M.TREE_SHOW]: 'Show tree',
   [M.TREE_HIDE]: 'Hide tree',
   [M.DESCRIPTION_SHOW]: 'Show description',

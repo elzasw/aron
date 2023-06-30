@@ -1,4 +1,4 @@
-import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock, Tune, Replay } from "@material-ui/icons";
+import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock, Tune, Replay, ExploreOutlined, Explore } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex } from 'lodash';
 import React, { useEffect, useRef, useState, useContext } from 'react';
@@ -237,6 +237,7 @@ export function EvidenceDetailDaoDialog({
   const [brightness, setBrightness] = useState(100);
   const [contrast, setContrast] = useState(100);
   const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
+  const [showNavigator, setShowNavigator] = useState(false);
 
   const { daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
@@ -392,6 +393,11 @@ export function EvidenceDetailDaoDialog({
                       </div>
                     }
                   </div>}
+                {<ToolbarButton
+                  Component={showNavigator ? Explore : ExploreOutlined}
+                  title={formatMessage({ id: Message.SHOW_NAVIGATOR })}
+                  onClick={() => { setShowNavigator(!showNavigator) }}
+                />}
                 {showMetadataInImageViewer && <ToolbarButton Component={InfoOutlined} title={"info"} onClick={handleShowMetadata} />}
                 {embed && <ToolbarButton
                   Component={fullscreen ? FullscreenExit : Fullscreen}
@@ -429,6 +435,7 @@ export function EvidenceDetailDaoDialog({
                     return fileUuid === file?.tile?.id || fileUuid === file?.id || fileUuid === file?.published?.id;
                   })}
                   onPreserveViewportChange={handlePreserveViewportChange}
+                  showNavigator={showNavigator}
                 />
               </div>
             ) : (

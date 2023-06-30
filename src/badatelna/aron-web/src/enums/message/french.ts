@@ -93,6 +93,7 @@ export const FRENCH = {
   [M.SHARE_THROUGH_TWITTER]: 'Communication à Twitter',
   [M.SHOW_LESS]: 'Refléter moins',
   [M.SHOW_MORE]: 'Refléter plus',
+  [M.SHOW_NAVIGATOR]: 'Show navigator',
   [M.TREE_SHOW]: 'Show tree',
   [M.TREE_HIDE]: 'Hide tree',
   [M.DESCRIPTION_SHOW]: 'Show description',
