@@ -1,4 +1,4 @@
-import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock, Tune, Replay, ExploreOutlined, Explore } from "@material-ui/icons";
+import { Fullscreen, FullscreenExit, GetApp as GetAppIcon, InfoOutlined, LockOpen, Lock, Tune, ExploreOutlined, Explore } from "@material-ui/icons";
 import classNames from 'classnames';
 import { findIndex } from 'lodash';
 import React, { useEffect, useRef, useState, useContext } from 'react';
@@ -6,130 +6,20 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { downloadFileByUrl, createUrlParams } from '../../../common-utils';
 import { useConfiguration } from '../../../components';
 import { ImageViewer, ImageViewerExposedFunctions } from '../../../components/file-viewer/image-viewer';
-import { ImageLoad } from '../../../components/image-load';
 import { Message, API_URL } from '../../../enums';
 import { useLayoutStyles, useSpacingStyles } from '../../../styles';
+import { useKeyPress } from "../../../utils/useKeyPress";
 import { ToolbarButton } from './icon';
 import { useStyles } from './styles';
 import { Toolbar } from './toolbar';
+import { ImageSettingsWindow } from "./image-settings";
 import { DetailDaoDialogProps, FileObject } from './types';
 import { getExistingFile, getFiles } from './utils';
 import { useParams } from "react-router-dom";
 import { NavigationContext } from "@eas/common-web";
 import { createApuDaoFileUrl, ApuPathParams } from "../evidence";
 import { DaoNamePlacement } from "../../../enums/dao-name-placement";
-import { FixedSizeList, ListChildComponentProps } from "react-window";
-import AutoSizer from "react-virtualized-auto-sizer"
-import { useKeyPress } from "../../../utils/useKeyPress";
-import Slider from "@material-ui/core/Slider";
-
-function Thumbnail({
-  file,
-  index,
-  isActive,
-  onClick = () => console.error('"onClick" not defined in Thumbnail'),
-}: {
-  file: FileObject;
-  index: number;
-  isActive?: boolean;
-  onClick?: (file: FileObject) => void;
-}) {
-  const classes = useStyles();
-  const name = file.published?.metadata?.find((item) => item.type === "name")?.value;
-  const isReferencedFile = !!file?.thumbnail?.name;
-
-  return (
-    <div
-      {...{
-        key: file.id,
-      }}
-      onClick={() => !isActive && onClick(file)}
-      className={classNames(
-        isActive && classes.daoDialogSectionPartActive,
-        classes.daoThumbnailContainer
-      )}
-    >
-      <div
-        title={name}
-        className={classes.daoThumbnailTitle}
-      >
-        {index + 1}
-        {name && ` - ${name}`}
-      </div>
-      <ImageLoad
-        key={file.id}
-        id={isReferencedFile ? file?.thumbnail?.id : file?.thumbnail?.file?.id}
-        referencedFile={isReferencedFile}
-        alternativeImage={<div />}
-        className={classNames(classes.daoThumbnail)}
-      />
-    </div>
-  );
-}
-
-function ListItem({ index, style, data }: ListChildComponentProps) {
-  const item = data.files[index];
-  const isActive = data.activeFile && data.activeFile.id === item.id;
-  return <div
-    key={index}
-    style={{ ...style, overflow: "hidden", padding: "3px 8px" }}
-  >
-    <Thumbnail
-      key={index}
-      isActive={isActive}
-      index={index}
-      file={item}
-      onClick={data.onClick}
-    />
-  </div>
-}
-
-function ImageList({
-  activeFile,
-  files,
-  label,
-  onClick = () => console.error('"onClick" not defined in ImageList'),
-}: {
-  activeFile: FileObject;
-  files: FileObject[];
-  label?: string;
-  onClick?: (file: FileObject) => void;
-}) {
-  const listRef = useRef<FixedSizeList>(null);
-  const classes = useStyles();
-
-  useEffect(() => {
-    const activeFileIndex = files.findIndex(({ id }) => id === activeFile.id);
-    listRef?.current?.scrollToItem(activeFileIndex, "auto");
-  }, [activeFile])
-
-  return <div
-    key={`${label}`}
-    className={classes.daoDialogSectionPart}
-  >
-    <div
-      className={classes.daoDialogSectionPartContent}
-    >
-      <AutoSizer>
-        {({ width, height }) => (
-          <FixedSizeList
-            ref={listRef}
-            width={width}
-            height={height}
-            itemCount={files.length}
-            itemSize={140}
-            overscanCount={2}
-            itemData={{
-              files, activeFile, onClick
-            }}
-          >
-            {ListItem}
-          </FixedSizeList>
-        )}
-      </AutoSizer>
-    </div>
-  </div>
-}
+import { ImageList } from "./image-list";
 
 const FULLSCREEN = "fullscreen"
 
@@ -154,49 +44,6 @@ const getDaoPlacementStyle = (placement?: DaoNamePlacement) => {
   if (!placementStyle) { throw `Undefined placement name: ${placement}` }
 
   return placementStyle || {};
-}
-
-const ImageSettingsWindow = ({
-  brightness = 100,
-  contrast = 100,
-  onBrightnessChange,
-  onContrastChange,
-}: {
-  brightness: number;
-  contrast: number;
-  onBrightnessChange: (brightness: number) => void;
-  onContrastChange: (contrast: number) => void;
-}) => {
-  return <div style={{ width: "100%", height: "100%" }}>
-    <div style={{ display: "flex", alignItems: "flex-end" }}>
-      <FormattedMessage id={Message.BRIGHTNESS} />
-      <Replay style={{ visibility: brightness !== 100 ? "visible" : "hidden", cursor: "pointer", marginLeft: "5px" }} onClick={() => { onBrightnessChange(100) }} />
-    </div>
-    <div>
-      <Slider
-        min={0}
-        max={200}
-        value={brightness}
-        valueLabelDisplay={"auto"}
-        onChange={(_, number) => { !Array.isArray(number) && onBrightnessChange(number) }}
-      />
-    </div>
-    <div style={{ display: "flex", alignItems: "flex-end" }}>
-      <FormattedMessage id={Message.CONTRAST} />
-      <Replay style={{ visibility: contrast !== 100 ? "visible" : "hidden", cursor: "pointer", marginLeft: "5px" }} onClick={() => { onContrastChange(100) }} />
-    </div>
-    <div>
-      <Slider
-        min={0}
-        max={200}
-        value={contrast}
-        valueLabelDisplay={"auto"}
-        onChange={(_, number) => { !Array.isArray(number) && onContrastChange(number) }}
-      />
-    </div>
-    {/* <input name="brightness" value={brightness} onChange={(e) => setBrightness(e.currentTarget.value)} /> */}
-    {/* <input name="contrast" value={contrast} onChange={(e) => setContrast(e.currentTarget.value)} /> */}
-  </div>
 }
 
 export function EvidenceDetailDaoDialog({

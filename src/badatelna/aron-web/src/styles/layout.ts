@@ -16,6 +16,11 @@ export const useLayoutStyles = makeStyles((theme) => ({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  flexBottom: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
   flexSpaceBetweenBottom: {
     display: 'flex',
     flexDirection: 'row',

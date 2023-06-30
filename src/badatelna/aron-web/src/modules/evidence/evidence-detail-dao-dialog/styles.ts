@@ -247,6 +247,13 @@ export const useStyles = makeStyles((theme) => {
       borderRadius: '3px',
       textAlign: 'right',
       outline: 'none',
+    },
+    imageSettingsWrapper: {
+      width: '100%',
+      height: '100%',
+    },
+    imageSettingsButton: {
+      cursor: 'pointer',
     }
   };
 });
