@@ -106,6 +106,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	private String institutionName;
 	
+	private String institutionShortName;
+	
 	private Integer fundId;
 
 	private Apu activeApu;
@@ -240,6 +242,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         var institutionInfo = dataProvider.getInstitutionApu(institutionCode);
         instApuUuid = institutionInfo.getUuid();
         institutionName = institutionInfo.getName();
+        institutionShortName = institutionInfo.getShortName();
         Validate.notNull(instApuUuid, "Missing institution, code: %s", institutionCode);
 
 		if (fi.getC() != null) {
@@ -671,7 +674,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
         String parentId = lvl.getPid();
 
         StringBuilder sb = new StringBuilder();
-        sb.append(institutionName).append(": ");
+        
+        if (configArchDesc.isComposedShortName()) {
+        	sb.append(institutionShortName).append(": ");
+        } else {        
+        	sb.append(institutionName).append(": ");
+        }
         sb.append(sect.getFi().getN());
 
         if(parentId == null) {

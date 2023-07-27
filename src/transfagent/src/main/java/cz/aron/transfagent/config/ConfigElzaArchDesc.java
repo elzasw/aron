@@ -18,6 +18,9 @@ public class ConfigElzaArchDesc {
     
     // show ZP2015_APPLIED_RESTRICTION
     public boolean showAccessRestrictions;
+    
+    // nazev urovne slozen ze zkratky instituce a nazvu urovne
+    public boolean composedShortName;
 
     public boolean isAddDateToName() {
         return addDateToName;
@@ -49,6 +52,14 @@ public class ConfigElzaArchDesc {
 
     public void setShowAccessRestrictions(boolean showAccessRestrictions) {
         this.showAccessRestrictions = showAccessRestrictions;
-    }    
+    }
+
+	public boolean isComposedShortName() {
+		return composedShortName;
+	}
+
+	public void setComposedShortName(boolean composedShortName) {
+		this.composedShortName = composedShortName;
+	}
 
 }
