@@ -54,7 +54,7 @@ export function EvidenceDetailItemValue({
           rel="noreferrer"
           className={classes.link}
         >
-          {value}
+          {value || href}
         </a>
       );
       break;

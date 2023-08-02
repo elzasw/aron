@@ -480,7 +480,7 @@ export function EvidenceDetail({
                 {parts
                   .map(({ items, ...part }) => ({
                     ...part,
-                    items: items.filter(({ visible, value }) => visible && value),
+                    items: items.filter(({ visible, value, href }) => visible && (value || href)),
                   }))
                   .filter(({ items }) => !isEmpty(items))
                   .map((partItem, index) => (
