@@ -247,6 +247,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 		if (fi.getC() != null) {
 			fundApuUuid = dataProvider.getFundApu(institutionCode, fi.getC());
+			if (fi.getNum()!=null) {
+				fundId = fi.getNum().intValue();
+			}
 		}
 		if (fundApuUuid==null&&fi.getNum() != null) {
 			fundId = fi.getNum().intValue();
@@ -505,7 +508,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put(ElzaTypes.ZP2015_RECORD_LENGTH, new EdxTimeLenghtConvertor(CoreTypes.RECORD_LENGTH));
         stringTypeMap.put(ElzaTypes.ZP2015_WRITING, new EdxStringConvertor(CoreTypes.WRITING));
         stringTypeMap.put(ElzaTypes.ZP2015_ITEM_LINK, new EdxLinkConvertor(CoreTypes.ARCH_DESC_REF, CoreTypes.SOURCE_LINK));
-        stringTypeMap.put(ElzaTypes.ZP2015_DAO_LINK, new EdxLinkConvertor(CoreTypes.ARCH_DESC_REF, CoreTypes.SOURCE_LINK));
+        stringTypeMap.put(ElzaTypes.ZP2015_DAO_LINK, new EdxLinkConvertor(CoreTypes.ARCH_DESC_REF, CoreTypes.DAO_LINK));
         stringTypeMap.put(ElzaTypes.ZP2015_RELATED_UNITS_LINK, new EdxLinkConvertor(CoreTypes.ARCH_DESC_REF, CoreTypes.SOURCE_LINK));
 
         stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));

@@ -105,6 +105,10 @@ itemTypes:
     name: Zdroj informací
     type: LINK
     indexed: true
+  - code: DAO_LINK
+    name: Odkaz na digitalizát
+    type: LINK
+    indexed: true
   # Archivy
   - code: INST_CODE
     name: Kód archivu
