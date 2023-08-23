@@ -1,5 +1,7 @@
 package cz.aron.transfagent.config;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +23,9 @@ public class ConfigElzaArchDesc {
     
     // nazev urovne slozen ze zkratky instituce a nazvu urovne
     public boolean composedShortName;
+    
+    // mapování přístupových bodů na hodnoty
+    private List<ConfigElzaArchDescApMapping> apMappings;
 
     public boolean isAddDateToName() {
         return addDateToName;
@@ -62,4 +67,13 @@ public class ConfigElzaArchDesc {
 		this.composedShortName = composedShortName;
 	}
 
+	public List<ConfigElzaArchDescApMapping> getApMappings() {
+		return apMappings;
+	}
+
+	public void setApMappings(List<ConfigElzaArchDescApMapping> apMappings) {
+		this.apMappings = apMappings;
+	}
+
+	
 }

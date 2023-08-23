@@ -1,14 +1,17 @@
 package cz.aron.transfagent.elza.convertor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.util.CollectionUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Part;
+import cz.aron.transfagent.config.ConfigElzaArchDescApMapping;
 import cz.aron.transfagent.elza.ElzaXmlReader;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
 import cz.aron.transfagent.transformation.ContextDataProvider;
@@ -20,16 +23,22 @@ import cz.tacr.elza.schema.v2.DescriptionItemUndefined;
 public class EdxApRefWithRole implements EdxItemConvertor {
 
     private final String partType;
-
     private final ContextDataProvider dataProvider;
-    private Map<String, String> specMap;
+    private final Map<String, String> specMap;    
+    private final List<ConfigElzaArchDescApMapping> apMappings;
 
     public EdxApRefWithRole(String partType,
             final ContextDataProvider dataProvider, 
-            final Map<String, String> specMap) {
+            final Map<String, String> specMap,
+            final List<ConfigElzaArchDescApMapping> apMappings) {
         this.partType = partType;
         this.dataProvider = dataProvider;
         this.specMap = specMap;
+        if (apMappings==null) {
+        	this.apMappings = Collections.emptyList();
+        } else {
+        	this.apMappings = apMappings;
+        }
     }
 
     @Override
@@ -59,6 +68,12 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         if(t == null) {
             throw new RuntimeException("Missing mapping for type: " + apRef.getT() + ", spec: " + apRef.getS() + ", ap not found");
         }
+        
+        for(var apMapping:apMappings) {
+        	if (Objects.equals(apMapping.getSpec(), apRef.getS())&&Objects.equals(apMapping.getUuid(), ap.getApe().getUuid()) ) {
+        		ApuSourceBuilder.addEnum(part, apMapping.getCode(), apMapping.getName(), true);
+        	}
+        }
 
         //apusBuilder.addEnum(part, roleType, s, true);
         if (CollectionUtils.isEmpty(archEntityInfo)) {
@@ -72,7 +87,6 @@ public class EdxApRefWithRole implements EdxItemConvertor {
                 uuids.add(uuid);
                 ctx.addArchEntityRef(aei);
             }
-
             apusBuilder.addApuRefsFirstVisible(part, t, uuids);
         }
     }
