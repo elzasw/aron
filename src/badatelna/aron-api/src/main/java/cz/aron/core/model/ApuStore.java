@@ -57,5 +57,68 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
     public LocalDateTime findApuSourcePublished(String id) {
         return query().select(metaModel.source.published).from(metaModel).innerJoin(metaModel.source,QApuSource.apuSource).where(metaModel.id.eq(id)).fetchOne();
     }
+    
+	public List<ApuEntityTreeViewDto> getEntitiesBefore(String apuId) {
+		var entity = query().select(metaModel).from(metaModel).where(metaModel.id.eq(apuId)).fetchOne();
+		if (entity.getParent() != null) {			
+			var result = query()
+					.select(Projections.constructor(ApuEntityTreeViewDto.class, metaModel.id, metaModel.name,
+							metaModel.description, metaModel.depth, metaModel.pos, metaModel.childCnt))
+					.from(metaModel)
+					.where(metaModel.parent.id.eq(entity.getParent().getId()).and(metaModel.pos.lt(entity.getPos())))
+					.orderBy(metaModel.pos.desc())
+					.limit(100)
+					.fetch();
+			Collections.reverse(result);
+			return result;
+		} else {
+			var result = query()
+					.select(Projections.constructor(ApuEntityTreeViewDto.class, metaModel.id, metaModel.name,
+							metaModel.description, metaModel.depth, metaModel.pos, metaModel.childCnt))
+					.from(metaModel)
+					.where(metaModel.source.id.eq(entity.getSource().getId()).and(metaModel.parent.isNull()).and(metaModel.pos.lt(entity.getPos())))
+					.orderBy(metaModel.pos.desc())
+					.limit(100)
+					.fetch();
+			Collections.reverse(result);
+			return result;
+		}
+	}
+    
+	public List<ApuEntityTreeViewDto> getEntitiesAfter(String apuId) {
+		var entity = query().select(metaModel).from(metaModel).where(metaModel.id.eq(apuId)).fetchOne();
+		if (entity.getParent() != null) {			
+			var result = query()
+					.select(Projections.constructor(ApuEntityTreeViewDto.class, metaModel.id, metaModel.name,
+							metaModel.description, metaModel.depth, metaModel.pos, metaModel.childCnt))
+					.from(metaModel)
+					.where(metaModel.parent.id.eq(entity.getParent().getId()).and(metaModel.pos.gt(entity.getPos())))
+					.orderBy(metaModel.pos.asc())
+					.limit(100)
+					.fetch();
+			return result;
+		} else {
+			var result = query()
+					.select(Projections.constructor(ApuEntityTreeViewDto.class, metaModel.id, metaModel.name,
+							metaModel.description, metaModel.depth, metaModel.pos, metaModel.childCnt))
+					.from(metaModel)
+					.where(metaModel.source.id.eq(entity.getSource().getId()).and(metaModel.parent.isNull()).and(metaModel.pos.gt(entity.getPos())))
+					.orderBy(metaModel.pos.asc())
+					.limit(100)
+					.fetch();
+			return result;
+		}
+	}
 
+	public List<ApuEntityTreeViewDto> getEntitiesUnder(String apuId) {
+		var result = query()
+				.select(Projections.constructor(ApuEntityTreeViewDto.class, metaModel.id, metaModel.name,
+						metaModel.description, metaModel.depth, metaModel.pos, metaModel.childCnt))
+				.from(metaModel)
+				.where(metaModel.parent.id.eq(apuId))
+				.orderBy(metaModel.pos.asc())
+				.limit(100)
+				.fetch();
+		return result;
+	}
 }

@@ -142,5 +142,19 @@ public class ApuApi extends DomainApi<
         return apuEntityViewStore.listByIds(ids);
     }
 
+    @GetMapping(value = "/{id}/related/{direction}")
+    public List<ApuEntityTreeViewDto> getRelatedNodes(@PathVariable("id") String apuId, @PathVariable("direction") String direction) {
+    	switch(direction) {
+    	case "before":
+    		return apuStore.getEntitiesBefore(apuId);
+    	case "after":
+    		return apuStore.getEntitiesAfter(apuId);
+    	case "under":
+    		return apuStore.getEntitiesUnder(apuId);
+    	default:
+    		throw new RuntimeException();
+    	}
+    }
+    
 }
 
