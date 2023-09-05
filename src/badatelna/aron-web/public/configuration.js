@@ -2,6 +2,7 @@ var _configuration = {
   // allowDetailExpand: true,
   // alternativeItemLabel: false,
   // compactAppHeader: false,
+  // orderResultsByScore: true,
   // showAppLogo: true,
   // showAppTopImage: false,
   // showHeader: true,
