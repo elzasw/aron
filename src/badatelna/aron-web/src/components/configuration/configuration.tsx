@@ -35,6 +35,7 @@ export interface ConfigurationType {
     hideThumbnails?: boolean;
     newsUrl?: string;
     helpUrl?: string;
+    orderResultsByScore?: boolean;
 }
 
 
@@ -83,6 +84,7 @@ const defaultConfiguration: ConfigurationType = {
     hideThumbnails: false,
     // newsUrl: 'https://www.seznam.cz',
     // helpUrl: 'https://www.google.cz',
+    orderResultsByScore: true,
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)
