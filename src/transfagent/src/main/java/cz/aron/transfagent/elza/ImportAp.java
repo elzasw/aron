@@ -232,6 +232,9 @@ public class ImportAp implements EdxItemCovertContext {
         case "ET_JOB":
             typePart = "PT_AE_JOB";
             break;
+        case "ET_AWARD":
+            typePart = "PT_AE_AWARD";
+            break;
         default:
             throw new IllegalStateException("Unknown event class: " + eventClass);
         }
