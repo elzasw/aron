@@ -52,6 +52,7 @@ import { EvidenceLayout, LayoutType } from './evidence-layout';
 import { ActionsRenderProps, FileObject } from './evidence-detail-dao-dialog/types';
 import { ApuPathParams, createApuDaoFileUrl } from './evidence';
 import { getFiles } from './evidence-detail-dao-dialog/utils';
+import { CitationDialog } from './citation-dialog';
 
 function EvidenceDao({
   customActionsLeft,
@@ -156,6 +157,8 @@ export function EvidenceDetail({
   );
 
   const [archdescRootRefItemId, setArchdescRootRefItemId] = useState<string>();
+
+  const [isCitationOpen, setCitationOpen] = useState(false);
 
   const { id } = useParams();
 
@@ -410,6 +413,16 @@ export function EvidenceDetail({
                         <></>
                       )}
                     <EvidenceShareButtons item={item} />
+                    {configuration.showCitation && <>
+                      <Button
+                        className={classes.findRelatedButton}
+                        label={formatMessage({ id: Message.CITATION_CREATE })}
+                        outlined={true}
+                        size="small"
+                        onClick={() => setCitationOpen(true)}
+                      />
+                      <CitationDialog apuId={id} isOpen={isCitationOpen} onClose={() => setCitationOpen(false)} />
+                    </>}
                     {archdescRootRef && item.type === ApuType.FUND ? (
                       <div className={spacingClasses.marginTop}>
                         <Link

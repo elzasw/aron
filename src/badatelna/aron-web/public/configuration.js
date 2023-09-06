@@ -10,6 +10,7 @@ var _configuration = {
   // showStandalonePartName: true,
   // showMainPageBreadcrumb: true,
   // showFindRecordsInFundButton: false,
+  // showCitation: false,
   // localeCookieName: "pll_language",
   // showMetadataInImageViewer: true,
   // disableDownloads: false,

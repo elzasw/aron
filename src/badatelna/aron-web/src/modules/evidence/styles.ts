@@ -401,6 +401,10 @@ export const useStyles = makeStyles((theme) => {
       margin: theme.spacing(0.5),
       overflow: 'hidden',
       borderRadius: theme.shape.borderRadius,
-    }
+    },
+
+    citationText: {
+      padding: theme.spacing(2),
+    },
   };
 });

@@ -23,6 +23,7 @@ export interface ConfigurationType {
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
     showFindRecordsInFundButton?: boolean;
+    showCitation?: boolean;
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
     localeCookieName?: string;
@@ -50,6 +51,7 @@ const defaultConfiguration: ConfigurationType = {
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
     showFindRecordsInFundButton: false,
+    showCitation: false,
     disableDownloads: false,
     // localeCookieName: "pll_language",
     headerItems: [
