@@ -61,6 +61,8 @@ public class ApuProcessor {
     private int apuOrderCounter;
 
     public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
+    	
+    	preprocess(apuSrcPath);
     	    	
         try(ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
             log.debug("Processing apu source {}", reader.getUuid());
