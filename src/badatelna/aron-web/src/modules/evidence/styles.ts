@@ -384,9 +384,13 @@ export const useStyles = makeStyles((theme) => {
       },
     },
 
+    buttonsContainer: {
+      display: 'flex',
+    },
+
     shareButtonsContainer: {
       display: 'flex',
-      marginBottom: '8px',
+      // marginBottom: '8px',
     },
 
     shareIcon: {
@@ -403,8 +407,13 @@ export const useStyles = makeStyles((theme) => {
       borderRadius: theme.shape.borderRadius,
     },
 
+    citationButton: {
+      margin: theme.spacing(0.5),
+    },
+
     citationText: {
       padding: theme.spacing(2),
+      flex: 1,
     },
   };
 });

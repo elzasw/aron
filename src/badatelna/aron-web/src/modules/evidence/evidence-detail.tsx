@@ -412,17 +412,19 @@ export function EvidenceDetail({
                     ) : (
                         <></>
                       )}
-                    <EvidenceShareButtons item={item} />
-                    {configuration.showCitation && <>
-                      <Button
-                        className={classes.findRelatedButton}
-                        label={formatMessage({ id: Message.CITATION_CREATE })}
-                        outlined={true}
-                        size="small"
-                        onClick={() => setCitationOpen(true)}
-                      />
-                      <CitationDialog apuId={id} isOpen={isCitationOpen} onClose={() => setCitationOpen(false)} />
-                    </>}
+                    {(configuration.showCitation || configuration.showShareButtons) && <div className={classes.buttonsContainer}>
+                      <EvidenceShareButtons item={item} />
+                      {configuration.showCitation && <>
+                        <Button
+                          className={classNames(classes.findRelatedButton, classes.citationButton)}
+                          label={formatMessage({ id: Message.CITATION_CREATE })}
+                          outlined={true}
+                          size="small"
+                          onClick={() => setCitationOpen(true)}
+                        />
+                        {isCitationOpen && <CitationDialog apuId={id} isOpen={isCitationOpen} onClose={() => setCitationOpen(false)} />}
+                      </>}
+                    </div>}
                     {archdescRootRef && item.type === ApuType.FUND ? (
                       <div className={spacingClasses.marginTop}>
                         <Link

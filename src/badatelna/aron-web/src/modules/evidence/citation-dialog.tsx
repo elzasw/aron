@@ -3,6 +3,7 @@ import React, { useContext } from 'react';
 import { useIntl } from 'react-intl';
 import Button from '@material-ui/core/Button';
 import ButtonGroup from '@material-ui/core/ButtonGroup';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -48,12 +49,16 @@ export function CitationDialog({ apuId, isOpen, onClose }: Props) {
     </DialogTitle>
     <DialogContent>
       <div className={classes.citationText}>
-        {citation?.citation}
+        {!citation
+          ? <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <CircularProgress />
+          </div>
+          : citation?.citation}
       </div>
     </DialogContent>
     <DialogActions>
       <ButtonGroup>
-        <Button size="small" onClick={handleCopyToClipboard}>{formatMessage({ id: Message.COPY_TEXT })}</Button>
+        {window.isSecureContext && citation && <Button size="small" onClick={handleCopyToClipboard}>{formatMessage({ id: Message.COPY_TEXT })}</Button>}
         <Button size="small" onClick={onClose}>{formatMessage({ id: Message.CLOSE })}</Button>
       </ButtonGroup>
     </DialogActions>
