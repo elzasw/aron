@@ -132,6 +132,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_INVALID_RECORD",
             "ZP2015_ITEM_LINK",
             "ZP2015_TITLE_PUBLIC",
+            "ZP2015_UNIT_DAMAGE_TYPE",
     // TODO: k zapracovani:
             "ZP2015_AMOUNT"
     };
