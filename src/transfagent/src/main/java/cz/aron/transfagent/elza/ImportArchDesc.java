@@ -54,8 +54,6 @@ import cz.aron.transfagent.elza.dao.ArchDescLevelDaoImporter;
 import cz.aron.transfagent.elza.datace.ItemDateRangeAppender;
 import cz.aron.transfagent.peva.ArchiveFundId;
 import cz.aron.transfagent.peva.ImportPevaGeo;
-import cz.aron.transfagent.service.DaoFileStore2Service;
-import cz.aron.transfagent.service.DaoFileStore2Service.ArchiveFundDao;
 import cz.aron.transfagent.service.DaoFileStoreService;
 import cz.aron.transfagent.service.LevelEnrichmentService;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
@@ -146,8 +144,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
     
     private final DaoFileStoreService daoFileStoreService;
     
-    private final DaoFileStore2Service daoFileStoreService2;
-    
     private final LevelEnrichmentService levelEnrichmentService;
     
     private final List<ArchDescLevelDaoImporter> levelDaoImporters;
@@ -159,11 +155,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final List<ArchDescAttachment> attachments = new ArrayList<>();
 
     public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
-                          DaoFileStore2Service daoFileStoreService2, LevelEnrichmentService levelEnrichmentService,
+                          LevelEnrichmentService levelEnrichmentService,
                           ConfigElzaArchDesc configArchDesc, List<ArchDescLevelDaoImporter> levelDaoImporters) {
         this.apTypeService = apTypeService;
         this.daoFileStoreService = daoFileStoreService;
-        this.daoFileStoreService2 = daoFileStoreService2;
         this.levelEnrichmentService = levelEnrichmentService;
         this.configArchDesc = configArchDesc;
         this.levelDaoImporters = levelDaoImporters;
@@ -191,7 +186,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, null, new ConfigElzaArchDesc(), Collections.emptyList());
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, new ConfigElzaArchDesc(), Collections.emptyList());
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -403,34 +398,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				addDaoRef(daoFileStoreService.getName(), UUID.fromString(lvl.getUuid()), lvl.getUuid());
 				ApuSourceBuilder.addDao(activeApu, UUID.fromString(lvl.getUuid()));
 				daoExist = true;
-			}
-		}
-		if (daoFileStoreService2 != null) {
-			for (DescriptionItem di : lvl.getDdOrDoOrDp()) {
-				if (di instanceof DescriptionItemString) {
-					DescriptionItemString ds = (DescriptionItemString) di;
-					if ("ZP2015_DAO_ID".equals(ds.getT())) {
-						String id = ds.getV();
-						try {
-							ArchiveFundDao afd = new ArchiveFundDao(institutionCode, fundId, id);
-							List<Path> paths = daoFileStoreService2.getDaos(afd);
-							if (CollectionUtils.isNotEmpty(paths)) {
-								// podivam se jestli uz dao neexistuje abych negeneroval nove uuid a neposlal ho
-								// opakovane
-								// TODO doresit situaci kdy by neexistujici dao bylo odkazovano z vice urovni (nakesovat nove vytvarena uuid)
-								UUID uuid = dataProvider.getDao(afd.toString());
-								if (uuid == null) {
-									uuid = UUID.randomUUID();
-								}
-								addDaoRef(daoFileStoreService2.getName(), uuid, afd.toString());
-								ApuSourceBuilder.addDao(activeApu, uuid);
-								daoExist = true;
-							}
-						} catch (IOException e) {
-							throw new UncheckedIOException(e);
-						}
-					}
-				}
 			}
 		}		
         for (ArchDescLevelDaoImporter daoImporter : levelDaoImporters) {
