@@ -538,7 +538,7 @@ public class ImportAp implements EdxItemCovertContext {
     }
 
     private void importName(Apu apu, Fragment frg) {
-        String fullName = nameBuilder.createFullName(frg, entityClass);
+        String fullName = nameBuilder.createFullName(frg, entityClass, false);
         // add name
         if (apu.getName() == null) {
             apu.setName(fullName);

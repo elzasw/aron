@@ -24,6 +24,8 @@ public class ConfigElzaArchDesc {
     // nazev urovne slozen ze zkratky instituce a nazvu urovne
     public boolean composedShortName;
     
+    public boolean processInternalSupplement;
+    
     // mapování přístupových bodů na hodnoty
     private List<ConfigElzaArchDescApMapping> apMappings;
 
@@ -75,5 +77,12 @@ public class ConfigElzaArchDesc {
 		this.apMappings = apMappings;
 	}
 
+	public boolean isProcessInternalSupplement() {
+		return processInternalSupplement;
+	}
+
+	public void setProcessInternalSupplement(boolean processInternalSupplement) {
+		this.processInternalSupplement = processInternalSupplement;
+	}
 	
 }

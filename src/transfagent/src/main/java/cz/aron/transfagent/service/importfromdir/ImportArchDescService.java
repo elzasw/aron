@@ -204,7 +204,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
     private void importArchDesc(TransactionStatus t, Path dir, String fundCode, Path archdescXmlPath) {
 
         var iad = new ImportArchDesc(apTypeService, daoFileStoreService, levelEnrichmentService,
-                configArchDesc, archDescLevelDaoImporters);
+                configArchDesc, archDescLevelDaoImporters, configurationLoader.getConfig());
         ApuSourceBuilder apusrcBuilder;
 
         try {
@@ -349,7 +349,8 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         var inputFile = archDescFile.get();
              
         ApuSourceBuilder apuSourceBuilder;
-        var iad = new ImportArchDesc(apTypeService, daoFileStoreService, levelEnrichmentService, configArchDesc, archDescLevelDaoImporters);
+		var iad = new ImportArchDesc(apTypeService, daoFileStoreService, levelEnrichmentService, configArchDesc,
+				archDescLevelDaoImporters, configurationLoader.getConfig());
         try {
             apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
             apuSourceBuilder.setUuid(apuSource.getUuid());

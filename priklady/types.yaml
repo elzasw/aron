@@ -1486,6 +1486,10 @@ itemTypes:
     name: Rejstřík obecných pojmů
     type: APU_REF
     indexed: true
+  - code: ENTITY_NOTE
+    name: Poznámka
+    type: STRING
+    indexed: true
 
 itemGroups:
   # vztahy u archivního popisu

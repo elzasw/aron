@@ -33,6 +33,7 @@ import cz.aron.apux._2020.ApuType;
 import cz.aron.apux._2020.ItemDateRange;
 import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.Part;
+import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.config.ConfigElzaArchDesc;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -153,15 +154,19 @@ public class ImportArchDesc implements EdxItemCovertContext {
     private final List<String> attachmentIds = new ArrayList<>();
     
     private final List<ArchDescAttachment> attachments = new ArrayList<>();
+    
+    private final TypesConfiguration typesConfig;
 
     public ImportArchDesc(ApTypeService apTypeService, DaoFileStoreService daoFileStoreService,
                           LevelEnrichmentService levelEnrichmentService,
-                          ConfigElzaArchDesc configArchDesc, List<ArchDescLevelDaoImporter> levelDaoImporters) {
+                          ConfigElzaArchDesc configArchDesc, List<ArchDescLevelDaoImporter> levelDaoImporters,
+                          TypesConfiguration typesConfig) {
         this.apTypeService = apTypeService;
         this.daoFileStoreService = daoFileStoreService;
         this.levelEnrichmentService = levelEnrichmentService;
         this.configArchDesc = configArchDesc;
         this.levelDaoImporters = levelDaoImporters;
+        this.typesConfig = typesConfig;
     }
 
     public Set<UUID> getApRefs() {
@@ -186,7 +191,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
 	public static void main(String[] args) {
 		Path inputFile = Path.of(args[0]);
-		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, new ConfigElzaArchDesc(), Collections.emptyList());
+		ImportArchDesc iad = new ImportArchDesc(new ApTypeService(), null, null, new ConfigElzaArchDesc(), Collections.emptyList(),null);
 		try {
 			ApuSourceBuilder apusrcBuilder = iad.importArchDesc(inputFile, args[1]);
 			Path outputPath = Path.of(args[2]);
@@ -428,7 +433,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		sourceDaoRefs.add(new ArchDescDaoRef(handle, uuid));
 	}
 
-    private void initConvertor() {
+    private void initConvertor() {    	
+    	ElzaNameBuilder nameBuilder = new ElzaNameBuilder(apTypeService);    	
 	    stringTypeMap = new HashMap<>();
         // TITLE is used as default APU name, it is not converted as separate ABSTRACT
         //stringTypeMap.put("ZP2015_TITLE",new EdxStringConvertor("ABSTRACT"));     
@@ -447,9 +453,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put("ZP2015_UNIT_ACCESS",new EdxStringConvertor("UNIT_ACCESS"));
         stringTypeMap.put("ZP2015_UNIT_CURRENT_STATUS",new EdxStringConvertor("UNIT_CURRENT_STATUS"));
         stringTypeMap.put("ZP2015_ARRANGE_RULES",new EdxStringConvertor("ARRANGE_RULES"));
-        stringTypeMap.put(ElzaTypes.ZP2015_ORIGINATOR,new EdxApRefConvertor(CoreTypes.ORIGINATOR_REF,this.dataProvider));
-        stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("AP_REF",this.dataProvider));
-        stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("ITEM_TITLE",this.dataProvider));
+        stringTypeMap.put(ElzaTypes.ZP2015_ORIGINATOR,new EdxApRefConvertor(CoreTypes.ORIGINATOR_REF,dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
+        stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("AP_REF",dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
+        stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("ITEM_TITLE",dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
         stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
         stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
         stringTypeMap.put(ElzaTypes.ZP2015_LANGUAGE, new EdxEnumConvertor(CoreTypes.LANGUAGE, ElzaTypes.languageTypeMap));
@@ -481,7 +487,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         stringTypeMap.put("ZP2015_EXISTING_COPY",new EdxStringConvertor("EXISTING_COPY"));
         stringTypeMap.put("ZP2015_ARRANGEMENT_INFO",new EdxStringConvertor("ARRANGEMENT_INFO"));
-        stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE, new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, this.dataProvider, ElzaTypes.roleSpecMap, this.configArchDesc.getApMappings()));
+		stringTypeMap.put(ElzaTypes.ZP2015_ENTITY_ROLE,
+				new EdxApRefWithRole(CoreTypes.PT_ENTITY_ROLE, dataProvider, ElzaTypes.roleSpecMap,
+						configArchDesc.getApMappings(), configArchDesc.isProcessInternalSupplement(), nameBuilder,
+						typesConfig));
         stringTypeMap.put("ZP2015_UNIT_COUNT",new EdxIntConvertor("UNIT_COUNT"));
         stringTypeMap.put("ZP2015_NOTE",new EdxStringConvertor(CoreTypes.NOTE));
         stringTypeMap.put("ZP2015_DESCRIPTION_DATE",new EdxStringConvertor("DESCRIPTION_DATE"));
