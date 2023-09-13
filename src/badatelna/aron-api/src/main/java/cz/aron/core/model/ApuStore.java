@@ -3,6 +3,8 @@ package cz.aron.core.model;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import cz.inqool.eas.common.domain.store.DomainStore;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import com.google.common.collect.Iterables;
@@ -17,6 +19,9 @@ import java.util.*;
 public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 
     private static final int BATCH_SIZE = 1000;
+    
+    @Value("${tree.levelSize:100}")
+    private Integer levelSize;
 
     public ApuStore() {
         super(ApuEntity.class);
@@ -67,7 +72,7 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 					.from(metaModel)
 					.where(metaModel.parent.id.eq(entity.getParent().getId()).and(metaModel.pos.lt(entity.getPos())))
 					.orderBy(metaModel.pos.desc())
-					.limit(100)
+					.limit(levelSize)
 					.fetch();
 			Collections.reverse(result);
 			return result;
@@ -78,7 +83,7 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 					.from(metaModel)
 					.where(metaModel.source.id.eq(entity.getSource().getId()).and(metaModel.parent.isNull()).and(metaModel.pos.lt(entity.getPos())))
 					.orderBy(metaModel.pos.desc())
-					.limit(100)
+					.limit(levelSize)
 					.fetch();
 			Collections.reverse(result);
 			return result;
@@ -94,7 +99,7 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 					.from(metaModel)
 					.where(metaModel.parent.id.eq(entity.getParent().getId()).and(metaModel.pos.gt(entity.getPos())))
 					.orderBy(metaModel.pos.asc())
-					.limit(100)
+					.limit(levelSize)
 					.fetch();
 			return result;
 		} else {
@@ -104,7 +109,7 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 					.from(metaModel)
 					.where(metaModel.source.id.eq(entity.getSource().getId()).and(metaModel.parent.isNull()).and(metaModel.pos.gt(entity.getPos())))
 					.orderBy(metaModel.pos.asc())
-					.limit(100)
+					.limit(levelSize)
 					.fetch();
 			return result;
 		}
@@ -117,7 +122,7 @@ public class ApuStore extends DomainStore<ApuEntity, ApuEntity, QApuEntity> {
 				.from(metaModel)
 				.where(metaModel.parent.id.eq(apuId))
 				.orderBy(metaModel.pos.asc())
-				.limit(100)
+				.limit(levelSize)
 				.fetch();
 		return result;
 	}
