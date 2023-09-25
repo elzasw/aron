@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.util.CollectionUtils;
 
 import cz.aron.apux.ApuSourceBuilder;
+import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.elza.ElzaNameBuilder;
 import cz.aron.transfagent.elza.ElzaTypes;
 import cz.aron.transfagent.elza.ElzaXmlReader;
@@ -29,13 +30,16 @@ public class EdxApRefConvertor implements EdxItemConvertor {
     private final boolean processPrivSupplement;
     
     private final ElzaNameBuilder nameBuilder;
+    
+    private final TypesConfiguration typesConfig;
 
 	public EdxApRefConvertor(final String targetType, ContextDataProvider dataProvider, boolean processPrivSupplement,
-			ElzaNameBuilder nameBuilder) {
+			ElzaNameBuilder nameBuilder, TypesConfiguration typesConfig) {
 		this.targetType = targetType;
 		this.dataProvider = dataProvider;
 		this.processPrivSupplement = processPrivSupplement;
 		this.nameBuilder = nameBuilder;
+		this.typesConfig = typesConfig;
 	}
 
     @Override
@@ -60,8 +64,13 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 				Fragment fragment = ap.getFrgs().getFrg().stream().filter(fr -> CoreTypes.PT_NAME.equals(fr.getT()))
 						.findFirst().orElse(null);
 				if (fragment != null) {
+					String prefix = "";
+					var itc = typesConfig.getItemTypes().stream().filter(itemType->itemType.getCode().equals(targetType)).findFirst().orElse(null);
+					if (itc!=null) {
+						prefix = ("" + itc.getName() + ": ").toLowerCase();
+					}					
 					ApuSourceBuilder.addString(ctx.getActivePart(), "ENTITY_NOTE",
-							nameBuilder.createFullName(fragment, ap.getApe().getT(), true));
+							prefix + nameBuilder.createFullName(fragment, ap.getApe().getT(), true));
 				}
 				return;
 			}

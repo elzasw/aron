@@ -453,9 +453,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put("ZP2015_UNIT_ACCESS",new EdxStringConvertor("UNIT_ACCESS"));
         stringTypeMap.put("ZP2015_UNIT_CURRENT_STATUS",new EdxStringConvertor("UNIT_CURRENT_STATUS"));
         stringTypeMap.put("ZP2015_ARRANGE_RULES",new EdxStringConvertor("ARRANGE_RULES"));
-        stringTypeMap.put(ElzaTypes.ZP2015_ORIGINATOR,new EdxApRefConvertor(CoreTypes.ORIGINATOR_REF,dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
-        stringTypeMap.put("ZP2015_AP_REF",new EdxApRefConvertor("AP_REF",dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
-        stringTypeMap.put("ZP2015_ITEM_TITLE_REF",new EdxApRefConvertor("ITEM_TITLE",dataProvider,configArchDesc.isProcessInternalSupplement(),nameBuilder));
+		stringTypeMap.put(ElzaTypes.ZP2015_ORIGINATOR, new EdxApRefConvertor(CoreTypes.ORIGINATOR_REF, dataProvider,
+				configArchDesc.isProcessInternalSupplement(), nameBuilder, typesConfig));
+		stringTypeMap.put("ZP2015_AP_REF", new EdxApRefConvertor("AP_REF", dataProvider,
+				configArchDesc.isProcessInternalSupplement(), nameBuilder, typesConfig));
+		stringTypeMap.put("ZP2015_ITEM_TITLE_REF", new EdxApRefConvertor("ITEM_TITLE", dataProvider,
+				configArchDesc.isProcessInternalSupplement(), nameBuilder, typesConfig));
         stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
         stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
         stringTypeMap.put(ElzaTypes.ZP2015_LANGUAGE, new EdxEnumConvertor(CoreTypes.LANGUAGE, ElzaTypes.languageTypeMap));
