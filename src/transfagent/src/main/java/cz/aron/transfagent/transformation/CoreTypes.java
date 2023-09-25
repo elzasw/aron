@@ -89,5 +89,7 @@ public class CoreTypes {
 
     public static final String CRE_TYPE = "CRE_TYPE";
     public static final String EXT_TYPE = "EXT_TYPE";
+    
+    public static final String SIZE = "SIZE";
 
 }

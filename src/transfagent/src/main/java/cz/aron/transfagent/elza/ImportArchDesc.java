@@ -35,6 +35,7 @@ import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.Part;
 import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.config.ConfigElzaArchDesc;
+import cz.aron.transfagent.elza.convertor.EdxAmountConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
 import cz.aron.transfagent.elza.convertor.EdxAttachment;
@@ -132,8 +133,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_ITEM_LINK",
             "ZP2015_TITLE_PUBLIC",
             "ZP2015_UNIT_DAMAGE_TYPE",
-    // TODO: k zapracovani:
-            "ZP2015_AMOUNT"
     };
 
     /**
@@ -508,6 +507,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
         } else {
             stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION, new EdxNullConvertor());
         }
+        
+        stringTypeMap.put(ElzaTypes.ZP2015_AMOUNT, new EdxAmountConvertor(ElzaTypes.AMOUNT_SUBTYPES));
     }
 
     private void addItem(Apu apu, DescriptionItem item) {

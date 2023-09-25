@@ -100,6 +100,8 @@ public abstract class ElzaTypes {
     public static final String ZP2015_DAO_LINK = "ZP2015_DAO_LINK";
     public static final String ZP2015_RELATED_UNITS_LINK = "ZP2015_RELATED_UNITS_LINK";
     
+    public static final String ZP2015_AMOUNT = "ZP2015_AMOUNT"; 
+    
     public static final String ZP2015_APPLIED_RESTRICTION = "ZP2015_APPLIED_RESTRICTION";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
@@ -687,4 +689,34 @@ public abstract class ElzaTypes {
         APPLIED_ACCESS_RESTRICT_MAP.put("ZP2015_APPLIED_RESTRICTION_ARCHENTITY","Uplatněno omezení přístupnosti - zobrazený archivní popis není úplný.");
     }
 
+    public static class AmountTextPos {
+    	
+    	private final boolean prefix;
+    	
+    	private final String text;
+    	
+    	public AmountTextPos(String text, boolean prefix) {
+    		this.text = text;
+    		this.prefix = prefix;
+    	}
+
+		public boolean isPrefix() {
+			return prefix;
+		}
+
+		public String getText() {
+			return text;
+		}
+    	
+    }
+    
+    
+	public static Map<String, AmountTextPos> AMOUNT_SUBTYPES = new HashMap<>();
+	static {
+		AMOUNT_SUBTYPES.put("ZP2015_AMOUNT_B", new AmountTextPos("B", false));
+		AMOUNT_SUBTYPES.put("ZP2015_AMOUNT_PIECES", new AmountTextPos("kusů: ", true));
+		AMOUNT_SUBTYPES.put("ZP2015_AMOUNT_SHEETS", new AmountTextPos("listů: ", true));
+		AMOUNT_SUBTYPES.put("ZP2015_AMOUNT_PAGES", new AmountTextPos("stran: ", true));
+	}
+    
 }
