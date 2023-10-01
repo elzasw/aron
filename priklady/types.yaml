@@ -109,6 +109,10 @@ itemTypes:
     name: Odkaz na digitalizát
     type: LINK
     indexed: true
+  - code: RELATED_UNITS_LINK
+    name: Odkazy na příbuzné dokumenty
+    type: LINK
+    indexed: true    
   # Archivy
   - code: INST_CODE
     name: Kód archivu

@@ -78,6 +78,7 @@ public class CoreTypes {
     // LINK
     public static final String SOURCE_LINK = "SOURCE_LINK";
     public static final String DAO_LINK = "DAO_LINK";
+    public static final String RELATED_UNITS_LINK = "RELATED_UNITS_LINK";
 
     public static final String CRC_BIRTH_DATE = "CRC_BIRTH_DATE";
     public static final String CRC_RISE_DATE = "CRC_RISE_DATE";
