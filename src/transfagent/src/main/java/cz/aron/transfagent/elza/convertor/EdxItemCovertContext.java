@@ -5,6 +5,7 @@ import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.Part;
 import cz.aron.transfagent.elza.ElzaXmlReader;
 import cz.aron.transfagent.transformation.ArchEntityInfo;
+import cz.tacr.elza.schema.v2.Level;
 
 public interface EdxItemCovertContext {
 
@@ -21,4 +22,6 @@ public interface EdxItemCovertContext {
 	void addArchEntityRef(ArchEntityInfo aei);
 
 	Apu getActiveApu();
+	
+	Level getProcessedLevel();
 }

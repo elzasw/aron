@@ -39,6 +39,7 @@ import cz.tacr.elza.schema.v2.DescriptionItemAPRef;
 import cz.tacr.elza.schema.v2.DescriptionItemUriRef;
 import cz.tacr.elza.schema.v2.Fragment;
 import cz.tacr.elza.schema.v2.Fragments;
+import cz.tacr.elza.schema.v2.Level;
 
 public class ImportAp implements EdxItemCovertContext {
 
@@ -573,8 +574,13 @@ public class ImportAp implements EdxItemCovertContext {
     public Apu getActiveApu() {
         return apu;
     }
-
+    
     @Override
+	public Level getProcessedLevel() {
+		return null;
+	}
+
+	@Override
     public void addArchEntityRef(ArchEntityInfo aei) {        
     }
     

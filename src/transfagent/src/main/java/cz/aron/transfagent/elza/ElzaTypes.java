@@ -100,7 +100,8 @@ public abstract class ElzaTypes {
     public static final String ZP2015_DAO_LINK = "ZP2015_DAO_LINK";
     public static final String ZP2015_RELATED_UNITS_LINK = "ZP2015_RELATED_UNITS_LINK";
     
-    public static final String ZP2015_AMOUNT = "ZP2015_AMOUNT"; 
+    public static final String ZP2015_AMOUNT = "ZP2015_AMOUNT";
+    public static final String ZP2015_ITEM_ORDER = "ZP2015_ITEM_ORDER";
     
     public static final String ZP2015_APPLIED_RESTRICTION = "ZP2015_APPLIED_RESTRICTION";
 
