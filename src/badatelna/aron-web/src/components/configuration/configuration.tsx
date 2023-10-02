@@ -35,6 +35,7 @@ export interface ConfigurationType {
     hideThumbnails?: boolean;
     newsUrl?: string;
     helpUrl?: string;
+    showIncrementalTree?: boolean;
 }
 
 
@@ -81,6 +82,7 @@ const defaultConfiguration: ConfigurationType = {
     treeHorizontalScroll: false,
     daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
     hideThumbnails: false,
+    showIncrementalTree: false,
     // newsUrl: 'https://www.seznam.cz',
     // helpUrl: 'https://www.google.cz',
 }

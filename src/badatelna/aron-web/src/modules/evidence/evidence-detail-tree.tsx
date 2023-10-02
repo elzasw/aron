@@ -12,10 +12,10 @@ import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { DetailTreeProps } from './types';
 import { useAppState, useGet } from '../../common-utils';
-import { /* Tree,  */useConfiguration } from '../../components';
+import { Tree, useConfiguration } from '../../components';
 import { ModulePath, ApiUrl } from '../../enums';
 import { ApuEntity, ApuTree } from '../../types';
-import { Tree2 } from '../../components/tree/tree2';
+import { IncrementalTree } from '../../components/tree/incremental-tree';
 
 const WRAPPER_ID = 'evidence-detail-tree-wrapper';
 
@@ -24,7 +24,7 @@ const getParentId = (item: ApuEntity): string => {
 };
 
 export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTreeProps) {
-  const { treeHorizontalScroll } = useConfiguration();
+  const { treeHorizontalScroll, showIncrementalTree } = useConfiguration();
   const classes = useStyles({ treeHorizontalScroll });
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
@@ -145,43 +145,45 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
               updateAppState({ evidenceDetailTreeExpandedItems: [] })
             }
           />
-          <Tree2
-            {...{
-              apuId: id,
-              // items: [treeItem],
-              initialItems: (() => {
-                console.log("current item", item);
-                const parents: any[] = [item];
-                let parent = item.parent;
-                while (parent) {
-                  parents.push(parent);
-                  parent = parent.parent;
-                }
-                return parents.reverse();
-              })(),
-              selected,
-              expanded: appState.evidenceDetailTreeExpandedItems,
-              disableClick: item,
-              labelMapper: (item) => item.description || item.name || 'Neznámé',
-              onLabelClick: (newItem) =>
-                navigate(`${ModulePath.APU}/${newItem.id}`),
-              onNodeToggle: (evidenceDetailTreeExpandedItems) =>
-                updateAppState({ evidenceDetailTreeExpandedItems }),
-            }}
-          />
-          {/* <Tree */}
-          {/*   {...{ */}
-          {/*     items: [treeItem], */}
-          {/*     selected, */}
-          {/*     expanded: appState.evidenceDetailTreeExpandedItems, */}
-          {/*     disableClick: item, */}
-          {/*     labelMapper: (item) => item.description || item.name || 'Neznámé', */}
-          {/*     onLabelClick: (newItem) => */}
-          {/*       navigate(`${ModulePath.APU}/${newItem.id}`), */}
-          {/*     onNodeToggle: (evidenceDetailTreeExpandedItems) => */}
-          {/*       updateAppState({ evidenceDetailTreeExpandedItems }), */}
-          {/*   }} */}
-          {/* /> */}
+          {showIncrementalTree ?
+            <IncrementalTree
+              {...{
+                apuId: id,
+                initialItems: (() => {
+                  console.log("current item", item);
+                  const parents: any[] = [item];
+                  let parent = item.parent;
+                  while (parent) {
+                    parents.push(parent);
+                    parent = parent.parent;
+                  }
+                  return parents.reverse();
+                })(),
+                selected,
+                expanded: appState.evidenceDetailTreeExpandedItems,
+                disableClick: item,
+                labelMapper: (item) => item.description || item.name || 'Neznámé',
+                onLabelClick: (newItem) =>
+                  navigate(`${ModulePath.APU}/${newItem.id}`),
+                onNodeToggle: (evidenceDetailTreeExpandedItems) =>
+                  updateAppState({ evidenceDetailTreeExpandedItems }),
+              }}
+            />
+            :
+            <Tree
+              {...{
+                items: [treeItem],
+                selected,
+                expanded: appState.evidenceDetailTreeExpandedItems,
+                disableClick: item,
+                labelMapper: (item) => item.description || item.name || 'Neznámé',
+                onLabelClick: (newItem) =>
+                  navigate(`${ModulePath.APU}/${newItem.id}`),
+                onNodeToggle: (evidenceDetailTreeExpandedItems) =>
+                  updateAppState({ evidenceDetailTreeExpandedItems }),
+              }}
+            />
+          }
         </div>
       </div>
     </Resizable>
