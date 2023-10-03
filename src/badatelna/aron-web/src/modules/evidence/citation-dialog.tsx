@@ -19,7 +19,8 @@ export interface Props {
 }
 
 export interface Citation {
-  citation: string;
+  citation?: string;
+  error?: string;
 }
 
 export function CitationDialog({ apuId, isOpen, onClose }: Props) {
@@ -31,7 +32,7 @@ export function CitationDialog({ apuId, isOpen, onClose }: Props) {
 
   async function handleCopyToClipboard() {
     try {
-      if (citation) {
+      if (citation && citation.citation) {
         await navigator.clipboard.writeText(citation.citation);
         showSnackbar(formatMessage({ id: Message.COPY_TEXT_SUCCESS }), SnackbarVariant.INFO, true);
       } else {
@@ -49,11 +50,10 @@ export function CitationDialog({ apuId, isOpen, onClose }: Props) {
     </DialogTitle>
     <DialogContent>
       <div className={classes.citationText}>
-        {!citation
-          ? <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <CircularProgress />
-          </div>
-          : citation?.citation}
+        {citation && citation.citation}
+        {!citation && <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <CircularProgress />
+        </div>}
       </div>
     </DialogContent>
     <DialogActions>

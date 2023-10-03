@@ -1,5 +1,5 @@
 import React, { FC, useContext, createContext } from 'react';
-import { AppHeaderItemCode, SearchOption, Message } from '../../enums';
+import { AppHeaderItemCode, SearchOption, Message, ApuType } from '../../enums';
 import { DaoNamePlacement } from '../../enums/dao-name-placement';
 
 interface DaoFooterDef {
@@ -23,7 +23,7 @@ export interface ConfigurationType {
     showStandalonePartName?: boolean;
     showMainPageBreadcrumb?: boolean;
     showFindRecordsInFundButton?: boolean;
-    showCitation?: boolean;
+    showCitationFor?: ApuType[];
     headerItems?: AppHeaderItemCode[];
     searchOptions?: SearchOption[];
     localeCookieName?: string;
@@ -51,7 +51,14 @@ const defaultConfiguration: ConfigurationType = {
     showStandalonePartName: true,
     showMainPageBreadcrumb: true,
     showFindRecordsInFundButton: false,
-    showCitation: false,
+    showCitationFor: [
+        // ApuType.FINDING_AID,
+        // ApuType.FUND,
+        // ApuType.ENTITY,
+        // ApuType.ARCH_DESC,
+        // ApuType.COLLECTION,
+        // ApuType.INSTITUTION,
+    ],
     disableDownloads: false,
     // localeCookieName: "pll_language",
     headerItems: [
