@@ -82,7 +82,7 @@ const defaultConfiguration: ConfigurationType = {
     treeHorizontalScroll: false,
     daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
     hideThumbnails: false,
-    showIncrementalTree: false,
+    showIncrementalTree: true,
     // newsUrl: 'https://www.seznam.cz',
     // helpUrl: 'https://www.google.cz',
 }

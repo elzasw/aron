@@ -9,14 +9,15 @@ import { ArrowUpward, ArrowDownward } from '@material-ui/icons';
 
 import { useStyles } from './styles';
 import { useIncrementalTree, TreeLevel, NodeDirection } from './useIncrementalTree';
+import { ApuEntity } from '../../types';
 
-interface Props {
+export interface Props {
   apuId: string;
   className?: string;
   disableClick?: any;
   expanded?: string[];
   selected?: string[];
-  initialItems?: TreeLevel[];
+  initialItems?: ApuEntity[];
   labelMapper?: (item: TreeLevel) => string;
   idMapper?: (item: TreeLevel) => string;
   onLabelClick?: (item: any) => void;
@@ -35,7 +36,7 @@ export function IncrementalTree({
   ...props
 }: Props) {
   const classes = useStyles();
-  const [treeItems, getRelatedNodes] = useIncrementalTree(apuId, initialItems);
+  const [treeItems, getRelatedNodes] = useIncrementalTree(apuId, initialItems?.map((item) => ({ ...item, parentId: item.parent?.id })));
 
   function renderItemsFromFlat(items: TreeLevel[], parent?: TreeLevel, parentId?: string) {
     return <>{[...items].map((item, index, array) => {
@@ -54,8 +55,8 @@ export function IncrementalTree({
         width: "calc( 100% - 20px )",
       };
 
-      const debugData = `${item.pos}/${parent?.childCnt} ${parent?.id.split("-")[0]}/${item.id.split("-")[0]} - `;
-      // const debugData = "";
+      // const debugData = `${item.pos}/${parent?.childCnt} ${parent?.id.split("-")[0]}/${item.id.split("-")[0]} - `;
+      const debugData = "";
 
       const label = <div title={labelMapper(item)} style={{
         whiteSpace: "nowrap",
