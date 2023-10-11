@@ -52,6 +52,7 @@ import { EvidenceLayout, LayoutType } from './evidence-layout';
 import { ActionsRenderProps, FileObject } from './evidence-detail-dao-dialog/types';
 import { ApuPathParams, createApuDaoFileUrl } from './evidence';
 import { getFiles } from './evidence-detail-dao-dialog/utils';
+import { EvidenceDetailIncrementalTree } from './evidence-detail-incremental-tree';
 
 function EvidenceDao({
   customActionsLeft,
@@ -321,7 +322,10 @@ export function EvidenceDetail({
         renderTree={
           item && path === ModulePath.ARCH_DESC && root ?
             () => <>
-              <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
+              {configuration.showIncrementalTree
+                ? <EvidenceDetailIncrementalTree {...{ item, id: root.id, verticalResize: false }} />
+                : <EvidenceDetailTree {...{ item, id: root.id, verticalResize: false }} />
+              }
               <div className={spacingClasses.paddingBottom} />
             </>
             : undefined

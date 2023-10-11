@@ -3,7 +3,7 @@ import { createUrl } from '../../common-utils';
 
 export interface TreeLevel {
   id: string;
-  parentId: string;
+  parentId?: string;
   pos: number;
   depth: number;
   childCnt: number;
