@@ -53,11 +53,6 @@ export function Tree({
             icon: hasChildren ? undefined : (
               <RemoveIcon className={classes.endItem} />
             ),
-            onLabelClick:
-              onLabelClick &&
-                (!disableClick || idMapper(disableClick) !== idMapper(item))
-                ? () => onLabelClick(item)
-                : undefined,
           }}
         >
           {hasChildren ? renderItems(children, nodeId) : <></>}
@@ -75,7 +70,11 @@ export function Tree({
         onNodeToggle: (_, expanded) => onNodeToggle(expanded),
         onNodeSelect: (event: any, nodePath: any) => {
           const nodeId = nodePath.split("__").pop();
-          onLabelClick?.({ id: nodeId });
+          if (!disableClick || disableClick.id !== nodeId) {
+            onLabelClick?.({
+              id: nodeId
+            });
+          }
         },
       }}
     >
