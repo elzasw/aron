@@ -151,8 +151,11 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
               expanded: appState.evidenceDetailTreeExpandedItems,
               disableClick: item,
               labelMapper: (item) => item.description || item.name || 'Neznámé',
-              onLabelClick: (newItem) =>
-                navigate(`${ModulePath.APU}/${newItem.id}`),
+              onLabelClick: (newItem) => {
+                if (id !== newItem.id) {
+                  navigate(`${ModulePath.APU}/${newItem.id}`)
+                }
+              },
               onNodeToggle: (evidenceDetailTreeExpandedItems) =>
                 updateAppState({ evidenceDetailTreeExpandedItems }),
             }}

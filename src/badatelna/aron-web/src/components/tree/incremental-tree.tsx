@@ -14,7 +14,7 @@ import { ApuEntity } from '../../types';
 export interface Props {
   apuId: string;
   className?: string;
-  disableClick?: any;
+  disableClick?: ApuEntity;
   expanded?: string[];
   selected?: string[];
   initialItems?: ApuEntity[];
@@ -39,7 +39,7 @@ export function IncrementalTree({
   const [treeItems, getRelatedNodes] = useIncrementalTree(apuId, initialItems?.map((item) => ({ ...item, parentId: item.parent?.id })));
 
   function renderItemsFromFlat(items: TreeLevel[], parent?: TreeLevel, parentId?: string) {
-    return <>{[...items].map((item, index, array) => {
+    return [...items].map((item, index, array) => {
       const childNodes: TreeLevel[] = [];
       for (let i = index + 1; array[i]?.depth > item.depth; i++) {
         childNodes.push(array[i]);
@@ -67,17 +67,6 @@ export function IncrementalTree({
       const hasChildren = item.childCnt > 0;
 
       const nodeId = `${parentId ? `${parentId}__` : ''}${idMapper(item)}`;
-
-      const handleLabelClick = (_event: any) => {
-        if (
-          onLabelClick
-          && (!disableClick
-            || idMapper(disableClick) !== idMapper(item)
-          )
-        ) {
-          onLabelClick(item)
-        }
-      }
 
       const handleLoadBefore = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -110,15 +99,13 @@ export function IncrementalTree({
           icon: hasChildren ? undefined : (
             <RemoveIcon className={classes.endItem} />
           ),
-          onLabelClick: handleLabelClick,
-          onIconClick: handleLabelClick,
         }}
       >
         {childNodes.length > 0
           && getDirectChildren(item, childNodes).length < item.childCnt
           && childNodes[0].pos > 1
           && <TreeItem
-            nodeId={`${item.id}_loadBefore`}
+            nodeId={`${nodeId}_loadBefore`}
             onLabelClick={handleLoadBefore}
             // label={`load more before - ${childNodes[0].id}`}
             label={<div style={{ display: "inline-flex" }}><ArrowUpward /> <div style={{ marginLeft: 5 }}>Načíst předchozí</div></div>}
@@ -142,14 +129,14 @@ export function IncrementalTree({
           && getDirectChildren(item, childNodes).length < item.childCnt
           && getLastDirectChild(item, childNodes).pos < item.childCnt
           && <TreeItem
-            nodeId={`${item.id}_loadAfter`}
+            nodeId={`${nodeId}_loadAfter`}
             onLabelClick={handleLoadAfter}
             // label={`load more after - ${getLastDirectChild(item, childNodes).pos}/${item.childCnt}  ${getLastDirectChild(item, childNodes)?.id.split("-")[0]}`}
             label={<div style={{ display: "inline-flex" }}><ArrowDownward /> <div style={{ marginLeft: 5 }}>Načíst další</div></div>}
           ></TreeItem>
         }
       </TreeItem>
-    })}</>
+    }).filter((item) => item);
   }
 
   function _onNodeToggle(_event: any, expanded: string[]) {
@@ -163,16 +150,17 @@ export function IncrementalTree({
     <TreeView
       {...{
         ...props,
-        items: treeItems,
         className: classNames(classes.tree, className),
         defaultCollapseIcon: <ExpandMoreIcon />,
         defaultExpandIcon: <ChevronRightIcon />,
         onNodeToggle: _onNodeToggle,
         onNodeSelect: (_event: any, nodePath: any) => {
           const nodeId = nodePath.split("__").pop();
-          onLabelClick?.({
-            id: nodeId
-          });
+          if (!disableClick || disableClick.id !== nodeId) {
+            onLabelClick?.({
+              id: nodeId
+            });
+          }
         },
       }}
     >
