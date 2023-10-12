@@ -68,18 +68,6 @@ export function IncrementalTree({
 
       const nodeId = `${parentId ? `${parentId}__` : ''}${idMapper(item)}`;
 
-      const handleLoadBefore = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        getRelatedNodes(childNodes[0].id, NodeDirection.BEFORE);
-      }
-
-      const handleLoadAfter = (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        getRelatedNodes(getLastDirectChild(item, childNodes)?.id, NodeDirection.AFTER)
-      }
-
       const getLastDirectChild = (item: TreeLevel, items: TreeLevel[]) => {
         const directChildren = getDirectChildren(item, items);
         return directChildren[directChildren.length - 1];
@@ -105,9 +93,7 @@ export function IncrementalTree({
           && getDirectChildren(item, childNodes).length < item.childCnt
           && childNodes[0].pos > 1
           && <TreeItem
-            nodeId={`${nodeId}_loadBefore`}
-            onLabelClick={handleLoadBefore}
-            // label={`load more before - ${childNodes[0].id}`}
+            nodeId={`${childNodes[0].id}_loadBefore`}
             label={<div style={{ display: "inline-flex" }}><ArrowUpward /> <div style={{ marginLeft: 5 }}>Načíst předchozí</div></div>}
           ></TreeItem>
         }
@@ -119,7 +105,6 @@ export function IncrementalTree({
           && item.childCnt > 0
           && <TreeItem
             nodeId={`${nodeId}_loading`}
-            // label="loading..."
             label="Načítání..."
             onLabelClick={(e: React.MouseEvent) => { e.preventDefault(); e.stopPropagation(); }}
           ></TreeItem>
@@ -129,9 +114,7 @@ export function IncrementalTree({
           && getDirectChildren(item, childNodes).length < item.childCnt
           && getLastDirectChild(item, childNodes).pos < item.childCnt
           && <TreeItem
-            nodeId={`${nodeId}_loadAfter`}
-            onLabelClick={handleLoadAfter}
-            // label={`load more after - ${getLastDirectChild(item, childNodes).pos}/${item.childCnt}  ${getLastDirectChild(item, childNodes)?.id.split("-")[0]}`}
+            nodeId={`${getLastDirectChild(item, childNodes)?.id}_loadAfter`}
             label={<div style={{ display: "inline-flex" }}><ArrowDownward /> <div style={{ marginLeft: 5 }}>Načíst další</div></div>}
           ></TreeItem>
         }
@@ -155,6 +138,20 @@ export function IncrementalTree({
         defaultExpandIcon: <ChevronRightIcon />,
         onNodeToggle: _onNodeToggle,
         onNodeSelect: (_event: any, nodePath: any) => {
+          if (nodePath.indexOf("loading") >= 0) {
+            return;
+          }
+
+          if (nodePath.indexOf("loadBefore") >= 0) {
+            const [id] = nodePath.split("_");
+            getRelatedNodes(id, NodeDirection.BEFORE);
+            return;
+          } else if (nodePath.indexOf("loadAfter") >= 0) {
+            const [id] = nodePath.split("_");
+            getRelatedNodes(id, NodeDirection.AFTER);
+            return;
+          }
+
           const nodeId = nodePath.split("__").pop();
           if (!disableClick || disableClick.id !== nodeId) {
             onLabelClick?.({
