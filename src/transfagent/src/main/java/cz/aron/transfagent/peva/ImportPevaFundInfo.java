@@ -40,6 +40,7 @@ import cz.aron.peva2.wsdl.NadPrimarySheet;
 import cz.aron.peva2.wsdl.NadSheet;
 import cz.aron.peva2.wsdl.NadSubsheet;
 import cz.aron.peva2.wsdl.Quantity;
+import cz.aron.peva2.wsdl.State;
 import cz.aron.transfagent.config.ConfigPeva2FundProperties;
 import cz.aron.transfagent.peva.jsoncomponent.Column;
 import cz.aron.transfagent.peva.jsoncomponent.JSONComponent;
@@ -113,6 +114,13 @@ public class ImportPevaFundInfo {
 		this.codeListProvider = codeListProvider;
 		this.archDescRoot = archDescRoot;
 		GetNadSheetResponse gnsr = Peva2XmlReader.unmarshalGetNadSheetResponse(inputFile);
+		
+		//TODO po uprave v PEvA II
+		/*
+		if (gnsr.getNadPrimarySheet()!=null&&gnsr.getNadPrimarySheet().getState()!=State.OK) {
+			throw new FundRemoved();
+		}*/
+		
 		if (gnsr.getNadPrimarySheet() != null) {
 			importPrimarySheet(gnsr.getNadPrimarySheet());
 		} else {
@@ -885,4 +893,9 @@ public class ImportPevaFundInfo {
 	public static class FundIgnored extends RuntimeException {
 		
 	}
+	
+	public static class FundRemoved extends RuntimeException {
+		
+	}
+	
 }

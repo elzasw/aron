@@ -39,6 +39,7 @@ import cz.aron.transfagent.domain.Fund;
 import cz.aron.transfagent.elza.ImportArchDesc;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundIgnored;
 import cz.aron.transfagent.peva.ImportPevaFundInfo.FundProvider;
+import cz.aron.transfagent.peva.ImportPevaFundInfo.FundRemoved;
 import cz.aron.transfagent.repository.ArchDescRepository;
 import cz.aron.transfagent.repository.FundRepository;
 import cz.aron.transfagent.repository.InstitutionRepository;
@@ -184,6 +185,17 @@ public class ImportPevaFund implements FundImporter, FundProvider {
 			log.error("Fail to import fund, fail to parse data, path={}", fundXml, e);
 			throw new IllegalStateException(e);
 		} catch (FundIgnored fu) {
+			return true;
+		} catch (FundRemoved fr) {
+			if (fund != null) {
+				tt.executeWithoutResult(t->{
+					var fund2 = fundRepository.findByCode(fundCode);
+					if (fund!=null) {
+						fund2.getApuSource().setDeleted(true);
+						log.info("Fund marked deleted {}", fundCode);
+					}
+				});
+			}
 			return true;
 		}
         

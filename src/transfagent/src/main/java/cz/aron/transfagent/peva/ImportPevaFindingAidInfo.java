@@ -283,4 +283,8 @@ public class ImportPevaFindingAidInfo {
 
 	}
 	
+	public static class FindingAidRemoved extends RuntimeException {
+		
+	}
+	
 }
