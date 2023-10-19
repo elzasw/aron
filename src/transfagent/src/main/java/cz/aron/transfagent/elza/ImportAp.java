@@ -452,6 +452,7 @@ public class ImportAp implements EdxItemCovertContext {
         case "PEVA":
         case "RUIAN":
         case "ARCHNUM":
+        case "CLO_ID":
             // ignored idents
             return;
         case "IC":        
