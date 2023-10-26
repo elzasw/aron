@@ -221,16 +221,16 @@
 
              WITH new_pos AS
              (
-             SELECT ROW_NUMBER() OVER(PARTITION BY parent_id ORDER BY 'order') AS row_num, id 
-             FROM apu_entity WHERE parent_id IS NOT NULL
+             SELECT ROW_NUMBER() OVER(PARTITION BY parent_id ORDER BY ae1.order) AS row_num, id
+             FROM apu_entity ae1 WHERE parent_id IS NOT NULL
              )
              UPDATE apu_entity ae SET pos=np.row_num
              FROM new_pos np
              WHERE np.id=ae.id;
              WITH new_pos AS
              (
-             SELECT ROW_NUMBER() OVER(PARTITION BY source_id ORDER BY 'order') AS row_num, id 
-             FROM apu_entity WHERE parent_id IS NULL
+             SELECT ROW_NUMBER() OVER(PARTITION BY source_id ORDER BY ae1.order) AS row_num, id
+             FROM apu_entity ae1 WHERE parent_id IS NULL
              )
              UPDATE apu_entity ae SET pos=np.row_num
              FROM new_pos np
