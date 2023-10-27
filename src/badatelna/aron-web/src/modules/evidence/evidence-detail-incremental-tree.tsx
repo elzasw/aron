@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import classNames from 'classnames';
 import { uniq } from 'lodash';
 import { Resizable } from 're-resizable';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import MoreHorizIcon from '@material-ui/icons/MoreHoriz';
 import UnfoldLessIcon from '@material-ui/icons/UnfoldLess';
 
@@ -11,10 +10,11 @@ import { NavigationContext } from '@eas/common-web';
 import { useStyles } from './styles';
 import { useLayoutStyles, useSpacingStyles } from '../../styles';
 import { DetailTreeProps } from './types';
-import { useAppState, useGet } from '../../common-utils';
-import { Tree, useConfiguration } from '../../components';
-import { ModulePath, ApiUrl } from '../../enums';
-import { ApuEntity, ApuTree } from '../../types';
+import { useAppState } from '../../common-utils';
+import { useConfiguration, IncrementalTree } from '../../components';
+import { ModulePath } from '../../enums';
+import { ApuEntity } from '../../types';
+// import { TreeLevel } from '../../components/tree/useIncrementalTree';
 
 const WRAPPER_ID = 'evidence-detail-tree-wrapper';
 
@@ -22,7 +22,7 @@ const getParentId = (item: ApuEntity): string => {
   return `${item.parent ? `${getParentId(item.parent)}__` : ''}${item.id}`;
 };
 
-export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTreeProps) {
+export function EvidenceDetailIncrementalTree({ item, id, verticalResize = true }: DetailTreeProps) {
   const { treeHorizontalScroll } = useConfiguration();
   const classes = useStyles({ treeHorizontalScroll });
   const layoutClasses = useLayoutStyles();
@@ -32,68 +32,29 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
 
   const { appState, updateAppState } = useAppState();
 
-  const [treeItem, loading] = useGet<ApuTree>(`${ApiUrl.APU}/${id}/tree`);
-
   const [selected, setSelected] = useState<string[]>([]);
+  const initialItems = getInitialItems(item);
 
   useEffect(() => {
     setSelected([getParentId(item)]);
   }, [item]);
 
   useEffect(() => {
-    if (treeItem && !loading) {
-      const init = () => {
-        const itemExists = (
-          item: ApuTree | undefined,
-          id: string,
-          parentId?: string
-        ): boolean => {
-          if (item) {
-            const itemId = `${parentId ? `${parentId}__` : ''}${item.id}`;
+    const initialExpandedIds = initialItems.map((item) => getParentId(item));
+    updateAppState({ evidenceDetailTreeExpandedItems: uniq(initialExpandedIds) });
+  }, [])
 
-            return !!(
-              itemId === id ||
-              (id.match(itemId) &&
-                item.children &&
-                item.children.some((item) => itemExists(item, id, itemId)))
-            );
-          }
-
-          return false;
-        };
-
-        const items = (
-          appState.evidenceDetailTreeExpandedItems || []
-        ).filter((id) => itemExists(treeItem, id));
-
-        let current: ApuEntity | undefined = item;
-
-        while (current) {
-          items.push(getParentId(current));
-          current = current.parent;
-        }
-
-        updateAppState({ evidenceDetailTreeExpandedItems: uniq(items) });
-
-        setTimeout(() => {
-          const itemElement = document.getElementById(item.id);
-          const wrapper = document.getElementById(WRAPPER_ID);
-
-          if (itemElement && wrapper) {
-            wrapper.scrollTop =
-              itemElement.getBoundingClientRect().top -
-              wrapper.getBoundingClientRect().top;
-          }
-        }, 500);
-      };
-
-      setTimeout(init);
+  function getInitialItems(item: ApuEntity) {
+    const parents = [item];
+    let parent = item.parent;
+    while (parent) {
+      parents.push(parent);
+      parent = parent.parent;
     }
+    return parents.reverse();
+  }
 
-    // eslint-disable-next-line
-  }, [treeItem, loading]);
-
-  return treeItem ? (
+  return (
     <Resizable
       size={{
         width: '100%',
@@ -144,9 +105,10 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
               updateAppState({ evidenceDetailTreeExpandedItems: [] })
             }
           />
-          <Tree
+          <IncrementalTree
             {...{
-              items: [treeItem],
+              apuId: id,
+              initialItems,
               selected,
               expanded: appState.evidenceDetailTreeExpandedItems,
               disableClick: item,
@@ -163,13 +125,5 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
         </div>
       </div>
     </Resizable>
-  ) : loading ? (
-    <div
-      className={classNames(layoutClasses.flexCentered, spacingClasses.padding)}
-    >
-      <CircularProgress />
-    </div>
-  ) : (
-        <></>
-      );
+  )
 }

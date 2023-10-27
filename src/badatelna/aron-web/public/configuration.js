@@ -57,4 +57,5 @@ var _configuration = {
   // hideThumbnails: false,
   // newsUrl: 'https://www.seznam.cz',
   // helpUrl: 'https://www.google.cz',
+  // showIncrementalTree: false,
 }

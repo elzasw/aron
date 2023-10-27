@@ -37,6 +37,7 @@ export interface ConfigurationType {
     newsUrl?: string;
     helpUrl?: string;
     orderResultsByScore?: boolean;
+    showIncrementalTree?: boolean;
 }
 
 
@@ -91,6 +92,7 @@ const defaultConfiguration: ConfigurationType = {
     treeHorizontalScroll: false,
     daoNamePlacement: DaoNamePlacement.TOP_RIGHT,
     hideThumbnails: false,
+    showIncrementalTree: true,
     // newsUrl: 'https://www.seznam.cz',
     // helpUrl: 'https://www.google.cz',
     orderResultsByScore: true,
