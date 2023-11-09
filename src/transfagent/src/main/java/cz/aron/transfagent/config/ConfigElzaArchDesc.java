@@ -26,6 +26,8 @@ public class ConfigElzaArchDesc {
     
     public boolean processInternalSupplement;
     
+    public boolean uniqueLevels;
+    
     // mapování přístupových bodů na hodnoty
     private List<ConfigElzaArchDescApMapping> apMappings;
 
@@ -84,5 +86,13 @@ public class ConfigElzaArchDesc {
 	public void setProcessInternalSupplement(boolean processInternalSupplement) {
 		this.processInternalSupplement = processInternalSupplement;
 	}
-	
+
+	public boolean isUniqueLevels() {
+		return uniqueLevels;
+	}
+
+	public void setUniqueLevels(boolean uniqueLevels) {
+		this.uniqueLevels = uniqueLevels;
+	}
+
 }

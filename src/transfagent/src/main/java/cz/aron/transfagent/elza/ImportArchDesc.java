@@ -261,9 +261,10 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		Validate.notNull(fundApuUuid, "Missing fund, code: %s, institution: %s,%s", fi.getC(), fi.getNum(),
 				institutionCode);
 
-        Levels lvls = sect.getLvls();
+		Levels lvls = sect.getLvls();
+		var levelDuplicities = computeLevelDuplicities(lvls);        
         for(Level lvl: lvls.getLvl()) {
-            processLevel(sect, lvl);
+            processLevel(sect, lvl, levelDuplicities);
         }
 
         // add dates to siblings
@@ -297,6 +298,57 @@ public class ImportArchDesc implements EdxItemCovertContext {
         return apusBuilder;
     }
     
+	private Map<String, Set<String>> computeLevelDuplicities(Levels lvls) {
+
+		var tmp = new HashMap<String, Map<String, Integer>>();
+		if (configArchDesc.isUniqueLevels()) {
+			for (Level lvl : lvls.getLvl()) {
+				LevelContext parentContext = null;
+				if (lvl.getPid() != null) {
+					parentContext = apuContexts.get(lvl.getPid());
+					if (parentContext == null) {
+						throw new RuntimeException("Missing parent for level: " + lvl.getPid());
+					}
+				}
+				var context = new LevelContext(lvl, null, parentContext);
+				apuContexts.put(lvl.getId(), context);
+
+				var desc = getDesc(lvl, parentContext, null);
+				tmp.compute(lvl.getPid(), (k, v) -> {
+					if (v != null) {
+						v.compute(desc, (k1, v1) -> {
+							if (v1 == null) {
+								return 1;
+							} else {
+								return v1 + 1;
+							}
+						});
+						return v;
+					} else {
+						var x = new HashMap<String, Integer>();
+						x.put(desc, 1);
+						return x;
+					}
+				});
+
+			}
+			apuContexts.clear();
+		}
+
+		var ret = new HashMap<String, Set<String>>();
+		for (var entry : tmp.entrySet()) {
+			var levelDescs = new HashSet<String>();
+			for (var levelDescEntry : entry.getValue().entrySet()) {
+				if (levelDescEntry.getValue() > 1) {
+					levelDescs.add(levelDescEntry.getKey());
+				}
+			}
+			if (!levelDescs.isEmpty()) {
+				ret.put(entry.getKey(), levelDescs);
+			}
+		}
+		return ret;
+	}
     
     public static class ArchDescAttachment {
         
@@ -311,7 +363,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
     }
 
-    private void processLevel(Section sect, Level lvl) {
+    private void processLevel(Section sect, Level lvl, Map<String,Set<String>> duplicities) {
         log.debug("Importing level, id: {}, u2uid: {}", lvl.getId(), lvl.getUuid());
         apLevelRefs.clear();
                 
@@ -334,7 +386,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         
         String name = getName(sect, lvl, parentContext);
         apu.setName(name);
-        String desc = getDesc(sect, lvl, parentContext);
+        String desc = getDesc(lvl, parentContext, duplicities.get(lvl.getPid()));        
         apu.setDesc(desc);
 
         activateArchDescPart(apu);                
@@ -773,7 +825,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         return null;
     }
 
-    private String getDesc(Section sect, Level lvl, LevelContext parentContext) {
+    private String getDesc(Level lvl, LevelContext parentContext, Set<String> levelDuplicities) {
         if (lvl.getPid() == null) {
             // for root no description
             return null;
@@ -794,6 +846,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
 
         boolean titleInherited = false;
+        boolean dateInherited = false;
         // inherit title and name when null
         if (StringUtils.isBlank(titleStr)) {
             titleStr = inheritTitle(parentContext);
@@ -801,19 +854,31 @@ public class ImportArchDesc implements EdxItemCovertContext {
         }
         if (StringUtils.isBlank(datace) && configArchDesc.isInheritNameDate()) {
             datace = inheritDatace(parentContext);
+            dateInherited = true;
         }
 
         if (StringUtils.isNotBlank(titleStr)) {
             sb.append(titleStr);
         }
-        if (StringUtils.isNotBlank(datace) && (configArchDesc.isAddDateToName() || (configArchDesc.isInheritNameDate()
-                && titleInherited))) {
-            sb.append(", ").append(datace);
-        }
+		if (StringUtils.isNotBlank(datace)
+				&& (configArchDesc.isAddDateToName() || (configArchDesc.isInheritNameDate() && titleInherited))) {
+			sb.append(", ").append(datace);
+		}
+		
+		if (levelDuplicities != null) {
+			var rawDesc = sb.toString();
+			if (levelDuplicities.contains(rawDesc) && StringUtils.isNotBlank(datace) && dateInherited == false
+					&& !configArchDesc.isAddDateToName()) {
+				sb.append(", ").append(datace);
+			}
+		}
 
         if (sb.length() == 0) {
             return null;
         }
+        
+        
+        
         return sb.toString();
     }
 
