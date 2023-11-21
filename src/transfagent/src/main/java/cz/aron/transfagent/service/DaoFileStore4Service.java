@@ -66,20 +66,20 @@ public class DaoFileStore4Service implements DaoImporter  {
      * @return handle nebo null
      */
     public String getDaoHandle(String institutionCode, int fundCode, String uuid) {
-        InstitutionFundKey key = new InstitutionFundKey(institutionCode, fundCode);
-        Map<String, List<String>> links = getLinks(key);
+    	FileStore4Handle handle = FileStore4Handle.of(institutionCode, fundCode, uuid);         
+        Map<String, List<String>> links = getLinks(handle.getIfKey());
         if (links==null) {
             return null;
         }
-        return links.containsKey(uuid)?key.getHandle():null;
+        return links.containsKey(uuid)?handle.toString():null;
     }
 
 	@Override
 	public void importDaoFile(Dao dao, Path daoDir) {
-		InstitutionFundKey key = InstitutionFundKey.fromHandle(dao.getHandle());
-		Map<String, List<String>> links = getLinks(key);
+		FileStore4Handle handle = FileStore4Handle.fromHandle(dao.getHandle());
+		Map<String, List<String>> links = getLinks(handle.getIfKey());
 		if (links != null) {
-			List<String> daoLinks = links.get(dao.getUuid().toString());
+			List<String> daoLinks = links.get(handle.getUuid());
 			if (daoLinks != null) {
 				try {
 					transformService.transformHttpUrls(daoDir, daoLinks);
@@ -113,7 +113,7 @@ public class DaoFileStore4Service implements DaoImporter  {
 		return resource.getResource();
 	}
 
-    static class InstitutionFundKey {
+    private static class InstitutionFundKey {
         
         private final String institutionCode;
         
@@ -162,7 +162,7 @@ public class DaoFileStore4Service implements DaoImporter  {
         }
     }
     
-	static class FundDaoLinks extends MonitoredFileResource<Map<String, List<String>>> {
+	private static class FundDaoLinks extends MonitoredFileResource<Map<String, List<String>>> {
 
 		public FundDaoLinks(Path path) {
 			super(path);
@@ -200,6 +200,45 @@ public class DaoFileStore4Service implements DaoImporter  {
 				log.info("Dao links loaded from path {}", monitoredPath);
 			}
 			return ret;
+		}
+
+	}
+	
+	private static class FileStore4Handle {
+
+		private final InstitutionFundKey ifKey;
+
+		private final String uuid;
+
+		public FileStore4Handle(InstitutionFundKey ifKey, String uuid) {
+			this.ifKey = ifKey;
+			this.uuid = uuid;
+		}
+
+		public InstitutionFundKey getIfKey() {
+			return ifKey;
+		}
+
+		public String getUuid() {
+			return uuid;
+		}
+		
+		@Override
+		public String toString() {
+			return ifKey.getHandle() + "/" + uuid;
+		}
+
+		private static FileStore4Handle of(String institutionCode, int fundCode, String uuid) {
+			return new FileStore4Handle(new InstitutionFundKey(institutionCode, fundCode), uuid);
+		}
+
+		private static FileStore4Handle fromHandle(String handleStr) {
+			String[] splitted = handleStr.split("/");
+			if (splitted.length != 3) {
+				throw new RuntimeException();
+			}
+			return new FileStore4Handle(new InstitutionFundKey(splitted[0], Integer.parseInt(splitted[1])),
+					splitted[2]);
 		}
 
 	}
