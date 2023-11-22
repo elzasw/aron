@@ -103,11 +103,7 @@ public class DaoFileStore4Service implements DaoImporter  {
 		FundDaoLinks resource = links.get(key);
 		if (resource == null) {
 			Path zipPath = path.resolve(key.getInstitutionCode()).resolve("" + key.getFundCode() + ".zip");
-			if (!Files.isRegularFile(zipPath)) {
-				resource = new FundDaoLinks(null);
-			} else {
-				resource = new FundDaoLinks(zipPath);
-			}
+			resource = new FundDaoLinks(zipPath);
 			links.put(key, resource);
 		}
 		return resource.getResource();
@@ -152,14 +148,7 @@ public class DaoFileStore4Service implements DaoImporter  {
         public String getHandle() {
             return institutionCode + "/" + fundCode;
         }
-        
-        public static InstitutionFundKey fromHandle(String handle) {            
-            String [] splitted = handle.split("/");
-            if (splitted.length!=2) {
-                throw new RuntimeException();
-            }
-            return new InstitutionFundKey(splitted[0],Integer.parseInt(splitted[1]));
-        }
+
     }
     
 	private static class FundDaoLinks extends MonitoredFileResource<Map<String, List<String>>> {
