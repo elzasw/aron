@@ -332,7 +332,7 @@ export const useGetMatchingName = (query: string, group?: string) =>
               operation: ApiFilterOperation.AND,
               filters: [
                 {
-                  operation: ApiFilterOperation.CONTAINS,
+                  operation: ApiFilterOperation.FTXF,
                   field: 'name',
                   value: query,
                 },
@@ -344,7 +344,7 @@ export const useGetMatchingName = (query: string, group?: string) =>
               ],
             }
           : {
-              operation: ApiFilterOperation.CONTAINS,
+              operation: ApiFilterOperation.FTXF,
               field: 'name',
               value: query,
             },
