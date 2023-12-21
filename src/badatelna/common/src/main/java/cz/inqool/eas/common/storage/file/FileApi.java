@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.text.Normalizer;
 
 @Tag(name = "Files", description = "File upload and access API")
 @ResponseBody
@@ -72,7 +73,7 @@ public class FileApi {
         File file = openedFile.getDescriptor();
         InputStream stream = openedFile.getStream();
 
-        String fileName = "filename=\"" + file.getName() + "\"";
+        String fileName = "filename=\"" + Normalizer.normalize(file.getName(), Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "") + "\"";
         String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(file.getName());
 
         return ResponseEntity.ok()
