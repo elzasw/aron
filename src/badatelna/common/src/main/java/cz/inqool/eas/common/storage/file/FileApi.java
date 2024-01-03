@@ -72,9 +72,11 @@ public class FileApi {
         OpenedFile openedFile = manager.open(id);
         File file = openedFile.getDescriptor();
         InputStream stream = openedFile.getStream();
+        
+        String name = file.getName().replaceAll("[\\\\/:*?\"<>|]", "");
 
-        String fileName = "filename=\"" + Normalizer.normalize(file.getName(), Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "") + "\"";
-        String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(file.getName());
+        String fileName = "filename=\"" + Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "") + "\"";
+        String fileNameAsterisk = "filename*=UTF-8''" + UrlEscapers.urlFragmentEscaper().escape(name);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; " + fileName + "; " + fileNameAsterisk)
