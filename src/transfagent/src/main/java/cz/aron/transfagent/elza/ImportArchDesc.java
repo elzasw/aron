@@ -768,9 +768,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
         if(StringUtils.isNotEmpty(refOzn)) {
             sb.append(", ").append(refOzn);
         } else if(StringUtils.isNotEmpty(invCislo)) {
-            sb.append(", inv.č.: ").append(invCislo);
+            sb.append(", inv. č.: ").append(invCislo);
         } else if(StringUtils.isNotEmpty(poradoveCislo)) {
-            sb.append(", poř.č.: ").append(poradoveCislo);
+            sb.append(", poř. č.: ").append(poradoveCislo);
         } else if(StringUtils.isNotEmpty(otherIdent)) {
             if(otherIdentType!=null) {
                 sb.append(", ").append(otherIdentType);                
