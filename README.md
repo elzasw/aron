@@ -7,8 +7,8 @@ ARON is used in several Czech archives and other cultural institutions.
 
 ## Requirements
 
-Java 1.8
+Java 11+
 
 ## Documentation
 
-[Documentation in Czech](doc)
+[Documentation in Czech](https://www.lightcomp.cz/documentation/aron)
