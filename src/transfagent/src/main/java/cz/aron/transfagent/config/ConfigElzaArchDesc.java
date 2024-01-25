@@ -18,7 +18,7 @@ public class ConfigElzaArchDesc {
     // import attachments stored inside xml
     public boolean importAttachments;
     
-    // show ZP2015_APPLIED_RESTRICTION
+    // show ZP2015_APPLIED_RESTRICTION_TEXT
     public boolean showAccessRestrictions;
     
     // nazev urovne slozen ze zkratky instituce a nazvu urovne

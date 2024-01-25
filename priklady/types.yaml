@@ -869,6 +869,10 @@ itemTypes:
     name: Omezení přístupu
     type: ENUM
     indexed: true
+  - code: UNIT_RESTRICTION_TEXT
+    name: Omezení přístupu
+    type: STRING
+    indexed: true
   - code: UNIT_CURRENT_STATUS
     name: Fyzický stav
     type: STRING

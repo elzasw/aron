@@ -134,7 +134,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_INVALID_RECORD",
             "ZP2015_TITLE_PUBLIC",
             "ZP2015_UNIT_DAMAGE_TYPE",
-            "ZP2015_MAJOR_LANG"
+            "ZP2015_MAJOR_LANG",
+            ElzaTypes.ZP2015_APPLIED_RESTRICTION,
+            ElzaTypes.ZP2015_APPLIED_RESTRICTION_CHANGE,
     };
 
     /**
@@ -559,9 +561,9 @@ public class ImportArchDesc implements EdxItemCovertContext {
             stringTypeMap.put("ZP2015_ATTACHMENT", new EdxNullConvertor());
         }
         if (configArchDesc.isShowAccessRestrictions()) {
-            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION, new EdxEnumConvertor("UNIT_RESTRICTION", ElzaTypes.APPLIED_ACCESS_RESTRICT_MAP));
+            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION_TEXT, new EdxStringConvertor("UNIT_RESTRICTION_TEXT"));
         } else {
-            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION, new EdxNullConvertor());
+            stringTypeMap.put(ElzaTypes.ZP2015_APPLIED_RESTRICTION_TEXT, new EdxNullConvertor());
         }
         
         stringTypeMap.put(ElzaTypes.ZP2015_AMOUNT, new EdxAmountConvertor(ElzaTypes.AMOUNT_SUBTYPES));

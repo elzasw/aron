@@ -104,6 +104,9 @@ public abstract class ElzaTypes {
     public static final String ZP2015_ITEM_ORDER = "ZP2015_ITEM_ORDER";
     
     public static final String ZP2015_APPLIED_RESTRICTION = "ZP2015_APPLIED_RESTRICTION";
+    public static final String ZP2015_APPLIED_RESTRICTION_TEXT = "ZP2015_APPLIED_RESTRICTION_TEXT";
+    public static final String ZP2015_APPLIED_RESTRICTION_CHANGE = "ZP2015_APPLIED_RESTRICTION_CHANGE";
+    
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {
