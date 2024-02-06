@@ -310,6 +310,12 @@ public abstract class ElzaTypes {
         roleSpecMap.put("ZP2015_ENTITY_ROLE_81", "ENTITY_ROLE_81");
         roleSpecMap.put("ZP2015_ENTITY_ROLE_82", "ENTITY_ROLE_82");
         roleSpecMap.put("ZP2015_ENTITY_ROLE_83", "ENTITY_ROLE_83");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_84", "ENTITY_ROLE_84");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_85", "ENTITY_ROLE_85");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_86", "ENTITY_ROLE_86");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_87", "ENTITY_ROLE_87");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_88", "ENTITY_ROLE_88");
+        roleSpecMap.put("ZP2015_ENTITY_ROLE_89", "ENTITY_ROLE_89");
     }
 
     public static Map<String, String> dateOtherMap = new HashMap<>();

@@ -1421,6 +1421,30 @@ itemTypes:
     name: sekundární klasifikace
     type: APU_REF
     indexed: true
+  - code: ENTITY_ROLE_84
+    name: opisovač
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_85
+    name: vlastník
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_86
+    name: místo fotografování
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_87
+    name: odborná spolupráce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_88
+    name: místo předání
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_89
+    name: obrazově a/nebo zvukově zachycená entita
+    type: APU_REF
+    indexed: true
   - code: ROLE
     name: Role
     type: ENUM
@@ -1588,6 +1612,12 @@ itemGroups:
       - ENTITY_ROLE_81
       - ENTITY_ROLE_82
       - ENTITY_ROLE_83
+      - ENTITY_ROLE_84
+      - ENTITY_ROLE_85
+      - ENTITY_ROLE_86
+      - ENTITY_ROLE_87
+      - ENTITY_ROLE_88
+      - ENTITY_ROLE_89
   # vztahy u archivních entit
   - code: AE_VIRT_REF
     items:
