@@ -607,6 +607,10 @@ itemTypes:
     name: Seznam archiválií v archivním souboru
     type: APU_REF
     indexed: true
+  - code: ARCHDESC_FLAG
+    name: Archivní popis
+    type: ENUM
+    indexed: true
   - code: INST_REF
     name: Instituce
     type: APU_REF

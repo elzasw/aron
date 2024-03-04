@@ -203,6 +203,9 @@ public class ImportPevaFundInfo {
 	private void processArchDesc(Part partFundInfo) {
 		if (archDescRoot != null) {
 			apusBuilder.addApuRef(partFundInfo, "ARCHDESC_ROOT_REF", archDescRoot);
+			if (fundProperties.isArchdescFlag()) {
+				ApuSourceBuilder.addEnum(partFundInfo, "ARCHDESC_FLAG", "Ano", false);
+			}
 		}
 	}
 

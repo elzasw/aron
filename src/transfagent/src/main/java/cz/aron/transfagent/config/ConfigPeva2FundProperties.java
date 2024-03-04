@@ -81,6 +81,8 @@ public class ConfigPeva2FundProperties {
     
     // aktualizace UUID pro testovaci instanci
     private boolean updateUUID = false;
+    
+    private boolean archdescFlag = false;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -296,6 +298,14 @@ public class ConfigPeva2FundProperties {
 
 	public void setComposedShortFundName(boolean composedShortFundName) {
 		this.composedShortFundName = composedShortFundName;
+	}
+
+	public boolean isArchdescFlag() {
+		return archdescFlag;
+	}
+
+	public void setArchdescFlag(boolean archdescFlag) {
+		this.archdescFlag = archdescFlag;
 	}
 
 }
