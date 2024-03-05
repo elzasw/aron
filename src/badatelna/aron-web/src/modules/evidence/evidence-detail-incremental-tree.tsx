@@ -114,7 +114,7 @@ export function EvidenceDetailIncrementalTree({ item, id, verticalResize = true 
               disableClick: item,
               labelMapper: (item) => item.description || item.name || 'Neznámé',
               onLabelClick: (newItem) => {
-                if (id !== newItem.id) {
+                if (item.id !== newItem.id) {
                   navigate(`${ModulePath.APU}/${newItem.id}`)
                 }
               },

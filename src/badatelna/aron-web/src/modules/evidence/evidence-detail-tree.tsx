@@ -152,7 +152,7 @@ export function EvidenceDetailTree({ item, id, verticalResize = true }: DetailTr
               disableClick: item,
               labelMapper: (item) => item.description || item.name || 'Neznámé',
               onLabelClick: (newItem) => {
-                if (id !== newItem.id) {
+                if (item.id !== newItem.id) {
                   navigate(`${ModulePath.APU}/${newItem.id}`)
                 }
               },
