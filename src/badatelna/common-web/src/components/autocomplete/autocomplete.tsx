@@ -79,6 +79,7 @@ export function Autocomplete<OPTION extends DomainObject>({
       }
       if (closeOnSelect) {
         setPopupOpen(false);
+        setTextValue("");
       }
     } else {
       // select item and close popup
