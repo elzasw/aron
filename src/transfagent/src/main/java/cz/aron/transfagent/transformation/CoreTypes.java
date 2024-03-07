@@ -60,6 +60,7 @@ public class CoreTypes {
     public static final String RECORD_TYPE = "RECORD_TYPE";
     public final static String ROLE = "ROLE";
     public final static String STORAGE_ID = "STORAGE_ID";
+    public static final String STORAGE = "STORAGE";
     
     // ArchDescs
     public static final String UNIT_ID_INDEX = "UNIT_ID_INDEX";

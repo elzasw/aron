@@ -14,43 +14,54 @@ import cz.tacr.elza.schema.v2.StructuredObject;
 public class EdxStorageConvertor implements EdxItemConvertor {
 	
 	private final String targetType;
+	
+	private final String storageTargetType;
     
     private final Map<String, StructuredObject> soMap;
 
-    public EdxStorageConvertor(final String targetType, 
-                                 final Map<String, StructuredObject> soMap) {
-        this.targetType = targetType;
-        this.soMap = soMap;
-    }
-
+	public EdxStorageConvertor(final String targetType, final String storageTargetType,
+			final Map<String, StructuredObject> soMap) {
+		this.targetType = targetType;
+		this.storageTargetType = storageTargetType;
+		this.soMap = soMap;
+	}
 
 	@Override
 	public void convert(EdxItemCovertContext ctx, DescriptionItem item) {
-		DescriptionItemStructObjectRef itemSoRef = (DescriptionItemStructObjectRef)item;
-        var soId = itemSoRef.getSoid();
-        var so = soMap.get(soId);
-        if(so==null) {
-            throw new IllegalStateException("Missing structured object, soId: "+soId);
-        }
-        // Convert structured object to text
-        String value = so.getV();
-        if(StringUtils.isEmpty(value)) {
-            // only items with value can be exported
-            return;
-        }
-        var lvl = ctx.getProcessedLevel();
-        if (lvl!=null) {
-        	for(var descItem:lvl.getDdOrDoOrDp()) {
-        		if (ElzaTypes.ZP2015_ITEM_ORDER.equals(descItem.getT())) {
-        			var itemInt = (DescriptionItemInteger)descItem;
-        			var v = itemInt.getV();
-        			if (v!=null) {
-        				value = value + " / " + v.toString();
-        			}
-        		}
-        	}
-        }                
-        ApuSourceBuilder.addString(ctx.getActivePart(), targetType, value);		
+		DescriptionItemStructObjectRef itemSoRef = (DescriptionItemStructObjectRef) item;
+		var soId = itemSoRef.getSoid();
+		var so = soMap.get(soId);
+		if (so == null) {
+			throw new IllegalStateException("Missing structured object, soId: " + soId);
+		}
+		
+		String value = so.getV();
+		if (StringUtils.isEmpty(value)) {
+			// only items with value can be exported
+			return;
+		}
+
+		ApuSourceBuilder.addString(ctx.getActivePart(), targetType, value).setVisible(false);
+
+		if (storageTargetType != null) {
+			// Convert structured object to text
+			// vygeneruji ulozeni
+			var lvl = ctx.getProcessedLevel();
+			if (lvl != null) {
+				for (var descItem : lvl.getDdOrDoOrDp()) {
+					if (ElzaTypes.ZP2015_ITEM_ORDER.equals(descItem.getT())) {
+						var itemInt = (DescriptionItemInteger) descItem;
+						var v = itemInt.getV();
+						if (v != null) {
+							value = value + "/" + v.toString();
+							break;
+						}
+					}
+				}
+			}
+			ApuSourceBuilder.addString(ctx.getActivePart(), storageTargetType, value);
+		}
+
 	}
 
 }

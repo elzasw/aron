@@ -1021,6 +1021,11 @@ itemTypes:
     type: STRING
     indexed: true
     indexFolding: false
+  - code: STORAGE
+    name: Uložení
+    type: STRING
+    indexed: true
+    indexFolding: false
   - code: EDITION
     name: Edice
     type: STRING

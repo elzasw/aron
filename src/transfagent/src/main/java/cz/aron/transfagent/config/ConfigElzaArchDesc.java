@@ -28,6 +28,9 @@ public class ConfigElzaArchDesc {
     
     public boolean uniqueLevels;
     
+    // generuje ulozeni
+    public boolean storage = true;
+    
     // mapování přístupových bodů na hodnoty
     private List<ConfigElzaArchDescApMapping> apMappings;
 
@@ -93,6 +96,14 @@ public class ConfigElzaArchDesc {
 
 	public void setUniqueLevels(boolean uniqueLevels) {
 		this.uniqueLevels = uniqueLevels;
+	}
+
+	public boolean isStorage() {
+		return storage;
+	}
+
+	public void setStorage(boolean storage) {
+		this.storage = storage;
 	}
 
 }

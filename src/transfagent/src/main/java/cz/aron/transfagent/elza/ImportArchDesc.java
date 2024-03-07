@@ -137,6 +137,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_MAJOR_LANG",
             ElzaTypes.ZP2015_APPLIED_RESTRICTION,
             ElzaTypes.ZP2015_APPLIED_RESTRICTION_CHANGE,
+            
+            // TODO zpracovavat
+            "ZP2015_SIZE_WIDTH",
+            "ZP2015_SIZE_HEIGHT",
+            "ZP2015_SIZE_DEPTH",
+
     };
 
     /**
@@ -461,14 +467,19 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				ApuSourceBuilder.addDao(activeApu, UUID.fromString(lvl.getUuid()));
 				daoExist = true;
 			}
-		}		
-        for (ArchDescLevelDaoImporter daoImporter : levelDaoImporters) {
-            if (daoImporter.importDaos(institutionCode, fundId, lvl, activeApu, dataProvider, (source, handle, uuid) -> {
-                addDaoRef(source, uuid, handle);
-            }) > 0) {
-                daoExist = true;
-            }
-        }
+		}
+		
+		if (fundId != null) {
+			// TODO fond z elzy nemusi mit fundId, rozsirit i na moznost pouzit kod fondu
+			for (ArchDescLevelDaoImporter daoImporter : levelDaoImporters) {
+				if (daoImporter.importDaos(institutionCode, fundId, lvl, activeApu, dataProvider,
+						(source, handle, uuid) -> {
+							addDaoRef(source, uuid, handle);
+						}) > 0) {
+					daoExist = true;
+				}
+			}
+		}
         return daoExist;
 	}
 	
@@ -501,7 +512,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put(ElzaTypes.ZP2015_UNIT_SUBTYPE, new EdxEnumConvertor(CoreTypes.UNIT_TYPE, ElzaTypes.subtypeMap));
         stringTypeMap.put(ElzaTypes.ZP2015_RECORD_TYPE, new EdxEnumConvertor(CoreTypes.RECORD_TYPE, ElzaTypes.recordTypeMap));      
         stringTypeMap.put("ZP2015_UNIT_ID",new EdxStringConvertor("UNIT_ID").addIndexedItem(CoreTypes.UNIT_ID_INDEX));
-        stringTypeMap.put(ElzaTypes.ZP2015_STORAGE_ID, new EdxStorageConvertor(CoreTypes.STORAGE_ID, elzaXmlReader.getSoMap()));
+		stringTypeMap.put(ElzaTypes.ZP2015_STORAGE_ID, new EdxStorageConvertor(CoreTypes.STORAGE_ID,
+				configArchDesc.isStorage() ? CoreTypes.STORAGE : null, elzaXmlReader.getSoMap()));
         stringTypeMap.put("ZP2015_UNIT_HIST",new EdxStringConvertor("HISTORY"));
         stringTypeMap.put("ZP2015_UNIT_ARR",new EdxStringConvertor("UNIT_ARR"));
         stringTypeMap.put("ZP2015_UNIT_CONTENT",new EdxStringConvertor("UNIT_CONTENT"));
