@@ -10,6 +10,7 @@ import { ArrowUpward, ArrowDownward } from '@material-ui/icons';
 import { useStyles } from './styles';
 import { useIncrementalTree, TreeLevel, NodeDirection } from './useIncrementalTree';
 import { ApuEntity } from '../../types';
+import { useConfiguration } from '../configuration';
 
 export interface Props {
   apuId: string;
@@ -36,6 +37,7 @@ export function IncrementalTree({
   ...props
 }: Props) {
   const classes = useStyles();
+  const { treeHorizontalScroll } = useConfiguration();
   const [treeItems, getRelatedNodes] = useIncrementalTree(apuId, initialItems?.map((item) => ({ ...item, parentId: item.parent?.id })));
 
   function renderItemsFromFlat(items: TreeLevel[], parent?: TreeLevel, parentId?: string) {
@@ -49,18 +51,18 @@ export function IncrementalTree({
         array.splice(index + 1, childNodes.length);
       }
 
-      const optionalStyle = {
+      const optionalStyle = !treeHorizontalScroll ? {
         overflow: "hidden",
         textOverflow: "ellipsis",
-        width: "calc( 100% - 20px )",
-      };
+        width: "calc( 100% + 20px )",
+      } : {};
 
       // const debugData = `${item.pos}/${parent?.childCnt} ${parent?.id.split("-")[0]}/${item.id.split("-")[0]} - `;
       const debugData = "";
 
       const label = <div title={labelMapper(item)} style={{
         whiteSpace: "nowrap",
-        paddingRight: "10px",
+        paddingRight: "20px",
         ...optionalStyle
       }}>{debugData}{labelMapper(item)}</div>;
 
