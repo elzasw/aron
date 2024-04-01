@@ -45,6 +45,7 @@ import cz.aron.transfagent.elza.convertor.EdxItemConvertor;
 import cz.aron.transfagent.elza.convertor.EdxItemCovertContext;
 import cz.aron.transfagent.elza.convertor.EdxLinkConvertor;
 import cz.aron.transfagent.elza.convertor.EdxNullConvertor;
+import cz.aron.transfagent.elza.convertor.EdxSizeConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStorageConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringConvertor;
 import cz.aron.transfagent.elza.convertor.EdxStringSpecConvertor;
@@ -137,12 +138,6 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_MAJOR_LANG",
             ElzaTypes.ZP2015_APPLIED_RESTRICTION,
             ElzaTypes.ZP2015_APPLIED_RESTRICTION_CHANGE,
-            
-            // TODO zpracovavat
-            "ZP2015_SIZE_WIDTH",
-            "ZP2015_SIZE_HEIGHT",
-            "ZP2015_SIZE_DEPTH",
-            "ZP2015_SIZE_UNITS"
 
     };
 
@@ -150,6 +145,8 @@ public class ImportArchDesc implements EdxItemCovertContext {
      * Map of item convertors
      */
     Map<String, EdxItemConvertor> stringTypeMap;
+    
+    Map<String, EdxItemConvertor> multiTypeMap;
 
     private final ApTypeService apTypeService;
     
@@ -235,6 +232,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
     private ApuSourceBuilder importArchDesc(Path inputFile) {
     	initConvertor();
+    	initMultiItemConvertor();
         Sections sections = elzaXmlReader.getEdx().getFs();
         if(sections==null||sections.getS().size()==0) {
             throw new RuntimeException("Missing section data");
@@ -400,10 +398,11 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         activateArchDescPart(apu);                
 
+        Set<EdxItemConvertor> usedMultiConvertors = new HashSet<>();
         // add items
         processedLevel = lvl;
         for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
-            addItem(apu, item);
+            addItem(apu, item, usedMultiConvertors);
         }
         processedLevel = null;
         
@@ -501,6 +500,16 @@ public class ImportArchDesc implements EdxItemCovertContext {
 		}
 		sourceDaoRefs.add(new ArchDescDaoRef(handle, uuid));
 	}
+	
+	
+	private void initMultiItemConvertor() {
+		multiTypeMap = new HashMap<>();
+		var sizeConvertor = new EdxSizeConvertor();		
+		multiTypeMap.put(ElzaTypes.ZP2015_SIZE_WIDTH, sizeConvertor);
+        multiTypeMap.put(ElzaTypes.ZP2015_SIZE_HEIGHT, sizeConvertor);
+        multiTypeMap.put(ElzaTypes.ZP2015_SIZE_DEPTH, sizeConvertor);
+        multiTypeMap.put(ElzaTypes.ZP2015_SIZE_UNITS, sizeConvertor);        
+	}
 
     private void initConvertor() {    	
     	ElzaNameBuilder nameBuilder = new ElzaNameBuilder(apTypeService);    	
@@ -582,7 +591,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put(ElzaTypes.ZP2015_AMOUNT, new EdxAmountConvertor(ElzaTypes.AMOUNT_SUBTYPES));
     }
 
-    private void addItem(Apu apu, DescriptionItem item) {
+    private void addItem(Apu apu, DescriptionItem item, Set<EdxItemConvertor> usedMultiConvertors) {
         if(item instanceof DescriptionItemUndefined ) {
             return;
         }
@@ -598,6 +607,17 @@ public class ImportArchDesc implements EdxItemCovertContext {
             convertor.convert(this, item);
             return;
         }
+        
+        EdxItemConvertor multiConvertor = multiTypeMap.get(item.getT());
+        if (multiConvertor!=null) {
+        	if (usedMultiConvertors.contains(multiConvertor)) {
+        		return;
+        	} else {
+        		multiConvertor.convert(this, item);
+        		usedMultiConvertors.add(multiConvertor);
+        		return;
+        	}
+        }        
         throw new RuntimeException("Unsupported item type: " + item.getT());
     }
 

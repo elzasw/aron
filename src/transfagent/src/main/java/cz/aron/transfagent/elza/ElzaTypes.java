@@ -107,6 +107,10 @@ public abstract class ElzaTypes {
     public static final String ZP2015_APPLIED_RESTRICTION_TEXT = "ZP2015_APPLIED_RESTRICTION_TEXT";
     public static final String ZP2015_APPLIED_RESTRICTION_CHANGE = "ZP2015_APPLIED_RESTRICTION_CHANGE";
     
+    public static final String ZP2015_SIZE_WIDTH = "ZP2015_SIZE_WIDTH";
+    public static final String ZP2015_SIZE_HEIGHT = "ZP2015_SIZE_HEIGHT";
+    public static final String ZP2015_SIZE_DEPTH = "ZP2015_SIZE_DEPTH";
+    public static final String ZP2015_SIZE_UNITS = "ZP2015_SIZE_UNITS";
 
     public static final Map<String, String> unitTypeMap = new HashMap<>();
     static {
