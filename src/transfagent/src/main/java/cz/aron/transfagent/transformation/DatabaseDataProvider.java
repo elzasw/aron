@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.xml.bind.JAXBException;
 
@@ -14,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.transfagent.domain.ApuSource;
 import cz.aron.transfagent.domain.Institution;
 import cz.aron.transfagent.elza.ImportInstitution;
@@ -127,5 +125,10 @@ public class DatabaseDataProvider implements ContextDataProvider {
             return null;
         }
     }
+
+	@Override
+	public List<ArchEntitySourceInfo> getArchEntityApuSources(List<UUID> uuids, String entityClass) {
+		return this.entityRepository.getArchEntityApuSources(uuids, entityClass);
+	}
 
 }

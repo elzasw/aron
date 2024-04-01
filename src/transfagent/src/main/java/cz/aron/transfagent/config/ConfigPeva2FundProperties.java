@@ -83,6 +83,9 @@ public class ConfigPeva2FundProperties {
     private boolean updateUUID = false;
     
     private boolean archdescFlag = false;
+    
+    // posle odkazy na puvodce z CAM
+    private boolean camOriginators = false;
 
 	public boolean isParseInternalChanges() {
 		return parseInternalChanges;
@@ -307,5 +310,13 @@ public class ConfigPeva2FundProperties {
 	public void setArchdescFlag(boolean archdescFlag) {
 		this.archdescFlag = archdescFlag;
 	}
+
+	public boolean isCamOriginators() {
+		return camOriginators;
+	}
+
+	public void setCamOriginators(boolean camOriginators) {
+		this.camOriginators = camOriginators;
+	}	
 
 }

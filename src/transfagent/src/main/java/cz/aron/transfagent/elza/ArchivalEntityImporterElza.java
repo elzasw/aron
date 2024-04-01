@@ -3,6 +3,7 @@ package cz.aron.transfagent.elza;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -548,8 +549,21 @@ public class ArchivalEntityImporterElza implements ArchivalEntityImporter {
             Files.deleteIfExists(prevApPath);
             Files.move(targetApPath, prevApPath);
         }
+        
         try(var os = Files.newOutputStream(targetApPath)) {
             dataHandler.writeTo(os);
+        } catch (NoSuchFileException e) {
+        	log.warn("Target path not exist {}", targetApPath,e);
+        	// zkusim jeste jednou pro pripad, kdy byl smazan adresar
+        	try {
+        		Files.createDirectories(dir);
+        		try(var os = Files.newOutputStream(targetApPath)) {
+        			dataHandler.writeTo(os);
+        		}
+        	} catch (IOException e1) {
+        		log.error("Fail to write downloaded ap",e);
+                throw new IllegalStateException(e);
+        	}        	
         } catch (IOException e) {
             log.error("Fail to write downloaded ap",e);
             throw new IllegalStateException(e);

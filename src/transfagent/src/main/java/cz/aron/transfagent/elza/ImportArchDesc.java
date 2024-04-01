@@ -142,6 +142,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
             "ZP2015_SIZE_WIDTH",
             "ZP2015_SIZE_HEIGHT",
             "ZP2015_SIZE_DEPTH",
+            "ZP2015_SIZE_UNITS"
 
     };
 

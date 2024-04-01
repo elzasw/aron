@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -61,5 +62,10 @@ public class PropertiesDataProvider implements ContextDataProvider {
 	public UUID getFundApuByUUID(String institutionCode, UUID fundUuid) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public List<ArchEntitySourceInfo> getArchEntityApuSources(List<UUID> uuids, String entityClass) {
+		return Collections.emptyList();
 	}
 }
