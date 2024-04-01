@@ -475,5 +475,12 @@
     </addColumn>
   </changeSet>
   
+ <changeSet author="karel.zacek@lightcomp.cz" id="8-h2" dbms="h2">
+        <addAutoIncrement
+            columnDataType="bigint"
+            columnName="core_queue_id"
+            tableName="core_queue"/>
+ </changeSet>
+
 
 </databaseChangeLog>
