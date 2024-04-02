@@ -71,6 +71,7 @@ export const ENGLISH = {
   [M.ONLINE]: 'Online',
   [M.ORIGINATORS]: 'Creators',
   [M.OTHER_DAOS]: 'Other digital objects',
+  [M.OTHER_SOURCES]: 'Other sources',
   [M.PER_PAGE]: 'Per page',
   [M.PRESERVE_VIEW]: 'Preserve view',
   [M.PREVIOUS_PAGE]: 'Previous page',

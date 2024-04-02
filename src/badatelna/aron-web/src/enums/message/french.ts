@@ -71,6 +71,7 @@ export const FRENCH = {
   [M.ONLINE]: 'En ligne',
   [M.ORIGINATORS]: 'Créateur',
   [M.OTHER_DAOS]: 'Documents numérisés suivants',
+  [M.OTHER_SOURCES]: 'Other sources',
   [M.PER_PAGE]: 'Nombre àla page',
   [M.PRESERVE_VIEW]: 'Preserve view',
   [M.PREVIOUS_PAGE]: 'Page précédente',

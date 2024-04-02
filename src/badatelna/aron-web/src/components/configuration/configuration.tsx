@@ -12,6 +12,13 @@ interface DaoFooterLinkDef {
     url?: string;
 }
 
+interface OtherSource {
+    icon?: string;
+    url?: string;
+    label?: string;
+    tooltip?: string;
+}
+
 export interface ConfigurationType {
     allowDetailExpand?: boolean,
     alternativeItemLabel?: boolean;
@@ -38,6 +45,7 @@ export interface ConfigurationType {
     helpUrl?: string;
     orderResultsByScore?: boolean;
     showIncrementalTree?: boolean;
+    otherSources?: OtherSource[];
 }
 
 
@@ -96,6 +104,7 @@ const defaultConfiguration: ConfigurationType = {
     // newsUrl: 'https://www.seznam.cz',
     // helpUrl: 'https://www.google.cz',
     orderResultsByScore: true,
+    otherSources: undefined,
 }
 
 const ConfigurationContext = createContext<ConfigurationType>(defaultConfiguration)

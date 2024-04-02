@@ -58,4 +58,15 @@ var _configuration = {
   // newsUrl: 'https://www.seznam.cz',
   // helpUrl: 'https://www.google.cz',
   // showIncrementalTree: false,
+  // otherSources: [{
+  //   icon: "fas fa-edit",
+  //   label: "seznam",
+  //   url: "http://www.seznam.cz",
+  //   tooltip: "Vyhledavac seznam",
+  // }, {
+  //   icon: "fas fa-file",
+  //   label: "Google",
+  //   url: "http://www.google.com",
+  //   tooltip: "Vyhledavac google",
+  // }]
 }

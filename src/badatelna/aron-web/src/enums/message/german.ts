@@ -71,6 +71,7 @@ export const GERMAN = {
   [M.ONLINE]: 'Online',
   [M.ORIGINATORS]: 'Provenienzstelle',
   [M.OTHER_DAOS]: 'Mehr Digitale Objekte',
+  [M.OTHER_SOURCES]: 'Other sources',
   [M.PER_PAGE]: 'Zahl auf der Seite',
   [M.PRESERVE_VIEW]: 'Preserve view',
   [M.PREVIOUS_PAGE]: 'Vorherige Seite',
