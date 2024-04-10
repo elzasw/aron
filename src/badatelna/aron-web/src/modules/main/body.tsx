@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import classNames from 'classnames';
 import { useIntl } from 'react-intl';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import { FormattedMessage } from 'react-intl';
 
 import { Tooltip } from '@eas/common-web';
 
 import { Search, useConfiguration } from '../../components';
 import { ModulePath, Message, ApiUrl } from '../../enums';
 import { useStyles } from './styles';
-import { useLayoutStyles, useSpacingStyles } from '../../styles';
+import { useLayoutStyles, useSpacingStyles, useAppStyles } from '../../styles';
 import {
   getPathByType,
   useGet,
@@ -22,6 +23,7 @@ import { replace } from 'lodash';
 
 export const Body: React.FC = () => {
   const classes = useStyles();
+  const appClasses = useAppStyles();
   const layoutClasses = useLayoutStyles();
   const spacingClasses = useSpacingStyles();
   const { otherSources } = useConfiguration();
@@ -99,6 +101,9 @@ export const Body: React.FC = () => {
     >
       <div className={classes.mainBodyInner}>
         <div className={spacingClasses.paddingBottomBig} />
+        <h2 className={appClasses.screenReaderHidden}>
+          <FormattedMessage id={Message.SEARCH}/>
+        </h2>
         <Search
           main={searchOptions.filter(so => so.path === ModulePath.ARCH_DESC).length > 0}
           placeholder={placeholder}
@@ -111,6 +116,9 @@ export const Body: React.FC = () => {
             }
           }}
         />
+        <h3 className={appClasses.screenReaderHidden}>
+          <FormattedMessage id={Message.SEARCH_CHANGE_TYPE}/>
+        </h3>
         <ClickableSelection
           radio={true}
           options={searchOptions}
@@ -118,9 +126,9 @@ export const Body: React.FC = () => {
         />
         {(favouriteQueries || loadingFavouriteQueries) && (
           <>
-            <h4 className={spacingClasses.marginTopBig}>
+            <h3 className={spacingClasses.marginTopBig}>
               {formatMessage({ id: Message.FAVOURITE_QUERIES })}
-            </h4>
+            </h3>
             <div
               className={classNames(
                 classes.mainFavourite,
@@ -164,9 +172,9 @@ export const Body: React.FC = () => {
         )}
         {otherSources && otherSources.length > 0 && (
           <>
-            <h4 className={spacingClasses.marginTopBig}>
+            <h3 className={spacingClasses.marginTopBig}>
               {formatMessage({ id: Message.OTHER_SOURCES })}
-            </h4>
+            </h3>
             <div
               className={classNames(
                 classes.mainFavourite,

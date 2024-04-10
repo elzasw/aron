@@ -94,6 +94,7 @@ export const CZECH = {
   [M.SEARCH_ORIGINATOR]: 'Vyhledávání v původcích',
   [M.SEARCH_INSTITUTION]: 'Vyhledávání v archivech',
   [M.SEARCH_NO_FILTER]: 'Vyhledávání bez filtru',
+  [M.SEARCH_CHANGE_TYPE]: 'Změnit typ vyhledávání',
   [M.SHARE_THROUGH_EMAIL]: 'Sdílet prostřednictvím e-mailu',
   [M.SHARE_THROUGH_FACEBOOK]: 'Sdílet na Facebook',
   [M.SHARE_THROUGH_TWITTER]: 'Sdílet na Twitter',

@@ -93,6 +93,7 @@ export const GERMAN = {
   [M.SEARCH_ORIGINATOR]: 'Suche in Provenienzstellen',
   [M.SEARCH_INSTITUTION]: 'Suche in Archiven',
   [M.SEARCH_NO_FILTER]: 'Ohne Filter suchen',
+  [M.SEARCH_CHANGE_TYPE]: 'Change search type',
   [M.SHARE_THROUGH_EMAIL]: 'Per E-mail teilen',
   [M.SHARE_THROUGH_FACEBOOK]: 'Auf Facebook teilen',
   [M.SHARE_THROUGH_TWITTER]: 'Auf Twitter teilen',

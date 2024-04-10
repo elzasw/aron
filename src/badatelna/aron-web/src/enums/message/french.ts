@@ -93,6 +93,7 @@ export const FRENCH = {
   [M.SEARCH_ORIGINATOR]: 'Recherche dans les créateurs',
   [M.SEARCH_INSTITUTION]: 'Recherche dans les archives',
   [M.SEARCH_NO_FILTER]: 'Recherche sans filtres',
+  [M.SEARCH_CHANGE_TYPE]: 'Change search type',
   [M.SHARE_THROUGH_EMAIL]: 'Communication à e-mail',
   [M.SHARE_THROUGH_FACEBOOK]: 'Communication à Facebook',
   [M.SHARE_THROUGH_TWITTER]: 'Communication à Twitter',
