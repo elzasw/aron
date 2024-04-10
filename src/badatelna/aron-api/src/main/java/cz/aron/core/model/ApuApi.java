@@ -52,6 +52,7 @@ public class ApuApi extends DomainApi<
 
     @Inject private ApuTreeViewStore apuTreeViewStore;
     @Inject private ApuEntityViewStore apuEntityViewStore;
+    @Inject private ApuEntitySimpleStore apuEntitySimpleStore;    
     @Inject private ApuRepository apuRepository;
     @Inject private ApuStore apuStore;
     @Inject private ObjectMapper objectMapper;
@@ -126,6 +127,16 @@ public class ApuApi extends DomainApi<
         
         Result<String> idsResult = apuRepository.getIndex().listIdsByParams(params);
         List<ApuEntityView> items = apuEntityViewStore.listByIds(idsResult.getItems());
+        return new Result<>(items, idsResult.getCount(), idsResult.getSearchAfter(), idsResult.getAggregations());
+    }
+    
+    @PostMapping("/listsimple")
+    public Result<ApuEntitySimple> listSimple(@Valid @RequestBody(required = false) Params params) {
+        
+        params = coalesce(params, Params::new);
+        
+        Result<String> idsResult = apuRepository.getIndex().listIdsByParams(params);
+        List<ApuEntitySimple> items = apuEntitySimpleStore.listByIds(idsResult.getItems());
         return new Result<>(items, idsResult.getCount(), idsResult.getSearchAfter(), idsResult.getAggregations());
     }
     

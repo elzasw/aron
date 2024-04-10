@@ -163,6 +163,26 @@ export function useApiListSimple({
   return usePost<ApiListSimplifiedResponse>(`${ApiUrl.APU}/listview?listType=${(source)?.toUpperCase()}`, { json });
 }
 
+export function useApiListViewSimple({
+  filters = [], 
+  sort = [], 
+  offset, 
+  size = -1, 
+  aggregations = [],
+  flipDirection = false,
+  source,
+}: ApiListProps) {
+  const json = { 
+    aggregations, 
+    filters: transformFilters(filters), 
+    sort, 
+    offset, 
+    flipDirection, 
+    size,
+  };
+  return usePost<ApiListResponse>(`${ApiUrl.APU}/listsimple?listType=${(source)?.toUpperCase()}`, { json });
+};
+
 export const getApu = async (id: string):Promise<ApuEntitySimplified | null> => {
   try {
     const response = await fetch(createUrl(`${ApiUrl.APU}/${id}/view`));
@@ -485,7 +505,7 @@ const useGetDateLimit = (
   filters: Filter[],
   field: string
 ): [number | null, boolean] => {
-  const [response, loading] = useApiList({
+  const [response, loading] = useApiListViewSimple({
       size: 1,
       sort: [
         {
