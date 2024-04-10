@@ -56,6 +56,12 @@ public class EdxApRefConvertor implements EdxItemConvertor {
             throw new RuntimeException("Failed to convert AP: "+apRef.getApid() + ", ap not found");
         }
                 
+        UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+        if (ctx.isArchEntityReferenced(apUuid)) {
+        	// ap already referenced
+        	return;
+        }
+                
 		ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
 
 		if (processPrivSupplement) {
@@ -75,8 +81,7 @@ public class EdxApRefConvertor implements EdxItemConvertor {
 				return;
 			}
 		}
-
-        UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+        
         var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
         if (CollectionUtils.isEmpty(archEntityInfo)) {
             ctx.addArchEntityRef(new ArchEntityInfo(apUuid, ap.getApe().getT()) );
@@ -84,8 +89,10 @@ public class EdxApRefConvertor implements EdxItemConvertor {
         } else {
             List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
             for(var aei: archEntityInfo) {
-                uuids.add(aei.getUuid());
-                ctx.addArchEntityRef(aei);
+            	if (!ctx.isArchEntityReferenced(apUuid)) {
+            		uuids.add(aei.getUuid());
+            		ctx.addArchEntityRef(aei);
+            	}
             }
             apusBuilder.addApuRefsFirstVisible(ctx.getActivePart(), targetType, uuids);
         }

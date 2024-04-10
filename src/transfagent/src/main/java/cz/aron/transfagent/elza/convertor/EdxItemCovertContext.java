@@ -1,5 +1,7 @@
 package cz.aron.transfagent.elza.convertor;
 
+import java.util.UUID;
+
 import cz.aron.apux.ApuSourceBuilder;
 import cz.aron.apux._2020.Apu;
 import cz.aron.apux._2020.Part;
@@ -24,4 +26,11 @@ public interface EdxItemCovertContext {
 	Apu getActiveApu();
 	
 	Level getProcessedLevel();
+	
+	/**
+	 * Check archival entity is referenced from current level
+	 * @param uuid of entity
+	 * @return true - referenced, false not referenced
+	 */
+	boolean isArchEntityReferenced(UUID uuid);
 }

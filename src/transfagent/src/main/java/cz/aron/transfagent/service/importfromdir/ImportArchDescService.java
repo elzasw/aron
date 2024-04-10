@@ -51,6 +51,7 @@ import cz.aron.transfagent.service.FileImportService;
 import cz.aron.transfagent.service.LevelEnrichmentService;
 import cz.aron.transfagent.service.ReimportService;
 import cz.aron.transfagent.service.StorageService;
+import cz.aron.transfagent.transformation.CachedDataProvider;
 import cz.aron.transfagent.transformation.DatabaseDataProvider;
 
 @Service
@@ -208,7 +209,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
         ApuSourceBuilder apusrcBuilder;
 
         try {
-            apusrcBuilder = iad.importArchDesc(archdescXmlPath, databaseDataProvider);
+            apusrcBuilder = iad.importArchDesc(archdescXmlPath, new CachedDataProvider(databaseDataProvider));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } catch (JAXBException e) {
@@ -352,7 +353,7 @@ public class ImportArchDescService extends ImportDirProcessor implements Reimpor
 		var iad = new ImportArchDesc(apTypeService, daoFileStoreService, levelEnrichmentService, configArchDesc,
 				archDescLevelDaoImporters, configurationLoader.getConfig());
         try {
-            apuSourceBuilder = iad.importArchDesc(inputFile, databaseDataProvider);
+            apuSourceBuilder = iad.importArchDesc(inputFile, new CachedDataProvider(databaseDataProvider));
             apuSourceBuilder.setUuid(apuSource.getUuid());
             
             // compare original apusrc.xml and newly generated

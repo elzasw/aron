@@ -35,6 +35,7 @@ import cz.aron.apux._2020.ItemEnum;
 import cz.aron.apux._2020.Part;
 import cz.aron.common.itemtypes.TypesConfiguration;
 import cz.aron.transfagent.config.ConfigElzaArchDesc;
+import cz.aron.transfagent.config.ConfigElzaInheritedType;
 import cz.aron.transfagent.elza.convertor.EdxAmountConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefConvertor;
 import cz.aron.transfagent.elza.convertor.EdxApRefWithRole;
@@ -95,8 +96,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 	/**
 	 * Mapa (source,daos)
 	 */
-	private final Map<String,Set<ArchDescDaoRef>> daoRefs = new HashMap<>();
-	
+	private final Map<String,Set<ArchDescDaoRef>> daoRefs = new HashMap<>();		
 
 	private UUID instApuUuid;
 	private UUID fundApuUuid;
@@ -398,13 +398,20 @@ public class ImportArchDesc implements EdxItemCovertContext {
 
         activateArchDescPart(apu);                
 
+        //Set<ConfigElzaInheritedType> toInherit = new HashSet<>(configArchDesc.getInherited());
         Set<EdxItemConvertor> usedMultiConvertors = new HashSet<>();
         // add items
         processedLevel = lvl;
         for(DescriptionItem item: lvl.getDdOrDoOrDp()) {
-            addItem(apu, item, usedMultiConvertors);
+            addItem(apu, item, usedMultiConvertors, levelContext);
         }
+		if (parentContext != null) {
+			for (var type : configArchDesc.getInherited()) {
+				parentContext.inheritValue(type);
+			}
+		}
         processedLevel = null;
+        
         
         processLevelEnrichment(lvl);
 
@@ -591,35 +598,41 @@ public class ImportArchDesc implements EdxItemCovertContext {
         stringTypeMap.put(ElzaTypes.ZP2015_AMOUNT, new EdxAmountConvertor(ElzaTypes.AMOUNT_SUBTYPES));
     }
 
-    private void addItem(Apu apu, DescriptionItem item, Set<EdxItemConvertor> usedMultiConvertors) {
-        if(item instanceof DescriptionItemUndefined ) {
-            return;
-        }
-        // check ignored items
-        for(String ignoredType: ignoredTypes) {
-            if(ignoredType.equals(item.getT())) {
-                return;
-            }
-        }
+	private void addItem(Apu apu, DescriptionItem item, Set<EdxItemConvertor> usedMultiConvertors,
+			LevelContext currentContext) {
+		
+		var typeSpec = new ConfigElzaInheritedType(item.getT(),item.getS());		
+		if (item instanceof DescriptionItemUndefined) {
+			return;
+		}
+		// check ignored items
+		for (String ignoredType : ignoredTypes) {
+			if (ignoredType.equals(item.getT())) {
+				return;
+			}
+		}
 
-        EdxItemConvertor convertor = stringTypeMap.get(item.getT());
-        if(convertor!=null) {
-            convertor.convert(this, item);
-            return;
-        }
-        
-        EdxItemConvertor multiConvertor = multiTypeMap.get(item.getT());
-        if (multiConvertor!=null) {
-        	if (usedMultiConvertors.contains(multiConvertor)) {
-        		return;
-        	} else {
-        		multiConvertor.convert(this, item);
-        		usedMultiConvertors.add(multiConvertor);
-        		return;
-        	}
-        }        
-        throw new RuntimeException("Unsupported item type: " + item.getT());
-    }
+		EdxItemConvertor convertor = stringTypeMap.get(item.getT());
+		if (convertor != null) {
+			convertor.convert(this, item);			
+			if(configArchDesc.isInherited(typeSpec)) {
+				currentContext.addInheritedConvertor(convertor, item, typeSpec);
+			}
+			return;
+		}
+
+		EdxItemConvertor multiConvertor = multiTypeMap.get(item.getT());
+		if (multiConvertor != null) {
+			if (usedMultiConvertors.contains(multiConvertor)) {
+				return;
+			} else {
+				multiConvertor.convert(this, item);
+				usedMultiConvertors.add(multiConvertor);
+				return;
+			}
+		}
+		throw new RuntimeException("Unsupported item type: " + item.getT());
+	}
 
     private void addEntityClasses(Part part) {
         if(apLevelRefs.isEmpty()) {
@@ -948,7 +961,12 @@ public class ImportArchDesc implements EdxItemCovertContext {
         apLevelRefs.put(aei.getUuid(), aei);
     }
     
-    public static class ArchDescDaoRef {
+    @Override
+	public boolean isArchEntityReferenced(UUID uuid) {		
+		return apLevelRefs.containsKey(uuid);
+	}
+
+	public static class ArchDescDaoRef {
     	
     	private final String handle;
     	
@@ -986,17 +1004,47 @@ public class ImportArchDesc implements EdxItemCovertContext {
     			
     }
     
-    private static class LevelContext {
+    private class LevelContext implements EdxItemCovertContext {
 
         private final Level level;
         private final Apu apu;
         private final LevelContext parentContext;
+        
+        private Map<ConfigElzaInheritedType,List<InheritedConvertor>> inheritedConvertors = null;
 
         public LevelContext(Level level, Apu apu, LevelContext parentContext) {
             this.level = level;
             this.apu = apu;
             this.parentContext = parentContext;
         }
+        
+		public void addInheritedConvertor(EdxItemConvertor convertor, DescriptionItem item, ConfigElzaInheritedType typeSpec) {
+			if (inheritedConvertors == null) {
+				inheritedConvertors = new HashMap<>();
+			}
+			inheritedConvertors.compute(typeSpec, (k, v) -> {
+				if (v == null) {
+					v = new ArrayList<>();
+				}
+				v.add(new InheritedConvertor(this, convertor, item));
+				return v;
+			});
+		}
+		
+		public void inheritValue(ConfigElzaInheritedType type) {			
+			if (inheritedConvertors!=null) {
+				var convertors = inheritedConvertors.get(type);
+				if (convertors!=null) {
+					for(var convertor:convertors) {
+						convertor.convert();
+					}
+				}
+				return;
+			}
+			if (parentContext!=null) {
+				parentContext.inheritValue(type);
+			}
+		}
 
         public Level getLevel() {
             return level;
@@ -1010,6 +1058,62 @@ public class ImportArchDesc implements EdxItemCovertContext {
             return parentContext;
         }
 
+		@Override
+		public ApuSourceBuilder getApusBuilder() {
+			return ImportArchDesc.this.getApusBuilder();
+		}
+
+		@Override
+		public Part getActivePart() {			
+			return ImportArchDesc.this.getActivePart();
+		}
+
+		@Override
+		public ElzaXmlReader getElzaXmlReader() {			
+			return ImportArchDesc.this.getElzaXmlReader();
+		}
+
+		@Override
+		public void addArchEntityRef(ArchEntityInfo aei) {
+			ImportArchDesc.this.addArchEntityRef(aei);			
+		}
+
+		@Override
+		public Apu getActiveApu() {
+			return ImportArchDesc.this.getActiveApu();
+		}
+
+		@Override
+		public Level getProcessedLevel() {
+			return level;
+		}
+
+		@Override
+		public boolean isArchEntityReferenced(UUID uuid) {
+			return ImportArchDesc.this.isArchEntityReferenced(uuid);
+		}		
+
     }
 
+    
+    private static class InheritedConvertor {
+    	
+    	private final LevelContext levelContext;
+    	
+    	private final EdxItemConvertor convertor;
+    	
+    	private final DescriptionItem item;
+
+		public InheritedConvertor(LevelContext levelContext, EdxItemConvertor convertor, DescriptionItem item) {
+			this.levelContext = levelContext;
+			this.convertor = convertor;
+			this.item = item;
+		}
+		
+		public void convert() {
+			convertor.convert(levelContext, item);
+		}
+    	
+    }
+    
 }

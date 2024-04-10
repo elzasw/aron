@@ -68,6 +68,11 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         if(ap == null) {
             throw new RuntimeException("Failed to convert AP: " + apRef.getApid() + ", ap not found");
         }
+        UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+        if (ctx.isArchEntityReferenced(apUuid)) {
+        	// ap already referenced
+        	return;
+        }
 
         ApuSourceBuilder apusBuilder = ctx.getApusBuilder();
         
@@ -98,8 +103,7 @@ public class EdxApRefWithRole implements EdxItemConvertor {
         if(part == null) {
             part = ApuSourceBuilder.addPart(ctx.getActiveApu(), partType);
         }
-
-        UUID apUuid = UUID.fromString(ap.getApe().getUuid());
+        
         var archEntityInfo = dataProvider.getArchivalEntityWithParentsByUuid(apUuid);
                 
         for(var apMapping:apMappings) {
@@ -117,8 +121,10 @@ public class EdxApRefWithRole implements EdxItemConvertor {
             List<UUID> uuids = new ArrayList<>(archEntityInfo.size());
             for(ArchEntityInfo aei : archEntityInfo) {
                 var uuid = aei.getUuid();
-                uuids.add(uuid);
-                ctx.addArchEntityRef(aei);
+                if (!ctx.isArchEntityReferenced(apUuid)) {
+                	uuids.add(uuid);
+                	ctx.addArchEntityRef(aei);
+                }
             }
             apusBuilder.addApuRefsFirstVisible(part, t, uuids);
         }

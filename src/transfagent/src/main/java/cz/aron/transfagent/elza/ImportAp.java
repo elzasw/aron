@@ -585,9 +585,14 @@ public class ImportAp implements EdxItemCovertContext {
 
 	@Override
     public void addArchEntityRef(ArchEntityInfo aei) {        
-    }
+    }		
     
-    /**
+    @Override
+	public boolean isArchEntityReferenced(UUID uuid) {
+		return false;
+	}
+
+	/**
      * Vyhodit tuto vyjimku pokud dojde k chybe kterou 
      */
     public static class MarkAsNonAvailableException extends RuntimeException {

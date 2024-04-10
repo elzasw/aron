@@ -1,9 +1,13 @@
 package cz.aron.transfagent.config;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import cz.aron.transfagent.elza.ElzaTypes;
 
 @Configuration
 @ConfigurationProperties(prefix = "archdesc")
@@ -33,6 +37,10 @@ public class ConfigElzaArchDesc {
     
     // mapování přístupových bodů na hodnoty
     private List<ConfigElzaArchDescApMapping> apMappings;
+    
+    private Set<ConfigElzaInheritedType> inherited = new HashSet<>();;
+    
+    private boolean inheritAttributes;
 
     public boolean isAddDateToName() {
         return addDateToName;
@@ -104,6 +112,36 @@ public class ConfigElzaArchDesc {
 
 	public void setStorage(boolean storage) {
 		this.storage = storage;
+	}
+
+	public Set<ConfigElzaInheritedType> getInherited() {
+		return inherited;
+	}
+
+	public void setInherited(List<ConfigElzaInheritedType> inherited) {
+		this.inherited.addAll(inherited);
+	}
+	
+	public boolean isInherited(ConfigElzaInheritedType type) {
+		return inherited.contains(type);
+	}
+
+	public boolean isInheritAttributes() {
+		return inheritAttributes;
+	}
+
+	public void setInheritAttributes(boolean inheritAttributes) {
+		this.inheritAttributes = inheritAttributes;
+		if (inheritAttributes) {
+			inherited = new HashSet<>();
+			ElzaTypes.otherIdMap.forEach((k,v)->{
+				inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_OTHER_ID,k));
+			});
+			ElzaTypes.roleSpecMap.forEach((k,v)->{
+				inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_ENTITY_ROLE,v));
+			});
+			inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_STORAGE_ID,null));
+		}
 	}
 
 }
