@@ -41,7 +41,17 @@ public class EdxStorageConvertor implements EdxItemConvertor {
 			return;
 		}
 
-		ApuSourceBuilder.addString(ctx.getActivePart(), targetType, value).setVisible(false);
+		// ukladaci cislo pridam jako cislo
+		for (var descItem : so.getDdOrDoOrDp()) {
+			if ("ZP2015_PACKET_NUMBER".equals(descItem.getT())) {
+				var itemInt = (DescriptionItemInteger) descItem;
+				var v = itemInt.getV();
+				if (v != null) {
+					ApuSourceBuilder.addString(ctx.getActivePart(), targetType, v.toString()).setVisible(false);
+					break;
+				}
+			}
+		}
 
 		if (storageTargetType != null) {
 			// Convert structured object to text
