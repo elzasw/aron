@@ -163,7 +163,7 @@ export function EvidenceDetail({
 
   const { id } = useParams();
 
-  const url = `${ApiUrl.APU}/${id}`;
+  const url = `${ApiUrl.APU}/${id}/entity`;
 
   const [item, loadingItem] = useGet<ApuEntity>(url);
 

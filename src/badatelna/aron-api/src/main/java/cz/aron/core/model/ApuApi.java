@@ -147,25 +147,43 @@ public class ApuApi extends DomainApi<
         return view;
     }
     
-    @PostMapping(value = "/views")
-    public List<ApuEntityView> getViews(@RequestBody List<String> ids) {        
+    @GetMapping(value = "/views")
+    public ResponseEntity<List<ApuEntityView>> getViews(@RequestParam List<String> ids) {
         lte(ids.size(),100, ()-> new InvalidArgument("ids", InvalidArgument.ErrorCode.SIZE_TOO_BIG));        
-        return apuEntityViewStore.listByIds(ids);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .contentType(MediaType.APPLICATION_JSON)
+		.body(apuEntityViewStore.listByIds(ids));
     }
 
     @GetMapping(value = "/{id}/related/{direction}")
-    public List<ApuEntityTreeViewDto> getRelatedNodes(@PathVariable("id") String apuId, @PathVariable("direction") String direction) {
+    public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(@PathVariable("id") String apuId, @PathVariable("direction") String direction) {
+	List<ApuEntityTreeViewDto> body = null;
     	switch(direction) {
     	case "before":
-    		return apuStore.getEntitiesBefore(apuId);
+    		body = apuStore.getEntitiesBefore(apuId);
+		break;
     	case "after":
-    		return apuStore.getEntitiesAfter(apuId);
+    		body = apuStore.getEntitiesAfter(apuId);
+		break;
     	case "under":
-    		return apuStore.getEntitiesUnder(apuId);
+    		body = apuStore.getEntitiesUnder(apuId);
+		break;
     	default:
     		throw new RuntimeException();
     	}
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
-    
-}
 
+    @GetMapping(value = "/{id}/entity")
+    public ResponseEntity<ApuEntity> getEntity(@PathVariable("id") String id) {
+        var body = service.get(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
+    }
+}

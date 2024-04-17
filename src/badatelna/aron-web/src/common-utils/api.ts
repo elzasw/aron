@@ -196,14 +196,8 @@ export const getApu = async (id: string):Promise<ApuEntitySimplified | null> => 
 
 export const getApus = async (ids: string[]):Promise<ApuEntitySimplified[] | null> => {
   try {
-    const response = await fetch(createUrl(`${ApiUrl.APU}/views`), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(ids),
-    });
-
+    const query = ids.join(','); 
+    const response = await fetch(createUrl(`${ApiUrl.APU}/views?ids=${query}`));
     return response.ok ? await response.json() : null;
   } catch (error) {
     console.log(error);
