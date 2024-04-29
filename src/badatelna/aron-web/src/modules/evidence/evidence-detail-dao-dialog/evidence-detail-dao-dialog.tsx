@@ -86,17 +86,17 @@ export function EvidenceDetailDaoDialog({
   const [imageSettingsOpen, setImageSettingsOpen] = useState(false);
   const [showNavigator, setShowNavigator] = useState(false);
 
-  const { daoId, fileId } = useParams<ApuPathParams>();
+  const { id, daoId, fileId } = useParams<ApuPathParams>();
   const { navigate } = useContext(NavigationContext);
 
   useEffect(() => {
     if (!daoId || !fileId) {
-      navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id));
+      navigate(createApuDaoFileUrl(apuInfo.id, dao.id, file.id), true);
     }
   }, [dao, file])
 
   useEffect(() => {
-    navigate(`${location.pathname}${createUrlParams({ ...urlParams, [FULLSCREEN]: fullscreen && embed })}`);
+    navigate(`${createApuDaoFileUrl(id, daoId, fileId)}${createUrlParams({ ...urlParams, [FULLSCREEN]: fullscreen && embed })}`, true);
   }, [fullscreen])
 
   const fileIndex = findIndex(files, ({ id }) => id === file.id);
