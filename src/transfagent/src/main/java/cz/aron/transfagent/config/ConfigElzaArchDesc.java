@@ -138,7 +138,7 @@ public class ConfigElzaArchDesc {
 				inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_OTHER_ID,k));
 			});
 			ElzaTypes.roleSpecMap.forEach((k,v)->{
-				inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_ENTITY_ROLE,v));
+				inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_ENTITY_ROLE,k));
 			});
 			inherited.add(new ConfigElzaInheritedType(ElzaTypes.ZP2015_STORAGE_ID,null));
 		}
