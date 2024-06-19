@@ -547,6 +547,7 @@ public class ImportArchDesc implements EdxItemCovertContext {
 				configArchDesc.isProcessInternalSupplement(), nameBuilder, typesConfig));
         stringTypeMap.put("ZP2015_FORMAL_TITLE",new EdxStringConvertor("FORMAL_TITLE"));
         stringTypeMap.put("ZP2015_SCALE",new EdxStringConvertor("SCALE"));
+        stringTypeMap.put("ZP2015_SCALE_NUMERICAL",new EdxStringConvertor("SCALE_NUMERICAL"));
         stringTypeMap.put(ElzaTypes.ZP2015_LANGUAGE, new EdxEnumConvertor(CoreTypes.LANGUAGE, ElzaTypes.languageTypeMap));
         stringTypeMap.put(ElzaTypes.ZP2015_ORIENTATION, new EdxStringConvertor(CoreTypes.ORIENTATION));
         stringTypeMap.put(ElzaTypes.ZP2015_ITEM_MAT, new EdxStringConvertor(CoreTypes.ITEM_MAT));
