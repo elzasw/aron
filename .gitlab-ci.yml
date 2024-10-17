@@ -13,21 +13,19 @@ cache:
   paths:
     - .m2/repository
 
-build:
+build-doc:
+  image: $CI_REGISTRY/lightcomp/docker-images/sphinxdoc7:latest
   stage: build
+  tags:
+   - docker
   script:
-    - pip install sphinx sphinx-rtd-theme
     - rm -f -r ./aron-doc
     - mkdir aron-doc
-    - cd doc    
+    - cd doc
     - make html
     - cd build/html 
     - mv * ../../../aron-doc/
     - cd ../../..
-    - export JAVA_HOME=/etc/alternatives/jre_11
-    - cd src
-    - mvn $MAVEN_CLI_OPTS package
-    - cd ..
   artifacts:
     paths:
       - aron-doc
