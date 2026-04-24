@@ -43,6 +43,7 @@ import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
+import cz.aron.indexing.IndexingService;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.ApuSourceRepository;
 import cz.aron.repository.DaoRepository;
@@ -64,6 +65,7 @@ public class ApuProcessor {
 	private final FileInputProcessor fileInputProcessor;
 	private final ObjectMapper objectMapper;
 	private final EntityManager entityManager;
+	private final IndexingService indexingService;
 
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
@@ -79,7 +81,7 @@ public class ApuProcessor {
 	private ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
 			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
 			TypesHolder typesHolder, FileInputProcessor fileInputProcessor, ObjectMapper objectMapper,
-			EntityManager entityManager) {
+			EntityManager entityManager, IndexingService indexingService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.apuEntityRepository = apuEntityRepository;
 		this.daoRepository = daoRepository;
@@ -89,6 +91,7 @@ public class ApuProcessor {
 		this.fileInputProcessor = fileInputProcessor;
 		this.objectMapper = objectMapper;
 		this.entityManager = entityManager;
+		this.indexingService = indexingService;
 	}
 
 	public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
@@ -379,7 +382,8 @@ public class ApuProcessor {
 		List<String> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
 		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
-		// clear for next batch
+		// clear for next batch		
+		indexingService.indexApus(saveCache.values());		
 		saveCache.clear();
 
 		// reindex incoming relations on target apus

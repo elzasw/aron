@@ -10,68 +10,101 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import cz.aron.api.rest.AronApi;
+import cz.aron.api.rest.model.ApuEntity;
+import cz.aron.api.rest.model.ApuEntitySimplified;
+import cz.aron.api.rest.model.Params;
+import cz.aron.api.rest.model.Result;
+import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
 import cz.aron.domain.types.dto.ApuEntityView;
+import cz.aron.indexing.IndexedApu;
+import cz.aron.indexing.QueryBuilder;
+import cz.aron.indexing.ResultBuilder;
+import cz.aron.indexing.SimpleResultBuilder;
+import cz.aron.mapper.ApuEntityMapper;
 import cz.aron.repository.ApuEntityRepository;
+import cz.aron.repository.ApuEntitySimpleRepository;
+import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/apu")
-public class ApuApi {
-	
+public class ApuApi implements AronApi {
+
 	private static final Logger log = LoggerFactory.getLogger(ApuApi.class);
-	
+
 	private final ApuEntityRepository apuEntityRepository;
 	
+	private final ApuEntitySimpleRepository apuEntitySimpleRepository;
+
     private final ObjectMapper objectMapper;
-    
+
     private final String treeCache;
-    
-	public ApuApi(ApuEntityRepository apuEntityRepository,
-			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache) {
+
+    private final ApuEntityMapper apuEntityMapper;
+
+    private final ElasticsearchOperations elasticsearchOperations;
+
+    private final QueryBuilder queryBuilder;
+
+    private final ResultBuilder resultBuilder;
+
+    private final SimpleResultBuilder simpleResultBuilder;
+
+	public ApuApi(ApuEntityRepository apuEntityRepository, ApuEntitySimpleRepository apuEntitySimpleRepository,
+			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
+			ApuEntityMapper apuEntityMapper, ElasticsearchOperations elasticsearchOperations,
+			QueryBuilder queryBuilder, ResultBuilder resultBuilder, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
+		this.apuEntitySimpleRepository = apuEntitySimpleRepository;
 		this.objectMapper = objectMapper;
 		this.treeCache = treeCache;
+		this.apuEntityMapper = apuEntityMapper;
+		this.elasticsearchOperations = elasticsearchOperations;
+		this.queryBuilder = queryBuilder;
+		this.resultBuilder = resultBuilder;
+		this.simpleResultBuilder = simpleResultBuilder;
 	}
 
-	@GetMapping("/{id}")
+	@Override
 	@Transactional
-    public ResponseEntity<?> getApu(@PathVariable("id") String apuId) {    	
+    public ResponseEntity<ApuEntity> getApu(@PathVariable("id") String apuId) {
     	var apu = apuEntityRepository.findByUuid(apuId);
-    	if (apu==null) {
+    	if (apu == null) {
     		throw new RuntimeException();
     	}
-    	
-    	// TODO load full entity
+    	// trigger lazy collections before transaction closes
     	apu.getAttachments().size();
     	apu.getDigitalObjects().size();
-    	for(var part:apu.getParts()) {
+    	for (var part : apu.getParts()) {
     		part.getChildParts().size();
     	}
-    	return ResponseEntity.ok(apu);
+    	return ResponseEntity.ok()
+    			.contentType(MediaType.APPLICATION_JSON)
+    			.body(apuEntityMapper.toRest(apu));
     }
 
-    @GetMapping("/{id}/tree")
+    //@GetMapping("/{id}/tree")
     @Transactional
-    public ResponseEntity<?> getSimpleTree(@PathVariable("id") String apuId) {                        
+    public ResponseEntity<?> getSimpleTree(@PathVariable("id") String apuId) {
         if (treeCache!=null) {
             var published = apuEntityRepository.findPublishedByUuid(apuId);
             String timestamp = "";
@@ -83,7 +116,7 @@ public class ApuApi {
             if (Files.isRegularFile(path)) {
                 return file(path);
             } else {
-                var tmpPath = directory.resolve(apuId+".tmp");                
+                var tmpPath = directory.resolve(apuId+".tmp");
                 ApuEntityTreeView apuEntityTreeView = readTree(apuId);
                 try {
                     Files.createDirectories(directory);
@@ -92,7 +125,7 @@ public class ApuApi {
                         gzos.flush();
                     }
                     Files.move(tmpPath, path, StandardCopyOption.REPLACE_EXISTING);
-                    log.info("Tree cached {}", apuId);                    
+                    log.info("Tree cached {}", apuId);
                 } catch (IOException ioEx) {
                     log.error("Fail to cache tree {}", apuId, ioEx);
                     try {
@@ -107,14 +140,14 @@ public class ApuApi {
                     }
                     return ResponseEntity.ok(apuEntityTreeView);
                 }
-                return file(path);             
+                return file(path);
             }
         } else {
             ApuEntityTreeView apuEntityTreeView = readTree(apuId);
-            return ResponseEntity.ok(apuEntityTreeView);    
+            return ResponseEntity.ok(apuEntityTreeView);
         }
     }
-    
+
 	private ApuEntityTreeView readTree(String apuId) {
 		var entities = apuEntityRepository.findAllByParentUuid(apuId);
 		if (entities.isEmpty()) {
@@ -127,7 +160,7 @@ public class ApuApi {
 					entity.type(), new ArrayList<>());
 			ids.put(entity.apu_id(), root);
 			if (root == null) {
-				root = newEntity;				
+				root = newEntity;
 			} else {
 				var parent = ids.get(entity.parent_id());
 				if (parent == null) {
@@ -139,51 +172,66 @@ public class ApuApi {
 		return root;
 	}
 
-    private ResponseEntity<FileSystemResource> file(Path path) {        
+    private ResponseEntity<FileSystemResource> file(Path path) {
         HttpHeaders responseHeaders = new HttpHeaders();
-        responseHeaders.set(HttpHeaders.CONTENT_ENCODING, 
-          "gzip");        
+        responseHeaders.set(HttpHeaders.CONTENT_ENCODING, "gzip");
         return ResponseEntity.ok()
                 .headers(responseHeaders)
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new FileSystemResource(path));          
+                .body(new FileSystemResource(path));
     }
-    
+
 /*
     @GetMapping("/labels")
     public List<IdLabelDto> mapNames(@RequestBody List<String> ids) {
         return service.mapNames(ids);
     }
 */
-  
-/*
-    @PostMapping("/listview")
-    public Result<ApuEntityView> listView(@Valid @RequestBody(required = false) Params params) {
-        
-        params = coalesce(params, Params::new);
-        
-        Result<String> idsResult = apuRepository.getIndex().listIdsByParams(params);
-        List<ApuEntityView> items = apuEntityViewStore.listByIds(idsResult.getItems());
-        return new Result<>(items, idsResult.getCount(), idsResult.getSearchAfter(), idsResult.getAggregations());
-    }
-*/
-  
+
 /*
     @GetMapping(value = "/{id}/view")
-    public ApuEntityView getView(@PathVariable("id") String id) {                        
-        ApuEntityView view = apuEntityViewStore.find(id);        
+    public ApuEntityView getView(@PathVariable("id") String id) {
+        ApuEntityView view = apuEntityViewStore.find(id);
         notNull(view, () -> new MissingObject(ApuEntityView.class, id));
         return view;
     }
 */
-    
-    @PostMapping(value = "/views")
-    public List<ApuEntityView> getViews(@RequestBody List<String> ids) {    	
+
+    //@PostMapping(value = "/views")
+    public List<ApuEntityView> getViews(@RequestBody List<String> ids) {
     	if (ids.size()>100) {
     		throw new IllegalArgumentException();
     	}
     	return apuEntityRepository.findAllByUuids(ids);
     }
 
-}
+	@Override
+	public ResponseEntity<Result> listView(@Valid Params params) {
+		// TODO: fetch ApuEntitySimplified by hit ids and pass to simpleResultBuilder
+		return null;
+	}
 
+	@Override
+	public ResponseEntity<SimpleResult> listSimple(@Valid Params params) {
+		var query = queryBuilder.build(params);
+		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var simplified = entities.stream().map(e -> {
+			var s = new ApuEntitySimplified();
+			s.setId(e.getUuid());
+			s.setName(e.getName());
+			s.setDescription(e.getDescription());
+			s.setOrder((long) e.getOrder());
+			return s;
+		}).collect(Collectors.toList());
+		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+	}
+
+	@Override
+	public ResponseEntity<Void> test() {
+		System.out.println("Test");
+		return ResponseEntity.ok().build();
+	}
+
+}

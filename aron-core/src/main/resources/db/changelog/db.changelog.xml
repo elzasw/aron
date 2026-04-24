@@ -5,6 +5,11 @@
     <property name="uuid" value="char(36)" dbms="postgresql"/>
 
     <changeSet id="1" author="karel.zacek@lightcomp.cz">
+
+<!--      
+    <validCheckSum>ANY</validCheckSum>
+-->
+    
         <createTable tableName="apu_source">
             <column name="apu_source_id" type="${id}" autoIncrement="true">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_source"/>
@@ -19,6 +24,7 @@
             <column name="uuid" type="${uuid}"/>
             <column name="name" type="nclob"/>
             <column name="description" type="nclob"/>
+            <column name="result" type="nclob"/>
             <column name="permalink" type="varchar(255)"/>
             <column name="published" type="boolean"/>
             <column name="apu_source_id" type="${id}">
@@ -29,6 +35,7 @@
             </column>
             <column name="type" type="varchar(255)"/>
             <column name="ordr" type="int" value="0"/>
+            <column name="indexed" type="boolean"/>
         </createTable>
         <createTable tableName="apu_attachment">
             <column name="apu_attachment_id" type="${id}" autoIncrement="true">
@@ -52,6 +59,7 @@
             <column name="apu_id" type="${id}">
                 <constraints referencedTableName="apu" referencedColumnNames="apu_id" foreignKeyName="FK_digital_object_apu"/>
             </column>
+            <column name="license_code" type="nclob"/>
         </createTable>
         <createTable tableName="apu_part">
             <column name="apu_part_id" type="${id}" autoIncrement="true">
@@ -79,6 +87,7 @@
             <column name="apu_part_id" type="${id}">
                 <constraints referencedTableName="apu_part" referencedColumnNames="apu_part_id" foreignKeyName="FK_apu_part_item_apu_part"/>
             </column>
+            <column name="label" type="nclob"/>
         </createTable>
         <createTable tableName="digital_object_file">
             <column name="digital_object_file_id" type="${id}" autoIncrement="true">

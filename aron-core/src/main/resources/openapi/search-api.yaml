@@ -1,0 +1,448 @@
+---
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: ARON Core Service API
+servers:
+  - url: https://localhost:3000/
+tags:
+  - name: Search
+
+
+components:
+  schemas:
+    SortMode:
+      description: Sort mode
+      type: string
+      enum: &APU_TYPE
+        - AVG
+        - MAX
+        - MEDIAN
+        - MIN
+        - SUM
+
+    FieldSort:
+      description: Sort by field
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/Sort"      
+      properties:
+        field:
+          type: string
+        sortMode:
+          $ref: "#/components/schemas/SortMode"
+
+    ScoreSort:
+      description: Sort by field
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/Sort"      
+      
+    Sort:
+      description: Returned list of funds
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          FIELD: "#/components/schemas/FieldSort"
+          SCORE: "#/components/schemas/ScoreSort"
+      properties:
+        type:
+          type: string
+          
+# Filters
+
+    Filter:
+      description: Filter
+      type: object
+      discriminator:
+        propertyName: operation
+        mapping:
+          AND: "#/components/schemas/AndFilter"
+          OR: "#/components/schemas/OrFilter"
+          EQ: "#/components/schemas/EqFilter"
+          FTX: "#/components/schemas/FullTextFilter"
+          FTXF: "#/components/schemas/FullTextFieldFilter"
+          RANGE: "#/components/schemas/RangeFilter"
+      properties:
+        operaton:
+          type: string
+          
+    AndFilter:
+        description: And filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/Filter"
+        properties:
+          filters:
+            type: array
+            items:
+              $ref: "#/components/schemas/Filter"
+    OrFilter:
+        description: And filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/Filter"
+        properties:
+          filters:
+            type: array
+            items:
+              $ref: "#/components/schemas/Filter"
+    FieldFilter:
+        description: Field filter base
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/Filter"
+        properties:
+          field:
+            type: string
+            
+    ValueFilter:
+        description: Field value filter base
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/Filter"
+        properties:
+          value:
+            type: string
+
+    FieldValueFilter:
+        description: Field value filter base
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldFilter"
+        properties:
+          value:
+            type: string
+            
+    FullTextFilter:
+        description: Fulltext filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/ValueFilter"
+
+    TextFilter:
+        description: Field value filter base
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldValueFilter"
+        properties:
+          value:
+            type: string
+    FullTextFieldFilter:
+        description: Fulltext field filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/TextFilter"
+
+    EqFilter:
+        description: Equality filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldValueFilter"
+
+    RangeFilter:
+        description: Range filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldFilter"
+        properties:
+          gt:
+            type: string
+          gte:
+            type: string
+          lt:
+            type: string
+          lte:
+            type: string
+
+
+# Aggregations
+
+    AggregationFamily:
+      description: Sort mode
+      type: string
+      enum: &AGGREGATION_FAMILY
+        - BUCKET
+        - MATRIX
+        - METRIC
+        - PIPELINE
+
+    Aggregation:
+      description: Aggregation
+      type: object
+      discriminator:
+        propertyName: aggregator
+        mapping:
+          TERMS: "#/components/schemas/BucketAggregation"
+          NESTED: "#/components/schemas/BucketAggregation"
+          FILTER: "#/components/schemas/BucketAggregation"
+          MISSING: "#/components/schemas/BucketAggregation"
+          RANGE: "#/components/schemas/BucketAggregation"
+          DATE_RANGE: "#/components/schemas/BucketAggregation"
+          MAX: "#/components/schemas/MaxAggregator"
+          MIN: "#/components/schemas/MinAggregator"
+      properties:
+        type:
+          type: string
+        family:
+          $ref: "#/components/schemas/AggregationFamily"
+        
+    BucketAggregator:
+      description: Sort mode
+      type: string
+      enum: &AGGREGATOR_FAMILY
+        - ADJACENCY_MATRIX
+        - CHILDREN
+        - COMPOSITE
+        - DATE_HISTOGRAM
+        - DATE_RANGE
+        - DIVERSIFIED_SAMPLER
+        - FILTER
+        - FILTERS
+        - GEO_DISTANCE
+        - GEOHASH_GRID
+        - GLOBAL
+        - HISTOGRAM
+        - IP_RANGE
+        - MISSING
+        - NESTED
+        - RANGE
+        - REVERSE_NESTED
+        - SAMPLER
+        - SIGNIFICANT_TERMS
+        - SIGNIFICANT_TEXT
+        - TERMS
+
+    BucketAggregation:
+      description: Equality filter
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/Aggregation"
+      properties:
+        aggregator:
+          $ref: "#/components/schemas/BucketAggregator"
+        aggregations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aggregation"
+
+    TermsAggregator:
+      description: Terms aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/BucketAggregation"
+      properties:
+        name:
+          type: string
+        field:
+          type: string
+
+    NestedAggregator:
+      description: Nested aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/BucketAggregation"
+      properties:
+        name:
+          type: string
+        field:
+          path: string
+    
+    FilterAggregator:
+      description: Filter aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/BucketAggregation"
+      properties:
+        name:
+          type: string
+        filter:
+          path: string
+
+    MetricAggregator:
+      description: Metric aggregator
+      type: string
+      enum: &AGGREGATOR_FAMILY
+        - CARDINALITY
+        - MAX
+        - MIN    
+
+    MetricAggregation:
+      description: Metric aggregation
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/Aggregation"
+      properties:
+        aggregator:
+          $ref: "#/components/schemas/MetricAggregator"
+        aggregations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aggregation"
+            
+    MaxAggregator:
+      description: Filter aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/MetricAggregation"
+      properties:
+        name:
+          type: string
+        field:
+          path: string
+        format:
+          path: string
+
+    MinAggregator:
+      description: Filter aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/MetricAggregation"
+      properties:
+        name:
+          type: string
+        field:
+          path: string
+        format:
+          path: string
+
+    CardinalityAggregator:
+      description: Filter aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/MetricAggregation"
+      properties:
+        name:
+          type: string
+        field:
+          path: string
+
+    Params:
+      description: Returned list of funds
+      type: object
+      properties:
+        sort:
+          type: array
+          items:
+            $ref: "#/components/schemas/Sort"
+        offset:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        searchAfter:
+          type: string
+        flipDirection:
+          type: boolean
+        filters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Filter"
+        aggregations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aggregation"
+        fields:
+          type: array
+          items:
+            type: string
+
+    AggregationResult:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        aggregations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/AggregationResult'
+#      discriminator:
+#        propertyName: type
+#        mapping:
+#          max: '#/components/schemas/MaxAggregation'
+#          sum: '#/components/schemas/SumAggregation'      
+
+    Relation:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        source:
+          type: string
+        relation:
+          type: string
+        target:
+          type: string
+
+    ResultBase:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+        searchAfter:
+          type: array
+          items:
+            type: object
+        aggregations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/AggregationResult'      
+
+    Result:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relation'
+        count:
+          type: integer
+          format: int64
+        searchAfter:
+          type: array
+          items:
+            type: object
+        aggregations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/AggregationResult'      
+
+    ApuEntitySimplified:
+      description: Simple result
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+          format: int64
+
+    SimpleResult:
+      description: Simple result
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/ResultBase"      
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuEntitySimplified'
+            
+              

@@ -88,7 +88,7 @@ public class ApuEntity {
 	@JoinColumn(name="parent_id")
 	private ApuEntity parent;
 
-	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(mappedBy = "apu", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ApuPart> parts = new ArrayList<>();
 
 	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

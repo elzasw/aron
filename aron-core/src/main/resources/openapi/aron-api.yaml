@@ -1,0 +1,261 @@
+---
+openapi: 3.0.2
+info:
+  version: 1.0.0
+  title: ARON Core Service API
+servers:
+  - url: https://localhost:3000/
+tags:
+  - name: Aron
+paths:
+  /test:
+    get:
+      tags:
+        - Aron
+      summary: test	
+      description: ""
+      operationId: test
+      responses:
+        "200":
+          description: Success
+
+  '/apu/{id}':
+    get:
+      tags:
+        - Aron
+      summary: Get object with given id
+      operationId: getApu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/ApuEntity'
+
+  /apu/listview:
+    post:
+      tags:
+        - Aron
+      operationId: listView
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'search-api.yaml#/components/schemas/Params'
+        required: true
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                $ref: 'search-api.yaml#/components/schemas/Result'
+                
+  /apu/listsimple:
+    post:
+      tags:
+        - Aron
+      operationId: listSimple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'search-api.yaml#/components/schemas/Params'
+        required: true
+      responses:
+        '200':
+          description: default response
+          content:
+            '*/*':
+              schema:
+                $ref: 'search-api.yaml#/components/schemas/SimpleResult'
+                
+components:
+  schemas:                
+    ApuEntity:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        result:
+          type: string
+        permalink:
+          type: string
+        order:
+          type: integer
+          format: int32
+        published:
+          type: boolean
+        depth:
+          type: integer
+          format: int32
+        pos:
+          type: integer
+          format: int32
+        childCnt:
+          type: integer
+          format: int32
+        indexed:
+          type: boolean
+        parent:
+          $ref: '#/components/schemas/ApuEntity'
+        parts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuPart'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuAttachment'
+        digitalObjects:
+          type: array
+          items:
+            $ref: '#/components/schemas/DigitalObject'
+        type:
+          type: string
+          enum:
+            - ARCH_DESC
+            - COLLECTION
+            - ENTITY
+            - FINDING_AID
+            - FUND
+            - INSTITUTION
+    ApuPart:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        type:
+          type: string
+        childParts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuPart'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuPartItem'
+    ApuPartItem:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        value:
+          type: string
+        visible:
+          type: boolean
+        href:
+          type: string
+        type:
+          type: string
+        label:
+          type: string
+    DigitalObject:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        permalink:
+          type: string
+        order:
+          type: integer
+          format: int32
+        licenseCode:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DigitalObjectFile'
+    DigitalObjectFile:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        permalink:
+          type: string
+        order:
+          type: integer
+          format: int32
+        type:
+          type: string
+          enum:
+            - PUBLISHED
+            - THUMBNAIL
+            - TILE
+        file:
+          $ref: '#/components/schemas/File'
+        name:
+          type: string
+        referencedFile:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+          format: int64
+        selected:
+          type: boolean
+    File:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+        deleted:
+          type: string
+          format: date-time
+        name:
+          type: string
+        contentType:
+          type: string
+        size:
+          type: integer
+          format: int64
+        permanent:
+          type: boolean
+    ApuAttachment:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        order:
+          type: integer
+          format: int32
+        file:
+          $ref: '#/components/schemas/DigitalObjectFile'

@@ -147,7 +147,7 @@ public class FileInputProcessor {
 
 	private DigitalObjectFile getNewOrExisting(DigitalObject digitalObject, String uuid) {
 		for (DigitalObjectFile digitalObjectFile : digitalObject.getFiles()) {
-			if (uuid.equals(digitalObjectFile.getId())) {
+			if (uuid.equals(digitalObjectFile.getUuid())) {
 				return digitalObjectFile;
 			}
 		}

@@ -57,6 +57,10 @@ public class ApuAttachment {
 		this.file = file;
 	}
 
+	public long getId() {
+		return id;
+	}
+
 	public ApuEntity getApu() {
 		return apu;
 	}
