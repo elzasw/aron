@@ -23,7 +23,7 @@ class Aggregations {
         var result = new HashMap<String, List<AggregationResult>>();
         for (ElasticsearchAggregation agg : esAggs.aggregations()) {
             Aggregation named = agg.aggregation();
-            result.put(named.getName(), mapAggregate(named.getAggregate()));
+            result.put(named.getName(), mapAggregate(named.getName(),named.getAggregate()));
         }
         return result;
     }
@@ -33,11 +33,11 @@ class Aggregations {
             return Map.of();
         }
         var result = new HashMap<String, List<AggregationResult>>();
-        aggregations.forEach((name, agg) -> result.put(name, mapAggregate(agg)));
+        aggregations.forEach((name, agg) -> result.put(name, mapAggregate(name, agg)));
         return result;
     }
 
-    static List<AggregationResult> mapAggregate(Aggregate aggregate) {
+    static List<AggregationResult> mapAggregate(String key, Aggregate aggregate) {
         if (aggregate.isSterms()) {
             return aggregate.sterms().buckets().array().stream()
                     .map(b -> new AggregationResult()
@@ -63,6 +63,17 @@ class Aggregations {
         if (aggregate.isMissing()) {
             return List.of(new AggregationResult()
                     .value(String.valueOf(aggregate.missing().docCount())));
+        }
+        if (aggregate.isMax()) {
+            var v = aggregate.max().value();
+            String s = Double.isInfinite(v) ? null : String.valueOf(v);
+            return List.of(new AggregationResult().key(key).value(s).asString(aggregate.max().valueAsString()));
+        }
+        if (aggregate.isMin()) {
+            var v = aggregate.min().value();
+            String s = Double.isInfinite(v) ? null : String.valueOf(v);
+            return List.of(new AggregationResult().key(key).value(s).asString(aggregate.min().valueAsString()));
+            
         }
         return List.of();
     }

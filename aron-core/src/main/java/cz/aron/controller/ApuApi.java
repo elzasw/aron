@@ -33,13 +33,11 @@ import cz.aron.api.rest.AronApi;
 import cz.aron.api.rest.model.ApuEntity;
 import cz.aron.api.rest.model.ApuEntitySimplified;
 import cz.aron.api.rest.model.Params;
-import cz.aron.api.rest.model.Result;
 import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
 import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.QueryBuilder;
-import cz.aron.indexing.ResultBuilder;
 import cz.aron.indexing.SimpleResultBuilder;
 import cz.aron.mapper.ApuEntityMapper;
 import cz.aron.repository.ApuEntityRepository;
@@ -65,14 +63,12 @@ public class ApuApi implements AronApi {
 
     private final QueryBuilder queryBuilder;
 
-    private final ResultBuilder resultBuilder;
-
     private final SimpleResultBuilder simpleResultBuilder;
 
 	public ApuApi(ApuEntityRepository apuEntityRepository, ApuEntitySimpleRepository apuEntitySimpleRepository,
 			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
 			ApuEntityMapper apuEntityMapper, ElasticsearchOperations elasticsearchOperations,
-			QueryBuilder queryBuilder, ResultBuilder resultBuilder, SimpleResultBuilder simpleResultBuilder) {
+			QueryBuilder queryBuilder, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuEntitySimpleRepository = apuEntitySimpleRepository;
 		this.objectMapper = objectMapper;
@@ -80,7 +76,6 @@ public class ApuApi implements AronApi {
 		this.apuEntityMapper = apuEntityMapper;
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.queryBuilder = queryBuilder;
-		this.resultBuilder = resultBuilder;
 		this.simpleResultBuilder = simpleResultBuilder;
 	}
 
@@ -206,9 +201,20 @@ public class ApuApi implements AronApi {
     }
 
 	@Override
-	public ResponseEntity<Result> listView(@Valid Params params) {
-		// TODO: fetch ApuEntitySimplified by hit ids and pass to simpleResultBuilder
-		return null;
+	public ResponseEntity<SimpleResult> listView(@Valid Params params) {
+		var query = queryBuilder.build(params);
+		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var simplified = entities.stream().map(e -> {
+			var s = new ApuEntitySimplified();
+			s.setId(e.getUuid());
+			s.setName(e.getName());
+			s.setDescription(e.getDescription());
+			s.setOrder((long) e.getOrder());
+			return s;
+		}).collect(Collectors.toList());
+		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
 	}
 
 	@Override

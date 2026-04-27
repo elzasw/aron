@@ -356,17 +356,14 @@ components:
           type: string
         value:
           type: string
+        asString:
+          type: string
         aggregations:
           type: object
           additionalProperties:
             type: array
             items:
               $ref: '#/components/schemas/AggregationResult'
-#      discriminator:
-#        propertyName: type
-#        mapping:
-#          max: '#/components/schemas/MaxAggregation'
-#          sum: '#/components/schemas/SumAggregation'      
 
     Relation:
       required:

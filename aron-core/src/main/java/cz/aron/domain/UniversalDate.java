@@ -1,6 +1,14 @@
 package cz.aron.domain;
 
+import java.time.LocalDateTime;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class UniversalDate {
+	
+	private static final Logger log = LoggerFactory.getLogger(UniversalDate.class);
+	
     private String from;
 
     /**
@@ -77,6 +85,28 @@ public class UniversalDate {
 
 	public void setFormat(String format) {
 		this.format = format;
-	}    
+	}
+	
+    public static boolean isLower(String d1, String d2) {
+        try {
+            var i1 = LocalDateTime.parse(d1);
+            var i2 = LocalDateTime.parse(d2);
+            return i1.compareTo(i2) < 0;
+        } catch (NumberFormatException nfEx) {
+            log.error("Fail to parse date, d1={}, d2={}", d1, d2);
+        }
+        return false;
+    }
+
+    public static boolean isHigher(String d1, String d2) {
+        try {
+            var i1 = LocalDateTime.parse(d1);
+            var i2 = LocalDateTime.parse(d2);
+            return i1.compareTo(i2) > 0;
+        } catch (NumberFormatException nfEx) {
+            log.error("Fail to parse date, d1={}, d2={}", d1, d2);
+        }
+        return false;
+    }
     
 }

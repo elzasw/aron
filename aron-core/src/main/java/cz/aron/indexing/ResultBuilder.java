@@ -6,12 +6,13 @@ import java.util.stream.Collectors;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Component;
 
-import cz.aron.api.rest.model.Relation;
-import cz.aron.api.rest.model.Result;
+//import cz.aron.api.rest.model.Relation;
+//import cz.aron.api.rest.model.Result;
 
 @Component
 public class ResultBuilder {
 
+	/*
     public Result build(SearchHits<IndexedApu> hits) {
         var result = new Result();
         result.setCount(hits.getTotalHits());
@@ -31,4 +32,5 @@ public class ResultBuilder {
 
         return result;
     }
+    */
 }

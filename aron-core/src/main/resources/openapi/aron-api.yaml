@@ -56,8 +56,8 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: 'search-api.yaml#/components/schemas/Result'
-                
+                $ref: 'search-api.yaml#/components/schemas/SimpleResult'
+
   /apu/listsimple:
     post:
       tags:
@@ -73,7 +73,7 @@ paths:
         '200':
           description: default response
           content:
-            '*/*':
+            'application/json':
               schema:
                 $ref: 'search-api.yaml#/components/schemas/SimpleResult'
                 

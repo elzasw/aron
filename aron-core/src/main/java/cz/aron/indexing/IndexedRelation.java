@@ -30,6 +30,45 @@ public class IndexedRelation {
 		this.label = label;
 		this.idLabel = idLabel;
 	}
-    
-    
+
+	public String getTargetId() {
+		return targetId;
+	}
+
+	public void setTargetId(String targetId) {
+		this.targetId = targetId;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public List<String> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<String> groups) {
+		this.groups = groups;
+	}
+
+	public String getLabel() {
+		return label;
+	}
+
+	public void setLabel(String label) {
+		this.label = label;
+	}
+
+	public String getIdLabel() {
+		return idLabel;
+	}
+
+	public void setIdLabel(String idLabel) {
+		this.idLabel = idLabel;
+	}
+
 }

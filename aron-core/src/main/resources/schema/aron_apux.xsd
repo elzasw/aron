@@ -64,6 +64,11 @@
 					<xs:documentation>Volitelný popis APU, zobrazí se ve výsledcích vyhledávání nebo v tooltipu.</xs:documentation>
 				</xs:annotation>
 			</xs:element>
+			<xs:element name="result" type="s1:LongString" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Strukturovany vysledek vyhledavani APU.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
 			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="prts" type="s1:Parts" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="prnt" type="s1:Uuid" minOccurs="0" maxOccurs="1">
@@ -73,6 +78,11 @@
 			</xs:element>
 			<xs:element name="attchs" type="s1:Attachment" minOccurs="0" maxOccurs="unbounded"/>
 			<xs:element name="daos" type="s1:Daos" minOccurs="0" maxOccurs="1"/>
+			<xs:element name="indexed" type="xs:boolean" minOccurs="0" maxOccurs="1">
+				<xs:annotation>
+					<xs:documentation>Priznak jestil je APU indexovane, </xs:documentation>
+				</xs:annotation>
+			</xs:element>
 		</xs:sequence>
 		<xs:attribute name="type" use="required" type="s1:ApuType"/>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid"/>
@@ -112,6 +122,7 @@
 			<xs:element name="name" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="prmLnk" type="s1:LongString" minOccurs="0" maxOccurs="1"/>
 			<xs:element name="bndl" type="s1:DaoBundle" minOccurs="1" maxOccurs="unbounded"/>
+			<xs:element name="license" type="s1:String250" minOccurs="0" maxOccurs="1"/>
 		</xs:sequence>
 		<xs:attribute name="uuid" use="required" type="s1:Uuid">
 			<xs:annotation>
@@ -240,9 +251,13 @@
 		<xs:attributeGroup ref="s1:ItemAttrGroup"/>
 	</xs:complexType>
 	<xs:complexType name="ItemRef">
+		<xs:annotation>
+			<xs:documentation>Odkaz na APU. Name prenaseno atributem kvuli zpetne kompatibilite</xs:documentation>
+		</xs:annotation>
 		<xs:simpleContent>
 			<xs:extension base="s1:Uuid">
 				<xs:attributeGroup ref="s1:ItemAttrGroup"/>
+				<xs:attribute name="name" use="optional" type="s1:LongString"/>
 			</xs:extension>
 		</xs:simpleContent>
 	</xs:complexType>

@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,21 +74,10 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 		//var dq = new Query();
 		//operations.delete(iq, IndexedApu.class);								
 		//query.		
-		//operations.delete(null, IndexedApu.class);
-		
+		//operations.delete(null, IndexedApu.class);		
 	}
 	
 	public void createIndexes() {								
-	}
-
-	public void indexApu(ApuEntity apu) {		
-		var document = convert(apu);		
-		var iq = new IndexQuery();
-		iq.setId(apu.getUuid());
-		iq.setObject(document);
-		iq.setOpType(OpType.INDEX);
-		iq.setSource("source");		
-		operations.index(iq, IndexCoordinates.of("apu"));		
 	}
 	
 	public void indexApus(Collection<ApuEntity> apus) {
@@ -140,15 +130,22 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
                         break;
                     case UNITDATE:
                         try {
-                            UniversalDate universalDate = objectMapper.readValue(value, UniversalDate.class);
-                            data = universalDate.getFrom();   //todo other subfields and where to? also create date object?                                                                                    
-                            int fromYear = Integer.parseInt(universalDate.getFrom());
-                            int toYear = Integer.parseInt(universalDate.getTo());                            
+                            UniversalDate universalDate = objectMapper.readValue(value, UniversalDate.class);                                                                                    
+                            var fromYear = universalDate.getFrom();
+                            var toYear = universalDate.getTo();                            
                             //var range = Range.<Integer>closed(fromYear, toYear);                            
-                            var r = new LinkedHashMap<String,Integer>();
+                            var r = new LinkedHashMap<String,String>();
                             r.put("gte", fromYear);
-                            r.put("lte", toYear);                            
-                            additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~MACHINE", k -> new ArrayList<>()).add(r);
+                            r.put("lte", toYear);
+                            data = r;                            
+                            var origL = additionalDataToIndex.get(itemType.getCode() + "~L");
+                            if (origL == null||UniversalDate.isLower(fromYear,(String)origL.get(0))) {
+                                additionalDataToIndex.put(itemType.getCode() + "~L", Collections.singletonList(fromYear));                                
+                            }                            
+                            var origH = additionalDataToIndex.get(itemType.getCode() + "~H");
+                            if (origH == null||UniversalDate.isHigher(toYear,(String)origH.get(0))) {
+                                additionalDataToIndex.put(itemType.getCode() + "~H", Collections.singletonList(toYear));
+                            }
                         } catch (JsonProcessingException e) {
                             throw new RuntimeException(e);
                         }
@@ -174,7 +171,6 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 		indexedApu.setIncomingRelTypeGroups(null);
 		indexedApu.setIncomingRelTypes(null);
 		indexedApu.setName(apu.getName());
-		indexedApu.setRels(null);
 		indexedApu.setType(apu.getType().toString());				
 		var doc = converter.mapObject(indexedApu);
 		doc.putAll(additionalDataToIndex);
@@ -232,7 +228,7 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
                     dataType = "keyword";
                     break;
                 case UNITDATE:
-                    dataType = "date";                	
+                    dataType = "date_range";                	
                     break;
                 case LINK:
                     dataType = "keyword";
@@ -250,11 +246,23 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
                 labelFieldProperties.put("type", "text");
                 customMapping.put(allItemType.getCode() + "~LABEL", labelFieldProperties);
                 customMapping.put(allItemType.getCode() + "~ID~LABEL", fieldProperties);
-            } else if (allItemType.getType() == DataType.UNITDATE) {
+            }
+            /*
+            else if (allItemType.getType() == DataType.UNITDATE) {
             	Map<String, Object> machineDateProperties = new HashMap<>();
             	machineDateProperties.put("type", "integer_range");
             	customMapping.put(allItemType.getCode() + "~MACHINE", machineDateProperties);
+            }*/
+            else if (allItemType.getType() == DataType.UNITDATE) {
+                var lowProperties = new HashMap<String,Object>();
+                lowProperties.put("type", "date");
+                customMapping.put(allItemType.getCode() + "~L", lowProperties);
+                var highProperties = new HashMap<String,Object>();
+                highProperties.put("type", "date");
+                customMapping.put(allItemType.getCode() + "~H", highProperties);
             }
+            
+            
         }
         return customMapping;
     }

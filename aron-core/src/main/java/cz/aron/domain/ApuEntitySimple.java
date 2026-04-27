@@ -9,6 +9,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -22,10 +23,12 @@ import jakarta.persistence.Table;
 public class ApuEntitySimple {
 	
 	@Id
+	@Column(name="apu_id")
 	private long id;
 	private String uuid;
     private String name;
     private String description;
+    @Column(name = "ordr")
     private int order;
 
     @OneToMany(mappedBy = "apu", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)

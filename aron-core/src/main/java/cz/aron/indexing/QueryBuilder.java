@@ -185,12 +185,14 @@ public class QueryBuilder {
 
     private Aggregation toAggregation(cz.aron.api.rest.model.Aggregation agg) {
         if (agg instanceof MaxAggregator max && max.getField() != null) {
-            String field = max.getField().toString();
-            return Aggregation.of(a -> a.max(m -> m.field(field)));
+            var field = max.getField().toString();
+            var format = max.getFormat().toString();
+            return Aggregation.of(a -> a.max(m -> m.field(field).format(format)));
         }
         if (agg instanceof MinAggregator min && min.getField() != null) {
-            String field = min.getField().toString();
-            return Aggregation.of(a -> a.min(m -> m.field(field)));
+            var field = min.getField().toString();
+            var format = min.getFormat().toString();
+            return Aggregation.of(a -> a.min(m -> m.field(field).format(format)));
         }
         if (!(agg instanceof BucketAggregation bucket) || bucket.getAggregator() == null) {
             return null;

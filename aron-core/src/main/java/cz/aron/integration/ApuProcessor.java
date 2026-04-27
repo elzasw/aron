@@ -49,6 +49,7 @@ import cz.aron.repository.ApuSourceRepository;
 import cz.aron.repository.DaoRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuRequestQueue;
+import cz.aron.service.ApuService;
 import jakarta.persistence.EntityManager;
 
 @Service
@@ -66,6 +67,7 @@ public class ApuProcessor {
 	private final ObjectMapper objectMapper;
 	private final EntityManager entityManager;
 	private final IndexingService indexingService;
+	private final ApuService apuService;
 
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
@@ -81,7 +83,7 @@ public class ApuProcessor {
 	private ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
 			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
 			TypesHolder typesHolder, FileInputProcessor fileInputProcessor, ObjectMapper objectMapper,
-			EntityManager entityManager, IndexingService indexingService) {
+			EntityManager entityManager, IndexingService indexingService, ApuService apuService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.apuEntityRepository = apuEntityRepository;
 		this.daoRepository = daoRepository;
@@ -92,6 +94,7 @@ public class ApuProcessor {
 		this.objectMapper = objectMapper;
 		this.entityManager = entityManager;
 		this.indexingService = indexingService;
+		this.apuService = apuService;
 	}
 
 	public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
@@ -383,6 +386,7 @@ public class ApuProcessor {
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
 		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
 		// clear for next batch		
+		apuService.fillTargetLabelsToApuRefs(saveCache.values());
 		indexingService.indexApus(saveCache.values());		
 		saveCache.clear();
 
