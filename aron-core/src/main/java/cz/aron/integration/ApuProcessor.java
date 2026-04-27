@@ -168,6 +168,7 @@ public class ApuProcessor {
 		var apuIdsToDelete = new ArrayList<>(topToBottomIds);
 		Collections.reverse(apuIdsToDelete);
 		apuEntityRepository.deleteAllById(apuIdsToDelete);
+		apuEntityRepository.flush();
 		log.debug("Processing apu source {}, original data deleted", uuid);
 		entityManager.clear();
 	}
