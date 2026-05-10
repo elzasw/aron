@@ -25,6 +25,7 @@ public class TypesHolder {
     private Map<String, List<String>> itemTypeToItemGroupMap = new LinkedHashMap<>();
 
     private Long currentConfigCrc;
+    private Long currentIndexedFieldsCrc;
     
     public TypesHolder(TypesLoader typesLoader) {
     	this.typesLoader = typesLoader;
@@ -48,6 +49,7 @@ public class TypesHolder {
             }
         }
         currentConfigCrc = typesConfigDto.getCurrentCrc();
+        currentIndexedFieldsCrc = typesConfigDto.getIndexedFieldsCrc();
     }
 
     public Collection<ApuPartType> getAllApuPartTypes() {
@@ -86,8 +88,8 @@ public class TypesHolder {
 		return currentConfigCrc;
 	}
 
-	public void setCurrentConfigCrc(Long currentConfigCrc) {
-		this.currentConfigCrc = currentConfigCrc;
+	public Long getCurrentIndexedFieldsCrc() {
+		return currentIndexedFieldsCrc;
 	}
     
 }

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -31,8 +32,8 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	//@EntityGraph(attributePaths = {"parts.items"})
 	List<ApuEntity> findAllByIdIn(@Param("ids") Collection<Long> ids);
 	
-	@Query("SELECT ae.id FROM ApuEntity ae")
-	List<Long> findAllIds();
+	@Query("SELECT ae.id FROM ApuEntity ae WHERE ae.id>:after ORDER BY ae.id asc LIMIT :numItems")
+	List<Long> findIds(@Param("after") long after, @Param("numItems") long numItems);
 	
 	@Query(name="entityTree", nativeQuery=true)
 	List<ApuEntityViewType> findAllByParentUuid(@Param("uuid") String uuid);

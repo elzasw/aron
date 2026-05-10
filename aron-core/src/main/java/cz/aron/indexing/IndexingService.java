@@ -17,35 +17,29 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Range;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.convert.NumberRangePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery.OpType;
-import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
-import cz.aron.apux._2020.Apu;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.ApuPart;
 import cz.aron.domain.ApuPartItem;
 import cz.aron.domain.DataType;
-import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
 
 @Service
-public class IndexingService implements ApplicationListener<ApplicationReadyEvent> {
+public class IndexingService {
 	
 	private static final Logger log = LoggerFactory.getLogger(IndexingService.class);
 
@@ -75,9 +69,6 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 		//operations.delete(iq, IndexedApu.class);								
 		//query.		
 		//operations.delete(null, IndexedApu.class);		
-	}
-	
-	public void createIndexes() {								
 	}
 	
 	public void indexApus(Collection<ApuEntity> apus) {
@@ -186,26 +177,24 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 		doc.putAll(additionalDataToIndex);
 		return doc;
 	}
-
-	@Override
-	public void onApplicationEvent(ApplicationReadyEvent event) {		
-		operations.indexOps(IndexCoordinates.of("apu")).delete();		
-		if (!operations.indexOps(IndexCoordinates.of("apu")).exists()) {									
+	
+	public void createIndexes() {
+		if (!operations.indexOps(IndexCoordinates.of("apu")).exists()) {
 			Settings settings;
 			try {
-				settings =Settings.parse(settingsResource.getContentAsString(StandardCharsets.UTF_8));
+				settings = Settings.parse(settingsResource.getContentAsString(StandardCharsets.UTF_8));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
-	        var mapping = operations.indexOps(IndexCoordinates.of("apu")).createMapping(IndexedApu.class);
-			var props = (Map<String,Object>) mapping.get("properties");
-			props.putAll(createCustomMapping());							        			
+			var mapping = operations.indexOps(IndexCoordinates.of("apu")).createMapping(IndexedApu.class);
+			var props = (Map<String, Object>) mapping.get("properties");
+			props.putAll(createCustomMapping());
 			operations.indexOps(IndexCoordinates.of("apu")).create(settings, mapping);
-			
-			// reindex
-			
-			
 		}
+	}
+	
+	public void dropIndexes() {
+		operations.indexOps(IndexCoordinates.of("apu")).delete();	
 	}
 	
     private Map<String, Object> createCustomMapping() {

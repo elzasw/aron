@@ -10,6 +10,7 @@ public class TypesConfigDto {
     private List<ItemTypeGroup> itemGroups = new ArrayList<>();
 
     private Long currentCrc;
+    private Long indexedFieldsCrc;
     
     public List<ApuPartType> getPartTypes() {
     	return partTypes;
@@ -45,6 +46,14 @@ public class TypesConfigDto {
 
 	public void setCurrentCrc(Long currentCrc) {
 		this.currentCrc = currentCrc;
+	}
+
+	public Long getIndexedFieldsCrc() {
+		return indexedFieldsCrc;
+	}
+
+	public void setIndexedFieldsCrc(Long indexedFieldsCrc) {
+		this.indexedFieldsCrc = indexedFieldsCrc;
 	}
 
 	public void setPartTypes(List<ApuPartType> partTypes) {

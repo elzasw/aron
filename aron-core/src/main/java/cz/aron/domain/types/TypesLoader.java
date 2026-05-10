@@ -2,6 +2,7 @@ package cz.aron.domain.types;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -93,6 +94,19 @@ public class TypesLoader {
                     itemType.setIndexed(false);
                 }
             }
+            List<String> indexedFields = new ArrayList<>();
+            for (ItemType itemType : typesConfigDto.getItemTypes()) {
+                if (itemType.isIndexed()) {
+                    indexedFields.add(itemType.getCode() + itemType.getType().name());
+                }
+            }
+            Collections.sort(indexedFields);
+            var indexedFieldsCrc = new CRC32();
+            for (String s : indexedFields) {
+                indexedFieldsCrc.update(s.getBytes(StandardCharsets.UTF_8));
+            }
+            typesConfigDto.setIndexedFieldsCrc(indexedFieldsCrc.getValue());
+
             for (ItemTypeGroup itemTypeGroup : typesConfigDto.getItemGroups()) {
                 itemTypeGroup.setCode(itemTypeGroup.getCode().replace("_", "~"));
                 List<String> modifiedItems = new ArrayList<>();
