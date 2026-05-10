@@ -174,14 +174,15 @@ components:
       discriminator:
         propertyName: aggregator
         mapping:
-          TERMS: "#/components/schemas/BucketAggregation"
-          NESTED: "#/components/schemas/BucketAggregation"
-          FILTER: "#/components/schemas/BucketAggregation"
+          TERMS: "#/components/schemas/TermsAggregation"
+          NESTED: "#/components/schemas/NestedAggregation"
+          FILTER: "#/components/schemas/FilterAggregation"
+#          FILTERS: "#/components/schemas/FiltersAggregation"
           MISSING: "#/components/schemas/BucketAggregation"
           RANGE: "#/components/schemas/BucketAggregation"
           DATE_RANGE: "#/components/schemas/BucketAggregation"
-          MAX: "#/components/schemas/MaxAggregator"
-          MIN: "#/components/schemas/MinAggregator"
+          MAX: "#/components/schemas/MaxAggregation"
+          MIN: "#/components/schemas/MinAggregation"
       properties:
         type:
           type: string
@@ -227,7 +228,7 @@ components:
           items:
             $ref: "#/components/schemas/Aggregation"
 
-    TermsAggregator:
+    TermsAggregation:
       description: Terms aggregator
       type: object
       allOf:
@@ -238,7 +239,7 @@ components:
         field:
           type: string
 
-    NestedAggregator:
+    NestedAggregation:
       description: Nested aggregator
       type: object
       allOf:
@@ -246,10 +247,10 @@ components:
       properties:
         name:
           type: string
-        field:
-          path: string
+        path:
+          type: string
     
-    FilterAggregator:
+    FilterAggregation:
       description: Filter aggregator
       type: object
       allOf:
@@ -258,7 +259,29 @@ components:
         name:
           type: string
         filter:
-          path: string
+          $ref: "#/components/schemas/Filter"
+
+    NamedFilter:
+      description: Filter aggregator
+      type: object
+      properties:
+        name:
+          type: string
+        filter:
+          $ref: "#/components/schemas/Filter"
+
+    FiltersAggregation:
+      description: Filter aggregator
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/BucketAggregation"
+      properties:
+        name:
+          type: string
+        filters:
+          type: array
+          items:
+            $ref: "#/components/schemas/NamedFilter"
 
     MetricAggregator:
       description: Metric aggregator
@@ -281,7 +304,7 @@ components:
           items:
             $ref: "#/components/schemas/Aggregation"
             
-    MaxAggregator:
+    MaxAggregation:
       description: Filter aggregator
       type: object
       allOf:
@@ -294,7 +317,7 @@ components:
         format:
           path: string
 
-    MinAggregator:
+    MinAggregation:
       description: Filter aggregator
       type: object
       allOf:
@@ -307,7 +330,7 @@ components:
         format:
           path: string
 
-    CardinalityAggregator:
+    CardinalityAggregation:
       description: Filter aggregator
       type: object
       allOf:

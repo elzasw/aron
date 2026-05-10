@@ -24,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,16 +31,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.aron.api.rest.AronApi;
 import cz.aron.api.rest.model.ApuEntity;
 import cz.aron.api.rest.model.ApuEntitySimplified;
+import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.rest.model.Params;
 import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
-import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.QueryBuilder;
 import cz.aron.indexing.SimpleResultBuilder;
 import cz.aron.mapper.ApuEntityMapper;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.ApuEntitySimpleRepository;
+import cz.aron.service.ApuService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -52,6 +52,8 @@ public class ApuApi implements AronApi {
 	private final ApuEntityRepository apuEntityRepository;
 	
 	private final ApuEntitySimpleRepository apuEntitySimpleRepository;
+	
+	private final ApuService apuService;
 
     private final ObjectMapper objectMapper;
 
@@ -66,11 +68,13 @@ public class ApuApi implements AronApi {
     private final SimpleResultBuilder simpleResultBuilder;
 
 	public ApuApi(ApuEntityRepository apuEntityRepository, ApuEntitySimpleRepository apuEntitySimpleRepository,
+			ApuService apuService,
 			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
 			ApuEntityMapper apuEntityMapper, ElasticsearchOperations elasticsearchOperations,
 			QueryBuilder queryBuilder, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuEntitySimpleRepository = apuEntitySimpleRepository;
+		this.apuService = apuService;
 		this.objectMapper = objectMapper;
 		this.treeCache = treeCache;
 		this.apuEntityMapper = apuEntityMapper;
@@ -192,14 +196,6 @@ public class ApuApi implements AronApi {
     }
 */
 
-    //@PostMapping(value = "/views")
-    public List<ApuEntityView> getViews(@RequestBody List<String> ids) {
-    	if (ids.size()>100) {
-    		throw new IllegalArgumentException();
-    	}
-    	return apuEntityRepository.findAllByUuids(ids);
-    }
-
 	@Override
 	public ResponseEntity<SimpleResult> listView(@Valid Params params) {
 		var query = queryBuilder.build(params);
@@ -218,6 +214,26 @@ public class ApuApi implements AronApi {
 	}
 
 	@Override
+	public ResponseEntity<List<cz.aron.api.rest.model.ApuEntityView>> getViews(List<String> ids) {		
+		if (ids.size()>100) {
+			throw new IllegalArgumentException("Too big, max 100 ids");
+		}
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .contentType(MediaType.APPLICATION_JSON)
+		.body(apuService.findAllByUuids(ids));
+	}
+
+	@Override
+	public ResponseEntity<cz.aron.api.rest.model.ApuEntityView> getView(String id) {
+		// TODO check error
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .contentType(MediaType.APPLICATION_JSON)
+		.body(apuService.findAllByUuids(List.of(id)).get(0));
+	}
+
+	@Override
 	public ResponseEntity<SimpleResult> listSimple(@Valid Params params) {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
@@ -232,6 +248,43 @@ public class ApuApi implements AronApi {
 			return s;
 		}).collect(Collectors.toList());
 		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+	}
+
+	@Override
+	public ResponseEntity<SimpleResult> callList(@Valid Params params) {
+		var query = queryBuilder.build(params);
+		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var simplified = entities.stream().map(e -> {
+			var s = new ApuEntitySimplified();
+			s.setId(e.getUuid());
+			s.setName(e.getName());
+			s.setDescription(e.getDescription());
+			s.setOrder((long) e.getOrder());
+			return s;
+		}).collect(Collectors.toList());
+		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+	}
+	
+	@Override
+	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(String id, String direction) {
+		List<ApuEntityTreeViewDto> body = null;
+		switch (direction) {
+		case "before":
+			body = apuService.getEntitiesBefore(id);
+			break;
+		case "after":
+			body = apuService.getEntitiesAfter(id);
+			break;
+		case "under":
+			body = apuService.getEntitiesUnder(id);
+			break;
+		default:
+			throw new RuntimeException();
+		}
+		return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+				.contentType(MediaType.APPLICATION_JSON).body(body);
 	}
 
 	@Override

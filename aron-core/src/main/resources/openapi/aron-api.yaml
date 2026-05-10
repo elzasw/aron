@@ -19,7 +19,7 @@ paths:
         "200":
           description: Success
 
-  '/apu/{id}':
+  '/apu/{id}/entity':
     get:
       tags:
         - Aron
@@ -76,7 +76,100 @@ paths:
             'application/json':
               schema:
                 $ref: 'search-api.yaml#/components/schemas/SimpleResult'
-                
+
+  '/apu/views':
+    get:
+      tags:
+        - Aron
+      summary: Get views for given APU ids
+      operationId: getViews
+      parameters:
+        - name: ids
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: simple
+          explode: false
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApuEntityView'
+
+  '/apu/{id}/view':
+    get:
+      tags:
+        - Aron
+      summary: Get view for given APU id
+      operationId: getView
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApuEntityView'
+
+  '/apu/{id}/related/{direction}':
+    get:
+      tags:
+        - Aron
+      summary: Get related nodes for given APU in specified direction
+      operationId: getRelatedNodes
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: direction
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApuEntityTreeViewDto'
+
+  /apu/list:
+    post:
+      tags:
+        - Aron
+      summary: List objects satisfying given params
+      operationId: list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'search-api.yaml#/components/schemas/Params'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            'application/json':
+              schema:
+                $ref: 'search-api.yaml#/components/schemas/SimpleResult'                
+
 components:
   schemas:                
     ApuEntity:
@@ -259,3 +352,47 @@ components:
           format: int32
         file:
           $ref: '#/components/schemas/DigitalObjectFile'
+    ApuEntityView:
+      required:
+        - id
+        - name
+        - order
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+          format: int32
+    ApuEntityTreeViewDto:
+      required:
+        - id
+        - name
+        - description        
+        - depth
+        - pos
+        - childCnt
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        depth:
+          type: integer
+          format: int32
+          nullable: false
+        pos:
+          type: integer
+          format: int32
+          nullable: false
+        childCnt:
+          type: integer
+          format: int32
+          nullable: false

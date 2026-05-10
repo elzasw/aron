@@ -58,6 +58,7 @@ class Aggregations {
             var na = aggregate.nested();
             return List.of(new AggregationResult()
                     .value(String.valueOf(na.docCount()))
+                    .key(key)
                     .aggregations(mapNative(na.aggregations())));
         }
         if (aggregate.isMissing()) {
@@ -75,6 +76,11 @@ class Aggregations {
             return List.of(new AggregationResult().key(key).value(s).asString(aggregate.min().valueAsString()));
             
         }
+		if (aggregate.isFilter()) {
+			var filter = aggregate.filter();
+			return List.of(new AggregationResult().key(key).value(String.valueOf(filter.docCount()))
+					.aggregations(mapNative(filter.aggregations())));
+		}
         return List.of();
     }
 }

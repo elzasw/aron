@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.dto.ApuEntityView;
@@ -42,6 +43,21 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<IdLabelDto> listByUuids(@Param("uuids") Collection<String> uuids);
 	
+	//public ApuEntityTreeViewDto(String id, String name, String description, Integer depth, Integer pos, Integer childCnt) {
 	
+	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId AND ae.pos>:pos ORDER BY ae.pos asc LIMIT :maxItems ")
+	List<ApuEntityTreeViewDto> listEntitiesAfter(@Param("parentId") long parentId, @Param("pos") int pos, @Param("maxItems") int maxItems);
 
+	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.source.id=:apuSourceId AND ae.parent IS NULL AND ae.pos>:pos ORDER BY ae.pos asc LIMIT :maxItems")
+	List<ApuEntityTreeViewDto> listRootEntitiesAfter(@Param("apuSourceId") long apuSourceId, @Param("pos") int pos, @Param("maxItems") int maxItems);
+
+	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId AND ae.pos<:pos ORDER BY ae.pos desc LIMIT :maxItems ")
+	List<ApuEntityTreeViewDto> listEntitiesBefore(@Param("parentId") long parentId, @Param("pos") int pos, @Param("maxItems") int maxItems);
+
+	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.source.id=:apuSourceId AND ae.parent IS NULL AND ae.pos<:pos ORDER BY ae.pos desc LIMIT :maxItems")
+	List<ApuEntityTreeViewDto> listRootEntitiesBefore(@Param("apuSourceId") long apuSourceId, @Param("pos") int pos, @Param("maxItems") int maxItems);
+
+	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId ORDER BY ae.pos asc LIMIT :maxItems ")
+	List<ApuEntityTreeViewDto> listEntitiesUnder(@Param("parentId") long parentId, @Param("maxItems") int maxItems);
+		
 }

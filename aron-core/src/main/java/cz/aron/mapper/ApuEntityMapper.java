@@ -23,6 +23,9 @@ public class ApuEntityMapper {
         dto.setOrder(src.getOrder());
         dto.setPublished(src.isPublished());
         dto.setType(toApuTypeEnum(src.getType()));
+        dto.setPos(src.getPos());
+        dto.setDepth(src.getDepth());
+        dto.setChildCnt(src.getChildCnt());
 
         if (src.getParent() != null) {
             dto.setParent(toRest(src.getParent()));

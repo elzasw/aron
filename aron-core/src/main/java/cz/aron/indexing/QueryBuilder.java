@@ -21,15 +21,18 @@ import cz.aron.api.rest.model.BucketAggregation;
 import cz.aron.api.rest.model.EqFilter;
 import cz.aron.api.rest.model.FieldSort;
 import cz.aron.api.rest.model.Filter;
+import cz.aron.api.rest.model.FilterAggregation;
 import cz.aron.api.rest.model.FullTextFieldFilter;
 import cz.aron.api.rest.model.FullTextFilter;
-import cz.aron.api.rest.model.MaxAggregator;
-import cz.aron.api.rest.model.MinAggregator;
+import cz.aron.api.rest.model.MaxAggregation;
+import cz.aron.api.rest.model.MinAggregation;
+import cz.aron.api.rest.model.NestedAggregation;
 import cz.aron.api.rest.model.OrFilter;
 import cz.aron.api.rest.model.Params;
 import cz.aron.api.rest.model.RangeFilter;
 import cz.aron.api.rest.model.ScoreSort;
 import cz.aron.api.rest.model.Sort;
+import cz.aron.api.rest.model.TermsAggregation;
 
 @Component
 public class QueryBuilder {
@@ -183,23 +186,39 @@ public class QueryBuilder {
     // Aggregations
     // -------------------------------------------------------------------------
 
-    private Aggregation toAggregation(cz.aron.api.rest.model.Aggregation agg) {
-        if (agg instanceof MaxAggregator max && max.getField() != null) {
+    private Aggregation toAggregation(cz.aron.api.rest.model.Aggregation agg) {    	
+        if (agg instanceof MaxAggregation max && max.getField() != null) {
             var field = max.getField().toString();
-            var format = max.getFormat().toString();
-            return Aggregation.of(a -> a.max(m -> m.field(field).format(format)));
+            var format = max.getFormat() != null ? max.getFormat().toString() : null;
+            return Aggregation.of(a -> a.max(m -> {
+                m.field(field);
+                if (format != null) m.format(format);
+                return m;
+            }));
         }
-        if (agg instanceof MinAggregator min && min.getField() != null) {
+        if (agg instanceof MinAggregation min && min.getField() != null) {
             var field = min.getField().toString();
-            var format = min.getFormat().toString();
-            return Aggregation.of(a -> a.min(m -> m.field(field).format(format)));
+            var format = min.getFormat() != null ? min.getFormat().toString() : null;
+            return Aggregation.of(a -> a.min(m -> {
+                m.field(field);
+                if (format != null) m.format(format);
+                return m;
+            }));
         }
         if (!(agg instanceof BucketAggregation bucket) || bucket.getAggregator() == null) {
             return null;
         }
-        String field = agg.getType();
-        Map<String, Aggregation> subAggs = collectSubAggregations(bucket.getAggregations());
-
+        Map<String, Aggregation> subAggs = collectSubAggregations(bucket.getAggregations());                
+       
+		return switch (bucket) {
+		case TermsAggregation term -> Aggregation.of(a -> a.terms(t -> t.field(term.getField())).aggregations(subAggs));
+		case NestedAggregation nested ->
+			Aggregation.of(a -> a.nested(t -> t.path(nested.getPath())).aggregations(subAggs));
+		case FilterAggregation filter -> Aggregation.of(a -> a.filter(toQuery(filter.getFilter())).aggregations(subAggs));
+		default -> null;
+		};
+        
+        /*
         return switch (bucket.getAggregator()) {
             case TERMS -> Aggregation.of(a -> a.terms(t -> t.field(field)).aggregations(subAggs));
             case NESTED -> Aggregation.of(a -> a.nested(n -> n.path(field)).aggregations(subAggs));
@@ -208,12 +227,15 @@ public class QueryBuilder {
             case RANGE -> Aggregation.of(a -> a.range(r -> r.field(field)).aggregations(subAggs));
             case DATE_RANGE -> Aggregation.of(a -> a.dateRange(dr -> dr.field(field)).aggregations(subAggs));
             default -> null;
-        };
+        };*/
     }
 
-    private String aggregationName(cz.aron.api.rest.model.Aggregation agg) {
-        if (agg instanceof MaxAggregator max && max.getName() != null) return max.getName();
-        if (agg instanceof MinAggregator min && min.getName() != null) return min.getName();
+    private String aggregationName(cz.aron.api.rest.model.Aggregation agg) {    	    	
+        if (agg instanceof MaxAggregation max && max.getName() != null) return max.getName();
+        if (agg instanceof MinAggregation min && min.getName() != null) return min.getName();
+        if (agg instanceof TermsAggregation terms && terms.getName() != null) return terms.getName();
+        if (agg instanceof NestedAggregation nested && nested.getName() != null) return nested.getName();
+        if (agg instanceof FilterAggregation filter && filter.getName() != null ) return filter.getName();
         return agg.getType();
     }
 

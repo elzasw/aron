@@ -73,7 +73,8 @@ public class ApuProcessor {
 																		// before child
 	private Set<RelationKey> relationsAddCache = new HashSet<>();	// set of relations to be added to database
 	private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
-	private Map<String, Long> apuIdsProcessed = new HashMap<>();     // ApuEntity.uuid to ApuEntity.id 
+	private Map<String, Long> apuIdsProcessed = new HashMap<>();     // ApuEntity.uuid to ApuEntity.id
+	private Map<String, LevelStats> apuIdsStates = new HashMap<>();
 	private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
 	private static final int CACHE_SIZE = 100;
@@ -98,6 +99,9 @@ public class ApuProcessor {
 	}
 
 	public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
+		
+		preprocess(apuSrcPath);
+		
 		try (ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
 			log.debug("Processing apu source {}", reader.getUuid());
 
@@ -172,12 +176,51 @@ public class ApuProcessor {
 		log.debug("Processing apu source {}, original data deleted", uuid);
 		entityManager.clear();
 	}
+	
+    private void preprocess(Path apuSrcPath) {
+    	var fictiveRoot = new LevelStats();
+    	fictiveRoot.depth = 0;
+    	fictiveRoot.pos = 0;
+    	boolean clearState = true;	
+    	try(ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
+    		log.debug("Processing first phase apu source {}", reader.getUuid());    		
+    		reader.process(apus->{
+    			for(var apu:apus) {
+    				var levelStats = new LevelStats();
+    				var parentId = apu.getPrnt();
+    				LevelStats parent;
+    				if (parentId!=null) {
+    					parent = apuIdsStates.get(parentId);
+    					if (parent==null) {
+    						log.error("Parent {} not exist", parentId);
+    						throw new RuntimeException("parent not exist"+parentId);
+    					}    					    				
+    				} else {
+    					parent = fictiveRoot;
+    				}
+    				parent.childCnt++;
+					levelStats.depth = parent.depth + 1;
+					levelStats.pos = parent.childCnt;    				
+    				apuIdsStates.put(apu.getUuid(), levelStats);
+    			}
+    		}, CACHE_SIZE);
+    		clearState = false;
+    	 } catch (Exception e) {
+             log.error("Fail to import apusource, preprocess phase ", e);
+             throw new RuntimeException(e);
+    	} finally {
+    		if (clearState) {
+    			clearInternalState();
+    		}
+    	}
+    }
 
 	private void clearInternalState() {
 		saveCache.clear();
 		relationsAddCache.clear();
 		apusToHaveIncomingRelsUpdated.clear();
 		apuIdsProcessed.clear();
+		apuIdsStates.clear();
 		existingDaos.clear();
 	}
 
@@ -196,23 +239,30 @@ public class ApuProcessor {
 	}
 
 	public void processApu(Apu apu, cz.aron.domain.ApuSource apuSource, Map<String, Path> filesMap) {
+		
+		var levelState = apuIdsStates.get(apu.getUuid());    	
+		
 		ApuEntity apuEntity = new ApuEntity();
 		apuEntity.setUuid(apu.getUuid());
 		apuEntity.setName(apu.getName());
 		apuEntity.setOrder(++apuOrderCounter);
 		apuEntity.setDescription(apu.getDesc());
+		apuEntity.setResult(apu.getResult());
 		apuEntity.setPermalink(apu.getPrmLnk());
-		apuEntity.setType(cz.aron.domain.ApuType.valueOf(apu.getType().name().toUpperCase())); // fixme names
-																											// don't
-																											// match
+		apuEntity.setType(cz.aron.domain.ApuType.valueOf(apu.getType().name().toUpperCase())); // fixme names don't match
+        apuEntity.setChildCnt(levelState.childCnt);
+        apuEntity.setPos(levelState.pos);
+        apuEntity.setDepth(levelState.depth);
+        apuEntity.setIndexed(apu.isIndexed()==null||Boolean.TRUE.equals(apu.isIndexed())); // defaultni hodnota je true
+		
 		if (apu.getPrnt() != null) {
 			ApuEntity parentApu = saveCache.get(apu.getPrnt());
 			if (parentApu == null) {
-				Long apuId = apuIdsProcessed.get(apu.getPrnt());
-				if (apuId == null) {
-					throw new RuntimeException("parent apu not found yet");
-				}
-				parentApu = apuEntityRepository.getReferenceById(apuId);
+            	var parentLevelStats =  apuIdsStates.get(apu.getPrnt());
+                if (parentLevelStats==null||!parentLevelStats.processed) {
+                    throw new RuntimeException("parent apu not found yet");
+                }
+                parentApu = apuEntityRepository.findByUuid(apu.getPrnt());
 			}
 			apuEntity.setParent(parentApu);
 		}
@@ -234,6 +284,7 @@ public class ApuProcessor {
 				apuEntity.getDigitalObjects().add(insertedDao);
 			}
 		}
+		levelState.processed = true;
 		saveCache.put(apuEntity.getUuid(), apuEntity);
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
 		recordRelations(apuEntity);
@@ -412,5 +463,13 @@ public class ApuProcessor {
 
 	record RelationKey(String source, String target, String relation) {
 	}
+	
+    private class LevelStats {
+    	private int depth;
+    	private int pos;
+    	private int childCnt = 0;
+    	private boolean processed = false;
+    }
+
 
 }

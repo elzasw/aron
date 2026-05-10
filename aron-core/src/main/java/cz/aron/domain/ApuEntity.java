@@ -71,12 +71,18 @@ public class ApuEntity {
 
 	private String name;
 	private String description;
+	private String result;
 	private String permalink;
 	
 	@Column(name = "ordr")
 	private int order;
 	
 	private boolean published;
+	
+    private int depth;
+    private int pos;
+    private int childCnt;
+    private boolean indexed;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@Fetch(FetchMode.SELECT)
@@ -138,6 +144,14 @@ public class ApuEntity {
 		this.description = description;
 	}
 
+	public String getResult() {
+		return result;
+	}
+
+	public void setResult(String result) {
+		this.result = result;
+	}
+
 	public String getPermalink() {
 		return permalink;
 	}
@@ -160,6 +174,38 @@ public class ApuEntity {
 
 	public void setPublished(boolean published) {
 		this.published = published;
+	}
+
+	public int getDepth() {
+		return depth;
+	}
+
+	public void setDepth(int depth) {
+		this.depth = depth;
+	}
+
+	public int getPos() {
+		return pos;
+	}
+
+	public void setPos(int pos) {
+		this.pos = pos;
+	}
+
+	public int getChildCnt() {
+		return childCnt;
+	}
+
+	public void setChildCnt(int childCnt) {
+		this.childCnt = childCnt;
+	}
+
+	public boolean isIndexed() {
+		return indexed;
+	}
+
+	public void setIndexed(boolean indexed) {
+		this.indexed = indexed;
 	}
 
 	public ApuSource getSource() {
