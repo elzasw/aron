@@ -73,7 +73,7 @@ public class ApuProcessor {
 																		// before child
 	private Set<RelationKey> relationsAddCache = new HashSet<>();	// set of relations to be added to database
 	private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
-	private Map<String, Long> apuIdsProcessed = new HashMap<>();     // ApuEntity.uuid to ApuEntity.id
+	private Map<String, Long> apuIdsProcessed2 = new HashMap<>();     // ApuEntity.uuid to ApuEntity.id
 	private Map<String, LevelStats> apuIdsStates = new HashMap<>();
 	private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
@@ -219,7 +219,6 @@ public class ApuProcessor {
 		saveCache.clear();
 		relationsAddCache.clear();
 		apusToHaveIncomingRelsUpdated.clear();
-		apuIdsProcessed.clear();
 		apuIdsStates.clear();
 		existingDaos.clear();
 	}
@@ -429,9 +428,8 @@ public class ApuProcessor {
 
 		// save apus (indexing uses relations table to index incoming relation type
 		// groups)
-		var saved = apuEntityRepository.saveAll(saveCache.values());
+		apuEntityRepository.saveAll(saveCache.values());
 		apuEntityRepository.flush();
-		saved.forEach(apu -> apuIdsProcessed.put(apu.getUuid(), apu.getId()));
 		
 		// Now to reindex all apus that reference these apus, to update labels in them
 		List<String> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());

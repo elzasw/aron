@@ -83,13 +83,15 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 	public void indexApus(Collection<ApuEntity> apus) {
 		var indexQueries = new ArrayList<IndexQuery>(apus.size());
 		for (var apu : apus) {
-			var document = convert(apu);
-			var iq = new IndexQuery();
-			iq.setId(apu.getUuid());
-			iq.setObject(document);
-			iq.setOpType(OpType.INDEX);
-			iq.setSource("source");
-			indexQueries.add(iq);
+			if (apu.isIndexed()) {
+				var document = convert(apu);
+				var iq = new IndexQuery();
+				iq.setId(apu.getUuid());
+				iq.setObject(document);
+				iq.setOpType(OpType.INDEX);
+				iq.setSource("source");
+				indexQueries.add(iq);
+			}
 		}
 		operations.bulkIndex(indexQueries, IndexCoordinates.of("apu"));
 	}
@@ -102,6 +104,8 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
         var apuSourceIdArr = new ArrayList<Object>();
         apuSourceIdArr.add(apu.getSource().getId());
         additionalDataToIndex.put("apuSourceId", apuSourceIdArr);
+        
+        String indexedName = apu.getName();
 		
         for (ApuPart part : apu.getParts()) {
             for (ApuPartItem item : part.getItems()) {
@@ -117,7 +121,13 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
                 Object data;
                 switch (itemType.getType()) {
                     case STRING:
-                        data = value;
+                    	if ("INT~NAME~INDEX".equals(item.getType())) {
+                    		// alternativni hodnota pro indexovani "name"
+                    		indexedName = value;
+                    		continue;
+                    	} else {
+                    		data = value;
+                    	}
                         break;
                     case ENUM:
                         data = value;
@@ -170,7 +180,7 @@ public class IndexingService implements ApplicationListener<ApplicationReadyEven
 		indexedApu.setDescription(apu.getDescription());
 		indexedApu.setIncomingRelTypeGroups(null);
 		indexedApu.setIncomingRelTypes(null);
-		indexedApu.setName(apu.getName());
+		indexedApu.setName(indexedName);
 		indexedApu.setType(apu.getType().toString());				
 		var doc = converter.mapObject(indexedApu);
 		doc.putAll(additionalDataToIndex);
