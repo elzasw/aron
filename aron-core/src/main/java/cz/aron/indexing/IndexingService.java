@@ -10,12 +10,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.core.io.Resource;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -34,6 +33,7 @@ import cz.aron.domain.ApuEntity;
 import cz.aron.domain.ApuPart;
 import cz.aron.domain.ApuPartItem;
 import cz.aron.domain.DataType;
+import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
@@ -85,6 +85,24 @@ public class IndexingService {
 			}
 		}
 		operations.bulkIndex(indexQueries, IndexCoordinates.of("apu"));
+	}
+	
+	public void indexRels(Collection<Relation> rels) {
+		var indexQueries = new ArrayList<IndexQuery>(rels.size());
+		for (var rel : rels) {
+			if (rel.isRemove()) {
+				continue;
+			}
+			var indexedRel = new IndexedRelation(rel.getSource(), rel.getRelation(), rel.getTarget());
+			var iq = new IndexQuery();
+			iq.setId(UUID.randomUUID().toString());
+			iq.setObject(indexedRel);
+			iq.setOpType(OpType.INDEX);
+			indexQueries.add(iq);
+		}
+		if (!indexQueries.isEmpty()) {
+			operations.bulkIndex(indexQueries, IndexCoordinates.of("rels"));
+		}
 	}
 
 	private Document convert(ApuEntity apu) {
@@ -160,7 +178,7 @@ public class IndexingService {
                 additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
                 if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
                     List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
-                    indexedApu.getRels().add(new IndexedRelation((String) data, item.getType(), itemTypeGroups, item.getTargetLabel(), data + "|" + item.getTargetLabel()));
+                    indexedApu.getRels().add(new IndexedApu.NestedRelation((String) data, item.getType(), itemTypeGroups, item.getTargetLabel(), data + "|" + item.getTargetLabel()));
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(item.getTargetLabel());
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + item.getTargetLabel());
                 }
@@ -191,10 +209,21 @@ public class IndexingService {
 			props.putAll(createCustomMapping());
 			operations.indexOps(IndexCoordinates.of("apu")).create(settings, mapping);
 		}
+		if (!operations.indexOps(IndexCoordinates.of("rels")).exists()) {
+			Settings settings;
+			try {
+				settings = Settings.parse(settingsResource.getContentAsString(StandardCharsets.UTF_8));
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+			var mapping = operations.indexOps(IndexCoordinates.of("rels")).createMapping(IndexedRelation.class);
+			operations.indexOps(IndexCoordinates.of("rels")).create(settings, mapping);
+		}
 	}
 	
 	public void dropIndexes() {
-		operations.indexOps(IndexCoordinates.of("apu")).delete();	
+		operations.indexOps(IndexCoordinates.of("apu")).delete();
+		operations.indexOps(IndexCoordinates.of("rels")).delete();
 	}
 	
     private Map<String, Object> createCustomMapping() {

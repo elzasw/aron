@@ -1,7 +1,5 @@
 package cz.aron.indexing;
 
-import java.util.List;
-
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
@@ -9,66 +7,46 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 public class IndexedRelation {
 	
     @Field(type = FieldType.Keyword)
-    private String targetId;
-    @Field(type = FieldType.Keyword)
-    private String type;
-    @Field(type = FieldType.Keyword)
-    private List<String> groups;
-    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING)
-    private String label;
-    @Field(type = FieldType.Keyword)
-    private String idLabel;
+    private String source;
 
-    public IndexedRelation() {
-    	
+    @Field(type = FieldType.Keyword)
+    private String relation;
+
+    @Field(type = FieldType.Keyword)
+    private String target;
+
+    public IndexedRelation() {    	
     }
 
-	public IndexedRelation(String targetId, String type, List<String> groups, String label, String idLabel) {
-		this.targetId = targetId;
-		this.type = type;
-		this.groups = groups;
-		this.label = label;
-		this.idLabel = idLabel;
+	public IndexedRelation(String source, String relation, String target) {
+		super();
+		this.source = source;
+		this.relation = relation;
+		this.target = target;
 	}
 
-	public String getTargetId() {
-		return targetId;
+	public String getSource() {
+		return source;
 	}
 
-	public void setTargetId(String targetId) {
-		this.targetId = targetId;
+	public void setSource(String source) {
+		this.source = source;
 	}
 
-	public String getType() {
-		return type;
+	public String getRelation() {
+		return relation;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setRelation(String relation) {
+		this.relation = relation;
 	}
 
-	public List<String> getGroups() {
-		return groups;
+	public String getTarget() {
+		return target;
 	}
 
-	public void setGroups(List<String> groups) {
-		this.groups = groups;
-	}
-
-	public String getLabel() {
-		return label;
-	}
-
-	public void setLabel(String label) {
-		this.label = label;
-	}
-
-	public String getIdLabel() {
-		return idLabel;
-	}
-
-	public void setIdLabel(String idLabel) {
-		this.idLabel = idLabel;
+	public void setTarget(String target) {
+		this.target = target;
 	}
 
 }
