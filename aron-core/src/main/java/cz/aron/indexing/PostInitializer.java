@@ -14,6 +14,7 @@ import com.google.common.collect.Iterables;
 
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.repository.ApuEntityRepository;
+import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuService;
 
 @Component
@@ -25,15 +26,19 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	
 	private final ApuEntityRepository apuEntityRepository;
 	
+	private final RelationRepository relationRepository;
+	
 	private final ApuService apuService;
 	
 	private final TypesHolder typesHolder;
 	
-	public PostInitializer(IndexingService indexingService, ApuEntityRepository apuEntityRepository, ApuService apuService, TypesHolder typesHolder) {
+	public PostInitializer(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
+			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository) {
 		this.indexingService = indexingService;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.typesHolder = typesHolder;
+		this.relationRepository = relationRepository;
 	}
 
 	@Override
@@ -73,6 +78,24 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 					if (!entities.isEmpty()) {
 						apuService.fillTargetLabelsToApuRefs(entities);
 						indexingService.indexApus(entities);
+					}
+				});
+				after = ids.getLast();
+			}
+		} while (!reindexed);
+
+		log.info("Reindexing Relations");
+		reindexed = false;
+		after = 0;
+		do {
+			var ids = relationRepository.findIds(after, 10000);
+			if (ids.isEmpty()) {
+				reindexed = true;
+			} else {
+				Iterables.partition(ids, 1000).forEach(partition -> {
+					var rels = relationRepository.findAllById(partition);
+					if (!rels.isEmpty()) {
+						indexingService.indexRels(rels);
 					}
 				});
 				after = ids.getLast();
