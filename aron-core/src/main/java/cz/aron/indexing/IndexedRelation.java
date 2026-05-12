@@ -1,9 +1,10 @@
 package cz.aron.indexing;
 
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 
-
+@Document(indexName = "rels")
 public class IndexedRelation {
 	
     @Field(type = FieldType.Keyword)

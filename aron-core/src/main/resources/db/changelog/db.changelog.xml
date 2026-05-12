@@ -38,7 +38,8 @@
             <column name="indexed" type="boolean"/>
             <column name="depth" type="int"/>
             <column name="pos" type="int"/>
-            <column name="child_cnt" type="int"/>            
+            <column name="child_cnt" type="int"/>
+            <column name="reindex" type="boolean"/>
         </createTable>
         <createTable tableName="apu_attachment">
             <column name="apu_attachment_id" type="${id}" autoIncrement="true">

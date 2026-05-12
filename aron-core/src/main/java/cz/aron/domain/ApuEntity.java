@@ -83,6 +83,7 @@ public class ApuEntity {
     private int pos;
     private int childCnt;
     private boolean indexed;
+    private boolean reindex;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@Fetch(FetchMode.SELECT)
@@ -270,6 +271,14 @@ public class ApuEntity {
 
 	public void setIncomingRelTypes(List<String> incomingRelTypes) {
 		this.incomingRelTypes = incomingRelTypes;
+	}
+
+	public boolean isReindex() {
+		return reindex;
+	}
+
+	public void setReindex(boolean reindex) {
+		this.reindex = reindex;
 	}
 
 }

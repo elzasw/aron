@@ -18,6 +18,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import cz.aron.api.rest.model.AndFilter;
 import cz.aron.api.rest.model.BucketAggregation;
+import cz.aron.api.rest.model.ContainsFilter;
 import cz.aron.api.rest.model.EqFilter;
 import cz.aron.api.rest.model.FieldSort;
 import cz.aron.api.rest.model.Filter;
@@ -150,6 +151,10 @@ public class QueryBuilder {
                 if (f.getLte() != null) t.lte(f.getLte());
                 return t;
             })));
+        }
+        if (filter instanceof ContainsFilter f) {
+            String pattern = "*" + f.getValue() + "*";
+            return Query.of(q -> q.wildcard(w -> w.field(f.getField()).value(pattern).caseInsensitive(true)));
         }
         throw new IllegalArgumentException("Unsupported filter type: " + filter.getClass().getSimpleName());
     }

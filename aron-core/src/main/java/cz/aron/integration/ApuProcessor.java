@@ -73,7 +73,6 @@ public class ApuProcessor {
 																		// before child
 	private Set<RelationKey> relationsAddCache = new HashSet<>();	// set of relations to be added to database
 	private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
-	private Map<String, Long> apuIdsProcessed2 = new HashMap<>();     // ApuEntity.uuid to ApuEntity.id
 	private Map<String, LevelStats> apuIdsStates = new HashMap<>();
 	private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
@@ -104,16 +103,12 @@ public class ApuProcessor {
 		
 		try (ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
 			log.debug("Processing apu source {}", reader.getUuid());
-
-			// read apusrc.xml as String to be stored to database
-			// String metadata = Files.readString(apuSrcPath, StandardCharsets.UTF_8);
-
 			var ourApuSource = apuSourceRepository.findByUuid(reader.getUuid());
 			if (ourApuSource == null) {
 				ourApuSource = new cz.aron.domain.ApuSource();
 				ourApuSource.setUuid(reader.getUuid());
 			} else {
-				removeExistingApus(ourApuSource.getId(), reader.getUuid());
+				removeExistingApusAndRelations(ourApuSource.getId(), reader.getUuid());
 			}
 			// ourApuSource.setData(metadata);
 			ourApuSource.setPublished(LocalDateTime.now());
@@ -140,15 +135,18 @@ public class ApuProcessor {
 		}
 	}
 
-	private void removeExistingApus(long apuSourceId, String uuid) {
+	private void removeExistingApusAndRelations(long apuSourceId, String uuid) {
+		
+		// remove from index
+		indexingService.deleteApus(apuSourceId);
 
 		// remove relations from Dao to ApuEntity
 		var numDisconnected = daoRepository.disconnectDaosByApuSourceId(apuSourceId);
 
 		// mark Relation to be removed when not used anymore
-		var numMarkedRelations = relationRepository.markToRemoveByApuSourceId(apuSourceId);
-		log.debug("Processing apu source {}, disconnect {} existing daos, mark {} relations to be potentially removed ", uuid,
-				numDisconnected, numMarkedRelations);
+		var numDeletedRelations = relationRepository.markToRemoveByApuSourceId(apuSourceId);
+		log.debug("Processing apu source {}, disconnect {} existing daos, delete {} relations", uuid,
+				numDisconnected, numDeletedRelations);
 		apuEntityRepository.flush();
 
 		// remove all ApuEntity from bottom to top to not breach referential integrity
@@ -174,9 +172,31 @@ public class ApuProcessor {
 		apuEntityRepository.deleteAllById(apuIdsToDelete);
 		apuEntityRepository.flush();
 		log.debug("Processing apu source {}, original data deleted", uuid);
-		entityManager.clear();
+		entityManager.clear();		
 	}
 	
+    /**
+     * First pass over the APU XML source: computes {@code depth} and {@code pos} for every APU
+     * and populates {@link #apuIdsStates} so that the main processing pass can assign these
+     * values without requiring a second database lookup.
+     *
+     * <p>The algorithm uses a fictive root node (depth&nbsp;0, pos&nbsp;0) as the anchor for
+     * top-level APUs. For each APU encountered:
+     * <ol>
+     *   <li>Resolves the parent via {@link #apuIdsStates} (throws if the parent UUID is unknown,
+     *       which would indicate an ordering violation in the source file).</li>
+     *   <li>Increments the parent's {@code childCnt} and derives
+     *       {@code depth = parent.depth + 1} and {@code pos = parent.childCnt}.</li>
+     *   <li>Stores the resulting {@link LevelStats} in {@link #apuIdsStates} keyed by the APU UUID.</li>
+     * </ol>
+     *
+     * <p>On failure the internal state is cleared via {@link #clearInternalState()} so that a
+     * subsequent import attempt starts clean.
+     *
+     * @param apuSrcPath path to the APU XML source file
+     * @throws RuntimeException if a referenced parent UUID is not present in the source file,
+     *                          or if the XML cannot be read
+     */
     private void preprocess(Path apuSrcPath) {
     	var fictiveRoot = new LevelStats();
     	fictiveRoot.depth = 0;
@@ -253,6 +273,7 @@ public class ApuProcessor {
         apuEntity.setPos(levelState.pos);
         apuEntity.setDepth(levelState.depth);
         apuEntity.setIndexed(apu.isIndexed()==null||Boolean.TRUE.equals(apu.isIndexed())); // defaultni hodnota je true
+        apuEntity.setReindex(false);
 		
 		if (apu.getPrnt() != null) {
 			ApuEntity parentApu = saveCache.get(apu.getPrnt());
@@ -398,19 +419,17 @@ public class ApuProcessor {
 		}
 	}
 
-	private void flush(cz.aron.domain.ApuSource apuSource) {		
+	private void flush(cz.aron.domain.ApuSource apuSource) {
 		// restore existing relations and store new
-		var sources = relationsAddCache.stream().map(r -> r.source()).collect(Collectors.toList());
+		var sources = relationsAddCache.stream().map(r -> r.source()).collect(Collectors.toSet());
 		var existingRelations = relationRepository.findAllByApuSourceIdAndSourceIn(apuSource.getId(), sources);
 		for (var existingRelation : existingRelations) {
 			if (relationsAddCache.remove(new RelationKey(existingRelation.getSource(), existingRelation.getTarget(),
 					existingRelation.getRelation()))) {
-				// relation exist, remove delete mark
-				existingRelation.setRemove(false);
-			} else {
-				// relation not exist anymore, delete it
-				relationRepository.delete(existingRelation);
+				// remove "remove mark" for existing relation
+				existingRelation.setRemove(false);				
 			}
+			// reindex target
 			apusToHaveIncomingRelsUpdated.add(existingRelation.getTarget());
 		}
 		// remaining relations are new
@@ -439,9 +458,15 @@ public class ApuProcessor {
 		apuService.fillTargetLabelsToApuRefs(saveCache.values());
 		indexingService.indexApus(saveCache.values());		
 		saveCache.clear();
-
-		// reindex incoming relations on target apus
-		// apuRepository.reindex(new ArrayList<>(apusToHaveIncomingRelsUpdated));
+		
+		var relatedIncomingEntities = apuEntityRepository.findAllByIdIn(apuIdsTargetingUpdatedIds);
+		apuService.fillTargetLabelsToApuRefs(relatedIncomingEntities);
+		indexingService.indexApus(relatedIncomingEntities);
+		
+		var relatedEntities = apuEntityRepository.findAllByUuidIn(apusToHaveIncomingRelsUpdated);
+		apuService.fillTargetLabelsToApuRefs(relatedEntities);
+		indexingService.indexApus(relatedEntities);
+		
 		apusToHaveIncomingRelsUpdated.clear();
 		entityManager.clear();
 	}

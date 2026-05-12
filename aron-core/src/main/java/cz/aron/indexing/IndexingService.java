@@ -21,7 +21,9 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery.OpType;
 import org.springframework.stereotype.Service;
@@ -62,15 +64,13 @@ public class IndexingService {
 		this.settingsResource = settingsResource;
 	}
 	
-	public void deleteApus(long apuSourceId) {
-		
-		var query = new BaseQuery();
-		//var dq = new Query();
-		//operations.delete(iq, IndexedApu.class);								
-		//query.		
-		//operations.delete(null, IndexedApu.class);		
+	public void deleteApus(long apuSourceId) {		
+		var criteria = new Criteria("apuSourceId.keyword").is(apuSourceId);
+	    var query = new CriteriaQuery(criteria);
+	    DeleteQuery deleteQuery = DeleteQuery.builder(query).build();
+	    operations.delete(deleteQuery, IndexedApu.class);			
 	}
-	
+
 	public void indexApus(Collection<ApuEntity> apus) {
 		var indexQueries = new ArrayList<IndexQuery>(apus.size());
 		for (var apu : apus) {
@@ -84,7 +84,9 @@ public class IndexingService {
 				indexQueries.add(iq);
 			}
 		}
-		operations.bulkIndex(indexQueries, IndexCoordinates.of("apu"));
+		if (!indexQueries.isEmpty()) {
+			operations.bulkIndex(indexQueries, IndexCoordinates.of("apu"));
+		}
 	}
 	
 	public void indexRels(Collection<Relation> rels) {

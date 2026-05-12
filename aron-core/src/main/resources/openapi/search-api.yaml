@@ -64,6 +64,7 @@ components:
           FTX: "#/components/schemas/FullTextFilter"
           FTXF: "#/components/schemas/FullTextFieldFilter"
           RANGE: "#/components/schemas/RangeFilter"
+          CONTAINS: "#/components/schemas/ContainsFilter"          
       properties:
         operaton:
           type: string
@@ -79,7 +80,7 @@ components:
             items:
               $ref: "#/components/schemas/Filter"
     OrFilter:
-        description: And filter
+        description: Or filter
         type: object
         allOf:
         - $ref: "#/components/schemas/Filter"
@@ -156,6 +157,11 @@ components:
           lte:
             type: string
 
+    ContainsFilter:
+        description: Contains filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldValueFilter"
 
 # Aggregations
 

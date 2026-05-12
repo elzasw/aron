@@ -31,6 +31,10 @@ public interface RelationRepository  extends JpaRepository<Relation, Long>  {
 	@Query("SELECT r.id FROM Relation r WHERE r.apuSource.id=:apuSourceId AND r.remove=true")
 	List<Long> findAllIdByApuSourceIdAndRemoveTrue(@Param("apuSourceId") long apuSourceId);
 
+	@Modifying
+	@Query("DELETE FROM Relation r WHERE r.apuSource.id=:apuSourceId")
+	void deleteAllByApuSourceId(@Param("apuSourceId") long apuSourceId);
+
 	@Query("SELECT r.id FROM Relation r WHERE r.id>:after AND r.remove=false ORDER BY r.id asc LIMIT :numItems")
 	List<Long> findIds(@Param("after") long after, @Param("numItems") long numItems);
 

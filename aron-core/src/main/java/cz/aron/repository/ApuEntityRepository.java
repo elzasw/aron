@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -32,6 +32,8 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	//@EntityGraph(attributePaths = {"parts.items"})
 	List<ApuEntity> findAllByIdIn(@Param("ids") Collection<Long> ids);
 	
+	List<ApuEntity> findAllByUuidIn(@Param("ids") Collection<String> ids);
+	
 	@Query("SELECT ae.id FROM ApuEntity ae WHERE ae.id>:after ORDER BY ae.id asc LIMIT :numItems")
 	List<Long> findIds(@Param("after") long after, @Param("numItems") long numItems);
 	
@@ -43,8 +45,10 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 
 	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<IdLabelDto> listByUuids(@Param("uuids") Collection<String> uuids);
-	
-	//public ApuEntityTreeViewDto(String id, String name, String description, Integer depth, Integer pos, Integer childCnt) {
+
+	@Modifying
+	@Query("UPDATE ApuEntity ae SET ae.reindex=true WHERE ae.uuid IN (:uuids) AND ae.reindex=false")
+	int markForReindexByUuids(@Param("uuids") Collection<String> uuids);
 	
 	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId AND ae.pos>:pos ORDER BY ae.pos asc LIMIT :maxItems ")
 	List<ApuEntityTreeViewDto> listEntitiesAfter(@Param("parentId") long parentId, @Param("pos") int pos, @Param("maxItems") int maxItems);
