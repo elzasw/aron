@@ -160,7 +160,7 @@ public class FileInputProcessor {
 
     private DigitalObjectFile getNewOrExisting(ApuAttachment apuAttachment, String uuid) {
         DigitalObjectFile digitalObjectFile = apuAttachment.getFile();
-        if (digitalObjectFile!=null && uuid.equals(digitalObjectFile.getId())) {
+        if (digitalObjectFile!=null && uuid.equals(digitalObjectFile.getUuid())) {
             return digitalObjectFile;
         }
         digitalObjectFile = new DigitalObjectFile();
