@@ -26,7 +26,8 @@ public class FileManagerService {
 	
 	public String storeFile(InputStream is, String uuid) throws IOException {
 		String handle = createHandle();
-		Path path = Paths.get(rootPath).resolve(handle);		
+		Path path = Paths.get(rootPath).resolve(handle);
+		Files.createDirectories(path.getParent());
 		Files.copy(is, path);
 		return handle;
 	}
