@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,7 +81,7 @@ public class ApuProcessor {
 
 	private int apuOrderCounter;
 
-	private ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
+	public ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
 			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
 			TypesHolder typesHolder, FileInputProcessor fileInputProcessor, ObjectMapper objectMapper,
 			EntityManager entityManager, IndexingService indexingService, ApuService apuService) {
@@ -97,8 +98,9 @@ public class ApuProcessor {
 		this.apuService = apuService;
 	}
 
+	@Transactional
 	public void processApuAndFiles(Path apuSrcPath, Map<String, Path> filesMap) {
-		
+
 		preprocess(apuSrcPath);
 		
 		try (ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {

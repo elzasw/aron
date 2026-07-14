@@ -14,6 +14,7 @@ import java.util.zip.ZipInputStream;
 import javax.xml.bind.JAXB;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import cz.aron.apux._2020.Dao;
 import cz.aron.apux._2020.DaoBundle;
@@ -38,6 +39,7 @@ public class DaoInputProcessor {
 		this.tilesManager = tilesManager;
 	}
 
+    @Transactional
     public void processDaoAndFiles(String metadata, Map<String, Path> filesMap) {
         Dao dao;
         try (StringReader reader = new StringReader(metadata)) {

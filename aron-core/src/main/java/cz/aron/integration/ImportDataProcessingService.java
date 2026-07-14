@@ -1,7 +1,6 @@
 package cz.aron.integration;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import cz.aron.ft.handling.TransferType;
 
@@ -30,7 +29,6 @@ public class ImportDataProcessingService {
     	this.daoInputProcessor = daoInputProcessor;
     }
 
-    @Transactional
     public void processData(Path path, TransferType transferType) {
         Map<String, Path> filesMap = loadFilesMap(path);
         if (transferType == TransferType.APUSRC) {
