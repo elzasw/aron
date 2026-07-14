@@ -64,8 +64,8 @@ public class IndexingService {
 		this.settingsResource = settingsResource;
 	}
 	
-	public void deleteApus(long apuSourceId) {		
-		var criteria = new Criteria("apuSourceId.keyword").is(apuSourceId);
+	public void deleteApus(long apuSourceId) {
+		var criteria = new Criteria("apuSourceId").is(apuSourceId);
 	    var query = new CriteriaQuery(criteria);
 	    DeleteQuery deleteQuery = DeleteQuery.builder(query).build();
 	    operations.delete(deleteQuery, IndexedApu.class);			
