@@ -8,8 +8,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
@@ -33,8 +36,14 @@ import cz.aron.api.rest.model.ApuEntity;
 import cz.aron.api.rest.model.ApuEntitySimplified;
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.rest.model.Params;
+import cz.aron.api.rest.model.ResultRowItem;
+import cz.aron.api.rest.model.ResultRowItemValue;
 import cz.aron.api.rest.model.SimpleResult;
+import cz.aron.api.rest.model.StructuredResult;
+import cz.aron.api.rest.model.StructuredResults;
+import cz.aron.domain.dto.IdStructuredResultDto;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
+import cz.aron.indexing.Aggregations;
 import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.QueryBuilder;
 import cz.aron.indexing.SimpleResultBuilder;
@@ -292,5 +301,56 @@ public class ApuApi implements AronApi {
 		System.out.println("Test");
 		return ResponseEntity.ok().build();
 	}
+
+	@Override
+	public ResponseEntity<StructuredResults> listResults(@Valid Params params) {
+		var query = queryBuilder.build(params);
+		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());				
+		var results = apuEntityRepository.findAllResultsByUuidIn(uuids);		
+		Map<String, IdStructuredResultDto> byId = results.stream()
+	                .collect(Collectors.toMap(IdStructuredResultDto::uuid, Function.identity()));
+		
+		var result = new StructuredResults();				
+		result.setAggregations(Aggregations.map(hits.getAggregations()));
+		result.setItems(hits.getSearchHits().stream()
+                .map(hit -> byId.get(hit.getId()))
+                .filter(e -> e != null)
+                .map(r->{                	
+                	if (r.result()!=null) {
+            			try {
+            				return objectMapper.readValue(r.result(),StructuredResult.class);
+            			} catch (Exception e) {
+            				return createEmptyResult(r.uuid());
+            			}
+            		} else {
+            			return createEmptyResult(r.uuid());
+            		}
+                })
+                .collect(Collectors.toList()));
+		result.setCount(hits.getTotalHits());		
+		var searchHitList = hits.getSearchHits();
+		if (!searchHitList.isEmpty()) {
+            var lastSortValues = searchHitList.get(searchHitList.size() - 1).getSortValues();
+            if (!lastSortValues.isEmpty()) {
+                result.setSearchAfter(new ArrayList<>(lastSortValues));
+            }
+        }		
+		return ResponseEntity.ok(result);
+	}
+	
+	
+    public static StructuredResult createEmptyResult(String id) {
+        var resRowItemValue = new ResultRowItemValue();
+        resRowItemValue.setV("Prazdny vysledek");
+        var resRowItem = new ResultRowItem();
+        resRowItem.setT("UNKNOWN");
+        resRowItem.addVItem(resRowItemValue);
+        var res = new StructuredResult();
+        res.setId(id);
+        res.setT("UNKNOWN");
+        res.addLItem(Arrays.asList(resRowItem));
+        return res;
+    }
 
 }

@@ -13,9 +13,9 @@ import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import cz.aron.api.rest.model.AggregationResult;
 
-class Aggregations {
+public class Aggregations {
 
-    static Map<String, List<AggregationResult>> map(AggregationsContainer<?> container) {
+    public static Map<String, List<AggregationResult>> map(AggregationsContainer<?> container) {
         if (container == null) {
             return Map.of();
         }

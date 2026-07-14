@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.dto.IdLabelDto;
+import cz.aron.domain.dto.IdStructuredResultDto;
 import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.domain.types.dto.ApuEntityViewType;
 import cz.aron.domain.types.dto.ApuIdParentId;
@@ -64,5 +65,8 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 
 	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(ae.uuid, ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId ORDER BY ae.pos asc LIMIT :maxItems ")
 	List<ApuEntityTreeViewDto> listEntitiesUnder(@Param("parentId") long parentId, @Param("maxItems") int maxItems);
-		
+
+	@Query("SELECT new cz.aron.domain.dto.IdStructuredResultDto(ae.uuid, ae.result) FROM ApuEntity ae WHERE ae.uuid IN (:ids)")
+	List<IdStructuredResultDto> findAllResultsByUuidIn(@Param("ids") Collection<String> ids);
+	
 }

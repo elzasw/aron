@@ -58,6 +58,25 @@ paths:
               schema:
                 $ref: 'search-api.yaml#/components/schemas/SimpleResult'
 
+  /apu/listresults:
+    post:
+      tags:
+        - Aron
+      operationId: listResults
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: 'search-api.yaml#/components/schemas/Params'
+        required: true
+      responses:
+        '200':
+          description: default response
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/StructuredResults'
+
   /apu/listsimple:
     post:
       tags:
@@ -396,3 +415,55 @@ components:
           type: integer
           format: int32
           nullable: false
+    ResultRowItemValue:
+      type: object
+      required:
+        - v
+      properties:
+        v:
+          type: string
+        id:
+          type: string
+    ResultRowItem:
+      type: object
+      required:
+        - t
+        - v
+      properties:
+        t:
+          type: string
+        v:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultRowItemValue'
+    StructuredResult:
+      type: object
+      required:
+        - id
+        - t
+        - l
+      properties:
+        id:
+          type: string
+        t:
+          type: string
+        tn:
+          type: string
+        tnLink:
+          type: string
+        l:
+          type: array
+          items:
+            type: array
+            items:
+              $ref: '#/components/schemas/ResultRowItem'
+    StructuredResults:
+      description: Structured results
+      type: object
+      allOf:
+      - $ref: "#/components/schemas/ResultBase"
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/StructuredResult'
