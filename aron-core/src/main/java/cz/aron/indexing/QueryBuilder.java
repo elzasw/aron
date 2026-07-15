@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import cz.aron.api.rest.model.AndFilter;
+import cz.aron.api.rest.model.AnyKeywordFieldFilter;
 import cz.aron.api.rest.model.BucketAggregation;
 import cz.aron.api.rest.model.ContainsFilter;
 import cz.aron.api.rest.model.EqFilter;
@@ -28,17 +29,26 @@ import cz.aron.api.rest.model.FullTextFilter;
 import cz.aron.api.rest.model.MaxAggregation;
 import cz.aron.api.rest.model.MinAggregation;
 import cz.aron.api.rest.model.NestedAggregation;
+import cz.aron.api.rest.model.NotFilter;
 import cz.aron.api.rest.model.OrFilter;
 import cz.aron.api.rest.model.Params;
 import cz.aron.api.rest.model.RangeFilter;
 import cz.aron.api.rest.model.ScoreSort;
 import cz.aron.api.rest.model.Sort;
 import cz.aron.api.rest.model.TermsAggregation;
+import cz.aron.domain.DataType;
+import cz.aron.domain.types.TypesHolder;
 
 @Component
 public class QueryBuilder {
+	
+	private final TypesHolder typesHolder;
+	
+    public QueryBuilder(TypesHolder typesHolder) {
+		this.typesHolder = typesHolder;
+	}
 
-    /**
+	/**
      * Converts a {@link Params} request into a Spring Data Elasticsearch {@link NativeQuery}.
      *
      * <p>{@link cz.aron.api.rest.model.Aggregation#getType()} is used as both the ES aggregation
@@ -131,6 +141,13 @@ public class QueryBuilder {
             }
             return Query.of(q -> q.bool(bool.build()));
         }
+        if (filter instanceof NotFilter f) {
+        	var bool = new BoolQuery.Builder();
+            if (f.getFilters() != null) {
+                f.getFilters().forEach(sub -> bool.mustNot(toQuery(sub)));                
+            }
+            return Query.of(q -> q.bool(bool.build()));
+        }                
         if (filter instanceof EqFilter f) {
             return Query.of(q -> q.term(t -> t.field(f.getField()).value(f.getValue())));
         }
@@ -155,6 +172,17 @@ public class QueryBuilder {
         if (filter instanceof ContainsFilter f) {
             String pattern = "*" + f.getValue() + "*";
             return Query.of(q -> q.wildcard(w -> w.field(f.getField()).value(pattern).caseInsensitive(true)));
+        }
+        if (filter instanceof AnyKeywordFieldFilter f) {        	
+        	var itemTypes = typesHolder.getAllItemTypes();
+        	// TODO cache
+        	var fields = new ArrayList<String>();
+        	for(var itemType: itemTypes) {
+        		if (DataType.APU_REF.equals(itemType.getType())) {
+        			fields.add(itemType.getCode());
+        		}
+        	}
+	        return Query.of(q->q.multiMatch(mm -> mm.fields(fields).query(f.getValue())));	        
         }
         throw new IllegalArgumentException("Unsupported filter type: " + filter.getClass().getSimpleName());
     }

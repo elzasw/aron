@@ -60,11 +60,13 @@ components:
         mapping:
           AND: "#/components/schemas/AndFilter"
           OR: "#/components/schemas/OrFilter"
+          NOT: "#/components/schemas/NotFilter"
           EQ: "#/components/schemas/EqFilter"
           FTX: "#/components/schemas/FullTextFilter"
           FTXF: "#/components/schemas/FullTextFieldFilter"
           RANGE: "#/components/schemas/RangeFilter"
-          CONTAINS: "#/components/schemas/ContainsFilter"          
+          CONTAINS: "#/components/schemas/ContainsFilter"
+          AKF: "#/components/schemas/AnyKeywordFieldFilter"
       properties:
         operation:
           type: string
@@ -81,6 +83,16 @@ components:
               $ref: "#/components/schemas/Filter"
     OrFilter:
         description: Or filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/Filter"
+        properties:
+          filters:
+            type: array
+            items:
+              $ref: "#/components/schemas/Filter"
+    NotFilter:
+        description: Not filter
         type: object
         allOf:
         - $ref: "#/components/schemas/Filter"
@@ -159,6 +171,12 @@ components:
 
     ContainsFilter:
         description: Contains filter
+        type: object
+        allOf:
+        - $ref: "#/components/schemas/FieldValueFilter"
+
+    AnyKeywordFieldFilter:
+        description: AKF filter
         type: object
         allOf:
         - $ref: "#/components/schemas/FieldValueFilter"
