@@ -66,7 +66,7 @@ components:
           RANGE: "#/components/schemas/RangeFilter"
           CONTAINS: "#/components/schemas/ContainsFilter"          
       properties:
-        operaton:
+        operation:
           type: string
           
     AndFilter:

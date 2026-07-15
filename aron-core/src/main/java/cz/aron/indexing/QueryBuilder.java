@@ -135,8 +135,8 @@ public class QueryBuilder {
             return Query.of(q -> q.term(t -> t.field(f.getField()).value(f.getValue())));
         }
         if (filter instanceof FullTextFieldFilter f) {
-            // match query on a specific field (uses the field's configured analyzer)
-            return Query.of(q -> q.match(m -> m.field(f.getField()).query(f.getValue())));
+            // match query on a specific field (uses the field's configured analyzer)        	
+        	return Query.of(q -> q.matchPhrasePrefix(m -> m.field(f.getField()).query(f.getValue())));
         }
         if (filter instanceof FullTextFilter f) {
             // query_string searches across all indexed fields by default
