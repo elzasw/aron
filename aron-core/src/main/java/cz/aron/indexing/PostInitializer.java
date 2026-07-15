@@ -74,7 +74,7 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 				reindexed = true;
 			} else {
 				Iterables.partition(ids, 1000).forEach(partition -> {
-					var entities = apuEntityRepository.findAllByIdIn(ids);
+					var entities = apuEntityRepository.findAllByIdIn(partition);
 					if (!entities.isEmpty()) {
 						apuService.fillTargetLabelsToApuRefs(entities);
 						indexingService.indexApus(entities);
