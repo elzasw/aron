@@ -116,7 +116,10 @@ public class IndexingService {
         apuSourceIdArr.add(apu.getSource().getId());
         additionalDataToIndex.put("apuSourceId", apuSourceIdArr);
         
-        String indexedName = apu.getName();
+		var indexedName = apu.getIndexedName();
+		if (indexedName == null) {
+			indexedName = apu.getName();
+		}
 		
         for (ApuPart part : apu.getParts()) {
             for (ApuPartItem item : part.getItems()) {
@@ -180,14 +183,15 @@ public class IndexingService {
                 additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
                 if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
                     List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
-                    indexedApu.getRels().add(new IndexedApu.NestedRelation((String) data, item.getType(), itemTypeGroups, item.getTargetLabel(), data + "|" + item.getTargetLabel()));
-                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(item.getTargetLabel());
+                    var indexedLabel = item.getTargetLabelIndex() != null ? item.getTargetLabelIndex() : item.getTargetLabel();
+                    indexedApu.getRels().add(new IndexedApu.NestedRelation((String) data, item.getType(), itemTypeGroups, indexedLabel, data + "|" + item.getTargetLabel()));
+                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(indexedLabel);
                     additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + item.getTargetLabel());
                 }
             }
         }
-		
-		indexedApu.setContainsDigitalObjects(false);
+
+		indexedApu.setContainsDigitalObjects(apu.getDigitalObjects().size() > 0);
 		indexedApu.setDescription(apu.getDescription());
 		indexedApu.setIncomingRelTypeGroups(null);
 		indexedApu.setIncomingRelTypes(null);

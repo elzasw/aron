@@ -3,12 +3,16 @@ package cz.aron.indexing;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Iterables;
 
@@ -31,7 +35,13 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	private final ApuService apuService;
 	
 	private final TypesHolder typesHolder;
-	
+
+	// self-reference through the Spring proxy so @Transactional on batch methods is honored
+	// (calling them directly from reindexAll would be self-invocation and bypass the proxy)
+	@Lazy
+	@Autowired
+	private PostInitializer self;
+
 	public PostInitializer(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
 			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository) {
 		this.indexingService = indexingService;
@@ -73,13 +83,7 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 			if (ids.isEmpty()) {
 				reindexed = true;
 			} else {
-				Iterables.partition(ids, 1000).forEach(partition -> {
-					var entities = apuEntityRepository.findAllByIdIn(partition);
-					if (!entities.isEmpty()) {
-						apuService.fillTargetLabelsToApuRefs(entities);
-						indexingService.indexApus(entities);
-					}
-				});
+				Iterables.partition(ids, 1000).forEach(partition -> self.reindexApuBatch(partition));
 				after = ids.getLast();
 			}
 		} while (!reindexed);
@@ -101,6 +105,21 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 				after = ids.getLast();
 			}
 		} while (!reindexed);
+	}
+
+	/**
+	 * Loads, label-fills and indexes one batch of APUs inside a read-only transaction so that
+	 * lazy associations (e.g. {@code digitalObjects}) can be initialized during
+	 * {@link IndexingService#convert} — the startup reindex path has no open session otherwise
+	 * ({@code spring.jpa.open-in-view=false}). Must be invoked through the Spring proxy ({@link #self}).
+	 */
+	@Transactional(readOnly = true)
+	public void reindexApuBatch(List<Long> ids) {
+		var entities = apuEntityRepository.findAllByIdIn(ids);
+		if (!entities.isEmpty()) {
+			apuService.fillTargetLabelsToApuRefs(entities);
+			indexingService.indexApus(entities);
+		}
 	}
 
 }

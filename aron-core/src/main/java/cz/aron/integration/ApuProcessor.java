@@ -261,11 +261,12 @@ public class ApuProcessor {
 
 	public void processApu(Apu apu, cz.aron.domain.ApuSource apuSource, Map<String, Path> filesMap) {
 		
-		var levelState = apuIdsStates.get(apu.getUuid());    	
+		var levelState = apuIdsStates.get(apu.getUuid());
 		
 		ApuEntity apuEntity = new ApuEntity();
 		apuEntity.setUuid(apu.getUuid());
 		apuEntity.setName(apu.getName());
+		apuEntity.setIndexedName(apu.getIndexedName());
 		apuEntity.setOrder(++apuOrderCounter);
 		apuEntity.setDescription(apu.getDesc());
 		apuEntity.setResult(apu.getResult());
@@ -310,7 +311,7 @@ public class ApuProcessor {
 		saveCache.put(apuEntity.getUuid(), apuEntity);
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
 		recordRelations(apuEntity);
-		apuRequestQueue.removeForApuId(apuEntity.getUuid());
+		//apuRequestQueue.removeForApuId(apuEntity.getUuid());
 	}
 
 	private void processParts(List<Part> parts, ApuEntity apuEntity) {
@@ -367,7 +368,7 @@ public class ApuProcessor {
 				item.setVisible(itemRef.isVisible() == null || itemRef.isVisible());
 				if (itemRef.getType().equals("ORIGINATOR_REF") || itemRef.getType().equals("AP_REF")) { // only archival
 																										// entities
-					apuRequestQueue.add(itemRef.getValue(), apuPart.findRootApuEntity().getUuid());
+					apuRequestQueue.add(itemRef.getValue());
 				}
 			} else if (o instanceof ItemDateRange) {
 				ItemDateRange itemDateRange = (ItemDateRange) o;

@@ -21,7 +21,6 @@ public class QueuedApu {
 	protected Instant created;
 
     private String apuId;
-    private String sourceApuId;
 
     private boolean requestSent;
 
@@ -47,14 +46,6 @@ public class QueuedApu {
 
 	public void setApuId(String apuId) {
 		this.apuId = apuId;
-	}
-
-	public String getSourceApuId() {
-		return sourceApuId;
-	}
-
-	public void setSourceApuId(String sourceApuId) {
-		this.sourceApuId = sourceApuId;
 	}
 
 	public boolean isRequestSent() {

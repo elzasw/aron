@@ -9,8 +9,10 @@ import cz.aron.domain.QueuedApu;
 import cz.aron.repository.QueuedApuRepository;
 import cz.aron.service.transformagent.TransformAgentClient;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class ApuRequestQueue {
@@ -18,19 +20,30 @@ public class ApuRequestQueue {
     private final QueuedApuRepository queuedApuRepository;
     private final TransformAgentClient transformAgentClient;
     
+    private final ReentrantLock lock = new ReentrantLock();
+    
     public ApuRequestQueue(QueuedApuRepository queuedApuRepository, TransformAgentClient transformAgentClient) {
     	this.queuedApuRepository = queuedApuRepository;
     	this.transformAgentClient = transformAgentClient;
     }
 
+    //TODO refactor to batch processing
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     @Async
-    public void add(String apuId, String sourceId) {
-        QueuedApu queuedApu = new QueuedApu();
-        queuedApu.setApuId(apuId);
-        queuedApu.setSourceApuId(sourceId);
-        queuedApuRepository.save(queuedApu);
-    }
+	public void add(String apuId) {    	
+    	try {
+    		lock.lock();
+    		var queuedApu = queuedApuRepository.findByApuId(apuId);
+    		if (queuedApu == null) {
+    			queuedApu = new QueuedApu();
+    			queuedApu.setApuId(apuId);
+    			queuedApu.setCreated(Instant.now());
+    			queuedApuRepository.save(queuedApu);
+    		}
+    	} finally {
+    		lock.unlock();
+    	}	
+	}
 
     /**
      * Send batch of apu requests to transformagent

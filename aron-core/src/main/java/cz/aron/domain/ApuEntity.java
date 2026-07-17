@@ -70,6 +70,7 @@ public class ApuEntity {
 	private String uuid;
 
 	private String name;
+	private String indexedName;
 	private String description;
 	private String result;
 	private String permalink;
@@ -135,6 +136,14 @@ public class ApuEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getIndexedName() {
+		return indexedName;
+	}
+
+	public void setIndexedName(String indexedName) {
+		this.indexedName = indexedName;
 	}
 
 	public String getDescription() {

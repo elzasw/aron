@@ -68,25 +68,29 @@ public class ApuService {
         }
 
         //Fetch their labels and put them to a map
-        var idToLabelLookupMap = new HashMap<String,String>();
+        var idToLabelLookupMap = new HashMap<String,IdLabelDto>();
         for (IdLabelDto idLabelDto : mapNames(idsToFind)) {
-            idToLabelLookupMap.put(idLabelDto.uuid(), idLabelDto.name());
+            idToLabelLookupMap.put(idLabelDto.uuid(), idLabelDto);
         }
-        //Use the map to fill labels to items
-        for (ApuEntity apuEntity : apus) {
-            for (ApuPart part : apuEntity.getParts()) {
-                for (ApuPartItem item : part.getItems()) {
-                    ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
-                    if (itemType == null) {
-                        log.warn("unrecognized item type: " + item.getType());
-                        continue;
-                    }
-                    if (itemType.getType() == DataType.APU_REF) {
-                        item.setTargetLabel(idToLabelLookupMap.get(item.getValue()));
-                    }
-                }
-            }
-        }
+		// Use the map to fill labels to items
+		for (ApuEntity apuEntity : apus) {
+			for (ApuPart part : apuEntity.getParts()) {
+				for (ApuPartItem item : part.getItems()) {
+					ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
+					if (itemType == null) {
+						log.warn("unrecognized item type: " + item.getType());
+						continue;
+					}
+					if (itemType.getType() == DataType.APU_REF) {
+						var idToLabel = idToLabelLookupMap.get(item.getValue());
+						if (idToLabel != null) {
+							item.setTargetLabel(idToLabel.name());
+							item.setTargetLabelIndex(idToLabel.indexedName());
+						}
+					}
+				}
+			}
+		}
     }
 
 	@Transactional(readOnly=true)

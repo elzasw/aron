@@ -36,6 +36,9 @@ public class ApuPartItem {
 
 	@Transient
 	private String targetLabel; // for APU_REF types, we preload referred item's name here (before indexing)
+	
+	@Transient
+	private String targetLabelIndex; // for APU_REF types, we preload referred item's name index here (before indexing)
 
 	public long getId() {
 		return id;
@@ -91,6 +94,14 @@ public class ApuPartItem {
 
 	public void setTargetLabel(String targetLabel) {
 		this.targetLabel = targetLabel;
+	}
+
+	public String getTargetLabelIndex() {
+		return targetLabelIndex;
+	}
+
+	public void setTargetLabelIndex(String targetLabelIndex) {
+		this.targetLabelIndex = targetLabelIndex;
 	}
 
 }

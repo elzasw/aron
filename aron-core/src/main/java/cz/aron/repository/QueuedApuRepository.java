@@ -14,6 +14,8 @@ public interface QueuedApuRepository extends JpaRepository<QueuedApu, Long>  {
 	
 	// TODO return only projection to be readonly
 	List<QueuedApu> findTop1000ByRequestSentIsFalse();
+	
+	QueuedApu findByApuId(String apuId);
 
     @Query("DELETE FROM QueuedApu qa WHERE qa.apuId=?1")
     @Modifying

@@ -44,7 +44,7 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@Query(value="SELECT aps.published FROM ApuEntity ae JOIN ae.source aps WHERE ae.uuid=:uuid")
 	LocalDateTime findPublishedByUuid(@Param("uuid") String uuid);
 
-	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
+	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name, ae.indexedName) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<IdLabelDto> listByUuids(@Param("uuids") Collection<String> uuids);
 
 	@Modifying
