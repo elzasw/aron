@@ -128,6 +128,11 @@ public class ApuEntity {
     private boolean indexed;
     private boolean reindex;
 
+    @Column(name = "has_attachments")
+    private boolean hasAttachments;
+    @Column(name = "has_daos")
+    private boolean hasDaos;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@Fetch(FetchMode.SELECT)
 	@JoinColumn(name="apu_source_id")
@@ -361,6 +366,22 @@ public class ApuEntity {
 
 	public void setReindex(boolean reindex) {
 		this.reindex = reindex;
+	}
+
+	public boolean isHasAttachments() {
+		return hasAttachments;
+	}
+
+	public void setHasAttachments(boolean hasAttachments) {
+		this.hasAttachments = hasAttachments;
+	}
+
+	public boolean isHasDaos() {
+		return hasDaos;
+	}
+
+	public void setHasDaos(boolean hasDaos) {
+		this.hasDaos = hasDaos;
 	}
 
 }

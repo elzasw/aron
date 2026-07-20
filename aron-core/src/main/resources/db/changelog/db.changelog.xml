@@ -28,7 +28,9 @@
             <column name="description" type="nclob"/>
             <column name="result" type="nclob"/>
             <column name="permalink" type="varchar(255)"/>
-            <column name="published" type="boolean"/>
+            <column name="published" type="boolean">
+                <constraints nullable="false"/>
+            </column>
             <column name="apu_source_id" type="${id}">
                 <constraints referencedTableName="apu_source" referencedColumnNames="apu_source_id" foreignKeyName="FK_apu_source"/>
             </column>
@@ -36,12 +38,30 @@
                 <constraints referencedTableName="apu" referencedColumnNames="apu_id" foreignKeyName="FK_apu_parent"/>
             </column>
             <column name="type" type="varchar(255)"/>
-            <column name="ordr" type="int" value="0"/>
-            <column name="indexed" type="boolean"/>
-            <column name="depth" type="int"/>
-            <column name="pos" type="int"/>
-            <column name="child_cnt" type="int"/>
-            <column name="reindex" type="boolean"/>
+            <column name="ordr" type="int" value="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="indexed" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="depth" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="pos" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="child_cnt" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reindex" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_attachments" type="boolean">
+                <constraints nullable="false"/>
+            </column>
+            <column name="has_daos" type="boolean">
+                <constraints nullable="false"/>
+            </column>
             <column name="data" type="${blob}"/>
         </createTable>
         <createTable tableName="apu_attachment">
