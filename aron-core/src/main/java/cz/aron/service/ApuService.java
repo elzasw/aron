@@ -22,8 +22,10 @@ import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.DataType;
 import cz.aron.domain.dto.IdLabelDto;
+import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
+import cz.aron.mapper.ApuEntityMapper;
 import cz.aron.repository.ApuEntityRepository;
 
 @Service
@@ -34,13 +36,16 @@ public class ApuService {
 	private final TypesHolder typesHolder;
 
 	private final ApuEntityRepository apuEntityRepository;
+	
+	private final ApuEntityMapper apuEntityMapper;
 	    
     private int levelSize;
 
-	public ApuService(TypesHolder typesHolder, ApuEntityRepository apuEntityRepository,
+	public ApuService(TypesHolder typesHolder, ApuEntityRepository apuEntityRepository, ApuEntityMapper apuEntityMapper,
 			@Value("${tree.levelSize:100}") int levelSize) {
 		this.typesHolder = typesHolder;
 		this.apuEntityRepository = apuEntityRepository;
+		this.apuEntityMapper = apuEntityMapper;
 		this.levelSize = levelSize;
 	}
 
@@ -82,6 +87,15 @@ public class ApuService {
         return idToLabelLookupMap;
     }
 
+	/**
+	 * Returns all ancestor APUs of the given APU, from its immediate parent up to the root,
+	 * ordered nearest-first. The APU identified by {@code id} itself is excluded.
+	 */
+	@Transactional(readOnly = true)
+	public List<IdUuidNameDescriptionParentDto> getAncestorsToRoot(long id) {
+		return apuEntityRepository.findAncestors(id);
+	}
+
 	@Transactional(readOnly=true)
 	public List<ApuEntityTreeViewDto> getEntitiesBefore(String apuId) {
 		var apu = apuEntityRepository.findByUuid(apuId);
@@ -118,4 +132,50 @@ public class ApuService {
 		return ret;
 	}
 
+	@Transactional(readOnly = true)
+	public cz.aron.api.rest.model.ApuEntity getApuEntity(String apuId) {		
+		var src = apuEntityRepository.findByUuid(apuId);
+		if (src == null) {
+			
+		}		
+		
+		cz.aron.api.rest.model.ApuEntity dto = new cz.aron.api.rest.model.ApuEntity();
+		dto.setId(apuId);
+        dto.setName(src.getName());
+        dto.setDescription(src.getDescription());
+        dto.setPermalink(src.getPermalink());
+        dto.setOrder(src.getOrder());
+        dto.setPublished(src.isPublished());
+        dto.setType(ApuEntityMapper.toApuTypeEnum(src.getType()));
+        dto.setPos(src.getPos());
+        dto.setDepth(src.getDepth());
+        dto.setChildCnt(src.getChildCnt());
+
+        // parts are stored (and deserialized) directly as the REST model
+        dto.setParts(src.getParts());
+		if (src.getParent()!=null) {
+			var ancestors = apuEntityRepository.findAncestors(src.getId());		
+			cz.aron.api.rest.model.ApuEntity current = dto;
+			for(var ancestor: ancestors) {
+				cz.aron.api.rest.model.ApuEntity ancestorDto = new cz.aron.api.rest.model.ApuEntity();
+				ancestorDto.setId(ancestor.uuid());
+				ancestorDto.setName(ancestor.name());
+				ancestorDto.setDescription(ancestor.description());
+				ancestorDto.setChildCnt(ancestor.childCnt());
+				ancestorDto.setDepth(ancestor.depth());
+				ancestorDto.setOrder(ancestor.ordr());
+				ancestorDto.setPos(ancestor.pos());
+				current.setParent(ancestorDto);
+				current = ancestorDto;
+			}
+		}
+
+		// attachments
+		
+		// daos
+		
+		
+		return dto;
+	}
+	
 }

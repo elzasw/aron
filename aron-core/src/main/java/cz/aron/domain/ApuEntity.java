@@ -22,14 +22,17 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 
+@NamedNativeQueries({
 @NamedNativeQuery(name = "entityTree",
 query = """
 WITH RECURSIVE cte(uuid, name, description, ordr, type, apu_id, parent_id) AS
@@ -40,13 +43,33 @@ WITH RECURSIVE cte(uuid, name, description, ordr, type, apu_id, parent_id) AS
 	UNION ALL
 	SELECT a.uuid, a.name, a.description, a.ordr, a.type, a.apu_id, a.parent_id
 	FROM cte
-	JOIN apu a ON a.parent_id=cte.apu_id			
+	JOIN apu a ON a.parent_id=cte.apu_id
 )
 SELECT uuid as uuid, name as name, description as description, ordr as ordr, type as type, apu_id as apu_id, parent_id as parent_id
 FROM cte
 """,
-resultSetMapping = "entityTreeResult")
+resultSetMapping = "entityTreeResult"),
+@NamedNativeQuery(name = "apuAncestors",
+query = """
+WITH RECURSIVE cte(apu_id, uuid, name, description, parent_id, depth, child_cnt, ordr, pos, lvl) AS
+(
+	SELECT a.apu_id, a.uuid, a.name, a.description, a.parent_id, a.depth, a.child_cnt, a.ordr, a.pos, 0 as lvl
+	FROM apu a
+	WHERE a.apu_id=:id
+	UNION ALL
+	SELECT p.apu_id, p.uuid, p.name, p.description, p.parent_id, p.depth, p.child_cnt, p.ordr, p.pos, c.lvl+1
+	FROM cte c
+	JOIN apu p ON p.apu_id=c.parent_id
+)
+SELECT apu_id as apu_id, uuid as uuid, name as name, description as description, parent_id as parent_id, depth as depth, child_cnt as child_cnt, ordr as ordr, pos as pos
+FROM cte
+WHERE lvl>0
+ORDER BY lvl
+""",
+resultSetMapping = "apuAncestorsResult")
+})
 
+@SqlResultSetMappings({
 @SqlResultSetMapping(
 	    name="entityTreeResult",
 	    classes={
@@ -59,7 +82,23 @@ resultSetMapping = "entityTreeResult")
 	          @ColumnResult(name="ordr", type=Integer.class),
 	          @ColumnResult(name="type", type=ApuType.class),
 	          @ColumnResult(name="apu_id", type=Long.class),
-	          @ColumnResult(name="parent_id", type=Long.class),})})
+	          @ColumnResult(name="parent_id", type=Long.class),})}),
+@SqlResultSetMapping(
+	    name="apuAncestorsResult",
+	    classes={
+	      @ConstructorResult(
+	        targetClass=cz.aron.domain.dto.IdUuidNameDescriptionParentDto.class,
+	        columns={
+	          @ColumnResult(name="apu_id", type=Long.class),
+	          @ColumnResult(name="uuid", type=String.class),
+	          @ColumnResult(name="name", type=String.class),
+	          @ColumnResult(name="description", type=String.class),
+	          @ColumnResult(name="parent_id", type=Long.class),
+	          @ColumnResult(name="depth", type=Integer.class),
+	          @ColumnResult(name="child_cnt", type=Integer.class),
+	          @ColumnResult(name="ordr", type=Integer.class),
+	          @ColumnResult(name="pos", type=Integer.class),})})
+})
 
 @Entity
 @Table(name = "apu")

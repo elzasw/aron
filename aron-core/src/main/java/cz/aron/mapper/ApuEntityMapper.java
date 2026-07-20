@@ -84,14 +84,14 @@ public class ApuEntityMapper {
         return dto;
     }
 
-    private ApuEntity.TypeEnum toApuTypeEnum(cz.aron.domain.ApuType type) {
+    public static ApuEntity.TypeEnum toApuTypeEnum(cz.aron.domain.ApuType type) {
         if (type == null) {
             return null;
         }
         return ApuEntity.TypeEnum.fromValue(type.name());
     }
 
-    private DigitalObjectFile.TypeEnum toFileTypeEnum(cz.aron.domain.DigitalObjectType type) {
+    public static DigitalObjectFile.TypeEnum toFileTypeEnum(cz.aron.domain.DigitalObjectType type) {
         if (type == null) {
             return null;
         }

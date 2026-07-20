@@ -94,17 +94,11 @@ public class ApuApi implements AronApi {
 
 	@Override
 	@Transactional
-    public ResponseEntity<ApuEntity> getApu(@PathVariable("id") String apuId) {
-    	var apu = apuEntityRepository.findByUuid(apuId);
-    	if (apu == null) {
-    		throw new RuntimeException();
-    	}
-    	// trigger lazy collections before transaction closes (parts are deserialized from the blob)
-    	apu.getAttachments().size();
-    	apu.getDigitalObjects().size();
+    public ResponseEntity<ApuEntity> getApu(@PathVariable("id") String apuId) {    
+    	var apu = apuService.getApuEntity(apuId);    	
     	return ResponseEntity.ok()
     			.contentType(MediaType.APPLICATION_JSON)
-    			.body(apuEntityMapper.toRest(apu));
+    			.body(apu);
     }
 
     //@GetMapping("/{id}/tree")

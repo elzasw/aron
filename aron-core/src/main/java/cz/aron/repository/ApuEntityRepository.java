@@ -14,6 +14,7 @@ import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.dto.IdStructuredResultDto;
+import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
 import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.domain.types.dto.ApuEntityViewType;
 import cz.aron.domain.types.dto.ApuIdParentId;
@@ -40,6 +41,9 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	
 	@Query(name="entityTree", nativeQuery=true)
 	List<ApuEntityViewType> findAllByParentUuid(@Param("uuid") String uuid);
+
+	@Query(name="apuAncestors", nativeQuery=true)
+	List<IdUuidNameDescriptionParentDto> findAncestors(@Param("id") long id);
 	
 	@Query(value="SELECT aps.published FROM ApuEntity ae JOIN ae.source aps WHERE ae.uuid=:uuid")
 	LocalDateTime findPublishedByUuid(@Param("uuid") String uuid);
