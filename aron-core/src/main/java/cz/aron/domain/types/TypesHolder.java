@@ -11,9 +11,6 @@ import jakarta.annotation.PostConstruct;
 
 import java.util.*;
 
-/**
- * @author Lukas Jane (inQool) 19.11.2020.
- */
 @Service
 public class TypesHolder {
 	

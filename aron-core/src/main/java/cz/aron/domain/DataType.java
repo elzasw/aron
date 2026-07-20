@@ -1,8 +1,5 @@
 package cz.aron.domain;
 
-/**
- * @author Lukas Jane (inQool) 27.10.2020.
- */
 public enum DataType {
     ENUM,           //výčtový typ
     APU_REF,        //odkaz na jinou jednotku publikace

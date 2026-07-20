@@ -9,9 +9,6 @@ import org.springframework.ws.client.core.support.WebServiceGatewaySupport;
 
 import java.util.List;
 
-/**
- * @author Lukas Jane (inQool) 06.11.2020.
- */
 public class TransformAgentClient extends WebServiceGatewaySupport {
 	
 	private static final Logger log = LoggerFactory.getLogger(TransformAgentClient.class);

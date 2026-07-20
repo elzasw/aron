@@ -5,9 +5,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 
-/**
- * @author Lukas Jane (inQool) 06.11.2020.
- */
 @Configuration
 public class TransformAgentClientConfig {
 

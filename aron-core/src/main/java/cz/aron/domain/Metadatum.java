@@ -10,9 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-/**
- * @author Lukas Jane (inQool) 27.10.2020.
- */
 @Entity
 @Table(name="metadatum")
 public class Metadatum {

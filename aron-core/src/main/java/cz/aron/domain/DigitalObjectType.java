@@ -2,9 +2,6 @@ package cz.aron.domain;
 
 import cz.aron.apux._2020.DaoBundleType;
 
-/**
- * @author Lukas Jane (inQool) 27.10.2020.
- */
 public enum DigitalObjectType {
     PUBLISHED,
     THUMBNAIL,

@@ -1,8 +1,5 @@
 package cz.aron.domain;
 
-/**
- * @author Lukas Jane (inQool) 27.10.2020.
- */
 public enum ApuType {
     ARCH_DESC,      //jednotka popisu
     COLLECTION,     //?
