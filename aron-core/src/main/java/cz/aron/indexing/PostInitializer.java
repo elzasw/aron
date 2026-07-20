@@ -117,8 +117,7 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	public void reindexApuBatch(List<Long> ids) {
 		var entities = apuEntityRepository.findAllByIdIn(ids);
 		if (!entities.isEmpty()) {
-			apuService.fillTargetLabelsToApuRefs(entities);
-			indexingService.indexApus(entities);
+			indexingService.indexApus(entities, apuService.resolveApuRefLabels(entities));
 		}
 	}
 

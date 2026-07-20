@@ -31,12 +31,13 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import cz.aron.api.rest.model.ApuPart;
+import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPart;
-import cz.aron.domain.ApuPartItem;
 import cz.aron.domain.DataType;
 import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
+import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
 
@@ -71,11 +72,11 @@ public class IndexingService {
 	    operations.delete(deleteQuery, IndexedApu.class);			
 	}
 
-	public void indexApus(Collection<ApuEntity> apus) {
+	public void indexApus(Collection<ApuEntity> apus, Map<String, IdLabelDto> apuRefLabels) {
 		var indexQueries = new ArrayList<IndexQuery>(apus.size());
 		for (var apu : apus) {
 			if (apu.isIndexed()) {
-				var document = convert(apu);
+				var document = convert(apu, apuRefLabels);
 				var iq = new IndexQuery();
 				iq.setId(apu.getUuid());
 				iq.setObject(document);
@@ -107,8 +108,8 @@ public class IndexingService {
 		}
 	}
 
-	private Document convert(ApuEntity apu) {
-	
+	private Document convert(ApuEntity apu, Map<String, IdLabelDto> apuRefLabels) {
+
 		var indexedApu = new IndexedApu();
 		Map<String, List<Object>> additionalDataToIndex = new HashMap<>();
 		
@@ -181,12 +182,16 @@ public class IndexingService {
                         throw new RuntimeException("Unknown type");
                 }
                 additionalDataToIndex.computeIfAbsent(itemType.getCode(), k -> new ArrayList<>()).add(data);
-                if (itemType.getType() == DataType.APU_REF && item.getTargetLabel() != null) {
-                    List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
-                    var indexedLabel = item.getTargetLabelIndex() != null ? item.getTargetLabelIndex() : item.getTargetLabel();
-                    indexedApu.getRels().add(new IndexedApu.NestedRelation((String) data, item.getType(), itemTypeGroups, indexedLabel, data + "|" + item.getTargetLabel()));
-                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(indexedLabel);
-                    additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + item.getTargetLabel());
+                if (itemType.getType() == DataType.APU_REF) {
+                    IdLabelDto refLabel = apuRefLabels.get(value);
+                    if (refLabel != null && refLabel.name() != null) {
+                        List<String> itemTypeGroups = typesHolder.getItemGroupsForItemType(item.getType());
+                        var targetLabel = refLabel.name();
+                        var indexedLabel = refLabel.indexedName() != null ? refLabel.indexedName() : targetLabel;
+                        indexedApu.getRels().add(new IndexedApu.NestedRelation((String) data, item.getType(), itemTypeGroups, indexedLabel, data + "|" + targetLabel));
+                        additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~LABEL", k -> new ArrayList<>()).add(indexedLabel);
+                        additionalDataToIndex.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new ArrayList<>()).add(data + "|" + targetLabel);
+                    }
                 }
             }
         }

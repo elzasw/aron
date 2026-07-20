@@ -7,8 +7,6 @@ import org.springframework.stereotype.Component;
 
 import cz.aron.api.rest.model.ApuAttachment;
 import cz.aron.api.rest.model.ApuEntity;
-import cz.aron.api.rest.model.ApuPart;
-import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.api.rest.model.DigitalObject;
 import cz.aron.api.rest.model.DigitalObjectFile;
 
@@ -31,11 +29,8 @@ public class ApuEntityMapper {
             dto.setParent(toRest(src.getParent()));
         }
 
-        List<ApuPart> parts = new ArrayList<>(src.getParts().size());
-        for (cz.aron.domain.ApuPart part : src.getParts()) {
-            parts.add(toRest(part));
-        }
-        dto.setParts(parts);
+        // parts are stored (and deserialized) directly as the REST model
+        dto.setParts(src.getParts());
 
         List<ApuAttachment> attachments = new ArrayList<>(src.getAttachments().size());
         for (cz.aron.domain.ApuAttachment att : src.getAttachments()) {
@@ -49,36 +44,6 @@ public class ApuEntityMapper {
         }
         dto.setDigitalObjects(digitalObjects);
 
-        return dto;
-    }
-
-    private ApuPart toRest(cz.aron.domain.ApuPart src) {
-        ApuPart dto = new ApuPart(String.valueOf(src.getId()));
-        dto.setValue(src.getValue());
-        dto.setType(src.getType());
-
-        List<ApuPart> children = new ArrayList<>(src.getChildParts().size());
-        for (cz.aron.domain.ApuPart child : src.getChildParts()) {
-            children.add(toRest(child));
-        }
-        dto.setChildParts(children);
-
-        List<ApuPartItem> items = new ArrayList<>(src.getItems().size());
-        for (cz.aron.domain.ApuPartItem item : src.getItems()) {
-            items.add(toRest(item));
-        }
-        dto.setItems(items);
-
-        return dto;
-    }
-
-    private ApuPartItem toRest(cz.aron.domain.ApuPartItem src) {
-        ApuPartItem dto = new ApuPartItem(String.valueOf(src.getId()));
-        dto.setValue(src.getValue());
-        dto.setVisible(src.isVisible());
-        dto.setHref(src.getHref());
-        dto.setType(src.getType());
-        dto.setLabel(src.getTargetLabel());
         return dto;
     }
 

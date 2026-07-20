@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +17,9 @@ import com.google.common.collect.Iterables;
 
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.rest.model.ApuEntityView;
+import cz.aron.api.rest.model.ApuPart;
+import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPart;
-import cz.aron.domain.ApuPartItem;
 import cz.aron.domain.DataType;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
@@ -49,7 +50,13 @@ public class ApuService {
 		return ret;
 	}
 
-	public void fillTargetLabelsToApuRefs(Collection<ApuEntity> apus) {
+	/**
+	 * Resolves the display/indexed labels for all APU_REF items referenced by the given APUs.
+	 * The result is a runtime-only lookup (keyed by referenced APU uuid) consumed by
+	 * {@code IndexingService} — the labels are neither serialized into the parts blob nor exposed
+	 * through the REST model.
+	 */
+	public Map<String, IdLabelDto> resolveApuRefLabels(Collection<ApuEntity> apus) {
         //Find all referred ids
         var idsToFind = new HashSet<String>();
         for (ApuEntity apuEntity : apus) {
@@ -72,25 +79,7 @@ public class ApuService {
         for (IdLabelDto idLabelDto : mapNames(idsToFind)) {
             idToLabelLookupMap.put(idLabelDto.uuid(), idLabelDto);
         }
-		// Use the map to fill labels to items
-		for (ApuEntity apuEntity : apus) {
-			for (ApuPart part : apuEntity.getParts()) {
-				for (ApuPartItem item : part.getItems()) {
-					ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
-					if (itemType == null) {
-						log.warn("unrecognized item type: " + item.getType());
-						continue;
-					}
-					if (itemType.getType() == DataType.APU_REF) {
-						var idToLabel = idToLabelLookupMap.get(item.getValue());
-						if (idToLabel != null) {
-							item.setTargetLabel(idToLabel.name());
-							item.setTargetLabelIndex(idToLabel.indexedName());
-						}
-					}
-				}
-			}
-		}
+        return idToLabelLookupMap;
     }
 
 	@Transactional(readOnly=true)

@@ -3,6 +3,8 @@ spring:
 #    change-log: classpath:db/changelog/db.changelog.xml
   jpa:
     open-in-view: false
+  jackson:
+    default-property-inclusion: non_null
 
 server:
   servlet:

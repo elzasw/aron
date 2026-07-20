@@ -99,12 +99,9 @@ public class ApuApi implements AronApi {
     	if (apu == null) {
     		throw new RuntimeException();
     	}
-    	// trigger lazy collections before transaction closes
+    	// trigger lazy collections before transaction closes (parts are deserialized from the blob)
     	apu.getAttachments().size();
     	apu.getDigitalObjects().size();
-    	for (var part : apu.getParts()) {
-    		part.getChildParts().size();
-    	}
     	return ResponseEntity.ok()
     			.contentType(MediaType.APPLICATION_JSON)
     			.body(apuEntityMapper.toRest(apu));

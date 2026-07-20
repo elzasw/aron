@@ -33,10 +33,10 @@ import cz.aron.apux._2020.ItemLink;
 import cz.aron.apux._2020.ItemRef;
 import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
+import cz.aron.api.rest.model.ApuPart;
+import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuAttachment;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPart;
-import cz.aron.domain.ApuPartItem;
 import cz.aron.domain.DataType;
 import cz.aron.domain.DigitalObject;
 import cz.aron.domain.DigitalObjectType;
@@ -80,6 +80,8 @@ public class ApuProcessor {
 	private static final int CACHE_SIZE = 100;
 
 	private int apuOrderCounter;
+
+	private long partIdSeq; // sequential id for parts/items within a single APU
 
 	public ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
 			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
@@ -315,13 +317,11 @@ public class ApuProcessor {
 	}
 
 	private void processParts(List<Part> parts, ApuEntity apuEntity) {
+		partIdSeq = 0;
 		Map<String, ApuPart> processedPartCache = new HashMap<>();
 		for (Part part : parts) {
 			ApuPart apuPart = new ApuPart();
-			if (part.getId() != null) {
-				// TODO apuPart UUID
-				// apuPart.setId(part.getId());
-			}
+			apuPart.setId(String.valueOf(++partIdSeq));
 			apuPart.setValue(part.getValue());
 			apuPart.setType(part.getType().replace("_", "~"));
 			Object prnt = part.getPrnt();
@@ -331,10 +331,8 @@ public class ApuProcessor {
 				if (parentPart == null) {
 					throw new RuntimeException("parent part not processed yet, move the connecting at the end");
 				}
-				apuPart.setParentPart(parentPart);
 				parentPart.getChildParts().add(apuPart);
 			} else {
-				apuPart.setApu(apuEntity);
 				apuEntity.getParts().add(apuPart);
 				processedPartCache.put(part.getId(), apuPart);
 			}
@@ -345,6 +343,7 @@ public class ApuProcessor {
 	private void processPartItems(DescItems itms, ApuPart apuPart) {
 		for (Object o : itms.getStrOrLnkOrEnm()) {
 			ApuPartItem item = new ApuPartItem();
+			item.setId(String.valueOf(++partIdSeq));
 			if (o instanceof ItemString) {
 				ItemString itemString = (ItemString) o;
 				item.setType(itemString.getType().replace("_", "~"));
@@ -391,7 +390,6 @@ public class ApuProcessor {
 				item.setValue(itemJson.getValue());
 				item.setVisible(itemJson.isVisible() == null || itemJson.isVisible());
 			}
-			item.setApuPart(apuPart);
 			apuPart.getItems().add(item);
 		}
 	}
@@ -457,18 +455,15 @@ public class ApuProcessor {
 		List<String> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
 		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
-		// clear for next batch		
-		apuService.fillTargetLabelsToApuRefs(saveCache.values());
-		indexingService.indexApus(saveCache.values());		
+		// clear for next batch
+		indexingService.indexApus(saveCache.values(), apuService.resolveApuRefLabels(saveCache.values()));
 		saveCache.clear();
-		
+
 		var relatedIncomingEntities = apuEntityRepository.findAllByIdIn(apuIdsTargetingUpdatedIds);
-		apuService.fillTargetLabelsToApuRefs(relatedIncomingEntities);
-		indexingService.indexApus(relatedIncomingEntities);
-		
+		indexingService.indexApus(relatedIncomingEntities, apuService.resolveApuRefLabels(relatedIncomingEntities));
+
 		var relatedEntities = apuEntityRepository.findAllByUuidIn(apusToHaveIncomingRelsUpdated);
-		apuService.fillTargetLabelsToApuRefs(relatedEntities);
-		indexingService.indexApus(relatedEntities);
+		indexingService.indexApus(relatedEntities, apuService.resolveApuRefLabels(relatedEntities));
 		
 		apusToHaveIncomingRelsUpdated.clear();
 		entityManager.clear();

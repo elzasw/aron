@@ -3,6 +3,7 @@
     <property name="now" value="now()" dbms="postgresql"/>
     <property name="id" value="bigint" dbms="postgresql"/>
     <property name="uuid" value="char(36)" dbms="postgresql"/>
+    <property name="blob" value="bytea" dbms="postgresql"/>
 
     <changeSet id="1" author="karel.zacek@lightcomp.cz">
 
@@ -41,6 +42,7 @@
             <column name="pos" type="int"/>
             <column name="child_cnt" type="int"/>
             <column name="reindex" type="boolean"/>
+            <column name="data" type="${blob}"/>
         </createTable>
         <createTable tableName="apu_attachment">
             <column name="apu_attachment_id" type="${id}" autoIncrement="true">
@@ -65,34 +67,6 @@
                 <constraints referencedTableName="apu" referencedColumnNames="apu_id" foreignKeyName="FK_digital_object_apu"/>
             </column>
             <column name="license_code" type="nclob"/>
-        </createTable>
-        <createTable tableName="apu_part">
-            <column name="apu_part_id" type="${id}" autoIncrement="true">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_part"/>
-            </column>
-            <column name="uuid" type="${uuid}"/>
-            <column name="value" type="nvarchar(1024)"/>
-            <column name="type" type="varchar(255)"/>
-            <column name="apu_id" type="${id}">
-                <constraints referencedTableName="apu" referencedColumnNames="apu_id" foreignKeyName="FK_apu_part_apu"/>
-            </column>
-            <column name="parent_id" type="${id}">
-                <constraints referencedTableName="apu_part" referencedColumnNames="apu_part_id" foreignKeyName="FK_apu_part_parent_part"/>
-            </column>
-        </createTable>
-        <createTable tableName="apu_part_item">
-            <column name="apu_part_item_id" type="${id}" autoIncrement="true">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_apu_part_item"/>
-            </column>
-            <column name="uuid" type="${uuid}"/>
-            <column name="value" type="nclob"/>
-            <column name="href" type="nvarchar(1024)"/>
-            <column name="visible" type="boolean"/>
-            <column name="type" type="varchar(255)"/>
-            <column name="apu_part_id" type="${id}">
-                <constraints referencedTableName="apu_part" referencedColumnNames="apu_part_id" foreignKeyName="FK_apu_part_item_apu_part"/>
-            </column>
-            <column name="label" type="nclob"/>
         </createTable>
         <createTable tableName="digital_object_file">
             <column name="digital_object_file_id" type="${id}" autoIncrement="true">
@@ -134,18 +108,6 @@
             <column name="request_sent" type="boolean"/>
         </createTable>
         
-        <createIndex indexName="idx_apu_part_item_apu_part_id"
-            tableName="apu_part_item" unique="false">
-            <column name="apu_part_id" />
-        </createIndex>
-        <createIndex indexName="idx_apu_part_apu_id"
-            tableName="apu_part" unique="false">
-            <column name="apu_id" />
-        </createIndex>
-        <createIndex indexName="idx_apu_part_apu_part_id"
-            tableName="apu_part" unique="false">
-            <column name="parent_id" />
-        </createIndex>
         <createIndex indexName="idx_apu_apu_source_id"
             tableName="apu" unique="false">
             <column name="apu_source_id" />

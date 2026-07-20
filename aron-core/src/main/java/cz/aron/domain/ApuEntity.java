@@ -8,6 +8,7 @@ import org.hibernate.annotations.FetchMode;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import cz.aron.api.rest.model.ApuPart;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
@@ -23,6 +24,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -96,8 +99,15 @@ public class ApuEntity {
 	@JoinColumn(name="parent_id")
 	private ApuEntity parent;
 
-	@OneToMany(mappedBy = "apu", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<ApuPart> parts = new ArrayList<>();
+	// parts (and their items) are serialized with Kryo into this blob instead of
+	// being stored in their own tables
+	@Column(name = "data")
+	@JsonIgnore
+	private byte[] data;
+
+	// runtime-only view of the parts, lazily deserialized from data / serialized back on save
+	@Transient
+	private transient List<ApuPart> parts;
 
 	@OneToMany(mappedBy = "apu", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<ApuAttachment> attachments = new ArrayList<>();
@@ -235,11 +245,35 @@ public class ApuEntity {
 	}
 
 	public List<ApuPart> getParts() {
+		if (parts == null) {
+			parts = ApuPartSerializer.deserialize(data);
+		}
 		return parts;
 	}
 
 	public void setParts(List<ApuPart> parts) {
 		this.parts = parts;
+	}
+
+	public byte[] getData() {
+		return data;
+	}
+
+	public void setData(byte[] data) {
+		this.data = data;
+	}
+
+	/**
+	 * Serializes the in-memory parts into {@link #data} before insert/update. Only runs when the
+	 * parts were actually loaded/modified ({@code parts != null}); otherwise the stored blob is
+	 * left untouched so entities updated without touching parts don't get their data wiped.
+	 */
+	@PrePersist
+	@PreUpdate
+	private void serializeParts() {
+		if (parts != null) {
+			this.data = ApuPartSerializer.serialize(parts);
+		}
 	}
 
 	public List<ApuAttachment> getAttachments() {
