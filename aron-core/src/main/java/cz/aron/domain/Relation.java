@@ -1,5 +1,7 @@
 package cz.aron.domain;
 
+import java.util.UUID;
+
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -27,11 +29,11 @@ public class Relation {
 	@JoinColumn(name = "apu_source_id")
 	private ApuSource apuSource;
 	
-	private String source;
-	
+	private UUID source;
+
 	private String relation;
-	
-	private String target;
+
+	private UUID target;
 	
 	private boolean remove;
 
@@ -51,11 +53,11 @@ public class Relation {
 		this.apuSource = apuSource;
 	}
 
-	public String getSource() {
+	public UUID getSource() {
 		return source;
 	}
 
-	public void setSource(String source) {
+	public void setSource(UUID source) {
 		this.source = source;
 	}
 
@@ -67,11 +69,11 @@ public class Relation {
 		this.relation = relation;
 	}
 
-	public String getTarget() {
+	public UUID getTarget() {
 		return target;
 	}
 
-	public void setTarget(String target) {
+	public void setTarget(UUID target) {
 		this.target = target;
 	}
 

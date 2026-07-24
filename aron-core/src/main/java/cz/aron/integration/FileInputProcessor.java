@@ -1,25 +1,23 @@
 package cz.aron.integration;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
 import cz.aron.apux._2020.DaoFile;
 import cz.aron.apux._2020.MetadataItem;
 import cz.aron.domain.ApuAttachment;
 import cz.aron.domain.DigitalObject;
 import cz.aron.domain.DigitalObjectFile;
 import cz.aron.domain.DigitalObjectType;
-import cz.aron.domain.Metadatum;
 import cz.aron.service.FileManagerService;
-
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.UUID;
 
 @Service
 public class FileInputProcessor {
@@ -32,6 +30,10 @@ public class FileInputProcessor {
     private static String ATTR_REFERENCE = "reference";
     // size of file
     private static String ATTR_SIZE = "size";
+    // file is selected
+    private static String ATTR_SELECTED = "selected";
+    // file name
+    private static String ATTR_NAME = "name";
     
     private final FileManagerService fileManager;
         
@@ -44,11 +46,11 @@ public class FileInputProcessor {
         String name;
         DigitalObjectFile digitalObjectFile;
         if (apuAttachment != null) {
-            digitalObjectFile = getNewOrExisting(apuAttachment, daoFile.getUuid());
+            digitalObjectFile = getNewOrExisting(apuAttachment, UUID.fromString(daoFile.getUuid()));
             name = apuAttachment.getName();
         }
         else if (digitalObject != null) {
-            digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
+            digitalObjectFile = getNewOrExisting(digitalObject, UUID.fromString(daoFile.getUuid()));
             name = digitalObject.getName();
         }
         else {
@@ -62,6 +64,7 @@ public class FileInputProcessor {
         digitalObjectFile.setContentType(null);
         digitalObjectFile.setName(null);
         digitalObjectFile.setSize(null);
+        digitalObjectFile.setSelected(isSelected(daoFile));
 
         var attributes = processMetadata(daoFile, digitalObjectFile);
         var mimeType = attributes.get(ATTR_MIMETYPE);
@@ -70,17 +73,12 @@ public class FileInputProcessor {
         }
         if (daoFile.getMtdt() != null) {
             for (MetadataItem itm : daoFile.getMtdt().getItms()) {
-                Metadatum metadatum = new Metadatum();
-                metadatum.setType(itm.getCode());
-                metadatum.setValue(itm.getValue());
-                metadatum.setFile(digitalObjectFile);
-                digitalObjectFile.getMetadata().add(metadatum);
-                if (metadatum.getType().equals("mimeType")) {
-                    mimeType = metadatum.getValue();
+                if ("mimeType".equals(itm.getCode())) {
+                    mimeType = itm.getValue();
                 }
             }
         }
-        Path uploadedFile = filesMap.get(digitalObjectFile.getUuid());
+        Path uploadedFile = filesMap.get(digitalObjectFile.getUuid().toString());
         if (name == null) {
             name = UUID.randomUUID().toString();
         }
@@ -93,11 +91,12 @@ public class FileInputProcessor {
     }
 
     public void processFileReference(DaoFile daoFile, DigitalObjectType digitalObjectType, DigitalObject digitalObject) {
-        DigitalObjectFile digitalObjectFile = getNewOrExisting(digitalObject, daoFile.getUuid());
+        DigitalObjectFile digitalObjectFile = getNewOrExisting(digitalObject, UUID.fromString(daoFile.getUuid()));
         digitalObjectFile.setType(digitalObjectType);
         digitalObjectFile.setOrder(daoFile.getPos());
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
         digitalObjectFile.setDigitalObject(digitalObject);
+        digitalObjectFile.setSelected(isSelected(daoFile));        
 
         var attributes = processMetadata(daoFile, digitalObjectFile);
         digitalObjectFile.setReferencedFile(attributes.get(ATTR_PATH));
@@ -109,7 +108,7 @@ public class FileInputProcessor {
              digitalObjectFile.setSize(null);
         }
         //TODO transfer filename from transformagent
-        String name = null;
+        String name = attributes.get(ATTR_NAME);
         if (name==null&&digitalObjectFile.getReferencedFile()!=null) {
             name = Paths.get(digitalObjectFile.getReferencedFile()).getFileName().toString();
         }
@@ -121,31 +120,18 @@ public class FileInputProcessor {
      */
     private Map<String, String> processMetadata(DaoFile daoFile, DigitalObjectFile digitalObjectFile) {
         var attributes = new HashMap<String,String>();
-        var usedMetadata = new HashSet<String>();
         if (daoFile.getMtdt() != null) {
             for (MetadataItem itm : daoFile.getMtdt().getItms()) {
                 attributes.put(itm.getCode(), itm.getValue());
                 if (!ATTR_PATH.equals(itm.getCode())&&!ATTR_REFERENCE.equals(itm.getCode())) {
-                    usedMetadata.add(itm.getCode());
                     attributes.put(itm.getCode(), itm.getValue());
-                    Metadatum metadatum = getNewOrExisting(digitalObjectFile, itm.getCode());
-                    metadatum.setValue(itm.getValue());
                 }
             }
-        }
-
-        // remove unused metadata
-        var it = digitalObjectFile.getMetadata().iterator();
-        while(it.hasNext()) {
-            var metadatum = it.next();
-            if (!usedMetadata.contains(metadatum.getType())) {
-                it.remove();
-            }
-        }
+        }       
         return attributes;
     }
 
-	private DigitalObjectFile getNewOrExisting(DigitalObject digitalObject, String uuid) {
+	private DigitalObjectFile getNewOrExisting(DigitalObject digitalObject, UUID uuid) {
 		for (DigitalObjectFile digitalObjectFile : digitalObject.getFiles()) {
 			if (uuid.equals(digitalObjectFile.getUuid())) {
 				return digitalObjectFile;
@@ -158,7 +144,7 @@ public class FileInputProcessor {
 		return digitalObjectFile;
 	}
 
-    private DigitalObjectFile getNewOrExisting(ApuAttachment apuAttachment, String uuid) {
+    private DigitalObjectFile getNewOrExisting(ApuAttachment apuAttachment, UUID uuid) {
         DigitalObjectFile digitalObjectFile = apuAttachment.getFile();
         if (digitalObjectFile!=null && uuid.equals(digitalObjectFile.getUuid())) {
             return digitalObjectFile;
@@ -168,19 +154,6 @@ public class FileInputProcessor {
         digitalObjectFile.setAttachment(apuAttachment);
         apuAttachment.setFile(digitalObjectFile);
         return digitalObjectFile;
-    }
-
-    private Metadatum getNewOrExisting(DigitalObjectFile digitalObjectFile, String code) {
-        for(Metadatum metadatum:digitalObjectFile.getMetadata()) {
-            if (code.equals(metadatum.getType())) {
-                return metadatum;
-            }
-        }
-        Metadatum metadatum = new Metadatum();
-        metadatum.setType(code);
-        metadatum.setFile(digitalObjectFile);
-        digitalObjectFile.getMetadata().add(metadatum);
-        return metadatum;
     }
 
     public static boolean isReference(DaoFile daoFile) {
@@ -193,5 +166,17 @@ public class FileInputProcessor {
         }
         return false;
     }
+    
+    public static boolean isSelected(DaoFile daoFile) {
+        if (daoFile.getMtdt() != null) {
+            for (MetadataItem itm : daoFile.getMtdt().getItms()) {
+                if (ATTR_SELECTED.equals(itm.getCode()) && "1".equals(itm.getValue())) {
+                    return true;
+                }
+            }
+        }
+        return false;    	
+    }
+
 
 }

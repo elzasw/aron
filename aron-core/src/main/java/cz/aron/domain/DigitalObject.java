@@ -2,6 +2,7 @@ package cz.aron.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -23,11 +24,12 @@ public class DigitalObject {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="digital_object_id")
 	private long id;
-	
-	private String uuid;
-	
+
+	private UUID uuid;
+
     private String name;
     private String permalink;
+    @Column(name = "\"order\"")
     private int order;
 
     @OneToMany(mappedBy = "digitalObject", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -85,12 +87,12 @@ public class DigitalObject {
 		this.id = id;
 	}
 
-	public String getUuid() {
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
-	}    
+	}
 
 }

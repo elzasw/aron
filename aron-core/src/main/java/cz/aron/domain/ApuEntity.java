@@ -2,6 +2,7 @@ package cz.aron.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
@@ -76,7 +77,7 @@ resultSetMapping = "apuAncestorsResult")
 	      @ConstructorResult(
 	        targetClass=cz.aron.domain.types.dto.ApuEntityViewType.class,
 	        columns={
-	          @ColumnResult(name="uuid", type=String.class),
+	          @ColumnResult(name="uuid", type=UUID.class),
 	          @ColumnResult(name="name", type=String.class),
 	          @ColumnResult(name="description", type=String.class),
 	          @ColumnResult(name="ordr", type=Integer.class),
@@ -90,7 +91,7 @@ resultSetMapping = "apuAncestorsResult")
 	        targetClass=cz.aron.domain.dto.IdUuidNameDescriptionParentDto.class,
 	        columns={
 	          @ColumnResult(name="apu_id", type=Long.class),
-	          @ColumnResult(name="uuid", type=String.class),
+	          @ColumnResult(name="uuid", type=UUID.class),
 	          @ColumnResult(name="name", type=String.class),
 	          @ColumnResult(name="description", type=String.class),
 	          @ColumnResult(name="parent_id", type=Long.class),
@@ -109,7 +110,7 @@ public class ApuEntity {
     @Column(name="apu_id")
 	private long id;
 
-	private String uuid;
+	private UUID uuid;
 
 	private String name;
 	private String indexedName;
@@ -172,11 +173,11 @@ public class ApuEntity {
 		return id;
 	}
 
-	public String getUuid() {
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
 

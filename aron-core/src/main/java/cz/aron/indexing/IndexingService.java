@@ -78,7 +78,7 @@ public class IndexingService {
 			if (apu.isIndexed()) {
 				var document = convert(apu, apuRefLabels);
 				var iq = new IndexQuery();
-				iq.setId(apu.getUuid());
+				iq.setId(apu.getUuid().toString());
 				iq.setObject(document);
 				iq.setOpType(OpType.INDEX);
 				iq.setSource("source");
@@ -96,7 +96,7 @@ public class IndexingService {
 			if (rel.isRemove()) {
 				continue;
 			}
-			var indexedRel = new IndexedRelation(rel.getSource(), rel.getRelation(), rel.getTarget());
+			var indexedRel = new IndexedRelation(rel.getSource().toString(), rel.getRelation(), rel.getTarget().toString());
 			var iq = new IndexQuery();
 			iq.setId(UUID.randomUUID().toString());
 			iq.setObject(indexedRel);

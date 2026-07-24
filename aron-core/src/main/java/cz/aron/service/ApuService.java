@@ -2,10 +2,13 @@ package cz.aron.service;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +52,7 @@ public class ApuService {
 		this.levelSize = levelSize;
 	}
 
-	private List<IdLabelDto> mapNames(Collection<String> ids) {
+	private List<IdLabelDto> mapNames(Collection<UUID> ids) {
 		var ret = new ArrayList<IdLabelDto>(ids.size());
 		Iterables.partition(ids, 1000).forEach(partition -> ret.addAll(apuEntityRepository.listByUuids(partition)));
 		return ret;
@@ -62,8 +65,8 @@ public class ApuService {
 	 * through the REST model.
 	 */
 	public Map<String, IdLabelDto> resolveApuRefLabels(Collection<ApuEntity> apus) {
-        //Find all referred ids
-        var idsToFind = new HashSet<String>();
+        //Find all referred ids (APU_REF values are uuid strings in the serialized parts)
+        var idsToFind = new HashSet<UUID>();
         for (ApuEntity apuEntity : apus) {
             for (ApuPart part : apuEntity.getParts()) {
                 for (ApuPartItem item : part.getItems()) {
@@ -73,16 +76,16 @@ public class ApuService {
                         continue;
                     }
                     if (itemType.getType() == DataType.APU_REF) {
-                        idsToFind.add(item.getValue());
+                        idsToFind.add(UUID.fromString(item.getValue()));
                     }
                 }
             }
         }
 
-        //Fetch their labels and put them to a map
+        //Fetch their labels and put them to a map keyed by the uuid string (matches item.getValue())
         var idToLabelLookupMap = new HashMap<String,IdLabelDto>();
         for (IdLabelDto idLabelDto : mapNames(idsToFind)) {
-            idToLabelLookupMap.put(idLabelDto.uuid(), idLabelDto);
+            idToLabelLookupMap.put(idLabelDto.uuid().toString(), idLabelDto);
         }
         return idToLabelLookupMap;
     }
@@ -98,17 +101,21 @@ public class ApuService {
 
 	@Transactional(readOnly=true)
 	public List<ApuEntityTreeViewDto> getEntitiesBefore(String apuId) {
-		var apu = apuEntityRepository.findByUuid(apuId);
+		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
+		List<ApuEntityTreeViewDto> result;
 		if (apu.getParent()!=null) {
-			return apuEntityRepository.listEntitiesBefore(apu.getParent().getId(), apu.getPos(), levelSize);
+			result = apuEntityRepository.listEntitiesBefore(apu.getParent().getId(), apu.getPos(), levelSize);
 		} else {
-			return apuEntityRepository.listRootEntitiesBefore(apu.getSource().getId(), apu.getPos(), levelSize);
+			result = apuEntityRepository.listRootEntitiesBefore(apu.getSource().getId(), apu.getPos(), levelSize);
 		}
+		// queries order by pos desc to grab the nearest items; reverse to restore ascending tree order
+		Collections.reverse(result);
+		return result;
 	}
 
 	@Transactional(readOnly=true)
 	public List<ApuEntityTreeViewDto> getEntitiesAfter(String apuId) {
-		var apu = apuEntityRepository.findByUuid(apuId);
+		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
 		if (apu.getParent()!=null) {
 			return apuEntityRepository.listEntitiesAfter(apu.getParent().getId(), apu.getPos(), levelSize);
 		} else {
@@ -118,13 +125,13 @@ public class ApuService {
 
 	@Transactional(readOnly = true)
 	public List<ApuEntityTreeViewDto> getEntitiesUnder(String apuId) {
-		var apu = apuEntityRepository.findByUuid(apuId);
+		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
 		return apuEntityRepository.listEntitiesUnder(apu.getId(), levelSize);
 	}
 
 	@Transactional(readOnly = true)
 	public List<ApuEntityView> findAllByUuids(List<String> ids) {
-		var entities = apuEntityRepository.findAllByUuids(ids);
+		var entities = apuEntityRepository.findAllByUuids(ids.stream().map(UUID::fromString).collect(Collectors.toList()));
 		var ret = new ArrayList<ApuEntityView>();
 		for(var entity:entities) {
 			ret.add(new ApuEntityView(entity.id(),entity.name(),entity.order()).description(entity.description()));
@@ -133,8 +140,8 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly = true)
-	public cz.aron.api.rest.model.ApuEntity getApuEntity(String apuId) {		
-		var src = apuEntityRepository.findByUuid(apuId);
+	public cz.aron.api.rest.model.ApuEntity getApuEntity(String apuId) {
+		var src = apuEntityRepository.findByUuid(UUID.fromString(apuId));
 		if (src == null) {
 			
 		}		
@@ -158,7 +165,7 @@ public class ApuService {
 			cz.aron.api.rest.model.ApuEntity current = dto;
 			for(var ancestor: ancestors) {
 				cz.aron.api.rest.model.ApuEntity ancestorDto = new cz.aron.api.rest.model.ApuEntity();
-				ancestorDto.setId(ancestor.uuid());
+				ancestorDto.setId(ancestor.uuid().toString());
 				ancestorDto.setName(ancestor.name());
 				ancestorDto.setDescription(ancestor.description());
 				ancestorDto.setChildCnt(ancestor.childCnt());
@@ -171,10 +178,12 @@ public class ApuService {
 		}
 
 		// attachments
-		
+
 		// daos
-		
-		
+		if (src.isHasDaos()) {
+			dto.setDigitalObjects(apuEntityMapper.toRestDigitalObjects(src.getDigitalObjects()));
+		}
+
 		return dto;
 	}
 	

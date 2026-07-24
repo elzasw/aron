@@ -1,22 +1,18 @@
 package cz.aron.domain;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -28,16 +24,18 @@ public class DigitalObjectFile {
     @Column(name="digital_object_file_id")
 	private long id;
 	
-	private String uuid;
-	
+	private UUID uuid;
+
+    @Column(name = "file_id")
+    private UUID fileId;
+
     private String permalink;
+
+    @Column(name = "\"order\"")
     private int order;
 
     @Enumerated(EnumType.STRING)
     private DigitalObjectType type;
-
-    @OneToMany(mappedBy = "file", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Metadatum> metadata = new ArrayList<>();
 
     //@OneToOne
     //private File file;
@@ -58,6 +56,8 @@ public class DigitalObjectFile {
     private String contentType;
 
     private Long size;
+    
+    private boolean selected;
 
 	public String getPermalink() {
 		return permalink;
@@ -81,14 +81,6 @@ public class DigitalObjectFile {
 
 	public void setType(DigitalObjectType type) {
 		this.type = type;
-	}
-
-	public List<Metadatum> getMetadata() {
-		return metadata;
-	}
-
-	public void setMetadata(List<Metadatum> metadata) {
-		this.metadata = metadata;
 	}
 
 	public DigitalObject getDigitalObject() {
@@ -147,12 +139,28 @@ public class DigitalObjectFile {
 		this.id = id;
 	}
 
-	public String getUuid() {
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
-	}    
+	}
 
+	public UUID getFileId() {
+		return fileId;
+	}
+
+	public void setFileId(UUID fileId) {
+		this.fileId = fileId;
+	}
+
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+	}
+	
 }

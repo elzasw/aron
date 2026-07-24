@@ -1,5 +1,7 @@
 package cz.aron.domain.dto;
 
-public record IdLabelDto(long id, String uuid, String name, String indexedName) {
+import java.util.UUID;
+
+public record IdLabelDto(long id, UUID uuid, String name, String indexedName) {
 
 }

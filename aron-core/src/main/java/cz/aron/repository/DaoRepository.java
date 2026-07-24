@@ -2,6 +2,7 @@ package cz.aron.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -17,7 +18,7 @@ public interface DaoRepository  extends JpaRepository<DigitalObject, Long> {
 	@Modifying
 	long disconnectDaosByApuSourceId(long id);
 
-	DigitalObject findByUuid(String uuid);
-	
-	List<DigitalObject> findAllByUuidIn(Collection<String> uuids);
+	DigitalObject findByUuid(UUID uuid);
+
+	List<DigitalObject> findAllByUuidIn(Collection<UUID> uuids);
 }

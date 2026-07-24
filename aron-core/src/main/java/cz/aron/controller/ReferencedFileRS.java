@@ -60,7 +60,7 @@ public class ReferencedFileRS {
     public ResponseEntity<InputStreamResource> download(@Parameter(description = "ID of file to download", required = true)
                                                         @PathVariable("id") String id) {
 
-        DigitalObjectFile digitalObjectFile = daoFileRepository.findByUuid(id);        
+        DigitalObjectFile digitalObjectFile = daoFileRepository.findByUuid(java.util.UUID.fromString(id));
         if (digitalObjectFile == null || digitalObjectFile.getReferencedFile() ==null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such object.");
         }

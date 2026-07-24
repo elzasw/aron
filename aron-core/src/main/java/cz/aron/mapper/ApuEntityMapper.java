@@ -14,7 +14,7 @@ import cz.aron.api.rest.model.DigitalObjectFile;
 public class ApuEntityMapper {
 
     public ApuEntity toRest(cz.aron.domain.ApuEntity src) {
-        ApuEntity dto = new ApuEntity(src.getUuid());
+        ApuEntity dto = new ApuEntity(src.getUuid().toString());
         dto.setName(src.getName());
         dto.setDescription(src.getDescription());
         dto.setPermalink(src.getPermalink());
@@ -57,8 +57,16 @@ public class ApuEntityMapper {
         return dto;
     }
 
+    public List<DigitalObject> toRestDigitalObjects(List<cz.aron.domain.DigitalObject> src) {
+        List<DigitalObject> digitalObjects = new ArrayList<>(src.size());
+        for (cz.aron.domain.DigitalObject dao : src) {
+            digitalObjects.add(toRest(dao));
+        }
+        return digitalObjects;
+    }
+
     private DigitalObject toRest(cz.aron.domain.DigitalObject src) {
-        DigitalObject dto = new DigitalObject(src.getUuid());
+        DigitalObject dto = new DigitalObject(src.getUuid().toString());
         dto.setName(src.getName());
         dto.setPermalink(src.getPermalink());
         dto.setOrder(src.getOrder());
@@ -73,7 +81,7 @@ public class ApuEntityMapper {
     }
 
     private DigitalObjectFile toRest(cz.aron.domain.DigitalObjectFile src) {
-        DigitalObjectFile dto = new DigitalObjectFile(src.getUuid());
+        DigitalObjectFile dto = new DigitalObjectFile(src.getUuid().toString());
         dto.setPermalink(src.getPermalink());
         dto.setOrder(src.getOrder());
         dto.setType(toFileTypeEnum(src.getType()));
@@ -81,6 +89,7 @@ public class ApuEntityMapper {
         dto.setReferencedFile(src.getReferencedFile());
         dto.setContentType(src.getContentType());
         dto.setSize(src.getSize());
+        dto.setSelected(src.isSelected());
         return dto;
     }
 

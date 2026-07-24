@@ -12,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -73,7 +74,7 @@ public class ApuProcessor {
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
 	private Set<RelationKey> relationsAddCache = new HashSet<>();	// set of relations to be added to database
-	private Set<String> apusToHaveIncomingRelsUpdated = new HashSet<>();
+	private Set<UUID> apusToHaveIncomingRelsUpdated = new HashSet<>();
 	private Map<String, LevelStats> apuIdsStates = new HashMap<>();
 	private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
@@ -107,10 +108,10 @@ public class ApuProcessor {
 		
 		try (ApuSourceBatchReader reader = new ApuSourceBatchReader(apuSrcPath);) {
 			log.debug("Processing apu source {}", reader.getUuid());
-			var ourApuSource = apuSourceRepository.findByUuid(reader.getUuid());
+			var ourApuSource = apuSourceRepository.findByUuid(UUID.fromString(reader.getUuid()));
 			if (ourApuSource == null) {
 				ourApuSource = new cz.aron.domain.ApuSource();
-				ourApuSource.setUuid(reader.getUuid());
+				ourApuSource.setUuid(UUID.fromString(reader.getUuid()));
 			} else {
 				removeExistingApusAndRelations(ourApuSource.getId(), reader.getUuid());
 			}
@@ -266,7 +267,7 @@ public class ApuProcessor {
 		var levelState = apuIdsStates.get(apu.getUuid());
 		
 		ApuEntity apuEntity = new ApuEntity();
-		apuEntity.setUuid(apu.getUuid());
+		apuEntity.setUuid(UUID.fromString(apu.getUuid()));
 		apuEntity.setName(apu.getName());
 		apuEntity.setIndexedName(apu.getIndexedName());
 		apuEntity.setOrder(++apuOrderCounter);
@@ -287,7 +288,7 @@ public class ApuProcessor {
                 if (parentLevelStats==null||!parentLevelStats.processed) {
                     throw new RuntimeException("parent apu not found yet");
                 }
-                parentApu = apuEntityRepository.findByUuid(apu.getPrnt());
+                parentApu = apuEntityRepository.findByUuid(UUID.fromString(apu.getPrnt()));
 			}
 			apuEntity.setParent(parentApu);
 		}
@@ -302,7 +303,7 @@ public class ApuProcessor {
 				DigitalObject insertedDao = existingDaos.get(daoUuid);
 				if (insertedDao == null) {
 					insertedDao = new DigitalObject();
-					insertedDao.setUuid(daoUuid);
+					insertedDao.setUuid(UUID.fromString(daoUuid));
 				}
 				insertedDao.setApu(apuEntity);
 				insertedDao.setOrder(++i);
@@ -312,7 +313,7 @@ public class ApuProcessor {
 		apuEntity.setHasAttachments(!apuEntity.getAttachments().isEmpty());
 		apuEntity.setHasDaos(!apuEntity.getDigitalObjects().isEmpty());
 		levelState.processed = true;
-		saveCache.put(apuEntity.getUuid(), apuEntity);
+		saveCache.put(apu.getUuid(), apuEntity);
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
 		recordRelations(apuEntity);
 		//apuRequestQueue.removeForApuId(apuEntity.getUuid());
@@ -416,7 +417,7 @@ public class ApuProcessor {
 			for (ApuPartItem item : part.getItems()) {
 				ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
 				if (itemType != null && itemType.getType() == DataType.APU_REF) {
-					relationsAddCache.add(new RelationKey(apuEntity.getUuid(), item.getValue(), item.getType()));
+					relationsAddCache.add(new RelationKey(apuEntity.getUuid(), UUID.fromString(item.getValue()), item.getType()));
 				}
 			}
 		}
@@ -454,7 +455,7 @@ public class ApuProcessor {
 		apuEntityRepository.flush();
 		
 		// Now to reindex all apus that reference these apus, to update labels in them
-		List<String> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
+		List<UUID> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
 		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
 		// clear for next batch
@@ -480,11 +481,12 @@ public class ApuProcessor {
 	private void fillDaoCache(List<String> daoIds) {
 		existingDaos.clear();
 		if (!daoIds.isEmpty()) {
-			daoRepository.findAllByUuidIn(daoIds).forEach(dao -> existingDaos.put(dao.getUuid(), dao));
+			var daoUuids = daoIds.stream().map(UUID::fromString).collect(Collectors.toList());
+			daoRepository.findAllByUuidIn(daoUuids).forEach(dao -> existingDaos.put(dao.getUuid().toString(), dao));
 		}
 	}
 
-	record RelationKey(String source, String target, String relation) {
+	record RelationKey(UUID source, UUID target, String relation) {
 	}
 	
     private class LevelStats {

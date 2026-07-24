@@ -1,6 +1,7 @@
 package cz.aron.domain;
 
 import java.time.Instant;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,7 +21,7 @@ public class QueuedApu {
 
 	protected Instant created;
 
-    private String apuId;
+    private UUID apuId;
 
     private boolean requestSent;
 
@@ -40,11 +41,11 @@ public class QueuedApu {
 		this.created = created;
 	}
 
-	public String getApuId() {
+	public UUID getApuId() {
 		return apuId;
 	}
 
-	public void setApuId(String apuId) {
+	public void setApuId(UUID apuId) {
 		this.apuId = apuId;
 	}
 

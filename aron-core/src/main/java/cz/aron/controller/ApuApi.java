@@ -105,7 +105,7 @@ public class ApuApi implements AronApi {
     @Transactional
     public ResponseEntity<?> getSimpleTree(@PathVariable("id") String apuId) {
         if (treeCache!=null) {
-            var published = apuEntityRepository.findPublishedByUuid(apuId);
+            var published = apuEntityRepository.findPublishedByUuid(java.util.UUID.fromString(apuId));
             String timestamp = "";
             if (published!=null) {
                 timestamp = "" + published.toEpochSecond(ZoneOffset.UTC);
@@ -148,14 +148,14 @@ public class ApuApi implements AronApi {
     }
 
 	private ApuEntityTreeView readTree(String apuId) {
-		var entities = apuEntityRepository.findAllByParentUuid(apuId);
+		var entities = apuEntityRepository.findAllByParentUuid(java.util.UUID.fromString(apuId));
 		if (entities.isEmpty()) {
 			return null;
 		}
 		var ids = new HashMap<Long, ApuEntityTreeView>();
 		ApuEntityTreeView root = null;
 		for (var entity : entities) {
-			var newEntity = new ApuEntityTreeView(entity.uuid(), entity.name(), entity.description(), entity.ordr(),
+			var newEntity = new ApuEntityTreeView(entity.uuid().toString(), entity.name(), entity.description(), entity.ordr(),
 					entity.type(), new ArrayList<>());
 			ids.put(entity.apu_id(), root);
 			if (root == null) {
@@ -201,10 +201,10 @@ public class ApuApi implements AronApi {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
 		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
 		var simplified = entities.stream().map(e -> {
 			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid());
+			s.setId(e.getUuid().toString());
 			s.setName(e.getName());
 			s.setDescription(e.getDescription());
 			s.setOrder((long) e.getOrder());
@@ -238,10 +238,10 @@ public class ApuApi implements AronApi {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
 		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
 		var simplified = entities.stream().map(e -> {
 			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid());
+			s.setId(e.getUuid().toString());
 			s.setName(e.getName());
 			s.setDescription(e.getDescription());
 			s.setOrder((long) e.getOrder());
@@ -255,10 +255,10 @@ public class ApuApi implements AronApi {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
 		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids);
+		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
 		var simplified = entities.stream().map(e -> {
 			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid());
+			s.setId(e.getUuid().toString());
 			s.setName(e.getName());
 			s.setDescription(e.getDescription());
 			s.setOrder((long) e.getOrder());
@@ -297,10 +297,10 @@ public class ApuApi implements AronApi {
 	public ResponseEntity<StructuredResults> listResults(@Valid Params params) {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());				
-		var results = apuEntityRepository.findAllResultsByUuidIn(uuids);		
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
+		var results = apuEntityRepository.findAllResultsByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
 		Map<String, IdStructuredResultDto> byId = results.stream()
-	                .collect(Collectors.toMap(IdStructuredResultDto::uuid, Function.identity()));
+	                .collect(Collectors.toMap(r -> r.uuid().toString(), Function.identity()));
 		
 		var result = new StructuredResults();				
 		result.setAggregations(Aggregations.map(hits.getAggregations()));
@@ -312,10 +312,10 @@ public class ApuApi implements AronApi {
             			try {
             				return objectMapper.readValue(r.result(),StructuredResult.class);
             			} catch (Exception e) {
-            				return createEmptyResult(r.uuid());
+            				return createEmptyResult(r.uuid().toString());
             			}
             		} else {
-            			return createEmptyResult(r.uuid());
+            			return createEmptyResult(r.uuid().toString());
             		}
                 })
                 .collect(Collectors.toList()));

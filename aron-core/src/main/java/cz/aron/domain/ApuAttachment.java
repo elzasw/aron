@@ -23,6 +23,7 @@ public class ApuAttachment {
 	private long id;
 	
     private String name;
+    @Column(name = "\"order\"")
     private int order;
 
     @OneToOne(mappedBy = "attachment", cascade = CascadeType.ALL, orphanRemoval = true)

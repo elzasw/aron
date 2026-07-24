@@ -2,7 +2,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
     <property name="now" value="now()" dbms="postgresql"/>
     <property name="id" value="bigint" dbms="postgresql"/>
-    <property name="uuid" value="char(36)" dbms="postgresql"/>
+    <property name="uuid" value="uuid" dbms="postgresql"/>
     <property name="blob" value="bytea" dbms="postgresql"/>
 
     <changeSet id="1" author="karel.zacek@lightcomp.cz">
@@ -93,6 +93,7 @@
                 <constraints nullable="false" primaryKey="true" primaryKeyName="PK_digital_object_file"/>
             </column>
             <column name="uuid" type="${uuid}"/>
+            <column name="file_id" type="uuid"/>
             <column name="permalink" type="nvarchar(255)"/>
             <column name="order" type="int"/>
             <column name="type" type="varchar(255)"/>
@@ -100,6 +101,7 @@
             <column name="referenced_file" type="nvarchar(2048)"/>
             <column name="content_type" type="varchar(255)"/>
             <column name="size" type="bigint"/>
+            <column name="selected" type="boolean"/>
             <column name="digital_object_id" type="${id}">
                 <constraints referencedTableName="digital_object" referencedColumnNames="digital_object_id" foreignKeyName="FK_digital_object_file_digital_object"/>
             </column>

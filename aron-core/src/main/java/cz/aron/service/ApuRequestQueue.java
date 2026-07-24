@@ -12,6 +12,7 @@ import cz.aron.service.transformagent.TransformAgentClient;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -30,19 +31,20 @@ public class ApuRequestQueue {
     //TODO refactor to batch processing
     @Transactional(propagation=Propagation.REQUIRES_NEW)
     @Async
-	public void add(String apuId) {    	
+	public void add(String apuId) {
+    	UUID apuUuid = UUID.fromString(apuId);
     	try {
     		lock.lock();
-    		var queuedApu = queuedApuRepository.findByApuId(apuId);
+    		var queuedApu = queuedApuRepository.findByApuId(apuUuid);
     		if (queuedApu == null) {
     			queuedApu = new QueuedApu();
-    			queuedApu.setApuId(apuId);
+    			queuedApu.setApuId(apuUuid);
     			queuedApu.setCreated(Instant.now());
     			queuedApuRepository.save(queuedApu);
     		}
     	} finally {
     		lock.unlock();
-    	}	
+    	}
 	}
 
     /**
@@ -59,7 +61,7 @@ public class ApuRequestQueue {
         }
         List<String> requestedIdsList = new ArrayList<>();
         for (QueuedApu apu : batchToResolve) {
-            requestedIdsList.add(apu.getApuId());
+            requestedIdsList.add(apu.getApuId().toString());
             apu.setRequestSent(true);
         }
         transformAgentClient.requestApus(requestedIdsList);
@@ -68,6 +70,6 @@ public class ApuRequestQueue {
     }
     
     public int removeForApuId(String apuId) {
-        return queuedApuRepository.removeForApuId(apuId);
+        return queuedApuRepository.removeForApuId(UUID.fromString(apuId));
     }
 }

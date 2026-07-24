@@ -1,6 +1,7 @@
 package cz.aron.domain;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,8 +19,8 @@ public class ApuSource {
     @Column(name="apu_source_id")
 	private long id;
 	
-	private String uuid;
-	
+	private UUID uuid;
+
     private LocalDateTime published;
 
 	public long getId() {
@@ -30,11 +31,11 @@ public class ApuSource {
 		this.id = id;
 	}
 
-	public String getUuid() {
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
 

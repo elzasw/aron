@@ -2,6 +2,7 @@ package cz.aron.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -15,7 +16,7 @@ import cz.aron.domain.Relation;
 public interface RelationRepository  extends JpaRepository<Relation, Long>  {
 	
 	@Query("SELECT r.id FROM Relation r WHERE r.target IN (:target)")
-	List<Long> findIdsByTarget(@Param("target") Collection<String> target);
+	List<Long> findIdsByTarget(@Param("target") Collection<UUID> target);
 
 	/**
 	 * Set reference to ApuEntity to NULL for all relations related to given ApuSource.
@@ -26,7 +27,7 @@ public interface RelationRepository  extends JpaRepository<Relation, Long>  {
 	@Query("UPDATE Relation r SET r.remove=true WHERE r.apuSource.id=:apuSourceId")
 	long markToRemoveByApuSourceId(@Param("apuSourceId") long apuSourceId);
 		
-	List<Relation> findAllByApuSourceIdAndSourceIn(@Param("apuSourceId") long apuSourceId, @Param("sources") Collection<String> sources);
+	List<Relation> findAllByApuSourceIdAndSourceIn(@Param("apuSourceId") long apuSourceId, @Param("sources") Collection<UUID> sources);
 	
 	@Query("SELECT r.id FROM Relation r WHERE r.apuSource.id=:apuSourceId AND r.remove=true")
 	List<Long> findAllIdByApuSourceIdAndRemoveTrue(@Param("apuSourceId") long apuSourceId);

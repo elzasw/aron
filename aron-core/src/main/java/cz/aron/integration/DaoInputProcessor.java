@@ -7,11 +7,12 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.xml.bind.JAXB;
+import jakarta.xml.bind.JAXB;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,11 +46,11 @@ public class DaoInputProcessor {
         try (StringReader reader = new StringReader(metadata)) {
             dao = JAXB.unmarshal(reader, Dao.class);
         }
-        DigitalObject digitalObject = daoRepository.findByUuid(dao.getUuid());
+        DigitalObject digitalObject = daoRepository.findByUuid(UUID.fromString(dao.getUuid()));
         if (digitalObject == null) {
             throw new RuntimeException("Digital object base not found.");
         }
-        digitalObject.setUuid(dao.getUuid());
+        digitalObject.setUuid(UUID.fromString(dao.getUuid()));
         digitalObject.setName(dao.getName());
         digitalObject.setPermalink(dao.getPrmLnk());
         var usedUuids = new HashSet<String>();
@@ -91,7 +92,7 @@ public class DaoInputProcessor {
         var it = digitalObject.getFiles().iterator();
         while(it.hasNext()) {
             var digitalObjectFile = it.next();
-            if (!usedUuids.contains(digitalObjectFile.getUuid())) {
+            if (!usedUuids.contains(digitalObjectFile.getUuid().toString())) {
                 it.remove();
             }
         }

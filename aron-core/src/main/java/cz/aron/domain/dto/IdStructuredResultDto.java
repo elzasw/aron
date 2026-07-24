@@ -1,4 +1,6 @@
 package cz.aron.domain.dto;
 
-public record IdStructuredResultDto(String uuid, String result) {
+import java.util.UUID;
+
+public record IdStructuredResultDto(UUID uuid, String result) {
 }

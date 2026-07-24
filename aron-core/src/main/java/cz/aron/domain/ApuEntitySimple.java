@@ -1,5 +1,7 @@
 package cz.aron.domain;
 
+import java.util.UUID;
+
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Immutable;
 
@@ -17,7 +19,7 @@ public class ApuEntitySimple {
 	@Id
 	@Column(name="apu_id")
 	private long id;
-	private String uuid;
+	private UUID uuid;
     private String name;
     private String description;
     @Column(name = "ordr")
@@ -31,11 +33,11 @@ public class ApuEntitySimple {
 		this.id = id;
 	}
 
-	public String getUuid() {
+	public UUID getUuid() {
 		return uuid;
 	}
 
-	public void setUuid(String uuid) {
+	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
 	}
 
