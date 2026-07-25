@@ -47,6 +47,14 @@ public class ApuEntityMapper {
         return dto;
     }
 
+    public List<ApuAttachment> toRestAttachments(List<cz.aron.domain.ApuAttachment> src) {
+        List<ApuAttachment> attachments = new ArrayList<>(src.size());
+        for (cz.aron.domain.ApuAttachment att : src) {
+            attachments.add(toRest(att));
+        }
+        return attachments;
+    }
+
     private ApuAttachment toRest(cz.aron.domain.ApuAttachment src) {
         ApuAttachment dto = new ApuAttachment(String.valueOf(src.getId()));
         dto.setName(src.getName());

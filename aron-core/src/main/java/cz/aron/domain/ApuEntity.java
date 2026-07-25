@@ -1,5 +1,6 @@
 package cz.aron.domain;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -131,8 +132,8 @@ public class ApuEntity {
 
     @Column(name = "has_attachments")
     private boolean hasAttachments;
-    @Column(name = "has_daos")
-    private boolean hasDaos;
+    @Column(name = "dao_published")
+    private LocalDateTime daoPublished;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@Fetch(FetchMode.SELECT)
@@ -377,12 +378,16 @@ public class ApuEntity {
 		this.hasAttachments = hasAttachments;
 	}
 
-	public boolean isHasDaos() {
-		return hasDaos;
+	public boolean hasDaos() {
+		return daoPublished != null;
 	}
 
-	public void setHasDaos(boolean hasDaos) {
-		this.hasDaos = hasDaos;
+	public LocalDateTime getDaoPublished() {
+		return daoPublished;
+	}
+
+	public void setDaoPublished(LocalDateTime daoPublished) {
+		this.daoPublished = daoPublished;
 	}
 
 }

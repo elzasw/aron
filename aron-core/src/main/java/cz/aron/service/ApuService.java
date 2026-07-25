@@ -178,9 +178,12 @@ public class ApuService {
 		}
 
 		// attachments
+		if (src.isHasAttachments()) {
+			dto.setAttachments(apuEntityMapper.toRestAttachments(src.getAttachments()));
+		}
 
 		// daos
-		if (src.isHasDaos()) {
+		if (src.hasDaos()) {
 			dto.setDigitalObjects(apuEntityMapper.toRestDigitalObjects(src.getDigitalObjects()));
 		}
 

@@ -59,9 +59,7 @@
             <column name="has_attachments" type="boolean">
                 <constraints nullable="false"/>
             </column>
-            <column name="has_daos" type="boolean">
-                <constraints nullable="false"/>
-            </column>
+            <column name="dao_published" type="datetime"/>
             <column name="data" type="${blob}"/>
         </createTable>
         <createTable tableName="apu_attachment">
@@ -83,6 +81,7 @@
             <column name="permalink" type="varchar(255)"/>
             <column name="name" type="nvarchar(255)"/>
             <column name="order" type="int" value="0"/>
+            <column name="published" type="datetime"/>
             <column name="apu_id" type="${id}">
                 <constraints referencedTableName="apu" referencedColumnNames="apu_id" foreignKeyName="FK_digital_object_apu"/>
             </column>

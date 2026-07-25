@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
@@ -88,13 +89,17 @@ public class DaoInputProcessor {
                 usedUuids.add(daoFile.getUuid());
             }
         }
-        // remove unused                
+        // remove unused
         var it = digitalObject.getFiles().iterator();
         while(it.hasNext()) {
             var digitalObjectFile = it.next();
             if (!usedUuids.contains(digitalObjectFile.getUuid().toString())) {
                 it.remove();
             }
+        }
+        digitalObject.setPublished(LocalDateTime.now());
+        if (digitalObject.getApu() != null) {
+            digitalObject.getApu().setDaoPublished(LocalDateTime.now());
         }
         daoRepository.save(digitalObject);
     }

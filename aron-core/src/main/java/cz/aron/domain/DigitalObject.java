@@ -1,5 +1,6 @@
 package cz.aron.domain;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +32,8 @@ public class DigitalObject {
     private String permalink;
     @Column(name = "\"order\"")
     private int order;
+
+    private LocalDateTime published;
 
     @OneToMany(mappedBy = "digitalObject", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DigitalObjectFile> files = new ArrayList<>();
@@ -93,6 +96,14 @@ public class DigitalObject {
 
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
+	}
+
+	public LocalDateTime getPublished() {
+		return published;
+	}
+
+	public void setPublished(LocalDateTime published) {
+		this.published = published;
 	}
 
 }

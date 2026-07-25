@@ -307,11 +307,11 @@ public class ApuProcessor {
 				}
 				insertedDao.setApu(apuEntity);
 				insertedDao.setOrder(++i);
+				insertedDao.setPublished(LocalDateTime.now());
 				apuEntity.getDigitalObjects().add(insertedDao);
 			}
 		}
 		apuEntity.setHasAttachments(!apuEntity.getAttachments().isEmpty());
-		apuEntity.setHasDaos(!apuEntity.getDigitalObjects().isEmpty());
 		levelState.processed = true;
 		saveCache.put(apu.getUuid(), apuEntity);
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
