@@ -424,6 +424,12 @@ public class ApuProcessor {
 	}
 
 	private void flush(cz.aron.domain.ApuSource apuSource) {
+		// persist apus first: managed daos (from existingDaos) may reference these still-transient
+		// apus, and the relation query below triggers an auto-flush that would otherwise fail with
+		// "references an unsaved transient instance"
+		apuEntityRepository.saveAll(saveCache.values());
+		apuEntityRepository.flush();
+
 		// restore existing relations and store new
 		var sources = relationsAddCache.stream().map(r -> r.source()).collect(Collectors.toSet());
 		var existingRelations = relationRepository.findAllByApuSourceIdAndSourceIn(apuSource.getId(), sources);
@@ -449,11 +455,6 @@ public class ApuProcessor {
 		relationRepository.saveAll(relationToAdd);
 		relationsAddCache.clear();
 
-		// save apus (indexing uses relations table to index incoming relation type
-		// groups)
-		apuEntityRepository.saveAll(saveCache.values());
-		apuEntityRepository.flush();
-		
 		// Now to reindex all apus that reference these apus, to update labels in them
 		List<UUID> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
