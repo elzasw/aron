@@ -35,6 +35,7 @@ import cz.aron.api.rest.AronApi;
 import cz.aron.api.rest.model.ApuEntity;
 import cz.aron.api.rest.model.ApuEntitySimplified;
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
+import cz.aron.api.rest.model.ApuEntityView;
 import cz.aron.api.rest.model.Params;
 import cz.aron.api.rest.model.ResultRowItem;
 import cz.aron.api.rest.model.ResultRowItemValue;
@@ -92,16 +93,15 @@ public class ApuApi implements AronApi {
 		this.simpleResultBuilder = simpleResultBuilder;
 	}
 
-	@Override
-	@Transactional
-    public ResponseEntity<ApuEntity> getApu(@PathVariable("id") String apuId) {    
+    @Override
+	public ResponseEntity<ApuEntity> getApu(String apuId, String ifNoneMatch, String ifModifiedSince) {
     	var apu = apuService.getApuEntity(apuId);    	
     	return ResponseEntity.ok()
     			.contentType(MediaType.APPLICATION_JSON)
     			.body(apu);
     }
 
-    //@GetMapping("/{id}/tree")
+	//@GetMapping("/{id}/tree")
     @Transactional
     public ResponseEntity<?> getSimpleTree(@PathVariable("id") String apuId) {
         if (treeCache!=null) {
@@ -222,10 +222,10 @@ public class ApuApi implements AronApi {
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
                 .contentType(MediaType.APPLICATION_JSON)
 		.body(apuService.findAllByUuids(ids));
-	}
+	}	
 
 	@Override
-	public ResponseEntity<cz.aron.api.rest.model.ApuEntityView> getView(String id) {
+	public ResponseEntity<ApuEntityView> getView(String id, String ifNoneMatch, String ifModifiedSince) {
 		// TODO check error
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
@@ -266,9 +266,10 @@ public class ApuApi implements AronApi {
 		}).collect(Collectors.toList());
 		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
 	}
-	
+
 	@Override
-	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(String id, String direction) {
+	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(String id, String direction, String ifNoneMatch,
+			String ifModifiedSince) {
 		List<ApuEntityTreeViewDto> body = null;
 		switch (direction) {
 		case "before":
