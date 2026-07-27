@@ -32,7 +32,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
         - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/IfModifiedSince'
       responses:
@@ -113,7 +113,7 @@ paths:
           schema:
             type: array
             items:
-              type: string
+              $ref: '#/components/schemas/uuid'
           style: simple
           explode: false
       responses:
@@ -137,7 +137,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
         - $ref: '#/components/parameters/IfNoneMatch'
         - $ref: '#/components/parameters/IfModifiedSince'
       responses:
@@ -159,7 +159,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
         - name: direction
           in: path
           required: true
@@ -214,7 +214,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/uuid'
       responses:
         '200':
           description: OK
@@ -245,6 +245,9 @@ components:
       schema:
         type: string
   schemas:
+    uuid:
+      type: string
+      format: uuid
     ApuEntity:
       required:
         - id

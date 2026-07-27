@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -69,8 +70,6 @@ public class ApuApi implements AronApi {
 
     private final String treeCache;
 
-    private final ApuEntityMapper apuEntityMapper;
-
     private final ElasticsearchOperations elasticsearchOperations;
 
     private final QueryBuilder queryBuilder;
@@ -80,22 +79,21 @@ public class ApuApi implements AronApi {
 	public ApuApi(ApuEntityRepository apuEntityRepository, ApuEntitySimpleRepository apuEntitySimpleRepository,
 			ApuService apuService,
 			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
-			ApuEntityMapper apuEntityMapper, ElasticsearchOperations elasticsearchOperations,
+			ElasticsearchOperations elasticsearchOperations,
 			QueryBuilder queryBuilder, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuEntitySimpleRepository = apuEntitySimpleRepository;
 		this.apuService = apuService;
 		this.objectMapper = objectMapper;
 		this.treeCache = treeCache;
-		this.apuEntityMapper = apuEntityMapper;
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.queryBuilder = queryBuilder;
 		this.simpleResultBuilder = simpleResultBuilder;
 	}
 
     @Override
-	public ResponseEntity<ApuEntity> getApu(String apuId, String ifNoneMatch, String ifModifiedSince) {
-    	var apu = apuService.getApuEntity(apuId);    	
+	public ResponseEntity<ApuEntity> getApu(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
+    	var apu = apuService.getApuEntity(apuId);
     	return ResponseEntity.ok()
     			.contentType(MediaType.APPLICATION_JSON)
     			.body(apu);
@@ -214,23 +212,23 @@ public class ApuApi implements AronApi {
 	}
 
 	@Override
-	public ResponseEntity<List<cz.aron.api.rest.model.ApuEntityView>> getViews(List<String> ids) {		
+	public ResponseEntity<List<cz.aron.api.rest.model.ApuEntityView>> getViews(List<UUID> ids) {
 		if (ids.size()>100) {
 			throw new IllegalArgumentException("Too big, max 100 ids");
 		}
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
                 .contentType(MediaType.APPLICATION_JSON)
-		.body(apuService.findAllByUuids(ids));
+		.body(apuService.findAllByUuids(ids.stream().map(UUID::toString).collect(Collectors.toList())));
 	}	
 
 	@Override
-	public ResponseEntity<ApuEntityView> getView(String id, String ifNoneMatch, String ifModifiedSince) {
+	public ResponseEntity<ApuEntityView> getView(UUID id, String ifNoneMatch, String ifModifiedSince) {
 		// TODO check error
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
                 .contentType(MediaType.APPLICATION_JSON)
-		.body(apuService.findAllByUuids(List.of(id)).get(0));
+		.body(apuService.findAllByUuids(List.of(id.toString())).get(0));
 	}
 
 	@Override
@@ -268,7 +266,7 @@ public class ApuApi implements AronApi {
 	}
 
 	@Override
-	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(String id, String direction, String ifNoneMatch,
+	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(UUID id, String direction, String ifNoneMatch,
 			String ifModifiedSince) {
 		List<ApuEntityTreeViewDto> body = null;
 		switch (direction) {

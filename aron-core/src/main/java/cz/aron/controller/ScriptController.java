@@ -35,7 +35,7 @@ public class ScriptController implements ScriptsApi {
 	}
 
     @Override
-    public ResponseEntity<Resource> runApuScript(String scriptName, String id) {
+    public ResponseEntity<Resource> runApuScript(String scriptName, UUID id) {
 		String code = null;
 		try {
 			code = new String(Files.readAllBytes(Path.of(scriptName+".groovy")),"utf-8");
@@ -44,7 +44,7 @@ public class ScriptController implements ScriptsApi {
 		}
 
 		Map<String,Object> configuration = new HashMap<>();
-		configuration.put("id", UUID.fromString(id));
+		configuration.put("id", id);
 		configuration.put("apuRepository", apuRepository);
 		configuration.put("objectMapper", objectMapper);
 		return scriptExecutor.executeScript(ScriptType.GROOVY, code, false, configuration, null);

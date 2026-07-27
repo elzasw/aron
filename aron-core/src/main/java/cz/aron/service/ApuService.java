@@ -100,8 +100,8 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly=true)
-	public List<ApuEntityTreeViewDto> getEntitiesBefore(String apuId) {
-		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
+	public List<ApuEntityTreeViewDto> getEntitiesBefore(UUID apuId) {
+		var apu = apuEntityRepository.findByUuid(apuId);
 		List<ApuEntityTreeViewDto> result;
 		if (apu.getParent()!=null) {
 			result = apuEntityRepository.listEntitiesBefore(apu.getParent().getId(), apu.getPos(), levelSize);
@@ -114,8 +114,8 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly=true)
-	public List<ApuEntityTreeViewDto> getEntitiesAfter(String apuId) {
-		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
+	public List<ApuEntityTreeViewDto> getEntitiesAfter(UUID apuId) {
+		var apu = apuEntityRepository.findByUuid(apuId);
 		if (apu.getParent()!=null) {
 			return apuEntityRepository.listEntitiesAfter(apu.getParent().getId(), apu.getPos(), levelSize);
 		} else {
@@ -124,8 +124,8 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<ApuEntityTreeViewDto> getEntitiesUnder(String apuId) {
-		var apu = apuEntityRepository.findByUuid(UUID.fromString(apuId));
+	public List<ApuEntityTreeViewDto> getEntitiesUnder(UUID apuId) {
+		var apu = apuEntityRepository.findByUuid(apuId);
 		return apuEntityRepository.listEntitiesUnder(apu.getId(), levelSize);
 	}
 
@@ -140,14 +140,14 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly = true)
-	public cz.aron.api.rest.model.ApuEntity getApuEntity(String apuId) {
-		var src = apuEntityRepository.findByUuid(UUID.fromString(apuId));
+	public cz.aron.api.rest.model.ApuEntity getApuEntity(UUID apuId) {
+		var src = apuEntityRepository.findByUuid(apuId);
 		if (src == null) {
-			
-		}		
-		
+
+		}
+
 		cz.aron.api.rest.model.ApuEntity dto = new cz.aron.api.rest.model.ApuEntity();
-		dto.setId(apuId);
+		dto.setId(apuId.toString());
         dto.setName(src.getName());
         dto.setDescription(src.getDescription());
         dto.setPermalink(src.getPermalink());
