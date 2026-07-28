@@ -9,6 +9,12 @@ tags:
   - name: Aron
   - name: Scripts
     description: Referenced files access API
+  - name: Redirect
+    description: >-
+      Permalink resolution and redirection. Implemented by the hand-written
+      cz.aron.controller.RedirectApi using wildcard mappings, since permalinks
+      may contain '/' characters that a single-segment path parameter cannot
+      capture. Documented here for the API contract only.
 paths:
   /test:
     get:
@@ -196,6 +202,72 @@ paths:
             'application/json':
               schema:
                 $ref: 'search-api.yaml#/components/schemas/SimpleResult'
+
+  '/redirect/{permalink}':
+    get:
+      tags:
+        - Redirect
+      summary: Resolve an APU permalink and redirect to the APU detail page
+      description: >-
+        The permalink may contain '/' characters. Returns 302 with a Location
+        header pointing at /apu/{id}.
+      operationId: redirect
+      parameters:
+        - name: permalink
+          in: path
+          required: true
+          description: APU permalink (may contain slashes)
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the APU detail page
+        '404':
+          description: No APU found for the given permalink
+
+  '/attachment/{name}':
+    get:
+      tags:
+        - Redirect
+      summary: Resolve an attachment name and redirect to its file download
+      description: >-
+        The name may contain '/' characters. Returns 302 with a Location header
+        pointing at /api/aron/file/{fileId}.
+      operationId: redirectAttachment
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: Attachment name (may contain slashes)
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the attachment file
+        '404':
+          description: No, or more than one, attachment found for the given name
+
+  '/redirectimage/{permalink}':
+    get:
+      tags:
+        - Redirect
+      summary: Resolve a digital object file permalink and redirect to the file within its APU
+      description: >-
+        The permalink may contain '/' characters. Returns 302 with a Location
+        header pointing at /apu/{apuId}/dao/{daoId}/file/{fileId}.
+      operationId: redirectImage
+      parameters:
+        - name: permalink
+          in: path
+          required: true
+          description: Digital object file permalink (may contain slashes)
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the digital object file
+        '404':
+          description: No digital object file found for the given permalink
 
   '/script/{scriptName}/{id}':
     get:

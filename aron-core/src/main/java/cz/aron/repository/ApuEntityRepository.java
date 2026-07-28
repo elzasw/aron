@@ -74,5 +74,8 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 
 	@Query("SELECT new cz.aron.domain.dto.IdStructuredResultDto(ae.uuid, ae.result) FROM ApuEntity ae WHERE ae.uuid IN (:ids)")
 	List<IdStructuredResultDto> findAllResultsByUuidIn(@Param("ids") Collection<UUID> ids);
-	
+
+	@Query("SELECT ae.uuid FROM ApuEntity ae WHERE ae.permalink=:permalink")
+	List<UUID> findUuidsByPermalink(@Param("permalink") String permalink);
+
 }
