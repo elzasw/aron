@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -23,7 +24,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,16 +52,20 @@ import cz.aron.indexing.Aggregations;
 import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.QueryBuilder;
 import cz.aron.indexing.SimpleResultBuilder;
-import cz.aron.mapper.ApuEntityMapper;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.ApuEntitySimpleRepository;
 import cz.aron.service.ApuService;
+import cz.aron.service.ApuService.Data;
+import cz.aron.service.ApuService.NotModified;
+import cz.aron.service.ApuService.Result;
 import jakarta.validation.Valid;
 
 @RestController
 public class ApuApi implements AronApi {
 
 	private static final Logger log = LoggerFactory.getLogger(ApuApi.class);
+
+	private static final long CACHE_MAX_AGE_SECONDS = 1800;
 
 	private final ApuEntityRepository apuEntityRepository;
 	
@@ -93,10 +100,22 @@ public class ApuApi implements AronApi {
 
     @Override
 	public ResponseEntity<ApuEntity> getApu(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
-    	var apu = apuService.getApuEntity(apuId);
-    	return ResponseEntity.ok()
-    			.contentType(MediaType.APPLICATION_JSON)
-    			.body(apu);
+    	var apu = apuService.getApuEntity(apuId, ifNoneMatch, ifModifiedSince);
+    	if (apu instanceof NotModified<ApuEntity> notModified) {
+    		return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+    				.cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+    				.eTag(notModified.eTag())
+    				.lastModified(notModified.lastModified())
+    				.build();
+    	} else if (apu instanceof Data<ApuEntity> data) {
+    		return ResponseEntity.ok()
+        			.cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+        			.contentType(MediaType.APPLICATION_JSON)
+        			.eTag(data.eTag())
+        			.lastModified(data.lastModified())
+        			.body(data.value());
+    	}
+    	throw new IllegalStateException();
     }
 
 	//@GetMapping("/{id}/tree")
@@ -217,18 +236,18 @@ public class ApuApi implements AronApi {
 			throw new IllegalArgumentException("Too big, max 100 ids");
 		}
         return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate())
                 .contentType(MediaType.APPLICATION_JSON)
-		.body(apuService.findAllByUuids(ids.stream().map(UUID::toString).collect(Collectors.toList())));
-	}	
+		.body(apuService.findAllByUuids(ids));
+	}
 
 	@Override
 	public ResponseEntity<ApuEntityView> getView(UUID id, String ifNoneMatch, String ifModifiedSince) {
 		// TODO check error
         return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
+                .cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate())
                 .contentType(MediaType.APPLICATION_JSON)
-		.body(apuService.findAllByUuids(List.of(id.toString())).get(0));
+		.body(apuService.findAllByUuids(List.of(id)).get(0));
 	}
 
 	@Override
@@ -268,22 +287,35 @@ public class ApuApi implements AronApi {
 	@Override
 	public ResponseEntity<List<ApuEntityTreeViewDto>> getRelatedNodes(UUID id, String direction, String ifNoneMatch,
 			String ifModifiedSince) {
-		List<ApuEntityTreeViewDto> body = null;
+		Result<List<ApuEntityTreeViewDto>> result;
 		switch (direction) {
 		case "before":
-			body = apuService.getEntitiesBefore(id);
+			result = apuService.getEntitiesBefore(id, ifNoneMatch, ifModifiedSince);
 			break;
 		case "after":
-			body = apuService.getEntitiesAfter(id);
+			result = apuService.getEntitiesAfter(id, ifNoneMatch, ifModifiedSince);
 			break;
 		case "under":
-			body = apuService.getEntitiesUnder(id);
+			result = apuService.getEntitiesUnder(id, ifNoneMatch, ifModifiedSince);
 			break;
 		default:
 			throw new RuntimeException();
 		}
-		return ResponseEntity.ok().header(HttpHeaders.CACHE_CONTROL, "public, max-age=1800")
-				.contentType(MediaType.APPLICATION_JSON).body(body);
+		if (result instanceof NotModified<List<ApuEntityTreeViewDto>> notModified) {
+			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+					.cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+					.eTag(notModified.eTag())
+					.lastModified(notModified.lastModified())
+					.build();
+		} else if (result instanceof Data<List<ApuEntityTreeViewDto>> data) {
+			return ResponseEntity.ok()
+					.cacheControl(CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate().mustRevalidate())
+					.contentType(MediaType.APPLICATION_JSON)
+					.eTag(data.eTag())
+					.lastModified(data.lastModified())
+					.body(data.value());
+		}
+		throw new IllegalStateException();
 	}
 
 	@Override

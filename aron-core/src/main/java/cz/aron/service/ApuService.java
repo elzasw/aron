@@ -1,5 +1,6 @@
 package cz.aron.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -8,13 +9,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.common.collect.Iterables;
 
@@ -22,6 +24,7 @@ import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.rest.model.ApuEntityView;
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
+import cz.aron.commons.HttpUtils;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.DataType;
 import cz.aron.domain.dto.IdLabelDto;
@@ -100,8 +103,15 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly=true)
-	public List<ApuEntityTreeViewDto> getEntitiesBefore(UUID apuId) {
+	public Result<List<ApuEntityTreeViewDto>> getEntitiesBefore(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
 		var apu = apuEntityRepository.findByUuid(apuId);
+		if (apu == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
+		}
+		var expireStatus = HttpUtils.computeExpired(apu.getSource().getPublished(), ifNoneMatch, ifModifiedSince);
+		if (!expireStatus.expired()) {
+			return new NotModified<>(expireStatus.eTag(), expireStatus.lastModified());
+		}
 		List<ApuEntityTreeViewDto> result;
 		if (apu.getParent()!=null) {
 			result = apuEntityRepository.listEntitiesBefore(apu.getParent().getId(), apu.getPos(), levelSize);
@@ -110,28 +120,57 @@ public class ApuService {
 		}
 		// queries order by pos desc to grab the nearest items; reverse to restore ascending tree order
 		Collections.reverse(result);
-		return result;
+		return new Data<>(result, expireStatus.eTag(), expireStatus.lastModified());
 	}
 
 	@Transactional(readOnly=true)
-	public List<ApuEntityTreeViewDto> getEntitiesAfter(UUID apuId) {
+	public Result<List<ApuEntityTreeViewDto>> getEntitiesAfter(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
 		var apu = apuEntityRepository.findByUuid(apuId);
-		if (apu.getParent()!=null) {
-			return apuEntityRepository.listEntitiesAfter(apu.getParent().getId(), apu.getPos(), levelSize);
-		} else {
-			return apuEntityRepository.listRootEntitiesAfter(apu.getSource().getId(), apu.getPos(), levelSize);
+		if (apu == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
 		}
+		var expireStatus = HttpUtils.computeExpired(apu.getSource().getPublished(), ifNoneMatch, ifModifiedSince);
+		if (!expireStatus.expired()) {
+			return new NotModified<>(expireStatus.eTag(), expireStatus.lastModified());
+		}
+		List<ApuEntityTreeViewDto> result;
+		if (apu.getParent()!=null) {
+			result = apuEntityRepository.listEntitiesAfter(apu.getParent().getId(), apu.getPos(), levelSize);
+		} else {
+			result = apuEntityRepository.listRootEntitiesAfter(apu.getSource().getId(), apu.getPos(), levelSize);
+		}
+		return new Data<>(result, expireStatus.eTag(), expireStatus.lastModified());
 	}
 
 	@Transactional(readOnly = true)
-	public List<ApuEntityTreeViewDto> getEntitiesUnder(UUID apuId) {
+	public Result<List<ApuEntityTreeViewDto>> getEntitiesUnder(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
 		var apu = apuEntityRepository.findByUuid(apuId);
-		return apuEntityRepository.listEntitiesUnder(apu.getId(), levelSize);
+		if (apu == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
+		}
+		var expireStatus = HttpUtils.computeExpired(apu.getSource().getPublished(), ifNoneMatch, ifModifiedSince);
+		if (!expireStatus.expired()) {
+			return new NotModified<>(expireStatus.eTag(), expireStatus.lastModified());
+		}
+		var result = apuEntityRepository.listEntitiesUnder(apu.getId(), levelSize);
+		return new Data<>(result, expireStatus.eTag(), expireStatus.lastModified());
+	}
+
+	/**
+	 * The moment the given APU was last published — the later of its source's publish time and,
+	 * when present, the time a DAO was connected to it. Used as the {@code Last-Modified}/ETag basis.
+	 */
+	private LocalDateTime publishedOf(ApuEntity apu) {
+		var published = apu.getSource().getPublished();
+		if (apu.getDaoPublished() != null && published.isBefore(apu.getDaoPublished())) {
+			published = apu.getDaoPublished();
+		}
+		return published;
 	}
 
 	@Transactional(readOnly = true)
-	public List<ApuEntityView> findAllByUuids(List<String> ids) {
-		var entities = apuEntityRepository.findAllByUuids(ids.stream().map(UUID::fromString).collect(Collectors.toList()));
+	public List<ApuEntityView> findAllByUuids(List<UUID> ids) {
+		var entities = apuEntityRepository.findAllByUuids(ids);
 		var ret = new ArrayList<ApuEntityView>();
 		for(var entity:entities) {
 			ret.add(new ApuEntityView(entity.id(),entity.name(),entity.order()).description(entity.description()));
@@ -140,10 +179,15 @@ public class ApuService {
 	}
 
 	@Transactional(readOnly = true)
-	public cz.aron.api.rest.model.ApuEntity getApuEntity(UUID apuId) {
+	public Result<cz.aron.api.rest.model.ApuEntity> getApuEntity(UUID apuId, String ifNoneMatch, String ifModifiedSince) {
 		var src = apuEntityRepository.findByUuid(apuId);
 		if (src == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
+		}
 
+		var expireStatus = HttpUtils.computeExpired(publishedOf(src), ifNoneMatch, ifModifiedSince);
+		if (!expireStatus.expired()) {
+			return new NotModified<>(expireStatus.eTag(), expireStatus.lastModified());
 		}
 
 		cz.aron.api.rest.model.ApuEntity dto = new cz.aron.api.rest.model.ApuEntity();
@@ -187,7 +231,16 @@ public class ApuService {
 			dto.setDigitalObjects(apuEntityMapper.toRestDigitalObjects(src.getDigitalObjects()));
 		}
 
-		return dto;
+		return new Data<>(dto, expireStatus.eTag(), expireStatus.lastModified());
 	}
 	
+	public sealed interface Result<T> permits Data, NotModified {
+	}
+
+	public record Data<T>(T value, String eTag, long lastModified) implements Result<T> {
+	}
+	
+	public record NotModified<T>(String eTag, long lastModified) implements Result<T> {
+	}
+
 }

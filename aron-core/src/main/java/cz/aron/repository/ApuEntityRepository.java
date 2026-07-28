@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -24,6 +25,7 @@ import cz.aron.domain.types.dto.ApuIdParentId;
 @Repository
 public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 
+	@EntityGraph(attributePaths = {"source"})
 	ApuEntity findByUuid(UUID uuid);
 
 	@Query("SELECT apu.id, apu.parent.id FROM ApuEntity apu WHERE apu.source.id=:apuSourceId")
@@ -32,7 +34,6 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@Query("SELECT cast(ae.uuid as string), ae.name, ae.description, ae.order FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<ApuEntityView> findAllByUuids(@Param("uuids") Collection<UUID> uuids);
 
-	//@EntityGraph(attributePaths = {"parts.items"})
 	List<ApuEntity> findAllByIdIn(@Param("ids") Collection<Long> ids);
 
 	List<ApuEntity> findAllByUuidIn(@Param("ids") Collection<UUID> ids);
