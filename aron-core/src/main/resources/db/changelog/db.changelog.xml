@@ -133,17 +133,6 @@
             tableName="apu" unique="false">
             <column name="apu_source_id" />
         </createIndex>
-        <createIndex indexName="idx_apu_parent_id"
-            tableName="apu" unique="false">
-            <column name="parent_id" />
-        </createIndex>
-<!--        
-        <createIndex indexName="idx_apu_id_pos"
-            tableName="apu" unique="true">
-            <column name="parent_id" />
-            <column name="pos" />
-        </createIndex>
--->        
         <createIndex indexName="idx_apu_attachment_apu_id"
             tableName="apu_attachment" unique="false">
             <column name="apu_id" />
@@ -176,6 +165,39 @@
             tableName="queued_apu" unique="true">
             <column name="apu_id" />
         </createIndex>
+        <!-- UUID natural-key lookups (findByUuid / findAllByUuidIn) -->
+        <createIndex indexName="idx_apu_uuid" tableName="apu" unique="false">
+            <column name="uuid" />
+        </createIndex>
+        <createIndex indexName="idx_apu_source_uuid" tableName="apu_source" unique="false">
+            <column name="uuid" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_uuid" tableName="digital_object" unique="false">
+            <column name="uuid" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_file_uuid" tableName="digital_object_file" unique="false">
+            <column name="uuid" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_file_file_id" tableName="digital_object_file" unique="false">
+            <column name="file_id" />
+        </createIndex>
+
+        <!-- Permalink / name resolution (RedirectApi endpoints) -->
+        <createIndex indexName="idx_apu_permalink" tableName="apu" unique="false">
+            <column name="permalink" />
+        </createIndex>
+        <createIndex indexName="idx_digital_object_file_permalink" tableName="digital_object_file" unique="false">
+            <column name="permalink" />
+        </createIndex>
+        <createIndex indexName="idx_apu_attachment_name" tableName="apu_attachment" unique="false">
+            <column name="name" />
+        </createIndex>
+
+        <!-- Tree navigation range+sort: WHERE parent_id=? AND pos </> ? ORDER BY pos -->
+        <createIndex indexName="idx_apu_parent_id_pos" tableName="apu" unique="false">
+            <column name="parent_id" />
+            <column name="pos" />
+        </createIndex>        
     </changeSet>
 
 </databaseChangeLog>
