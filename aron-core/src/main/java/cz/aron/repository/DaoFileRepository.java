@@ -24,4 +24,7 @@ public interface DaoFileRepository  extends JpaRepository<DigitalObjectFile, Lon
 	@Query("SELECT new cz.aron.domain.dto.DaoFileRedirectDto(dof.digitalObject.apu.uuid, dof.digitalObject.uuid, dof.uuid) FROM DigitalObjectFile dof WHERE dof.permalink=:permalink")
 	List<DaoFileRedirectDto> findRedirectByPermalink(@Param("permalink") String permalink);
 
+	@Query("SELECT COALESCE(MAX(dof.id), 0) FROM DigitalObjectFile dof")
+	long findMaxId();
+
 }

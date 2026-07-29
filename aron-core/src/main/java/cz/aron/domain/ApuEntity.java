@@ -11,6 +11,7 @@ import org.hibernate.annotations.FetchMode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cz.aron.api.rest.model.ApuPart;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
@@ -19,9 +20,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedNativeQueries;
@@ -104,12 +102,8 @@ resultSetMapping = "apuAncestorsResult")
 
 @Entity
 @Table(name = "apu")
-public class ApuEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="apu_id")
-	private long id;
+@AttributeOverride(name = "id", column = @Column(name = "apu_id"))
+public class ApuEntity extends PersistableBase {
 
 	private UUID uuid;
 
@@ -170,20 +164,12 @@ public class ApuEntity {
 	@Transient
 	private List<String> incomingRelTypes = new ArrayList<>();
 
-	public long getId() {
-		return id;
-	}
-
 	public UUID getUuid() {
 		return uuid;
 	}
 
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
-	}
-
-	public void setId(long id) {
-		this.id = id;
 	}
 
 	public String getName() {

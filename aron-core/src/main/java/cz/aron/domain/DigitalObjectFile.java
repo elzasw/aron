@@ -4,26 +4,20 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name="digital_object_file")
-public class DigitalObjectFile {
+@AttributeOverride(name = "id", column = @Column(name = "digital_object_file_id"))
+public class DigitalObjectFile extends PersistableBase {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="digital_object_file_id")
-	private long id;
-	
 	private UUID uuid;
 
     @Column(name = "file_id")
@@ -129,14 +123,6 @@ public class DigitalObjectFile {
 
 	public void setSize(Long size) {
 		this.size = size;
-	}
-
-	public long getId() {
-		return id;
-	}
-
-	public void setId(long id) {
-		this.id = id;
 	}
 
 	public UUID getUuid() {

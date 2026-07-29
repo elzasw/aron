@@ -20,6 +20,7 @@ import cz.aron.domain.types.TypesHolder;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuService;
+import cz.aron.service.IdService;
 
 @Component
 public class PostInitializer  implements ApplicationListener<ApplicationReadyEvent>  {
@@ -33,8 +34,10 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	private final RelationRepository relationRepository;
 	
 	private final ApuService apuService;
-	
+
 	private final TypesHolder typesHolder;
+
+	private final IdService idService;
 
 	// self-reference through the Spring proxy so @Transactional on batch methods is honored
 	// (calling them directly from reindexAll would be self-invocation and bypass the proxy)
@@ -43,16 +46,22 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	private PostInitializer self;
 
 	public PostInitializer(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
-			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository) {
+			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository,
+			IdService idService) {
 		this.indexingService = indexingService;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.typesHolder = typesHolder;
 		this.relationRepository = relationRepository;
+		this.idService = idService;
 	}
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
+
+		// seed application-side id counters from current DB maxima before any import can run
+		idService.initMetadataIds();
+		idService.initDaoIds();
 
 		try {
 			Path crcPath = Path.of("./lastConfigCrc.txt");

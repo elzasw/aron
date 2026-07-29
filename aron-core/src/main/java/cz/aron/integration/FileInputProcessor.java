@@ -18,6 +18,7 @@ import cz.aron.domain.DigitalObject;
 import cz.aron.domain.DigitalObjectFile;
 import cz.aron.domain.DigitalObjectType;
 import cz.aron.service.FileManagerService;
+import cz.aron.service.IdService;
 
 @Service
 public class FileInputProcessor {
@@ -36,9 +37,11 @@ public class FileInputProcessor {
     private static String ATTR_NAME = "name";
     
     private final FileManagerService fileManager;
-        
-    public FileInputProcessor(FileManagerService fileManager) {
+    private final IdService idService;
+
+    public FileInputProcessor(FileManagerService fileManager, IdService idService) {
     	this.fileManager = fileManager;
+    	this.idService = idService;
     }
 
     public void processFile(DaoFile daoFile, DigitalObjectType digitalObjectType, ApuAttachment apuAttachment, DigitalObject digitalObject, Map<String, Path> filesMap) {
@@ -138,6 +141,7 @@ public class FileInputProcessor {
 			}
 		}
 		DigitalObjectFile digitalObjectFile = new DigitalObjectFile();
+		digitalObjectFile.setId(idService.getNextDigitalObjectFileId());
 		digitalObjectFile.setUuid(uuid);
 		digitalObjectFile.setDigitalObject(digitalObject);
 		digitalObject.getFiles().add(digitalObjectFile);
@@ -150,6 +154,7 @@ public class FileInputProcessor {
             return digitalObjectFile;
         }
         digitalObjectFile = new DigitalObjectFile();
+        digitalObjectFile.setId(idService.getNextDigitalObjectFileId());
         digitalObjectFile.setUuid(uuid);
         digitalObjectFile.setAttachment(apuAttachment);
         apuAttachment.setFile(digitalObjectFile);

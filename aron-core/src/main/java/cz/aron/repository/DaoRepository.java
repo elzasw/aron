@@ -21,4 +21,7 @@ public interface DaoRepository  extends JpaRepository<DigitalObject, Long> {
 	DigitalObject findByUuid(UUID uuid);
 
 	List<DigitalObject> findAllByUuidIn(Collection<UUID> uuids);
+
+	@Query("SELECT COALESCE(MAX(dobj.id), 0) FROM DigitalObject dobj")
+	long findMaxId();
 }

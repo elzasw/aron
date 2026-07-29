@@ -52,6 +52,7 @@ import cz.aron.repository.DaoRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuRequestQueue;
 import cz.aron.service.ApuService;
+import cz.aron.service.IdService;
 import jakarta.persistence.EntityManager;
 
 @Service
@@ -70,6 +71,7 @@ public class ApuProcessor {
 	private final EntityManager entityManager;
 	private final IndexingService indexingService;
 	private final ApuService apuService;
+	private final IdService idService;
 
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
@@ -87,7 +89,8 @@ public class ApuProcessor {
 	public ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
 			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
 			TypesHolder typesHolder, FileInputProcessor fileInputProcessor, ObjectMapper objectMapper,
-			EntityManager entityManager, IndexingService indexingService, ApuService apuService) {
+			EntityManager entityManager, IndexingService indexingService, ApuService apuService,
+			IdService idService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.apuEntityRepository = apuEntityRepository;
 		this.daoRepository = daoRepository;
@@ -99,6 +102,7 @@ public class ApuProcessor {
 		this.entityManager = entityManager;
 		this.indexingService = indexingService;
 		this.apuService = apuService;
+		this.idService = idService;
 	}
 
 	@Transactional
@@ -111,6 +115,7 @@ public class ApuProcessor {
 			var ourApuSource = apuSourceRepository.findByUuid(UUID.fromString(reader.getUuid()));
 			if (ourApuSource == null) {
 				ourApuSource = new cz.aron.domain.ApuSource();
+				ourApuSource.setId(idService.getNextApuSourceId());
 				ourApuSource.setUuid(UUID.fromString(reader.getUuid()));
 			} else {
 				removeExistingApusAndRelations(ourApuSource.getId(), reader.getUuid());
@@ -267,6 +272,7 @@ public class ApuProcessor {
 		var levelState = apuIdsStates.get(apu.getUuid());
 		
 		ApuEntity apuEntity = new ApuEntity();
+		apuEntity.setId(idService.getNextApuEntityId());
 		apuEntity.setUuid(UUID.fromString(apu.getUuid()));
 		apuEntity.setName(apu.getName());
 		apuEntity.setIndexedName(apu.getIndexedName());
@@ -303,6 +309,7 @@ public class ApuProcessor {
 				DigitalObject insertedDao = existingDaos.get(daoUuid);
 				if (insertedDao == null) {
 					insertedDao = new DigitalObject();
+					insertedDao.setId(idService.getNextDigitalObjectId());
 					insertedDao.setUuid(UUID.fromString(daoUuid));
 				}
 				insertedDao.setApu(apuEntity);
@@ -402,6 +409,7 @@ public class ApuProcessor {
 			int i = 0;
 			for (Attachment attch : attchs) {
 				ApuAttachment apuAttachment = new ApuAttachment();
+				apuAttachment.setId(idService.getNextApuAttachmentId());
 				apuAttachment.setName(attch.getName());
 				apuAttachment.setOrder(++i);
 				fileInputProcessor.processFile(attch.getFile(), DigitalObjectType.PUBLISHED, apuAttachment, null,
@@ -445,6 +453,7 @@ public class ApuProcessor {
 		// remaining relations are new
 		var relationToAdd = relationsAddCache.stream().map(r -> {
 			var rel = new Relation();
+			rel.setId(idService.getNextRelationId());
 			rel.setSource(r.source());
 			rel.setTarget(r.target());
 			rel.setRelation(r.relation());

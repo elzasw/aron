@@ -3,6 +3,7 @@ package cz.aron.integration;
 import org.springframework.stereotype.Service;
 
 import cz.aron.ft.handling.TransferType;
+import cz.aron.service.IdService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,10 +24,12 @@ public class ImportDataProcessingService {
     
     private final ApuProcessor apuProcessor;
     private final DaoInputProcessor daoInputProcessor;
+    private final IdService idService;
     
-    public ImportDataProcessingService(ApuProcessor apuProcessor, DaoInputProcessor daoInputProcessor) {
+    public ImportDataProcessingService(ApuProcessor apuProcessor, DaoInputProcessor daoInputProcessor, IdService idService) {
     	this.apuProcessor = apuProcessor;
     	this.daoInputProcessor = daoInputProcessor;
+		this.idService = idService;
     }
 
     public void processData(Path path, TransferType transferType) {
@@ -37,6 +40,7 @@ public class ImportDataProcessingService {
                 if (!apuLock.tryLock()) {
                     throw new RuntimeException("Concurrent apu upload is running");
                 }
+                idService.initMetadataIds();
                 try {                    
                     apuProcessor.processApuAndFiles(apuFilePath, filesMap);    
                 } finally {

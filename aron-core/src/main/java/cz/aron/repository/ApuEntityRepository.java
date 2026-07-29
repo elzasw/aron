@@ -82,4 +82,7 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@Query("SELECT ae.uuid FROM ApuEntity ae WHERE ae.permalink=:permalink")
 	List<UUID> findUuidsByPermalink(@Param("permalink") String permalink);
 
+	@Query("SELECT COALESCE(MAX(ae.id), 0) FROM ApuEntity ae")
+	long findMaxId();
+
 }
