@@ -16,6 +16,7 @@ import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.domain.ApuEntity;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.dto.IdStructuredResultDto;
+import cz.aron.domain.dto.IdUuidNameDescriptionOrderDto;
 import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
 import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.domain.types.dto.ApuEntityViewType;
@@ -74,6 +75,9 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 
 	@Query("SELECT new cz.aron.domain.dto.IdStructuredResultDto(ae.uuid, ae.result) FROM ApuEntity ae WHERE ae.uuid IN (:ids)")
 	List<IdStructuredResultDto> findAllResultsByUuidIn(@Param("ids") Collection<UUID> ids);
+
+	@Query("SELECT new cz.aron.domain.dto.IdUuidNameDescriptionOrderDto(ae.id, ae.uuid, ae.name, ae.description, ae.order) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
+	List<IdUuidNameDescriptionOrderDto> findDtosByUuidIn(@Param("uuids") Collection<UUID> uuids);
 
 	@Query("SELECT ae.uuid FROM ApuEntity ae WHERE ae.permalink=:permalink")
 	List<UUID> findUuidsByPermalink(@Param("permalink") String permalink);

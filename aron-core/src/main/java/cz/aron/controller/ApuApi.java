@@ -53,7 +53,6 @@ import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.QueryBuilder;
 import cz.aron.indexing.SimpleResultBuilder;
 import cz.aron.repository.ApuEntityRepository;
-import cz.aron.repository.ApuEntitySimpleRepository;
 import cz.aron.service.ApuService;
 import cz.aron.service.ApuService.Data;
 import cz.aron.service.ApuService.NotModified;
@@ -68,9 +67,7 @@ public class ApuApi implements AronApi {
 	private static final long CACHE_MAX_AGE_SECONDS = 1800;
 
 	private final ApuEntityRepository apuEntityRepository;
-	
-	private final ApuEntitySimpleRepository apuEntitySimpleRepository;
-	
+
 	private final ApuService apuService;
 
     private final ObjectMapper objectMapper;
@@ -83,13 +80,12 @@ public class ApuApi implements AronApi {
 
     private final SimpleResultBuilder simpleResultBuilder;
 
-	public ApuApi(ApuEntityRepository apuEntityRepository, ApuEntitySimpleRepository apuEntitySimpleRepository,
+	public ApuApi(ApuEntityRepository apuEntityRepository,
 			ApuService apuService,
 			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
 			ElasticsearchOperations elasticsearchOperations,
 			QueryBuilder queryBuilder, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
-		this.apuEntitySimpleRepository = apuEntitySimpleRepository;
 		this.apuService = apuService;
 		this.objectMapper = objectMapper;
 		this.treeCache = treeCache;
@@ -215,19 +211,22 @@ public class ApuApi implements AronApi {
 
 	@Override
 	public ResponseEntity<SimpleResult> listView(@Valid Params params) {
+		return ResponseEntity.ok(buildSimpleResult(params));
+	}
+
+	private SimpleResult buildSimpleResult(Params params) {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
-		var simplified = entities.stream().map(e -> {
+		var uuids = hits.getSearchHits().stream().map(h -> java.util.UUID.fromString(h.getId())).collect(Collectors.toList());
+		var simplified = apuEntityRepository.findDtosByUuidIn(uuids).stream().map(d -> {
 			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid().toString());
-			s.setName(e.getName());
-			s.setDescription(e.getDescription());
-			s.setOrder((long) e.getOrder());
+			s.setId(d.uuid().toString());
+			s.setName(d.name());
+			s.setDescription(d.description());
+			s.setOrder((long) d.order());
 			return s;
 		}).collect(Collectors.toList());
-		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+		return simpleResultBuilder.build(hits, simplified);
 	}
 
 	@Override
@@ -252,36 +251,12 @@ public class ApuApi implements AronApi {
 
 	@Override
 	public ResponseEntity<SimpleResult> listSimple(@Valid Params params) {
-		var query = queryBuilder.build(params);
-		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
-		var simplified = entities.stream().map(e -> {
-			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid().toString());
-			s.setName(e.getName());
-			s.setDescription(e.getDescription());
-			s.setOrder((long) e.getOrder());
-			return s;
-		}).collect(Collectors.toList());
-		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+		return ResponseEntity.ok(buildSimpleResult(params));
 	}
 
 	@Override
 	public ResponseEntity<SimpleResult> callList(@Valid Params params) {
-		var query = queryBuilder.build(params);
-		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var entities = apuEntitySimpleRepository.findAllByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
-		var simplified = entities.stream().map(e -> {
-			var s = new ApuEntitySimplified();
-			s.setId(e.getUuid().toString());
-			s.setName(e.getName());
-			s.setDescription(e.getDescription());
-			s.setOrder((long) e.getOrder());
-			return s;
-		}).collect(Collectors.toList());
-		return ResponseEntity.ok(simpleResultBuilder.build(hits, simplified));
+		return ResponseEntity.ok(buildSimpleResult(params));
 	}
 
 	@Override
