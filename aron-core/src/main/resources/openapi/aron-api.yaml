@@ -9,6 +9,8 @@ tags:
   - name: Aron
   - name: Scripts
     description: Referenced files access API
+  - name: File
+    description: File download API
   - name: Redirect
     description: >-
       Permalink resolution and redirection. Implemented by the hand-written
@@ -202,6 +204,30 @@ paths:
             'application/json':
               schema:
                 $ref: 'search-api.yaml#/components/schemas/SimpleResult'
+
+  '/file/{id}':
+    get:
+      tags:
+        - File
+      summary: Download a digital object file by its ID
+      description: Returns the content of the file in an input stream.
+      operationId: downloadFile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/uuid'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: The file was not found.
 
   '/redirect/{permalink}':
     get:
@@ -449,7 +475,7 @@ components:
             - THUMBNAIL
             - TILE
         file:
-          $ref: '#/components/schemas/File'
+          $ref: '#/components/schemas/FileInfo'
         name:
           type: string
         referencedFile:
@@ -461,7 +487,7 @@ components:
           format: int64
         selected:
           type: boolean
-    File:
+    FileInfo:
       required:
         - id
       type: object

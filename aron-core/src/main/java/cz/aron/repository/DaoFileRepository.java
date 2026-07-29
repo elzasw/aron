@@ -15,6 +15,8 @@ import cz.aron.domain.dto.DaoFileRedirectDto;
 public interface DaoFileRepository  extends JpaRepository<DigitalObjectFile, Long> {
 
 	DigitalObjectFile findByUuid(UUID uuid);
+	
+	DigitalObjectFile findByFileId(UUID uuid);
 
 	@Query("SELECT dof.uuid FROM DigitalObjectFile dof WHERE dof.attachment.name=:name")
 	List<UUID> findUuidsByAttachmentName(@Param("name") String name);

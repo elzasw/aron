@@ -9,6 +9,7 @@ import cz.aron.api.rest.model.ApuAttachment;
 import cz.aron.api.rest.model.ApuEntity;
 import cz.aron.api.rest.model.DigitalObject;
 import cz.aron.api.rest.model.DigitalObjectFile;
+import cz.aron.api.rest.model.FileInfo;
 
 @Component
 public class ApuEntityMapper {
@@ -88,18 +89,24 @@ public class ApuEntityMapper {
         return dto;
     }
 
-    private DigitalObjectFile toRest(cz.aron.domain.DigitalObjectFile src) {
-        DigitalObjectFile dto = new DigitalObjectFile(src.getUuid().toString());
-        dto.setPermalink(src.getPermalink());
-        dto.setOrder(src.getOrder());
-        dto.setType(toFileTypeEnum(src.getType()));
-        dto.setName(src.getName());
-        dto.setReferencedFile(src.getReferencedFile());
-        dto.setContentType(src.getContentType());
-        dto.setSize(src.getSize());
-        dto.setSelected(src.isSelected());
-        return dto;
-    }
+	private DigitalObjectFile toRest(cz.aron.domain.DigitalObjectFile src) {
+		DigitalObjectFile dto = new DigitalObjectFile(src.getUuid().toString());
+		dto.setPermalink(src.getPermalink());
+		dto.setOrder(src.getOrder());
+		dto.setType(toFileTypeEnum(src.getType()));
+		dto.setName(src.getName());
+		dto.setReferencedFile(src.getReferencedFile());
+		dto.setContentType(src.getContentType());
+		dto.setSize(src.getSize());
+		dto.setSelected(src.isSelected());
+
+		//TODO only for compatifility with UI
+		var file = new FileInfo();
+		file.setId(dto.getId());
+		file.setContentType(src.getContentType());
+		dto.setFile(file);
+		return dto;
+	}
 
     public static ApuEntity.TypeEnum toApuTypeEnum(cz.aron.domain.ApuType type) {
         if (type == null) {

@@ -61,7 +61,6 @@ public class FileInputProcessor {
         digitalObjectFile.setOrder(daoFile.getPos());
         digitalObjectFile.setPermalink(daoFile.getPrmLnk());
         digitalObjectFile.setReferencedFile(null);
-        digitalObjectFile.setContentType(null);
         digitalObjectFile.setName(null);
         digitalObjectFile.setSize(null);
         digitalObjectFile.setSelected(isSelected(daoFile));
@@ -78,13 +77,14 @@ public class FileInputProcessor {
                 }
             }
         }
+        digitalObjectFile.setContentType(mimeType);
         Path uploadedFile = filesMap.get(digitalObjectFile.getUuid().toString());
         if (name == null) {
             name = UUID.randomUUID().toString();
         }
         try (InputStream is = Files.newInputStream(uploadedFile)) {
-            var handle = fileManager.storeFile(is,null);
-            digitalObjectFile.setReferencedFile("file://"+handle);
+            var handle = fileManager.storeFile(is,digitalObjectFile.getUuid());
+            digitalObjectFile.setFileId(handle);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
