@@ -110,7 +110,6 @@ public class ApuEntity extends PersistableBase {
 	private String name;
 	private String indexedName;
 	private String description;
-	private String result;
 	private String permalink;
 	
 	@Column(name = "ordr")
@@ -138,6 +137,12 @@ public class ApuEntity extends PersistableBase {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="parent_id")
 	private ApuEntity parent;
+
+	// Kryo-encoded result blob; callers encode/decode via ApuPartSerializer
+	// (no serialization inside the entity, no lifecycle callbacks)
+	@Column(name = "result")
+	@JsonIgnore
+	private byte[] result;
 
 	// parts (and their items) are serialized with Kryo into this blob instead of
 	// being stored in their own tables
@@ -196,11 +201,11 @@ public class ApuEntity extends PersistableBase {
 		this.description = description;
 	}
 
-	public String getResult() {
+	public byte[] getResult() {
 		return result;
 	}
 
-	public void setResult(String result) {
+	public void setResult(byte[] result) {
 		this.result = result;
 	}
 

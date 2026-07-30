@@ -26,7 +26,7 @@
             <column name="name" type="nclob"/>
             <column name="indexed_name" type="nclob"/>
             <column name="description" type="nclob"/>
-            <column name="result" type="nclob"/>
+            <column name="result" type="${blob}"/>
             <column name="permalink" type="varchar(255)"/>
             <column name="published" type="boolean">
                 <constraints nullable="false"/>

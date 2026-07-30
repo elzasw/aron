@@ -36,8 +36,10 @@ import cz.aron.apux._2020.ItemString;
 import cz.aron.apux._2020.Part;
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
+import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.domain.ApuAttachment;
 import cz.aron.domain.ApuEntity;
+import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.DigitalObject;
 import cz.aron.domain.DigitalObjectType;
@@ -278,7 +280,7 @@ public class ApuProcessor {
 		apuEntity.setIndexedName(apu.getIndexedName());
 		apuEntity.setOrder(++apuOrderCounter);
 		apuEntity.setDescription(apu.getDesc());
-		apuEntity.setResult(apu.getResult());
+		apuEntity.setResult(ApuPartSerializer.serializeStructuredResult(parseResult(apu.getResult())));
 		apuEntity.setPermalink(apu.getPrmLnk());
 		apuEntity.setType(cz.aron.domain.ApuType.valueOf(apu.getType().name().toUpperCase())); // fixme names don't match
         apuEntity.setChildCnt(levelState.childCnt);
@@ -324,6 +326,22 @@ public class ApuProcessor {
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
 		recordRelations(apuEntity);
 		//apuRequestQueue.removeForApuId(apuEntity.getUuid());
+	}
+
+	/**
+	 * Parses the APU result JSON into a {@link StructuredResult}. The parsed object is Kryo-serialized
+	 * into the {@code result} blob by the caller. Returns {@code null} for missing/invalid JSON.
+	 */
+	private StructuredResult parseResult(String json) {
+		if (json == null || json.isBlank()) {
+			return null;
+		}
+		try {
+			return objectMapper.readValue(json, StructuredResult.class);
+		} catch (JsonProcessingException e) {
+			log.warn("Cannot parse APU result JSON", e);
+			return null;
+		}
 	}
 
 	private void processParts(List<Part> parts, ApuEntity apuEntity) {

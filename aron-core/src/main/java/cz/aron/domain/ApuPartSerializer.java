@@ -10,6 +10,9 @@ import com.esotericsoftware.kryo.util.Pool;
 
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
+import cz.aron.api.rest.model.ResultRowItem;
+import cz.aron.api.rest.model.ResultRowItemValue;
+import cz.aron.api.rest.model.StructuredResult;
 
 /**
  * Kryo-based (de)serialization of an APU's parts. The parts (REST model
@@ -30,6 +33,9 @@ public final class ApuPartSerializer {
 			kryo.register(ArrayList.class);
 			kryo.register(ApuPart.class);
 			kryo.register(ApuPartItem.class);
+			kryo.register(StructuredResult.class);
+			kryo.register(ResultRowItem.class);
+			kryo.register(ResultRowItemValue.class);
 			return kryo;
 		}
 	};
@@ -59,6 +65,32 @@ public final class ApuPartSerializer {
 		Kryo kryo = KRYO_POOL.obtain();
 		try (Input input = new Input(data)) {
 			return kryo.readObject(input, ArrayList.class);
+		} finally {
+			KRYO_POOL.free(kryo);
+		}
+	}
+
+	public static byte[] serializeStructuredResult(StructuredResult result) {
+		if (result == null) {
+			return null;
+		}
+		Kryo kryo = KRYO_POOL.obtain();
+		try (Output output = new Output(1024, -1)) {
+			kryo.writeObject(output, result);
+			output.flush();
+			return output.toBytes();
+		} finally {
+			KRYO_POOL.free(kryo);
+		}
+	}
+
+	public static StructuredResult deserializeStructuredResult(byte[] data) {
+		if (data == null || data.length == 0) {
+			return null;
+		}
+		Kryo kryo = KRYO_POOL.obtain();
+		try (Input input = new Input(data)) {
+			return kryo.readObject(input, StructuredResult.class);
 		} finally {
 			KRYO_POOL.free(kryo);
 		}

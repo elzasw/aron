@@ -46,6 +46,7 @@ import cz.aron.api.rest.model.ResultRowItemValue;
 import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.api.rest.model.StructuredResults;
+import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.dto.IdStructuredResultDto;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
 import cz.aron.indexing.Aggregations;
@@ -303,8 +304,8 @@ public class ApuApi implements AronApi {
 	public ResponseEntity<StructuredResults> listResults(@Valid Params params) {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).collect(Collectors.toList());
-		var results = apuEntityRepository.findAllResultsByUuidIn(uuids.stream().map(java.util.UUID::fromString).collect(Collectors.toList()));
+		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).map(java.util.UUID::fromString).collect(Collectors.toList());
+		var results = apuEntityRepository.findAllResultsByUuidIn(uuids).stream().collect(Collectors.toList());
 		Map<String, IdStructuredResultDto> byId = results.stream()
 	                .collect(Collectors.toMap(r -> r.uuid().toString(), Function.identity()));
 		
@@ -313,13 +314,10 @@ public class ApuApi implements AronApi {
 		result.setItems(hits.getSearchHits().stream()
                 .map(hit -> byId.get(hit.getId()))
                 .filter(e -> e != null)
-                .map(r->{                	
-                	if (r.result()!=null) {
-            			try {
-            				return objectMapper.readValue(r.result(),StructuredResult.class);
-            			} catch (Exception e) {
-            				return createEmptyResult(r.uuid().toString());
-            			}
+                .map(r->{
+                	var structuredResult = ApuPartSerializer.deserializeStructuredResult(r.result());
+                	if (structuredResult!=null) {
+            			return structuredResult;
             		} else {
             			return createEmptyResult(r.uuid().toString());
             		}
