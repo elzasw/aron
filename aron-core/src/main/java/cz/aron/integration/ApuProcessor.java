@@ -301,9 +301,8 @@ public class ApuProcessor {
 			apuEntity.setParent(parentApu);
 		}
 		apuEntity.setSource(apuSource);
-		if (apu.getPrts() != null) {
-			processParts(apu.getPrts().getPart(), apuEntity);
-		}
+		List<ApuPart> parts = apu.getPrts() != null ? processParts(apu.getPrts().getPart()) : new ArrayList<>();
+		apuEntity.setData(ApuPartSerializer.serialize(parts));
 		processAttachments(apu.getAttchs(), apuEntity, filesMap);
 		if (apu.getDaos() != null) {
 			int i = 0;
@@ -324,7 +323,7 @@ public class ApuProcessor {
 		levelState.processed = true;
 		saveCache.put(apu.getUuid(), apuEntity);
 		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
-		recordRelations(apuEntity);
+		recordRelations(apuEntity, parts);
 		//apuRequestQueue.removeForApuId(apuEntity.getUuid());
 	}
 
@@ -344,7 +343,8 @@ public class ApuProcessor {
 		}
 	}
 
-	private void processParts(List<Part> parts, ApuEntity apuEntity) {
+	private List<ApuPart> processParts(List<Part> parts) {
+		List<ApuPart> result = new ArrayList<>();
 		partIdSeq = 0;
 		Map<String, ApuPart> processedPartCache = new HashMap<>();
 		for (Part part : parts) {
@@ -361,11 +361,12 @@ public class ApuProcessor {
 				}
 				parentPart.getChildParts().add(apuPart);
 			} else {
-				apuEntity.getParts().add(apuPart);
+				result.add(apuPart);
 				processedPartCache.put(part.getId(), apuPart);
 			}
 			processPartItems(part.getItms(), apuPart);
 		}
+		return result;
 	}
 
 	private void processPartItems(DescItems itms, ApuPart apuPart) {
@@ -438,8 +439,8 @@ public class ApuProcessor {
 		}
 	}
 
-	private void recordRelations(ApuEntity apuEntity) {
-		for (ApuPart part : apuEntity.getParts()) {
+	private void recordRelations(ApuEntity apuEntity, List<ApuPart> parts) {
+		for (ApuPart part : parts) {
 			for (ApuPartItem item : part.getItems()) {
 				ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
 				if (itemType != null && itemType.getType() == DataType.APU_REF) {

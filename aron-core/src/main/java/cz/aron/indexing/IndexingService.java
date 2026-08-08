@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuEntity;
+import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
@@ -122,7 +123,7 @@ public class IndexingService {
 			indexedName = apu.getName();
 		}
 		
-        for (ApuPart part : apu.getParts()) {
+        for (ApuPart part : ApuPartSerializer.deserialize(apu.getData())) {
             for (ApuPartItem item : part.getItems()) {
                 String value = item.getValue();
                 ItemType itemType = typesHolder.getItemTypeForCode(item.getType());

@@ -26,6 +26,7 @@ import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.commons.HttpUtils;
 import cz.aron.domain.ApuEntity;
+import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
@@ -71,7 +72,7 @@ public class ApuService {
         //Find all referred ids (APU_REF values are uuid strings in the serialized parts)
         var idsToFind = new HashSet<UUID>();
         for (ApuEntity apuEntity : apus) {
-            for (ApuPart part : apuEntity.getParts()) {
+            for (ApuPart part : ApuPartSerializer.deserialize(apuEntity.getData())) {
                 for (ApuPartItem item : part.getItems()) {
                     ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
                     if (itemType == null) {
@@ -203,7 +204,7 @@ public class ApuService {
         dto.setChildCnt(src.getChildCnt());
 
         // parts are stored (and deserialized) directly as the REST model
-        dto.setParts(src.getParts());
+        dto.setParts(ApuPartSerializer.deserialize(src.getData()));
 		if (src.getParent()!=null) {
 			var ancestors = apuEntityRepository.findAncestors(src.getId());		
 			cz.aron.api.rest.model.ApuEntity current = dto;
