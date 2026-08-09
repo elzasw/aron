@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 
 import cz.aron.api.rest.model.ApuAttachment;
 import cz.aron.api.rest.model.ApuEntity;
-import cz.aron.domain.ApuPartSerializer;
 import cz.aron.api.rest.model.DigitalObject;
 import cz.aron.api.rest.model.DigitalObjectFile;
 import cz.aron.api.rest.model.FileInfo;
@@ -32,7 +31,7 @@ public class ApuEntityMapper {
         }
 
         // parts are stored (and deserialized) directly as the REST model
-        dto.setParts(ApuPartSerializer.deserialize(src.getData()));
+        dto.setParts(ApuSerializer.deserialize(src.getData()));
 
         List<ApuAttachment> attachments = new ArrayList<>(src.getAttachments().size());
         for (cz.aron.domain.ApuAttachment att : src.getAttachments()) {

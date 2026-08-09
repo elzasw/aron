@@ -18,21 +18,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.esotericsoftware.kryo.Kryo;
 import com.google.common.collect.Iterables;
 
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.rest.model.ApuEntityView;
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
+import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.commons.HttpUtils;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
 import cz.aron.mapper.ApuEntityMapper;
+import cz.aron.mapper.ApuSerializer;
+import cz.aron.mapper.KryoSerializer;
+import cz.aron.mapper.StructuredResultSerializer;
 import cz.aron.repository.ApuEntityRepository;
 
 @Service
@@ -72,7 +76,7 @@ public class ApuService {
         //Find all referred ids (APU_REF values are uuid strings in the serialized parts)
         var idsToFind = new HashSet<UUID>();
         for (ApuEntity apuEntity : apus) {
-            for (ApuPart part : ApuPartSerializer.deserialize(apuEntity.getData())) {
+            for (ApuPart part : ApuSerializer.deserialize(apuEntity.getData())) {
                 for (ApuPartItem item : part.getItems()) {
                     ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
                     if (itemType == null) {
@@ -93,6 +97,29 @@ public class ApuService {
         }
         return idToLabelLookupMap;
     }
+
+	/**
+	 * Loads the stored {@link StructuredResult} of every given APU, keyed by uuid string.
+	 * <p>
+	 * APUs not found in the database are absent from the map; an APU that exists but has no
+	 * stored result is present with a {@code null} value, so callers can tell the two apart.
+	 * A single pooled {@link Kryo} is used for the whole batch.
+	 */
+	@Transactional(readOnly = true)
+	public Map<String, StructuredResult> findAllResultsByUuidIn(Collection<UUID> uuids) {
+		var results = new HashMap<String, StructuredResult>();
+		if (uuids.isEmpty()) {
+			return results;
+		}
+		return KryoSerializer.doWithKryo(kryo -> {
+			Iterables.partition(uuids, 1000).forEach(partition -> {
+				for (var dto : apuEntityRepository.findAllResultsByUuidIn(partition)) {
+					results.put(dto.uuid().toString(), StructuredResultSerializer.deserialize(kryo, dto.result()));
+				}
+			});
+			return results;
+		});
+	}
 
 	/**
 	 * Returns all ancestor APUs of the given APU, from its immediate parent up to the root,
@@ -204,7 +231,7 @@ public class ApuService {
         dto.setChildCnt(src.getChildCnt());
 
         // parts are stored (and deserialized) directly as the REST model
-        dto.setParts(ApuPartSerializer.deserialize(src.getData()));
+        dto.setParts(ApuSerializer.deserialize(src.getData()));
 		if (src.getParent()!=null) {
 			var ancestors = apuEntityRepository.findAncestors(src.getId());		
 			cz.aron.api.rest.model.ApuEntity current = dto;

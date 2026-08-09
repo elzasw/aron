@@ -135,14 +135,14 @@ public class ApuEntity extends PersistableBase {
 	@JoinColumn(name="parent_id")
 	private ApuEntity parent;
 
-	// Kryo-encoded result blob; callers encode/decode via ApuPartSerializer
+	// Kryo-encoded result blob; callers encode/decode via StructuredResultSerializer
 	// (no serialization inside the entity, no lifecycle callbacks)
 	@Column(name = "result")
 	@JsonIgnore
 	private byte[] result;
 
 	// parts (and their items) are serialized into this blob instead of being stored in their own
-	// tables; callers encode/decode via ApuPartSerializer (no serialization inside the entity)
+	// tables; callers encode/decode via ApuSerializer (no serialization inside the entity)
 	@Column(name = "data")
 	@JsonIgnore
 	private byte[] data;

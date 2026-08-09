@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.collect.Iterables;
 
 import cz.aron.domain.types.TypesHolder;
+import cz.aron.mapper.KryoSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuService;
@@ -126,7 +127,11 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	public void reindexApuBatch(List<Long> ids) {
 		var entities = apuEntityRepository.findAllByIdIn(ids);
 		if (!entities.isEmpty()) {
-			indexingService.indexApus(entities, apuService.resolveApuRefLabels(entities));
+			var apuRefLabels = apuService.resolveApuRefLabels(entities);
+			KryoSerializer.doWithKryo(kryo -> {
+				indexingService.indexApus(kryo, entities, apuRefLabels);
+				return null;
+			});
 		}
 	}
 

@@ -28,19 +28,20 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery.OpType;
 import org.springframework.stereotype.Service;
 
+import com.esotericsoftware.kryo.Kryo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
+import cz.aron.mapper.ApuSerializer;
 
 @Service
 public class IndexingService {
@@ -73,11 +74,16 @@ public class IndexingService {
 	    operations.delete(deleteQuery, IndexedApu.class);			
 	}
 
-	public void indexApus(Collection<ApuEntity> apus, Map<String, IdLabelDto> apuRefLabels) {
+	/**
+	 * Indexes the given APUs. The parts blob of each one is deserialized with the supplied
+	 * {@link Kryo}, so a caller indexing a whole batch borrows a single instance (see
+	 * {@code KryoSerializer.doWithKryo}) instead of one per APU.
+	 */
+	public void indexApus(Kryo kryo, Collection<ApuEntity> apus, Map<String, IdLabelDto> apuRefLabels) {
 		var indexQueries = new ArrayList<IndexQuery>(apus.size());
 		for (var apu : apus) {
 			if (apu.isIndexed()) {
-				var document = convert(apu, apuRefLabels);
+				var document = convert(kryo, apu, apuRefLabels);
 				var iq = new IndexQuery();
 				iq.setId(apu.getUuid().toString());
 				iq.setObject(document);
@@ -109,7 +115,7 @@ public class IndexingService {
 		}
 	}
 
-	private Document convert(ApuEntity apu, Map<String, IdLabelDto> apuRefLabels) {
+	private Document convert(Kryo kryo, ApuEntity apu, Map<String, IdLabelDto> apuRefLabels) {
 
 		var indexedApu = new IndexedApu();
 		Map<String, List<Object>> additionalDataToIndex = new HashMap<>();
@@ -123,7 +129,7 @@ public class IndexingService {
 			indexedName = apu.getName();
 		}
 		
-        for (ApuPart part : ApuPartSerializer.deserialize(apu.getData())) {
+        for (ApuPart part : ApuSerializer.deserialize(kryo, apu.getData())) {
             for (ApuPartItem item : part.getItems()) {
                 String value = item.getValue();
                 ItemType itemType = typesHolder.getItemTypeForCode(item.getType());

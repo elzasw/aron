@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.esotericsoftware.kryo.Kryo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,7 +40,6 @@ import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.domain.ApuAttachment;
 import cz.aron.domain.ApuEntity;
-import cz.aron.domain.ApuPartSerializer;
 import cz.aron.domain.DataType;
 import cz.aron.domain.DigitalObject;
 import cz.aron.domain.DigitalObjectType;
@@ -48,6 +48,9 @@ import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
 import cz.aron.indexing.IndexingService;
+import cz.aron.mapper.ApuSerializer;
+import cz.aron.mapper.KryoSerializer;
+import cz.aron.mapper.StructuredResultSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.ApuSourceRepository;
 import cz.aron.repository.DaoRepository;
@@ -74,6 +77,10 @@ public class ApuProcessor {
 	private final IndexingService indexingService;
 	private final ApuService apuService;
 	private final IdService idService;
+
+	// Kryo is not thread-safe; this instance is confined to the single import run that
+	// holds the APUSRC lock, like the caches below
+	private final Kryo kryo;
 
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
@@ -105,6 +112,7 @@ public class ApuProcessor {
 		this.indexingService = indexingService;
 		this.apuService = apuService;
 		this.idService = idService;
+		this.kryo = KryoSerializer.getKryo();
 	}
 
 	@Transactional
@@ -269,7 +277,7 @@ public class ApuProcessor {
 		processApuAndFiles(path, null);
 	}
 
-	public void processApu(Apu apu, cz.aron.domain.ApuSource apuSource, Map<String, Path> filesMap) {
+	private void processApu(Apu apu, cz.aron.domain.ApuSource apuSource, Map<String, Path> filesMap) {
 		
 		var levelState = apuIdsStates.get(apu.getUuid());
 		
@@ -280,7 +288,7 @@ public class ApuProcessor {
 		apuEntity.setIndexedName(apu.getIndexedName());
 		apuEntity.setOrder(++apuOrderCounter);
 		apuEntity.setDescription(apu.getDesc());
-		apuEntity.setResult(ApuPartSerializer.serializeStructuredResult(parseResult(apu.getResult())));
+		apuEntity.setResult(StructuredResultSerializer.serialize(kryo, parseResult(apu.getResult())));
 		apuEntity.setPermalink(apu.getPrmLnk());
 		apuEntity.setType(cz.aron.domain.ApuType.valueOf(apu.getType().name().toUpperCase())); // fixme names don't match
         apuEntity.setChildCnt(levelState.childCnt);
@@ -302,7 +310,7 @@ public class ApuProcessor {
 		}
 		apuEntity.setSource(apuSource);
 		List<ApuPart> parts = apu.getPrts() != null ? processParts(apu.getPrts().getPart()) : new ArrayList<>();
-		apuEntity.setData(ApuPartSerializer.serialize(parts));
+		apuEntity.setData(ApuSerializer.serialize(kryo, parts));
 		processAttachments(apu.getAttchs(), apuEntity, filesMap);
 		if (apu.getDaos() != null) {
 			int i = 0;
@@ -488,14 +496,14 @@ public class ApuProcessor {
 		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
 		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
 		// clear for next batch
-		indexingService.indexApus(saveCache.values(), apuService.resolveApuRefLabels(saveCache.values()));
+		indexingService.indexApus(kryo,saveCache.values(), apuService.resolveApuRefLabels(saveCache.values()));
 		saveCache.clear();
 
 		var relatedIncomingEntities = apuEntityRepository.findAllByIdIn(apuIdsTargetingUpdatedIds);
-		indexingService.indexApus(relatedIncomingEntities, apuService.resolveApuRefLabels(relatedIncomingEntities));
+		indexingService.indexApus(kryo,relatedIncomingEntities, apuService.resolveApuRefLabels(relatedIncomingEntities));
 
 		var relatedEntities = apuEntityRepository.findAllByUuidIn(apusToHaveIncomingRelsUpdated);
-		indexingService.indexApus(relatedEntities, apuService.resolveApuRefLabels(relatedEntities));
+		indexingService.indexApus(kryo,relatedEntities, apuService.resolveApuRefLabels(relatedEntities));
 		
 		apusToHaveIncomingRelsUpdated.clear();
 		entityManager.clear();

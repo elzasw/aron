@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
@@ -46,8 +45,6 @@ import cz.aron.api.rest.model.ResultRowItemValue;
 import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.api.rest.model.StructuredResults;
-import cz.aron.domain.ApuPartSerializer;
-import cz.aron.domain.dto.IdStructuredResultDto;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
 import cz.aron.indexing.Aggregations;
 import cz.aron.indexing.IndexedApu;
@@ -305,21 +302,18 @@ public class ApuApi implements AronApi {
 		var query = queryBuilder.build(params);
 		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
 		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).map(java.util.UUID::fromString).collect(Collectors.toList());
-		var results = apuEntityRepository.findAllResultsByUuidIn(uuids).stream().collect(Collectors.toList());
-		Map<String, IdStructuredResultDto> byId = results.stream()
-	                .collect(Collectors.toMap(r -> r.uuid().toString(), Function.identity()));
+		Map<String, StructuredResult> byId = apuService.findAllResultsByUuidIn(uuids);
 		
 		var result = new StructuredResults();				
 		result.setAggregations(Aggregations.map(hits.getAggregations()));
 		result.setItems(hits.getSearchHits().stream()
-                .map(hit -> byId.get(hit.getId()))
-                .filter(e -> e != null)
-                .map(r->{
-                	var structuredResult = ApuPartSerializer.deserializeStructuredResult(r.result());
+                .filter(hit -> byId.containsKey(hit.getId()))
+                .map(hit->{
+                	var structuredResult = byId.get(hit.getId());
                 	if (structuredResult!=null) {
             			return structuredResult;
             		} else {
-            			return createEmptyResult(r.uuid().toString());
+            			return createEmptyResult(hit.getId());
             		}
                 })
                 .collect(Collectors.toList()));
