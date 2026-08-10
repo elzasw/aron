@@ -29,8 +29,15 @@ public interface RelationRepository  extends JpaRepository<Relation, Long>  {
 		
 	List<Relation> findAllByApuSourceIdAndSourceIn(@Param("apuSourceId") long apuSourceId, @Param("sources") Collection<UUID> sources);
 	
-	@Query("SELECT r.id FROM Relation r WHERE r.apuSource.id=:apuSourceId AND r.remove=true")
-	List<Long> findAllIdByApuSourceIdAndRemoveTrue(@Param("apuSourceId") long apuSourceId);
+	/**
+	 * Deletes the relations of the given ApuSource that were marked to be removed by
+	 * {@link #markToRemoveByApuSourceId(long)} and were not re-created by the running import.
+	 *
+	 * @return num deleted records
+	 */
+	@Modifying(flushAutomatically = true)
+	@Query("DELETE FROM Relation r WHERE r.apuSource.id=:apuSourceId AND r.remove=true")
+	long deleteAllByApuSourceIdAndRemoveTrue(@Param("apuSourceId") long apuSourceId);
 
 	@Modifying
 	@Query("DELETE FROM Relation r WHERE r.apuSource.id=:apuSourceId")

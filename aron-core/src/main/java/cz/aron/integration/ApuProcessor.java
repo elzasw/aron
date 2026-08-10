@@ -4,11 +4,9 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,8 +49,10 @@ import cz.aron.indexing.IndexingService;
 import cz.aron.mapper.ApuSerializer;
 import cz.aron.mapper.KryoSerializer;
 import cz.aron.mapper.StructuredResultSerializer;
+import cz.aron.repository.ApuAttachmentRepository;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.ApuSourceRepository;
+import cz.aron.repository.DaoFileRepository;
 import cz.aron.repository.DaoRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuRequestQueue;
@@ -67,7 +67,9 @@ public class ApuProcessor {
 
 	private final ApuSourceRepository apuSourceRepository;
 	private final ApuEntityRepository apuEntityRepository;
+	private final ApuAttachmentRepository apuAttachmentRepository;
 	private final DaoRepository daoRepository;
+	private final DaoFileRepository daoFileRepository;
 	private final RelationRepository relationRepository;
 	private final ApuRequestQueue apuRequestQueue;
 	private final TypesHolder typesHolder;
@@ -96,13 +98,16 @@ public class ApuProcessor {
 	private long partIdSeq; // sequential id for parts/items within a single APU
 
 	public ApuProcessor(ApuSourceRepository apuSourceRepository, ApuEntityRepository apuEntityRepository,
-			DaoRepository daoRepository, RelationRepository relationRepository, ApuRequestQueue apuRequestQueue,
-			TypesHolder typesHolder, FileInputProcessor fileInputProcessor, ObjectMapper objectMapper,
-			EntityManager entityManager, IndexingService indexingService, ApuService apuService,
-			IdService idService) {
+			ApuAttachmentRepository apuAttachmentRepository, DaoRepository daoRepository,
+			DaoFileRepository daoFileRepository, RelationRepository relationRepository,
+			ApuRequestQueue apuRequestQueue, TypesHolder typesHolder, FileInputProcessor fileInputProcessor,
+			ObjectMapper objectMapper, EntityManager entityManager, IndexingService indexingService,
+			ApuService apuService, IdService idService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.apuEntityRepository = apuEntityRepository;
+		this.apuAttachmentRepository = apuAttachmentRepository;
 		this.daoRepository = daoRepository;
+		this.daoFileRepository = daoFileRepository;
 		this.relationRepository = relationRepository;
 		this.apuRequestQueue = apuRequestQueue;
 		this.typesHolder = typesHolder;
@@ -169,32 +174,18 @@ public class ApuProcessor {
 				numDisconnected, numDeletedRelations);
 		apuEntityRepository.flush();
 
-		// remove all ApuEntity from bottom to top to not breach referential integrity
-		var idParentIds = apuEntityRepository.findIdParentIdByApuSourceId(apuSourceId);
-		Map<Long, Long> idToParentIdMap = new HashMap<>();
-		for (var idParentId : idParentIds) {
-			idToParentIdMap.put(idParentId.id(), idParentId.parentId());
-		}
-		var topToBottomIds = new LinkedHashSet<Long>();
-		while (!idToParentIdMap.isEmpty()) {
-			var iterator = idToParentIdMap.entrySet().iterator();
-			while (iterator.hasNext()) {
-				var next = iterator.next();
-				if (next.getValue() == null || topToBottomIds.contains(next.getValue())) {
-					topToBottomIds.add(next.getKey());
-					iterator.remove();
-				}
-			}
-		}
-		// Reverse
-		var apuIdsToDelete = new ArrayList<>(topToBottomIds);
-		Collections.reverse(apuIdsToDelete);
-		apuEntityRepository.deleteAllById(apuIdsToDelete);
-		apuEntityRepository.flush();
-		log.debug("Processing apu source {}, original data deleted", uuid);
-		entityManager.clear();		
+		// remove all ApuEntity in bulk; the statements below bypass the persistence context, so they
+		// are ordered by the foreign keys instead of relying on JPA cascades:
+		// attachment files -> attachments -> detach from parents -> apus
+		var numDeletedFiles = daoFileRepository.deleteAttachmentFilesByApuSourceId(apuSourceId);
+		var numDeletedAttachments = apuAttachmentRepository.deleteAllByApuSourceId(apuSourceId);
+		apuEntityRepository.clearParentsByApuSourceId(apuSourceId);
+		var numDeletedApus = apuEntityRepository.deleteAllByApuSourceId(apuSourceId);
+		log.debug("Processing apu source {}, original data deleted, {} apus, {} attachments, {} files", uuid,
+				numDeletedApus, numDeletedAttachments, numDeletedFiles);
+		entityManager.clear();
 	}
-	
+
     /**
      * First pass over the APU XML source: computes {@code depth} and {@code pos} for every APU
      * and populates {@link #apuIdsStates} so that the main processing pass can assign these
@@ -510,9 +501,8 @@ public class ApuProcessor {
 	}
 
 	private void removeNotUsedRelations(cz.aron.domain.ApuSource apuSource) {
-		var ids = relationRepository.findAllIdByApuSourceIdAndRemoveTrue(apuSource.getId());
-		relationRepository.deleteAllById(ids);
-		// TODO reindex referenced apus referenced from deleted		
+		relationRepository.deleteAllByApuSourceIdAndRemoveTrue(apuSource.getId());
+		// TODO reindex referenced apus referenced from deleted
 	}
 
 	private void fillDaoCache(List<String> daoIds) {

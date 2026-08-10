@@ -20,7 +20,6 @@ import cz.aron.domain.dto.IdUuidNameDescriptionOrderDto;
 import cz.aron.domain.dto.IdUuidNameDescriptionParentDto;
 import cz.aron.domain.types.dto.ApuEntityView;
 import cz.aron.domain.types.dto.ApuEntityViewType;
-import cz.aron.domain.types.dto.ApuIdParentId;
 
 
 @Repository
@@ -29,8 +28,27 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@EntityGraph(attributePaths = {"source"})
 	ApuEntity findByUuid(UUID uuid);
 
-	@Query("SELECT apu.id, apu.parent.id FROM ApuEntity apu WHERE apu.source.id=:apuSourceId")
-	List<ApuIdParentId> findIdParentIdByApuSourceId(@Param("apuSourceId") long apuSourceId);
+	/**
+	 * Detaches all APUs of the given ApuSource from their parents, so that they can be deleted by
+	 * {@link #deleteAllByApuSourceId(long)} in a single statement without ordering them
+	 * child-before-parent (FK_apu_parent is a plain NO ACTION constraint).
+	 *
+	 * @return num updated records
+	 */
+	@Modifying
+	@Query("UPDATE ApuEntity ae SET ae.parent=NULL WHERE ae.source.id=:apuSourceId")
+	int clearParentsByApuSourceId(@Param("apuSourceId") long apuSourceId);
+
+	/**
+	 * Deletes all APUs of the given ApuSource. Everything referencing them has to be removed first:
+	 * attachments (and their files), and {@code digital_object.apu_id} has to be NULLed — see
+	 * {@link DaoRepository#disconnectDaosByApuSourceId(long)}.
+	 *
+	 * @return num deleted records
+	 */
+	@Modifying
+	@Query("DELETE FROM ApuEntity ae WHERE ae.source.id=:apuSourceId")
+	int deleteAllByApuSourceId(@Param("apuSourceId") long apuSourceId);
 
 	@Query("SELECT cast(ae.uuid as string), ae.name, ae.description, ae.order FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<ApuEntityView> findAllByUuids(@Param("uuids") Collection<UUID> uuids);
