@@ -15,6 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import cz.aron.domain.dto.DaoFileRedirectDto;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.DaoFileRepository;
+import cz.aron.web.WebConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -54,7 +55,7 @@ public class RedirectApi {
 			log.warn("Entity not found for permalink: {}", permalink);
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
 		}
-		String redirectUrl = "/apu/" + ids.get(0);
+		String redirectUrl = request.getContextPath() + "/apu/" + ids.get(0);
 		log.info("Redirecting from /redirect{} to {}", permalink, redirectUrl);
 		return redirectTo(redirectUrl);
 	}
@@ -74,7 +75,7 @@ public class RedirectApi {
 			log.warn("Multiple attachments found for permalink: {}", name);
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Multiple attachments found");
 		}
-		String redirectUrl = "/api/aron/file/" + ids.get(0);
+		String redirectUrl = request.getContextPath() + WebConfig.OLD_API_PREFIX + "/file/" + ids.get(0);
 		log.info("Redirecting from /attachment/{} to {}", name, redirectUrl);
 		return redirectTo(redirectUrl);
 	}
@@ -92,19 +93,21 @@ public class RedirectApi {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
 		}
 		DaoFileRedirectDto id = ids.get(0);
-		String redirectUrl = "/apu/" + id.apuId() + "/dao/" + id.daoId() + "/file/" + id.fileId();
+		String redirectUrl = request.getContextPath() + "/apu/" + id.apuId() + "/dao/" + id.daoId() + "/file/"
+				+ id.fileId();
 		log.info("Redirecting from /redirectimage{} to {}", permalink, redirectUrl);
 		return redirectTo(redirectUrl);
 	}
 
 	/**
-	 * Returns the request URI tail after {@code prefix}, with the servlet context path removed.
-	 * Preserves any leading slash that is part of {@code prefix} (e.g. {@code "/redirect"} keeps the
-	 * following slash, {@code "/attachment/"} strips it) to match the stored permalink format.
+	 * Returns the request URI tail after {@code prefix}, with the servlet context path and the
+	 * old-API mapping prefix removed. Preserves any leading slash that is part of {@code prefix}
+	 * (e.g. {@code "/redirect"} keeps the following slash, {@code "/attachment/"} strips it) to
+	 * match the stored permalink format.
 	 */
 	private static String tail(HttpServletRequest request, String prefix) {
 		String withoutContext = request.getRequestURI().substring(request.getContextPath().length());
-		return withoutContext.substring(prefix.length());
+		return withoutContext.substring((WebConfig.OLD_API_PREFIX + prefix).length());
 	}
 
 	private static ResponseEntity<Void> redirectTo(String url) {

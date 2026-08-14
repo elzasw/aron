@@ -7,8 +7,14 @@ spring:
     default-property-inclusion: non_null
 
 server:
-  servlet:
-    context-path: /api/aron
+  # The old API lives under /api/aron as a MAPPING prefix (see WebConfig), not a
+  # servlet context path - the URL root serves the UI (IndexController injects the
+  # effective prefix into the SPA shell). Subpath deployment needs no rebuild: set
+  # server.servlet.context-path (standalone) or send X-Forwarded-Prefix from the
+  # reverse proxy; the framework strategy below folds the header into the context
+  # path. The SOAP file-transfer endpoint (/cxf/*) is internal - the reverse proxy
+  # must not forward /cxf/** from the internet.
+  forward-headers-strategy: framework
   compression:
     enabled: true
     # The comma-separated list of mime types that should be compressed

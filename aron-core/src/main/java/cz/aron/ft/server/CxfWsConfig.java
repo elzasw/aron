@@ -17,8 +17,12 @@ import jakarta.xml.ws.Endpoint;
 @Configuration
 public class CxfWsConfig {
     @Bean
-    public ServletRegistrationBean<CXFServlet> cxfServlet() {    	
-        ServletRegistrationBean<CXFServlet> cxfServletServletRegistrationBean = new ServletRegistrationBean<>(new CXFServlet(), "/cxf/*");
+    public ServletRegistrationBean<CXFServlet> cxfServlet() {
+        // Internal service-to-service interface (Transfagent ingest) - deliberately
+        // OUTSIDE the public /api namespace. The reverse proxy of a deployment must
+        // not forward /cxf/** from the internet.
+        ServletRegistrationBean<CXFServlet> cxfServletServletRegistrationBean = new ServletRegistrationBean<>(
+                new CXFServlet(), "/cxf/*");
         MultipartConfigElement multipartConfigElement = new MultipartConfigElement("");
         cxfServletServletRegistrationBean.setMultipartConfig(multipartConfigElement);
         return cxfServletServletRegistrationBean;

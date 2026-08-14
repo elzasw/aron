@@ -18,11 +18,12 @@ import cz.aron.domain.ApuEntity;
 import cz.aron.repository.ApuEntityRepository;
 
 /**
- * Pins the externally visible URL surface of the old API (everything under
- * {@code /api/aron}, including the SOAP file-transfer endpoint). These URLs are a
- * published contract consumed by the previous-generation UI and by Transfagent
- * deployments; internal refactorings (context-path removal, mapping prefixes) must
- * keep every assertion here green unchanged. See PLAN.md.
+ * Pins the externally visible URL surface of the old REST API (everything under
+ * {@code /api/aron} - a published contract consumed by the previous-generation UI)
+ * plus the location of the internal SOAP file-transfer endpoint ({@code /cxf/*},
+ * configured per deployment in Transfagent, never exposed by the public reverse
+ * proxy). Internal refactorings must keep every assertion here green unchanged.
+ * See PLAN.md.
  *
  * Runs against a full server on a random port with H2 (real Liquibase changelog)
  * and without Elasticsearch. The "test" profile is an OVERLAY over the real
@@ -134,10 +135,13 @@ class OldApiSurfaceTest {
 	}
 
 	@Test
-	void soapFileTransferWsdl() throws Exception {
-		var response = get("/api/aron/cxf/ft?wsdl");
+	void soapFileTransferWsdlIsInternalOutsideApiPrefix() throws Exception {
+		// internal service-to-service interface (Transfagent ingest): served at
+		// /cxf/*, deliberately outside the publicly proxied /api namespace
+		var response = get("/cxf/ft?wsdl");
 		assertThat(response.statusCode()).isEqualTo(200);
 		assertThat(response.body()).contains("definitions");
+		assertThat(get("/api/aron/cxf/ft?wsdl").statusCode()).isEqualTo(404);
 	}
 
 	@Test
@@ -175,10 +179,10 @@ class OldApiSurfaceTest {
 	}
 
 	@Test
-	void endpointsOutsideContextPathDoNotExist() throws Exception {
-		// the API lives under /api/aron only - the URL root stays free for the future UI
-		var response = get("/facets");
-		assertThat(response.statusCode()).isEqualTo(404);
+	void apiIsNotServedOutsideItsPrefix() throws Exception {
+		// the API lives under /api/aron only; SPA routes are enumerated in
+		// IndexController and /facets is not one of them
+		assertThat(get("/facets").statusCode()).isEqualTo(404);
 	}
 
 }
