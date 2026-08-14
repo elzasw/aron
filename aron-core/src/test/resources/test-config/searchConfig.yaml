@@ -1,0 +1,7 @@
+facets:
+  - type: ENUM
+    source: TEST_FACET
+    title: Test facet
+    maxItems: 10
+    displayedItems: 5
+    maxDisplayedItems: 10

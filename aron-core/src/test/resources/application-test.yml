@@ -1,0 +1,57 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;NON_KEYWORDS=VALUE,ORDER;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      # schema is owned by Liquibase (the real production changelog, run on H2)
+      ddl-auto: none
+    open-in-view: false
+  liquibase:
+    # Liquibase gets its own connection WITHOUT NON_KEYWORDS: its bookkeeping
+    # queries need ORDER as a keyword, and it quotes the reserved-word columns it
+    # creates (e.g. "order"). The app connection above keeps NON_KEYWORDS because
+    # Hibernate references the order/value columns unquoted.
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1
+    user: sa
+    password: sa
+  elasticsearch:
+    # never connected in tests (startup bootstrap disabled, search endpoints not
+    # called) - the key only satisfies IndexConfig's constructor placeholder
+    rest:
+      uris: http://localhost:9200
+
+# Elasticsearch is not reachable in tests: the startup index bootstrap is disabled
+# (PostInitializer) and tests must not call search endpoints. The client bean
+# exists but never connects.
+indexing:
+  startup-enabled: false
+
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
+types-config: ./src/test/resources/test-config/types.yaml
+transformation-agent-url: "http://localhost:8088/ws/ApuTransformManager"
+
+files:
+  storage: ./target/test-data/fileStorage
+  transfer:
+    path: ./target/test-data/aronFileTransfer
+
+tile:
+  folder: ./target/test-data/tiles
+  format: jpg
+
+webResources:
+  pageTemplate: ./src/test/resources/test-config/pageTemplate.yaml
+  news: ./src/test/resources/test-config/news.yaml
+  favoriteQueries: ./src/test/resources/test-config/favoriteQueries.yaml
+  facets: ./src/test/resources/test-config/searchConfig.yaml
+  logo: ./src/test/resources/test-config/logo.svg
+  topImage: ./src/test/resources/test-config/book.png
+
+help-url: http://help.test.example

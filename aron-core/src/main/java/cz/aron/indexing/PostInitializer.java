@@ -8,6 +8,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
@@ -23,6 +24,12 @@ import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuService;
 import cz.aron.service.IdService;
 
+/**
+ * Bootstraps the Elasticsearch indexes after startup. Disabled via
+ * {@code indexing.startup-enabled=false} for environments without a reachable
+ * Elasticsearch (tests).
+ */
+@ConditionalOnProperty(name = "indexing.startup-enabled", havingValue = "true", matchIfMissing = true)
 @Component
 public class PostInitializer  implements ApplicationListener<ApplicationReadyEvent>  {
 	

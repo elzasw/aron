@@ -1,0 +1,23 @@
+partTypes:
+  - code: PT_TITLE
+    name: Title
+    viewType: STANDALONE
+  - code: PT_BODY
+    name: Body
+    viewType: GROUPED
+itemTypes:
+  - code: TITLE_MAIN
+    name: Main title
+    type: STRING
+    indexed: true
+  - code: UNIT_DATE
+    name: Dating
+    type: UNITDATE
+    indexed: true
+metaDataTypes:
+  - code: MD_ORDER
+    name: Order
+itemGroups:
+  - code: GRP_TITLES
+    items:
+      - TITLE_MAIN

@@ -5,6 +5,13 @@
     <property name="uuid" value="uuid" dbms="postgresql"/>
     <property name="blob" value="bytea" dbms="postgresql"/>
 
+    <!-- H2 variants (tests run the same changelog on H2 in PostgreSQL mode) -->
+    <property name="now" value="now()" dbms="h2"/>
+    <property name="id" value="bigint" dbms="h2"/>
+    <property name="uuid" value="uuid" dbms="h2"/>
+    <!-- bytea, not blob: H2's PostgreSQL compatibility mode rejects the BLOB type -->
+    <property name="blob" value="bytea" dbms="h2"/>
+
     <changeSet id="1" author="karel.zacek@lightcomp.cz">
 
 <!--      
