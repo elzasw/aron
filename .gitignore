@@ -1,0 +1,14 @@
+# Maven
+target/
+
+# Local toolchain config (machine-specific paths) - copied from set-env.bat.template
+/set-env.bat
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+.project
+.classpath
+.settings/
+.vscode/

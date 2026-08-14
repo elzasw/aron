@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.lightcomp</groupId>
+		<artifactId>aron2</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>aron-distribution</artifactId>
+	<name>ARON 2 Distribution</name>
+	<description>Assembles the deployable artifact: one executable Spring Boot fat jar
+		(target/aron2.jar) via spring-boot:repackage. Integrates the outputs of the
+		backend (aron-core) and, once it exists, the UI (aron-ui) modules. This module
+		exists so packaging concerns stay out of aron-core - it remains a plain library
+		jar.</description>
+
+	<dependencies>
+		<!-- The backend application (plain library jar; its main class is the entry point). -->
+		<dependency>
+			<groupId>com.lightcomp</groupId>
+			<artifactId>aron-core</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<!-- target/aron2.jar (no version in the name). -->
+		<finalName>aron2</finalName>
+		<plugins>
+			<!-- Repackage the dependency graph into one executable fat jar. The module
+			     has no sources of its own, so the main class is named explicitly; the
+			     loader finds it in BOOT-INF/lib/aron-core.jar. -->
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<mainClass>cz.aron.Application</mainClass>
+				</configuration>
+				<executions>
+					<execution>
+						<id>repackage</id>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

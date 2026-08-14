@@ -1,0 +1,14 @@
+@echo off
+REM ---------------------------------------------------------------------------
+REM Local toolchain for the build scripts. COPY this file to "set-env.bat"
+REM (which is gitignored) and set the paths to YOUR locally downloaded JDK 21
+REM and Maven 3.9.x. build.bat calls set-env.bat if it exists, so you build
+REM with your own toolchain instead of the Maven wrapper.
+REM
+REM Keep machine-specific paths only here; never commit set-env.bat.
+REM ---------------------------------------------------------------------------
+
+SET "JAVA_HOME=C:\path\to\jdk-21"
+SET "MAVEN_HOME=C:\path\to\apache-maven-3.9.x"
+
+set "PATH=%JAVA_HOME%\bin;%MAVEN_HOME%\bin;%PATH%"
