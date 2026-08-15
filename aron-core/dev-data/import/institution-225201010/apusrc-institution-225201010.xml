@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c9bff0c8-7c52-4831-90d0-9390435de1d6">
+    <apus>
+        <apu type="Institution" uuid="9025a3ec-1ce6-4a27-9c84-985cfb8ce214">
+            <name>Státní okresní archiv Chrudim</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Chrudim</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Chrudim</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Chrudim</value>
+                    <itms>
+                        <str type="NAME">SOkA Chrudim</str>
+                    </itms>
+                </part>
+                <part type="PT_INST_INFO">
+                    <itms>
+                        <str type="INST_CODE">225201010</str>
+                        <ref type="AP_REF">48c5571b-dbf5-48e5-b615-5cf7cef71489</ref>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

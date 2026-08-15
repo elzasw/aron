@@ -82,11 +82,13 @@
 			<artifactId>mapstruct-processor</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<!-- test -->
+		<!-- H2 backs tests and the dev profile (mvn spring-boot:run with profile
+		     "dev"); optional=true keeps it OUT of the distribution jar -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -277,5 +279,161 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+		  Dev mode (doc/search-port.md, S5): `mvn spring-boot:run -Pdev` runs the
+		  whole stack with zero external services. The dev configuration is NOT
+		  packaged - it lives in dev-data/application-dev.yml and is supplied at
+		  runtime, like any other deployment configuration of this
+		  configuration-driven platform.
+		-->
+		<profile>
+			<id>dev</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<configuration>
+							<profiles>
+								<profile>dev</profile>
+							</profiles>
+							<arguments>
+								<argument>--spring.config.additional-location=file:./dev-data/</argument>
+							</arguments>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<!--
+		  Optional Elasticsearch integration tests (see doc/search-port.md, S4).
+		  Activation: mvn verify -Pes-it
+		  Starts the OFFICIAL Elasticsearch distribution as a local process on port
+		  19200 (downloaded automatically and cached - no local installation, no
+		  Docker; a dev ES on 9200 does not collide), runs the *IT tests against it
+		  (failsafe) and stops it. The default build never touches Elasticsearch.
+		  The ES version matches the client line managed by the Spring Boot BOM.
+		-->
+		<profile>
+			<id>es-it</id>
+			<build>
+				<plugins>
+					<!-- Own ES launcher (doc/search-port.md, S4): download (cached in
+					     ~/.m2/es-cache) and extract the official distribution, start on
+					     port 19200 with a pidfile, stop after the ITs. Engine-agnostic by
+					     design - the same pattern will serve OpenSearch if ever needed.
+					     The version tracks what deployments install (current major);
+					     client/server compatibility (Boot-managed 8.x client vs 9.x
+					     server) is exactly what these ITs verify. No analysis plugins
+					     needed - es_settings.json uses built-in analyzers only. -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<executions>
+							<execution>
+								<id>start-elasticsearch</id>
+								<phase>pre-integration-test</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<property name="es.version" value="9.5.1"/>
+										<property name="es.cache" value="${user.home}/.m2/es-cache"/>
+										<property name="es.home" value="${project.build.directory}/elasticsearch-it"/>
+										<condition property="es.dist" value="elasticsearch-${es.version}-windows-x86_64.zip">
+											<os family="windows"/>
+										</condition>
+										<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz"/>
+										<mkdir dir="${es.cache}"/>
+										<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}"
+											dest="${es.cache}/${es.dist}" skipexisting="true"/>
+										<delete dir="${es.home}" quiet="true"/>
+										<mkdir dir="${es.home}"/>
+										<exec osfamily="windows" executable="powershell" failonerror="true">
+											<arg value="-NoProfile"/>
+											<arg value="-Command"/>
+											<arg value="Expand-Archive -Force '${es.cache}/${es.dist}' '${es.home}-tmp'; Get-ChildItem '${es.home}-tmp/elasticsearch-${es.version}' | Move-Item -Destination '${es.home}'; Remove-Item -Recurse -Force '${es.home}-tmp'"/>
+										</exec>
+										<!-- tar preserves the executable bits ant's untar cannot -->
+										<exec osfamily="unix" executable="tar" failonerror="true">
+											<arg value="-xzf"/>
+											<arg value="${es.cache}/${es.dist}"/>
+											<arg value="-C"/>
+											<arg value="${es.home}"/>
+											<arg value="--strip-components=1"/>
+										</exec>
+										<!-- start with test-friendly settings; ES writes its JVM pid to es.pid -->
+										<exec osfamily="windows" executable="powershell" failonerror="true">
+											<arg value="-NoProfile"/>
+											<arg value="-Command"/>
+											<arg value="$env:ES_JAVA_OPTS='-Xms512m -Xmx512m'; Start-Process -FilePath '${es.home}/bin/elasticsearch.bat' -ArgumentList '-Ehttp.port=19200','-Etransport.port=19300','-Ecluster.name=aron2-it','-Ediscovery.type=single-node','-Expack.security.enabled=false','-p','${es.home}/es.pid' -WindowStyle Hidden"/>
+										</exec>
+										<exec osfamily="unix" executable="${es.home}/bin/elasticsearch" failonerror="true">
+											<env key="ES_JAVA_OPTS" value="-Xms512m -Xmx512m"/>
+											<arg value="-d"/>
+											<arg value="-p"/>
+											<arg value="${es.home}/es.pid"/>
+											<arg value="-Ehttp.port=19200"/>
+											<arg value="-Etransport.port=19300"/>
+											<arg value="-Ecluster.name=aron2-it"/>
+											<arg value="-Ediscovery.type=single-node"/>
+											<arg value="-Expack.security.enabled=false"/>
+										</exec>
+										<waitfor maxwait="180" maxwaitunit="second" checkevery="2"
+											checkeveryunit="second" timeoutproperty="es.start.timeout">
+											<http url="http://localhost:19200/_cluster/health"/>
+										</waitfor>
+										<fail if="es.start.timeout"
+											message="Elasticsearch did not become available on port 19200 within 180s - see ${es.home}/logs"/>
+									</target>
+								</configuration>
+							</execution>
+							<execution>
+								<id>stop-elasticsearch</id>
+								<phase>post-integration-test</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<property name="es.home" value="${project.build.directory}/elasticsearch-it"/>
+										<exec osfamily="windows" executable="powershell">
+											<arg value="-NoProfile"/>
+											<arg value="-Command"/>
+											<arg value="if (Test-Path '${es.home}/es.pid') { Stop-Process -Id (Get-Content '${es.home}/es.pid') -Force -ErrorAction SilentlyContinue }"/>
+										</exec>
+										<exec osfamily="unix" executable="sh">
+											<arg value="-c"/>
+											<arg value="[ -f '${es.home}/es.pid' ] &amp;&amp; kill $(cat '${es.home}/es.pid') || true"/>
+										</exec>
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-failsafe-plugin</artifactId>
+						<configuration>
+							<systemPropertyVariables>
+								<es.it.port>19200</es.it.port>
+							</systemPropertyVariables>
+						</configuration>
+						<executions>
+							<execution>
+								<goals>
+									<goal>integration-test</goal>
+									<goal>verify</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="80431620-bcdd-43a2-8f55-11dccf8e162e">
+    <apus>
+        <apu type="Entity" uuid="d72e1213-8422-47e3-a94e-748cc98f7697">
+            <name>Státní okresní archiv Náchod</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Náchod</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Náchod</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Náchod</value>
+                    <itms>
+                        <str type="NAME">SOkA Náchod</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

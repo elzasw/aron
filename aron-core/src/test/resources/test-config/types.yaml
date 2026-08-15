@@ -14,6 +14,26 @@ itemTypes:
     name: Dating
     type: UNITDATE
     indexed: true
+  - code: LANG_CODE
+    name: Language
+    type: ENUM
+    indexed: true
+  - code: CNT_ITEMS
+    name: Item count
+    type: INTEGER
+    indexed: true
+  - code: REL_ENTITY
+    name: Related entity
+    type: APU_REF
+    indexed: true
+  - code: NOTE_SECRET
+    name: Note excluded from the index
+    type: STRING
+    indexed: false
+  - code: INT_NAME_INDEX
+    name: Indexed name override
+    type: STRING
+    indexed: true
 metaDataTypes:
   - code: MD_ORDER
     name: Order
@@ -21,3 +41,6 @@ itemGroups:
   - code: GRP_TITLES
     items:
       - TITLE_MAIN
+  - code: GRP_RELS
+    items:
+      - REL_ENTITY

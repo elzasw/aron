@@ -1,17 +1,14 @@
-package cz.aron.indexing;
+package cz.aron.search;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,22 +22,26 @@ import cz.aron.service.ApuService;
 import cz.aron.service.IdService;
 
 /**
- * Bootstraps the Elasticsearch indexes after startup. Disabled via
- * {@code indexing.startup-enabled=false} for environments without a reachable
- * Elasticsearch (tests).
+ * Bootstraps the search schema after startup: compares the CRC of the types.yaml
+ * indexed-fields configuration with the value stored in the schema's own
+ * metadata ({@link SearchIndex#storedFieldsCrc()}) and rebuilds + reindexes when
+ * they differ. The marker lives and dies with the schema it describes, so no
+ * external state (the former ./lastConfigCrc.txt) can drift.
  */
-@ConditionalOnProperty(name = "indexing.startup-enabled", havingValue = "true", matchIfMissing = true)
 @Component
-public class PostInitializer  implements ApplicationListener<ApplicationReadyEvent>  {
-	
-	private static final Logger log = LoggerFactory.getLogger(PostInitializer.class);
-	
+public class SearchIndexManager implements ApplicationListener<ApplicationReadyEvent>, Ordered {
+
+	/** Startup-listener order: runs before anything that needs the search schema. */
+	public static final int STARTUP_ORDER = 0;
+
+	private static final Logger log = LoggerFactory.getLogger(SearchIndexManager.class);
+
 	private final IndexingService indexingService;
-	
+
 	private final ApuEntityRepository apuEntityRepository;
-	
+
 	private final RelationRepository relationRepository;
-	
+
 	private final ApuService apuService;
 
 	private final TypesHolder typesHolder;
@@ -51,9 +52,9 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	// (calling them directly from reindexAll would be self-invocation and bypass the proxy)
 	@Lazy
 	@Autowired
-	private PostInitializer self;
+	private SearchIndexManager self;
 
-	public PostInitializer(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
+	public SearchIndexManager(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
 			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository,
 			IdService idService) {
 		this.indexingService = indexingService;
@@ -65,32 +66,32 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	}
 
 	@Override
+	public int getOrder() {
+		return STARTUP_ORDER;
+	}
+
+	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
 
 		// seed application-side id counters from current DB maxima before any import can run
 		idService.initMetadataIds();
 		idService.initDaoIds();
 
-		try {
-			Path crcPath = Path.of("./lastConfigCrc.txt");
-			Long previousCrc = null;
-			if (Files.exists(crcPath)) {
-				previousCrc = Long.valueOf(Files.readString(crcPath));
-			}
-			if (!typesHolder.getCurrentIndexedFieldsCrc().equals(previousCrc)) {
-				indexingService.dropIndexes();
-				indexingService.createIndexes();
-				reindexAll();
-				Files.writeString(crcPath, String.valueOf(typesHolder.getCurrentIndexedFieldsCrc()));
-			} else {
-				indexingService.createIndexes();
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}				
-		log.info("PostInitializer completed.");
+		Long currentCrc = typesHolder.getCurrentIndexedFieldsCrc();
+		Long storedCrc = indexingService.storedFieldsCrc();
+		if (!currentCrc.equals(storedCrc)) {
+			log.info("Indexed-fields configuration changed (stored CRC {}, current {}) - rebuilding the search schema.",
+					storedCrc, currentCrc);
+			indexingService.dropSchema();
+			indexingService.createSchema();
+			reindexAll();
+			indexingService.storeFieldsCrc(currentCrc);
+		} else {
+			indexingService.createSchema();
+		}
+		log.info("Search index bootstrap completed.");
 	}
-	
+
 	private void reindexAll() {
 		log.info("Reindexing APU");
 		boolean reindexed = false;
@@ -127,7 +128,7 @@ public class PostInitializer  implements ApplicationListener<ApplicationReadyEve
 	/**
 	 * Loads, label-fills and indexes one batch of APUs inside a read-only transaction so that
 	 * lazy associations (e.g. {@code digitalObjects}) can be initialized during
-	 * {@link IndexingService#convert} — the startup reindex path has no open session otherwise
+	 * {@link ApuDocumentBuilder#build} — the startup reindex path has no open session otherwise
 	 * ({@code spring.jpa.open-in-view=false}). Must be invoked through the Spring proxy ({@link #self}).
 	 */
 	@Transactional(readOnly = true)

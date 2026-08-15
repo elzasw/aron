@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c4fa2283-1b3c-48bb-a40b-b64ca97dcbef">
+    <apus>
+        <apu type="Entity" uuid="681a7299-b9c4-4c06-aeb8-51e6a62d73bb">
+            <name>Státní okresní archiv Jičín</name>
+            <prts>
+                <part type="PT_NAME">
+                    <value>Státní okresní archiv Jičín</value>
+                    <itms>
+                        <str type="NAME">Státní okresní archiv Jičín</str>
+                    </itms>
+                </part>
+                <part type="PT_NAME">
+                    <value>SOkA Jičín</value>
+                    <itms>
+                        <str type="NAME">SOkA Jičín</str>
+                    </itms>
+                </part>
+            </prts>
+        </apu>
+    </apus>
+</apusrc>

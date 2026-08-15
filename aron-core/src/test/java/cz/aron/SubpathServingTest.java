@@ -2,17 +2,11 @@ package cz.aron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 import cz.aron.domain.ApuEntity;
 import cz.aron.repository.ApuEntityRepository;
@@ -23,31 +17,21 @@ import cz.aron.repository.ApuEntityRepository;
  * and the complete old API (REST, SOAP, permalink redirects) under /aron - no
  * rebuild, everything shifts uniformly. Together with {@link SpaServingTest} (root
  * + X-Forwarded-Prefix) this covers the deployment matrix from PLAN.md.
+ * <p>
+ * DELIBERATE SECOND CONTEXT (the only one besides the shared AbstractTest
+ * context): the context path cannot be changed per request. It also needs its own
+ * in-memory database - the named {@code mem:testdb} of the default context stays
+ * alive JVM-wide (DB_CLOSE_DELAY=-1), and a second Liquibase run against it would
+ * collide on the changelog table.
  */
-@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"server.servlet.context-path=/aron",
-		// own in-memory DB: the named mem:testdb of the default test context stays
-		// alive JVM-wide (DB_CLOSE_DELAY=-1), and a second Liquibase run against it
-		// collides on the changelog table
-		"spring.datasource.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;NON_KEYWORDS=VALUE,ORDER;DB_CLOSE_DELAY=-1",
-		"spring.liquibase.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1" })
-class SubpathServingTest {
-
-	@LocalServerPort
-	private int port;
+		"spring.datasource.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=VALUE,ORDER;DB_CLOSE_DELAY=-1",
+		"spring.liquibase.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1" })
+class SubpathServingTest extends AbstractTest {
 
 	@Autowired
 	private ApuEntityRepository apuEntityRepository;
-
-	private final HttpClient client = HttpClient.newBuilder()
-			.followRedirects(HttpClient.Redirect.NEVER)
-			.build();
-
-	private HttpResponse<String> get(String path) throws Exception {
-		HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build();
-		return client.send(request, HttpResponse.BodyHandlers.ofString());
-	}
 
 	@Test
 	void spaShellCarriesContextPath() throws Exception {

@@ -45,7 +45,7 @@ import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
-import cz.aron.indexing.IndexingService;
+import cz.aron.search.IndexingService;
 import cz.aron.mapper.ApuSerializer;
 import cz.aron.mapper.KryoSerializer;
 import cz.aron.mapper.StructuredResultSerializer;

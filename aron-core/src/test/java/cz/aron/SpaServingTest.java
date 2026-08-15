@@ -2,15 +2,7 @@ package cz.aron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Pins the SPA serving contract at the URL root: the shell is served for "/" and
@@ -20,30 +12,13 @@ import org.springframework.test.context.ActiveProfiles;
  * routes and missing assets stay 404. Complemented by {@link SubpathServingTest}
  * for the context-path deployment mode.
  */
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class SpaServingTest {
-
-	@LocalServerPort
-	private int port;
-
-	private final HttpClient client = HttpClient.newBuilder()
-			.followRedirects(HttpClient.Redirect.NEVER)
-			.build();
-
-	private HttpResponse<String> get(String path, String... headers) throws Exception {
-		HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET();
-		for (int i = 0; i < headers.length; i += 2) {
-			builder.header(headers[i], headers[i + 1]);
-		}
-		return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-	}
+class SpaServingTest extends AbstractTest {
 
 	@Test
 	void rootServesSpaShell() throws Exception {
 		var response = get("/");
 		assertThat(response.statusCode()).isEqualTo(200);
-		assertThat(response.headers().firstValue("Content-Type").orElse("")).startsWith("text/html");
+		assertThat(contentType(response)).startsWith("text/html");
 		assertThat(response.body()).contains("<base href=\"/\"");
 		assertThat(response.body()).contains("window.serverContextPath = \"\"");
 	}

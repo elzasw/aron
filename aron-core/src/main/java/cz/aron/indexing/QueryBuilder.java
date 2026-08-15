@@ -208,9 +208,9 @@ public class QueryBuilder {
     }
 
     private String resolveSortField(String field) {
-        // "name" has a dedicated sort subfield backed by the ICU collation analyzer
+        // "name" sorts by the index-time Czech collation key (see ApuDocumentBuilder)
         if ("name".equals(field)) {
-            return "name." + IndexConfig.SUFFIX_SORT;
+            return "nameSort";
         }
         return field;
     }

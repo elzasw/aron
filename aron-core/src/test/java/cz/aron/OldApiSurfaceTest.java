@@ -2,17 +2,10 @@ package cz.aron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.test.context.ActiveProfiles;
 
 import cz.aron.domain.ApuEntity;
 import cz.aron.repository.ApuEntityRepository;
@@ -28,31 +21,15 @@ import cz.aron.repository.ApuEntityRepository;
  * Runs against a full server on a random port with H2 (real Liquibase changelog)
  * and without Elasticsearch. The "test" profile is an OVERLAY over the real
  * application.yml (application-test.yml), so production configuration such as the
- * servlet context-path is genuinely exercised here.
+ * URL layout is genuinely exercised here.
  */
-@ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class OldApiSurfaceTest {
-
-	@LocalServerPort
-	private int port;
+class OldApiSurfaceTest extends AbstractTest {
 
 	@Autowired
 	private ApuEntityRepository apuEntityRepository;
 
-	// redirects are asserted explicitly, so the client must not follow them
-	private final HttpClient client = HttpClient.newBuilder()
-			.followRedirects(HttpClient.Redirect.NEVER)
-			.build();
-
-	private HttpResponse<String> get(String path) throws Exception {
-		HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build();
-		return client.send(request, HttpResponse.BodyHandlers.ofString());
-	}
-
-	private static String contentType(HttpResponse<?> response) {
-		return response.headers().firstValue("Content-Type").orElse("");
-	}
+	@Autowired
+	private jakarta.persistence.EntityManager entityManager;
 
 	@Test
 	void contextLoadsWithoutElasticsearchAndPostgres() {
@@ -86,9 +63,7 @@ class OldApiSurfaceTest {
 
 	@Test
 	void pageTemplateTopImage() throws Exception {
-		HttpRequest request = HttpRequest
-				.newBuilder(URI.create("http://localhost:" + port + "/api/aron/pageTemplate/topImage")).GET().build();
-		var response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+		var response = getBytes("/api/aron/pageTemplate/topImage");
 		assertThat(response.statusCode()).isEqualTo(200);
 		assertThat(contentType(response)).startsWith("image/png");
 		assertThat(response.body()).isNotEmpty();
@@ -176,6 +151,23 @@ class OldApiSurfaceTest {
 		var response = get("/api/aron/redirect/test-permalink");
 		assertThat(response.statusCode()).isEqualTo(302);
 		assertThat(response.headers().firstValue("Location")).contains("/apu/" + uuid);
+	}
+
+	@Test
+	@org.springframework.transaction.annotation.Transactional
+	void entitiesWithReservedWordColumnsAreLoadableOnH2() {
+		// digital_object & co. have a column literally named "order"; Hibernate
+		// auto-quotes it while Liquibase created it on its own H2 connection -
+		// this pins that both sides agree (caught by the dev-mode seed, not by
+		// uuid-projection queries which never touch the column)
+		ApuEntity apu = new ApuEntity();
+		apu.setId(999_003L);
+		apu.setUuid(UUID.randomUUID());
+		apuEntityRepository.saveAndFlush(apu);
+		entityManager.clear();
+
+		ApuEntity loaded = apuEntityRepository.findById(999_003L).orElseThrow();
+		assertThat(loaded.getDigitalObjects()).isEmpty();
 	}
 
 	@Test

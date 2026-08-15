@@ -1,0 +1,1714 @@
+# Druhy částí
+partTypes:
+  - name: Jméno
+    code: PT_NAME
+    # STANDALONE | GROUPED
+    viewType: GROUPED
+  - name: Název
+    code: PT_TITLE
+    viewType: GROUPED
+  - name: Informace o archivu
+    code: PT_INST_INFO
+    viewType: STANDALONE
+  - name: Informace o archivní entitě
+    code: PT_AE_INFO
+    viewType: STANDALONE
+  - name: Identifikátor
+    code: PT_IDENT
+    viewType: GROUPED
+  - name: Vznik
+    code: PT_AE_CRE
+    viewType: STANDALONE
+  - name: Zánik
+    code: PT_AE_EXT
+    viewType: STANDALONE
+  - name: Vztah
+    code: PT_AE_REL
+    viewType: STANDALONE
+  - name: členství
+    code: PT_AE_MEMBERSHIP
+    viewType: STANDALONE
+  - name: historické milníky
+    code: PT_AE_MILESTONES
+    viewType: STANDALONE
+  - name: manželství
+    code: PT_AE_MARRIAGE
+    viewType: STANDALONE
+  - name: přeřazení
+    code: PT_AE_REASSIGN
+    viewType: STANDALONE
+  - name: studium
+    code: PT_AE_STUDY
+    viewType: STANDALONE
+  - name: udělení ocenění
+    code: PT_AE_AWARD
+    viewType: STANDALONE
+  - name: záliba
+    code: PT_AE_HOBBY
+    viewType: STANDALONE
+  - name: zaměstnání / veřejná funkce
+    code: PT_AE_JOB
+    viewType: STANDALONE
+  - name: Informace o archivním souboru
+    code: PT_FUND_INFO
+    viewType: STANDALONE
+  - name: Informace o archivní pomůcce
+    code: PT_FINDINGAID_INFO
+    viewType: STANDALONE
+  - name: Archivní popis
+    code: PT_ARCH_DESC
+    viewType: STANDALONE
+  - name: Role
+    code: PT_ENTITY_ROLE
+    viewType: STANDALONE
+  - name: Archivní soubor
+    code: PT_ARCH_DESC_FUND
+    viewType: STANDALONE
+
+#
+# Jednotlivé prvky popisu
+#
+# Druhy prvků popisu, uvádí se jako type: ....
+# - ENUM - výčet hodnot
+# - APU_REF - odkaz na jinou APU
+# - INTEGER - číselná hodnota
+# - STRING - textová hodnota
+# - UNITDATE - datace
+# - LINK - hypertextový odkaz
+# - ITEM_AGGREG - agregace více prvků popisu, obvykle vztahy
+#
+itemTypes:
+  # Obecné
+  - code: NAME
+    name: Jméno
+    # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK | ITEM_AGGREG
+    type: STRING
+    # indexBoost: 1.1
+    # 
+    # Odstraneni diakritiky (folding, velka mala pismena apod.)
+    # Vychozi hodnoty:
+    #  - enum: false
+    #  - string: true
+    # indexFolding: true | false
+    #
+    # Moznost vypnuti indexaxe hodnoty
+    indexed: true
+  - code: INT_NAME_INDEX
+    name: Generovaný text pro vyhledávání v názvu APU, pouzije se jako index pro pole NAME
+    type: STRING
+    indexed: true
+  - code: TITLE
+    name: Název
+    type: STRING
+    indexed: true
+  - code: URL
+    name: Odkaz
+    type: LINK
+    indexed: true
+  - code: SOURCE_LINK
+    name: Zdroj informací
+    type: LINK
+    indexed: true
+  - code: DAO_LINK
+    name: Odkaz na digitalizát
+    type: LINK
+    indexed: true
+  - code: RELATED_UNITS_LINK
+    name: Odkazy na příbuzné dokumenty
+    type: LINK
+    indexed: true    
+  # Archivy
+  - code: INST_CODE
+    name: Kód archivu
+    type: STRING
+    indexed: true
+  - code: INST_SHORT_NAME
+    name: Zkrácené označení
+    type: STRING
+    indexed: true
+  # Archivní entity
+  - code: AE_CLASS
+    name: Třída entity
+    type: ENUM
+    indexed: true
+  - code: AE_SUBCLASS
+    name: Podtřída entity
+    type: ENUM
+    indexed: true
+  - code: AE_ORIGINATOR
+    name: Původce
+    type: ENUM
+    indexed: true
+  - code: AE_IDENT_TYPE
+    name: Druh identifikátoru
+    type: ENUM
+    indexed: true
+  - code: AE_IDENT_VALUE
+    name: Hodnota identifikátoru
+    type: STRING
+    indexed: true
+  - code: AE_BRIEF_DESC
+    name: Stručná charakteristika
+    type: STRING
+    indexed: false
+  - code: AE_GEO_ADMIN_REF
+    name: Administrativní zařazení
+    type: APU_REF
+    indexed: true
+#  - code: AE_REL_TYPE
+#    name: Druh vztahu
+#    type: ENUM
+#    indexed: true
+  - code: CORP_PURPOSE
+    name: Funkce korporace
+    type: STRING
+    indexed: true
+  - code: FOUNDING_NORMS
+    name: Normy – konstitutivní
+    type: STRING
+    indexed: true
+  - code: SCOPE_NORMS
+    name: Normy – působnost původce
+    type: STRING
+    indexed: true
+  - code: CORP_STRUCTURE
+    name: Vnitřní struktury korporace
+    type: STRING
+    indexed: true
+  - code: SOURCE_INFO
+    name: Zdroje informací
+    type: STRING
+    indexed: true
+  - code: HISTORY
+    name: Dějiny
+    type: STRING
+    indexed: true
+  - code: GENEALOGY
+    name: Genealogie
+    type: STRING
+    indexed: false
+  - code: BIOGRAPHY
+    name: Životopis
+    type: STRING
+    indexed: false
+  - code: DESCRIPTION
+    name: Popis
+    type: STRING
+    indexed: true
+  - code: CRC_BIRTH_DATE
+    name: narození
+    type: UNITDATE
+    indexed: false
+  - code: CRC_RISE_DATE
+    name: vznik
+    type: UNITDATE
+    indexed: false
+  - code: CRC_BEGINSCOPE_DATE
+    name: působnost od
+    type: UNITDATE
+    indexed: false
+  - code: CRC_FIRSTMBIRTH_DATE
+    name: narození prvního známého člena rodu/rodiny
+    type: UNITDATE
+    indexed: false
+  - code: CRC_FIRSTWMENTION_DATE
+    name: první písemná zmínka
+    type: UNITDATE
+    indexed: false
+  - code: CRC_ORIGIN_DATE
+    name: začátek
+    type: UNITDATE
+    indexed: false
+  - code: CRC_BEGINVALIDNESS_DATE
+    name: začátek platnosti
+    type: UNITDATE
+    indexed: false
+  - code: CRE_TYPE
+    name: typ vzniku
+    type: ENUM
+    indexed: false
+  - code: EXC_DEATH
+    name: úmrtí
+    type: UNITDATE
+    indexed: false
+  - code: EXC_EXTINCTION
+    name: zánik
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDSCOPE
+    name: působnost do
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTMDEATH
+    name: úmrtí posledního známého člena rodu/rodiny
+    type: UNITDATE
+    indexed: false
+  - code: EXC_LASTWMENTION
+    name: poslední písemná zmínka
+    type: UNITDATE
+    indexed: false
+  - code: EXC_END
+    name: konec
+    type: UNITDATE
+    indexed: false
+  - code: EXC_ENDVALIDNESS
+    name: konec platnosti
+    type: UNITDATE
+    indexed: true
+  - code: EXT_TYPE
+    name: typ zániku
+    type: ENUM
+    indexed: false
+  - code: EV_BEGIN
+    name: datace od
+    type: UNITDATE
+    indexed: true
+  - code: EV_END
+    name: datace do
+    type: UNITDATE
+    indexed: true
+  - code: RT_AUTHOR
+    name: autor/tvůrce
+    type: APU_REF
+    indexed: true
+  - code: RT_AUTHOROFCHANGE
+    name: autor změny / tvůrce změny
+    type: APU_REF
+    indexed: true
+  - code: RT_GRANDMOTHER
+    name: babička
+    type: APU_REF
+    indexed: true
+  - code: RT_BROTHER
+    name: bratr
+    type: APU_REF
+    indexed: true
+  - code: RT_HECOUSIN
+    name: bratranec
+    type: APU_REF
+    indexed: true
+  - code: RT_WHOLE
+    name: celek
+    type: APU_REF
+    indexed: true
+  - code: RT_CEREMONY
+    name: ceremoniál ocenění
+    type: APU_REF
+    indexed: true
+  - code: RT_MEMBERORG
+    name: členská organizace
+    type: APU_REF
+    indexed: true
+  - code: RT_RELATIONS
+    name: další rodinné vztahy
+    type: APU_REF
+    indexed: true
+  - code: RT_GRANDFATHER
+    name: dědeček
+    type: APU_REF
+    indexed: true
+  - code: RT_DOCUMENT
+    name: dokument
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYEND
+    name: entita související s koncem
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYBIRTH
+    name: entita související s narozením
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYDEATH
+    name: entita související s úmrtím
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYRISE
+    name: entita související se vznikem
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYORIGIN
+    name: entita související se začátkem
+    type: APU_REF
+    indexed: true
+  - code: RT_ENTITYEXTINCTION
+    name: entita související se zánikem
+    type: APU_REF
+    indexed: true
+  - code: RT_FUNCTION
+    name: funkce/činnost
+    type: APU_REF
+    indexed: true
+  - code: RT_GEOSCOPE
+    name: geografická působnost
+    type: APU_REF
+    indexed: true
+  - code: RT_MILESTONE
+    name: historický milník
+    type: APU_REF
+    indexed: true
+  - code: RT_ISPART
+    name: je část
+    type: APU_REF
+    indexed: true
+  - code: RT_ISMEMBER
+    name: je členem
+    type: APU_REF
+    indexed: true
+  - code: RT_GENUSMEMBER
+    name: je členem rodiny/rodu
+    type: APU_REF
+    indexed: true
+  - code: RT_OTHERNAME
+    name: jiná entita reprezentující tutéž osobu
+    type: APU_REF
+    indexed: true
+  - code: RT_ANCESTOR
+    name: jiný předek
+    type: APU_REF
+    indexed: true
+  - code: RT_ACTIVITYCORP
+    name: korporace veřejného působení
+    type: APU_REF
+    indexed: true
+  - code: RT_LIQUIDATOR
+    name: likvidátor
+    type: APU_REF
+    indexed: true
+  - code: RT_OWNER
+    name: majitel
+    type: APU_REF
+    indexed: true
+  - code: RT_HOLDER
+    name: majitel, držitel
+    type: APU_REF
+    indexed: true
+  - code: RT_HUSBAND
+    name: manžel
+    type: APU_REF
+    indexed: true
+  - code: RT_WIFE
+    name: manželka
+    type: APU_REF
+    indexed: true
+  - code: RT_MOTHER
+    name: matka
+    type: APU_REF
+    indexed: true
+  - code: RT_PLACE
+    name: místo
+    type: APU_REF
+    indexed: true
+  - code: RT_VENUE
+    name: místo konání
+    type: APU_REF
+    indexed: true
+  - code: RT_PLACEEND
+    name: místo ukončení
+    type: APU_REF
+    indexed: true
+  - code: RT_PLACESTART
+    name: místo uzavření
+    type: APU_REF
+    indexed: true
+  - code: RT_SUPCORP
+    name: nadřazená korporace
+    type: APU_REF
+    indexed: true
+  - code: RT_SUPTERM
+    name: nadřazený pojem
+    type: APU_REF
+    indexed: true
+  - code: RT_SENIOR
+    name: nadřízený
+    type: APU_REF
+    indexed: true
+  - code: RT_SUCCESSOR
+    name: nástupce
+    type: APU_REF
+    indexed: true
+  - code: RT_ACTIVITYFIELD
+    name: obor činnosti
+    type: APU_REF
+    indexed: true
+  - code: RT_STUDYFIELD
+    name: obor studia
+    type: APU_REF
+    indexed: true
+  - code: RT_AWARD
+    name: ocenění
+    type: APU_REF
+    indexed: true
+  - code: RT_ORGANIZER
+    name: organizátor, svolavatel
+    type: APU_REF
+    indexed: true
+  - code: RT_FATHER
+    name: otec
+    type: APU_REF
+    indexed: true
+  - code: RT_PARTNER
+    name: partner
+    type: APU_REF
+    indexed: true
+  - code: RT_SHEPARTNER
+    name: partnerka
+    type: APU_REF
+    indexed: true
+  - code: RT_SUBTERM
+    name: podřazený pojem
+    type: APU_REF
+    indexed: true
+  - code: RT_NAMEDAFTER
+    name: pojmenováno po
+    type: APU_REF
+    indexed: true
+  - code: RT_LASTKMEMBER
+    name: poslední známý člen rodu/rodiny
+    type: APU_REF
+    indexed: true
+  - code: RT_FIRSTKMEMBER
+    name: první známý člen rodu/rodiny
+    type: APU_REF
+    indexed: true
+  - code: RT_PREDECESSOR
+    name: předchůdce
+    type: APU_REF
+    indexed: true
+  - code: RT_AFFILIATION
+    name: příslušnost k
+    type: APU_REF
+    indexed: true
+  - code: RT_SISTER
+    name: sestra
+    type: APU_REF
+    indexed: true
+  - code: RT_SHECOUSIN
+    name: sestřenice
+    type: APU_REF
+    indexed: true
+  - code: RT_RESIDENCE
+    name: sídlo
+    type: APU_REF
+    indexed: true
+  - code: RT_COMPEVENT
+    name: souborná událost, celek
+    type: APU_REF
+    indexed: true
+  - code: RT_RELATED
+    name: související entita
+    type: APU_REF
+    indexed: true
+  - code: RT_RELATEDTERM
+    name: související pojem
+    type: APU_REF
+    indexed: true
+  - code: RT_COLLABORATOR
+    name: spolupracovník
+    type: APU_REF
+    indexed: true
+  - code: RT_SCHOOLMATE
+    name: spolužák
+    type: APU_REF
+    indexed: true
+  - code: RT_UNCLE
+    name: strýc
+    type: APU_REF
+    indexed: true
+  - code: RT_SCHOOL
+    name: škola
+    type: APU_REF
+    indexed: true
+  - code: RT_BROTHERINLAW
+    name: švagr
+    type: APU_REF
+    indexed: true
+  - code: RT_SISTERINLAW
+    name: švagrová
+    type: APU_REF
+    indexed: true
+  - code: RT_CATEGORY
+    name: taxonomická kategorie
+    type: APU_REF
+    indexed: true
+  - code: RT_THEME
+    name: tematický celek
+    type: APU_REF
+    indexed: true
+  - code: RT_AUNT
+    name: teta
+    type: APU_REF
+    indexed: true
+  - code: RT_FATHERINLAW
+    name: tchán
+    type: APU_REF
+    indexed: true
+  - code: RT_MOTHERINLAW
+    name: tchyně
+    type: APU_REF
+    indexed: true
+  - code: RT_TEACHER
+    name: učitel
+    type: APU_REF
+    indexed: true
+  - code: RT_GRANTAUTH
+    name: udělovatel
+    type: APU_REF
+    indexed: true
+  - code: RT_STORAGE
+    name: uložení
+    type: APU_REF
+    indexed: true
+  - code: RT_LOCATION
+    name: umístění
+    type: APU_REF
+    indexed: true
+  - code: RT_OBJECT
+    name: vazba na objekt
+    type: APU_REF
+    indexed: true
+  - code: RT_ACTIVITIES
+    name: významné aktivity
+    type: APU_REF
+    indexed: true
+  - code: RT_FOUNDER
+    name: zakladatel/zřizovatel
+    type: APU_REF
+    indexed: true
+  - code: RT_EMPLOYER
+    name: zaměstnavatel
+    type: APU_REF
+    indexed: true
+  - code: RT_ROOF
+    name: zjednodušená podniková entita
+    type: APU_REF
+    indexed: true
+  - code: RT_REPRESENT
+    name: zástupce
+    type: APU_REF
+    indexed: true
+  - code: RT_NAMECHANGE
+    name: změna jména/identity
+    type: APU_REF
+    indexed: true
+  - code: RT_MENTION
+    name: zmínka o existenci
+    type: APU_REF
+    indexed: true
+  - code: RT_ORIGINATOR
+    name: zřizovatel
+    type: APU_REF
+    indexed: true
+  - code: RT_GEOPARTNER
+    name: partner
+    type: APU_REF
+    indexed: true
+  - code: REL_BEGIN
+    name: vznik
+    type: UNITDATE
+  - code: REL_END
+    name: zánik
+    type: UNITDATE
+
+
+  #
+  # Archivní soubory
+  #
+  - code: ARCHDESC_ROOT_REF
+    name: Seznam archiválií v archivním souboru
+    type: APU_REF
+    indexed: true
+  - code: ARCHDESC_FLAG
+    name: Archivní popis
+    type: ENUM
+    indexed: true
+  - code: FINDINGAID_FLAG
+    name: Pomůcka
+    type: ENUM
+    indexed: true
+  - code: FA_AGG_FLAG
+    name: Pomůcka
+    type: ENUM
+    indexed: true
+  - code: INST_REF
+    name: Instituce
+    type: APU_REF
+    indexed: true
+  - code: DEPARTMENT
+    name: Oddělení
+    type: ENUM
+    indexed: true
+  - code: ORIGINATOR_REF
+    name: Původce
+    type: APU_REF
+    indexed: true
+  - code: ORIGINATOR_TEXT
+    name: Původce
+    type: STRING
+    indexed: true
+  - code: CISLO_NAD
+    name: Číslo archivního souboru
+    type: STRING
+    indexed: true
+  - code: FUND_MARK
+    name: Značka archivního souboru
+    type: STRING
+    indexed: true
+    indexFolding: false
+    caseInsensitive: true
+  - code: ORIG_PLACES_REF
+    name: Místa vzniku
+    type: APU_REF
+    indexed: true
+  # Přístupové body pro fond
+  - code: FUND_AP_REF
+    name: Rejstříkové heslo
+    type: APU_REF
+    indexed: true
+  # Udaje k fondu z PEvA
+  - code: FUND_NOTE
+    name: Poznámka
+    type: STRING
+    indexed: true
+  - code: FUND_ORIG_NOTE
+    name: O původci
+    type: STRING
+    indexed: true
+  - code: FUND_TOPIC
+    name: Téma
+    type: STRING
+    indexed: true
+  - code: FUND_EDITIONS
+    name: Edice
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_REF
+    name: Archivní pomůcka
+    type: APU_REF
+    indexed: true
+  - code: EVIDENCE_UNIT
+    name: Evidenční jednotka
+    type: JSON
+  - code: FUND_LITERATURE
+    name: Literatura
+    type: STRING
+  - code: FUND_UPTODATE
+    name: Stav ke dni
+    type: STRING
+  - code: FUND_PRESERVATION
+    name: Stav zachování
+    type: STRING
+  - code: FUND_LENGTH
+    name: Metráž
+    type: STRING
+  - code: FUND_DIGITAL_LENGTH
+    name: Velikost
+    type: STRING
+  - code: FUND_EVIDENCE_STATUS
+    name: Evidenční status
+    type: ENUM
+    indexed: true
+  - code: FUND_EVIDENCE_STATUS_TEXT
+    name: Evidenční status
+    type: STRING
+  - code: ACCESSIBILITY
+    name: Přístupnost
+    type: ENUM
+  - code: FUND_THEMATIC_GROUP
+    name: Tematická skupina
+    type: ENUM
+    indexed: true
+  - code: FUND_THEMATIC_GROUP_VIRT
+    name: Tematická skupina
+    type: ENUM
+    indexed: true
+  - code: FUND_THEMATIC_GROUP_TEXT
+    name: Tematická skupina
+    type: STRING
+  - code: FUND_ARCHIVE_GROUP_PARTS
+    name: Části archivního souboru v jiných institucích
+    type: STRING
+
+  #
+  # Archivní pomucka
+  #
+  - code: FINDINGAID_ID
+    name: Číslo archivní pomůcky
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_PART_ID
+    name: Číslo části archivní pomůcky
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_RELEASE_DATE_PLACE
+    name: Datum a místo vydání
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_DATE
+    name: Datum zachyceného stavu
+    type: STRING
+    indexed: true    
+  - code: FINDINGAID_TYPE
+    name: Druh pomůcky
+    type: ENUM
+    indexed: true    
+  - code: FINDINGAID_FORM_TYPE
+    name: Forma pomůcky
+    type: ENUM
+    indexed: true    
+  - code: FINDINGAID_YEAR_OF_ORIGIN
+    name: Rok vzniku
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_UNITS_AMOUNT
+    name: Rozsah zpřístupněných archiválií
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_SIG
+    name: Signatura
+    type: STRING
+    indexed: true
+  - code: FINDINGAID_ADDENUM
+    name: Dodatky
+    type: STRING
+  - code: FINDINGAID_AUTHOR_REF
+    name: Autor
+    type: APU_REF
+    indexed: true
+  - code: FINDINGAID_AUTHOR_TEXT
+    name: Autor
+    type: STRING
+  - code: FINDINGAID_COPY
+    name: Stejnopis
+    type: STRING
+
+  #
+  # Archivní popis
+  #
+  - code: UNIT_ID
+    name: Referenční označení
+    type: STRING
+    indexed: false
+  - code: UNIT_ID_INDEX
+    name: Referenční označení přidělené archivem
+    type: STRING
+    # Referenční označení se hledá na přesnou shodu
+    indexFolding: false
+    indexed: true
+  - code: ABSTRACT
+    name: Obsah
+    type: STRING
+    indexed: true
+  - code: UNIT_TYPE
+    name: Druh archiválie
+    type: ENUM
+    indexed: true
+  - code: RECORD_TYPE
+    name: Druh záznamu
+    type: ENUM
+    indexed: true
+  - code: HISTORY
+    name: Historie
+    type: STRING
+    indexed: true
+  - code: UNIT_ARR
+    name: Způsob uspořádání
+    type: STRING
+    indexed: true
+  - code: UNIT_CONTENT
+    name: Tematický popis jednotky popisu
+    type: STRING
+    indexed: true
+  - code: UNIT_DATE
+    name: Datace vzniku
+    type: UNITDATE
+    indexed: true
+  - code: DATE_OF_CONTENT
+    name: Datace obsahu
+    type: UNITDATE
+    indexed: true
+  # Slouží pro zachycení ostatních druhů datace
+  - code: DATE_OTHER
+    name: Jiná datace
+    type: UNITDATE
+    indexed: true    
+  - code: DATE_DECLARED
+    name: datace deklarovaná
+    type: UNITDATE
+    indexed: false
+  - code: DATE_ORIG
+    name: datace vzniku předlohy
+    type: UNITDATE
+    indexed: false
+  - code: DATE_OF_COPY
+    name: datace vzniku kopie
+    type: UNITDATE
+    indexed: false
+  - code: DATE_SEALING
+    name: datace zpečetění
+    type: UNITDATE
+    indexed: false
+  - code: DATE_ACT_PUBLISHING
+    name: datace vydání listiny
+    type: UNITDATE
+    indexed: false
+  - code: DATE_INSERT
+    name: datace insertu/transeptu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_MOLD_CREATION
+    name: datace vzniku matrice
+    type: UNITDATE
+    indexed: false
+  - code: DATE_USAGE
+    name: datace užívání typáře
+    type: UNITDATE
+    indexed: false
+  - code: DATE_PUBLISHING
+    name: datace vydání dokumentu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_MAP_UPDATE
+    name: datace reambulace mapy
+    type: UNITDATE
+    indexed: false
+  - code: DATE_CAPTURING
+    name: datace pořízení obrazového záznamu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_RECORDING
+    name: datace pořízení filmového / zvukového záznamu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_AWARDING
+    name: datace udělení / propůjčení faleristického předmětu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_AWARD_CER
+    name: datace předání faleristického předmětu
+    type: UNITDATE
+    indexed: false
+  - code: DATE_WITHDRAWAL
+    name: datace odnětí / vrácení faleristického předmětu
+    type: UNITDATE
+    indexed: false
+  - code: UNIT_SOURCE
+    name: Přímý zdroj akvizice
+    type: STRING
+    indexed: true
+  - code: FUTURE_UNITS
+    name: Budoucí přírůstky
+    type: STRING
+    indexed: true
+  - code: UNIT_ACCESS
+    name: Podmínky přístupu
+    type: STRING
+    indexed: true
+  - code: UNIT_RESTRICTION
+    name: Omezení přístupu
+    type: ENUM
+    indexed: true
+  - code: UNIT_RESTRICTION_TEXT
+    name: Omezení přístupu
+    type: STRING
+    indexed: true
+  - code: UNIT_CURRENT_STATUS
+    name: Fyzický stav
+    type: STRING
+    indexed: true
+  - code: ARRANGEMENT_INFO
+    name: Informace o zpracování
+    type: STRING
+    indexed: true
+  - code: ARRANGE_RULES
+    name: Pravidla zpracování
+    type: STRING
+    indexed: true
+  - code: FORMAL_TITLE
+    name: Formální název
+    type: STRING
+    indexed: true
+  - code: ITEM_TITLE
+    name: Název autorského díla
+    type: APU_REF
+    indexed: true
+  - code: LANGUAGE
+    name: Jazyk
+    type: ENUM
+    indexed: true
+  - code: LANGUAGE_TEXT
+    name: Jazyk
+    type: STRING
+  - code: SCALE
+    name: Měřítko
+    type: STRING
+    indexed: true
+    indexFolding: false
+  - code: SCALE_NUMERICAL
+    name: Měřítko
+    type: STRING
+    indexed: true
+    indexFolding: false
+  - code: UNIT_COUNT
+    name: Počet
+    type: STRING
+  - code: SIZE
+    name: Rozměry, velikost
+    type: STRING
+    indexed: true
+  - code: ITEM_MAT
+    name: Materiál
+    type: STRING
+    indexed: true
+  - code: INV_CISLO
+    name: Inventární číslo
+    type: STRING
+    indexed: false
+  - code: OTHER_ID_PROC_INDEX
+    name: Ostatní označení přidělená archivem
+    type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
+    indexed: true
+  - code: OTHER_ID_ORIG_INDEX
+    name: Označení přidělená původcem
+    type: STRING
+    # Hledá se na přesnou shodu
+    indexFolding: false
+    indexed: true
+  - code: OTHERID_SIG_ORIG
+    name: signatura přidělená původcem
+    type: STRING
+    indexed: false
+  - code: OTHERID_SIG
+    name: signatura přidělená při zpracování archiválie
+    type: STRING
+    indexed: false
+  - code: OTHERID_STORAGE_ID
+    name: ukládací znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_CJ
+    name: číslo jednací
+    type: STRING
+    indexed: false
+  - code: OTHERID_DOCID
+    name: značka spisu
+    type: STRING
+    indexed: false
+  - code: OTHERID_FORMAL_DOCID
+    name: číslo vložky úřední knihy
+    type: STRING
+    indexed: false
+  - code: OTHERID_ADDID
+    name: přírůstkové číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG
+    name: signatura přidělená při předchozím zpracování
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDSIG2
+    name: spisový znak
+    type: STRING
+    indexed: false
+  - code: OTHERID_OLDID
+    name: neplatné inventární číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_UNITID
+    name: neplatné ukládací číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_INVALID_REFNO
+    name: neplatné referenční označení
+    type: STRING
+    indexed: false
+  - code: OTHERID_PRINTID
+    name: pořadové číslo pro tisk
+    type: STRING
+    indexed: false
+  - code: OTHERID_PICID
+    name: nakladatelské číslo
+    type: STRING
+    indexed: false
+  - code: OTHERID_NEGID
+    name: číslo negativu
+    type: STRING
+    indexed: false
+  - code: OTHERID_CDID
+    name: číslo produkce CD
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISBN
+    name: kód ISBN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISSN
+    name: kód ISSN
+    type: STRING
+    indexed: false
+  - code: OTHERID_ISMN
+    name: kód ISMN
+    type: STRING
+    indexed: false
+  - code: OTHERID_MATRIXID
+    name: matriční číslo
+    type: STRING
+    indexed: false
+  - code: STORAGE_ID
+    name: Ukládací číslo
+    type: STRING
+    indexed: true
+    indexFolding: false
+  - code: STORAGE
+    name: Uložení
+    type: STRING
+    indexed: true
+    indexFolding: false
+  - code: EDITION
+    name: Edice
+    type: STRING
+    indexed: true
+  - code: UNIT_DATE_TEXT
+    name: Textová datace
+    type: STRING
+    indexed: true
+  - code: ORIENTATION
+    name: Orientace z hlediska světových stran
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT
+    name: Technika, adjustace, nosič a látka záznamu
+    type: STRING
+    indexed: true
+  - code: ITEM_MAT_TECHNIKA
+    name: Technika záznamu
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT_ADJUSTACE
+    name: Adjustace nosiče záznamu
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT_NOSIC
+    name: Nosič záznamu
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT_LATKA_ZAZNAMU
+    name: Látka záznamu
+    type: STRING
+    indexed: false
+  - code: ITEM_MAT_BAREVNOST
+    name: Barevnost
+    type: STRING
+    indexed: false
+  - code: PART
+    name: Díl, část, pořadí vydání jednotky popisu
+    type: STRING
+    indexed: true
+  - code: WRITING
+    name: Písmo
+    type: STRING
+    indexed: true
+  - code: EXERQUE
+    name: Otisk
+    type: STRING
+    indexed: true
+  - code: PAINTING_CHAR
+    name: Malba
+    type: STRING
+    indexed: true
+  - code: CORROBORATION
+    name: Koroborace
+    type: STRING
+    indexed: true
+  - code: IMPRINT_COUNT
+    name: Počet otisků původní a současný
+    type: STRING
+    indexed: false
+  - code: IMPRINT_ORDER
+    name: Pořadí otisku
+    type: STRING
+    indexed: false
+  - code: LEGEND
+    name: Legenda
+    type: STRING
+    indexed: false
+  - code: MOVIE_LENGTH
+    name: Délka filmového záznamu
+    type: STRING
+    indexed: false
+  - code: RECORD_LENGTH
+    name: Délka zvukového záznamu
+    type: STRING
+    indexed: false
+  - code: EXISTING_COPY
+    name: Kopie
+    type: STRING
+    indexed: true
+  - code: STORAGE_COND
+    name: Způsob a forma dochování
+    type: STRING
+    indexed: true
+  - code: RELATED_UNITS
+    name: Odkazy na příbuzné dokumenty
+    type: STRING
+    indexed: true
+  - code: DESCRIPTION_DATE
+    name: Datum popisu
+    type: STRING
+    indexed: false
+  - code: ENTITY_ROLE_1
+    name: autor
+    type: APU_REF
+    indexed: false
+  - code: ENTITY_ROLE_2
+    name: autor dialogu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_4
+    name: autor fotografií
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_5
+    name: skladatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_10
+    name: autor textové složky/textař
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_6
+    name: autor hudby/skladatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_7
+    name: autor choreografie/choreograf
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_8
+    name: autor komentáře
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_9
+    name: autor námětu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_11
+    name: autor textu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_3
+    name: autor doprovodnéno textu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_12
+    name: autor triků a speciálních efektů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_13
+    name: autor výtvarné a obrazové stránky
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_14
+    name: autor výtvarné stránky
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_15
+    name: vydavatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_16
+    name: vydavatel / nakladatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_17
+    name: pečetitel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_18
+    name: produkční společnost/producent
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_19
+    name: objednatel / příjemce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_20
+    name: distributor
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_21
+    name: příjemce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_22
+    name: žadatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_23
+    name: držitel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_24
+    name: odesilatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_25
+    name: schvalovatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_26
+    name: stavitel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_27
+    name: režisér
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_28
+    name: scénárista
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_29
+    name: kameraman
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_30
+    name: interpret hudby
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_31
+    name: fotograf
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_32
+    name: redaktor
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_33
+    name: kartograf
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_34
+    name: editor
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_35
+    name: editor / redaktor
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_36
+    name: kreslič
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_37
+    name: majitel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_38
+    name: tvůrce technického zpracování
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_39
+    name: tvůrce výtvarné stránky
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_40
+    name: dramaturg
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_41
+    name: střih/střihač
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_42
+    name: zvuk/zvukař
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_43
+    name: účinkující
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_44
+    name: překladatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_45
+    name: lektor
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_46
+    name: svědek
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_47
+    name: ručitel (rukojmě)
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_48
+    name: písař
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_49
+    name: zpracovatel nosičů záznamů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_50
+    name: výrobce nosičů záznamů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_51
+    name: tiskárna
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_52
+    name: tiskárna/tiskař
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_53
+    name: výrobce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_54
+    name: výrobce typářů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_55
+    name: výrobce odlitků otisků / otisků typářů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_56
+    name: místo natáčení
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_57
+    name: místo vydavatele
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_58
+    name: místo vydání
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_59
+    name: místo vydání dokumentů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_60
+    name: místo výroby
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_61
+    name: místo vzniku jednotky popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_62
+    name: místo vzniku předlohy popisované kopie
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_63
+    name: typové označení a název výrobku a typové stavby
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_64
+    name: entita zachycená jednotkami popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_65
+    name: ostatní entita zachycená jednotkami popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_66
+    name: osoba/bytost zachycená jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_67
+    name: rod/rodina zachycený/á jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_68
+    name: korporace zachycená jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_69
+    name: událost zachycená jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_70
+    name: dílo/výtvor zachycené/ý jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_71
+    name: geografický objekt zachycený jednotkou popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_72
+    name: obecný pojem vztahující se k jednotce popisu
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_73
+    name: vyznamenání/cena
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_74
+    name: nositel vyznamenání/ceny
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_75
+    name: navrhovatel
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_76
+    name: předávající
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_77
+    name: osoba jmenovaná / ustanovená do funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_78
+    name: funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_79
+    name: korporace výkonu funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_80
+    name: místo výkonu funkce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_81
+    name: katalogizační záznam
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_82
+    name: Matriční místo
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_83
+    name: sekundární klasifikace
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_84
+    name: opisovač
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_85
+    name: vlastník
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_86
+    name: místo fotografování
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_87
+    name: odborná spolupráce
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_88
+    name: místo předání
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_89
+    name: obrazově a/nebo zvukově zachycená entita
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_ROLE_TEXT
+    name: role entit textově
+    type: STRING
+    indexed: true        
+  - code: ROLE
+    name: Role
+    type: ENUM
+    indexed: true
+  # Odkaz z archivniho popisu na jiný archivní popis (pevné spojení)
+  - code: ARCH_DESC_REF
+    name: Pevně spojeno s
+    type: APU_REF
+    indexed: true
+  - code: ARCH_DESC_LINK
+    name: Pevně spojeno s
+    type: LINK
+    indexed: false
+  # Odkaz z archivniho popisu na archivni soubor
+  - code: FUND_REF
+    name: Archivní soubor
+    type: APU_REF
+    indexed: true
+  - code: FUND_INST_REF
+    name: Instituce
+    type: APU_REF
+    indexed: true
+  - code: DIGITAL
+    name: Digitální podoba
+    type: ENUM
+    indexed: true
+  # Obecné s nejnižší prioritou
+  - code: AP_REF
+    name: Odkaz na entitu
+    type: APU_REF
+    indexed: true
+  - code: NOTE
+    name: Poznámka
+    type: STRING
+    indexed: true
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    name: Přístupový bod
+    type: ITEM_AGGREG
+    indexed: true
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    name: Vztah k entitě
+    type: ITEM_AGGREG
+    indexed: true
+  - code: REGISTRY_TYPE
+    name: Rejstřík
+    type: ENUM
+    indexed: true
+  - code: REG_GEO_REF
+    name: Rejstřík zeměpisný
+    type: APU_REF
+    indexed: true
+  - code: REG_PERSON_REF
+    name: Rejstřík osob, bytostí
+    type: APU_REF
+    indexed: true
+  - code: REG_DYNASTY_REF
+    name: Rejstřík rodů, rodin
+    type: APU_REF
+    indexed: true
+  - code: REG_GROUP_PARTY_REF
+    name: Rejstřík korporací
+    type: APU_REF
+    indexed: true
+  - code: REG_EVENT_REF
+    name: Rejstřík událostí
+    type: APU_REF
+    indexed: true
+  - code: REG_ARTWORK_REF
+    name: Rejstřík děl, výtvorů
+    type: APU_REF
+    indexed: true
+  - code: REG_TERM_REF
+    name: Rejstřík obecných pojmů
+    type: APU_REF
+    indexed: true
+  - code: ENTITY_NOTE
+    name: Poznámka
+    type: STRING
+    indexed: true
+  - code: LEVEL_TYPE
+    name: Typ úrovně
+    type: ENUM
+    indexed: true
+  - code: LEVEL_GROUP
+    name: Sdružený typ úrovně
+    type: ENUM
+    indexed: true
+
+itemGroups:
+  # vztahy u archivního popisu
+  - code: AP_VIRT_REF
+    items:
+      - ITEM_TITLE
+      - AP_REF
+      - ENTITY_ROLE_1
+      - ENTITY_ROLE_2
+      - ENTITY_ROLE_4
+      - ENTITY_ROLE_5
+      - ENTITY_ROLE_10
+      - ENTITY_ROLE_6
+      - ENTITY_ROLE_7
+      - ENTITY_ROLE_8
+      - ENTITY_ROLE_9
+      - ENTITY_ROLE_11
+      - ENTITY_ROLE_3
+      - ENTITY_ROLE_12
+      - ENTITY_ROLE_13
+      - ENTITY_ROLE_14
+      - ENTITY_ROLE_15
+      - ENTITY_ROLE_16
+      - ENTITY_ROLE_17
+      - ENTITY_ROLE_18
+      - ENTITY_ROLE_19
+      - ENTITY_ROLE_20
+      - ENTITY_ROLE_21
+      - ENTITY_ROLE_22
+      - ENTITY_ROLE_23
+      - ENTITY_ROLE_24
+      - ENTITY_ROLE_25
+      - ENTITY_ROLE_26
+      - ENTITY_ROLE_27
+      - ENTITY_ROLE_28
+      - ENTITY_ROLE_29
+      - ENTITY_ROLE_30
+      - ENTITY_ROLE_31
+      - ENTITY_ROLE_32
+      - ENTITY_ROLE_33
+      - ENTITY_ROLE_34
+      - ENTITY_ROLE_35
+      - ENTITY_ROLE_36
+      - ENTITY_ROLE_37
+      - ENTITY_ROLE_38
+      - ENTITY_ROLE_39
+      - ENTITY_ROLE_40
+      - ENTITY_ROLE_41
+      - ENTITY_ROLE_42
+      - ENTITY_ROLE_43
+      - ENTITY_ROLE_44
+      - ENTITY_ROLE_45
+      - ENTITY_ROLE_46
+      - ENTITY_ROLE_47
+      - ENTITY_ROLE_48
+      - ENTITY_ROLE_49
+      - ENTITY_ROLE_50
+      - ENTITY_ROLE_51
+      - ENTITY_ROLE_52
+      - ENTITY_ROLE_53
+      - ENTITY_ROLE_54
+      - ENTITY_ROLE_55
+      - ENTITY_ROLE_56
+      - ENTITY_ROLE_57
+      - ENTITY_ROLE_58
+      - ENTITY_ROLE_59
+      - ENTITY_ROLE_60
+      - ENTITY_ROLE_61
+      - ENTITY_ROLE_62
+      - ENTITY_ROLE_63
+      - ENTITY_ROLE_64
+      - ENTITY_ROLE_65
+      - ENTITY_ROLE_66
+      - ENTITY_ROLE_67
+      - ENTITY_ROLE_68
+      - ENTITY_ROLE_69
+      - ENTITY_ROLE_70
+      - ENTITY_ROLE_71
+      - ENTITY_ROLE_72
+      - ENTITY_ROLE_73
+      - ENTITY_ROLE_74
+      - ENTITY_ROLE_75
+      - ENTITY_ROLE_76
+      - ENTITY_ROLE_77
+      - ENTITY_ROLE_78
+      - ENTITY_ROLE_79
+      - ENTITY_ROLE_80
+      - ENTITY_ROLE_81
+      - ENTITY_ROLE_82
+      - ENTITY_ROLE_83
+      - ENTITY_ROLE_84
+      - ENTITY_ROLE_85
+      - ENTITY_ROLE_86
+      - ENTITY_ROLE_87
+      - ENTITY_ROLE_88
+      - ENTITY_ROLE_89
+  # vztahy u archivních entit
+  - code: AE_VIRT_REF
+    items:
+      - AE_GEO_ADMIN_REF
+
+# Metadata a jejich popis
+metaDataTypes:
+  - code: mimeType
+    name: Typ souboru

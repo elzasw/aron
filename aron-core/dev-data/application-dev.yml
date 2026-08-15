@@ -1,0 +1,67 @@
+# Dev mode (doc/search-port.md, S5): the whole stack with ZERO external services -
+# in-memory H2 (real Liquibase changelog) + in-memory search engine + sample data
+# imported through the real import mechanism at startup (DevDataSeeder).
+#
+# This file is NOT packaged into the application - it is runtime-supplied
+# configuration (loaded via spring.config.additional-location by the Maven `dev`
+# profile), like any deployment configuration of this platform.
+#
+# Run from aron-core/ (paths are relative to the source tree):
+#   mvn spring-boot:run -Pdev
+#
+# Limitation by design: the OLD API's search endpoints bypass the search port
+# (frozen direct-Elasticsearch path) and are unavailable in dev mode; dev mode
+# serves the development of the new API and UI. To develop against a real ES,
+# override spring.elasticsearch.uris and search.engine=elasticsearch.
+
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:arondev;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=VALUE,ORDER;DB_CLOSE_DELAY=-1
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      ddl-auto: none
+  liquibase:
+    # own connection without NON_KEYWORDS - see the comment in application-test.yml
+    url: jdbc:h2:mem:arondev;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
+    user: sa
+    password: sa
+
+search:
+  engine: memory
+
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
+types-config: ./dev-data/config/types.yaml
+transformation-agent-url: "http://localhost:8088/ws/ApuTransformManager"
+
+files:
+  storage: ./target/dev-data/fileStorage
+  transfer:
+    path: ./target/dev-data/aronFileTransfer
+
+tile:
+  folder: ./target/dev-data/tiles
+  format: jpg
+
+webResources:
+  pageTemplate: ./dev-data/config/pageTemplate.yaml
+  news: ./dev-data/config/news.yaml
+  favoriteQueries: ./dev-data/config/favoriteQueries.yaml
+  facets: ./dev-data/config/searchConfig.yaml
+  logo: ./dev-data/config/logo.svg
+  topImage: ./dev-data/config/photo.png
+
+help-url: http://localhost
+
+# one subdirectory = one transfer in the standard layout (apusrc-*.xml or
+# dao-*.xml + optional files/) - imported via ImportDataProcessingService,
+# the same internal mechanism a real deployment uses (only the SOAP transport
+# is substituted by the seeder)
+dev:
+  seed-path: ./dev-data/import

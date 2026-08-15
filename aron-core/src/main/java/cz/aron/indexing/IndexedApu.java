@@ -6,8 +6,6 @@ import java.util.List;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.MultiField;
 
 @Document(indexName = "apu")
 public class IndexedApu {
@@ -15,13 +13,16 @@ public class IndexedApu {
 	@Field(type = FieldType.Keyword)
 	private String id;
 	
-    @MultiField(
-            mainField = @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP),
-            otherFields = {
-                    @InnerField(suffix = IndexConfig.SUFFIX_SORT, type = FieldType.Text, analyzer = IndexConfig.SORTING, searchAnalyzer = IndexConfig.SORTING, fielddata = true)
-            }
-    )
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP)
     private String name;
+
+    /**
+     * Czech collation key of the name, computed at index time (hex-encoded; see
+     * ApuDocumentBuilder). Replaces the former ICU-collation subfield - sorting is
+     * engine-neutral and needs no analysis plugin.
+     */
+    @Field(type = FieldType.Keyword)
+    private String nameSort;
 
     @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP)
     private String description;
@@ -47,6 +48,14 @@ public class IndexedApu {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getNameSort() {
+		return nameSort;
+	}
+
+	public void setNameSort(String nameSort) {
+		this.nameSort = nameSort;
 	}
 
 	public String getDescription() {
