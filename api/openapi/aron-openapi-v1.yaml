@@ -1,0 +1,48 @@
+openapi: 3.0.0
+info:
+  title: ARON Portal API
+  version: '1.0'
+  description: |-
+    ARON portal API (v1) - the contract between the ARON backend and its user
+    interface (and possible external consumers).
+
+    Paths carry the full external prefix `/api/v1`; the application adds no
+    further prefix. Clients resolve the base URL from the page's
+    `window.serverContextPath` (injected by the server into the SPA shell), so the
+    same UI build works at the URL root and under a subpath.
+
+    The contract deliberately exposes no search-engine internals - search and
+    facet models are typed DTOs, so the indexing backend can evolve or be swapped
+    without breaking clients.
+tags:
+  - name: system
+paths:
+  /api/v1/system/info:
+    get:
+      operationId: System_getInfo
+      description: Basic information about the running application.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
+      tags:
+        - system
+components:
+  schemas:
+    SystemInfo:
+      type: object
+      required:
+        - name
+        - version
+      properties:
+        name:
+          type: string
+          description: Application name.
+        version:
+          type: string
+          description: Application version (build version; "dev" when built without build info).
+      description: Basic information about the running application.

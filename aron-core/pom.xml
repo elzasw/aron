@@ -151,6 +151,7 @@
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
 				<executions>
+					<!-- old (frozen) API - module-local spec, external URLs under /api/aron -->
 					<execution>
 						<id>search-api</id>
 						<phase>generate-sources</phase>
@@ -175,12 +176,87 @@
 							</configOptions>
 						</configuration>
 					</execution>
+					<!-- new API (/api/v1) - server interfaces from the TypeSpec-emitted
+					     contract in the api module; controllers in cz.aron.web.v1
+					     implement them (spec paths carry the full /api/v1 prefix) -->
+					<execution>
+						<id>api-v1</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generatorName>spring</generatorName>
+							<inputSpec>${project.basedir}/../api/openapi/aron-openapi-v1.yaml</inputSpec>
+							<output>${project.build.directory}/generated-sources/api/rest-v1</output>
+							<generateSupportingFiles>false</generateSupportingFiles>
+							<configOptions>
+								<sourceFolder>/</sourceFolder>
+								<apiPackage>cz.aron.api.v1</apiPackage>
+								<modelPackage>cz.aron.api.v1.model</modelPackage>
+								<interfaceOnly>true</interfaceOnly>
+								<skipDefaultInterface>true</skipDefaultInterface>
+								<openApiNullable>false</openApiNullable>
+								<useTags>true</useTags>
+								<useSpringBoot3>true</useSpringBoot3>
+							</configOptions>
+						</configuration>
+					</execution>
+					<!-- typed Java client for integration tests (csc pattern): drives
+					     the real HTTP API in tests; never used in production code -->
+					<execution>
+						<id>api-v1-test-client</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generatorName>java</generatorName>
+							<library>restclient</library>
+							<inputSpec>${project.basedir}/../api/openapi/aron-openapi-v1.yaml</inputSpec>
+							<output>${project.build.directory}/generated-test-sources/v1-client</output>
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<generateApiTests>false</generateApiTests>
+							<generateModelTests>false</generateModelTests>
+							<generateApiDocumentation>false</generateApiDocumentation>
+							<generateModelDocumentation>false</generateModelDocumentation>
+							<configOptions>
+								<sourceFolder>/</sourceFolder>
+								<apiPackage>cz.aron.test.api.v1</apiPackage>
+								<modelPackage>cz.aron.test.api.v1.model</modelPackage>
+								<invokerPackage>cz.aron.test.api.v1.invoker</invokerPackage>
+								<openApiNullable>false</openApiNullable>
+								<useJakartaEe>true</useJakartaEe>
+								<dateLibrary>java8</dateLibrary>
+								<useTags>true</useTags>
+							</configOptions>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 
-			<!-- Declared for `mvn spring-boot:run`; repackage is unbound because this
-			     module is a plain library jar - the executable jar is produced by the
-			     distribution module. -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>add-v1-test-client-sources</id>
+						<phase>generate-test-sources</phase>
+						<goals>
+							<goal>add-test-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>${project.build.directory}/generated-test-sources/v1-client</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Declared for `mvn spring-boot:run` and build-info; repackage is unbound
+			     because this module is a plain library jar - the executable jar is
+			     produced by the distribution module. -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -188,6 +264,14 @@
 					<execution>
 						<id>repackage</id>
 						<phase>none</phase>
+					</execution>
+					<!-- META-INF/build-info.properties -> BuildProperties bean (the
+					     version reported by /api/v1/system/info) -->
+					<execution>
+						<id>build-info</id>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
 					</execution>
 				</executions>
 			</plugin>

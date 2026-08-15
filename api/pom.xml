@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.lightcomp</groupId>
+		<artifactId>aron2</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>aron-api</artifactId>
+	<packaging>pom</packaging>
+	<name>ARON 2 API spec</name>
+	<description>TypeSpec contract of the new portal API (/api/v1); regenerates the
+		committed openapi/aron-openapi-v1.yaml on every build. Produces no jar -
+		consumers (aron-core, later aron-ui) generate their own code from the YAML.
+		Runs before aron-core (see module order in the parent pom).</description>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<configuration>
+					<nodeVersion>${node.version}</nodeVersion>
+					<npmVersion>${npm.version}</npmVersion>
+					<installDirectory>${project.basedir}/.node</installDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install-node-and-npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<phase>generate-sources</phase>
+					</execution>
+					<execution>
+						<id>npm-install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>tsp-compile</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+							<arguments>run build</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

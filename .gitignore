@@ -1,6 +1,11 @@
 # Maven
 target/
 
+# Node / TypeSpec toolchain (frontend-maven-plugin installs Node per module)
+node_modules/
+.node/
+tsp-output/
+
 # Local toolchain config (machine-specific paths) - copied from set-env.bat.template
 /set-env.bat
 
