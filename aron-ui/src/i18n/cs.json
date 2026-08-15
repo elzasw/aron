@@ -1,0 +1,20 @@
+{
+  "app": {
+    "title": "Archiv online",
+    "footer": {
+      "version": "{{name}} — verze {{version}}"
+    }
+  },
+  "home": {
+    "heading": "Archiv online",
+    "placeholder": "Portál pro zpřístupnění archiválií. Vyhledávání se připravuje."
+  },
+  "apu": {
+    "heading": "Archivní záznam",
+    "placeholder": "Detail záznamu {{uuid}} se připravuje."
+  },
+  "notFound": {
+    "heading": "Stránka nenalezena",
+    "home": "Zpět na úvod"
+  }
+}

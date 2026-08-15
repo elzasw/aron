@@ -11,10 +11,10 @@ License: [Apache-2.0](LICENSE).
 
 | Module | Purpose |
 |---|---|
+| `api` | TypeSpec contract of the portal API (`/api/v1`); emits the committed `openapi/aron-openapi-v1.yaml` |
 | `aron-core` | Backend (Spring Boot library jar) |
-| `distribution` | Assembles the executable fat jar `distribution/target/aron2.jar` |
-
-Planned: `api` (TypeSpec contract), `aron-ui` (React SPA).
+| `aron-ui` | Portal UI (React + Vite + TypeScript + Fluent UI v9), packaged as a resource jar |
+| `distribution` | Assembles the executable fat jar `distribution/target/aron2.jar` (backend + UI) |
 
 ## Prerequisites
 
@@ -37,6 +37,9 @@ mvn install          # with your own toolchain
 gitignored; never commit machine paths).
 
 The build produces the deployable artifact `distribution/target/aron2.jar`.
+No Node/npm is needed on the host: the `api` and `aron-ui` modules install their
+own Node toolchain (into `<module>/.node`); the first build downloads it and the
+npm dependencies (internet required).
 
 ## Run
 
@@ -77,10 +80,26 @@ design: the old API's search endpoints bypass the search port and need a real
 Elasticsearch — override `search.engine=elasticsearch` and
 `spring.elasticsearch.uris` to develop against one.
 
+## UI development
+
+For the edit-refresh loop run the Vite dev server against a running backend —
+typically the dev mode, so nothing needs to be installed:
+
+```
+cd aron-core && mvn spring-boot:run -Pdev    # backend on :8080, zero external services
+cd aron-ui && npm run dev                    # UI on :5173, proxies /api to :8080
+```
+
+`npm run dev` first regenerates the TypeScript client from the committed
+`api/openapi/aron-openapi-v1.yaml`. Running npm directly needs Node ≥ 20 and a
+JDK on the host; alternatively use the Maven-installed Node
+(`aron-ui\.node\node\npm.cmd run dev`).
+
 ## Development
 
-- REST API is spec-first: `aron-core/src/main/resources/openapi/*.yaml` →
-  generated Spring interfaces (never edit generated code).
+- REST API is spec-first: TypeSpec in `api/` for the new `/api/v1` (committed
+  OpenAPI YAML), frozen `aron-core/src/main/resources/openapi/*.yaml` for the
+  old API → generated interfaces/clients (never edit generated code).
 - DB schema changes go through Liquibase changelogs.
 - Tests run without external services: `mvn test` needs no PostgreSQL,
   Elasticsearch, or Docker.

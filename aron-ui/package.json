@@ -1,0 +1,31 @@
+{
+  "name": "aron-ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "ARON portal UI (React + Fluent UI v9); consumes the /api/v1 contract.",
+  "scripts": {
+    "generate:api": "openapi-generator-cli generate -i ../api/openapi/aron-openapi-v1.yaml -g typescript-fetch -o src/api/generated --skip-validate-spec --additional-properties=supportsES6=true,withInterfaces=true",
+    "dev": "npm run generate:api && vite",
+    "build": "npm run generate:api && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "^9.54.0",
+    "@tanstack/react-query": "^5.59.0",
+    "i18next": "^24.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.0",
+    "react-router-dom": "^7.18.2"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.40.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "typescript": "^5.4.5",
+    "vite": "^6.4.3"
+  }
+}

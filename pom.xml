@@ -17,12 +17,14 @@
 
 	<!--
 	  Module order is significant: the api contract module regenerates its OpenAPI
-	  (consumed by aron-core's code generators) first; the distribution module
-	  assembles the deployable jar and therefore builds last. See PLAN.md.
+	  (consumed by aron-core's code generators and aron-ui's client generator)
+	  first; the distribution module assembles the deployable jar and therefore
+	  builds last. See PLAN.md.
 	-->
 	<modules>
 		<module>api</module>
 		<module>aron-core</module>
+		<module>aron-ui</module>
 		<module>distribution</module>
 	</modules>
 
@@ -31,11 +33,12 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<cxf.version>4.0.0</cxf.version>
 		<!-- TypeSpec / frontend toolchain (csc pattern): the build installs its own
-		     Node into <module>/.node - no Node/npm needed on the host. TypeSpec is
-		     pinned to ~1.11, the last Node-20-compatible line. -->
+		     Node into <module>/.node - no Node/npm needed on the host. Node 22 LTS:
+		     current npm tooling (openapi-generator-cli) needs require(esm) support,
+		     available from 20.19/22.12. TypeSpec pinned to the tested ~1.11 line. -->
 		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
-		<node.version>v20.18.0</node.version>
-		<npm.version>10.8.2</npm.version>
+		<node.version>v22.12.0</node.version>
+		<npm.version>10.9.0</npm.version>
 		<springdoc.version>2.8.6</springdoc.version>
 		<guava.version>31.1-jre</guava.version>
 		<kryo.version>5.6.2</kryo.version>

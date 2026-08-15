@@ -6,6 +6,10 @@ node_modules/
 .node/
 tsp-output/
 
+# aron-ui build output and generated TypeScript client
+aron-ui/dist/
+aron-ui/src/api/generated/
+
 # Local toolchain config (machine-specific paths) - copied from set-env.bat.template
 /set-env.bat
 

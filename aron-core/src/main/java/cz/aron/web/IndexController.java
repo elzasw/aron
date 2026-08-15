@@ -3,8 +3,8 @@ package cz.aron.web;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +17,34 @@ import jakarta.servlet.http.HttpServletRequest;
  * Serves the SPA shell for the enumerated SPA route families (Elza/CAM pattern -
  * no blind catch-all; a new top-level UI route requires adding a mapping here).
  * <p>
- * The shell (web/index.html) is a lightweight template: the servlet context path -
- * which already includes the reverse proxy's X-Forwarded-Prefix thanks to
+ * The shell is a lightweight template: the servlet context path - which already
+ * includes the reverse proxy's X-Forwarded-Prefix thanks to
  * {@code server.forward-headers-strategy=framework} - is substituted per request
  * into {@code <base href>} and the {@code window.serverContextPath} JavaScript
  * global, so the same artifact works at the URL root and under any subpath
  * without rebuild.
+ * <p>
+ * Shell resolution: the real UI's template ({@code META-INF/aron-ui/index.html},
+ * provided by the aron-ui resource jar - present in the distribution) is
+ * preferred; without it the aron-core placeholder ({@code web/index.html}) is
+ * served, e.g. in backend-only runs and tests. The UI template deliberately
+ * lives outside {@code META-INF/resources/} so it can never be served raw with
+ * its tokens unsubstituted.
  */
 @Controller
 public class IndexController {
 
+	private static final String UI_SHELL = "classpath:META-INF/aron-ui/index.html";
+
+	private static final String PLACEHOLDER_SHELL = "classpath:web/index.html";
+
 	private final String shellTemplate;
 
-	public IndexController(@Value("classpath:web/index.html") Resource shell) throws IOException {
+	public IndexController(ResourceLoader resourceLoader) throws IOException {
+		Resource shell = resourceLoader.getResource(UI_SHELL);
+		if (!shell.exists()) {
+			shell = resourceLoader.getResource(PLACEHOLDER_SHELL);
+		}
 		this.shellTemplate = shell.getContentAsString(StandardCharsets.UTF_8);
 	}
 

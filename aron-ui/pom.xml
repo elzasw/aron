@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.lightcomp</groupId>
+		<artifactId>aron2</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>aron-ui</artifactId>
+	<!-- jar (not pom): the built SPA is packaged as a resource jar so the
+	     distribution module can put it on the classpath. -->
+	<packaging>jar</packaging>
+	<name>ARON 2 UI</name>
+	<description>New portal UI: React + Vite + TypeScript + Fluent UI v9. Generates its
+		TypeScript client from the committed api/openapi/aron-openapi-v1.yaml and builds
+		with Vite. Dev loop: `npm run dev` (proxies /api to :8080, ideally the aron-core
+		dev mode). The Maven build packages dist/ into this jar: hashed assets under
+		META-INF/resources/ (served statically by Spring Boot), index.html under
+		META-INF/aron-ui/ where IndexController picks it up as the SPA shell template
+		(it must never be served raw - it contains deployment-prefix tokens).</description>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.github.eirslett</groupId>
+				<artifactId>frontend-maven-plugin</artifactId>
+				<configuration>
+					<nodeVersion>${node.version}</nodeVersion>
+					<npmVersion>${npm.version}</npmVersion>
+					<installDirectory>${project.basedir}/.node</installDirectory>
+				</configuration>
+				<executions>
+					<execution>
+						<id>install-node-and-npm</id>
+						<goals>
+							<goal>install-node-and-npm</goal>
+						</goals>
+						<phase>generate-resources</phase>
+					</execution>
+					<execution>
+						<id>npm-install</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>generate-resources</phase>
+						<configuration>
+							<arguments>install</arguments>
+						</configuration>
+					</execution>
+					<execution>
+						<id>npm-build</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>compile</phase>
+						<configuration>
+							<arguments>run build</arguments>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Package the Vite output (dist/) into the jar. index.html goes to
+			     META-INF/aron-ui/ (shell template for IndexController), everything
+			     else to META-INF/resources/ (plain Spring Boot static content). -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-ui-dist</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${project.basedir}/dist</directory>
+									<targetPath>resources</targetPath>
+									<excludes>
+										<exclude>index.html</exclude>
+									</excludes>
+								</resource>
+								<resource>
+									<directory>${project.basedir}/dist</directory>
+									<targetPath>aron-ui</targetPath>
+									<includes>
+										<include>index.html</include>
+									</includes>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

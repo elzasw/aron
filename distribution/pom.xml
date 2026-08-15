@@ -11,9 +11,8 @@
 	<name>ARON 2 Distribution</name>
 	<description>Assembles the deployable artifact: one executable Spring Boot fat jar
 		(target/aron2.jar) via spring-boot:repackage. Integrates the outputs of the
-		backend (aron-core) and, once it exists, the UI (aron-ui) modules. This module
-		exists so packaging concerns stay out of aron-core - it remains a plain library
-		jar.</description>
+		backend (aron-core) and UI (aron-ui) modules. This module exists so packaging
+		concerns stay out of aron-core - it remains a plain library jar.</description>
 
 	<dependencies>
 		<!-- The backend application (plain library jar; its main class is the entry point). -->
@@ -21,6 +20,14 @@
 			<groupId>com.lightcomp</groupId>
 			<artifactId>aron-core</artifactId>
 			<version>${project.version}</version>
+		</dependency>
+		<!-- The built SPA: static assets under META-INF/resources/, the shell
+		     template under META-INF/aron-ui/ (picked up by IndexController). -->
+		<dependency>
+			<groupId>com.lightcomp</groupId>
+			<artifactId>aron-ui</artifactId>
+			<version>${project.version}</version>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
 
