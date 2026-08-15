@@ -48,6 +48,18 @@ Runtime configuration is read from `config/application.yml` in the working
 directory — a template is in `aron-core/config/application.yml.template`. For
 development, `mvn spring-boot:run` works from `aron-core/`.
 
+### Input directory (optional data input)
+
+Setting `import.input-dir` makes the application import transfer folders from
+that directory **at startup** — a file-based alternative to the Transfagent
+upload, using the same internal import mechanism. One subdirectory = one
+transfer (`apusrc-*.xml` or `dao-*.xml` descriptor + optional `files/`).
+Unchanged transfers are skipped on restarts (content-hash journal in the
+database); changed ones are re-imported; the input directory is never modified.
+Within one scan, transfers import in lexicographic folder-name order — use a
+numbering prefix (`01-...`, `02-...`) to control the initial-load order. Dev
+mode uses this feature for its seed data.
+
 ## Dev mode — zero external services
 
 For UI/new-API development and demos the whole stack can run without installing

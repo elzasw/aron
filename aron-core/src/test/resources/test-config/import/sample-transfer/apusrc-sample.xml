@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="7d3f9a10-2481-4a01-8f33-944455566677">
+ <apus>
+  <apu type="Institution" uuid="5e8c2b41-93a7-4d1e-8ccc-9ddd0eee1aaa">
+   <name>Testovací archiv</name>
+   <desc>Vzorová instituce pro testy vstupního adresáře</desc>
+  </apu>
+ </apus>
+</apusrc>

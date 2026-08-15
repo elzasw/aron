@@ -204,7 +204,27 @@
         <createIndex indexName="idx_apu_parent_id_pos" tableName="apu" unique="false">
             <column name="parent_id" />
             <column name="pos" />
-        </createIndex>        
+        </createIndex>
+    </changeSet>
+
+    <!-- Journal of the input-directory import (import.input-dir): remembers the
+         content hash of every imported transfer folder, so unchanged transfers
+         are skipped on subsequent startups and changed ones are re-imported. -->
+    <changeSet id="2" author="petr.pytelka@lightcomp.cz">
+        <createTable tableName="import_journal">
+            <column name="import_journal_id" type="${id}" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="PK_import_journal"/>
+            </column>
+            <column name="folder" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="UQ_import_journal_folder"/>
+            </column>
+            <column name="content_hash" type="varchar(64)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="imported_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
     </changeSet>
 
 </databaseChangeLog>

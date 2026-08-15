@@ -28,3 +28,8 @@ webResources:
   topImage: ./config/images/book.png
 
 help-url: https://seznam.cz
+# Volitelny import ze vstupniho adresare - souborova alternativa k nahravani
+# pres Transfagent (jedna podslozka = jeden prenos: apusrc-*.xml nebo dao-*.xml
+# + volitelne files/); nezmenene prenosy se pri restartu preskakuji.
+#import:
+#  input-dir: ./import

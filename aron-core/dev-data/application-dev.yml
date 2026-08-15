@@ -59,9 +59,9 @@ webResources:
 
 help-url: http://localhost
 
-# one subdirectory = one transfer in the standard layout (apusrc-*.xml or
-# dao-*.xml + optional files/) - imported via ImportDataProcessingService,
-# the same internal mechanism a real deployment uses (only the SOAP transport
-# is substituted by the seeder)
-dev:
-  seed-path: ./dev-data/import
+# Supported input-directory import: one subdirectory = one transfer in the
+# standard layout (apusrc-*.xml or dao-*.xml + optional files/). Unchanged
+# transfers are skipped on restart (DB journal by content hash).
+
+import:
+  input-dir: ./dev-data/import

@@ -24,6 +24,11 @@ spring:
 search:
   engine: memory
 
+# exercises the input-directory import (a supported data input) on every context
+# startup with a minimal own-authored transfer
+import:
+  input-dir: ./src/test/resources/test-config/import
+
 management:
   health:
     elasticsearch:
