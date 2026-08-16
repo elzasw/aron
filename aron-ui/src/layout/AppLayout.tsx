@@ -1,31 +1,22 @@
-import { makeStyles, Text, Title3, tokens } from "@fluentui/react-components";
+import { makeStyles, Text, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Link, Outlet } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { systemApi } from "../api/client";
+import AppHeader from "./AppHeader";
+import Breadcrumbs from "./Breadcrumbs";
 
 const useStyles = makeStyles({
   root: {
     display: "flex",
     flexDirection: "column",
     minHeight: "100%",
-    backgroundColor: tokens.colorNeutralBackground2,
-  },
-  header: {
-    display: "flex",
-    alignItems: "center",
-    gap: tokens.spacingHorizontalL,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXXL}`,
     backgroundColor: tokens.colorNeutralBackground1,
-    borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
-  },
-  titleLink: {
-    color: tokens.colorNeutralForeground1,
-    textDecorationLine: "none",
   },
   main: {
     flexGrow: 1,
-    padding: `${tokens.spacingVerticalXXL} ${tokens.spacingHorizontalXXL}`,
+    display: "flex",
+    flexDirection: "column",
   },
   footer: {
     padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalXXL}`,
@@ -35,9 +26,9 @@ const useStyles = makeStyles({
 });
 
 /**
- * Application frame: header with the portal title, routed content, footer with
- * the running backend's name and version (the first consumer of the generated
- * /api/v1 client).
+ * Application frame: configuration-driven header, breadcrumb strip, routed
+ * content, footer with the running backend's name and version (the first
+ * consumer of the generated /api/v1 client).
  */
 export default function AppLayout() {
   const styles = useStyles();
@@ -49,17 +40,14 @@ export default function AppLayout() {
 
   return (
     <div className={styles.root}>
-      <header className={styles.header}>
-        <Link to="/" className={styles.titleLink}>
-          <Title3>{t("app.title")}</Title3>
-        </Link>
-      </header>
+      <AppHeader />
+      <Breadcrumbs />
       <main className={styles.main}>
         <Outlet />
       </main>
       <footer className={styles.footer}>
         <Text size={200}>
-          {info ? t("app.footer.version", { name: info.name, version: info.version }) : " "}
+          {info ? t("app.footer.version", { name: info.name, version: info.version }) : " "}
         </Text>
       </footer>
     </div>

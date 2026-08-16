@@ -1,4 +1,4 @@
-import { Configuration, SystemApi } from "./generated";
+import { Configuration, SystemApi, UiApi } from "./generated";
 import { serverContextPath } from "../serverContext";
 
 // Contract paths carry the full /api/v1 prefix, so the client's base path is
@@ -7,3 +7,7 @@ import { serverContextPath } from "../serverContext";
 const configuration = new Configuration({ basePath: serverContextPath });
 
 export const systemApi = new SystemApi(configuration);
+export const uiApi = new UiApi(configuration);
+
+/** URL of the deployment-supplied logo (plain <img> source, no client needed). */
+export const logoUrl = `${serverContextPath}/api/v1/ui/logo`;

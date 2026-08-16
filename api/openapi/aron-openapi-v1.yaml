@@ -16,6 +16,7 @@ info:
     without breaking clients.
 tags:
   - name: system
+  - name: ui
 paths:
   /api/v1/system/info:
     get:
@@ -31,8 +32,73 @@ paths:
                 $ref: '#/components/schemas/SystemInfo'
       tags:
         - system
+  /api/v1/ui/config:
+    get:
+      operationId: Ui_getConfig
+      description: 'UI configuration: portal name, available localizations, top-level menu.'
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UiConfig'
+      tags:
+        - ui
+  /api/v1/ui/logo:
+    get:
+      operationId: Ui_getLogo
+      description: Portal logo image (deployment-supplied; format varies, see Content-Type).
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+      tags:
+        - ui
 components:
   schemas:
+    MenuItem:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          allOf:
+            - $ref: '#/components/schemas/MenuItemCode'
+          description: Section code; the UI maps it to its route and localized label.
+        color:
+          type: string
+          description: Accent color of the section (CSS color); the UI supplies a default palette.
+        url:
+          type: string
+          description: External URL - the item is a plain link instead of an in-app section (typically HELP or NEWS).
+      description: One item of the top-level menu.
+    MenuItemCode:
+      type: string
+      enum:
+        - INSTITUTION
+        - FUND
+        - FINDING_AID
+        - ARCH_DESC
+        - ENTITY
+        - ORIGINATOR
+        - NEWS
+        - HELP
+      description: Portal sections available for the top-level menu.
     SystemInfo:
       type: object
       required:
@@ -46,3 +112,26 @@ components:
           type: string
           description: Application version (build version; "dev" when built without build info).
       description: Basic information about the running application.
+    UiConfig:
+      type: object
+      required:
+        - name
+        - localizations
+        - menuItems
+      properties:
+        name:
+          type: string
+          description: Portal name displayed in the header and the browser tab.
+        localizations:
+          type: array
+          items:
+            type: string
+          description: |-
+            Available localizations (IETF-like codes, e.g. `cs_CZ`). The UI offers a
+            language switcher only when more than one is listed.
+        menuItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+          description: 'Top-level menu: which sections this deployment enables, in display order.'
+      description: UI configuration of the deployment.

@@ -5,9 +5,30 @@
       "version": "{{name}} — verze {{version}}"
     }
   },
+  "nav": {
+    "home": "Úvod",
+    "search": "Vyhledávání"
+  },
+  "sections": {
+    "INSTITUTION": "Archivy",
+    "FUND": "Archivní soubory",
+    "FINDING_AID": "Archivní pomůcky",
+    "ARCH_DESC": "Archiválie",
+    "ENTITY": "Přístupové body",
+    "ORIGINATOR": "Původci",
+    "NEWS": "Aktuality",
+    "HELP": "Nápověda"
+  },
   "home": {
-    "heading": "Archiv online",
-    "placeholder": "Portál pro zpřístupnění archiválií. Vyhledávání se připravuje."
+    "searchPlaceholder": "Vyhledávání bez filtru",
+    "searchButton": "Hledat"
+  },
+  "section": {
+    "placeholder": "Obsah sekce se připravuje."
+  },
+  "search": {
+    "placeholder": "Vyhledávání se připravuje.",
+    "placeholderWithQuery": "Vyhledávání výrazu „{{query}}“ se připravuje."
   },
   "apu": {
     "heading": "Archivní záznam",

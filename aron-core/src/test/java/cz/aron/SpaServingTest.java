@@ -3,6 +3,8 @@ package cz.aron;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Pins the SPA serving contract at the URL root: the shell is served for "/" and
@@ -26,6 +28,16 @@ class SpaServingTest extends AbstractTest {
 	@Test
 	void apuDeepLinkServesSpaShell() throws Exception {
 		var response = get("/apu/0f0e0d0c-0b0a-0908-0706-050403020100");
+		assertThat(response.statusCode()).isEqualTo(200);
+		assertThat(response.body()).contains("<base href=\"/\"");
+	}
+
+	/** Every enumerated SPA section family serves the shell (menu visibility is config, routes always exist). */
+	@ParameterizedTest
+	@ValueSource(strings = { "/institution", "/fund", "/finding-aid", "/arch-desc", "/entity", "/originator",
+			"/news" })
+	void sectionRouteServesSpaShell(String route) throws Exception {
+		var response = get(route);
 		assertThat(response.statusCode()).isEqualTo(200);
 		assertThat(response.body()).contains("<base href=\"/\"");
 	}

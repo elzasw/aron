@@ -48,7 +48,8 @@ public class IndexController {
 		this.shellTemplate = shell.getContentAsString(StandardCharsets.UTF_8);
 	}
 
-	@GetMapping(path = { "/", "/apu/**" })
+	@GetMapping(path = { "/", "/apu/**", "/institution/**", "/fund/**", "/finding-aid/**", "/arch-desc/**",
+			"/entity/**", "/originator/**", "/news/**" })
 	public ResponseEntity<String> spaShell(HttpServletRequest request) {
 		String contextPath = request.getContextPath();
 		String html = shellTemplate
