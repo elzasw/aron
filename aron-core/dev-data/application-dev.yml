@@ -1,6 +1,6 @@
 # Dev mode (doc/search-port.md, S5): the whole stack with ZERO external services -
-# in-memory H2 (real Liquibase changelog) + in-memory search engine + sample data
-# imported through the real import mechanism at startup (DevDataSeeder).
+# in-memory H2 (real Liquibase changelog) + embedded Lucene search engine + sample
+# data imported through the real import mechanism at startup (import.input-dir).
 #
 # This file is NOT packaged into the application - it is runtime-supplied
 # configuration (loaded via spring.config.additional-location by the Maven `dev`
@@ -29,8 +29,9 @@ spring:
     user: sa
     password: sa
 
+# embedded Lucene; no search.lucene.path = in-memory index, rebuilt at startup
 search:
-  engine: memory
+  engine: lucene
 
 management:
   health:

@@ -47,6 +47,9 @@
 		     (mvn.lightcomp.cz, configured as a mirror in settings.xml / on CI). -->
 		<file-transfer.version>2.0</file-transfer.version>
 		<openapi-generator.version>7.6.0</openapi-generator.version>
+		<!-- Embedded search engine (search.engine=lucene) - same Lucene generation
+		     that Elasticsearch 9.x embeds. -->
+		<lucene.version>10.5.0</lucene.version>
 	</properties>
 
 	<dependencyManagement>
@@ -90,6 +93,16 @@
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct-processor</artifactId>
 				<version>${mapstruct.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-core</artifactId>
+				<version>${lucene.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.lucene</groupId>
+				<artifactId>lucene-analysis-common</artifactId>
+				<version>${lucene.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

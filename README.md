@@ -73,7 +73,7 @@ cd aron-core
 mvn spring-boot:run -Pdev
 ```
 
-In-memory H2 (real Liquibase schema) + in-memory search engine; sample archival
+In-memory H2 (real Liquibase schema) + embedded Lucene search engine; sample archival
 data from `aron-core/dev-data/` is imported through the real pipeline at startup.
 Runs from the source tree (paths are relative to `aron-core/`). Limitation by
 design: the old API's search endpoints bypass the search port and need a real

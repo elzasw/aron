@@ -4,10 +4,11 @@ import java.util.Collection;
 
 /**
  * Port of the search engine (see doc/search-port.md). Adapters:
- * {@code cz.aron.search.es} (Elasticsearch - the production engine) and
- * {@code cz.aron.search.memory} (minimal in-memory engine for tests and dev
- * mode). Selected by the {@code search.engine} property
- * ({@code elasticsearch}, the default, or {@code memory}).
+ * {@code cz.aron.search.es} (Elasticsearch - the default production engine,
+ * required while the old API lives) and {@code cz.aron.search.lucene} (embedded
+ * Lucene - small/ES-less deployments, tests and dev mode; serves the new API
+ * only). Selected by the {@code search.engine} property
+ * ({@code elasticsearch}, the default, or {@code lucene}).
  * <p>
  * The boundary is domain-shaped: no engine types leak through it. The write
  * side is used by the import pipeline and the startup bootstrap

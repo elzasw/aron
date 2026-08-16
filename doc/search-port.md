@@ -4,6 +4,11 @@ Status: **approved 2026-08-15** (review resolutions in §5). Indexing is the
 keystone of future search capabilities — this design was agreed before
 implementation started.
 
+> **Update 2026-08-16 (§6):** the in-memory adapter described in §3 was replaced
+> by an embedded **Lucene** adapter (`search.engine=lucene`) and the engine
+> decision D-1 is settled — see §6. The port, builder, contract suite and ES
+> adapter are unchanged.
+
 ## 1. Goals
 
 1. Make indexing and search **testable**: the import → index → search round trip
@@ -244,3 +249,53 @@ Edge-case coverage matrix:
   Elasticsearch client managed by the Spring Boot BOM — currently **8.18.x**
   (client 8.18.8). This also documents the ES server requirement of aron2
   deployments.
+
+## 6. Engine decision — D-1 settled (2026-08-16)
+
+Re-evaluation requested before Phase 7 (originally deferred to Phase 8).
+Decision: **the `SearchIndex` port stays the single abstraction; Hibernate
+Search is not adopted; embedded Lucene becomes the second supported engine**
+(`search.engine=lucene`), replacing the in-memory adapter everywhere (tests,
+dev mode, small/ES-less deployments).
+
+### Hibernate Search — why not (final)
+
+- **Version-matrix coupling.** The only HS line compatible with Spring Boot 3.5
+  (ORM 6.6) is HS 7.2 ("limited support"), whose ES backend tops out at
+  **ES 8.18 — no ES 9 at all**, while aron2 already runs and tests against
+  ES 9.5. HS 8.x requires ORM 7 (= Spring Boot 4 first) and its certified
+  matrix trails engine releases by design. The direct client pairing
+  (8.18 client ↔ 9.5 server) is proven here in `es-it`.
+- **Bootstrap-frozen schema vs. configuration-driven fields.** HS declares the
+  full index schema once at Hibernate bootstrap (TypeBinder). The org's own
+  "dynamic schema" layers confirm the cost of working around that: Elza's
+  `ApCachedAccessPointBinder` pre-creates fields for every part×item×spec code
+  combination (with its own TODO about combinatorial bloat), CAM's
+  `AeRecordCacheBinder` preallocates **1000 numbered slots** ×3 variants with an
+  external name→slot mapping, both via `SpringContext.getBean` static hacks.
+  Raw Lucene documents are schemaless — going direct *skips* that whole coping
+  layer; types.yaml-driven fields need no pre-declared mapping.
+- **Indexing model mismatch.** HS's core value is automatic ORM-entity↔index
+  sync; ARON indexes explicitly from the import pipeline (batch per ApuSource,
+  delete-by-source, CRC-driven rebuild) — we would disable the framework's main
+  feature and keep its constraints.
+- **Old API pins the physical ES layout** until Phase 8 — HS would force legacy
+  layout emulation or double indexing.
+- Both Elza and CAM use the HS **Lucene backend only**; there is no in-house
+  HS-over-ES experience to reuse.
+
+### Embedded Lucene adapter — why yes
+
+Triggers confirmed by the product owner: ES-less deployments are a real need
+(incl. the internal test environment) and dev-mode search realism matters.
+ES is Lucene inside — analysis (tokenization, lowercase, ASCII folding) and
+scoring match the production adapter **by construction**, replacing the
+imitation-based in-memory fake. One adapter now covers small deployments, dev
+mode and the default test suite; the contract suite runs on Lucene by default
+and on real ES under `es-it`, unchanged. Storage: `search.lucene.path`
+(persisted) or in-memory when unset. Limitation by design: an ES-less
+deployment serves the **new API only** — the frozen old-API read path requires
+Elasticsearch until Phase 8.
+
+Phase 8's re-evaluation thereby shrinks to a pure engine/adapter choice
+(e.g. OpenSearch) — the abstraction question is closed.

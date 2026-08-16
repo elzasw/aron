@@ -17,12 +17,13 @@ spring:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1
     user: sa
     password: sa
-# The in-memory search adapter replaces Elasticsearch in tests: the real startup
-# bootstrap (SearchIndexManager) runs against it, and no test may depend on
-# engine-specific behavior (that belongs to the es-it profile). The ES client
-# bean still exists but never connects.
+# The embedded Lucene adapter replaces Elasticsearch in tests: the real startup
+# bootstrap (SearchIndexManager) runs against it (in-memory directory - no
+# search.lucene.path), and no test may depend on engine-specific behavior (that
+# belongs to the es-it profile). The ES client bean still exists but never
+# connects.
 search:
-  engine: memory
+  engine: lucene
 
 # exercises the input-directory import (a supported data input) on every context
 # startup with a minimal own-authored transfer

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Contract of the search port that EVERY adapter must fulfil (doc/search-port.md
- * §3.5): the in-memory adapter runs it in the default suite
- * (InMemorySearchIndexTest), the Elasticsearch adapter under the opt-in es-it
+ * §3.5): the embedded Lucene adapter runs it in the default suite
+ * (LuceneSearchIndexTest), the Elasticsearch adapter under the opt-in es-it
  * profile (*IT). Only behavior both engines share belongs here — engine
  * specifics (stemming, ranking, stop words) get engine-only tests.
  */
