@@ -358,6 +358,11 @@
 										</condition>
 										<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz"/>
 										<mkdir dir="${es.cache}"/>
+										<!-- keep only the current version's distribution: without pruning
+										     the cache grows by ~600MB with every es.version bump -->
+										<delete quiet="true">
+											<fileset dir="${es.cache}" includes="elasticsearch-*" excludes="${es.dist}"/>
+										</delete>
 										<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}"
 											dest="${es.cache}/${es.dist}" skipexisting="true"/>
 										<delete dir="${es.home}" quiet="true"/>
