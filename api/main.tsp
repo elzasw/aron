@@ -587,11 +587,25 @@ model DetailPart {
 	/** Server-localized display label. */
 	label: string;
 
+	viewType: PartViewType;
+
 	/** Textual value of the whole part, when the source supplied one. */
 	value?: string;
 
 	/** Display-ready items in display order (invisible items already filtered out). */
 	items: DetailItem[];
+}
+
+/** How a part is displayed (the display model's viewType). */
+enum PartViewType {
+	/** Items are always visible. */
+	STANDALONE,
+
+	/**
+	 * Collapsed by default to a one-line summary of its item values (references
+	 * excluded); expandable to the full item rows.
+	 */
+	GROUPED,
 }
 
 /** One display-ready item of a part. */

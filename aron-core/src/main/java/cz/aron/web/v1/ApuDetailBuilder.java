@@ -17,11 +17,13 @@ import cz.aron.api.v1.model.ApuLink;
 import cz.aron.api.v1.model.DetailItem;
 import cz.aron.api.v1.model.DetailItemKind;
 import cz.aron.api.v1.model.DetailPart;
+import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ApuPartType;
 import cz.aron.domain.types.dto.ItemType;
+import cz.aron.domain.types.dto.ViewType;
 
 /**
  * Builds the display-ready parts of the APU detail (render model, D-9): parts
@@ -66,7 +68,8 @@ public class ApuDetailBuilder {
 			if (items.isEmpty()) {
 				continue;
 			}
-			var detailPart = new DetailPart(part.getType(), partLabel(part.getType()), items);
+			var detailPart = new DetailPart(part.getType(), partLabel(part.getType()), viewType(part.getType()),
+					items);
 			if (part.getValue() != null && !part.getValue().isBlank()) {
 				detailPart.setValue(part.getValue());
 			}
@@ -166,6 +169,14 @@ public class ApuDetailBuilder {
 	private String partLabel(String code) {
 		ApuPartType partType = typesHolder.getApuPartTypeForCode(code);
 		return partType != null && partType.getName() != null ? partType.getName() : code;
+	}
+
+	/** Unknown part types display standalone (always visible). */
+	private PartViewType viewType(String code) {
+		ApuPartType partType = typesHolder.getApuPartTypeForCode(code);
+		return partType != null && partType.getViewType() == ViewType.GROUPED
+				? PartViewType.GROUPED
+				: PartViewType.STANDALONE;
 	}
 
 	private static String itemLabel(ItemType itemType) {

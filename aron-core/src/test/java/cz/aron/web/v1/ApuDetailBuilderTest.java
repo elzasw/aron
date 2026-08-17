@@ -17,6 +17,7 @@ import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.api.v1.model.DetailItem;
 import cz.aron.api.v1.model.DetailItemKind;
 import cz.aron.api.v1.model.DetailPart;
+import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.TypesLoader;
@@ -73,6 +74,9 @@ class ApuDetailBuilderTest {
 		// part order = types.yaml partTypes order (PT~TITLE first), labels resolved
 		assertThat(parts).extracting(DetailPart::getCode).containsExactly("PT~TITLE", "PT~BODY");
 		assertThat(parts.get(0).getLabel()).isEqualTo("Title");
+		// view types follow the display model
+		assertThat(parts.get(0).getViewType()).isEqualTo(PartViewType.STANDALONE);
+		assertThat(parts.get(1).getViewType()).isEqualTo(PartViewType.GROUPED);
 		// item order = types.yaml viewOrder (TITLE~MAIN before LANG~CODE)
 		assertThat(parts.get(1).getItems()).extracting(DetailItem::getCode)
 				.containsExactly("TITLE~MAIN", "LANG~CODE");

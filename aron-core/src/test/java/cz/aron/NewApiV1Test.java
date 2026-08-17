@@ -27,6 +27,7 @@ import cz.aron.test.api.v1.model.ApuType;
 import cz.aron.test.api.v1.model.DetailItem;
 import cz.aron.test.api.v1.model.DetailItemKind;
 import cz.aron.test.api.v1.model.DetailPart;
+import cz.aron.test.api.v1.model.PartViewType;
 import cz.aron.test.api.v1.model.TreeDirection;
 import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
@@ -293,6 +294,9 @@ class NewApiV1Test extends AbstractTest {
 		var body = detail.getParts().get(1);
 		assertThat(body.getLabel()).isEqualTo("Body");
 		assertThat(body.getValue()).isEqualTo("Obsahová část");
+		// view types come from the display model (PT_TITLE standalone, PT_BODY grouped)
+		assertThat(detail.getParts().get(0).getViewType()).isEqualTo(PartViewType.STANDALONE);
+		assertThat(body.getViewType()).isEqualTo(PartViewType.GROUPED);
 		// items in viewOrder (types.yaml declaration order), invisible one filtered;
 		// dating formatted, reference resolved to a link, external link typed
 		assertThat(body.getItems()).extracting(DetailItem::getCode, DetailItem::getKind, DetailItem::getValue)

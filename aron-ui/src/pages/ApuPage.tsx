@@ -7,7 +7,7 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { apuApi } from "../api/client";
@@ -16,6 +16,7 @@ import {
   type DetailItem,
   DetailItemKind,
   type DetailPart,
+  PartViewType,
   ResponseError,
 } from "../api/generated";
 import ApuTree from "../apu/ApuTree";
@@ -91,6 +92,31 @@ const useStyles = makeStyles({
       rowGap: tokens.spacingVerticalXXS,
     },
   },
+  // collapsed GROUPED part: one line of part label + item-value summary,
+  // aligned with the item grid so labels form one column
+  groupedHeader: {
+    display: "grid",
+    gridTemplateColumns: "minmax(160px, 240px) 1fr",
+    columnGap: tokens.spacingHorizontalL,
+    alignItems: "baseline",
+    background: "none",
+    border: "none",
+    padding: 0,
+    cursor: "pointer",
+    textAlign: "left",
+    fontSize: tokens.fontSizeBase300,
+    "@media (max-width: 640px)": {
+      gridTemplateColumns: "1fr",
+    },
+  },
+  groupedSummary: {
+    fontWeight: tokens.fontWeightSemibold,
+    overflowWrap: "anywhere",
+  },
+  groupedChevron: {
+    marginLeft: tokens.spacingHorizontalS,
+    color: tokens.colorNeutralForeground3,
+  },
   itemLabel: {
     color: tokens.colorNeutralForeground3,
     margin: 0,
@@ -136,33 +162,69 @@ function ItemValue({ item }: { item: DetailItem }) {
   }
 }
 
+function ItemRows({ items }: { items: DetailItem[] }) {
+  const styles = useStyles();
+  return (
+    <dl className={styles.items}>
+      {items.map((item, index) => (
+        <Fragment key={`${item.code}-${index}`}>
+          <dt className={styles.itemLabel}>{item.label}</dt>
+          <dd className={styles.itemValue}>
+            <ItemValue item={item} />
+          </dd>
+        </Fragment>
+      ))}
+    </dl>
+  );
+}
+
 /**
  * One part of the detail. Follows the old portal's display rules: the part's
- * own textual value is never rendered (it only duplicates the items), and a
+ * own textual value is never rendered (it only duplicates the items); a
+ * GROUPED part collapses to one line - part label plus a summary of its item
+ * values (references excluded) - expandable to the full rows; a STANDALONE
  * part with a single item collapses to one label/value row without the part
- * header - seven name parts of an entity read as seven rows, not seven
- * sections.
+ * header.
  */
 function Part({ part }: { part: DetailPart }) {
   const styles = useStyles();
+  const [open, setOpen] = useState(false);
   const items = part.items.filter((item) => item.code !== ARCHDESC_ROOT_REF);
   if (items.length === 0) {
     return null;
   }
+
+  if (part.viewType === PartViewType.Grouped) {
+    const summary = items
+      .filter((item) => item.kind !== DetailItemKind.Ref)
+      .map((item) => item.value)
+      .join(" ");
+    return (
+      <section className={styles.part} aria-label={part.label}>
+        <button
+          type="button"
+          className={styles.groupedHeader}
+          aria-expanded={open}
+          onClick={() => setOpen(!open)}
+        >
+          <span className={styles.itemLabel}>{part.label}</span>
+          <span className={styles.groupedSummary}>
+            {summary}
+            <span aria-hidden="true" className={styles.groupedChevron}>
+              {open ? "▾" : "▸"}
+            </span>
+          </span>
+        </button>
+        {open && <ItemRows items={items} />}
+      </section>
+    );
+  }
+
   const single = items.length === 1;
   return (
     <section className={styles.part} aria-label={single ? items[0].label : part.label}>
       {!single && <Subtitle2>{part.label}</Subtitle2>}
-      <dl className={styles.items}>
-        {items.map((item, index) => (
-          <Fragment key={`${item.code}-${index}`}>
-            <dt className={styles.itemLabel}>{item.label}</dt>
-            <dd className={styles.itemValue}>
-              <ItemValue item={item} />
-            </dd>
-          </Fragment>
-        ))}
-      </dl>
+      <ItemRows items={items} />
     </section>
   );
 }

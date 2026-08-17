@@ -501,6 +501,7 @@ components:
       required:
         - code
         - label
+        - viewType
         - items
       properties:
         code:
@@ -509,6 +510,8 @@ components:
         label:
           type: string
           description: Server-localized display label.
+        viewType:
+          $ref: "#/components/schemas/PartViewType"
         value:
           type: string
           description: Textual value of the whole part, when the source supplied one.
@@ -755,6 +758,12 @@ components:
         - NEWS
         - HELP
       description: Portal sections available for the top-level menu.
+    PartViewType:
+      type: string
+      enum:
+        - STANDALONE
+        - GROUPED
+      description: How a part is displayed (the display model's viewType).
     RangeFilter:
       type: object
       properties:
