@@ -41,10 +41,22 @@ public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldF
 		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null);
 	}
 
+	/**
+	 * Named sort modes (AUTO is resolved by the API layer before the port).
+	 * Every mode ends in the uuid tie-break, so paging is stable; documents
+	 * without the sorted value (no name, no dating) sort last in either
+	 * direction.
+	 */
 	public enum SortMode {
+		/** Score descending; ties by nameSort, then uuid. */
 		RELEVANCE,
 		/** Czech-alphabetical by name - engines sort by the index-time collation key (nameSort). */
-		NAME
+		NAME,
+		NAME_DESC,
+		/** Earliest dating ({@code dateL}) ascending; undated last. */
+		DATE_ASC,
+		/** Latest dating ({@code dateH}) descending; undated last. */
+		DATE_DESC
 	}
 
 	/**

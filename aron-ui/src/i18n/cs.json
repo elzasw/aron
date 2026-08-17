@@ -31,6 +31,15 @@
     "button": "Hledat",
     "sidebarPlaceholder": "Vyhledávání",
     "pageSize": "Počet na stránce:",
+    "sortLabel": "Řazení:",
+    "sort": {
+      "AUTO": "Výchozí",
+      "RELEVANCE": "Nejlépe odpovídající",
+      "NAME": "Název A–Z",
+      "NAME_DESC": "Název Z–A",
+      "DATE_ASC": "Datace vzestupně",
+      "DATE_DESC": "Datace sestupně"
+    },
     "total": "Nalezeno záznamů: {{count}}",
     "totalMore": "Nalezeno záznamů: více než {{count}}",
     "relaxed": "Všem slovům dotazu neodpovídá žádný záznam. Zobrazujeme záznamy obsahující alespoň některá ze zadaných slov.",

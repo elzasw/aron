@@ -154,10 +154,8 @@ public class SearchController implements SearchApi {
 		if (from + size > maxWindow) {
 			throw badRequest("from + size must not exceed " + maxWindow + ".");
 		}
-		var sort = request.getSort() == SortMode.NAME
-				? ApuSearchQuery.SortMode.NAME
-				: ApuSearchQuery.SortMode.RELEVANCE;
 		RelevancePlan plan = relevanceService.plan(blankToNull(request.getQuery()));
+		var sort = resolveSort(request.getSort(), plan);
 		String apuType = request.getApuType() != null ? request.getApuType().getValue() : null;
 
 		QueryMode queryMode = QueryMode.STRICT;
@@ -213,6 +211,19 @@ public class SearchController implements SearchApi {
 	/** The request's own accuracy override, clamped by the server maximum; unset = the server default. */
 	private int effectiveTotalUpTo(Integer requested) {
 		return requested != null ? Math.min(requested, totalUpToMax) : totalUpToDefault;
+	}
+
+	/** AUTO resolves server-side: relevance with a query, name otherwise (§4.4). */
+	private static ApuSearchQuery.SortMode resolveSort(SortMode requested, RelevancePlan plan) {
+		SortMode mode = requested != null ? requested : SortMode.AUTO;
+		return switch (mode) {
+			case AUTO -> plan != null ? ApuSearchQuery.SortMode.RELEVANCE : ApuSearchQuery.SortMode.NAME;
+			case RELEVANCE -> ApuSearchQuery.SortMode.RELEVANCE;
+			case NAME -> ApuSearchQuery.SortMode.NAME;
+			case NAME_DESC -> ApuSearchQuery.SortMode.NAME_DESC;
+			case DATE_ASC -> ApuSearchQuery.SortMode.DATE_ASC;
+			case DATE_DESC -> ApuSearchQuery.SortMode.DATE_DESC;
+		};
 	}
 
 	/**

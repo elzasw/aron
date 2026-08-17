@@ -370,7 +370,7 @@ components:
         sort:
           allOf:
             - $ref: "#/components/schemas/SortMode"
-          default: RELEVANCE
+          default: AUTO
         totalUpTo:
           type: integer
           format: int32
@@ -832,9 +832,16 @@ components:
     SortMode:
       type: string
       enum:
+        - AUTO
         - RELEVANCE
         - NAME
-      description: Named sort modes.
+        - NAME_DESC
+        - DATE_ASC
+        - DATE_DESC
+      description: |-
+        Named sort modes. Every mode tie-breaks deterministically (name, then uuid),
+        so paging is stable. Records without the sorted value (no name, no dating)
+        always sort last.
     SystemInfo:
       type: object
       required:

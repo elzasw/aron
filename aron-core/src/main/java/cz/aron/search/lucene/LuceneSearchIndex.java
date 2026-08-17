@@ -268,9 +268,8 @@ public class LuceneSearchIndex implements SearchIndex {
 				var hits = new ArrayList<ApuSearchResult.Hit>();
 				if (exactTotal > query.from() && query.size() > 0) {
 					int wanted = query.from() + query.size();
-					TopDocs top = query.sort() == ApuSearchQuery.SortMode.NAME
-							? searcher.search(fullQuery, wanted, nameSort())
-							: searcher.search(fullQuery, wanted);
+					// doDocScores: the RELEVANCE chain leads with the score field
+					TopDocs top = searcher.search(fullQuery, wanted, sortFor(query.sort()), true);
 					var storedFields = searcher.storedFields();
 					for (int i = query.from(); i < top.scoreDocs.length; i++) {
 						var doc = storedFields.document(top.scoreDocs[i].doc);
@@ -293,10 +292,34 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 	}
 
-	private static Sort nameSort() {
-		var field = new SortField("nameSort", SortField.Type.STRING);
-		field.setMissingValue(SortField.STRING_LAST);
-		return new Sort(field);
+	/**
+	 * Full deterministic sort chain of a mode: primary key, then nameSort, then
+	 * the uuid tie-break; documents without the sorted value (no name, no
+	 * dating) sort last in either direction (doc/search-relevance.md §4.4).
+	 */
+	private static Sort sortFor(ApuSearchQuery.SortMode mode) {
+		var uuid = new SortField("uuid", SortField.Type.STRING);
+		return switch (mode) {
+			case RELEVANCE -> new Sort(SortField.FIELD_SCORE, nameSortField(false), uuid);
+			case NAME -> new Sort(nameSortField(false), uuid);
+			case NAME_DESC -> new Sort(nameSortField(true), uuid);
+			case DATE_ASC -> new Sort(dateSortField("dateL", false), nameSortField(false), uuid);
+			case DATE_DESC -> new Sort(dateSortField("dateH", true), nameSortField(false), uuid);
+		};
+	}
+
+	private static SortField nameSortField(boolean reverse) {
+		var field = new SortField("nameSort", SortField.Type.STRING, reverse);
+		// missing-last must flip with the direction (STRING_LAST = "greater than
+		// everything", which a reversed sort would file FIRST)
+		field.setMissingValue(reverse ? SortField.STRING_FIRST : SortField.STRING_LAST);
+		return field;
+	}
+
+	private static SortField dateSortField(String field, boolean reverse) {
+		var sortField = new SortedNumericSortField(field, SortField.Type.LONG, reverse);
+		sortField.setMissingValue(reverse ? Long.MIN_VALUE : Long.MAX_VALUE);
+		return sortField;
 	}
 
 	/**

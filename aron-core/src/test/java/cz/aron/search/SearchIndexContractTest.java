@@ -422,6 +422,55 @@ public abstract class SearchIndexContractTest {
 		return java.time.Instant.ofEpochMilli(epochMillis).atOffset(java.time.ZoneOffset.UTC).getYear();
 	}
 
+	/** Fixture with explicit derived dating bounds (what ApuDocumentBuilder computes). */
+	protected static ApuDocument docWithDates(String uuid, String name, String dateL, String dateH) {
+		var document = doc(uuid, name, 1, Map.of());
+		document.setDateL(dateL);
+		document.setDateH(dateH);
+		return document;
+	}
+
+	@Test
+	void dateSortsUseTheDerivedBoundsAndFileUndatedLast() {
+		// B10: earliest bound ascending / latest bound descending; undated always last
+		indexApus(List.of(
+				docWithDates(uuid(80), "Střední", "1850-01-01T00:00:00", "1900-12-31T23:59:59"),
+				docWithDates(uuid(81), "Stará", "1800-01-01T00:00:00", "1850-12-31T23:59:59"),
+				docWithDates(uuid(82), "Nová", "1900-01-01T00:00:00", "1950-12-31T23:59:59"),
+				doc(uuid(83), "Bez datace", 1, Map.of())));
+
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.DATE_ASC)).hits()).extracting(ApuSearchResult.Hit::uuid)
+				.containsExactly(uuid(81), uuid(80), uuid(82), uuid(83));
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.DATE_DESC)).hits()).extracting(ApuSearchResult.Hit::uuid)
+				.containsExactly(uuid(82), uuid(80), uuid(81), uuid(83));
+	}
+
+	@Test
+	void nameDescReversesTheCzechOrder() {
+		indexApus(List.of(
+				doc(uuid(84), "Chalupa", 1, Map.of()),
+				doc(uuid(85), "Cibule", 1, Map.of()),
+				doc(uuid(86), "Hrad", 1, Map.of())));
+
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.NAME_DESC)).hits()).extracting(ApuSearchResult.Hit::name)
+				.containsExactly("Chalupa", "Hrad", "Cibule");
+	}
+
+	@Test
+	void equalSortValuesOrderStablyByUuid() {
+		// B10 (stability): identical names page deterministically - the uuid tie-break
+		var uuids = new java.util.ArrayList<>(List.of(uuid(87), uuid(88), uuid(89)));
+		indexApus(uuids.stream().map(u -> doc(u, "Stejné jméno", 1, Map.<String, List<Object>>of())).toList());
+		java.util.Collections.sort(uuids);
+
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.NAME)).hits()).extracting(ApuSearchResult.Hit::uuid)
+				.containsExactlyElementsOf(uuids);
+	}
+
 	@Test
 	void nameSortFollowsCzechCollation() {
 		indexApus(List.of(

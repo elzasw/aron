@@ -1,4 +1,4 @@
-import { Button, Input, makeStyles, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
+import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -80,7 +80,17 @@ const useStyles = makeStyles({
   status: {
     color: tokens.colorNeutralForeground3,
   },
+  sortRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalS,
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground3,
+  },
 });
+
+/** URL `sort` values; the empty string is AUTO (parameter absent, server decides). */
+const SORT_OPTIONS = ["", "RELEVANCE", "NAME", "NAME_DESC", "DATE_ASC", "DATE_DESC"] as const;
 
 /**
  * The search experience of one portal section (apuType set) or of the general
@@ -97,6 +107,8 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const size = Math.max(1, Math.min(100, Number(params.get("s")) || 10));
   const filterParam = params.get("f");
   const filters = useMemo(() => parseFilters(filterParam), [filterParam]);
+  // unset = AUTO: the server picks relevance with a query, name without
+  const sortParam = params.get("sort") ?? "";
   const [queryInput, setQueryInput] = useState(query);
   useEffect(() => setQueryInput(query), [query]);
 
@@ -108,7 +120,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   });
 
   const search = useQuery({
-    queryKey: ["apu-search", apuType, query, filterParam, page, size],
+    queryKey: ["apu-search", apuType, query, filterParam, page, size, sortParam],
     queryFn: () =>
       searchApi.searchSearch({
         apuSearchRequest: {
@@ -117,8 +129,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
           filters,
           from: (page - 1) * size,
           size,
-          // stable alphabetical browsing without a query, relevance with one
-          sort: query ? SortMode.Relevance : SortMode.Name,
+          sort: sortParam ? (sortParam as SortMode) : undefined,
         },
       }),
     placeholderData: (previous) => previous,
@@ -203,6 +214,20 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
         <Title3>{t(titleKey)}</Title3>
         {search.data && (
           <>
+            <div className={styles.sortRow}>
+              <label htmlFor="search-sort">{t("search.sortLabel")}</label>
+              <Select
+                id="search-sort"
+                value={sortParam}
+                onChange={(_, data) => update({ sort: data.value || null, p: null })}
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {t(`search.sort.${option || "AUTO"}`)}
+                  </option>
+                ))}
+              </Select>
+            </div>
             <Pagination
               page={page}
               size={size}

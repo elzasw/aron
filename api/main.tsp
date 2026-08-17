@@ -239,7 +239,7 @@ model ApuSearchRequest {
 	@maxValue(100)
 	size?: int32 = 10;
 
-	sort?: SortMode = SortMode.RELEVANCE;
+	sort?: SortMode = SortMode.AUTO;
 
 	/**
 	 * Requested accuracy of `total`: matching APUs are counted exactly up to
@@ -250,12 +250,29 @@ model ApuSearchRequest {
 	totalUpTo?: int32;
 }
 
-/** Named sort modes. */
+/**
+ * Named sort modes. Every mode tie-breaks deterministically (name, then uuid),
+ * so paging is stable. Records without the sorted value (no name, no dating)
+ * always sort last.
+ */
 enum SortMode {
+	/** The server decides: RELEVANCE when a query is present, NAME otherwise. */
+	AUTO,
+
+	/** Best match first; ties in Czech-alphabetical order. */
 	RELEVANCE,
 
-	/** Czech-alphabetical by name (collation). */
+	/** Czech-alphabetical by name (collation: č after c, ch after h). */
 	NAME,
+
+	/** Czech-alphabetical by name, reversed. */
+	NAME_DESC,
+
+	/** By the earliest dating of the record; undated last. */
+	DATE_ASC,
+
+	/** By the latest dating of the record; undated last. */
+	DATE_DESC,
 }
 
 /** How the fulltext query was matched (see `ApuSearchResponse.queryMode`). */

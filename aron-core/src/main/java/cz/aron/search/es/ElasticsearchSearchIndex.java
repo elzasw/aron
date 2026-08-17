@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -210,8 +211,33 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 					.aggregations("minCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~L"))))
 					.aggregations("maxCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~H"))))));
 		}
-		if (query.sort() == ApuSearchQuery.SortMode.NAME) {
-			builder.withSort(Sort.by(Sort.Direction.ASC, "nameSort"));
+		// full deterministic sort chains (uuid mirror field "id" is the final
+		// tie-break of every mode); ES's default missing=_last already files
+		// unnamed/undated documents last in either direction
+		switch (query.sort()) {
+			case RELEVANCE -> {
+				builder.withSort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
+				builder.withSort(so -> so.field(f -> f.field("nameSort").order(SortOrder.Asc)));
+				builder.withSort(so -> so.field(f -> f.field("id").order(SortOrder.Asc)));
+			}
+			case NAME -> {
+				builder.withSort(so -> so.field(f -> f.field("nameSort").order(SortOrder.Asc)));
+				builder.withSort(so -> so.field(f -> f.field("id").order(SortOrder.Asc)));
+			}
+			case NAME_DESC -> {
+				builder.withSort(so -> so.field(f -> f.field("nameSort").order(SortOrder.Desc)));
+				builder.withSort(so -> so.field(f -> f.field("id").order(SortOrder.Asc)));
+			}
+			case DATE_ASC -> {
+				builder.withSort(so -> so.field(f -> f.field("dateL").order(SortOrder.Asc)));
+				builder.withSort(so -> so.field(f -> f.field("nameSort").order(SortOrder.Asc)));
+				builder.withSort(so -> so.field(f -> f.field("id").order(SortOrder.Asc)));
+			}
+			case DATE_DESC -> {
+				builder.withSort(so -> so.field(f -> f.field("dateH").order(SortOrder.Desc)));
+				builder.withSort(so -> so.field(f -> f.field("nameSort").order(SortOrder.Asc)));
+				builder.withSort(so -> so.field(f -> f.field("id").order(SortOrder.Asc)));
+			}
 		}
 		// explicit total accuracy: without it ES silently caps totals at 10 000
 		// (and Spring Data's total alone does not carry the GTE relation)
