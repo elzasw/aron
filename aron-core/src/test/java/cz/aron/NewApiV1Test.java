@@ -34,6 +34,7 @@ import cz.aron.test.api.v1.model.RefFacetResult;
 import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
 import cz.aron.test.api.v1.model.SystemInfo;
+import cz.aron.test.api.v1.model.TotalRelation;
 import cz.aron.test.api.v1.model.UiConfig;
 import cz.aron.test.api.v1.model.ValuesFilter;
 
@@ -137,6 +138,34 @@ class NewApiV1Test extends AbstractTest {
 		// section restriction applies
 		request.setApuType(ApuType.FUND);
 		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getTotal()).isZero();
+	}
+
+	@Test
+	void totalsCarryTheirAccuracyRelation() {
+		// small result set: total is exact
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(response.getTotalRelation()).isEqualTo(TotalRelation.EQ);
+
+		// a totalUpTo below the hit count caps the total and reports GTE
+		request.setTotalUpTo(1);
+		response = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(response.getTotal()).isEqualTo(1);
+		assertThat(response.getTotalRelation()).isEqualTo(TotalRelation.GTE);
+		// the page itself is not limited by the accuracy
+		assertThat(response.getItems().size()).isGreaterThan(1);
+	}
+
+	@Test
+	void pagingBeyondTheWindowIsRejected() {
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		request.setFrom(9_995);
+		request.setSize(10); // from + size > 10 000
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(request))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
 	}
 
 	@Test

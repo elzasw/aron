@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,6 +47,7 @@ import cz.aron.api.v1.model.RangeFilter;
 import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
 import cz.aron.api.v1.model.TextFilter;
+import cz.aron.api.v1.model.TotalRelation;
 import cz.aron.api.v1.model.ValuesFilter;
 import cz.aron.domain.DataType;
 import cz.aron.domain.facets.FacetsLoader;
@@ -77,12 +79,27 @@ public class SearchController implements SearchApi {
 
 	private final IndexingService indexingService;
 
+	/** Page window cap: {@code from + size} must stay within (protects deep paging). */
+	private final int maxWindow;
+
+	/** Default accuracy of totals - exact up to this count, "more than N" above it. */
+	private final int totalUpToDefault;
+
+	/** Upper clamp for the request's own {@code totalUpTo} override. */
+	private final int totalUpToMax;
+
 	private List<FacetConfigDto> facets;
 
-	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService) {
+	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
+			@Value("${search.max-window:10000}") int maxWindow,
+			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
+			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
 		this.facetsLoader = facetsLoader;
 		this.typesHolder = typesHolder;
 		this.indexingService = indexingService;
+		this.maxWindow = maxWindow;
+		this.totalUpToDefault = totalUpToDefault;
+		this.totalUpToMax = totalUpToMax;
 	}
 
 	@PostConstruct
@@ -127,14 +144,17 @@ public class SearchController implements SearchApi {
 
 		int from = request.getFrom() != null ? request.getFrom() : 0;
 		int size = request.getSize() != null ? request.getSize() : 10;
+		if (from + size > maxWindow) {
+			throw badRequest("from + size must not exceed " + maxWindow + ".");
+		}
 		var sort = request.getSort() == SortMode.NAME
 				? ApuSearchQuery.SortMode.NAME
 				: ApuSearchQuery.SortMode.RELEVANCE;
 		String fulltext = blankToNull(request.getQuery());
 		String apuType = request.getApuType() != null ? request.getApuType().getValue() : null;
 
-		ApuSearchResult result = indexingService
-				.search(new ApuSearchQuery(apuType, fulltext, filters, bucketRequests, boundsFields, from, size, sort));
+		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, fulltext, filters,
+				bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo())));
 
 		var items = result.hits().stream()
 				.map(h -> {
@@ -165,7 +185,16 @@ public class SearchController implements SearchApi {
 				default -> { /* no facet result */ }
 			}
 		}
-		return ResponseEntity.ok(new ApuSearchResponse((long) result.total(), items, facetResults));
+		return ResponseEntity.ok(new ApuSearchResponse(result.total(),
+				result.totalRelation() == ApuSearchResult.TotalRelation.EQ
+						? TotalRelation.EQ
+						: TotalRelation.GTE,
+				items, facetResults));
+	}
+
+	/** The request's own accuracy override, clamped by the server maximum; unset = the server default. */
+	private int effectiveTotalUpTo(Integer requested) {
+		return requested != null ? Math.min(requested, totalUpToMax) : totalUpToDefault;
 	}
 
 	/**

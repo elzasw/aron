@@ -254,9 +254,9 @@ public class LuceneSearchIndex implements SearchIndex {
 			try {
 				Query mainQuery = buildMainQuery(query);
 				Query fullQuery = withFacetFilters(mainQuery, query.filters(), null);
-				long total = searcher.count(fullQuery);
+				long exactTotal = searcher.count(fullQuery);
 				var hits = new ArrayList<ApuSearchResult.Hit>();
-				if (total > query.from() && query.size() > 0) {
+				if (exactTotal > query.from() && query.size() > 0) {
 					int wanted = query.from() + query.size();
 					TopDocs top = query.sort() == ApuSearchQuery.SortMode.NAME
 							? searcher.search(fullQuery, wanted, nameSort())
@@ -268,7 +268,12 @@ public class LuceneSearchIndex implements SearchIndex {
 								doc.get("type"), Boolean.parseBoolean(doc.get("containsDigitalObjects"))));
 					}
 				}
-				return new ApuSearchResult(total, hits, countBuckets(searcher, query, mainQuery),
+				// the count is exact either way (cheap on an embedded index); the
+				// report mirrors the ES adapter's contract: capped = (totalUpTo, GTE)
+				boolean capped = query.totalUpTo() != null && exactTotal > query.totalUpTo();
+				return new ApuSearchResult(capped ? query.totalUpTo() : exactTotal,
+						capped ? ApuSearchResult.TotalRelation.GTE : ApuSearchResult.TotalRelation.EQ,
+						hits, countBuckets(searcher, query, mainQuery),
 						computeBounds(searcher, query, mainQuery));
 			} finally {
 				apuSearchers.release(searcher);

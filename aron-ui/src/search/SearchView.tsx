@@ -14,6 +14,7 @@ import {
   FacetType,
   type SearchFilter,
   SortMode,
+  TotalRelation,
 } from "../api/generated";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import FacetPanel from "./FacetPanel";
@@ -209,7 +210,12 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
               onSize={(s) => update({ s: s !== 10 ? String(s) : null, p: null })}
             />
             <Text size={200} className={styles.status}>
-              {t("search.total", { count: search.data.total })}
+              {t(
+                search.data.totalRelation === TotalRelation.Gte
+                  ? "search.totalMore"
+                  : "search.total",
+                { count: search.data.total },
+              )}
             </Text>
             <ResultList items={search.data.items} />
           </>

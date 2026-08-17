@@ -6,10 +6,12 @@ Search
 
    This chapter describes the search behavior introduced by the relevance
    redesign (design document ``doc/search-relevance.md``, decision D-12).
-   It is the normative target; sections not yet available in a release are
-   marked with a todo. The behavior stated here is pinned by automated
-   tests — both supported engines (Elasticsearch and embedded Lucene) must
-   satisfy it identically.
+   It is the normative target; the behavior stated here is pinned by
+   automated tests — both supported engines (Elasticsearch and embedded
+   Lucene) must satisfy it identically. Implemented so far: result-total
+   accuracy (exact up to the limit, "more than N" above it) and the paging
+   window; the ranking and the extended ordering modes are still being
+   rolled out.
 
 Search behavior
 ===============
@@ -143,8 +145,11 @@ Protective limits, configurable in ``application.yml``:
    * - ``search.track-total-hits-up-to``
      - 10 000
      - Result totals are exact up to this count; above it the portal shows
-       "more than N results". Clients may request a higher (server-capped)
-       accuracy per query.
+       "more than N results". Clients may request a higher accuracy per query
+       (``totalUpTo``).
+   * - ``search.track-total-hits-max``
+     - 100 000
+     - Upper bound for the per-query ``totalUpTo`` override.
    * - ``search.max-facet-buckets``
      - 200
      - Hard cap on facet bucket counts.

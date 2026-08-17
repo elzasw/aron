@@ -32,6 +32,7 @@
     "sidebarPlaceholder": "Vyhledávání",
     "pageSize": "Počet na stránce:",
     "total": "Nalezeno záznamů: {{count}}",
+    "totalMore": "Nalezeno záznamů: více než {{count}}",
     "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
     "pagination": "Stránkování výsledků",

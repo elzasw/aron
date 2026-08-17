@@ -442,6 +442,12 @@ blind against the last complaint.
 1. **Total-count fix + native `from`** — explicit tracking limit on both
    engines, `totalRelation` in the contract, UI "více než N", ES over-fetch
    removed. A defect fix; goes first and stands alone.
+   **Done 2026-08-17**: `totalRelation` + `totalUpTo` in the contract;
+   `search.track-total-hits-up-to` (default 10 000) /
+   `search.track-total-hits-max` (override clamp, 100 000) /
+   `search.max-window` (10 000, violations → 400); the cap is deterministic
+   on both engines — above `totalUpTo` always `(totalUpTo, GTE)`, even when
+   the engine happens to know the exact count (ES match-all shortcut).
 2. **Index side** — multi-valued `allText` (position gap), `nameExactCs`,
    `nameExact`, `dateL`/`dateH`, uuid doc-values, `fulltext` flag in the CRC,
    document-layout version on both engines, ENUM label verification (§4.1). One

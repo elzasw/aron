@@ -226,7 +226,11 @@ model ApuSearchRequest {
 	/** Active filters; each references a facet of the section by its code. */
 	filters?: SearchFilter[];
 
-	/** Zero-based offset of the first returned item. */
+	/**
+	 * Zero-based offset of the first returned item. `from + size` must stay
+	 * within the server's page window (default 10 000); beyond it the request
+	 * is rejected (400).
+	 */
 	@minValue(0)
 	from?: int32 = 0;
 
@@ -236,6 +240,14 @@ model ApuSearchRequest {
 	size?: int32 = 10;
 
 	sort?: SortMode = SortMode.RELEVANCE;
+
+	/**
+	 * Requested accuracy of `total`: matching APUs are counted exactly up to
+	 * this value (see `totalRelation`). Unset = the server default (10 000);
+	 * the server clamps the value to its configured maximum.
+	 */
+	@minValue(1)
+	totalUpTo?: int32;
 }
 
 /** Named sort modes. */
@@ -244,6 +256,15 @@ enum SortMode {
 
 	/** Czech-alphabetical by name (collation). */
 	NAME,
+}
+
+/** Accuracy of a search response's `total`. */
+enum TotalRelation {
+	/** `total` is the exact number of matching APUs. */
+	EQ,
+
+	/** At least `total` APUs match (counting stopped at the accuracy limit). */
+	GTE,
 }
 
 /** Filter kinds - the SearchFilter discriminator. */
@@ -296,8 +317,15 @@ model RangeFilter extends SearchFilter {
 
 /** Search response. */
 model ApuSearchResponse {
-	/** Total number of matching APUs (independent of paging). */
+	/**
+	 * Total number of matching APUs (independent of paging), counted exactly
+	 * up to the effective accuracy limit — `totalRelation` says whether it is
+	 * exact.
+	 */
 	total: int64;
+
+	/** EQ = `total` is exact; GTE = at least `total` APUs match. */
+	totalRelation: TotalRelation;
 
 	items: ApuSearchItem[];
 

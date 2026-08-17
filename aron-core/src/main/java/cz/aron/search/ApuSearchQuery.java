@@ -21,9 +21,20 @@ import java.util.Set;
  * @param from         zero-based offset of the first hit
  * @param size         page size (bounded by the caller)
  * @param sort         named sort mode
+ * @param totalUpTo    accuracy limit of the result's total: matching documents
+ *                     are counted exactly up to this value, beyond it the total
+ *                     is reported as {@code (totalUpTo, GTE)}; {@code null} =
+ *                     count exactly (callers resolve their configured default)
  */
 public record ApuSearchQuery(String apuType, String fulltext, List<FieldFilter> filters,
-		List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort) {
+		List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
+		Integer totalUpTo) {
+
+	/** Exact-total variant - the accuracy limit defaults to unlimited. */
+	public ApuSearchQuery(String apuType, String fulltext, List<FieldFilter> filters,
+			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort) {
+		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null);
+	}
 
 	public enum SortMode {
 		RELEVANCE,

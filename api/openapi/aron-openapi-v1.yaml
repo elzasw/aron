@@ -192,7 +192,10 @@ components:
           type: integer
           format: int32
           minimum: 0
-          description: Zero-based offset of the first returned item.
+          description: |-
+            Zero-based offset of the first returned item. `from + size` must stay
+            within the server's page window (default 10 000); beyond it the request
+            is rejected (400).
           default: 0
         size:
           type: integer
@@ -205,18 +208,34 @@ components:
           allOf:
             - $ref: "#/components/schemas/SortMode"
           default: RELEVANCE
+        totalUpTo:
+          type: integer
+          format: int32
+          minimum: 1
+          description: |-
+            Requested accuracy of `total`: matching APUs are counted exactly up to
+            this value (see `totalRelation`). Unset = the server default (10 000);
+            the server clamps the value to its configured maximum.
       description: Search request over APUs.
     ApuSearchResponse:
       type: object
       required:
         - total
+        - totalRelation
         - items
         - facets
       properties:
         total:
           type: integer
           format: int64
-          description: Total number of matching APUs (independent of paging).
+          description: |-
+            Total number of matching APUs (independent of paging), counted exactly
+            up to the effective accuracy limit — `totalRelation` says whether it is
+            exact.
+        totalRelation:
+          allOf:
+            - $ref: "#/components/schemas/TotalRelation"
+          description: EQ = `total` is exact; GTE = at least `total` APUs match.
         items:
           type: array
           items:
@@ -533,6 +552,12 @@ components:
       allOf:
         - $ref: "#/components/schemas/SearchFilter"
       description: Text filter of a FULLTEXT facet (analyzed match on the facet's field).
+    TotalRelation:
+      type: string
+      enum:
+        - EQ
+        - GTE
+      description: Accuracy of a search response's `total`.
     UiConfig:
       type: object
       required:

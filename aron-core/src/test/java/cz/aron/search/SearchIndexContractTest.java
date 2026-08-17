@@ -353,6 +353,34 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void totalsAreExactUpToTheAccuracyLimitAndCappedAboveIt() {
+		indexApus(List.of(
+				doc(uuid(50), "Total one", 1, Map.of()),
+				doc(uuid(51), "Total two", 1, Map.of()),
+				doc(uuid(52), "Total three", 1, Map.of())));
+
+		// no limit = exact
+		var exact = index.search(ApuSearchQuery.matchAll(0, 10));
+		assertThat(exact.total()).isEqualTo(3);
+		assertThat(exact.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.EQ);
+
+		// limit above the hit count = still exact
+		var above = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.RELEVANCE, 10));
+		assertThat(above.total()).isEqualTo(3);
+		assertThat(above.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.EQ);
+
+		// limit below the hit count = deterministically (limit, GTE) on every
+		// engine, even when the engine happens to know the exact count
+		var capped = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+				SortMode.RELEVANCE, 2));
+		assertThat(capped.total()).isEqualTo(2);
+		assertThat(capped.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.GTE);
+		// the accuracy limit affects counting only, never the returned page
+		assertThat(capped.hits()).hasSize(3);
+	}
+
+	@Test
 	void relationsAreAcceptedForIndexing() {
 		// the rels index is write-only within the application (see design Q3)
 		assertThatCode(() -> indexRelations(List.of(

@@ -15,12 +15,13 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -195,24 +196,96 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		if (query.sort() == ApuSearchQuery.SortMode.NAME) {
 			builder.withSort(Sort.by(Sort.Direction.ASC, "nameSort"));
 		}
-		// arbitrary from-offset: over-fetch from+size and slice (size is capped by
-		// the caller and ES limits the window to 10k anyway); zero = an
-		// aggregation/bounds-only query without hits
-		int wanted = query.from() + query.size();
-		if (wanted > 0) {
-			builder.withPageable(PageRequest.of(0, wanted));
+		// explicit total accuracy: without it ES silently caps totals at 10 000
+		// (and Spring Data's total alone does not carry the GTE relation)
+		if (query.totalUpTo() != null) {
+			builder.withTrackTotalHitsUpTo(query.totalUpTo());
+		} else {
+			builder.withTrackTotalHits(true);
+		}
+		// native from/size; zero size = an aggregation/bounds-only query without hits
+		if (query.size() > 0) {
+			builder.withPageable(new OffsetPageable(query.from(), query.size()));
 		} else {
 			builder.withMaxResults(0);
 		}
 		var hits = operations.search(builder.build(), IndexedApu.class, IndexCoordinates.of("apu"));
 		var resultHits = hits.getSearchHits().stream()
-				.skip(query.from())
 				.map(h -> new ApuSearchResult.Hit(h.getId(), h.getContent().getName(),
 						h.getContent().getDescription(), h.getContent().getType(),
 						h.getContent().isContainsDigitalObjects()))
 				.toList();
-		return new ApuSearchResult(hits.getTotalHits(), resultHits, extractBuckets(hits, query.buckets()),
+		// deterministic accuracy cap, mirrored by the Lucene adapter: above
+		// totalUpTo the result is always (totalUpTo, GTE) - even when ES happens
+		// to know the exact count (match-all shortcut), so the API's behavior
+		// does not flicker with the query shape
+		long rawTotal = hits.getTotalHits();
+		long total;
+		ApuSearchResult.TotalRelation relation;
+		if (query.totalUpTo() != null && rawTotal > query.totalUpTo()) {
+			total = query.totalUpTo();
+			relation = ApuSearchResult.TotalRelation.GTE;
+		} else {
+			total = rawTotal;
+			relation = hits.getTotalHitsRelation() == TotalHitsRelation.EQUAL_TO
+					? ApuSearchResult.TotalRelation.EQ
+					: ApuSearchResult.TotalRelation.GTE;
+		}
+		return new ApuSearchResult(total, relation, resultHits, extractBuckets(hits, query.buckets()),
 				extractBounds(hits, query.boundsFields()));
+	}
+
+	/**
+	 * Pageable with an arbitrary offset: the ES request converter reads
+	 * {@code getOffset()} into the native {@code from}, so non-page-aligned
+	 * offsets need no over-fetching.
+	 */
+	private record OffsetPageable(int offset, int size) implements Pageable {
+
+		@Override
+		public int getPageNumber() {
+			return offset / size;
+		}
+
+		@Override
+		public int getPageSize() {
+			return size;
+		}
+
+		@Override
+		public long getOffset() {
+			return offset;
+		}
+
+		@Override
+		public Sort getSort() {
+			return Sort.unsorted();
+		}
+
+		@Override
+		public Pageable next() {
+			return new OffsetPageable(offset + size, size);
+		}
+
+		@Override
+		public Pageable previousOrFirst() {
+			return offset >= size ? new OffsetPageable(offset - size, size) : first();
+		}
+
+		@Override
+		public Pageable first() {
+			return new OffsetPageable(0, size);
+		}
+
+		@Override
+		public Pageable withPage(int pageNumber) {
+			return new OffsetPageable(pageNumber * size, size);
+		}
+
+		@Override
+		public boolean hasPrevious() {
+			return offset > 0;
+		}
 	}
 
 	private Query buildMainQuery(ApuSearchQuery query) {
