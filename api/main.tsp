@@ -239,36 +239,43 @@ enum FilterKind {
 }
 
 /**
- * One active filter. `kind` discriminates which payload fields apply and the
- * server validates them per kind:
- * - `VALUES` (ENUM/MULTI_REF facets): `values` required - the document matches
- *   ANY of them (OR);
- * - `TEXT` (FULLTEXT facets): `q` required - analyzed match on the facet's field;
- * - `RANGE` (UNITDATE facets): at least one of `from`/`to` - matches documents
- *   whose dating interval intersects [from, to].
- *
- * Deliberately a flat model, not schema-level polymorphism: openapi-generator
- * cannot generate TypeSpec-emitted discriminator inheritance (csc opts out of
- * generation via schemaMappings + hand-written classes). The JSON wire format
- * is identical to the discriminated-subtypes shape, so a later switch stays
- * contract-compatible.
+ * One active filter, discriminated by `kind`. TypeSpec requires every subtype
+ * to re-declare the discriminator literal; the emitted OpenAPI is post-processed
+ * (scripts/strip-discriminator-redeclaration.mjs) into the classic
+ * parent-only-property shape that code generators handle (CAM pattern).
  */
+@discriminator("kind")
 model SearchFilter {
+	/**
+	 * Filter kind - the discriminator. A named enum so the base and every
+	 * subtype share one type.
+	 */
 	kind: FilterKind;
 
 	/** Code of the facet the filter applies to. */
 	facet: string;
+}
 
-	/** VALUES: the selected values. */
-	values?: string[];
+/** Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR). */
+model ValuesFilter extends SearchFilter {
+	kind: FilterKind.VALUES;
+	values: string[];
+}
 
-	/** TEXT: the query text. */
-	q?: string;
+/** Text filter of a FULLTEXT facet (analyzed match on the facet's field). */
+model TextFilter extends SearchFilter {
+	kind: FilterKind.TEXT;
+	q: string;
+}
 
-	/** RANGE: lower bound - a year (`1190`), a date (`1190-05-01`) or a full ISO date-time. */
+/**
+ * Dating filter of a UNITDATE facet: matches documents whose interval
+ * intersects [from, to]. Bounds accept a year (`1190`), a date (`1190-05-01`)
+ * or a full ISO date-time; either bound may be omitted.
+ */
+model RangeFilter extends SearchFilter {
+	kind: FilterKind.RANGE;
 	from?: string;
-
-	/** RANGE: upper bound - same formats as `from`. */
 	to?: string;
 }
 

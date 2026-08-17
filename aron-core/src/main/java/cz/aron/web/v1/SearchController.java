@@ -31,8 +31,11 @@ import cz.aron.api.v1.model.FacetDef;
 import cz.aron.api.v1.model.FacetDisplay;
 import cz.aron.api.v1.model.FacetOrder;
 import cz.aron.api.v1.model.FacetResult;
+import cz.aron.api.v1.model.RangeFilter;
 import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
+import cz.aron.api.v1.model.TextFilter;
+import cz.aron.api.v1.model.ValuesFilter;
 import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
@@ -136,41 +139,40 @@ public class SearchController implements SearchApi {
 		if (facet == null) {
 			throw badRequest("Unknown facet '" + filter.getFacet() + "' for the requested apuType.");
 		}
-		return switch (filter.getKind()) {
-			case VALUES -> {
-				if (facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM
-						&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF
-						&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF_EXT
-						&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_TYPE_REF) {
-					throw badRequest("Facet '" + filter.getFacet() + "' does not accept a VALUES filter.");
-				}
-				if (filter.getValues() == null || filter.getValues().isEmpty()) {
-					throw badRequest("VALUES filter of facet '" + filter.getFacet() + "' has no values.");
-				}
-				yield new FieldFilter.Values(facet.getSource(), filter.getValues());
+		if (filter instanceof ValuesFilter values) {
+			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM
+					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF
+					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF_EXT
+					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_TYPE_REF) {
+				throw badRequest("Facet '" + filter.getFacet() + "' does not accept a VALUES filter.");
 			}
-			case TEXT -> {
-				if (facet.getType() != cz.aron.domain.facets.dto.FacetType.FULLTEXT
-						&& facet.getType() != cz.aron.domain.facets.dto.FacetType.FULLTEXTF) {
-					throw badRequest("Facet '" + filter.getFacet() + "' does not accept a TEXT filter.");
-				}
-				if (filter.getQ() == null || filter.getQ().isBlank()) {
-					throw badRequest("TEXT filter of facet '" + filter.getFacet() + "' has no query.");
-				}
-				yield new FieldFilter.Text(facet.getSource(), filter.getQ());
+			if (values.getValues() == null || values.getValues().isEmpty()) {
+				throw badRequest("VALUES filter of facet '" + filter.getFacet() + "' has no values.");
 			}
-			case RANGE -> {
-				if (facet.getType() != cz.aron.domain.facets.dto.FacetType.UNITDATE) {
-					throw badRequest("Facet '" + filter.getFacet() + "' does not accept a RANGE filter.");
-				}
-				LocalDateTime fromBound = parseBound(filter.getFrom(), false, filter.getFacet());
-				LocalDateTime toBound = parseBound(filter.getTo(), true, filter.getFacet());
-				if (fromBound == null && toBound == null) {
-					throw badRequest("RANGE filter of facet '" + filter.getFacet() + "' has no bounds.");
-				}
-				yield new FieldFilter.Range(facet.getSource(), fromBound, toBound);
+			return new FieldFilter.Values(facet.getSource(), values.getValues());
+		}
+		if (filter instanceof TextFilter text) {
+			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.FULLTEXT
+					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.FULLTEXTF) {
+				throw badRequest("Facet '" + filter.getFacet() + "' does not accept a TEXT filter.");
 			}
-		};
+			if (text.getQ() == null || text.getQ().isBlank()) {
+				throw badRequest("TEXT filter of facet '" + filter.getFacet() + "' has no query.");
+			}
+			return new FieldFilter.Text(facet.getSource(), text.getQ());
+		}
+		if (filter instanceof RangeFilter range) {
+			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.UNITDATE) {
+				throw badRequest("Facet '" + filter.getFacet() + "' does not accept a RANGE filter.");
+			}
+			LocalDateTime fromBound = parseBound(range.getFrom(), false, filter.getFacet());
+			LocalDateTime toBound = parseBound(range.getTo(), true, filter.getFacet());
+			if (fromBound == null && toBound == null) {
+				throw badRequest("RANGE filter of facet '" + filter.getFacet() + "' has no bounds.");
+			}
+			return new FieldFilter.Range(facet.getSource(), fromBound, toBound);
+		}
+		throw badRequest("Unsupported filter kind.");
 	}
 
 	/** Accepts a year (1190), a date (1190-05-01) or a full ISO date-time; expands to the interval edge. */

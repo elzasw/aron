@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: ARON Portal API
-  version: '1.0'
+  version: "1.0"
   description: |-
     ARON portal API (v1) - the contract between the ARON backend and its user
     interface (and possible external consumers).
@@ -28,12 +28,12 @@ paths:
         that facet's own VALUES filter.
       parameters: []
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApuSearchResponse'
+                $ref: "#/components/schemas/ApuSearchResponse"
       tags:
         - search
       requestBody:
@@ -41,7 +41,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApuSearchRequest'
+              $ref: "#/components/schemas/ApuSearchRequest"
   /api/v1/facets:
     get:
       operationId: Search_getFacets
@@ -54,17 +54,17 @@ paths:
           in: query
           required: true
           schema:
-            $ref: '#/components/schemas/ApuType'
+            $ref: "#/components/schemas/ApuType"
           explode: false
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/FacetDef'
+                  $ref: "#/components/schemas/FacetDef"
       tags:
         - search
   /api/v1/system/info:
@@ -73,26 +73,26 @@ paths:
       description: Basic information about the running application.
       parameters: []
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SystemInfo'
+                $ref: "#/components/schemas/SystemInfo"
       tags:
         - system
   /api/v1/ui/config:
     get:
       operationId: Ui_getConfig
-      description: 'UI configuration: portal name, available localizations, top-level menu.'
+      description: "UI configuration: portal name, available localizations, top-level menu."
       parameters: []
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UiConfig'
+                $ref: "#/components/schemas/UiConfig"
       tags:
         - ui
   /api/v1/ui/logo:
@@ -101,7 +101,7 @@ paths:
       description: Portal logo image (deployment-supplied; format varies, see Content-Type).
       parameters: []
       responses:
-        '200':
+        "200":
           description: The request has succeeded.
           content:
             image/svg+xml:
@@ -135,7 +135,7 @@ components:
         description:
           type: string
         apuType:
-          $ref: '#/components/schemas/ApuType'
+          $ref: "#/components/schemas/ApuType"
         containsDigitalObjects:
           type: boolean
       description: One search hit.
@@ -144,7 +144,7 @@ components:
       properties:
         apuType:
           allOf:
-            - $ref: '#/components/schemas/ApuType'
+            - $ref: "#/components/schemas/ApuType"
           description: Section restriction; unset = search across all types (general search, no facets).
         query:
           type: string
@@ -152,7 +152,7 @@ components:
         filters:
           type: array
           items:
-            $ref: '#/components/schemas/SearchFilter'
+            $ref: "#/components/schemas/SearchFilter"
           description: Active filters; each references a facet of the section by its code.
         from:
           type: integer
@@ -169,7 +169,7 @@ components:
           default: 10
         sort:
           allOf:
-            - $ref: '#/components/schemas/SortMode'
+            - $ref: "#/components/schemas/SortMode"
           default: RELEVANCE
       description: Search request over APUs.
     ApuSearchResponse:
@@ -186,11 +186,11 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/ApuSearchItem'
+            $ref: "#/components/schemas/ApuSearchItem"
         facets:
           type: array
           items:
-            $ref: '#/components/schemas/FacetResult'
+            $ref: "#/components/schemas/FacetResult"
           description: Bucket counts of the section's ENUM facets (multi-select semantics).
       description: Search response.
     ApuType:
@@ -230,7 +230,7 @@ components:
           type: string
           description: Facet code = source item-type code (tilde form, e.g. `LANG~CODE`); used in filters.
         type:
-          $ref: '#/components/schemas/FacetType'
+          $ref: "#/components/schemas/FacetType"
         label:
           type: string
           description: Display label (server-localized).
@@ -239,10 +239,10 @@ components:
         description:
           type: string
         display:
-          $ref: '#/components/schemas/FacetDisplay'
+          $ref: "#/components/schemas/FacetDisplay"
         orderBy:
           allOf:
-            - $ref: '#/components/schemas/FacetOrder'
+            - $ref: "#/components/schemas/FacetOrder"
           description: Bucket ordering (ENUM facets).
         displayedItems:
           type: integer
@@ -277,7 +277,7 @@ components:
         buckets:
           type: array
           items:
-            $ref: '#/components/schemas/FacetBucket'
+            $ref: "#/components/schemas/FacetBucket"
       description: Bucket counts of one facet.
     FacetType:
       type: string
@@ -303,7 +303,7 @@ components:
       properties:
         code:
           allOf:
-            - $ref: '#/components/schemas/MenuItemCode'
+            - $ref: "#/components/schemas/MenuItemCode"
           description: Section code; the UI maps it to its route and localized label.
         color:
           type: string
@@ -324,6 +324,19 @@ components:
         - NEWS
         - HELP
       description: Portal sections available for the top-level menu.
+    RangeFilter:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+      allOf:
+        - $ref: "#/components/schemas/SearchFilter"
+      description: |-
+        Dating filter of a UNITDATE facet: matches documents whose interval
+        intersects [from, to]. Bounds accept a year (`1190`), a date (`1190-05-01`)
+        or a full ISO date-time; either bound may be omitted.
     SearchFilter:
       type: object
       required:
@@ -331,38 +344,25 @@ components:
         - facet
       properties:
         kind:
-          $ref: '#/components/schemas/FilterKind'
+          allOf:
+            - $ref: "#/components/schemas/FilterKind"
+          description: |-
+            Filter kind - the discriminator. A named enum so the base and every
+            subtype share one type.
         facet:
           type: string
           description: Code of the facet the filter applies to.
-        values:
-          type: array
-          items:
-            type: string
-          description: 'VALUES: the selected values.'
-        q:
-          type: string
-          description: 'TEXT: the query text.'
-        from:
-          type: string
-          description: 'RANGE: lower bound - a year (`1190`), a date (`1190-05-01`) or a full ISO date-time.'
-        to:
-          type: string
-          description: 'RANGE: upper bound - same formats as `from`.'
+      discriminator:
+        propertyName: kind
+        mapping:
+          VALUES: "#/components/schemas/ValuesFilter"
+          TEXT: "#/components/schemas/TextFilter"
+          RANGE: "#/components/schemas/RangeFilter"
       description: |-
-        One active filter. `kind` discriminates which payload fields apply and the
-        server validates them per kind:
-        - `VALUES` (ENUM/MULTI_REF facets): `values` required - the document matches
-        ANY of them (OR);
-        - `TEXT` (FULLTEXT facets): `q` required - analyzed match on the facet's field;
-        - `RANGE` (UNITDATE facets): at least one of `from`/`to` - matches documents
-        whose dating interval intersects [from, to].
-
-        Deliberately a flat model, not schema-level polymorphism: openapi-generator
-        cannot generate TypeSpec-emitted discriminator inheritance (csc opts out of
-        generation via schemaMappings + hand-written classes). The JSON wire format
-        is identical to the discriminated-subtypes shape, so a later switch stays
-        contract-compatible.
+        One active filter, discriminated by `kind`. TypeSpec requires every subtype
+        to re-declare the discriminator literal; the emitted OpenAPI is post-processed
+        (scripts/strip-discriminator-redeclaration.mjs) into the classic
+        parent-only-property shape that code generators handle (CAM pattern).
     SortMode:
       type: string
       enum:
@@ -382,6 +382,16 @@ components:
           type: string
           description: Application version (build version; "dev" when built without build info).
       description: Basic information about the running application.
+    TextFilter:
+      type: object
+      required:
+        - q
+      properties:
+        q:
+          type: string
+      allOf:
+        - $ref: "#/components/schemas/SearchFilter"
+      description: Text filter of a FULLTEXT facet (analyzed match on the facet's field).
     UiConfig:
       type: object
       required:
@@ -402,6 +412,18 @@ components:
         menuItems:
           type: array
           items:
-            $ref: '#/components/schemas/MenuItem'
-          description: 'Top-level menu: which sections this deployment enables, in display order.'
+            $ref: "#/components/schemas/MenuItem"
+          description: "Top-level menu: which sections this deployment enables, in display order."
       description: UI configuration of the deployment.
+    ValuesFilter:
+      type: object
+      required:
+        - values
+      properties:
+        values:
+          type: array
+          items:
+            type: string
+      allOf:
+        - $ref: "#/components/schemas/SearchFilter"
+      description: Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR).
