@@ -160,6 +160,40 @@ class LuceneOldApiSearchTest {
 	}
 
 	@Test
+	void rangeAcceptsTheOldUiZuluBounds() {
+		// the old UI's yearInISO sends bounds with millis and a Z zone designator
+		assertThat(search.search(params(range("UNIT~DATE", "1840-01-01T00:00:00.000Z", "1899-12-31T23:59:59.999Z")))
+				.uuids()).containsExactly(uuid(1));
+		assertThat(search.search(params(range("UNIT~DATE", "0001-01-01T00:00:00.000Z", "2026-12-31T23:59:59.999Z")))
+				.total()).isEqualTo(2);
+	}
+
+	@Test
+	void unsupportedAggregationsAnswerWithAnEmptyShape() {
+		// GET-OPTIONSREL-BY_SOURCE shape: NESTED(items) > FILTER(relsFilterAgg) > TERMS(idLabel);
+		// the old UI navigates the structure without guards - the shape must exist
+		var idLabel = terms("idLabel", "rels.idLabel", null);
+		var relsFilter = new cz.aron.api.rest.model.FilterAggregation();
+		relsFilter.setName("relsFilterAgg");
+		relsFilter.setAggregations(List.of(idLabel));
+		var nested = new cz.aron.api.rest.model.NestedAggregation();
+		nested.setName("items");
+		nested.setPath("rels");
+		nested.setAggregations(List.of(relsFilter));
+
+		var params = new Params();
+		params.setSize(0);
+		params.setAggregations(List.of(nested));
+
+		var items = search.search(params).aggregations().get("items");
+		assertThat(items).hasSize(1);
+		assertThat(items.get(0).getValue()).isEqualTo("0");
+		var relsFilterResult = items.get(0).getAggregations().get("relsFilterAgg");
+		assertThat(relsFilterResult).hasSize(1);
+		assertThat(relsFilterResult.get(0).getAggregations().get("idLabel")).isEmpty();
+	}
+
+	@Test
 	void containsMatchesFoldedSubstringOfAnalyzedTokens() {
 		var contains = new ContainsFilter();
 		contains.setField("REL~ENTITY~LABEL");

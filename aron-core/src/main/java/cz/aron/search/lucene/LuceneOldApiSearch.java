@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -37,8 +38,11 @@ import org.springframework.stereotype.Component;
 import cz.aron.api.rest.model.AggregationResult;
 import cz.aron.api.rest.model.AndFilter;
 import cz.aron.api.rest.model.AnyKeywordFieldFilter;
+import cz.aron.api.rest.model.BucketAggregation;
 import cz.aron.api.rest.model.ContainsFilter;
 import cz.aron.api.rest.model.EqFilter;
+import cz.aron.api.rest.model.FilterAggregation;
+import cz.aron.api.rest.model.NestedAggregation;
 import cz.aron.api.rest.model.FieldSort;
 import cz.aron.api.rest.model.Filter;
 import cz.aron.api.rest.model.FullTextFieldFilter;
@@ -71,8 +75,9 @@ import cz.aron.indexing.OldApiSearchResult;
  * <li>relevance ranking and bucket tie order are engine-specific;</li>
  * <li>CONTAINS matches within single analyzed tokens (mirrors ES wildcard
  * behavior on analyzed fields; multi-word values match on neither engine);</li>
- * <li>NESTED/FILTER aggregations (the rels shapes of detail pages) are skipped -
- * a later slice will serve them from the rels index;</li>
+ * <li>NESTED/FILTER aggregations (the rels shapes of detail pages) answer with
+ * an empty result of the correct recursive shape - a later slice will serve
+ * them from the rels index;</li>
  * <li>{@code searchAfter} pagination is rejected (the old UI pages by
  * offset).</li>
  * </ul>
@@ -274,7 +279,11 @@ public class LuceneOldApiSearch implements OldApiSearch {
 				f.getGt() == null, f.getLt() == null);
 	}
 
-	/** Parses an ISO local date-time; {@code exclusiveShift} turns gt/lt into inclusive millis. */
+	/**
+	 * Parses an ISO date-time bound - local ({@code 1850-01-01T00:00:00}) or with
+	 * an offset as the old UI really sends it ({@code 0001-01-01T00:00:00.000Z});
+	 * {@code exclusiveShift} turns gt/lt into inclusive millis.
+	 */
 	private static Long parseMillis(String value, int exclusiveShift) {
 		if (value == null) {
 			return null;
@@ -282,7 +291,11 @@ public class LuceneOldApiSearch implements OldApiSearch {
 		try {
 			return LocalDateTime.parse(value).toInstant(ZoneOffset.UTC).toEpochMilli() + exclusiveShift;
 		} catch (DateTimeParseException e) {
-			throw new IllegalArgumentException("Range bound is not an ISO date-time: " + value, e);
+			try {
+				return OffsetDateTime.parse(value).toInstant().toEpochMilli() + exclusiveShift;
+			} catch (DateTimeParseException e2) {
+				throw new IllegalArgumentException("Range bound is not an ISO date-time: " + value, e2);
+			}
 		}
 	}
 
@@ -335,24 +348,66 @@ public class LuceneOldApiSearch implements OldApiSearch {
 		}
 		var result = new HashMap<String, List<AggregationResult>>();
 		for (var agg : aggregations) {
+			String name = aggregationName(agg);
 			if (agg instanceof TermsAggregation terms && terms.getField() != null) {
-				result.put(name(terms.getName(), agg), termsBuckets(searcher, query, terms));
+				result.put(name, termsBuckets(searcher, query, terms));
 			} else if (agg instanceof MaxAggregation max && max.getField() != null) {
-				result.put(name(max.getName(), agg), List.of(minMax(searcher, query, max.getField().toString(),
-						max.getFormat() != null ? max.getFormat().toString() : null, name(max.getName(), agg), true)));
+				result.put(name, List.of(minMax(searcher, query, max.getField().toString(),
+						max.getFormat() != null ? max.getFormat().toString() : null, name, true)));
 			} else if (agg instanceof MinAggregation min && min.getField() != null) {
-				result.put(name(min.getName(), agg), List.of(minMax(searcher, query, min.getField().toString(),
-						min.getFormat() != null ? min.getFormat().toString() : null, name(min.getName(), agg), false)));
+				result.put(name, List.of(minMax(searcher, query, min.getField().toString(),
+						min.getFormat() != null ? min.getFormat().toString() : null, name, false)));
 			} else {
-				// NESTED/FILTER rels shapes: a later slice serves them from the rels index
-				log.debug("Skipping unsupported aggregation on the lucene engine: {}", agg.getClass().getSimpleName());
+				// NESTED/FILTER rels shapes are not computed yet (a later slice will
+				// serve them from the rels index) - answer with an EMPTY result of
+				// the same recursive shape: the old UI navigates the structure
+				// without guards, a missing key would crash it
+				log.debug("Answering unsupported aggregation with an empty result on the lucene engine: {}",
+						agg.getClass().getSimpleName());
+				result.put(name, emptyShape(agg));
 			}
 		}
 		return result;
 	}
 
-	private static String name(String name, cz.aron.api.rest.model.Aggregation agg) {
-		return name != null ? name : agg.getType();
+	private static String aggregationName(cz.aron.api.rest.model.Aggregation agg) {
+		if (agg instanceof TermsAggregation a && a.getName() != null) {
+			return a.getName();
+		}
+		if (agg instanceof NestedAggregation a && a.getName() != null) {
+			return a.getName();
+		}
+		if (agg instanceof FilterAggregation a && a.getName() != null) {
+			return a.getName();
+		}
+		if (agg instanceof MaxAggregation a && a.getName() != null) {
+			return a.getName();
+		}
+		if (agg instanceof MinAggregation a && a.getName() != null) {
+			return a.getName();
+		}
+		return agg.getType();
+	}
+
+	/**
+	 * Empty result of an unsupported aggregation, recursively shaped like the ES
+	 * response would be: a zero-count bucket wrapping its sub-aggregations, empty
+	 * terms lists, valueless metrics.
+	 */
+	private static List<AggregationResult> emptyShape(cz.aron.api.rest.model.Aggregation aggregation) {
+		if (aggregation instanceof TermsAggregation) {
+			return List.of();
+		}
+		if (aggregation instanceof MaxAggregation || aggregation instanceof MinAggregation) {
+			return List.of(new AggregationResult().key(aggregationName(aggregation)));
+		}
+		var subAggs = new HashMap<String, List<AggregationResult>>();
+		if (aggregation instanceof BucketAggregation bucket && bucket.getAggregations() != null) {
+			for (var sub : bucket.getAggregations()) {
+				subAggs.put(aggregationName(sub), emptyShape(sub));
+			}
+		}
+		return List.of(new AggregationResult().key(aggregationName(aggregation)).value("0").aggregations(subAggs));
 	}
 
 	/**

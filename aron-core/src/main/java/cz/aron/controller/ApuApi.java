@@ -27,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -51,6 +52,7 @@ import cz.aron.service.ApuService;
 import cz.aron.service.ApuService.Data;
 import cz.aron.service.ApuService.NotModified;
 import cz.aron.service.ApuService.Result;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -286,6 +288,35 @@ public class ApuApi implements AronApi {
 	public ResponseEntity<Void> test() {
 		System.out.println("Test");
 		return ResponseEntity.ok().build();
+	}
+
+	/**
+	 * Old-API request problems (bad range bounds, oversized id lists, ...) are
+	 * client errors, not opaque 500s; the body carries the reason so a failing
+	 * old-UI request is diagnosable from the browser's network log alone.
+	 */
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<Map<String, Object>> badRequest(IllegalArgumentException ex, HttpServletRequest request) {
+		return errorBody(HttpStatus.BAD_REQUEST, ex, request);
+	}
+
+	/** Features the configured search engine does not serve (yet). */
+	@ExceptionHandler(UnsupportedOperationException.class)
+	public ResponseEntity<Map<String, Object>> notImplemented(UnsupportedOperationException ex,
+			HttpServletRequest request) {
+		return errorBody(HttpStatus.NOT_IMPLEMENTED, ex, request);
+	}
+
+	/** Mirrors Spring's default error attributes and adds the exception message. */
+	private static ResponseEntity<Map<String, Object>> errorBody(HttpStatus status, Exception ex,
+			HttpServletRequest request) {
+		var body = new java.util.LinkedHashMap<String, Object>();
+		body.put("timestamp", java.time.OffsetDateTime.now(ZoneOffset.UTC).toString());
+		body.put("status", status.value());
+		body.put("error", status.getReasonPhrase());
+		body.put("message", ex.getMessage());
+		body.put("path", request.getRequestURI());
+		return ResponseEntity.status(status).body(body);
 	}
 
 	@Override

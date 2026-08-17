@@ -149,6 +149,57 @@ class OldApiSearchTest extends AbstractTest {
 		assertThat(body.get("items").get(0).get("name").asText()).isEqualTo("OldApi pořadač");
 	}
 
+	@Test
+	void getCountRangeRequestVerbatim() throws Exception {
+		// captured from the old UI's /fund page (year-range count preview);
+		// bounds come with millis + Z, empty aggregations/sort arrays
+		var response = post("/api/aron/apu/listview?listType=GET-COUNT-RANGE", """
+				{"aggregations":[],
+				 "filters":[{"field":"type","operation":"EQ","value":"%s"},
+				            {"field":"UNIT~DATE","operation":"RANGE",
+				             "gte":"0001-01-01T00:00:00.000Z","lte":"2026-12-31T23:59:59.999Z"}],
+				 "sort":[],"flipDirection":false,"size":0}
+				""".formatted(APU_TYPE));
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		assertThat(objectMapper.readTree(response.body()).get("count").asLong()).isEqualTo(2);
+	}
+
+	@Test
+	void getOptionsRelRequestAnswersWithTheExpectedShape() throws Exception {
+		// captured from the old UI's autocomplete filter: the nested rels
+		// aggregation is not computed yet, but the response must carry the full
+		// recursive shape - the old client navigates it without guards
+		var response = post("/api/aron/apu/list?listType=GET-OPTIONSREL-BY_SOURCE_X", """
+				{"size":0,
+				 "aggregations":[{"name":"items","family":"BUCKET","aggregator":"NESTED","path":"rels",
+				   "aggregations":[{"family":"BUCKET","aggregator":"FILTER","name":"relsFilterAgg",
+				     "filter":{"operation":"AND","filters":[
+				       {"field":"rels.type","operation":"EQ","value":"X","nestedQueryEnabled":false}]},
+				     "aggregations":[{"family":"BUCKET","aggregator":"TERMS","name":"idLabel","field":"rels.idLabel"}]}]}],
+				 "filters":[]}
+				""");
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		JsonNode body = objectMapper.readTree(response.body());
+		JsonNode idLabel = body.get("aggregations").get("items").get(0)
+				.get("aggregations").get("relsFilterAgg").get(0)
+				.get("aggregations").get("idLabel");
+		assertThat(idLabel.isArray()).isTrue();
+		assertThat(idLabel).isEmpty();
+	}
+
+	@Test
+	void invalidRangeBoundIsABadRequestWithAMessage() throws Exception {
+		var response = post("/api/aron/apu/list?listType=TEST", """
+				{"size":0,"filters":[{"field":"UNIT~DATE","operation":"RANGE","gte":"not-a-date"}]}
+				""");
+
+		assertThat(response.statusCode()).isEqualTo(400);
+		JsonNode body = objectMapper.readTree(response.body());
+		assertThat(body.get("message").asText()).contains("not-a-date");
+	}
+
 	// --- helpers --------------------------------------------------------------
 
 	private static String uuid(int n) {
