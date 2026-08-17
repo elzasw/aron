@@ -18,6 +18,7 @@ tags:
   - name: system
   - name: ui
   - name: search
+  - name: apu
 paths:
   /api/v1/apu/search:
     post:
@@ -44,6 +45,49 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/ApuSearchRequest"
+  /api/v1/apu/{uuid}:
+    get:
+      operationId: Apu_getDetail
+      description: |-
+        Detail of one APU. Supports conditional requests: responses carry
+        `ETag`/`Last-Modified`, and a request with `If-None-Match` /
+        `If-Modified-Since` is answered with 304 when unchanged.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: If-Modified-Since
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          headers:
+            ETag:
+              required: false
+              schema:
+                type: string
+            Last-Modified:
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApuDetail"
+        "304":
+          description: The client has made a conditional request and the resource has not been modified.
+      tags:
+        - apu
   /api/v1/facets:
     get:
       operationId: Search_getFacets
@@ -154,6 +198,68 @@ paths:
         - ui
 components:
   schemas:
+    ApuDetail:
+      type: object
+      required:
+        - uuid
+        - name
+        - apuType
+        - childCount
+        - breadcrumbs
+        - parts
+        - attachments
+        - digitalObjects
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+          description: Display name.
+        description:
+          type: string
+        apuType:
+          $ref: "#/components/schemas/ApuType"
+        permalink:
+          type: string
+          description: Public permalink of this APU, when assigned.
+        childCount:
+          type: integer
+          format: int32
+          description: Number of child APUs in the archival-description tree (0 = leaf).
+        breadcrumbs:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApuLink"
+          description: Ancestor chain, root first; empty for a root or standalone APU.
+        parts:
+          type: array
+          items:
+            $ref: "#/components/schemas/DetailPart"
+          description: Display-ready parts in display order; parts with no visible items are omitted.
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttachmentInfo"
+          description: Attachments (metadata only; binary serving arrives with a later slice).
+        digitalObjects:
+          type: array
+          items:
+            $ref: "#/components/schemas/DigitalObjectInfo"
+          description: Digital objects (metadata only; file/tile serving arrives with a later slice).
+      description: Display-ready detail of one APU (the render model).
+    ApuLink:
+      type: object
+      required:
+        - uuid
+        - name
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+      description: Reference to another APU, resolved with its display data.
     ApuSearchItem:
       type: object
       required:
@@ -259,6 +365,19 @@ components:
         - FUND
         - INSTITUTION
       description: Types of archival presentation units.
+    AttachmentInfo:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Display name.
+        file:
+          allOf:
+            - $ref: "#/components/schemas/FileInfo"
+          description: The attachment's file.
+      description: Attachment of an APU (metadata; binary serving arrives with a later slice).
     DatingBounds:
       type: object
       required:
@@ -285,6 +404,81 @@ components:
       allOf:
         - $ref: "#/components/schemas/FacetResult"
       description: Dating bounds of a UNITDATE facet.
+    DetailItem:
+      type: object
+      required:
+        - code
+        - label
+        - kind
+        - value
+      properties:
+        code:
+          type: string
+          description: Item-type code (display-model code, tilde form) - lets clients special-case known types.
+        label:
+          type: string
+          description: Server-localized display label.
+        kind:
+          $ref: "#/components/schemas/DetailItemKind"
+        value:
+          type: string
+          description: Display value; datings arrive formatted server-side, kind JSON carries the raw JSON string.
+        href:
+          type: string
+          description: Link target (kind LINK; `value` is the caption).
+        ref:
+          allOf:
+            - $ref: "#/components/schemas/ApuLink"
+          description: Referenced APU (kind REF).
+      description: One display-ready item of a part.
+    DetailItemKind:
+      type: string
+      enum:
+        - TEXT
+        - LINK
+        - REF
+        - JSON
+      description: Item value kinds - how the client renders the value.
+    DetailPart:
+      type: object
+      required:
+        - code
+        - label
+        - items
+      properties:
+        code:
+          type: string
+          description: Part-type code (display-model code, tilde form).
+        label:
+          type: string
+          description: Server-localized display label.
+        value:
+          type: string
+          description: Textual value of the whole part, when the source supplied one.
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/DetailItem"
+          description: Display-ready items in display order (invisible items already filtered out).
+      description: One display-ready part of the detail.
+    DigitalObjectInfo:
+      type: object
+      required:
+        - uuid
+        - files
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        permalink:
+          type: string
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/FileInfo"
+          description: Files of the object in display order.
+      description: Digital object (digitized attachment) of an APU.
     EnumFacetResult:
       type: object
       required:
@@ -437,6 +631,38 @@ components:
         - MULTI_REF_EXT
         - MULTI_TYPE_REF
       description: Facet kinds (mirrors the searchConfig.yaml model).
+    FileInfo:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: File id for the (future) file-serving endpoints.
+        fileType:
+          allOf:
+            - $ref: "#/components/schemas/FileType"
+          description: Role of the file within its digital object.
+        name:
+          type: string
+        contentType:
+          type: string
+          description: MIME type.
+        size:
+          type: integer
+          format: int64
+          description: Size in bytes.
+        selected:
+          type: boolean
+          description: The file a viewer should open first.
+      description: One file of a digital object or attachment.
+    FileType:
+      type: string
+      enum:
+        - PUBLISHED
+        - THUMBNAIL
+        - TILE
+      description: Roles of digital-object files.
     FilterKind:
       type: string
       enum:

@@ -436,3 +436,182 @@ model FacetOptionsRequest {
 model FacetOptionsResponse {
 	options: FacetBucket[];
 }
+
+/**
+ * APU detail. The response is a render model: parts and items arrive
+ * display-ready — server-ordered by the deployment's display configuration,
+ * invisible items filtered out, labels server-localized, references resolved —
+ * so clients never download the server's types configuration. Items keep their
+ * item-type codes, letting a client still special-case known types (e.g. the
+ * fund's link to its archival-description tree root, `ARCHDESC~ROOT~REF`).
+ */
+@tag("apu")
+namespace Apu {
+	/**
+	 * Detail of one APU. Supports conditional requests: responses carry
+	 * `ETag`/`Last-Modified`, and a request with `If-None-Match` /
+	 * `If-Modified-Since` is answered with 304 when unchanged.
+	 */
+	@get
+	@route("/api/v1/apu/{uuid}")
+	op getDetail(
+		@path uuid: string,
+
+		@header("If-None-Match") ifNoneMatch?: string,
+
+		@header("If-Modified-Since") ifModifiedSince?: string,
+	): {
+		@statusCode statusCode: 200;
+
+		@header("ETag") eTag?: string;
+
+		@header("Last-Modified") lastModified?: string;
+
+		@body body: ApuDetail;
+	} | {
+		/** Not modified - the client's cached representation is still valid. */
+		@statusCode statusCode: 304;
+	};
+}
+
+/** Display-ready detail of one APU (the render model). */
+model ApuDetail {
+	uuid: string;
+
+	/** Display name. */
+	name: string;
+
+	description?: string;
+
+	apuType: ApuType;
+
+	/** Public permalink of this APU, when assigned. */
+	permalink?: string;
+
+	/** Number of child APUs in the archival-description tree (0 = leaf). */
+	childCount: int32;
+
+	/** Ancestor chain, root first; empty for a root or standalone APU. */
+	breadcrumbs: ApuLink[];
+
+	/** Display-ready parts in display order; parts with no visible items are omitted. */
+	parts: DetailPart[];
+
+	/** Attachments (metadata only; binary serving arrives with a later slice). */
+	attachments: AttachmentInfo[];
+
+	/** Digital objects (metadata only; file/tile serving arrives with a later slice). */
+	digitalObjects: DigitalObjectInfo[];
+}
+
+/** Reference to another APU, resolved with its display data. */
+model ApuLink {
+	uuid: string;
+
+	name: string;
+
+	description?: string;
+}
+
+/** One display-ready part of the detail. */
+model DetailPart {
+	/** Part-type code (display-model code, tilde form). */
+	code: string;
+
+	/** Server-localized display label. */
+	label: string;
+
+	/** Textual value of the whole part, when the source supplied one. */
+	value?: string;
+
+	/** Display-ready items in display order (invisible items already filtered out). */
+	items: DetailItem[];
+}
+
+/** One display-ready item of a part. */
+model DetailItem {
+	/** Item-type code (display-model code, tilde form) - lets clients special-case known types. */
+	code: string;
+
+	/** Server-localized display label. */
+	label: string;
+
+	kind: DetailItemKind;
+
+	/** Display value; datings arrive formatted server-side, kind JSON carries the raw JSON string. */
+	value: string;
+
+	/** Link target (kind LINK; `value` is the caption). */
+	href?: string;
+
+	/** Referenced APU (kind REF). */
+	ref?: ApuLink;
+}
+
+/** Item value kinds - how the client renders the value. */
+enum DetailItemKind {
+	/** Plain text: strings, enumerations, numbers, server-formatted datings. */
+	TEXT,
+
+	/** External link - `href` carries the target, `value` the caption. */
+	LINK,
+
+	/** Reference to another APU - `ref` carries the resolved target. */
+	REF,
+
+	/** Structured value (aggregated items) - `value` is the raw JSON string. */
+	JSON,
+}
+
+/** Attachment of an APU (metadata; binary serving arrives with a later slice). */
+model AttachmentInfo {
+	/** Display name. */
+	name: string;
+
+	/** The attachment's file. */
+	file?: FileInfo;
+}
+
+/** Digital object (digitized attachment) of an APU. */
+model DigitalObjectInfo {
+	uuid: string;
+
+	name?: string;
+
+	permalink?: string;
+
+	/** Files of the object in display order. */
+	files: FileInfo[];
+}
+
+/** One file of a digital object or attachment. */
+model FileInfo {
+	/** File id for the (future) file-serving endpoints. */
+	id: string;
+
+	/** Role of the file within its digital object. */
+	fileType?: FileType;
+
+	name?: string;
+
+	/** MIME type. */
+	contentType?: string;
+
+	/** Size in bytes. */
+	size?: int64;
+
+	/** The file a viewer should open first. */
+	selected?: boolean;
+}
+
+/** Roles of digital-object files. */
+enum FileType {
+	/** Published (downloadable) rendition. */
+	PUBLISHED,
+
+	/** Preview thumbnail. */
+	THUMBNAIL,
+
+	/** Deep-zoom tile source. */
+	TILE,
+}

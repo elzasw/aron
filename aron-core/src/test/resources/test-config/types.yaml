@@ -34,6 +34,10 @@ itemTypes:
     name: Indexed name override
     type: STRING
     indexed: true
+  - code: LINK_SOURCE
+    name: Source link
+    type: LINK
+    indexed: false
 metaDataTypes:
   - code: MD_ORDER
     name: Order

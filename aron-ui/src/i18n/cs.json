@@ -52,8 +52,13 @@
     "noOptions": "Žádné odpovídající hodnoty"
   },
   "apu": {
-    "heading": "Archivní záznam",
-    "placeholder": "Detail záznamu {{uuid}} se připravuje."
+    "breadcrumbs": "Umístění záznamu",
+    "notFound": "Záznam nebyl nalezen.",
+    "error": "Načtení záznamu se nezdařilo, zkuste to prosím znovu.",
+    "attachments": "Přílohy",
+    "digitalObjects": "Digitalizáty",
+    "digitalObjectFiles": "počet souborů: {{count}}",
+    "binariesLater": "Prohlížení souborů bude doplněno v další fázi."
   },
   "notFound": {
     "heading": "Stránka nenalezena",

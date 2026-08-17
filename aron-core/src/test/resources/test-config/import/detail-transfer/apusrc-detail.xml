@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Detail-slice fixture: a fund with one ARCH_DESC child carrying every item
+     kind of the render model (order in the XML is deliberately scrambled -
+     the server must reorder by the display model). -->
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="8a1b2c30-1111-4222-9333-add000000001">
+ <apus>
+  <apu type="Fund" uuid="9f1d0000-0000-4000-8000-90000000000f">
+   <name>V1D Sbírka kronik</name>
+   <prts>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE_MAIN">Sbírka kronik okresu Test</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="9f1d0000-0000-4000-8000-90000000000d">
+   <name>V1D Kronika obce Testov</name>
+   <desc>1850–1910</desc>
+   <prnt>9f1d0000-0000-4000-8000-90000000000f</prnt>
+   <prts>
+    <part type="PT_BODY">
+     <value>Obsahová část</value>
+     <itms>
+      <ref type="REL_ENTITY">9f1d0000-0000-4000-8000-90000000000f</ref>
+      <lnk type="LINK_SOURCE" visible="true"><name>Zdroj digitalizace</name><link>https://example.org/kronika</link></lnk>
+      <enm type="LANG_CODE">cze</enm>
+      <str type="TITLE_MAIN" visible="false">Skrytý pracovní název</str>
+      <drng type="UNIT_DATE" f="1850-01-01T00:00:00" to="1910-12-31T23:59:59" fmt="Y-Y"/>
+      <str type="CNT_ITEMS">12</str>
+     </itms>
+    </part>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE_MAIN">Kronika obce Testov</str>
+     </itms>
+    </part>
+    <part type="PT_BODY">
+     <itms>
+      <str type="TITLE_MAIN" visible="false">Part s neviditelnými položkami se vynechává</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+ </apus>
+</apusrc>

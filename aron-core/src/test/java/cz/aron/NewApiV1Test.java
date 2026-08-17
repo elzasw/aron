@@ -18,11 +18,16 @@ import org.springframework.web.client.RestClientResponseException;
 import cz.aron.search.ApuDocument;
 import cz.aron.search.ApuDocumentBuilder;
 import cz.aron.search.SearchIndex;
+import cz.aron.test.api.v1.ApuApi;
 import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
 import cz.aron.test.api.v1.UiApi;
+import cz.aron.test.api.v1.model.ApuLink;
 import cz.aron.test.api.v1.model.ApuSearchRequest;
 import cz.aron.test.api.v1.model.ApuType;
+import cz.aron.test.api.v1.model.DetailItem;
+import cz.aron.test.api.v1.model.DetailItemKind;
+import cz.aron.test.api.v1.model.DetailPart;
 import cz.aron.test.api.v1.model.DatingFacetResult;
 import cz.aron.test.api.v1.model.EnumFacetResult;
 import cz.aron.test.api.v1.model.FacetBucket;
@@ -252,6 +257,85 @@ class NewApiV1Test extends AbstractTest {
 		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchGetFacetOptions("NEZNAMA", request))
 				.isInstanceOfSatisfying(RestClientResponseException.class,
 						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+	}
+
+	// --- APU detail (render model, D-9) ----------------------------------------
+
+	/** Fixture uuids from test-config/import/detail-transfer/apusrc-detail.xml. */
+	private static final String DETAIL_FUND = "9f1d0000-0000-4000-8000-90000000000f";
+	private static final String DETAIL_ARCH_DESC = "9f1d0000-0000-4000-8000-90000000000d";
+
+	@Test
+	void detailServesTheRenderModel() {
+		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_ARCH_DESC, null, null);
+
+		assertThat(detail.getName()).isEqualTo("V1D Kronika obce Testov");
+		assertThat(detail.getDescription()).isEqualTo("1850–1910");
+		assertThat(detail.getApuType()).isEqualTo(ApuType.ARCH_DESC);
+		assertThat(detail.getChildCount()).isZero();
+
+		// breadcrumbs = ancestor chain, root first
+		assertThat(detail.getBreadcrumbs()).extracting(ApuLink::getUuid, ApuLink::getName)
+				.containsExactly(tuple(DETAIL_FUND, "V1D Sbírka kronik"));
+
+		// parts ordered by the display model (PT~TITLE first, XML had PT~BODY first);
+		// the part with only invisible items is omitted
+		assertThat(detail.getParts()).extracting(DetailPart::getCode).containsExactly("PT~TITLE", "PT~BODY");
+		assertThat(detail.getParts().get(0).getItems())
+				.extracting(DetailItem::getValue).containsExactly("Kronika obce Testov");
+
+		var body = detail.getParts().get(1);
+		assertThat(body.getLabel()).isEqualTo("Body");
+		assertThat(body.getValue()).isEqualTo("Obsahová část");
+		// items in viewOrder (types.yaml declaration order), invisible one filtered;
+		// dating formatted, reference resolved to a link, external link typed
+		assertThat(body.getItems()).extracting(DetailItem::getCode, DetailItem::getKind, DetailItem::getValue)
+				.containsExactly(
+						tuple("UNIT~DATE", DetailItemKind.TEXT, "1850–1910"),
+						tuple("LANG~CODE", DetailItemKind.TEXT, "cze"),
+						tuple("CNT~ITEMS", DetailItemKind.TEXT, "12"),
+						tuple("REL~ENTITY", DetailItemKind.REF, "V1D Sbírka kronik"),
+						tuple("LINK~SOURCE", DetailItemKind.LINK, "Zdroj digitalizace"));
+		assertThat(body.getItems().get(3).getRef().getUuid()).isEqualTo(DETAIL_FUND);
+		assertThat(body.getItems().get(4).getHref()).isEqualTo("https://example.org/kronika");
+
+		// metadata-only sections of this fixture are empty (binaries arrive with the tiles slice)
+		assertThat(detail.getAttachments()).isEmpty();
+		assertThat(detail.getDigitalObjects()).isEmpty();
+	}
+
+	@Test
+	void detailOfTheFundSeesItsChild() {
+		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_FUND, null, null);
+		assertThat(detail.getApuType()).isEqualTo(ApuType.FUND);
+		assertThat(detail.getChildCount()).isEqualTo(1);
+		assertThat(detail.getBreadcrumbs()).isEmpty();
+	}
+
+	@Test
+	void detailAnswers404ForUnknownOrMalformedUuid() {
+		assertThatThrownBy(() -> new ApuApi(v1ApiClient())
+				.apuGetDetail("00000000-0000-4000-8000-000000000000", null, null))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
+		assertThatThrownBy(() -> new ApuApi(v1ApiClient()).apuGetDetail("neni-uuid", null, null))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
+	}
+
+	@Test
+	void detailSupportsConditionalRequests() throws Exception {
+		var first = get("/api/v1/apu/" + DETAIL_ARCH_DESC);
+		assertThat(first.statusCode()).isEqualTo(200);
+		String eTag = first.headers().firstValue("ETag").orElseThrow();
+		assertThat(first.headers().firstValue("Last-Modified")).isPresent();
+
+		var notModified = get("/api/v1/apu/" + DETAIL_ARCH_DESC, "If-None-Match", eTag);
+		assertThat(notModified.statusCode()).isEqualTo(304);
+		assertThat(notModified.body()).isEmpty();
+
+		var changed = get("/api/v1/apu/" + DETAIL_ARCH_DESC, "If-None-Match", "\"jiny-etag\"");
+		assertThat(changed.statusCode()).isEqualTo(200);
 	}
 
 	// --- helpers --------------------------------------------------------------
