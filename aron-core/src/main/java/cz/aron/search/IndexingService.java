@@ -66,6 +66,11 @@ public class IndexingService {
 		searchIndex.deleteApusBySource(apuSourceId);
 	}
 
+	/** Read side of the port - the only search entry point of the new API. */
+	public ApuSearchResult search(ApuSearchQuery query) {
+		return searchIndex.search(query);
+	}
+
 	public void createSchema() {
 		searchIndex.createSchema();
 	}

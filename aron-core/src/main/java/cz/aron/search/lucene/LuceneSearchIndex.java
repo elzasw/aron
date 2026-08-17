@@ -4,8 +4,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,14 +30,21 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexNotFoundException;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -42,9 +53,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import cz.aron.domain.DataType;
+import cz.aron.domain.types.TypesHolder;
+import cz.aron.domain.types.dto.ItemType;
 import cz.aron.search.ApuDocument;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
+import cz.aron.search.FieldFilter;
 import cz.aron.search.RelationDocument;
 import cz.aron.search.SearchIndex;
 import jakarta.annotation.PreDestroy;
@@ -61,13 +76,12 @@ import jakarta.annotation.PreDestroy;
  * ({@code apu/}, {@code rels/} subdirectories); unset = in-memory (tests, dev
  * mode - rebuilt on startup by {@link cz.aron.search.SearchIndexManager}).
  * <p>
- * Layout notes: Lucene documents are schemaless, so the dynamic types.yaml
- * values need no pre-declared mapping - every value is indexed as an exact
- * (keyword-like) term, which is what the port's value filters require. UNITDATE
- * range maps and relation payloads are accepted but not yet indexed; they gain a
- * typed representation with the Phase 7 slices that read them. The indexed-fields
- * CRC lives in the Lucene commit user data (the analog of the ES index
- * {@code _meta}).
+ * Layout: mirrors the ES mapping semantics per types.yaml - STRING item fields
+ * are analyzed text, ENUM/APU_REF/LINK/INTEGER values are exact terms, UNITDATE
+ * {@code ~L}/{@code ~H} bounds become long points (epoch millis) for interval
+ * filters. Facet buckets are counted by term enumeration per field - suited to
+ * the embedded scale this adapter targets. The indexed-fields CRC lives in the
+ * Lucene commit user data (the analog of the ES index {@code _meta}).
  */
 @ConditionalOnProperty(name = "search.engine", havingValue = "lucene")
 @Component
@@ -76,6 +90,8 @@ public class LuceneSearchIndex implements SearchIndex {
 	private static final String FIELDS_CRC_KEY = "fieldsCrc";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
+
+	private final TypesHolder typesHolder;
 
 	private final Directory apuDirectory;
 
@@ -87,7 +103,7 @@ public class LuceneSearchIndex implements SearchIndex {
 
 	private final SearcherManager apuSearchers;
 
-	/** Mirrors the ES analysis chain used for name/description: standard tokenizer + lowercase + ASCII folding. */
+	/** Mirrors the ES analysis chain used for analyzed fields: standard tokenizer + lowercase + ASCII folding. */
 	private static final class FoldingAnalyzer extends Analyzer {
 		@Override
 		protected TokenStreamComponents createComponents(String fieldName) {
@@ -98,7 +114,8 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 	}
 
-	public LuceneSearchIndex(@Value("${search.lucene.path:}") String path) {
+	public LuceneSearchIndex(TypesHolder typesHolder, @Value("${search.lucene.path:}") String path) {
+		this.typesHolder = typesHolder;
 		try {
 			if (path == null || path.isBlank()) {
 				apuDirectory = new ByteBuffersDirectory();
@@ -215,19 +232,23 @@ public class LuceneSearchIndex implements SearchIndex {
 		try {
 			IndexSearcher searcher = apuSearchers.acquire();
 			try {
-				Query luceneQuery = toLuceneQuery(query);
-				long total = searcher.count(luceneQuery);
+				Query mainQuery = buildMainQuery(query);
+				Query fullQuery = withValuesFilters(mainQuery, query.filters(), null);
+				long total = searcher.count(fullQuery);
 				var hits = new ArrayList<ApuSearchResult.Hit>();
-				if (total > 0 && query.size() > 0) {
-					int wanted = (query.page() + 1) * query.size();
-					var top = searcher.search(luceneQuery, wanted);
+				if (total > query.from() && query.size() > 0) {
+					int wanted = query.from() + query.size();
+					TopDocs top = query.sort() == ApuSearchQuery.SortMode.NAME
+							? searcher.search(fullQuery, wanted, nameSort())
+							: searcher.search(fullQuery, wanted);
 					var storedFields = searcher.storedFields();
-					for (int i = query.page() * query.size(); i < top.scoreDocs.length; i++) {
+					for (int i = query.from(); i < top.scoreDocs.length; i++) {
 						var doc = storedFields.document(top.scoreDocs[i].doc);
-						hits.add(new ApuSearchResult.Hit(doc.get("uuid"), doc.get("name"), doc.get("type")));
+						hits.add(new ApuSearchResult.Hit(doc.get("uuid"), doc.get("name"), doc.get("description"),
+								doc.get("type"), Boolean.parseBoolean(doc.get("containsDigitalObjects"))));
 					}
 				}
-				return new ApuSearchResult(total, hits);
+				return new ApuSearchResult(total, hits, countBuckets(searcher, query, mainQuery));
 			} finally {
 				apuSearchers.release(searcher);
 			}
@@ -236,7 +257,48 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 	}
 
-	private Query toLuceneQuery(ApuSearchQuery query) throws IOException {
+	private static Sort nameSort() {
+		var field = new SortField("nameSort", SortField.Type.STRING);
+		field.setMissingValue(SortField.STRING_LAST);
+		return new Sort(field);
+	}
+
+	/**
+	 * Bucket counting by term enumeration: for each bucket field, every term of
+	 * the field is counted against the query without that field's own Values
+	 * filter (multi-select semantics). Cost grows with term cardinality - fine
+	 * for the embedded scale this adapter targets.
+	 */
+	private Map<String, List<ApuSearchResult.Bucket>> countBuckets(IndexSearcher searcher, ApuSearchQuery query,
+			Query mainQuery) throws IOException {
+		if (query.bucketFields().isEmpty()) {
+			return Map.of();
+		}
+		var result = new HashMap<String, List<ApuSearchResult.Bucket>>();
+		for (String field : query.bucketFields()) {
+			Query base = withValuesFilters(mainQuery, query.filters(), field);
+			var buckets = new ArrayList<ApuSearchResult.Bucket>();
+			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), field);
+			if (terms != null) {
+				TermsEnum iterator = terms.iterator();
+				BytesRef term;
+				while ((term = iterator.next()) != null) {
+					String value = term.utf8ToString();
+					long count = searcher.count(new BooleanQuery.Builder()
+							.add(base, Occur.MUST)
+							.add(new TermQuery(new Term(field, value)), Occur.FILTER)
+							.build());
+					if (count > 0) {
+						buckets.add(new ApuSearchResult.Bucket(value, count));
+					}
+				}
+			}
+			result.put(field, buckets);
+		}
+		return result;
+	}
+
+	private Query buildMainQuery(ApuSearchQuery query) throws IOException {
 		var root = new BooleanQuery.Builder();
 		if (query.fulltext() != null) {
 			// OR semantics across tokens and fields (ES multi_match default)
@@ -249,9 +311,54 @@ public class LuceneSearchIndex implements SearchIndex {
 		} else {
 			root.add(new MatchAllDocsQuery(), Occur.MUST);
 		}
-		query.valueFilters()
-				.forEach((field, value) -> root.add(new TermQuery(new Term(field, value)), Occur.FILTER));
+		if (query.apuType() != null) {
+			root.add(new TermQuery(new Term("type", query.apuType())), Occur.FILTER);
+		}
+		for (FieldFilter filter : query.filters()) {
+			if (filter instanceof FieldFilter.Text text) {
+				root.add(textFieldQuery(text), Occur.FILTER);
+			} else if (filter instanceof FieldFilter.Range range) {
+				// interval intersection over the ~L/~H bound fields (engine-shared logic)
+				if (range.to() != null) {
+					root.add(LongPoint.newRangeQuery(range.field() + "~L", Long.MIN_VALUE, toEpochMillis(range.to())),
+							Occur.FILTER);
+				}
+				if (range.from() != null) {
+					root.add(LongPoint.newRangeQuery(range.field() + "~H", toEpochMillis(range.from()),
+							Long.MAX_VALUE), Occur.FILTER);
+				}
+			}
+		}
 		return root.build();
+	}
+
+	/** All analyzed words must match, the last one as a prefix (ES matchPhrasePrefix analog). */
+	private Query textFieldQuery(FieldFilter.Text filter) throws IOException {
+		List<String> tokens = analyze(filter.text());
+		var bool = new BooleanQuery.Builder();
+		for (int i = 0; i < tokens.size(); i++) {
+			Query tokenQuery = i == tokens.size() - 1
+					? new PrefixQuery(new Term(filter.field(), tokens.get(i)))
+					: new TermQuery(new Term(filter.field(), tokens.get(i)));
+			bool.add(tokenQuery, Occur.MUST);
+		}
+		return bool.build();
+	}
+
+	/** Adds all Values filters except the excluded field's one; each filter is an OR over its values. */
+	private static Query withValuesFilters(Query base, List<FieldFilter> filters, String excludedField) {
+		var root = new BooleanQuery.Builder().add(base, Occur.MUST);
+		boolean any = false;
+		for (FieldFilter filter : filters) {
+			if (filter instanceof FieldFilter.Values values && !values.field().equals(excludedField)) {
+				var or = new BooleanQuery.Builder();
+				values.values().forEach(v -> or.add(new TermQuery(new Term(values.field(), v)), Occur.SHOULD));
+				or.setMinimumNumberShouldMatch(1);
+				root.add(or.build(), Occur.FILTER);
+				any = true;
+			}
+		}
+		return any ? root.build() : base;
 	}
 
 	private List<String> analyze(String text) throws IOException {
@@ -267,15 +374,17 @@ public class LuceneSearchIndex implements SearchIndex {
 		return tokens;
 	}
 
-	private static Document toLuceneDocument(ApuDocument apuDocument) {
+	private Document toLuceneDocument(ApuDocument apuDocument) {
 		var doc = new Document();
 		doc.add(new StringField("uuid", apuDocument.getUuid(), Field.Store.YES));
 		doc.add(new LongPoint("apuSourceId", apuDocument.getApuSourceId()));
+		doc.add(new StringField("containsDigitalObjects", Boolean.toString(apuDocument.isContainsDigitalObjects()),
+				Field.Store.YES));
 		if (apuDocument.getName() != null) {
 			doc.add(new TextField("name", apuDocument.getName(), Field.Store.YES));
 		}
 		if (apuDocument.getDescription() != null) {
-			doc.add(new TextField("description", apuDocument.getDescription(), Field.Store.NO));
+			doc.add(new TextField("description", apuDocument.getDescription(), Field.Store.YES));
 		}
 		if (apuDocument.getType() != null) {
 			doc.add(new StringField("type", apuDocument.getType(), Field.Store.YES));
@@ -286,13 +395,42 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 		for (var entry : apuDocument.getValues().entrySet()) {
 			for (Object value : entry.getValue()) {
-				// UNITDATE range maps get a typed representation with a later slice
 				if (value instanceof String || value instanceof Number) {
-					doc.add(new StringField(entry.getKey(), String.valueOf(value), Field.Store.NO));
+					addValueField(doc, entry.getKey(), String.valueOf(value));
 				}
+				// UNITDATE range maps are represented by their ~L/~H bound entries
 			}
 		}
 		return doc;
+	}
+
+	/**
+	 * Field typing mirrors the ES mapping built from types.yaml: STRING item
+	 * fields and APU_REF {@code ~LABEL} fields are analyzed text, UNITDATE
+	 * {@code ~L}/{@code ~H} bounds are long points, everything else is an exact
+	 * term (keyword semantics for Values filters and bucket counting).
+	 */
+	private void addValueField(Document doc, String field, String value) {
+		if (field.endsWith("~L") || field.endsWith("~H")) {
+			try {
+				doc.add(new LongPoint(field, toEpochMillis(LocalDateTime.parse(value))));
+				return;
+			} catch (DateTimeParseException e) {
+				// not a date bound - fall through to the exact term
+			}
+		}
+		ItemType itemType = typesHolder.getItemTypeForCode(field);
+		boolean analyzed = (itemType != null && itemType.getType() == DataType.STRING)
+				|| (field.endsWith("~LABEL") && !field.endsWith("~ID~LABEL"));
+		if (analyzed) {
+			doc.add(new TextField(field, value, Field.Store.NO));
+		} else {
+			doc.add(new StringField(field, value, Field.Store.NO));
+		}
+	}
+
+	private static long toEpochMillis(LocalDateTime dateTime) {
+		return dateTime.toInstant(ZoneOffset.UTC).toEpochMilli();
 	}
 
 	private void commitAndRefresh() {

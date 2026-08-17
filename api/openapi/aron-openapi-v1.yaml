@@ -17,7 +17,56 @@ info:
 tags:
   - name: system
   - name: ui
+  - name: search
 paths:
+  /api/v1/apu/search:
+    post:
+      operationId: Search_search
+      description: |-
+        Searches APUs of one type. Facet bucket counts follow multi-select
+        semantics: counts of a facet reflect the query and all filters EXCEPT
+        that facet's own VALUES filter.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApuSearchResponse'
+      tags:
+        - search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApuSearchRequest'
+  /api/v1/facets:
+    get:
+      operationId: Search_getFacets
+      description: |-
+        Typed facet definitions of one section, in the deployment-configured
+        order. Labels are server-localized (deployment configuration is the
+        label source).
+      parameters:
+        - name: apuType
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/ApuType'
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FacetDef'
+      tags:
+        - search
   /api/v1/system/info:
     get:
       operationId: System_getInfo
@@ -71,6 +120,182 @@ paths:
         - ui
 components:
   schemas:
+    ApuSearchItem:
+      type: object
+      required:
+        - uuid
+        - name
+        - apuType
+        - containsDigitalObjects
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        apuType:
+          $ref: '#/components/schemas/ApuType'
+        containsDigitalObjects:
+          type: boolean
+      description: One search hit.
+    ApuSearchRequest:
+      type: object
+      properties:
+        apuType:
+          allOf:
+            - $ref: '#/components/schemas/ApuType'
+          description: Section restriction; unset = search across all types (general search, no facets).
+        query:
+          type: string
+          description: Fulltext query over the APU name and description; unset = match all.
+        filters:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchFilter'
+          description: Active filters; each references a facet of the section by its code.
+        from:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Zero-based offset of the first returned item.
+          default: 0
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 100
+          description: Page size.
+          default: 10
+        sort:
+          allOf:
+            - $ref: '#/components/schemas/SortMode'
+          default: RELEVANCE
+      description: Search request over APUs.
+    ApuSearchResponse:
+      type: object
+      required:
+        - total
+        - items
+        - facets
+      properties:
+        total:
+          type: integer
+          format: int64
+          description: Total number of matching APUs (independent of paging).
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuSearchItem'
+        facets:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacetResult'
+          description: Bucket counts of the section's ENUM facets (multi-select semantics).
+      description: Search response.
+    ApuType:
+      type: string
+      enum:
+        - ARCH_DESC
+        - COLLECTION
+        - ENTITY
+        - FINDING_AID
+        - FUND
+        - INSTITUTION
+      description: Types of archival presentation units.
+    FacetBucket:
+      type: object
+      required:
+        - value
+        - count
+      properties:
+        value:
+          type: string
+        label:
+          type: string
+          description: Display label when it differs from the value (e.g. resolved references).
+        count:
+          type: integer
+          format: int64
+      description: One value bucket of an enumerated facet.
+    FacetDef:
+      type: object
+      required:
+        - code
+        - type
+        - label
+        - display
+      properties:
+        code:
+          type: string
+          description: Facet code = source item-type code (tilde form, e.g. `LANG~CODE`); used in filters.
+        type:
+          $ref: '#/components/schemas/FacetType'
+        label:
+          type: string
+          description: Display label (server-localized).
+        tooltip:
+          type: string
+        description:
+          type: string
+        display:
+          $ref: '#/components/schemas/FacetDisplay'
+        orderBy:
+          allOf:
+            - $ref: '#/components/schemas/FacetOrder'
+          description: Bucket ordering (ENUM facets).
+        displayedItems:
+          type: integer
+          format: int32
+          description: Buckets shown collapsed (ENUM facets); more after expanding.
+        maxDisplayedItems:
+          type: integer
+          format: int32
+          description: Bucket limit when expanded (ENUM facets); unset = no limit.
+      description: Definition of one search facet (deployment-configured).
+    FacetDisplay:
+      type: string
+      enum:
+        - ALWAYS
+        - DETAIL
+      description: When the facet is offered.
+    FacetOrder:
+      type: string
+      enum:
+        - FREQ
+        - ASC
+      description: Ordering of enumerated facet buckets.
+    FacetResult:
+      type: object
+      required:
+        - code
+        - buckets
+      properties:
+        code:
+          type: string
+          description: Facet code.
+        buckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacetBucket'
+      description: Bucket counts of one facet.
+    FacetType:
+      type: string
+      enum:
+        - FULLTEXT
+        - ENUM
+        - MULTI_REF
+        - UNITDATE
+        - MULTI_REF_EXT
+        - MULTI_TYPE_REF
+      description: Facet kinds (mirrors the searchConfig.yaml model).
+    FilterKind:
+      type: string
+      enum:
+        - VALUES
+        - TEXT
+        - RANGE
+      description: Filter kinds - the SearchFilter discriminator.
     MenuItem:
       type: object
       required:
@@ -99,6 +324,51 @@ components:
         - NEWS
         - HELP
       description: Portal sections available for the top-level menu.
+    SearchFilter:
+      type: object
+      required:
+        - kind
+        - facet
+      properties:
+        kind:
+          $ref: '#/components/schemas/FilterKind'
+        facet:
+          type: string
+          description: Code of the facet the filter applies to.
+        values:
+          type: array
+          items:
+            type: string
+          description: 'VALUES: the selected values.'
+        q:
+          type: string
+          description: 'TEXT: the query text.'
+        from:
+          type: string
+          description: 'RANGE: lower bound - a year (`1190`), a date (`1190-05-01`) or a full ISO date-time.'
+        to:
+          type: string
+          description: 'RANGE: upper bound - same formats as `from`.'
+      description: |-
+        One active filter. `kind` discriminates which payload fields apply and the
+        server validates them per kind:
+        - `VALUES` (ENUM/MULTI_REF facets): `values` required - the document matches
+        ANY of them (OR);
+        - `TEXT` (FULLTEXT facets): `q` required - analyzed match on the facet's field;
+        - `RANGE` (UNITDATE facets): at least one of `from`/`to` - matches documents
+        whose dating interval intersects [from, to].
+
+        Deliberately a flat model, not schema-level polymorphism: openapi-generator
+        cannot generate TypeSpec-emitted discriminator inheritance (csc opts out of
+        generation via schemaMappings + hand-written classes). The JSON wire format
+        is identical to the discriminated-subtypes shape, so a later switch stays
+        contract-compatible.
+    SortMode:
+      type: string
+      enum:
+        - RELEVANCE
+        - NAME
+      description: Named sort modes.
     SystemInfo:
       type: object
       required:

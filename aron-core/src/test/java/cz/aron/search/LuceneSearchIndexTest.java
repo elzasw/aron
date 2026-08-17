@@ -1,5 +1,9 @@
 package cz.aron.search;
 
+import org.springframework.test.util.ReflectionTestUtils;
+
+import cz.aron.domain.types.TypesHolder;
+import cz.aron.domain.types.TypesLoader;
 import cz.aron.search.lucene.LuceneSearchIndex;
 
 /**
@@ -11,7 +15,10 @@ class LuceneSearchIndexTest extends SearchIndexContractTest {
 
 	@Override
 	protected SearchIndex createIndex() {
-		return new LuceneSearchIndex("");
+		var typesLoader = new TypesLoader(null, "src/test/resources/test-config/types.yaml");
+		var typesHolder = new TypesHolder(typesLoader);
+		ReflectionTestUtils.invokeMethod(typesHolder, "loadData");
+		return new LuceneSearchIndex(typesHolder, "");
 	}
 
 }

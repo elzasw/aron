@@ -1,7 +1,27 @@
 facets:
+  # no when-condition = applies to every apuType
   - type: ENUM
     source: TEST_FACET
     title: Test facet
     maxItems: 10
     displayedItems: 5
     maxDisplayedItems: 10
+  # typed facets of the ARCH_DESC section (used by NewApiV1Test)
+  - when:
+      apuType: ARCH_DESC
+    type: FULLTEXT
+    source: TITLE_MAIN
+    tooltip: Zadejte část názvu
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: LANG_CODE
+    orderBy: ASC
+  - when:
+      apuType: ARCH_DESC
+    type: UNITDATE
+    source: UNIT_DATE
+  - when:
+      apuType: ARCH_DESC
+    type: MULTI_REF
+    source: REL_ENTITY

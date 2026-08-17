@@ -101,3 +101,211 @@ enum MenuItemCode {
 	NEWS,
 	HELP,
 }
+
+/**
+ * Search over archival presentation units (APU). Facet semantics live
+ * server-side (deployment configuration): clients send facet codes and values,
+ * never engine structures, so the search backend stays swappable.
+ */
+@tag("search")
+namespace Search {
+	/**
+	 * Typed facet definitions of one section, in the deployment-configured
+	 * order. Labels are server-localized (deployment configuration is the
+	 * label source).
+	 */
+	@get
+	@route("/api/v1/facets")
+	op getFacets(@query apuType: ApuType): FacetDef[];
+
+	/**
+	 * Searches APUs of one type. Facet bucket counts follow multi-select
+	 * semantics: counts of a facet reflect the query and all filters EXCEPT
+	 * that facet's own VALUES filter.
+	 */
+	@post
+	@route("/api/v1/apu/search")
+	op search(@body request: ApuSearchRequest): ApuSearchResponse;
+}
+
+/** Types of archival presentation units. */
+enum ApuType {
+	ARCH_DESC,
+	COLLECTION,
+	ENTITY,
+	FINDING_AID,
+	FUND,
+	INSTITUTION,
+}
+
+/** Facet kinds (mirrors the searchConfig.yaml model). */
+enum FacetType {
+	/** Text filter on one item field. */
+	FULLTEXT,
+
+	/** Enumerated values with bucket counts; multi-select works as OR. */
+	ENUM,
+
+	/** Reference to archival entities; filterable by value (suggest UI arrives later). */
+	MULTI_REF,
+
+	/** Dating interval. */
+	UNITDATE,
+
+	/** Advanced reference facet (not yet supported by the UI). */
+	MULTI_REF_EXT,
+
+	/** Advanced reference facet (not yet supported by the UI). */
+	MULTI_TYPE_REF,
+}
+
+/** When the facet is offered. */
+enum FacetDisplay {
+	ALWAYS,
+	DETAIL,
+}
+
+/** Ordering of enumerated facet buckets. */
+enum FacetOrder {
+	/** By count, descending. */
+	FREQ,
+
+	/** Alphabetically. */
+	ASC,
+}
+
+/** Definition of one search facet (deployment-configured). */
+model FacetDef {
+	/** Facet code = source item-type code (tilde form, e.g. `LANG~CODE`); used in filters. */
+	code: string;
+
+	type: FacetType;
+
+	/** Display label (server-localized). */
+	label: string;
+
+	tooltip?: string;
+
+	description?: string;
+
+	display: FacetDisplay;
+
+	/** Bucket ordering (ENUM facets). */
+	orderBy?: FacetOrder;
+
+	/** Buckets shown collapsed (ENUM facets); more after expanding. */
+	displayedItems?: int32;
+
+	/** Bucket limit when expanded (ENUM facets); unset = no limit. */
+	maxDisplayedItems?: int32;
+}
+
+/** Search request over APUs. */
+model ApuSearchRequest {
+	/** Section restriction; unset = search across all types (general search, no facets). */
+	apuType?: ApuType;
+
+	/** Fulltext query over the APU name and description; unset = match all. */
+	query?: string;
+
+	/** Active filters; each references a facet of the section by its code. */
+	filters?: SearchFilter[];
+
+	/** Zero-based offset of the first returned item. */
+	@minValue(0)
+	from?: int32 = 0;
+
+	/** Page size. */
+	@minValue(1)
+	@maxValue(100)
+	size?: int32 = 10;
+
+	sort?: SortMode = SortMode.RELEVANCE;
+}
+
+/** Named sort modes. */
+enum SortMode {
+	RELEVANCE,
+
+	/** Czech-alphabetical by name (collation). */
+	NAME,
+}
+
+/** Filter kinds - the SearchFilter discriminator. */
+enum FilterKind {
+	VALUES,
+	TEXT,
+	RANGE,
+}
+
+/**
+ * One active filter. `kind` discriminates which payload fields apply and the
+ * server validates them per kind:
+ * - `VALUES` (ENUM/MULTI_REF facets): `values` required - the document matches
+ *   ANY of them (OR);
+ * - `TEXT` (FULLTEXT facets): `q` required - analyzed match on the facet's field;
+ * - `RANGE` (UNITDATE facets): at least one of `from`/`to` - matches documents
+ *   whose dating interval intersects [from, to].
+ *
+ * Deliberately a flat model, not schema-level polymorphism: openapi-generator
+ * cannot generate TypeSpec-emitted discriminator inheritance (csc opts out of
+ * generation via schemaMappings + hand-written classes). The JSON wire format
+ * is identical to the discriminated-subtypes shape, so a later switch stays
+ * contract-compatible.
+ */
+model SearchFilter {
+	kind: FilterKind;
+
+	/** Code of the facet the filter applies to. */
+	facet: string;
+
+	/** VALUES: the selected values. */
+	values?: string[];
+
+	/** TEXT: the query text. */
+	q?: string;
+
+	/** RANGE: lower bound - a year (`1190`), a date (`1190-05-01`) or a full ISO date-time. */
+	from?: string;
+
+	/** RANGE: upper bound - same formats as `from`. */
+	to?: string;
+}
+
+/** Search response. */
+model ApuSearchResponse {
+	/** Total number of matching APUs (independent of paging). */
+	total: int64;
+
+	items: ApuSearchItem[];
+
+	/** Bucket counts of the section's ENUM facets (multi-select semantics). */
+	facets: FacetResult[];
+}
+
+/** One search hit. */
+model ApuSearchItem {
+	uuid: string;
+	name: string;
+	description?: string;
+	apuType: ApuType;
+	containsDigitalObjects: boolean;
+}
+
+/** Bucket counts of one facet. */
+model FacetResult {
+	/** Facet code. */
+	code: string;
+
+	buckets: FacetBucket[];
+}
+
+/** One value bucket of an enumerated facet. */
+model FacetBucket {
+	value: string;
+
+	/** Display label when it differs from the value (e.g. resolved references). */
+	label?: string;
+
+	count: int64;
+}

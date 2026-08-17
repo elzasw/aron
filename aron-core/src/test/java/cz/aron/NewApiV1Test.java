@@ -2,10 +2,18 @@ package cz.aron;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Test;
 
+import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
 import cz.aron.test.api.v1.UiApi;
+import cz.aron.test.api.v1.model.ApuSearchRequest;
+import cz.aron.test.api.v1.model.ApuType;
+import cz.aron.test.api.v1.model.FacetDef;
+import cz.aron.test.api.v1.model.FacetType;
 import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
 import cz.aron.test.api.v1.model.SystemInfo;
@@ -44,6 +52,40 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(response.statusCode()).isEqualTo(200);
 		assertThat(contentType(response)).startsWith("image/svg+xml");
 		assertThat(response.body()).isNotEmpty();
+	}
+
+	@Test
+	void facetDefinitionsComeTypedFromDeploymentConfig() {
+		var facets = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC);
+
+		// section facets in configuration order; the when-less TEST~FACET applies everywhere
+		assertThat(facets).extracting(FacetDef::getCode)
+				.containsExactly("TEST~FACET", "TITLE~MAIN", "LANG~CODE", "UNIT~DATE", "REL~ENTITY");
+		var byCode = facets.stream().collect(Collectors.toMap(FacetDef::getCode, Function.identity()));
+		// label = explicit title, or the types.yaml item name
+		assertThat(byCode.get("TEST~FACET").getLabel()).isEqualTo("Test facet");
+		assertThat(byCode.get("LANG~CODE").getLabel()).isEqualTo("Language");
+		assertThat(byCode.get("TITLE~MAIN").getType()).isEqualTo(FacetType.FULLTEXT);
+		assertThat(byCode.get("LANG~CODE").getType()).isEqualTo(FacetType.ENUM);
+		assertThat(byCode.get("UNIT~DATE").getType()).isEqualTo(FacetType.UNITDATE);
+	}
+
+	@Test
+	void searchFindsTheSeedApu() {
+		// general search (no apuType): hits the input-dir seed, returns no facets
+		var request = new ApuSearchRequest();
+		request.setQuery("Testovací");
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+
+		assertThat(response.getTotal()).isEqualTo(1);
+		assertThat(response.getItems()).hasSize(1);
+		assertThat(response.getItems().get(0).getUuid()).isEqualTo("5e8c2b41-93a7-4d1e-8ccc-9ddd0eee1aaa");
+		assertThat(response.getItems().get(0).getApuType()).isEqualTo(ApuType.INSTITUTION);
+		assertThat(response.getFacets()).isEmpty();
+
+		// section restriction applies
+		request.setApuType(ApuType.FUND);
+		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getTotal()).isZero();
 	}
 
 }

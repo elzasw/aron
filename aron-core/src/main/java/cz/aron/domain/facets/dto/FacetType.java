@@ -6,5 +6,6 @@ public enum FacetType {
     ENUM,
     MULTI_REF,
     UNITDATE,
-    MULTI_REF_EXT
+    MULTI_REF_EXT,
+    MULTI_TYPE_REF
 }

@@ -46,7 +46,11 @@
 		<!-- Internal artifact; resolves from the LightComp Maven repository
 		     (mvn.lightcomp.cz, configured as a mirror in settings.xml / on CI). -->
 		<file-transfer.version>2.0</file-transfer.version>
-		<openapi-generator.version>7.6.0</openapi-generator.version>
+		<!-- 7.15 (csc-proven): correctly generates the named-enum discriminator
+		     pattern (SearchFilter). 7.6 broke discriminator subclasses and strict
+		     TS enums; 7.24 REGRESSED on discriminator inheritance (child single-value
+		     KindEnum vs parent named enum) - re-test before any upgrade. -->
+		<openapi-generator.version>7.15.0</openapi-generator.version>
 		<!-- Embedded search engine (search.engine=lucene) - same Lucene generation
 		     that Elasticsearch 9.x embeds. -->
 		<lucene.version>10.5.0</lucene.version>
