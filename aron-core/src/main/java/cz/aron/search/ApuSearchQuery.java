@@ -3,6 +3,10 @@ package cz.aron.search;
 import java.util.List;
 import java.util.Set;
 
+import cz.aron.search.relevance.RelevanceConfig;
+import cz.aron.search.relevance.RelevancePlan;
+import cz.aron.search.relevance.RelevanceQueryPlanner;
+
 /**
  * Engine-neutral search request (the port's read side).
  *
@@ -11,8 +15,9 @@ import java.util.Set;
  * its own filter field, so an active selection can always be widened.
  *
  * @param apuType      restricts to one APU type ({@code null} = all types)
- * @param fulltext     tokens matched against the indexed name/description
- *                     (engine analysis applies; {@code null} = match all)
+ * @param fulltext     planned fulltext query - a non-scoring gate plus weighted
+ *                     scoring tiers (see {@link cz.aron.search.relevance.RelevanceQueryPlanner});
+ *                     {@code null} = match all
  * @param filters      field-level filters, all must match (see {@link FieldFilter})
  * @param buckets      value-bucket count requests (see {@link BucketRequest})
  * @param boundsFields UNITDATE item codes to compute dating bounds for (min of
@@ -26,12 +31,12 @@ import java.util.Set;
  *                     is reported as {@code (totalUpTo, GTE)}; {@code null} =
  *                     count exactly (callers resolve their configured default)
  */
-public record ApuSearchQuery(String apuType, String fulltext, List<FieldFilter> filters,
+public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
 		List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
 		Integer totalUpTo) {
 
 	/** Exact-total variant - the accuracy limit defaults to unlimited. */
-	public ApuSearchQuery(String apuType, String fulltext, List<FieldFilter> filters,
+	public ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
 			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort) {
 		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null);
 	}
@@ -56,8 +61,10 @@ public record ApuSearchQuery(String apuType, String fulltext, List<FieldFilter> 
 		}
 	}
 
+	/** Fulltext planned with the built-in default weights (tests, simple callers). */
 	public static ApuSearchQuery fulltext(String fulltext) {
-		return new ApuSearchQuery(null, fulltext, List.of(), List.of(), Set.of(), 0, 20, SortMode.RELEVANCE);
+		return new ApuSearchQuery(null, RelevanceQueryPlanner.plan(fulltext, RelevanceConfig.defaults()),
+				List.of(), List.of(), Set.of(), 0, 20, SortMode.RELEVANCE);
 	}
 
 	public static ApuSearchQuery matchAll(int from, int size) {

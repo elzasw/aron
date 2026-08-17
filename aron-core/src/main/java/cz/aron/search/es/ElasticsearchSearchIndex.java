@@ -48,6 +48,7 @@ import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
 import cz.aron.search.RelationDocument;
 import cz.aron.search.SearchIndex;
+import cz.aron.search.relevance.RelevancePlan;
 
 /**
  * Elasticsearch adapter of the search port - the production engine (see
@@ -307,7 +308,18 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	private Query buildMainQuery(ApuSearchQuery query) {
 		var bool = new BoolQuery.Builder();
 		if (query.fulltext() != null) {
-			bool.must(Query.of(q -> q.multiMatch(mm -> mm.fields("name", "description").query(query.fulltext()))));
+			RelevancePlan plan = query.fulltext();
+			// the gate decides WHAT matches - filter context, no score pollution;
+			// scores come exclusively from the weighted tiers (R-9)
+			var gate = new BoolQuery.Builder();
+			for (RelevancePlan.Clause clause : plan.gate()) {
+				gate.should(clauseQuery(clause, false));
+			}
+			gate.minimumShouldMatch(String.valueOf(plan.minimumShouldMatch()));
+			bool.filter(Query.of(q -> q.bool(gate.build())));
+			for (RelevancePlan.Clause clause : plan.scoring()) {
+				bool.should(clauseQuery(clause, true));
+			}
 		} else {
 			bool.must(Query.of(q -> q.matchAll(m -> m)));
 		}
@@ -320,6 +332,19 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			}
 		}
 		return Query.of(q -> q.bool(bool.build()));
+	}
+
+	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */
+	private static Query clauseQuery(RelevancePlan.Clause clause, boolean boosted) {
+		Float boost = boosted ? clause.weight() : null;
+		return switch (clause.kind()) {
+			case TERM -> Query.of(q -> q.term(t -> t.field(clause.field()).value(clause.text()).boost(boost)));
+			case PREFIX -> Query.of(q -> q.prefix(p -> p.field(clause.field()).value(clause.text()).boost(boost)));
+			case PHRASE -> Query.of(q -> q.matchPhrase(m -> m.field(clause.field()).query(clause.text()).boost(boost)));
+			case ALL_TERMS -> Query.of(q -> q.match(m -> m.field(clause.field()).query(clause.text())
+					.operator(co.elastic.clients.elasticsearch._types.query_dsl.Operator.And).boost(boost)));
+			case ANY_TERM -> Query.of(q -> q.match(m -> m.field(clause.field()).query(clause.text()).boost(boost)));
+		};
 	}
 
 	/**

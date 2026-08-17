@@ -28,6 +28,7 @@ import cz.aron.test.api.v1.model.DetailItem;
 import cz.aron.test.api.v1.model.DetailItemKind;
 import cz.aron.test.api.v1.model.DetailPart;
 import cz.aron.test.api.v1.model.PartViewType;
+import cz.aron.test.api.v1.model.QueryMode;
 import cz.aron.test.api.v1.model.TreeDirection;
 import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
@@ -145,6 +146,21 @@ class NewApiV1Test extends AbstractTest {
 		// section restriction applies
 		request.setApuType(ApuType.FUND);
 		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getTotal()).isZero();
+	}
+
+	@Test
+	void relaxedRetryIsReportedInQueryMode() {
+		// strict AND yields nothing for a query with one stray word; the server
+		// retries any-word once and labels the result (B7)
+		var request = new ApuSearchRequest();
+		request.setQuery("Testovací slovonavic");
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(response.getQueryMode()).isEqualTo(QueryMode.RELAXED);
+		assertThat(response.getTotal()).isGreaterThanOrEqualTo(1);
+
+		// a fully matching query stays strict
+		request.setQuery("Testovací");
+		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getQueryMode()).isEqualTo(QueryMode.STRICT);
 	}
 
 	@Test

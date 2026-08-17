@@ -33,6 +33,7 @@
     "pageSize": "Počet na stránce:",
     "total": "Nalezeno záznamů: {{count}}",
     "totalMore": "Nalezeno záznamů: více než {{count}}",
+    "relaxed": "Všem slovům dotazu neodpovídá žádný záznam. Zobrazujeme záznamy obsahující alespoň některá ze zadaných slov.",
     "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
     "pagination": "Stránkování výsledků",

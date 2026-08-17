@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import cz.aron.search.ApuSearchQuery.SortMode;
+import cz.aron.search.relevance.RelevanceConfig;
+import cz.aron.search.relevance.RelevanceQueryPlanner;
 
 /**
  * Contract of the search port that EVERY adapter must fulfil (doc/search-port.md
@@ -69,9 +71,22 @@ public abstract class SearchIndexContractTest {
 		document.setUuid(uuid);
 		document.setName(name);
 		document.setNameSort(ApuDocumentBuilder.czechSortKey(name));
+		// the fixture mirrors what ApuDocumentBuilder computes for real APUs
+		document.setNameExactCs(ApuDocumentBuilder.normalizeCs(name));
+		document.setNameExact(ApuDocumentBuilder.normalize(name));
+		if (name != null) {
+			document.getAllText().add(name);
+		}
 		document.setType(type);
 		document.setApuSourceId(sourceId);
 		document.getValues().putAll(values);
+		return document;
+	}
+
+	/** Fixture with explicit allText entries (description-like searchable values). */
+	protected static ApuDocument docWithAllText(String uuid, String name, String... allTextEntries) {
+		var document = doc(uuid, name, 1, Map.of());
+		document.getAllText().addAll(List.of(allTextEntries));
 		return document;
 	}
 
@@ -100,6 +115,106 @@ public abstract class SearchIndexContractTest {
 
 		assertThat(index.search(ApuSearchQuery.fulltext("novák")).total()).isEqualTo(1);
 		assertThat(index.search(ApuSearchQuery.fulltext("neexistuje")).total()).isZero();
+	}
+
+	// --- behavior specification (doc/search-relevance.md §5) -----------------
+
+	@Test
+	void everyQueryWordMustMatchRegardlessOfOrder() {
+		// B1: AND across words; word order never decides matching
+		indexApus(List.of(
+				doc(uuid(60), "Václav Novák", 1, Map.of()),
+				doc(uuid(61), "Václav Dvořák", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("vaclav novak")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(60));
+		assertThat(index.search(ApuSearchQuery.fulltext("novak vaclav")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(60));
+		assertThat(index.search(ApuSearchQuery.fulltext("vaclav")).total()).isEqualTo(2);
+	}
+
+	@Test
+	void wordsMatchAcrossDifferentValues() {
+		// B1: a word may match in ANY searchable value (cross-field AND)
+		indexApus(List.of(docWithAllText(uuid(62), "Kronika obce", "1850")));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("kronika 1850")).total()).isEqualTo(1);
+		assertThat(index.search(ApuSearchQuery.fulltext("kronika 1999")).total()).isZero();
+	}
+
+	@Test
+	void matchingIgnoresCaseAndDiacritics() {
+		// B2 + B3 (recall half)
+		indexApus(List.of(doc(uuid(63), "Řehoř Mrázek", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("REHOR")).total()).isEqualTo(1);
+		assertThat(index.search(ApuSearchQuery.fulltext("mrázek")).total()).isEqualTo(1);
+	}
+
+	@Test
+	void typedDiacriticsRankTheExactNameFirst() {
+		// B3 (ranking half): the diacritics-preserving exact tier outranks the folded one
+		indexApus(List.of(
+				doc(uuid(64), "Řehoř", 1, Map.of()),
+				doc(uuid(65), "Rehor", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("Řehoř")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(64), uuid(65));
+		assertThat(index.search(ApuSearchQuery.fulltext("Rehor")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(65), uuid(64));
+	}
+
+	@Test
+	void quotedPhrasesMatchExactlyAndNeverAcrossValues() {
+		// B4: phrase order matters; values are position-gapped
+		indexApus(List.of(docWithAllText(uuid(66), "Zápis", "Kronika města Přerova", "kostel svatého Jana")));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("\"kronika města\"")).total()).isEqualTo(1);
+		assertThat(index.search(ApuSearchQuery.fulltext("\"města kronika\"")).total()).isZero();
+		// the phrase must not bridge two different values
+		assertThat(index.search(ApuSearchQuery.fulltext("\"Přerova kostel\"")).total()).isZero();
+	}
+
+	@Test
+	void stopWordOnlyQueriesStillSearch() {
+		// B5: the canonical analyzer drops "v"; the fallback chain keeps it
+		indexApus(List.of(doc(uuid(67), "Kostel v Praze", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("v")).total()).isEqualTo(1);
+		// and stop words never cause empty results for mixed queries
+		assertThat(index.search(ApuSearchQuery.fulltext("kostel v praze")).total()).isEqualTo(1);
+	}
+
+	@Test
+	void trailingStarMeansBeginsWith() {
+		// B6: word* is the only wildcard; a bare word is never a prefix
+		indexApus(List.of(doc(uuid(68), "Kronika obce", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("kron*")).total()).isEqualTo(1);
+		assertThat(index.search(ApuSearchQuery.fulltext("kron")).total()).isZero();
+	}
+
+	@Test
+	void nameMatchesOutrankDeepMatches() {
+		// B8 (ordering only): a hit in the name precedes an allText-only hit
+		indexApus(List.of(
+				docWithAllText(uuid(70), "Zápisy města", "kronika zmíněná v obsahu"),
+				doc(uuid(71), "Kronika obce", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("kronika")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(71), uuid(70));
+	}
+
+	@Test
+	void relaxedPlanMatchesAnyWord() {
+		// B7 (the port half; the automatic retry itself lives in the API layer)
+		indexApus(List.of(doc(uuid(72), "Kronika obce", 1, Map.of())));
+
+		var strict = ApuSearchQuery.fulltext("kronika neexistujici");
+		assertThat(index.search(strict).total()).isZero();
+		var relaxed = new ApuSearchQuery(null, strict.fulltext().relaxed(), List.of(), List.of(), Set.of(),
+				0, 10, SortMode.RELEVANCE);
+		assertThat(index.search(relaxed).total()).isEqualTo(1);
 	}
 
 	@Test
@@ -389,7 +504,9 @@ public abstract class SearchIndexContractTest {
 	}
 
 	private static ApuSearchQuery query(String fulltext, List<FieldFilter> filters) {
-		return new ApuSearchQuery(null, fulltext, filters, List.of(), Set.of(), 0, 10, SortMode.RELEVANCE);
+		return new ApuSearchQuery(null,
+				RelevanceQueryPlanner.plan(fulltext, RelevanceConfig.defaults()),
+				filters, List.of(), Set.of(), 0, 10, SortMode.RELEVANCE);
 	}
 
 }

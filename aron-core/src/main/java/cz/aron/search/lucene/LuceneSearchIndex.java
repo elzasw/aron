@@ -38,9 +38,11 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
@@ -66,6 +68,7 @@ import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
 import cz.aron.search.RelationDocument;
 import cz.aron.search.SearchIndex;
+import cz.aron.search.relevance.RelevancePlan;
 import jakarta.annotation.PreDestroy;
 
 /**
@@ -378,13 +381,18 @@ public class LuceneSearchIndex implements SearchIndex {
 	private Query buildMainQuery(ApuSearchQuery query) throws IOException {
 		var root = new BooleanQuery.Builder();
 		if (query.fulltext() != null) {
-			// OR semantics across tokens and fields (ES multi_match default)
-			var text = new BooleanQuery.Builder();
-			for (String token : analyze(query.fulltext())) {
-				text.add(new TermQuery(new Term("name", token)), Occur.SHOULD);
-				text.add(new TermQuery(new Term("description", token)), Occur.SHOULD);
+			RelevancePlan plan = query.fulltext();
+			// the gate decides WHAT matches - filter context, no score pollution;
+			// scores come exclusively from the weighted tiers (R-9)
+			var gate = new BooleanQuery.Builder();
+			for (RelevancePlan.Clause clause : plan.gate()) {
+				gate.add(clauseQuery(clause, false), Occur.SHOULD);
 			}
-			root.add(text.build(), Occur.MUST);
+			gate.setMinimumNumberShouldMatch(plan.minimumShouldMatch());
+			root.add(gate.build(), Occur.FILTER);
+			for (RelevancePlan.Clause clause : plan.scoring()) {
+				root.add(clauseQuery(clause, true), Occur.SHOULD);
+			}
 		} else {
 			root.add(new MatchAllDocsQuery(), Occur.MUST);
 		}
@@ -397,6 +405,35 @@ public class LuceneSearchIndex implements SearchIndex {
 			}
 		}
 		return root.build();
+	}
+
+	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */
+	private Query clauseQuery(RelevancePlan.Clause clause, boolean boosted) throws IOException {
+		Query query = switch (clause.kind()) {
+			case TERM -> new TermQuery(new Term(clause.field(), clause.text()));
+			case PREFIX -> new PrefixQuery(new Term(clause.field(), clause.text()));
+			case PHRASE -> phraseQuery(clause.field(), clause.text());
+			case ALL_TERMS -> termsQuery(clause.field(), clause.text(), Occur.MUST);
+			case ANY_TERM -> termsQuery(clause.field(), clause.text(), Occur.SHOULD);
+		};
+		return boosted && clause.weight() != 1.0f ? new BoostQuery(query, clause.weight()) : query;
+	}
+
+	/** Consecutive analyzed tokens; the analyzer matches the indexed chain. */
+	private Query phraseQuery(String field, String text) throws IOException {
+		var builder = new PhraseQuery.Builder();
+		for (String token : analyze(text)) {
+			builder.add(new Term(field, token));
+		}
+		return builder.build();
+	}
+
+	private Query termsQuery(String field, String text, Occur occur) throws IOException {
+		var bool = new BooleanQuery.Builder();
+		for (String token : analyze(text)) {
+			bool.add(new TermQuery(new Term(field, token)), occur);
+		}
+		return bool.build();
 	}
 
 	private Query textFieldQuery(FieldFilter.Text filter) throws IOException {

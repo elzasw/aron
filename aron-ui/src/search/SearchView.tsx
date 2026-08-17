@@ -12,6 +12,7 @@ import {
   FacetDisplay,
   FacetResultKind,
   FacetType,
+  QueryMode,
   type SearchFilter,
   SortMode,
   TotalRelation,
@@ -217,6 +218,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
                 { count: search.data.total },
               )}
             </Text>
+            {search.data.queryMode === QueryMode.Relaxed && (
+              <Text size={200} role="status">
+                {t("search.relaxed")}
+              </Text>
+            )}
             <ResultList items={search.data.items} />
           </>
         )}

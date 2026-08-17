@@ -1,0 +1,88 @@
+package cz.aron.domain.facets.dto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * The optional {@code relevance:} section of searchConfig.yaml - the query-side
+ * ranking weights (doc/search-relevance.md §4.3). Every key is optional; the
+ * built-in defaults apply to anything unset, so a deployment without the
+ * section still ranks sensibly. Changes take effect after a restart, no
+ * reindex.
+ */
+public class RelevanceSettingsDto {
+
+	/** Minimum share of query tokens a document must match: {@code 100%}, {@code 75%}, ... */
+	private String minimumShouldMatch;
+
+	/** Retry with any-word matching when the strict query yields no hits. */
+	private Boolean relaxOnNoHits;
+
+	private RelevanceFieldWeightsDto name;
+
+	private RelevanceFieldWeightsDto refLabels;
+
+	private RelevanceFieldWeightsDto description;
+
+	private RelevanceFieldWeightsDto allText;
+
+	/** Item types promoted above the allText baseline. */
+	private List<RelevanceItemWeightsDto> items = new ArrayList<>();
+
+	public String getMinimumShouldMatch() {
+		return minimumShouldMatch;
+	}
+
+	public void setMinimumShouldMatch(String minimumShouldMatch) {
+		this.minimumShouldMatch = minimumShouldMatch;
+	}
+
+	public Boolean getRelaxOnNoHits() {
+		return relaxOnNoHits;
+	}
+
+	public void setRelaxOnNoHits(Boolean relaxOnNoHits) {
+		this.relaxOnNoHits = relaxOnNoHits;
+	}
+
+	public RelevanceFieldWeightsDto getName() {
+		return name;
+	}
+
+	public void setName(RelevanceFieldWeightsDto name) {
+		this.name = name;
+	}
+
+	public RelevanceFieldWeightsDto getRefLabels() {
+		return refLabels;
+	}
+
+	public void setRefLabels(RelevanceFieldWeightsDto refLabels) {
+		this.refLabels = refLabels;
+	}
+
+	public RelevanceFieldWeightsDto getDescription() {
+		return description;
+	}
+
+	public void setDescription(RelevanceFieldWeightsDto description) {
+		this.description = description;
+	}
+
+	public RelevanceFieldWeightsDto getAllText() {
+		return allText;
+	}
+
+	public void setAllText(RelevanceFieldWeightsDto allText) {
+		this.allText = allText;
+	}
+
+	public List<RelevanceItemWeightsDto> getItems() {
+		return items;
+	}
+
+	public void setItems(List<RelevanceItemWeightsDto> items) {
+		this.items = items;
+	}
+
+}

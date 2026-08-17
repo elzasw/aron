@@ -385,6 +385,7 @@ components:
       required:
         - total
         - totalRelation
+        - queryMode
         - items
         - facets
       properties:
@@ -399,6 +400,13 @@ components:
           allOf:
             - $ref: "#/components/schemas/TotalRelation"
           description: EQ = `total` is exact; GTE = at least `total` APUs match.
+        queryMode:
+          allOf:
+            - $ref: "#/components/schemas/QueryMode"
+          description: |-
+            STRICT = every query word had to match. RELAXED = the strict query had no
+            hits and the server automatically retried with any-word matching - the UI
+            labels such results.
         items:
           type: array
           items:
@@ -764,6 +772,12 @@ components:
         - STANDALONE
         - GROUPED
       description: How a part is displayed (the display model's viewType).
+    QueryMode:
+      type: string
+      enum:
+        - STRICT
+        - RELAXED
+      description: How the fulltext query was matched (see `ApuSearchResponse.queryMode`).
     RangeFilter:
       type: object
       properties:

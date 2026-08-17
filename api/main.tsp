@@ -258,6 +258,15 @@ enum SortMode {
 	NAME,
 }
 
+/** How the fulltext query was matched (see `ApuSearchResponse.queryMode`). */
+enum QueryMode {
+	/** Every query word matched. */
+	STRICT,
+
+	/** Automatic any-word retry after zero strict hits. */
+	RELAXED,
+}
+
 /** Accuracy of a search response's `total`. */
 enum TotalRelation {
 	/** `total` is the exact number of matching APUs. */
@@ -326,6 +335,13 @@ model ApuSearchResponse {
 
 	/** EQ = `total` is exact; GTE = at least `total` APUs match. */
 	totalRelation: TotalRelation;
+
+	/**
+	 * STRICT = every query word had to match. RELAXED = the strict query had no
+	 * hits and the server automatically retried with any-word matching - the UI
+	 * labels such results.
+	 */
+	queryMode: QueryMode;
 
 	items: ApuSearchItem[];
 

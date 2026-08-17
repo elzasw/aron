@@ -31,7 +31,12 @@ public class FacetsLoader {
     private String facetConfig;
 
     public List<FacetConfigDto> loadFacets() throws IOException {
-        log.debug("Loading facets from config.");
+        return loadConfig().getFacets();
+    }
+
+    /** The whole searchConfig.yaml: facets plus the optional relevance section. */
+    public FacetsConfigDto loadConfig() throws IOException {
+        log.debug("Loading search configuration.");
         Yaml yaml = new Yaml();
         String yamlConfig = Files.readString(Paths.get(facetConfig), StandardCharsets.UTF_8);
         FacetsConfigDto facetsConfigDto = yaml.loadAs(yamlConfig, FacetsConfigDto.class);
@@ -44,6 +49,13 @@ public class FacetsLoader {
                 facet.setGroup(facet.getGroup().replace("_", "~"));
             }
         }
-        return facetsConfigDto.getFacets();
+        if (facetsConfigDto.getRelevance() != null) {
+            for (var item : facetsConfigDto.getRelevance().getItems()) {
+                if (item.getSource() != null) {
+                    item.setSource(item.getSource().replace("_", "~"));
+                }
+            }
+        }
+        return facetsConfigDto;
     }
 }

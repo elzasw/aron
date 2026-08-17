@@ -42,6 +42,7 @@ import cz.aron.api.v1.model.FacetOptionsResponse;
 import cz.aron.api.v1.model.FacetOrder;
 import cz.aron.api.v1.model.FacetResult;
 import cz.aron.api.v1.model.FacetResultKind;
+import cz.aron.api.v1.model.QueryMode;
 import cz.aron.api.v1.model.RefFacetResult;
 import cz.aron.api.v1.model.RangeFilter;
 import cz.aron.api.v1.model.SearchFilter;
@@ -58,6 +59,8 @@ import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
 import cz.aron.search.IndexingService;
+import cz.aron.search.relevance.RelevancePlan;
+import cz.aron.search.relevance.RelevanceService;
 import jakarta.annotation.PostConstruct;
 
 /**
@@ -79,6 +82,8 @@ public class SearchController implements SearchApi {
 
 	private final IndexingService indexingService;
 
+	private final RelevanceService relevanceService;
+
 	/** Page window cap: {@code from + size} must stay within (protects deep paging). */
 	private final int maxWindow;
 
@@ -91,12 +96,14 @@ public class SearchController implements SearchApi {
 	private List<FacetConfigDto> facets;
 
 	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
+			RelevanceService relevanceService,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
 			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
 		this.facetsLoader = facetsLoader;
 		this.typesHolder = typesHolder;
 		this.indexingService = indexingService;
+		this.relevanceService = relevanceService;
 		this.maxWindow = maxWindow;
 		this.totalUpToDefault = totalUpToDefault;
 		this.totalUpToMax = totalUpToMax;
@@ -150,11 +157,22 @@ public class SearchController implements SearchApi {
 		var sort = request.getSort() == SortMode.NAME
 				? ApuSearchQuery.SortMode.NAME
 				: ApuSearchQuery.SortMode.RELEVANCE;
-		String fulltext = blankToNull(request.getQuery());
+		RelevancePlan plan = relevanceService.plan(blankToNull(request.getQuery()));
 		String apuType = request.getApuType() != null ? request.getApuType().getValue() : null;
 
-		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, fulltext, filters,
+		QueryMode queryMode = QueryMode.STRICT;
+		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, plan, filters,
 				bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo())));
+		// zero strict hits - one automatic any-word retry, visibly labeled (B7);
+		// facet filters and the section restriction are never relaxed
+		if (result.total() == 0 && plan != null && plan.relaxable()
+				&& relevanceService.config().relaxOnNoHits()) {
+			result = indexingService.search(new ApuSearchQuery(apuType, plan.relaxed(), filters,
+					bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo())));
+			if (result.total() > 0) {
+				queryMode = QueryMode.RELAXED;
+			}
+		}
 
 		var items = result.hits().stream()
 				.map(h -> {
@@ -189,7 +207,7 @@ public class SearchController implements SearchApi {
 				result.totalRelation() == ApuSearchResult.TotalRelation.EQ
 						? TotalRelation.EQ
 						: TotalRelation.GTE,
-				items, facetResults));
+				queryMode, items, facetResults));
 	}
 
 	/** The request's own accuracy override, clamped by the server maximum; unset = the server default. */
@@ -230,7 +248,7 @@ public class SearchController implements SearchApi {
 
 		String bucketField = bucketFieldOf(facet);
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(
-				request.getApuType().getValue(), blankToNull(request.getQuery()), filters,
+				request.getApuType().getValue(), relevanceService.plan(blankToNull(request.getQuery())), filters,
 				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT)),
 				Set.of(), 0, 0, ApuSearchQuery.SortMode.RELEVANCE));
 
