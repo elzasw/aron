@@ -1,6 +1,9 @@
 # Maven
 target/
 
+# Sphinx documentation build output
+doc/build/
+
 # Node / TypeSpec toolchain (frontend-maven-plugin installs Node per module)
 node_modules/
 .node/

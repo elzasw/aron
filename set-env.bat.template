@@ -12,3 +12,8 @@ SET "JAVA_HOME=C:\path\to\jdk-21"
 SET "MAVEN_HOME=C:\path\to\apache-maven-3.9.x"
 
 set "PATH=%JAVA_HOME%\bin;%MAVEN_HOME%\bin;%PATH%"
+
+REM Sphinx Docker image for doc\build-docker.bat (administrator docs).
+REM Set to your registry's sphinxdoc image; when unset, the public
+REM sphinxdoc/sphinx image is used with the RTD theme installed on the fly.
+REM SET "SPHINXDOC_IMAGE=<registry>/sphinxdoc:latest"
