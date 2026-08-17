@@ -1,8 +1,9 @@
-import { Button, Checkbox, Input, Link, makeStyles, Spinner, Text, tokens } from "@fluentui/react-components";
+import { Checkbox, Input, Link, makeStyles, Spinner, Text, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { searchApi } from "../api/client";
+import { PRIMARY_MAIN } from "../layout/AppHeader";
 import {
   type ApuType,
   type DatingFacetResult,
@@ -28,6 +29,14 @@ const useStyles = makeStyles({
   title: {
     fontWeight: tokens.fontWeightSemibold,
   },
+  // the old portal's highlighted per-condition hit count next to the facet name
+  titleCount: {
+    marginLeft: tokens.spacingHorizontalXS,
+    padding: `0 ${tokens.spacingHorizontalXXS}`,
+    backgroundColor: "hsl(47.7, 100%, 85.7%)",
+    color: "#d73f3b",
+    borderRadius: tokens.borderRadiusSmall,
+  },
   count: {
     color: tokens.colorNeutralForeground3,
   },
@@ -44,6 +53,73 @@ const useStyles = makeStyles({
   rangeInput: {
     width: "90px",
   },
+  sliderWrap: {
+    position: "relative",
+    height: "24px",
+    marginTop: tokens.spacingVerticalXS,
+  },
+  sliderTrack: {
+    position: "absolute",
+    left: "8px",
+    right: "8px",
+    top: "10px",
+    height: "4px",
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorNeutralStroke1,
+  },
+  sliderFill: {
+    position: "absolute",
+    top: "10px",
+    height: "4px",
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: PRIMARY_MAIN,
+  },
+  // two overlaid native range inputs form the dual-thumb slider: tracks are
+  // transparent and ignore the pointer, only the thumbs are interactive
+  sliderInput: {
+    position: "absolute",
+    left: "0",
+    top: "0",
+    width: "100%",
+    height: "24px",
+    margin: "0",
+    appearance: "none",
+    backgroundColor: "transparent",
+    pointerEvents: "none",
+    "::-webkit-slider-thumb": {
+      appearance: "none",
+      pointerEvents: "auto",
+      width: "16px",
+      height: "16px",
+      borderRadius: "50%",
+      backgroundColor: PRIMARY_MAIN,
+      border: `2px solid ${tokens.colorNeutralBackground1}`,
+      boxShadow: tokens.shadow2,
+      cursor: "pointer",
+      marginTop: "4px",
+    },
+    "::-moz-range-thumb": {
+      pointerEvents: "auto",
+      width: "12px",
+      height: "12px",
+      borderRadius: "50%",
+      backgroundColor: PRIMARY_MAIN,
+      border: `2px solid ${tokens.colorNeutralBackground1}`,
+      boxShadow: tokens.shadow2,
+      cursor: "pointer",
+    },
+    "::-webkit-slider-runnable-track": {
+      backgroundColor: "transparent",
+    },
+    "::-moz-range-track": {
+      backgroundColor: "transparent",
+    },
+  },
+  sliderBounds: {
+    display: "flex",
+    justifyContent: "space-between",
+    color: tokens.colorNeutralForeground3,
+  },
 });
 
 interface Props {
@@ -55,6 +131,8 @@ interface Props {
   apuType: ApuType;
   /** Fulltext query of the current search (scopes the reference type-ahead). */
   query: string;
+  /** Total of the current search - the per-condition count badge of active text/range facets. */
+  total?: number;
   onFilters: (filters: SearchFilter[]) => void;
 }
 
@@ -62,12 +140,23 @@ interface Props {
  * One facet of the sidebar; the widget follows the facet type. Bucket counts
  * and dating bounds come server-computed with multi-select semantics.
  */
-export default function FacetPanel({ def, filters, result, apuType, query, onFilters }: Props) {
+export default function FacetPanel({ def, filters, result, apuType, query, total, onFilters }: Props) {
   const styles = useStyles();
+
+  // the old portal highlights how many records satisfy an entered condition;
+  // text/range filters auto-apply, so the current total IS that count
+  const conditionEntered =
+    (def.type === FacetType.Fulltext || def.type === FacetType.Unitdate) &&
+    filters.some((f) => f.facet === def.code);
 
   return (
     <div className={styles.facet} title={def.tooltip}>
-      <Text className={styles.title}>{def.label}</Text>
+      <Text className={styles.title}>
+        {def.label}
+        {conditionEntered && total !== undefined && (
+          <span className={styles.titleCount}>({total})</span>
+        )}
+      </Text>
       {def.type === FacetType.Enum && (
         <EnumFacet def={def} filters={filters} result={result} onFilters={onFilters} />
       )}
@@ -255,6 +344,12 @@ function TextFacet({ def, filters, onFilters }: Pick<Props, "def" | "filters" | 
   );
 }
 
+/**
+ * Dating facet: a dual-thumb year slider over the available bounds plus the
+ * paired integer fields. Both auto-apply with the same debounce as text
+ * filters (old-portal behavior, no apply button); typed years clamp to the
+ * available bounds.
+ */
 function RangeFacet({
   def,
   filters,
@@ -273,36 +368,103 @@ function RangeFacet({
     setFrom(applied.from ?? "");
     setTo(applied.to ?? "");
   }, [applied.from, applied.to]);
-  const apply = () => onFilters(setRange(filters, def.code, from, to));
+
+  const clampYear = (value: string) => {
+    if (value === "" || bounds === undefined) {
+      return value;
+    }
+    const year = parseInt(value, 10);
+    if (Number.isNaN(year)) {
+      return "";
+    }
+    return String(Math.min(Math.max(year, bounds.minYear), bounds.maxYear));
+  };
+
+  const debouncedFrom = useDebouncedValue(from, 700);
+  const debouncedTo = useDebouncedValue(to, 700);
+  useEffect(() => {
+    // let the user finish typing a year (the old portal's >= 3 digits rule)
+    const settled = (value: string) => value === "" || value.length >= 3;
+    if (!settled(debouncedFrom) || !settled(debouncedTo)) {
+      return;
+    }
+    const nextFrom = clampYear(debouncedFrom);
+    const nextTo = clampYear(debouncedTo);
+    if (nextFrom !== (applied.from ?? "") || nextTo !== (applied.to ?? "")) {
+      setFrom(nextFrom);
+      setTo(nextTo);
+      onFilters(setRange(filters, def.code, nextFrom, nextTo));
+    }
+  }, [debouncedFrom, debouncedTo]); // deliberately not on applied/filters - the guard makes echoes no-ops
+
+  // slider thumbs live inside the available bounds; unset fields sit at the edges
+  const slider = bounds !== undefined && bounds.maxYear > bounds.minYear
+    ? {
+        min: bounds.minYear,
+        max: bounds.maxYear,
+        lo: Math.min(Math.max(parseInt(from, 10) || bounds.minYear, bounds.minYear), bounds.maxYear),
+        hi: Math.min(Math.max(parseInt(to, 10) || bounds.maxYear, bounds.minYear), bounds.maxYear),
+      }
+    : undefined;
+  const percent = (value: number) =>
+    slider ? ((value - slider.min) / (slider.max - slider.min)) * 100 : 0;
 
   return (
     <>
+      {slider && (
+        <>
+          <div className={styles.sliderWrap}>
+            <div className={styles.sliderTrack} />
+            <div
+              className={styles.sliderFill}
+              style={{
+                left: `calc(8px + ${percent(slider.lo)} * (100% - 16px) / 100)`,
+                width: `calc(${percent(slider.hi) - percent(slider.lo)} * (100% - 16px) / 100)`,
+              }}
+            />
+            <input
+              type="range"
+              className={styles.sliderInput}
+              aria-label={t("facets.from")}
+              min={slider.min}
+              max={slider.max}
+              value={slider.lo}
+              onChange={(e) => setFrom(String(Math.min(Number(e.target.value), slider.hi)))}
+            />
+            <input
+              type="range"
+              className={styles.sliderInput}
+              aria-label={t("facets.to")}
+              min={slider.min}
+              max={slider.max}
+              value={slider.hi}
+              onChange={(e) => setTo(String(Math.max(Number(e.target.value), slider.lo)))}
+            />
+          </div>
+          <div className={styles.sliderBounds}>
+            <Text size={200}>{slider.min}</Text>
+            <Text size={200}>{slider.max}</Text>
+          </div>
+        </>
+      )}
       <div className={styles.rangeRow}>
         <Text size={200}>{t("facets.from")}</Text>
         <Input
           className={styles.rangeInput}
+          type="number"
           value={from}
           placeholder={bounds !== undefined ? String(bounds.minYear) : undefined}
           onChange={(_, data) => setFrom(data.value)}
-          onKeyDown={(e) => e.key === "Enter" && apply()}
         />
         <Text size={200}>{t("facets.to")}</Text>
         <Input
           className={styles.rangeInput}
+          type="number"
           value={to}
           placeholder={bounds !== undefined ? String(bounds.maxYear) : undefined}
           onChange={(_, data) => setTo(data.value)}
-          onKeyDown={(e) => e.key === "Enter" && apply()}
         />
-        <Button size="small" onClick={apply}>
-          {t("facets.apply")}
-        </Button>
       </div>
-      {bounds !== undefined && (
-        <Text size={200} className={styles.count}>
-          {t("facets.availableRange", { min: bounds.minYear, max: bounds.maxYear })}
-        </Text>
-      )}
     </>
   );
 }

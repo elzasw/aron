@@ -38,12 +38,10 @@
     "textPlaceholder": "Zadejte text",
     "from": "Od:",
     "to": "Do:",
-    "apply": "Použít",
     "showMore": "Zobrazit více ({{count}})",
     "showLess": "Zobrazit méně",
     "optionsPlaceholder": "Vyhledat hodnotu",
-    "noOptions": "Žádné odpovídající hodnoty",
-    "availableRange": "Dostupné rozmezí: {{min}}–{{max}}"
+    "noOptions": "Žádné odpovídající hodnoty"
   },
   "apu": {
     "heading": "Archivní záznam",

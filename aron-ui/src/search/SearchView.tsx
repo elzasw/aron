@@ -183,6 +183,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
               result={resultOf(def.code)}
               apuType={apuType}
               query={query}
+              total={search.data ? Number(search.data.total) : undefined}
               onFilters={onFilters}
             />
           ))}
