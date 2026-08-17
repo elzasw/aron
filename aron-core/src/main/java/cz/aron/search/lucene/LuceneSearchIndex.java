@@ -9,6 +9,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,7 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.PrefixQuery;
@@ -44,6 +46,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
@@ -250,7 +253,7 @@ public class LuceneSearchIndex implements SearchIndex {
 			IndexSearcher searcher = apuSearchers.acquire();
 			try {
 				Query mainQuery = buildMainQuery(query);
-				Query fullQuery = withValuesFilters(mainQuery, query.filters(), null);
+				Query fullQuery = withFacetFilters(mainQuery, query.filters(), null);
 				long total = searcher.count(fullQuery);
 				var hits = new ArrayList<ApuSearchResult.Hit>();
 				if (total > query.from() && query.size() > 0) {
@@ -265,7 +268,8 @@ public class LuceneSearchIndex implements SearchIndex {
 								doc.get("type"), Boolean.parseBoolean(doc.get("containsDigitalObjects"))));
 					}
 				}
-				return new ApuSearchResult(total, hits, countBuckets(searcher, query, mainQuery));
+				return new ApuSearchResult(total, hits, countBuckets(searcher, query, mainQuery),
+						computeBounds(searcher, query, mainQuery));
 			} finally {
 				apuSearchers.release(searcher);
 			}
@@ -281,21 +285,23 @@ public class LuceneSearchIndex implements SearchIndex {
 	}
 
 	/**
-	 * Bucket counting by term enumeration: for each bucket field, every term of
-	 * the field is counted against the query without that field's own Values
-	 * filter (multi-select semantics). Cost grows with term cardinality - fine
-	 * for the embedded scale this adapter targets.
+	 * Bucket counting by term enumeration: for each requested bucket field, every
+	 * term of the field is counted against the query without the paired filter
+	 * field's own facet filters (multi-select semantics). Buckets are ordered by
+	 * count descending (ties by value) and capped by the requested size. Cost
+	 * grows with term cardinality - fine for the embedded scale this adapter
+	 * targets.
 	 */
 	private Map<String, List<ApuSearchResult.Bucket>> countBuckets(IndexSearcher searcher, ApuSearchQuery query,
 			Query mainQuery) throws IOException {
-		if (query.bucketFields().isEmpty()) {
+		if (query.buckets().isEmpty()) {
 			return Map.of();
 		}
 		var result = new HashMap<String, List<ApuSearchResult.Bucket>>();
-		for (String field : query.bucketFields()) {
-			Query base = withValuesFilters(mainQuery, query.filters(), field);
+		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
+			Query base = withFacetFilters(mainQuery, query.filters(), bucket.filterField());
 			var buckets = new ArrayList<ApuSearchResult.Bucket>();
-			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), field);
+			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), bucket.bucketField());
 			if (terms != null) {
 				TermsEnum iterator = terms.iterator();
 				BytesRef term;
@@ -303,16 +309,58 @@ public class LuceneSearchIndex implements SearchIndex {
 					String value = term.utf8ToString();
 					long count = searcher.count(new BooleanQuery.Builder()
 							.add(base, Occur.MUST)
-							.add(new TermQuery(new Term(field, value)), Occur.FILTER)
+							.add(new TermQuery(new Term(bucket.bucketField(), value)), Occur.FILTER)
 							.build());
 					if (count > 0) {
 						buckets.add(new ApuSearchResult.Bucket(value, count));
 					}
 				}
 			}
-			result.put(field, buckets);
+			buckets.sort(Comparator.comparingLong(ApuSearchResult.Bucket::count).reversed()
+					.thenComparing(ApuSearchResult.Bucket::value));
+			result.put(bucket.bucketField(), buckets.size() > bucket.size()
+					? new ArrayList<>(buckets.subList(0, bucket.size()))
+					: buckets);
 		}
 		return result;
+	}
+
+	/** Dating bounds per requested UNITDATE field: min of {@code ~L}, max of {@code ~H} (doc-values). */
+	private Map<String, ApuSearchResult.Bounds> computeBounds(IndexSearcher searcher, ApuSearchQuery query,
+			Query mainQuery) throws IOException {
+		if (query.boundsFields().isEmpty()) {
+			return Map.of();
+		}
+		var result = new HashMap<String, ApuSearchResult.Bounds>();
+		for (String field : query.boundsFields()) {
+			Query base = withFacetFilters(mainQuery, query.filters(), field);
+			Long min = minMaxMillis(searcher, base, field + "~L", false);
+			Long max = minMaxMillis(searcher, base, field + "~H", true);
+			if (min != null && max != null) {
+				result.put(field, new ApuSearchResult.Bounds(min, max));
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Min/max of a date-bound field's doc-values over the matching documents,
+	 * resolved as a top-1 search sorted by the field; {@code null} when no
+	 * matching document carries the field. Shared with {@link LuceneOldApiSearch}
+	 * (the old API's MIN/MAX metric aggregations).
+	 */
+	Long minMaxMillis(IndexSearcher searcher, Query query, String field, boolean max) throws IOException {
+		long missingMarker = max ? Long.MIN_VALUE : Long.MAX_VALUE;
+		var sortField = new SortedNumericSortField(field, SortField.Type.LONG, max);
+		sortField.setMissingValue(missingMarker);
+		var top = searcher.search(query, 1, new Sort(sortField));
+		if (top.scoreDocs.length > 0 && top.scoreDocs[0] instanceof FieldDoc fieldDoc) {
+			long value = ((Number) fieldDoc.fields[0]).longValue();
+			if (value != missingMarker) {
+				return value;
+			}
+		}
+		return null;
 	}
 
 	private Query buildMainQuery(ApuSearchQuery query) throws IOException {
@@ -334,16 +382,6 @@ public class LuceneSearchIndex implements SearchIndex {
 		for (FieldFilter filter : query.filters()) {
 			if (filter instanceof FieldFilter.Text text) {
 				root.add(textFieldQuery(text), Occur.FILTER);
-			} else if (filter instanceof FieldFilter.Range range) {
-				// interval intersection over the ~L/~H bound fields (engine-shared logic)
-				if (range.to() != null) {
-					root.add(LongPoint.newRangeQuery(range.field() + "~L", Long.MIN_VALUE, toEpochMillis(range.to())),
-							Occur.FILTER);
-				}
-				if (range.from() != null) {
-					root.add(LongPoint.newRangeQuery(range.field() + "~H", toEpochMillis(range.from()),
-							Long.MAX_VALUE), Occur.FILTER);
-				}
 			}
 		}
 		return root.build();
@@ -369,8 +407,13 @@ public class LuceneSearchIndex implements SearchIndex {
 		return bool.build();
 	}
 
-	/** Adds all Values filters except the excluded field's one; each filter is an OR over its values. */
-	private static Query withValuesFilters(Query base, List<FieldFilter> filters, String excludedField) {
+	/**
+	 * Adds the facet filters (Values, Range) except those on the excluded field
+	 * (multi-select semantics); a Values filter is an OR over its values, a Range
+	 * filter an interval intersection over the {@code ~L}/{@code ~H} bound fields
+	 * (engine-shared logic).
+	 */
+	private static Query withFacetFilters(Query base, List<FieldFilter> filters, String excludedField) {
 		var root = new BooleanQuery.Builder().add(base, Occur.MUST);
 		boolean any = false;
 		for (FieldFilter filter : filters) {
@@ -380,6 +423,17 @@ public class LuceneSearchIndex implements SearchIndex {
 				or.setMinimumNumberShouldMatch(1);
 				root.add(or.build(), Occur.FILTER);
 				any = true;
+			} else if (filter instanceof FieldFilter.Range range && !range.field().equals(excludedField)) {
+				if (range.to() != null) {
+					root.add(LongPoint.newRangeQuery(range.field() + "~L", Long.MIN_VALUE, toEpochMillis(range.to())),
+							Occur.FILTER);
+					any = true;
+				}
+				if (range.from() != null) {
+					root.add(LongPoint.newRangeQuery(range.field() + "~H", toEpochMillis(range.from()),
+							Long.MAX_VALUE), Occur.FILTER);
+					any = true;
+				}
 			}
 		}
 		return any ? root.build() : base;

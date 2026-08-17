@@ -332,3 +332,28 @@ Testing: `LuceneOldApiSearchTest` (plain unit, translator behavior) and
 `OldApiSearchTest` (endpoints end-to-end with the old UI's literal request
 JSON) run in the default suite; `OldApiSurfaceTest` pins that the endpoints
 answer without Elasticsearch. ES-specific behavior stays under `es-it`.
+
+## 8. Read-side growth: facet options, REF buckets, dating bounds (2026-08-17)
+
+The old UI served as the requirements catalog (see §7): its per-facet N+1
+queries (option type-ahead, year-slider bounds) become server-side features of
+the new API. The port grew accordingly - still new-API-shaped:
+
+- `BucketRequest(bucketField, filterField, size)` replaces the plain bucket
+  field set: reference facets enumerate the composite `<code>~ID~LABEL` field
+  while their Values filter sits on `<code>`, and the explicit pairing drives
+  the multi-select exclusion. Buckets are now ordered (count desc, value asc)
+  and capped by the request.
+- `boundsFields` + `Bounds(minMillis, maxMillis)`: dating bounds of UNITDATE
+  facets, computed with the facet's own Range filter excluded. Range filters
+  moved from the engines' main query into the facet-filter layer (post_filter
+  on ES, exclusion-aware clauses on Lucene) so the exclusion works; hits and
+  totals are unaffected.
+- `POST /api/v1/facets/{code}/options` is a **controller composition** over
+  `search()` (one BucketRequest + a document-level label Text filter), with an
+  engine-neutral label post-filter in `SearchController` (folded all-words-
+  last-prefix match) - no dedicated port operation.
+
+The Lucene min/max brick added for the old API's MIN/MAX metrics
+(`LuceneSearchIndex.minMaxMillis`) now serves both the old-API aggregations and
+the port's bounds - the convergence intended in §7.

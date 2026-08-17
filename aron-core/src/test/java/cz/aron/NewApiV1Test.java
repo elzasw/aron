@@ -1,23 +1,41 @@
 package cz.aron;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestClientResponseException;
 
+import cz.aron.search.ApuDocument;
+import cz.aron.search.ApuDocumentBuilder;
+import cz.aron.search.SearchIndex;
 import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
 import cz.aron.test.api.v1.UiApi;
 import cz.aron.test.api.v1.model.ApuSearchRequest;
 import cz.aron.test.api.v1.model.ApuType;
+import cz.aron.test.api.v1.model.DatingFacetResult;
+import cz.aron.test.api.v1.model.EnumFacetResult;
+import cz.aron.test.api.v1.model.FacetBucket;
 import cz.aron.test.api.v1.model.FacetDef;
+import cz.aron.test.api.v1.model.FacetOptionsRequest;
+import cz.aron.test.api.v1.model.FacetResult;
 import cz.aron.test.api.v1.model.FacetType;
+import cz.aron.test.api.v1.model.RefFacetResult;
 import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
 import cz.aron.test.api.v1.model.SystemInfo;
 import cz.aron.test.api.v1.model.UiConfig;
+import cz.aron.test.api.v1.model.ValuesFilter;
 
 /**
  * Drives the new portal API (/api/v1) through the typed Java client generated
@@ -26,6 +44,34 @@ import cz.aron.test.api.v1.model.UiConfig;
  * generated client -> real HTTP round trip.
  */
 class NewApiV1Test extends AbstractTest {
+
+	@Autowired
+	private SearchIndex searchIndex;
+
+	/**
+	 * ARCH_DESC fixture for the facet features (idempotent: documents replace by
+	 * uuid). Assertions filter on the unique v1-* values, so data of other tests
+	 * sharing the context cannot interfere.
+	 */
+	@BeforeEach
+	void seedSearchData() {
+		var record1 = doc(uuid(1), "V1 matrika Přerov", Map.of(
+				"LANG~CODE", List.of("v1-cze"),
+				"REL~ENTITY", List.of("ent-v1-a"),
+				"REL~ENTITY~LABEL", List.of("Karel Novák"),
+				"REL~ENTITY~ID~LABEL", List.of("ent-v1-a|Karel Novák"),
+				"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
+				"UNIT~DATE~H", List.of("1850-12-31T23:59:59")));
+		var record2 = doc(uuid(2), "V1 sbírka listin", Map.of(
+				"LANG~CODE", List.of("v1-cze"),
+				"REL~ENTITY", List.of("ent-v1-b"),
+				"REL~ENTITY~LABEL", List.of("Jan Dvořák"),
+				"REL~ENTITY~ID~LABEL", List.of("ent-v1-b|Jan Dvořák"),
+				"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
+				"UNIT~DATE~H", List.of("1910-12-31T23:59:59")));
+		var record3 = doc(uuid(3), "V1 kronika", Map.of("LANG~CODE", List.of("v1-ger")));
+		searchIndex.indexApus(List.of(record1, record2, record3));
+	}
 
 	@Test
 	void systemInfoViaGeneratedClient() {
@@ -86,6 +132,105 @@ class NewApiV1Test extends AbstractTest {
 		// section restriction applies
 		request.setApuType(ApuType.FUND);
 		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getTotal()).isZero();
+	}
+
+	@Test
+	void searchReturnsRefBucketsAndDatingBounds() {
+		// the LANG~CODE filter scopes every OTHER facet's result to the fixture
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		request.setFilters(List.of(valuesFilter("LANG~CODE", "v1-cze")));
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+
+		assertThat(response.getTotal()).isEqualTo(2);
+		Map<String, FacetResult> byCode = response.getFacets().stream()
+				.collect(Collectors.toMap(FacetResult::getCode, Function.identity()));
+
+		// MULTI_REF facets answer with a REF result: uuid as value plus its label
+		assertThat(byCode.get("REL~ENTITY")).isInstanceOfSatisfying(RefFacetResult.class,
+				ref -> assertThat(ref.getBuckets())
+						.extracting(FacetBucket::getValue, FacetBucket::getLabel, FacetBucket::getCount)
+						.containsExactlyInAnyOrder(
+								tuple("ent-v1-a", "Karel Novák", 1L),
+								tuple("ent-v1-b", "Jan Dvořák", 1L)));
+
+		// UNITDATE facets answer with a DATING result carrying the bounds
+		assertThat(byCode.get("UNIT~DATE")).isInstanceOfSatisfying(DatingFacetResult.class, dating -> {
+			assertThat(dating.getBounds()).isNotNull();
+			assertThat(dating.getBounds().getMinYear()).isEqualTo(1800);
+			assertThat(dating.getBounds().getMaxYear()).isEqualTo(1910);
+		});
+
+		// the ENUM facet's own buckets ignore its filter (multi-select)
+		assertThat(byCode.get("LANG~CODE")).isInstanceOfSatisfying(EnumFacetResult.class,
+				enumResult -> assertThat(enumResult.getBuckets())
+						.extracting(FacetBucket::getValue, FacetBucket::getCount)
+						.contains(tuple("v1-cze", 2L), tuple("v1-ger", 1L)));
+	}
+
+	@Test
+	void facetOptionsProvideFoldedTypeAhead() {
+		var request = optionsRequest(ApuType.ARCH_DESC);
+		request.setQ("novak"); // folded form of "Novák"
+		var options = new SearchApi(v1ApiClient()).searchGetFacetOptions("REL~ENTITY", request).getOptions();
+		assertThat(options)
+				.extracting(FacetBucket::getValue, FacetBucket::getLabel)
+				.containsExactly(tuple("ent-v1-a", "Karel Novák"));
+
+		// prefix on the last word
+		request.setQ("dvo");
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacetOptions("REL~ENTITY", request).getOptions())
+				.extracting(FacetBucket::getValue)
+				.containsExactly("ent-v1-b");
+
+		// ENUM options match against the value itself
+		var enumRequest = optionsRequest(ApuType.ARCH_DESC);
+		enumRequest.setQ("v1-c");
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacetOptions("LANG~CODE", enumRequest).getOptions())
+				.extracting(FacetBucket::getValue)
+				.containsExactly("v1-cze");
+	}
+
+	@Test
+	void facetOptionsRejectNonEnumerableOrUnknownFacets() {
+		var request = optionsRequest(ApuType.ARCH_DESC);
+
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchGetFacetOptions("TITLE~MAIN", request))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchGetFacetOptions("NEZNAMA", request))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+	}
+
+	// --- helpers --------------------------------------------------------------
+
+	private static String uuid(int n) {
+		return UUID.nameUUIDFromBytes(("v1-search-" + n).getBytes()).toString();
+	}
+
+	private static FacetOptionsRequest optionsRequest(ApuType apuType) {
+		var request = new FacetOptionsRequest();
+		request.setApuType(apuType);
+		return request;
+	}
+
+	private static ValuesFilter valuesFilter(String facet, String value) {
+		var filter = new ValuesFilter();
+		filter.setFacet(facet);
+		filter.setValues(List.of(value));
+		return filter;
+	}
+
+	private static ApuDocument doc(String uuid, String name, Map<String, List<Object>> values) {
+		var document = new ApuDocument();
+		document.setUuid(uuid);
+		document.setName(name);
+		document.setNameSort(ApuDocumentBuilder.czechSortKey(name));
+		document.setType("ARCH_DESC");
+		document.setApuSourceId(999_200L);
+		document.getValues().putAll(values);
+		return document;
 	}
 
 }

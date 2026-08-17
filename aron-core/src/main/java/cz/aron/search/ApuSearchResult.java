@@ -10,15 +10,23 @@ import java.util.Map;
  *
  * @param total   total number of matching documents (independent of paging)
  * @param hits    the requested page of hits
- * @param buckets value-bucket counts per requested bucket field; bucket order
- *                is unspecified (the caller orders per facet configuration)
+ * @param buckets value buckets per requested bucket field, ordered by count
+ *                descending (ties by value ascending) and capped by the
+ *                request's size
+ * @param bounds  dating bounds per requested bounds field; a field has no entry
+ *                when no matching document carries its dating
  */
-public record ApuSearchResult(long total, List<Hit> hits, Map<String, List<Bucket>> buckets) {
+public record ApuSearchResult(long total, List<Hit> hits, Map<String, List<Bucket>> buckets,
+		Map<String, Bounds> bounds) {
 
 	public record Hit(String uuid, String name, String description, String type, boolean containsDigitalObjects) {
 	}
 
 	public record Bucket(String value, long count) {
+	}
+
+	/** Dating bounds in epoch millis (UTC) - min of the {@code ~L}, max of the {@code ~H} bound field. */
+	public record Bounds(long minMillis, long maxMillis) {
 	}
 
 }

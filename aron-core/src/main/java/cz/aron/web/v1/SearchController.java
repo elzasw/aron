@@ -2,14 +2,18 @@ package cz.aron.web.v1;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.text.Normalizer;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -26,11 +30,18 @@ import cz.aron.api.v1.model.ApuSearchItem;
 import cz.aron.api.v1.model.ApuSearchRequest;
 import cz.aron.api.v1.model.ApuSearchResponse;
 import cz.aron.api.v1.model.ApuType;
+import cz.aron.api.v1.model.DatingBounds;
+import cz.aron.api.v1.model.DatingFacetResult;
+import cz.aron.api.v1.model.EnumFacetResult;
 import cz.aron.api.v1.model.FacetBucket;
 import cz.aron.api.v1.model.FacetDef;
 import cz.aron.api.v1.model.FacetDisplay;
+import cz.aron.api.v1.model.FacetOptionsRequest;
+import cz.aron.api.v1.model.FacetOptionsResponse;
 import cz.aron.api.v1.model.FacetOrder;
 import cz.aron.api.v1.model.FacetResult;
+import cz.aron.api.v1.model.FacetResultKind;
+import cz.aron.api.v1.model.RefFacetResult;
 import cz.aron.api.v1.model.RangeFilter;
 import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
@@ -55,6 +66,9 @@ import jakarta.annotation.PostConstruct;
  */
 @RestController
 public class SearchController implements SearchApi {
+
+	/** Upper bound of buckets requested from the engine per facet (= the contract's max options size). */
+	private static final int BUCKET_LIMIT = 1000;
 
 	private final FacetsLoader facetsLoader;
 
@@ -96,22 +110,31 @@ public class SearchController implements SearchApi {
 		for (SearchFilter filter : request.getFilters() != null ? request.getFilters() : List.<SearchFilter>of()) {
 			filters.add(toFieldFilter(filter, byCode));
 		}
-		// buckets are counted for every ENUM facet of the section
-		Set<String> bucketFields = sectionFacets.stream()
-				.filter(f -> f.getType() == cz.aron.domain.facets.dto.FacetType.ENUM)
-				.map(FacetConfigDto::getSource)
-				.collect(Collectors.toCollection(LinkedHashSet::new));
+		// buckets for every enumerable facet of the section (reference facets
+		// enumerate their composite ~ID~LABEL field, see BucketRequest), dating
+		// bounds for every UNITDATE facet
+		var bucketRequests = new ArrayList<ApuSearchQuery.BucketRequest>();
+		var boundsFields = new LinkedHashSet<String>();
+		for (FacetConfigDto facet : sectionFacets) {
+			switch (facet.getType()) {
+				case ENUM -> bucketRequests.add(ApuSearchQuery.BucketRequest.of(facet.getSource(), BUCKET_LIMIT));
+				case MULTI_REF -> bucketRequests.add(new ApuSearchQuery.BucketRequest(
+						facet.getSource() + "~ID~LABEL", facet.getSource(), BUCKET_LIMIT));
+				case UNITDATE -> boundsFields.add(facet.getSource());
+				default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
+			}
+		}
 
 		int from = request.getFrom() != null ? request.getFrom() : 0;
 		int size = request.getSize() != null ? request.getSize() : 10;
 		var sort = request.getSort() == SortMode.NAME
 				? ApuSearchQuery.SortMode.NAME
 				: ApuSearchQuery.SortMode.RELEVANCE;
-		String fulltext = request.getQuery() != null && !request.getQuery().isBlank() ? request.getQuery() : null;
+		String fulltext = blankToNull(request.getQuery());
 		String apuType = request.getApuType() != null ? request.getApuType().getValue() : null;
 
 		ApuSearchResult result = indexingService
-				.search(new ApuSearchQuery(apuType, fulltext, filters, bucketFields, from, size, sort));
+				.search(new ApuSearchQuery(apuType, fulltext, filters, bucketRequests, boundsFields, from, size, sort));
 
 		var items = result.hits().stream()
 				.map(h -> {
@@ -123,15 +146,71 @@ public class SearchController implements SearchApi {
 				.toList();
 		var facetResults = new ArrayList<FacetResult>();
 		for (FacetConfigDto facet : sectionFacets) {
-			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM) {
-				continue;
+			switch (facet.getType()) {
+				case ENUM -> facetResults.add(new EnumFacetResult(
+						orderFacetBuckets(toFacetBuckets(result.buckets().get(facet.getSource()), false), facet),
+						FacetResultKind.ENUM, facet.getSource()));
+				case MULTI_REF -> facetResults.add(new RefFacetResult(
+						orderFacetBuckets(
+								toFacetBuckets(result.buckets().get(facet.getSource() + "~ID~LABEL"), true), facet),
+						FacetResultKind.REF, facet.getSource()));
+				case UNITDATE -> {
+					var facetResult = new DatingFacetResult(FacetResultKind.DATING, facet.getSource());
+					var bounds = result.bounds().get(facet.getSource());
+					if (bounds != null) {
+						facetResult.setBounds(new DatingBounds(yearOf(bounds.minMillis()), yearOf(bounds.maxMillis())));
+					}
+					facetResults.add(facetResult);
+				}
+				default -> { /* no facet result */ }
 			}
-			var buckets = result.buckets().getOrDefault(facet.getSource(), List.of());
-			facetResults.add(new FacetResult(facet.getSource(), orderBuckets(buckets, facet).stream()
-					.map(b -> new FacetBucket(b.value(), b.count()))
-					.toList()));
 		}
 		return ResponseEntity.ok(new ApuSearchResponse((long) result.total(), items, facetResults));
+	}
+
+	/**
+	 * Options of one enumerable facet (type-ahead): the same multi-select search
+	 * as {@code searchSearch} restricted to the facet's buckets, narrowed by the
+	 * option label. For reference facets a document-level filter on the analyzed
+	 * label companion narrows the candidates; the term-level label match below
+	 * removes the remaining false positives of multi-reference documents.
+	 */
+	@Override
+	public ResponseEntity<FacetOptionsResponse> searchGetFacetOptions(String code, FacetOptionsRequest request) {
+		List<FacetConfigDto> sectionFacets = facetsFor(request.getApuType());
+		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
+				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
+		FacetConfigDto facet = byCode.get(code);
+		if (facet == null) {
+			throw badRequest("Unknown facet '" + code + "' for the requested apuType.");
+		}
+		boolean reference = facet.getType() == cz.aron.domain.facets.dto.FacetType.MULTI_REF;
+		if (!reference && facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM) {
+			throw badRequest("Facet '" + code + "' has no options.");
+		}
+
+		var filters = new ArrayList<FieldFilter>();
+		for (SearchFilter filter : request.getFilters() != null ? request.getFilters() : List.<SearchFilter>of()) {
+			filters.add(toFieldFilter(filter, byCode));
+		}
+		String q = blankToNull(request.getQ());
+		if (reference && q != null) {
+			filters.add(new FieldFilter.Text(facet.getSource() + "~LABEL", q));
+		}
+
+		String bucketField = reference ? facet.getSource() + "~ID~LABEL" : facet.getSource();
+		ApuSearchResult result = indexingService.search(new ApuSearchQuery(
+				request.getApuType().getValue(), blankToNull(request.getQuery()), filters,
+				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT)),
+				Set.of(), 0, 0, ApuSearchQuery.SortMode.RELEVANCE));
+
+		var options = toFacetBuckets(result.buckets().get(bucketField), reference).stream()
+				.filter(b -> q == null || labelMatches(b.getLabel() != null ? b.getLabel() : b.getValue(), q))
+				.collect(Collectors.toCollection(ArrayList::new));
+		var ordered = orderFacetBuckets(options, facet);
+		int size = request.getSize() != null ? request.getSize() : 100;
+		return ResponseEntity
+				.ok(new FacetOptionsResponse(ordered.size() > size ? ordered.subList(0, size) : ordered));
 	}
 
 	private FieldFilter toFieldFilter(SearchFilter filter, Map<String, FacetConfigDto> byCode) {
@@ -252,14 +331,78 @@ public class SearchController implements SearchApi {
 		};
 	}
 
-	/** ASC = alphabetical, otherwise (FREQ, the default) by count with a stable alphabetical tiebreak. */
-	private static List<ApuSearchResult.Bucket> orderBuckets(List<ApuSearchResult.Bucket> buckets,
-			FacetConfigDto facet) {
-		Comparator<ApuSearchResult.Bucket> comparator = "ASC".equalsIgnoreCase(facet.getOrderBy())
-				? Comparator.comparing(ApuSearchResult.Bucket::value)
-				: Comparator.comparingLong(ApuSearchResult.Bucket::count).reversed()
-						.thenComparing(ApuSearchResult.Bucket::value);
+	/**
+	 * Port buckets to contract buckets; reference buckets split their composite
+	 * {@code uuid|label} value (see the ~ID~LABEL layout of ApuDocumentBuilder).
+	 */
+	private static List<FacetBucket> toFacetBuckets(List<ApuSearchResult.Bucket> buckets, boolean reference) {
+		if (buckets == null) {
+			return List.of();
+		}
+		return buckets.stream().map(b -> {
+			if (reference) {
+				int separator = b.value().indexOf('|');
+				if (separator > 0) {
+					var facetBucket = new FacetBucket(b.value().substring(0, separator), b.count());
+					facetBucket.setLabel(b.value().substring(separator + 1));
+					return facetBucket;
+				}
+			}
+			return new FacetBucket(b.value(), b.count());
+		}).collect(Collectors.toCollection(ArrayList::new));
+	}
+
+	/** ASC = alphabetical by display label, otherwise (FREQ, the default) by count with a label tiebreak. */
+	private static List<FacetBucket> orderFacetBuckets(List<FacetBucket> buckets, FacetConfigDto facet) {
+		Function<FacetBucket, String> label = b -> b.getLabel() != null ? b.getLabel() : b.getValue();
+		Comparator<FacetBucket> comparator = "ASC".equalsIgnoreCase(facet.getOrderBy())
+				? Comparator.comparing(label)
+				: Comparator.comparingLong(FacetBucket::getCount).reversed().thenComparing(label);
 		return buckets.stream().sorted(comparator).toList();
+	}
+
+	/**
+	 * Label match of the type-ahead: all folded words of {@code q} must match
+	 * words of the label, the last one as a prefix (the engines' analyzed-match
+	 * semantics, applied engine-neutrally on the option labels).
+	 */
+	static boolean labelMatches(String label, String q) {
+		// both sides split like the index analyzers tokenize (non-alphanumerics)
+		String[] words = fold(label).split("[^\\p{L}\\p{N}]+");
+		String[] tokens = fold(q).split("[^\\p{L}\\p{N}]+");
+		for (int i = 0; i < tokens.length; i++) {
+			String token = tokens[i];
+			if (token.isEmpty()) {
+				continue;
+			}
+			boolean last = i == tokens.length - 1;
+			boolean found = false;
+			for (String word : words) {
+				if (last ? word.startsWith(token) : word.equals(token)) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/** Folds to the comparison form of the index analyzers: lowercase, diacritics stripped. */
+	private static String fold(String text) {
+		return Normalizer.normalize(text, Normalizer.Form.NFD)
+				.replaceAll("\\p{M}+", "")
+				.toLowerCase(Locale.ROOT);
+	}
+
+	private static int yearOf(long epochMillis) {
+		return Instant.ofEpochMilli(epochMillis).atOffset(ZoneOffset.UTC).getYear();
+	}
+
+	private static String blankToNull(String value) {
+		return value != null && !value.isBlank() ? value : null;
 	}
 
 	private static ResponseStatusException badRequest(String message) {

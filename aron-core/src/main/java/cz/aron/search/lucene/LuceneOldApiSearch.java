@@ -18,13 +18,11 @@ import org.apache.lucene.index.MultiTerms;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.FieldDoc;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.WildcardQuery;
@@ -442,24 +440,14 @@ public class LuceneOldApiSearch implements OldApiSearch {
 
 	/**
 	 * Min/max of a date-bound field ({@code ~L}/{@code ~H} doc-values) over the
-	 * matching documents: top-1 search sorted by the field. Mirrors the ES metric
-	 * result mapping: {@code value} is the epoch-millis double, {@code asString}
-	 * its {@code format}-formatted form; both {@code null} when nothing matches.
+	 * matching documents (the engine brick shared with the port's dating bounds).
+	 * Mirrors the ES metric result mapping: {@code value} is the epoch-millis
+	 * double, {@code asString} its {@code format}-formatted form; both
+	 * {@code null} when nothing matches.
 	 */
 	private AggregationResult minMax(IndexSearcher searcher, Query query, String field, String format, String key,
 			boolean max) throws IOException {
-		long missingMarker = max ? Long.MIN_VALUE : Long.MAX_VALUE;
-		var sortField = new SortedNumericSortField(field, SortField.Type.LONG, max);
-		sortField.setMissingValue(missingMarker);
-		var top = searcher.search(query, 1, new Sort(sortField));
-
-		Long millis = null;
-		if (top.scoreDocs.length > 0 && top.scoreDocs[0] instanceof FieldDoc fieldDoc) {
-			long value = ((Number) fieldDoc.fields[0]).longValue();
-			if (value != missingMarker) {
-				millis = value;
-			}
-		}
+		Long millis = index.minMaxMillis(searcher, query, field, max);
 		var result = new AggregationResult().key(key);
 		if (millis != null) {
 			result.value(String.valueOf((double) millis));

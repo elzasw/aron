@@ -61,8 +61,8 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	private static final String FIELDS_CRC_META_KEY = "fieldsCrc";
 
-	/** Upper bound of returned buckets per facet (terms aggregation size). */
-	private static final int BUCKET_LIMIT = 1000;
+	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
+	private static final String BOUNDS_AGG_PREFIX = "bounds~";
 
 	private static final DateTimeFormatter ISO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -169,27 +169,41 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	@Override
 	public ApuSearchResult search(ApuSearchQuery query) {
 		var builder = NativeQuery.builder().withQuery(buildMainQuery(query));
-		// Values filters go into the post_filter: they restrict hits and total but
-		// not aggregations - that is what the multi-select bucket semantics need
-		Query valuesFilter = buildValuesFilters(query.filters(), null);
-		if (valuesFilter != null) {
-			builder.withFilter(valuesFilter);
+		// facet filters (Values, Range) go into the post_filter: they restrict hits
+		// and total but not aggregations - each aggregation applies the OTHER
+		// facets' filters itself (multi-select semantics)
+		Query facetFilter = buildFacetFilters(query.filters(), null);
+		if (facetFilter != null) {
+			builder.withFilter(facetFilter);
 		}
-		for (String bucketField : query.bucketFields()) {
-			// buckets of a field ignore that field's own Values filter
-			Query otherValues = buildValuesFilters(query.filters(), bucketField);
-			Query aggFilter = otherValues != null ? otherValues : Query.of(q -> q.matchAll(m -> m));
-			builder.withAggregation(bucketField, Aggregation.of(a -> a
-					.filter(aggFilter)
+		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
+			builder.withAggregation(bucket.bucketField(), Aggregation.of(a -> a
+					.filter(facetFiltersOrMatchAll(query.filters(), bucket.filterField()))
 					.aggregations("values", Aggregation.of(sub -> sub
-							.terms(t -> t.field(bucketField).size(BUCKET_LIMIT))))));
+							.terms(t -> t.field(bucket.bucketField()).size(bucket.size()))))));
+		}
+		for (String field : query.boundsFields()) {
+			// the value_counts detect "no dating present": the min/max values alone
+			// cannot (the client maps their null to 0.0)
+			builder.withAggregation(BOUNDS_AGG_PREFIX + field, Aggregation.of(a -> a
+					.filter(facetFiltersOrMatchAll(query.filters(), field))
+					.aggregations("min", Aggregation.of(sub -> sub.min(m -> m.field(field + "~L"))))
+					.aggregations("max", Aggregation.of(sub -> sub.max(m -> m.field(field + "~H"))))
+					.aggregations("minCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~L"))))
+					.aggregations("maxCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~H"))))));
 		}
 		if (query.sort() == ApuSearchQuery.SortMode.NAME) {
 			builder.withSort(Sort.by(Sort.Direction.ASC, "nameSort"));
 		}
 		// arbitrary from-offset: over-fetch from+size and slice (size is capped by
-		// the caller and ES limits the window to 10k anyway)
-		builder.withPageable(PageRequest.of(0, query.from() + query.size()));
+		// the caller and ES limits the window to 10k anyway); zero = an
+		// aggregation/bounds-only query without hits
+		int wanted = query.from() + query.size();
+		if (wanted > 0) {
+			builder.withPageable(PageRequest.of(0, wanted));
+		} else {
+			builder.withMaxResults(0);
+		}
 		var hits = operations.search(builder.build(), IndexedApu.class, IndexCoordinates.of("apu"));
 		var resultHits = hits.getSearchHits().stream()
 				.skip(query.from())
@@ -197,7 +211,8 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 						h.getContent().getDescription(), h.getContent().getType(),
 						h.getContent().isContainsDigitalObjects()))
 				.toList();
-		return new ApuSearchResult(hits.getTotalHits(), resultHits, extractBuckets(hits, query.bucketFields()));
+		return new ApuSearchResult(hits.getTotalHits(), resultHits, extractBuckets(hits, query.buckets()),
+				extractBounds(hits, query.boundsFields()));
 	}
 
 	private Query buildMainQuery(ApuSearchQuery query) {
@@ -213,23 +228,16 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		for (FieldFilter filter : query.filters()) {
 			if (filter instanceof FieldFilter.Text text) {
 				bool.filter(Query.of(q -> q.matchPhrasePrefix(m -> m.field(text.field()).query(text.text()))));
-			} else if (filter instanceof FieldFilter.Range range) {
-				// interval intersection over the ~L/~H bound fields (engine-shared logic)
-				if (range.to() != null) {
-					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~L")
-							.lte(ISO_DATE_TIME.format(range.to()))))));
-				}
-				if (range.from() != null) {
-					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~H")
-							.gte(ISO_DATE_TIME.format(range.from()))))));
-				}
 			}
 		}
 		return Query.of(q -> q.bool(bool.build()));
 	}
 
-	/** AND of all Values filters, each an OR over its values; {@code null} when none apply. */
-	private static Query buildValuesFilters(List<FieldFilter> filters, String excludedField) {
+	/**
+	 * AND of the facet filters (Values, Range), skipping those on the excluded
+	 * field (multi-select); {@code null} when none apply.
+	 */
+	private static Query buildFacetFilters(List<FieldFilter> filters, String excludedField) {
 		var bool = new BoolQuery.Builder();
 		boolean any = false;
 		for (FieldFilter filter : filters) {
@@ -239,28 +247,68 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 				or.minimumShouldMatch("1");
 				bool.filter(Query.of(q -> q.bool(or.build())));
 				any = true;
+			} else if (filter instanceof FieldFilter.Range range && !range.field().equals(excludedField)) {
+				// interval intersection over the ~L/~H bound fields (engine-shared logic)
+				if (range.to() != null) {
+					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~L")
+							.lte(ISO_DATE_TIME.format(range.to()))))));
+					any = true;
+				}
+				if (range.from() != null) {
+					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~H")
+							.gte(ISO_DATE_TIME.format(range.from()))))));
+					any = true;
+				}
 			}
 		}
 		return any ? Query.of(q -> q.bool(bool.build())) : null;
 	}
 
+	private static Query facetFiltersOrMatchAll(List<FieldFilter> filters, String excludedField) {
+		Query others = buildFacetFilters(filters, excludedField);
+		return others != null ? others : Query.of(q -> q.matchAll(m -> m));
+	}
+
 	private static Map<String, List<ApuSearchResult.Bucket>> extractBuckets(SearchHits<IndexedApu> hits,
-			Set<String> bucketFields) {
-		if (bucketFields.isEmpty()) {
+			List<ApuSearchQuery.BucketRequest> buckets) {
+		if (buckets.isEmpty()) {
 			return Map.of();
 		}
 		var result = new HashMap<String, List<ApuSearchResult.Bucket>>();
 		var aggregations = (ElasticsearchAggregations) hits.getAggregations();
-		for (String field : bucketFields) {
-			var aggregation = aggregations.get(field);
+		for (ApuSearchQuery.BucketRequest bucket : buckets) {
+			var aggregation = aggregations.get(bucket.bucketField());
 			if (aggregation == null) {
-				result.put(field, List.of());
+				result.put(bucket.bucketField(), List.of());
 				continue;
 			}
 			var terms = aggregation.aggregation().getAggregate().filter().aggregations().get("values").sterms();
-			result.put(field, terms.buckets().array().stream()
+			result.put(bucket.bucketField(), terms.buckets().array().stream()
 					.map(b -> new ApuSearchResult.Bucket(b.key().stringValue(), b.docCount()))
 					.toList());
+		}
+		return result;
+	}
+
+	private static Map<String, ApuSearchResult.Bounds> extractBounds(SearchHits<IndexedApu> hits,
+			Set<String> boundsFields) {
+		if (boundsFields.isEmpty()) {
+			return Map.of();
+		}
+		var result = new HashMap<String, ApuSearchResult.Bounds>();
+		var aggregations = (ElasticsearchAggregations) hits.getAggregations();
+		for (String field : boundsFields) {
+			var aggregation = aggregations.get(BOUNDS_AGG_PREFIX + field);
+			if (aggregation == null) {
+				continue;
+			}
+			var subAggs = aggregation.aggregation().getAggregate().filter().aggregations();
+			// no matching document carries the dating - no entry then
+			if (subAggs.get("minCount").valueCount().value() > 0
+					&& subAggs.get("maxCount").valueCount().value() > 0) {
+				result.put(field, new ApuSearchResult.Bounds((long) subAggs.get("min").min().value(),
+						(long) subAggs.get("max").max().value()));
+			}
 		}
 		return result;
 	}
