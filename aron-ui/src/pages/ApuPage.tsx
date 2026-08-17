@@ -80,10 +80,6 @@ const useStyles = makeStyles({
     paddingTop: tokens.spacingVerticalM,
     borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
   },
-  partValue: {
-    color: tokens.colorNeutralForeground2,
-    fontStyle: "italic",
-  },
   items: {
     display: "grid",
     gridTemplateColumns: "minmax(160px, 240px) 1fr",
@@ -140,16 +136,23 @@ function ItemValue({ item }: { item: DetailItem }) {
   }
 }
 
+/**
+ * One part of the detail. Follows the old portal's display rules: the part's
+ * own textual value is never rendered (it only duplicates the items), and a
+ * part with a single item collapses to one label/value row without the part
+ * header - seven name parts of an entity read as seven rows, not seven
+ * sections.
+ */
 function Part({ part }: { part: DetailPart }) {
   const styles = useStyles();
   const items = part.items.filter((item) => item.code !== ARCHDESC_ROOT_REF);
   if (items.length === 0) {
     return null;
   }
+  const single = items.length === 1;
   return (
-    <section className={styles.part} aria-label={part.label}>
-      <Subtitle2>{part.label}</Subtitle2>
-      {part.value && <Text className={styles.partValue}>{part.value}</Text>}
+    <section className={styles.part} aria-label={single ? items[0].label : part.label}>
+      {!single && <Subtitle2>{part.label}</Subtitle2>}
       <dl className={styles.items}>
         {items.map((item, index) => (
           <Fragment key={`${item.code}-${index}`}>
