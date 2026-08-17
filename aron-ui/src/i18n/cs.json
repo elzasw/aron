@@ -27,8 +27,20 @@
     "placeholder": "Obsah sekce se připravuje."
   },
   "search": {
-    "placeholder": "Vyhledávání se připravuje.",
-    "placeholderWithQuery": "Vyhledávání výrazu „{{query}}“ se připravuje."
+    "button": "Hledat",
+    "sidebarPlaceholder": "Vyhledávání",
+    "pageSize": "Počet na stránce:",
+    "total": "Nalezeno záznamů: {{count}}",
+    "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
+    "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu."
+  },
+  "facets": {
+    "textPlaceholder": "Zadejte text",
+    "from": "Od:",
+    "to": "Do:",
+    "apply": "Použít",
+    "showMore": "Zobrazit více ({{count}})",
+    "showLess": "Zobrazit méně"
   },
   "apu": {
     "heading": "Archivní záznam",
