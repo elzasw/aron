@@ -53,6 +53,7 @@ export const SECTIONS: Record<MenuItemCode, SectionDef> = {
   },
   [MenuItemCode.Help]: {
     labelKey: "sections.HELP",
-    defaultColor: "#1d3c60",
+    // must stay visible against the navy header background
+    defaultColor: "#3e6ca3",
   },
 };

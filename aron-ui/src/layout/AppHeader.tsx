@@ -1,6 +1,6 @@
 import { makeStyles, mergeClasses, Text, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router-dom";
 import { logoUrl, uiApi } from "../api/client";
@@ -30,13 +30,24 @@ const useStyles = makeStyles({
     paddingBottom: tokens.spacingVerticalS,
   },
   logo: {
-    height: "44px",
+    // deployments supply arbitrary SVG/PNG logos - constrain both dimensions
+    height: "48px",
+    maxWidth: "300px",
     width: "auto",
+    objectFit: "contain",
   },
   title: {
     fontSize: tokens.fontSizeHero800,
     fontWeight: tokens.fontWeightBold,
     lineHeight: "1.1",
+  },
+  screenReaderOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    overflow: "hidden",
+    clipPath: "inset(50%)",
+    whiteSpace: "nowrap",
   },
   nav: {
     display: "flex",
@@ -87,14 +98,24 @@ export default function AppHeader() {
     queryKey: ["ui-config"],
     queryFn: () => uiApi.uiGetConfig(),
   });
+  const name = config?.name ?? t("app.title");
+
+  useEffect(() => {
+    if (config) {
+      document.title = config.name;
+    }
+  }, [config]);
 
   return (
     <header className={styles.header}>
       <Link to="/" className={styles.brand}>
+        {/* the logo carries the visual brand; the name is shown only without it
+            (old-portal behavior - deployment logos typically contain the wordmark) */}
         {!logoFailed && (
           <img className={styles.logo} src={logoUrl} alt="" onError={() => setLogoFailed(true)} />
         )}
-        <span className={styles.title}>{config?.name ?? t("app.title")}</span>
+        {logoFailed && <span className={styles.title}>{name}</span>}
+        <h1 className={styles.screenReaderOnly}>{name}</h1>
       </Link>
       <nav className={styles.nav}>
         {(config?.menuItems ?? []).map((item) => (
