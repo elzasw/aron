@@ -47,6 +47,7 @@ import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
 import cz.aron.api.v1.model.TextFilter;
 import cz.aron.api.v1.model.ValuesFilter;
+import cz.aron.domain.DataType;
 import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
@@ -110,16 +111,15 @@ public class SearchController implements SearchApi {
 		for (SearchFilter filter : request.getFilters() != null ? request.getFilters() : List.<SearchFilter>of()) {
 			filters.add(toFieldFilter(filter, byCode));
 		}
-		// buckets for every enumerable facet of the section (reference facets
-		// enumerate their composite ~ID~LABEL field, see BucketRequest), dating
-		// bounds for every UNITDATE facet
+		// buckets for every enumerable facet of the section (reference-valued
+		// facets enumerate their composite ~ID~LABEL field, see BucketRequest),
+		// dating bounds for every UNITDATE facet
 		var bucketRequests = new ArrayList<ApuSearchQuery.BucketRequest>();
 		var boundsFields = new LinkedHashSet<String>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
-				case ENUM -> bucketRequests.add(ApuSearchQuery.BucketRequest.of(facet.getSource(), BUCKET_LIMIT));
-				case MULTI_REF -> bucketRequests.add(new ApuSearchQuery.BucketRequest(
-						facet.getSource() + "~ID~LABEL", facet.getSource(), BUCKET_LIMIT));
+				case ENUM, MULTI_REF -> bucketRequests.add(new ApuSearchQuery.BucketRequest(
+						bucketFieldOf(facet), facet.getSource(), BUCKET_LIMIT));
 				case UNITDATE -> boundsFields.add(facet.getSource());
 				default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
 			}
@@ -148,11 +148,11 @@ public class SearchController implements SearchApi {
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
 				case ENUM -> facetResults.add(new EnumFacetResult(
-						orderFacetBuckets(toFacetBuckets(result.buckets().get(facet.getSource()), false), facet),
+						orderFacetBuckets(toFacetBuckets(result.buckets().get(bucketFieldOf(facet)),
+								referenceValued(facet)), facet),
 						FacetResultKind.ENUM, facet.getSource()));
 				case MULTI_REF -> facetResults.add(new RefFacetResult(
-						orderFacetBuckets(
-								toFacetBuckets(result.buckets().get(facet.getSource() + "~ID~LABEL"), true), facet),
+						orderFacetBuckets(toFacetBuckets(result.buckets().get(bucketFieldOf(facet)), true), facet),
 						FacetResultKind.REF, facet.getSource()));
 				case UNITDATE -> {
 					var facetResult = new DatingFacetResult(FacetResultKind.DATING, facet.getSource());
@@ -184,10 +184,11 @@ public class SearchController implements SearchApi {
 		if (facet == null) {
 			throw badRequest("Unknown facet '" + code + "' for the requested apuType.");
 		}
-		boolean reference = facet.getType() == cz.aron.domain.facets.dto.FacetType.MULTI_REF;
-		if (!reference && facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM) {
+		if (facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF
+				&& facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM) {
 			throw badRequest("Facet '" + code + "' has no options.");
 		}
+		boolean reference = referenceValued(facet);
 
 		var filters = new ArrayList<FieldFilter>();
 		for (SearchFilter filter : request.getFilters() != null ? request.getFilters() : List.<SearchFilter>of()) {
@@ -198,7 +199,7 @@ public class SearchController implements SearchApi {
 			filters.add(new FieldFilter.Text(facet.getSource() + "~LABEL", q));
 		}
 
-		String bucketField = reference ? facet.getSource() + "~ID~LABEL" : facet.getSource();
+		String bucketField = bucketFieldOf(facet);
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(
 				request.getApuType().getValue(), blankToNull(request.getQuery()), filters,
 				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT)),
@@ -329,6 +330,27 @@ public class SearchController implements SearchApi {
 			case MULTI_REF_EXT -> cz.aron.api.v1.model.FacetType.MULTI_REF_EXT;
 			case MULTI_TYPE_REF -> cz.aron.api.v1.model.FacetType.MULTI_TYPE_REF;
 		};
+	}
+
+	/**
+	 * A facet whose values are APU references: MULTI_REF facets by definition,
+	 * and ENUM facets whose source item type is APU_REF (deployments configure
+	 * e.g. an institution facet this way). Such facets enumerate the composite
+	 * {@code ~ID~LABEL} field so their buckets carry display labels, not uuids.
+	 */
+	private boolean referenceValued(FacetConfigDto facet) {
+		if (facet.getType() == cz.aron.domain.facets.dto.FacetType.MULTI_REF) {
+			return true;
+		}
+		if (facet.getType() == cz.aron.domain.facets.dto.FacetType.ENUM) {
+			var itemType = typesHolder.getItemTypeForCode(facet.getSource());
+			return itemType != null && DataType.APU_REF.equals(itemType.getType());
+		}
+		return false;
+	}
+
+	private String bucketFieldOf(FacetConfigDto facet) {
+		return referenceValued(facet) ? facet.getSource() + "~ID~LABEL" : facet.getSource();
 	}
 
 	/**

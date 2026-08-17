@@ -70,7 +70,12 @@ class NewApiV1Test extends AbstractTest {
 				"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
 				"UNIT~DATE~H", List.of("1910-12-31T23:59:59")));
 		var record3 = doc(uuid(3), "V1 kronika", Map.of("LANG~CODE", List.of("v1-ger")));
-		searchIndex.indexApus(List.of(record1, record2, record3));
+		var fund = doc(uuid(4), "V1 fond města", Map.of(
+				"REL~ENTITY", List.of("ent-v1-f"),
+				"REL~ENTITY~LABEL", List.of("Okresní archiv"),
+				"REL~ENTITY~ID~LABEL", List.of("ent-v1-f|Okresní archiv")));
+		fund.setType("FUND");
+		searchIndex.indexApus(List.of(record1, record2, record3, fund));
 	}
 
 	@Test
@@ -166,6 +171,23 @@ class NewApiV1Test extends AbstractTest {
 				enumResult -> assertThat(enumResult.getBuckets())
 						.extracting(FacetBucket::getValue, FacetBucket::getCount)
 						.contains(tuple("v1-cze", 2L), tuple("v1-ger", 1L)));
+	}
+
+	@Test
+	void enumFacetOverReferenceSourceCarriesLabels() {
+		// the FUND section configures an ENUM facet over the APU_REF source
+		// REL~ENTITY - buckets must resolve display labels, not raw uuids
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.FUND);
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+
+		var facet = response.getFacets().stream()
+				.filter(f -> "REL~ENTITY".equals(f.getCode()))
+				.findFirst().orElseThrow();
+		assertThat(facet).isInstanceOfSatisfying(EnumFacetResult.class,
+				enumResult -> assertThat(enumResult.getBuckets())
+						.extracting(FacetBucket::getValue, FacetBucket::getLabel)
+						.contains(tuple("ent-v1-f", "Okresní archiv")));
 	}
 
 	@Test

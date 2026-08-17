@@ -4,7 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
-import { ApuType, FacetDisplay, FacetType, type SearchFilter, SortMode } from "../api/generated";
+import {
+  ApuType,
+  type DatingFacetResult,
+  type EnumFacetResult,
+  type FacetDef,
+  FacetDisplay,
+  FacetResultKind,
+  FacetType,
+  type SearchFilter,
+  SortMode,
+} from "../api/generated";
 import { HEADER_BACKGROUND } from "../layout/AppHeader";
 import FacetPanel from "./FacetPanel";
 import { parseFilters, serializeFilters } from "./filters";
@@ -126,8 +136,27 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     FacetType.Fulltext,
     FacetType.Unitdate,
   ];
+  // a facet with no values in the current scope is hidden (the old-portal
+  // rule); text inputs always show, an actively filtered facet stays visible
+  // so its selection can be undone
+  const hasData = (def: FacetDef) => {
+    if (def.type === FacetType.Fulltext) {
+      return true;
+    }
+    const result = resultOf(def.code);
+    if (result === undefined) {
+      return false;
+    }
+    return result.kind === FacetResultKind.Dating
+      ? (result as DatingFacetResult).bounds !== undefined
+      : ((result as EnumFacetResult).buckets ?? []).length > 0;
+  };
+  const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
   const visibleFacets = (facetDefs.data ?? []).filter(
-    (def) => def.display === FacetDisplay.Always && supportedTypes.includes(def.type),
+    (def) =>
+      def.display === FacetDisplay.Always &&
+      supportedTypes.includes(def.type) &&
+      (hasActiveFilter(def.code) || hasData(def)),
   );
 
   return (

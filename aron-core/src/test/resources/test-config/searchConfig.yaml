@@ -25,3 +25,9 @@ facets:
       apuType: ARCH_DESC
     type: MULTI_REF
     source: REL_ENTITY
+  # ENUM facet over an APU_REF source (the institution-facet pattern of real
+  # deployments): buckets must carry labels, not raw uuids
+  - when:
+      apuType: FUND
+    type: ENUM
+    source: REL_ENTITY
