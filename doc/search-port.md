@@ -293,9 +293,42 @@ scoring match the production adapter **by construction**, replacing the
 imitation-based in-memory fake. One adapter now covers small deployments, dev
 mode and the default test suite; the contract suite runs on Lucene by default
 and on real ES under `es-it`, unchanged. Storage: `search.lucene.path`
-(persisted) or in-memory when unset. Limitation by design: an ES-less
-deployment serves the **new API only** — the frozen old-API read path requires
-Elasticsearch until Phase 8.
+(persisted) or in-memory when unset.
 
 Phase 8's re-evaluation thereby shrinks to a pure engine/adapter choice
 (e.g. OpenSearch) — the abstraction question is closed.
+
+## 7. Old API on the embedded engine — the `OldApiSearch` seam (2026-08-17)
+
+Originally an ES-less deployment served the new API only. That kept the old UI
+unusable on ES-less environments (the internal test server) and left the old
+API's search endpoints as the only untested old-API area — both hurt Phase 7
+work, where the old UI is the side-by-side reference for the new frontend.
+
+Resolution: the four frozen search endpoints (`/api/aron/apu/list*`) now sit
+behind a dedicated internal seam, `cz.aron.indexing.OldApiSearch`, selected by
+`search.engine`:
+
+- `EsOldApiSearch` — the former direct `Params → QueryBuilder → ES` code moved
+  verbatim out of the controller. Still frozen, still the parity reference;
+  production old-API deployments keep requiring Elasticsearch.
+- `search.lucene.LuceneOldApiSearch` — **dev/test-grade** translation of the
+  same `Params` model onto the embedded index. Possible only because
+  `ApuDocumentBuilder` makes the index content identical across engines; the
+  class is pure query translation. Covers the request shapes the old UI sends:
+  boolean filter trees (EQ/FTXF/FTX/RANGE/CONTAINS/AKF), offset paging,
+  name/score sort, TERMS (with `size`) and MAX/MIN aggregations. Not covered
+  yet: the nested-rels aggregation shapes of detail pages (planned as a join
+  over the `rels` index) and `searchAfter` (the old UI pages by offset).
+  Divergences (FTX approximation, relevance ranking, bucket tie order) are
+  acceptable for dev/test and must not be used to reason about old-API parity.
+
+The port's own model (`ApuSearchQuery`) deliberately did NOT grow for this —
+the "abstraction must not carry the whole old API" argument from §6 applies to
+the port as much as to Hibernate Search. The seam is old-API-private and dies
+with the old API.
+
+Testing: `LuceneOldApiSearchTest` (plain unit, translator behavior) and
+`OldApiSearchTest` (endpoints end-to-end with the old UI's literal request
+JSON) run in the default suite; `OldApiSurfaceTest` pins that the endpoints
+answer without Elasticsearch. ES-specific behavior stays under `es-it`.

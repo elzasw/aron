@@ -158,7 +158,7 @@ public class ApuDocumentBuilder {
 	 * Hex-encoded Czech collation key - hex preserves byte order, so a plain
 	 * string/keyword sort of the keys yields correct Czech alphabetical order.
 	 */
-	static String czechSortKey(String name) {
+	public static String czechSortKey(String name) {
 		if (name == null) {
 			return null;
 		}

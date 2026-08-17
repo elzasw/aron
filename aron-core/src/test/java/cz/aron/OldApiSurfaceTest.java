@@ -110,6 +110,20 @@ class OldApiSurfaceTest extends AbstractTest {
 	}
 
 	@Test
+	void searchEndpointsAnswerOnTheEmbeddedEngine() throws Exception {
+		// the four frozen search endpoints of the old API; in the default suite
+		// they run on the embedded Lucene engine (OldApiSearch seam), so they are
+		// part of the pinned, callable surface without Elasticsearch
+		for (String endpoint : new String[] { "/api/aron/apu/listview", "/api/aron/apu/list",
+				"/api/aron/apu/listsimple", "/api/aron/apu/listresults" }) {
+			var response = post(endpoint + "?listType=SURFACE-TEST", "{\"size\":1}");
+			assertThat(response.statusCode()).as(endpoint).isEqualTo(200);
+			assertThat(contentType(response)).as(endpoint).startsWith("application/json");
+			assertThat(response.body()).as(endpoint).contains("\"count\"");
+		}
+	}
+
+	@Test
 	void soapFileTransferWsdlIsInternalOutsideApiPrefix() throws Exception {
 		// internal service-to-service interface (Transfagent ingest): served at
 		// /cxf/*, deliberately outside the publicly proxied /api namespace

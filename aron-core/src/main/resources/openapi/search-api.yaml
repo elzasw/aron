@@ -262,6 +262,10 @@ components:
           type: string
         field:
           type: string
+        size:
+          description: Maximum number of returned buckets (engine default when absent)
+          type: integer
+          format: int32
 
     NestedAggregation:
       description: Nested aggregator

@@ -21,8 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -46,9 +44,7 @@ import cz.aron.api.rest.model.SimpleResult;
 import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.api.rest.model.StructuredResults;
 import cz.aron.domain.types.dto.ApuEntityTreeView;
-import cz.aron.indexing.Aggregations;
-import cz.aron.indexing.IndexedApu;
-import cz.aron.indexing.QueryBuilder;
+import cz.aron.indexing.OldApiSearch;
 import cz.aron.indexing.SimpleResultBuilder;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.service.ApuService;
@@ -72,23 +68,19 @@ public class ApuApi implements AronApi {
 
     private final String treeCache;
 
-    private final ElasticsearchOperations elasticsearchOperations;
-
-    private final QueryBuilder queryBuilder;
+    private final OldApiSearch oldApiSearch;
 
     private final SimpleResultBuilder simpleResultBuilder;
 
 	public ApuApi(ApuEntityRepository apuEntityRepository,
 			ApuService apuService,
 			ObjectMapper objectMapper, @Value("${files.treeCache:}") String treeCache,
-			ElasticsearchOperations elasticsearchOperations,
-			QueryBuilder queryBuilder, SimpleResultBuilder simpleResultBuilder) {
+			OldApiSearch oldApiSearch, SimpleResultBuilder simpleResultBuilder) {
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.objectMapper = objectMapper;
 		this.treeCache = treeCache;
-		this.elasticsearchOperations = elasticsearchOperations;
-		this.queryBuilder = queryBuilder;
+		this.oldApiSearch = oldApiSearch;
 		this.simpleResultBuilder = simpleResultBuilder;
 	}
 
@@ -213,9 +205,8 @@ public class ApuApi implements AronApi {
 	}
 
 	private SimpleResult buildSimpleResult(Params params) {
-		var query = queryBuilder.build(params);
-		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> java.util.UUID.fromString(h.getId())).collect(Collectors.toList());
+		var searchResult = oldApiSearch.search(params);
+		var uuids = searchResult.uuids().stream().map(java.util.UUID::fromString).collect(Collectors.toList());
 		var simplified = apuEntityRepository.findDtosByUuidIn(uuids).stream().map(d -> {
 			var s = new ApuEntitySimplified();
 			s.setId(d.uuid().toString());
@@ -224,7 +215,7 @@ public class ApuApi implements AronApi {
 			s.setOrder((long) d.order());
 			return s;
 		}).collect(Collectors.toList());
-		return simpleResultBuilder.build(hits, simplified);
+		return simpleResultBuilder.build(searchResult, simplified);
 	}
 
 	@Override
@@ -299,32 +290,27 @@ public class ApuApi implements AronApi {
 
 	@Override
 	public ResponseEntity<StructuredResults> listResults(@Valid Params params) {
-		var query = queryBuilder.build(params);
-		var hits = elasticsearchOperations.search(query, IndexedApu.class, IndexCoordinates.of("apu"));
-		var uuids = hits.getSearchHits().stream().map(h -> h.getId()).map(java.util.UUID::fromString).collect(Collectors.toList());
+		var searchResult = oldApiSearch.search(params);
+		var uuids = searchResult.uuids().stream().map(java.util.UUID::fromString).collect(Collectors.toList());
 		Map<String, StructuredResult> byId = apuService.findAllResultsByUuidIn(uuids);
-		
-		var result = new StructuredResults();				
-		result.setAggregations(Aggregations.map(hits.getAggregations()));
-		result.setItems(hits.getSearchHits().stream()
-                .filter(hit -> byId.containsKey(hit.getId()))
-                .map(hit->{
-                	var structuredResult = byId.get(hit.getId());
+
+		var result = new StructuredResults();
+		result.setAggregations(searchResult.aggregations());
+		result.setItems(searchResult.uuids().stream()
+                .filter(byId::containsKey)
+                .map(uuid->{
+                	var structuredResult = byId.get(uuid);
                 	if (structuredResult!=null) {
             			return structuredResult;
             		} else {
-            			return createEmptyResult(hit.getId());
+            			return createEmptyResult(uuid);
             		}
                 })
                 .collect(Collectors.toList()));
-		result.setCount(hits.getTotalHits());		
-		var searchHitList = hits.getSearchHits();
-		if (!searchHitList.isEmpty()) {
-            var lastSortValues = searchHitList.get(searchHitList.size() - 1).getSortValues();
-            if (!lastSortValues.isEmpty()) {
-                result.setSearchAfter(new ArrayList<>(lastSortValues));
-            }
-        }		
+		result.setCount(searchResult.total());
+		if (searchResult.searchAfter() != null && !searchResult.searchAfter().isEmpty()) {
+			result.setSearchAfter(new ArrayList<>(searchResult.searchAfter()));
+		}
 		return ResponseEntity.ok(result);
 	}
 	

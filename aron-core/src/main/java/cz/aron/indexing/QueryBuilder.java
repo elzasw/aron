@@ -244,7 +244,14 @@ public class QueryBuilder {
         Map<String, Aggregation> subAggs = collectSubAggregations(bucket.getAggregations());                
        
 		return switch (bucket) {
-		case TermsAggregation term -> Aggregation.of(a -> a.terms(t -> t.field(term.getField())).aggregations(subAggs));
+		case TermsAggregation term -> Aggregation.of(a -> a.terms(t -> {
+			t.field(term.getField());
+			// the old UI requests all buckets (size 9999) for its dropdowns
+			if (term.getSize() != null) {
+				t.size(term.getSize());
+			}
+			return t;
+		}).aggregations(subAggs));
 		case NestedAggregation nested ->
 			Aggregation.of(a -> a.nested(t -> t.path(nested.getPath())).aggregations(subAggs));
 		case FilterAggregation filter -> Aggregation.of(a -> a.filter(toQuery(filter.getFilter())).aggregations(subAggs));

@@ -24,6 +24,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.SortedDocValuesField;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
@@ -69,8 +70,8 @@ import jakarta.annotation.PreDestroy;
  * engine for small/ES-less deployments, and the engine of tests and dev mode.
  * Elasticsearch is Lucene inside, so analysis behavior (tokenization, lowercase,
  * ASCII folding) matches the production ES adapter by construction rather than
- * by imitation. Serves the new API only - the frozen old-API read path talks to
- * Elasticsearch directly.
+ * by imitation. Serves the new API fully; the old API's search endpoints run on
+ * this index too, dev/test-grade, via {@link LuceneOldApiSearch}.
  * <p>
  * Storage: {@code search.lucene.path} set = persisted index under that directory
  * ({@code apu/}, {@code rels/} subdirectories); unset = in-memory (tests, dev
@@ -88,6 +89,16 @@ import jakarta.annotation.PreDestroy;
 public class LuceneSearchIndex implements SearchIndex {
 
 	private static final String FIELDS_CRC_KEY = "fieldsCrc";
+
+	private static final String LAYOUT_VERSION_KEY = "layoutVersion";
+
+	/**
+	 * Version of the Lucene document layout produced by this code. Bump on any
+	 * layout change (new doc-values, changed field types): a persisted index
+	 * committed under a different version reports no stored CRC, so the startup
+	 * bootstrap rebuilds and reindexes it.
+	 */
+	private static final String LAYOUT_VERSION = "2";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -169,7 +180,12 @@ public class LuceneSearchIndex implements SearchIndex {
 	@Override
 	public Long storedFieldsCrc() {
 		try (var reader = DirectoryReader.open(apuDirectory)) {
-			String crc = reader.getIndexCommit().getUserData().get(FIELDS_CRC_KEY);
+			var userData = reader.getIndexCommit().getUserData();
+			if (!LAYOUT_VERSION.equals(userData.get(LAYOUT_VERSION_KEY))) {
+				// index written by another layout version = treat as no schema
+				return null;
+			}
+			String crc = userData.get(FIELDS_CRC_KEY);
 			return crc != null ? Long.valueOf(crc) : null;
 		} catch (IndexNotFoundException e) {
 			// no commit yet = schema does not exist
@@ -181,7 +197,8 @@ public class LuceneSearchIndex implements SearchIndex {
 
 	@Override
 	public void storeFieldsCrc(long crc) {
-		apuWriter.setLiveCommitData(Set.of(Map.entry(FIELDS_CRC_KEY, Long.toString(crc))));
+		apuWriter.setLiveCommitData(Set.of(Map.entry(FIELDS_CRC_KEY, Long.toString(crc)),
+				Map.entry(LAYOUT_VERSION_KEY, LAYOUT_VERSION)));
 		commitAndRefresh();
 	}
 
@@ -332,14 +349,21 @@ public class LuceneSearchIndex implements SearchIndex {
 		return root.build();
 	}
 
-	/** All analyzed words must match, the last one as a prefix (ES matchPhrasePrefix analog). */
 	private Query textFieldQuery(FieldFilter.Text filter) throws IOException {
-		List<String> tokens = analyze(filter.text());
+		return allWordsLastPrefixQuery(filter.field(), filter.text());
+	}
+
+	/**
+	 * All analyzed words must match, the last one as a prefix (ES matchPhrasePrefix
+	 * analog). Shared with {@link LuceneOldApiSearch} (the old API's FTXF filter).
+	 */
+	Query allWordsLastPrefixQuery(String field, String text) throws IOException {
+		List<String> tokens = analyze(text);
 		var bool = new BooleanQuery.Builder();
 		for (int i = 0; i < tokens.size(); i++) {
 			Query tokenQuery = i == tokens.size() - 1
-					? new PrefixQuery(new Term(filter.field(), tokens.get(i)))
-					: new TermQuery(new Term(filter.field(), tokens.get(i)));
+					? new PrefixQuery(new Term(field, tokens.get(i)))
+					: new TermQuery(new Term(field, tokens.get(i)));
 			bool.add(tokenQuery, Occur.MUST);
 		}
 		return bool.build();
@@ -361,7 +385,8 @@ public class LuceneSearchIndex implements SearchIndex {
 		return any ? root.build() : base;
 	}
 
-	private List<String> analyze(String text) throws IOException {
+	/** Runs the folding analysis chain; shared with {@link LuceneOldApiSearch}. */
+	List<String> analyze(String text) throws IOException {
 		var tokens = new ArrayList<String>();
 		try (TokenStream stream = foldingAnalyzer.tokenStream("name", text)) {
 			var term = stream.addAttribute(CharTermAttribute.class);
@@ -413,7 +438,11 @@ public class LuceneSearchIndex implements SearchIndex {
 	private void addValueField(Document doc, String field, String value) {
 		if (field.endsWith("~L") || field.endsWith("~H")) {
 			try {
-				doc.add(new LongPoint(field, toEpochMillis(LocalDateTime.parse(value))));
+				long millis = toEpochMillis(LocalDateTime.parse(value));
+				doc.add(new LongPoint(field, millis));
+				// doc-values enable per-document access: min/max metric aggregations
+				// of the old API (and future sort/searchAfter slices)
+				doc.add(new SortedNumericDocValuesField(field, millis));
 				return;
 			} catch (DateTimeParseException e) {
 				// not a date bound - fall through to the exact term
@@ -440,6 +469,11 @@ public class LuceneSearchIndex implements SearchIndex {
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
+	}
+
+	/** Searcher pool of the apu index; shared with {@link LuceneOldApiSearch}. */
+	SearcherManager apuSearchers() {
+		return apuSearchers;
 	}
 
 }

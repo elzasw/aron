@@ -47,6 +47,15 @@ public abstract class AbstractTest {
 		return client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
 	}
 
+	/** JSON POST against the running server. */
+	protected HttpResponse<String> post(String path, String jsonBody) throws Exception {
+		HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+				.header("Content-Type", "application/json")
+				.POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+				.build();
+		return client.send(request, HttpResponse.BodyHandlers.ofString());
+	}
+
 	/** GET returning raw bytes (binary endpoints). */
 	protected HttpResponse<byte[]> getBytes(String path) throws Exception {
 		HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build();
