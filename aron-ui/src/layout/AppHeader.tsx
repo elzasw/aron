@@ -19,11 +19,16 @@ const useStyles = makeStyles({
   header: {
     display: "flex",
     alignItems: "stretch",
+    flexWrap: "wrap",
     gap: tokens.spacingHorizontalXXL,
     padding: `0 ${tokens.spacingHorizontalXXL}`,
     backgroundColor: PRIMARY_DARK,
     color: "#ffffff",
     minHeight: "72px",
+    "@media (max-width: 860px)": {
+      padding: `0 ${tokens.spacingHorizontalM}`,
+      gap: tokens.spacingHorizontalM,
+    },
   },
   brand: {
     display: "flex",
@@ -57,6 +62,7 @@ const useStyles = makeStyles({
   nav: {
     display: "flex",
     alignItems: "stretch",
+    flexWrap: "wrap",
     marginLeft: "auto",
     gap: tokens.spacingHorizontalXS,
   },
@@ -122,7 +128,7 @@ export default function AppHeader() {
         {logoFailed && <span className={styles.title}>{name}</span>}
         <h1 className={styles.screenReaderOnly}>{name}</h1>
       </Link>
-      <nav className={styles.nav}>
+      <nav className={styles.nav} aria-label={t("nav.main")}>
         {(config?.menuItems ?? []).map((item) => (
           <HeaderMenuItem key={item.code} item={item} />
         ))}

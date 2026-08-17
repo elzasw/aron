@@ -1,5 +1,6 @@
-import { Button, Dropdown, makeStyles, Option, Text, tokens } from "@fluentui/react-components";
+import { Button, Dropdown, makeStyles, mergeClasses, Option, Text, tokens } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
+import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const PAGE_SIZES = [10, 20, 50];
 
@@ -7,10 +8,30 @@ const useStyles = makeStyles({
   bar: {
     display: "flex",
     alignItems: "center",
+    flexWrap: "wrap",
     gap: tokens.spacingHorizontalXS,
   },
   spacer: {
     flexGrow: 1,
+  },
+  // compact circular controls (the old portal's pager look)
+  pageButton: {
+    minWidth: "32px",
+    height: "32px",
+    padding: "0",
+    borderRadius: tokens.borderRadiusCircular,
+  },
+  pageCurrent: {
+    backgroundColor: PRIMARY_DARK,
+    color: "#ffffff",
+    ":hover": {
+      backgroundColor: PRIMARY_MAIN,
+      color: "#ffffff",
+    },
+    ":hover:active": {
+      backgroundColor: PRIMARY_MAIN,
+      color: "#ffffff",
+    },
   },
   pageSize: {
     display: "flex",
@@ -30,7 +51,7 @@ interface Props {
   onSize: (size: number) => void;
 }
 
-/** Top pagination bar: page numbers with a window around the current page + page-size select. */
+/** Pagination bar: compact circular pager with a window around the current page + page-size select. */
 export default function Pagination({ page, size, total, onPage, onSize }: Props) {
   const styles = useStyles();
   const { t } = useTranslation();
@@ -41,31 +62,45 @@ export default function Pagination({ page, size, total, onPage, onSize }: Props)
     pages.push(p);
   }
 
+  const pager = (label: string, target: number, disabled: boolean, symbol: string) => (
+    <Button
+      className={styles.pageButton}
+      appearance="subtle"
+      shape="circular"
+      size="small"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={() => onPage(target)}
+    >
+      {symbol}
+    </Button>
+  );
+
   return (
-    <div className={styles.bar}>
-      <Button appearance="subtle" disabled={page <= 1} onClick={() => onPage(1)}>
-        «
-      </Button>
-      <Button appearance="subtle" disabled={page <= 1} onClick={() => onPage(page - 1)}>
-        ‹
-      </Button>
-      {pages[0] > 1 && <Text>…</Text>}
+    <nav className={styles.bar} aria-label={t("search.pagination")}>
+      {pager(t("search.firstPage"), 1, page <= 1, "«")}
+      {pager(t("search.prevPage"), page - 1, page <= 1, "‹")}
+      {pages[0] > 1 && <Text size={200}>…</Text>}
       {pages.map((p) => (
         <Button
           key={p}
-          appearance={p === page ? "primary" : "subtle"}
+          className={
+            p === page ? mergeClasses(styles.pageButton, styles.pageCurrent) : styles.pageButton
+          }
+          appearance="subtle"
+          shape="circular"
+          size="small"
+          aria-label={t("search.page", { page: p })}
+          aria-current={p === page ? "page" : undefined}
           onClick={() => onPage(p)}
         >
           {p}
         </Button>
       ))}
-      {pages[pages.length - 1] < pageCount && <Text>…</Text>}
-      <Button appearance="subtle" disabled={page >= pageCount} onClick={() => onPage(page + 1)}>
-        ›
-      </Button>
-      <Button appearance="subtle" disabled={page >= pageCount} onClick={() => onPage(pageCount)}>
-        »
-      </Button>
+      {pages[pages.length - 1] < pageCount && <Text size={200}>…</Text>}
+      {pager(t("search.nextPage"), page + 1, page >= pageCount, "›")}
+      {pager(t("search.lastPage"), pageCount, page >= pageCount, "»")}
       <div className={styles.spacer} />
       <div className={styles.pageSize}>
         <Text size={200}>{t("search.pageSize")}</Text>
@@ -82,6 +117,6 @@ export default function Pagination({ page, size, total, onPage, onSize }: Props)
           ))}
         </Dropdown>
       </div>
-    </div>
+    </nav>
   );
 }

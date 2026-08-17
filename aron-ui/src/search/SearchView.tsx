@@ -27,6 +27,12 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalXXL,
     padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
     alignItems: "flex-start",
+    // narrow viewports stack the sidebar above the results
+    "@media (max-width: 860px)": {
+      flexDirection: "column",
+      alignItems: "stretch",
+      padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
+    },
   },
   sidebar: {
     width: "320px",
@@ -39,6 +45,9 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusMedium,
     boxShadow: tokens.shadow2,
     padding: tokens.spacingHorizontalL,
+    "@media (max-width: 860px)": {
+      width: "auto",
+    },
   },
   searchRow: {
     display: "flex",

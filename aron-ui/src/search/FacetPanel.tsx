@@ -29,13 +29,11 @@ const useStyles = makeStyles({
   title: {
     fontWeight: tokens.fontWeightSemibold,
   },
-  // the old portal's highlighted per-condition hit count next to the facet name
+  // per-condition hit count next to the facet name (muted, like bucket counts)
   titleCount: {
     marginLeft: tokens.spacingHorizontalXS,
-    padding: `0 ${tokens.spacingHorizontalXXS}`,
-    backgroundColor: "hsl(47.7, 100%, 85.7%)",
-    color: "#d73f3b",
-    borderRadius: tokens.borderRadiusSmall,
+    color: tokens.colorNeutralForeground3,
+    fontWeight: tokens.fontWeightRegular,
   },
   count: {
     color: tokens.colorNeutralForeground3,
@@ -150,7 +148,7 @@ export default function FacetPanel({ def, filters, result, apuType, query, total
     filters.some((f) => f.facet === def.code);
 
   return (
-    <div className={styles.facet} title={def.tooltip}>
+    <div className={styles.facet} title={def.tooltip} role="group" aria-label={def.label}>
       <Text className={styles.title}>
         {def.label}
         {conditionEntered && total !== undefined && (
