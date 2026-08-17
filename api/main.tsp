@@ -119,13 +119,28 @@ namespace Search {
 	op getFacets(@query apuType: ApuType): FacetDef[];
 
 	/**
-	 * Searches APUs of one type. Facet bucket counts follow multi-select
-	 * semantics: counts of a facet reflect the query and all filters EXCEPT
-	 * that facet's own VALUES filter.
+	 * Searches APUs of one type. Facet results follow multi-select semantics:
+	 * bucket counts of a facet reflect the query and all filters EXCEPT that
+	 * facet's own VALUES filter, and dating bounds of a UNITDATE facet ignore
+	 * that facet's own RANGE filter - so an active selection can always be
+	 * widened.
 	 */
 	@post
 	@route("/api/v1/apu/search")
 	op search(@body request: ApuSearchRequest): ApuSearchResponse;
+
+	/**
+	 * Options of one enumerated facet (ENUM/MULTI_REF) for its picker - the
+	 * type-ahead companion of `search`. The same multi-select semantics apply:
+	 * the request's query and filters constrain the options EXCEPT the facet's
+	 * own VALUES filter. `q` narrows options by their display label (label of
+	 * a reference, the value itself of an ENUM): diacritics-insensitive, all
+	 * words must match with the last one as a prefix. Facets of other kinds
+	 * (FULLTEXT, UNITDATE) have no options - 400.
+	 */
+	@post
+	@route("/api/v1/facets/{code}/options")
+	op getFacetOptions(@path code: string, @body request: FacetOptionsRequest): FacetOptionsResponse;
 }
 
 /** Types of archival presentation units. */
@@ -286,7 +301,11 @@ model ApuSearchResponse {
 
 	items: ApuSearchItem[];
 
-	/** Bucket counts of the section's ENUM facets (multi-select semantics). */
+	/**
+	 * Per-facet results of the section (multi-select semantics), each shaped by
+	 * its facet kind - see the `FacetResult` specializations. A facet's full
+	 * option list (beyond the bucket limit) comes from `getFacetOptions`.
+	 */
 	facets: FacetResult[];
 }
 
@@ -299,20 +318,93 @@ model ApuSearchItem {
 	containsDigitalObjects: boolean;
 }
 
-/** Bucket counts of one facet. */
+/** Facet result kinds - the FacetResult discriminator (follows the facet's type). */
+enum FacetResultKind {
+	/** Value buckets of an ENUM facet. */
+	ENUM,
+
+	/** Reference buckets of a MULTI_REF facet. */
+	REF,
+
+	/** Dating bounds of a UNITDATE facet. */
+	DATING,
+}
+
+/**
+ * Result of one facet, discriminated by `kind` - each facet kind carries only
+ * the fields it really has (same TypeSpec pattern as `SearchFilter`).
+ */
+@discriminator("kind")
 model FacetResult {
+	/** Result kind - the discriminator; follows the facet's type. */
+	kind: FacetResultKind;
+
 	/** Facet code. */
 	code: string;
+}
 
+/** Value buckets of an ENUM facet (`value` doubles as the display label). */
+model EnumFacetResult extends FacetResult {
+	kind: FacetResultKind.ENUM;
 	buckets: FacetBucket[];
+}
+
+/** Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name. */
+model RefFacetResult extends FacetResult {
+	kind: FacetResultKind.REF;
+	buckets: FacetBucket[];
+}
+
+/** Dating bounds of a UNITDATE facet. */
+model DatingFacetResult extends FacetResult {
+	kind: FacetResultKind.DATING;
+
+	/** Absent when no matching document carries a dating. */
+	bounds?: DatingBounds;
 }
 
 /** One value bucket of an enumerated facet. */
 model FacetBucket {
+	/** Filter value to send back in a VALUES filter (for references the APU uuid). */
 	value: string;
 
 	/** Display label when it differs from the value (e.g. resolved references). */
 	label?: string;
 
 	count: int64;
+}
+
+/**
+ * Year bounds of the matching documents' dating - the range of a UNITDATE
+ * facet's slider. Computed with the facet's own RANGE filter excluded
+ * (multi-select), so the user can widen a selected range.
+ */
+model DatingBounds {
+	minYear: int32;
+	maxYear: int32;
+}
+
+/** Options request of one facet - carries the active search state. */
+model FacetOptionsRequest {
+	/** Section whose facet configuration applies (facets are section-scoped). */
+	apuType: ApuType;
+
+	/** Fulltext query of the current search; unset = match all. */
+	query?: string;
+
+	/** Active filters of the current search; the facet's own VALUES filter is ignored. */
+	filters?: SearchFilter[];
+
+	/** Type-ahead text matched against option labels; unset = all options (up to `size`). */
+	q?: string;
+
+	/** Maximum number of returned options. */
+	@minValue(1)
+	@maxValue(1000)
+	size?: int32 = 100;
+}
+
+/** Facet options, ordered per the facet configuration (default: count descending). */
+model FacetOptionsResponse {
+	options: FacetBucket[];
 }

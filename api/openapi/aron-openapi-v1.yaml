@@ -23,9 +23,11 @@ paths:
     post:
       operationId: Search_search
       description: |-
-        Searches APUs of one type. Facet bucket counts follow multi-select
-        semantics: counts of a facet reflect the query and all filters EXCEPT
-        that facet's own VALUES filter.
+        Searches APUs of one type. Facet results follow multi-select semantics:
+        bucket counts of a facet reflect the query and all filters EXCEPT that
+        facet's own VALUES filter, and dating bounds of a UNITDATE facet ignore
+        that facet's own RANGE filter - so an active selection can always be
+        widened.
       parameters: []
       responses:
         "200":
@@ -67,6 +69,38 @@ paths:
                   $ref: "#/components/schemas/FacetDef"
       tags:
         - search
+  /api/v1/facets/{code}/options:
+    post:
+      operationId: Search_getFacetOptions
+      description: |-
+        Options of one enumerated facet (ENUM/MULTI_REF) for its picker - the
+        type-ahead companion of `search`. The same multi-select semantics apply:
+        the request's query and filters constrain the options EXCEPT the facet's
+        own VALUES filter. `q` narrows options by their display label (label of
+        a reference, the value itself of an ENUM): diacritics-insensitive, all
+        words must match with the last one as a prefix. Facets of other kinds
+        (FULLTEXT, UNITDATE) have no options - 400.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FacetOptionsResponse"
+      tags:
+        - search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FacetOptionsRequest"
   /api/v1/system/info:
     get:
       operationId: System_getInfo
@@ -191,7 +225,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/FacetResult"
-          description: Bucket counts of the section's ENUM facets (multi-select semantics).
+          description: |-
+            Per-facet results of the section (multi-select semantics), each shaped by
+            its facet kind - see the `FacetResult` specializations. A facet's full
+            option list (beyond the bucket limit) comes from `getFacetOptions`.
       description: Search response.
     ApuType:
       type: string
@@ -203,6 +240,44 @@ components:
         - FUND
         - INSTITUTION
       description: Types of archival presentation units.
+    DatingBounds:
+      type: object
+      required:
+        - minYear
+        - maxYear
+      properties:
+        minYear:
+          type: integer
+          format: int32
+        maxYear:
+          type: integer
+          format: int32
+      description: |-
+        Year bounds of the matching documents' dating - the range of a UNITDATE
+        facet's slider. Computed with the facet's own RANGE filter excluded
+        (multi-select), so the user can widen a selected range.
+    DatingFacetResult:
+      type: object
+      properties:
+        bounds:
+          allOf:
+            - $ref: "#/components/schemas/DatingBounds"
+          description: Absent when no matching document carries a dating.
+      allOf:
+        - $ref: "#/components/schemas/FacetResult"
+      description: Dating bounds of a UNITDATE facet.
+    EnumFacetResult:
+      type: object
+      required:
+        - buckets
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/FacetBucket"
+      allOf:
+        - $ref: "#/components/schemas/FacetResult"
+      description: Value buckets of an ENUM facet (`value` doubles as the display label).
     FacetBucket:
       type: object
       required:
@@ -211,6 +286,7 @@ components:
       properties:
         value:
           type: string
+          description: Filter value to send back in a VALUES filter (for references the APU uuid).
         label:
           type: string
           description: Display label when it differs from the value (e.g. resolved references).
@@ -259,6 +335,44 @@ components:
         - ALWAYS
         - DETAIL
       description: When the facet is offered.
+    FacetOptionsRequest:
+      type: object
+      required:
+        - apuType
+      properties:
+        apuType:
+          allOf:
+            - $ref: "#/components/schemas/ApuType"
+          description: Section whose facet configuration applies (facets are section-scoped).
+        query:
+          type: string
+          description: Fulltext query of the current search; unset = match all.
+        filters:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchFilter"
+          description: Active filters of the current search; the facet's own VALUES filter is ignored.
+        q:
+          type: string
+          description: Type-ahead text matched against option labels; unset = all options (up to `size`).
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+          description: Maximum number of returned options.
+          default: 100
+      description: Options request of one facet - carries the active search state.
+    FacetOptionsResponse:
+      type: object
+      required:
+        - options
+      properties:
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/FacetBucket"
+      description: "Facet options, ordered per the facet configuration (default: count descending)."
     FacetOrder:
       type: string
       enum:
@@ -268,17 +382,32 @@ components:
     FacetResult:
       type: object
       required:
+        - kind
         - code
-        - buckets
       properties:
+        kind:
+          allOf:
+            - $ref: "#/components/schemas/FacetResultKind"
+          description: Result kind - the discriminator; follows the facet's type.
         code:
           type: string
           description: Facet code.
-        buckets:
-          type: array
-          items:
-            $ref: "#/components/schemas/FacetBucket"
-      description: Bucket counts of one facet.
+      discriminator:
+        propertyName: kind
+        mapping:
+          ENUM: "#/components/schemas/EnumFacetResult"
+          REF: "#/components/schemas/RefFacetResult"
+          DATING: "#/components/schemas/DatingFacetResult"
+      description: |-
+        Result of one facet, discriminated by `kind` - each facet kind carries only
+        the fields it really has (same TypeSpec pattern as `SearchFilter`).
+    FacetResultKind:
+      type: string
+      enum:
+        - ENUM
+        - REF
+        - DATING
+      description: Facet result kinds - the FacetResult discriminator (follows the facet's type).
     FacetType:
       type: string
       enum:
@@ -337,6 +466,18 @@ components:
         Dating filter of a UNITDATE facet: matches documents whose interval
         intersects [from, to]. Bounds accept a year (`1190`), a date (`1190-05-01`)
         or a full ISO date-time; either bound may be omitted.
+    RefFacetResult:
+      type: object
+      required:
+        - buckets
+      properties:
+        buckets:
+          type: array
+          items:
+            $ref: "#/components/schemas/FacetBucket"
+      allOf:
+        - $ref: "#/components/schemas/FacetResult"
+      description: "Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name."
     SearchFilter:
       type: object
       required:
