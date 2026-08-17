@@ -49,5 +49,14 @@
   "notFound": {
     "heading": "Stránka nenalezena",
     "home": "Zpět na úvod"
+  },
+  "errors": {
+    "requestFailed": "Chyba komunikace se serverem",
+    "dismiss": "Zavřít",
+    "boundary": {
+      "heading": "Neočekávaná chyba aplikace",
+      "text": "Omlouváme se, v aplikaci došlo k chybě. Technický popis:",
+      "reload": "Znovu načíst stránku"
+    }
   }
 }

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Outlet } from "react-router-dom";
 import { systemApi } from "../api/client";
+import ApiErrorBar from "../errors/ApiErrorBar";
 import AppHeader from "./AppHeader";
 import Breadcrumbs from "./Breadcrumbs";
 
@@ -41,6 +42,7 @@ export default function AppLayout() {
   return (
     <div className={styles.root}>
       <AppHeader />
+      <ApiErrorBar />
       <Breadcrumbs />
       <main className={styles.main}>
         <Outlet />
