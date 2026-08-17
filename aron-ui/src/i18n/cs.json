@@ -40,7 +40,10 @@
     "to": "Do:",
     "apply": "Použít",
     "showMore": "Zobrazit více ({{count}})",
-    "showLess": "Zobrazit méně"
+    "showLess": "Zobrazit méně",
+    "optionsPlaceholder": "Vyhledat hodnotu",
+    "noOptions": "Žádné odpovídající hodnoty",
+    "availableRange": "Dostupné rozmezí: {{min}}–{{max}}"
   },
   "apu": {
     "heading": "Archivní záznam",

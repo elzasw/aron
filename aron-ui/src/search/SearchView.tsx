@@ -4,15 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
-import {
-  ApuType,
-  type EnumFacetResult,
-  FacetDisplay,
-  FacetResultKind,
-  FacetType,
-  type SearchFilter,
-  SortMode,
-} from "../api/generated";
+import { ApuType, FacetDisplay, FacetType, type SearchFilter, SortMode } from "../api/generated";
 import { HEADER_BACKGROUND } from "../layout/AppHeader";
 import FacetPanel from "./FacetPanel";
 import { parseFilters, serializeFilters } from "./filters";
@@ -126,15 +118,14 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     update({ f: serializeFilters(next), p: null });
   const submitQuery = () => update({ q: queryInput.trim() || null, p: null });
 
-  const bucketsOf = (code: string) => {
-    // facet results are discriminated by kind; only the bucket kinds carry buckets
-    const facet = search.data?.facets.find((f) => f.code === code);
-    return facet && (facet.kind === FacetResultKind.Enum || facet.kind === FacetResultKind.Ref)
-      ? (facet as EnumFacetResult).buckets
-      : [];
-  };
-  // MULTI_REF* facets wait for the suggest UI; DETAIL facets for the advanced dialog
-  const supportedTypes: FacetType[] = [FacetType.Enum, FacetType.Fulltext, FacetType.Unitdate];
+  const resultOf = (code: string) => search.data?.facets.find((f) => f.code === code);
+  // MULTI_REF_EXT/MULTI_TYPE_REF facets wait for their contract slice; DETAIL facets for the advanced dialog
+  const supportedTypes: FacetType[] = [
+    FacetType.Enum,
+    FacetType.MultiRef,
+    FacetType.Fulltext,
+    FacetType.Unitdate,
+  ];
   const visibleFacets = (facetDefs.data ?? []).filter(
     (def) => def.display === FacetDisplay.Always && supportedTypes.includes(def.type),
   );
@@ -154,15 +145,18 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             {t("search.button")}
           </Button>
         </div>
-        {visibleFacets.map((def) => (
-          <FacetPanel
-            key={def.code}
-            def={def}
-            filters={filters}
-            buckets={bucketsOf(def.code)}
-            onFilters={onFilters}
-          />
-        ))}
+        {apuType !== undefined &&
+          visibleFacets.map((def) => (
+            <FacetPanel
+              key={def.code}
+              def={def}
+              filters={filters}
+              result={resultOf(def.code)}
+              apuType={apuType}
+              query={query}
+              onFilters={onFilters}
+            />
+          ))}
       </div>
       <div className={styles.main}>
         <Title3>{t(titleKey)}</Title3>
