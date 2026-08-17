@@ -7,8 +7,13 @@ import { logoUrl, uiApi } from "../api/client";
 import { MenuItem } from "../api/generated";
 import { SECTIONS } from "../sections";
 
-/** Navy of the original portal header. */
-export const HEADER_BACKGROUND = "#1d3c60";
+/**
+ * Default primary palette of the original portal (its theme's primary.dark and
+ * primary.main): the slate of the header and primary buttons. Section accents
+ * are configured separately (menu colors of /api/v1/ui/config).
+ */
+export const PRIMARY_DARK = "hsl(210, 20%, 20%)";
+export const PRIMARY_MAIN = "hsl(210, 20%, 30%)";
 
 const useStyles = makeStyles({
   header: {
@@ -16,7 +21,7 @@ const useStyles = makeStyles({
     alignItems: "stretch",
     gap: tokens.spacingHorizontalXXL,
     padding: `0 ${tokens.spacingHorizontalXXL}`,
-    backgroundColor: HEADER_BACKGROUND,
+    backgroundColor: PRIMARY_DARK,
     color: "#ffffff",
     minHeight: "72px",
   },
@@ -65,11 +70,11 @@ const useStyles = makeStyles({
     borderBottom: "4px solid transparent",
     whiteSpace: "nowrap",
     ":hover": {
-      backgroundColor: "rgba(255, 255, 255, 0.08)",
+      backgroundColor: PRIMARY_MAIN,
     },
   },
   navItemActive: {
-    backgroundColor: "rgba(255, 255, 255, 0.14)",
+    backgroundColor: PRIMARY_MAIN,
   },
   language: {
     display: "flex",

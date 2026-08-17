@@ -234,12 +234,22 @@ function TextFacet({ def, filters, onFilters }: Pick<Props, "def" | "filters" | 
   const [value, setValue] = useState(applied);
   useEffect(() => setValue(applied), [applied]);
 
+  // the filter applies while typing (old-portal behavior, same 700 ms
+  // debounce); Enter just applies immediately
+  const debounced = useDebouncedValue(value, 700);
+  useEffect(() => {
+    // fires on the debounced keystroke only; the guard keeps the apply-echo
+    // (applied catching up with debounced) from re-applying
+    if (debounced !== applied) {
+      onFilters(setText(filters, def.code, debounced));
+    }
+  }, [debounced]); // deliberately not on applied/filters - see the guard
+
   return (
     <Input
       value={value}
       placeholder={t("facets.textPlaceholder")}
       onChange={(_, data) => setValue(data.value)}
-      onBlur={() => onFilters(setText(filters, def.code, value))}
       onKeyDown={(e) => e.key === "Enter" && onFilters(setText(filters, def.code, value))}
     />
   );

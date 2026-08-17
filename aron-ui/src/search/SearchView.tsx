@@ -15,7 +15,7 @@ import {
   type SearchFilter,
   SortMode,
 } from "../api/generated";
-import { HEADER_BACKGROUND } from "../layout/AppHeader";
+import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import FacetPanel from "./FacetPanel";
 import { parseFilters, serializeFilters } from "./filters";
 import Pagination from "./Pagination";
@@ -49,13 +49,13 @@ const useStyles = makeStyles({
     borderBottomRightRadius: "0",
   },
   searchButton: {
-    backgroundColor: HEADER_BACKGROUND,
+    backgroundColor: PRIMARY_DARK,
     color: "#ffffff",
     borderTopLeftRadius: "0",
     borderBottomLeftRadius: "0",
     textTransform: "uppercase",
     ":hover": {
-      backgroundColor: "#2a4d78",
+      backgroundColor: PRIMARY_MAIN,
       color: "#ffffff",
     },
   },

@@ -2,7 +2,7 @@ import { Button, Card, Input, makeStyles, tokens } from "@fluentui/react-compone
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { HEADER_BACKGROUND } from "../layout/AppHeader";
+import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const useStyles = makeStyles({
   root: {
@@ -30,17 +30,17 @@ const useStyles = makeStyles({
   searchButton: {
     height: "56px",
     minWidth: "110px",
-    backgroundColor: HEADER_BACKGROUND,
+    backgroundColor: PRIMARY_DARK,
     color: "#ffffff",
     borderTopLeftRadius: "0",
     borderBottomLeftRadius: "0",
     textTransform: "uppercase",
     ":hover": {
-      backgroundColor: "#2a4d78",
+      backgroundColor: PRIMARY_MAIN,
       color: "#ffffff",
     },
     ":hover:active": {
-      backgroundColor: "#16304e",
+      backgroundColor: PRIMARY_MAIN,
       color: "#ffffff",
     },
   },
