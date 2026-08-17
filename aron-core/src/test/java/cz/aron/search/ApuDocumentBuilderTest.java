@@ -162,6 +162,56 @@ class ApuDocumentBuilderTest {
 	}
 
 	@Test
+	void allTextCollectsEverySearchableValue() {
+		var target = "99999999-8888-7777-6666-555555555555";
+		var apu = apu(
+				item("TITLE~MAIN", "Kronika obce"),
+				item("LANG~CODE", "cze"),
+				item("CNT~ITEMS", "12"),
+				item("NOTE~NOFT", "vyloučeno z fulltextu"),
+				item("REL~ENTITY", target),
+				item("UNIT~DATE", "{\"from\":\"1850-01-01T00:00:00\",\"to\":\"1910-12-31T23:59:59\"}"));
+		apu.setDescription("Popis jednotky");
+		var labels = Map.of(target, new IdLabelDto(9L, UUID.fromString(target), "Entita Železný", "Entita Zelezny"));
+
+		var doc = build(apu, labels);
+
+		// item values, the reference label, integers and boundary years as text,
+		// plus name and description - fulltext:false stays out (B13, R-3/R-4)
+		assertThat(doc.getAllText()).containsExactlyInAnyOrder(
+				"Kronika obce", "cze", "12", "Entita Zelezny", "1850", "1910",
+				"Testovací jednotka", "Popis jednotky");
+	}
+
+	@Test
+	void exactNamesAreNormalizedByTheSharedNormalizer() {
+		var apu = apu();
+		apu.setName("  Václav   NOVÁK  ");
+
+		var doc = build(apu, Map.of());
+
+		assertThat(doc.getNameExactCs()).isEqualTo("václav novák");
+		assertThat(doc.getNameExact()).isEqualTo("vaclav novak");
+		// the exact keywords are length-capped (Lucene term limit, keyword hygiene)
+		apu.setName("x".repeat(500));
+		assertThat(build(apu, Map.of()).getNameExact()).hasSize(200);
+	}
+
+	@Test
+	void globalDateBoundsSpanAllUnitdateItems() {
+		var apu = apu(
+				item("UNIT~DATE", "{\"from\":\"1850-01-01T00:00:00\",\"to\":\"1880-12-31T23:59:59\"}"),
+				item("UNIT~DATE", "{\"from\":\"1830-01-01T00:00:00\",\"to\":\"1900-12-31T23:59:59\"}"));
+
+		var doc = build(apu, Map.of());
+
+		assertThat(doc.getDateL()).isEqualTo("1830-01-01T00:00:00");
+		assertThat(doc.getDateH()).isEqualTo("1900-12-31T23:59:59");
+		// no dating = no derived bounds
+		assertThat(build(apu(), Map.of()).getDateL()).isNull();
+	}
+
+	@Test
 	void nameSortKeyFollowsCzechCollation() {
 		// Czech alphabet: c < h < ch < i; a plain string sort would file "Chalupa"
 		// under C - the collation key must not

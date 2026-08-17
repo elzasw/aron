@@ -25,11 +25,26 @@ public class ApuDocument {
 	private String name;
 	/** Czech collation key of the name (hex) - engine-neutral, index-time sorting. */
 	private String nameSort;
+	/** Normalized name, diacritics preserved (exact-match tier); computed by the builder. */
+	private String nameExactCs;
+	/** Normalized name, diacritics folded (exact/prefix tiers); computed by the builder. */
+	private String nameExact;
 	private String description;
 	private String type;
 	private boolean containsDigitalObjects;
 	private long apuSourceId;
+	/** Earliest {@code ~L} dating bound across all UNITDATE items (ISO local date-time). */
+	private String dateL;
+	/** Latest {@code ~H} dating bound across all UNITDATE items (ISO local date-time). */
+	private String dateH;
 	private final List<Rel> rels = new ArrayList<>();
+	/**
+	 * The general-fulltext catch-all: one entry per searchable value (name,
+	 * description, item values, reference labels, integers and dating boundary
+	 * years as text). MULTI-VALUED on purpose - engines index the entries with a
+	 * position gap so phrases never match across two different values.
+	 */
+	private final List<String> allText = new ArrayList<>();
 	private final Map<String, List<Object>> values = new HashMap<>();
 
 	/** Outgoing reference to another APU, resolved with its display label. */
@@ -90,6 +105,42 @@ public class ApuDocument {
 
 	public void setApuSourceId(long apuSourceId) {
 		this.apuSourceId = apuSourceId;
+	}
+
+	public String getNameExactCs() {
+		return nameExactCs;
+	}
+
+	public void setNameExactCs(String nameExactCs) {
+		this.nameExactCs = nameExactCs;
+	}
+
+	public String getNameExact() {
+		return nameExact;
+	}
+
+	public void setNameExact(String nameExact) {
+		this.nameExact = nameExact;
+	}
+
+	public String getDateL() {
+		return dateL;
+	}
+
+	public void setDateL(String dateL) {
+		this.dateL = dateL;
+	}
+
+	public String getDateH() {
+		return dateH;
+	}
+
+	public void setDateH(String dateH) {
+		this.dateH = dateH;
+	}
+
+	public List<String> getAllText() {
+		return allText;
 	}
 
 	public List<Rel> getRels() {

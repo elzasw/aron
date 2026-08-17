@@ -10,9 +10,16 @@ public class ItemType {
     private String name;
     private DataType type;
     private boolean indexed = true;
+    /** Whether the item's value enters the general fulltext (allText); default true. */
+    private Boolean fulltext;
     private Boolean indexFolding;
     private Boolean caseInsensitive;
-    private Boolean indexBoost;
+    /**
+     * Legacy key accepted from deployed types.yaml files and IGNORED - relevance
+     * weights are query-side configuration in searchConfig.yaml (see
+     * doc/search-relevance.md, R-1).
+     */
+    private Object indexBoost;
     private List<LocalizedItem> lang = new ArrayList<>();
     private int viewOrder;
 	public String getCode() {
@@ -51,11 +58,21 @@ public class ItemType {
 	public void setCaseInsensitive(Boolean caseInsensitive) {
 		this.caseInsensitive = caseInsensitive;
 	}
-	public Boolean getIndexBoost() {
+	public Object getIndexBoost() {
 		return indexBoost;
 	}
-	public void setIndexBoost(Boolean indexBoost) {
+	public void setIndexBoost(Object indexBoost) {
 		this.indexBoost = indexBoost;
+	}
+	public Boolean getFulltext() {
+		return fulltext;
+	}
+	public void setFulltext(Boolean fulltext) {
+		this.fulltext = fulltext;
+	}
+	/** Fulltext participation (allText): on unless explicitly disabled. */
+	public boolean isFulltextEnabled() {
+		return !Boolean.FALSE.equals(fulltext);
 	}
 	public List<LocalizedItem> getLang() {
 		return lang;

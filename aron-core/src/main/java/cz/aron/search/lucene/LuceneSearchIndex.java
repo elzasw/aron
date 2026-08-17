@@ -101,7 +101,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "2";
+	private static final String LAYOUT_VERSION = "3";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -125,6 +125,13 @@ public class LuceneSearchIndex implements SearchIndex {
 			TokenStream stream = new LowerCaseFilter(tokenizer);
 			stream = new ASCIIFoldingFilter(stream);
 			return new TokenStreamComponents(tokenizer, stream);
+		}
+
+		@Override
+		public int getPositionIncrementGap(String fieldName) {
+			// ES's default gap for multi-valued text: phrases never match across
+			// two values of allText (doc/search-relevance.md §4.1)
+			return 100;
 		}
 	}
 
@@ -461,6 +468,8 @@ public class LuceneSearchIndex implements SearchIndex {
 	private Document toLuceneDocument(ApuDocument apuDocument) {
 		var doc = new Document();
 		doc.add(new StringField("uuid", apuDocument.getUuid(), Field.Store.YES));
+		// sortable uuid - the final tie-break of every sort mode
+		doc.add(new SortedDocValuesField("uuid", new BytesRef(apuDocument.getUuid())));
 		doc.add(new LongPoint("apuSourceId", apuDocument.getApuSourceId()));
 		doc.add(new StringField("containsDigitalObjects", Boolean.toString(apuDocument.isContainsDigitalObjects()),
 				Field.Store.YES));
@@ -477,6 +486,18 @@ public class LuceneSearchIndex implements SearchIndex {
 			// index-time Czech collation key computed by ApuDocumentBuilder
 			doc.add(new SortedDocValuesField("nameSort", new BytesRef(apuDocument.getNameSort())));
 		}
+		if (apuDocument.getNameExactCs() != null) {
+			doc.add(new StringField("nameExactCs", apuDocument.getNameExactCs(), Field.Store.NO));
+		}
+		if (apuDocument.getNameExact() != null) {
+			doc.add(new StringField("nameExact", apuDocument.getNameExact(), Field.Store.NO));
+		}
+		// multi-valued: the analyzer's position gap keeps phrases inside one value
+		for (String text : apuDocument.getAllText()) {
+			doc.add(new TextField("allText", text, Field.Store.NO));
+		}
+		addDateBound(doc, "dateL", apuDocument.getDateL());
+		addDateBound(doc, "dateH", apuDocument.getDateH());
 		for (var entry : apuDocument.getValues().entrySet()) {
 			for (Object value : entry.getValue()) {
 				if (value instanceof String || value instanceof Number) {
@@ -514,6 +535,20 @@ public class LuceneSearchIndex implements SearchIndex {
 			doc.add(new TextField(field, value, Field.Store.NO));
 		} else {
 			doc.add(new StringField(field, value, Field.Store.NO));
+		}
+	}
+
+	/** Derived global dating bound: range-filterable point + sortable doc-values. */
+	private static void addDateBound(Document doc, String field, String bound) {
+		if (bound == null) {
+			return;
+		}
+		try {
+			long millis = toEpochMillis(LocalDateTime.parse(bound));
+			doc.add(new LongPoint(field, millis));
+			doc.add(new SortedNumericDocValuesField(field, millis));
+		} catch (DateTimeParseException e) {
+			// unparseable bound - the document simply has no derived dating
 		}
 	}
 

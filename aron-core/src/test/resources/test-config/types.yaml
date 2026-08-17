@@ -38,6 +38,11 @@ itemTypes:
     name: Source link
     type: LINK
     indexed: false
+  - code: NOTE_NOFT
+    name: Indexed note excluded from the general fulltext
+    type: STRING
+    indexed: true
+    fulltext: false
 metaDataTypes:
   - code: MD_ORDER
     name: Order

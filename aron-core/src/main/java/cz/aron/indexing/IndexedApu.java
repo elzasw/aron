@@ -24,6 +24,23 @@ public class IndexedApu {
     @Field(type = FieldType.Keyword)
     private String nameSort;
 
+    /** Normalized name, diacritics preserved - the exact-match tier (ApuDocumentBuilder.normalizeCs). */
+    @Field(type = FieldType.Keyword)
+    private String nameExactCs;
+
+    /** Normalized name, diacritics folded - the folded exact and prefix tiers (ApuDocumentBuilder.normalize). */
+    @Field(type = FieldType.Keyword)
+    private String nameExact;
+
+    /**
+     * The general-fulltext catch-all (one entry per searchable value; see
+     * ApuDocument.getAllText). The NON-stop folding analyzer, so stop-word-only
+     * queries stay answerable; ES's default position_increment_gap (100) keeps
+     * phrases from matching across two values.
+     */
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private List<String> allText = new ArrayList<>();
+
     @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP)
     private String description;
 
@@ -56,6 +73,38 @@ public class IndexedApu {
 
 	public void setNameSort(String nameSort) {
 		this.nameSort = nameSort;
+	}
+
+	public String getNameExactCs() {
+		return nameExactCs;
+	}
+
+	public void setNameExactCs(String nameExactCs) {
+		this.nameExactCs = nameExactCs;
+	}
+
+	public String getNameExact() {
+		return nameExact;
+	}
+
+	public void setNameExact(String nameExact) {
+		this.nameExact = nameExact;
+	}
+
+	public List<String> getAllText() {
+		return allText;
+	}
+
+	public void setAllText(List<String> allText) {
+		this.allText = allText;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public String getDescription() {

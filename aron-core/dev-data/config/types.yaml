@@ -83,8 +83,11 @@ itemTypes:
     name: Jméno
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK | ITEM_AGGREG
     type: STRING
-    # indexBoost: 1.1
-    # 
+    #
+    # Vyrazeni z obecneho fulltextu (allText); vychozi je true.
+    # Vahy relevance patri do searchConfig.yaml (sekce relevance).
+    # fulltext: false
+    #
     # Odstraneni diakritiky (folding, velka mala pismena apod.)
     # Vychozi hodnoty:
     #  - enum: false

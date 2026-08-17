@@ -62,6 +62,17 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	private static final String FIELDS_CRC_META_KEY = "fieldsCrc";
 
+	private static final String LAYOUT_VERSION_META_KEY = "layoutVersion";
+
+	/**
+	 * Version of the fixed-field document layout produced by this adapter (the
+	 * types.yaml CRC does not cover fixed fields). Bump on any layout change: an
+	 * index written under a different version reports no stored CRC, so the
+	 * startup bootstrap rebuilds and reindexes it - the analog of the Lucene
+	 * adapter's commit-user-data version.
+	 */
+	private static final String LAYOUT_VERSION = "1";
+
 	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
 	private static final String BOUNDS_AGG_PREFIX = "bounds~";
 
@@ -117,6 +128,10 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		if (meta == null || meta.get(FIELDS_CRC_META_KEY) == null) {
 			return null;
 		}
+		if (!LAYOUT_VERSION.equals(String.valueOf(meta.get(LAYOUT_VERSION_META_KEY)))) {
+			// index written by another layout version = treat as no schema
+			return null;
+		}
 		return Long.valueOf(meta.get(FIELDS_CRC_META_KEY).toString());
 	}
 
@@ -124,7 +139,8 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	public void storeFieldsCrc(long crc) {
 		// partial mapping update - merges _meta without touching field mappings
 		operations.indexOps(IndexCoordinates.of("apu"))
-				.putMapping(Document.parse("{\"_meta\":{\"" + FIELDS_CRC_META_KEY + "\":\"" + crc + "\"}}"));
+				.putMapping(Document.parse("{\"_meta\":{\"" + FIELDS_CRC_META_KEY + "\":\"" + crc + "\",\""
+						+ LAYOUT_VERSION_META_KEY + "\":\"" + LAYOUT_VERSION + "\"}}"));
 	}
 
 	@Override
@@ -401,12 +417,17 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	 */
 	private Document toEsDocument(ApuDocument apuDocument) {
 		var indexedApu = new IndexedApu();
+		// the id field mirrors the document _id as a sortable keyword (tie-breaks)
+		indexedApu.setId(apuDocument.getUuid());
 		indexedApu.setContainsDigitalObjects(apuDocument.isContainsDigitalObjects());
 		indexedApu.setDescription(apuDocument.getDescription());
 		indexedApu.setIncomingRelTypeGroups(null);
 		indexedApu.setIncomingRelTypes(null);
 		indexedApu.setName(apuDocument.getName());
 		indexedApu.setNameSort(apuDocument.getNameSort());
+		indexedApu.setNameExactCs(apuDocument.getNameExactCs());
+		indexedApu.setNameExact(apuDocument.getNameExact());
+		indexedApu.setAllText(apuDocument.getAllText());
 		indexedApu.setType(apuDocument.getType());
 		for (var rel : apuDocument.getRels()) {
 			indexedApu.getRels().add(new IndexedApu.NestedRelation(rel.targetId(), rel.type(), rel.groups(),
@@ -417,11 +438,21 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		var apuSourceIdArr = new ArrayList<Object>();
 		apuSourceIdArr.add(apuDocument.getApuSourceId());
 		doc.put("apuSourceId", apuSourceIdArr);
+		// derived global dating bounds (dating sort); mapped in createCustomMapping
+		if (apuDocument.getDateL() != null) {
+			doc.put("dateL", List.of(apuDocument.getDateL()));
+		}
+		if (apuDocument.getDateH() != null) {
+			doc.put("dateH", List.of(apuDocument.getDateH()));
+		}
 		return doc;
 	}
 
 	private Map<String, Object> createCustomMapping() {
 		Map<String, Object> customMapping = new HashMap<>();
+		// derived global dating bounds (min ~L / max ~H per document) - dating sort
+		customMapping.put("dateL", Map.of("type", "date"));
+		customMapping.put("dateH", Map.of("type", "date"));
 		for (ItemType allItemType : typesHolder.getAllItemTypes()) {
 			if (!allItemType.isIndexed()) {
 				continue;
