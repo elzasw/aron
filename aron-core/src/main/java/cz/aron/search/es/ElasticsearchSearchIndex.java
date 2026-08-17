@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,9 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
 	private static final String BOUNDS_AGG_PREFIX = "bounds~";
+
+	/** Name of the per-type counts aggregation (the tilde keeps it clash-free too). */
+	private static final String TYPE_COUNTS_AGG = "types~counts";
 
 	private static final DateTimeFormatter ISO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
@@ -188,16 +192,18 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	@Override
 	public ApuSearchResult search(ApuSearchQuery query) {
 		var builder = NativeQuery.builder().withQuery(buildMainQuery(query));
-		// facet filters (Values, Range) go into the post_filter: they restrict hits
-		// and total but not aggregations - each aggregation applies the OTHER
-		// facets' filters itself (multi-select semantics)
-		Query facetFilter = buildFacetFilters(query.filters(), null);
-		if (facetFilter != null) {
-			builder.withFilter(facetFilter);
+		// facet filters (Values, Range) and the apuType restriction go into the
+		// post_filter: they restrict hits and total but not aggregations - each
+		// aggregation applies the OTHER facets' filters (and the apuType) itself
+		// (multi-select semantics); the typeCounts aggregation is the one that
+		// deliberately drops the apuType
+		Query postFilter = withApuType(buildFacetFilters(query.filters(), null), query.apuType());
+		if (postFilter != null) {
+			builder.withFilter(postFilter);
 		}
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
 			builder.withAggregation(bucket.bucketField(), Aggregation.of(a -> a
-					.filter(facetFiltersOrMatchAll(query.filters(), bucket.filterField()))
+					.filter(aggregationFilter(query, bucket.filterField(), true))
 					.aggregations("values", Aggregation.of(sub -> sub
 							.terms(t -> t.field(bucket.bucketField()).size(bucket.size()))))));
 		}
@@ -205,11 +211,16 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			// the value_counts detect "no dating present": the min/max values alone
 			// cannot (the client maps their null to 0.0)
 			builder.withAggregation(BOUNDS_AGG_PREFIX + field, Aggregation.of(a -> a
-					.filter(facetFiltersOrMatchAll(query.filters(), field))
+					.filter(aggregationFilter(query, field, true))
 					.aggregations("min", Aggregation.of(sub -> sub.min(m -> m.field(field + "~L"))))
 					.aggregations("max", Aggregation.of(sub -> sub.max(m -> m.field(field + "~H"))))
 					.aggregations("minCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~L"))))
 					.aggregations("maxCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~H"))))));
+		}
+		if (query.typeCounts()) {
+			builder.withAggregation(TYPE_COUNTS_AGG, Aggregation.of(a -> a
+					.filter(aggregationFilter(query, null, false))
+					.aggregations("values", Aggregation.of(sub -> sub.terms(t -> t.field("type").size(20))))));
 		}
 		// full deterministic sort chains (uuid mirror field "id" is the final
 		// tie-break of every mode); ES's default missing=_last already files
@@ -275,7 +286,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 					: ApuSearchResult.TotalRelation.GTE;
 		}
 		return new ApuSearchResult(total, relation, resultHits, extractBuckets(hits, query.buckets()),
-				extractBounds(hits, query.boundsFields()));
+				extractBounds(hits, query.boundsFields()), extractTypeCounts(hits, query.typeCounts()));
 	}
 
 	/**
@@ -349,15 +360,38 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		} else {
 			bool.must(Query.of(q -> q.matchAll(m -> m)));
 		}
-		if (query.apuType() != null) {
-			bool.filter(Query.of(q -> q.term(t -> t.field("type").value(query.apuType()))));
-		}
+		// the apuType restriction deliberately lives in the post_filter (see
+		// search()), so the typeCounts aggregation can ignore it
 		for (FieldFilter filter : query.filters()) {
 			if (filter instanceof FieldFilter.Text text) {
 				bool.filter(Query.of(q -> q.matchPhrasePrefix(m -> m.field(text.field()).query(text.text()))));
 			}
 		}
 		return Query.of(q -> q.bool(bool.build()));
+	}
+
+	/** ANDs the apuType restriction onto a (nullable) filter; {@code null} when neither applies. */
+	private static Query withApuType(Query filter, String apuType) {
+		if (apuType == null) {
+			return filter;
+		}
+		Query typeQuery = Query.of(q -> q.term(t -> t.field("type").value(apuType)));
+		if (filter == null) {
+			return typeQuery;
+		}
+		return Query.of(q -> q.bool(b -> b.filter(filter).filter(typeQuery)));
+	}
+
+	/**
+	 * Filter of one aggregation: the OTHER facets' filters (multi-select) plus -
+	 * except for typeCounts - the apuType restriction.
+	 */
+	private Query aggregationFilter(ApuSearchQuery query, String excludedField, boolean includeApuType) {
+		Query filter = buildFacetFilters(query.filters(), excludedField);
+		if (includeApuType) {
+			filter = withApuType(filter, query.apuType());
+		}
+		return filter != null ? filter : Query.of(q -> q.matchAll(m -> m));
 	}
 
 	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */
@@ -404,9 +438,21 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		return any ? Query.of(q -> q.bool(bool.build())) : null;
 	}
 
-	private static Query facetFiltersOrMatchAll(List<FieldFilter> filters, String excludedField) {
-		Query others = buildFacetFilters(filters, excludedField);
-		return others != null ? others : Query.of(q -> q.matchAll(m -> m));
+	private static List<ApuSearchResult.Bucket> extractTypeCounts(SearchHits<IndexedApu> hits, boolean requested) {
+		if (!requested) {
+			return List.of();
+		}
+		var aggregations = (ElasticsearchAggregations) hits.getAggregations();
+		var aggregation = aggregations.get(TYPE_COUNTS_AGG);
+		if (aggregation == null) {
+			return List.of();
+		}
+		var terms = aggregation.aggregation().getAggregate().filter().aggregations().get("values").sterms();
+		return terms.buckets().array().stream()
+				.map(b -> new ApuSearchResult.Bucket(b.key().stringValue(), b.docCount()))
+				.sorted(Comparator.comparingLong(ApuSearchResult.Bucket::count).reversed()
+						.thenComparing(ApuSearchResult.Bucket::value))
+				.toList();
 	}
 
 	private static Map<String, List<ApuSearchResult.Bucket>> extractBuckets(SearchHits<IndexedApu> hits,

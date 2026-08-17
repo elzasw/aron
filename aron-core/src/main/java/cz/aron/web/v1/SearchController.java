@@ -49,6 +49,7 @@ import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
 import cz.aron.api.v1.model.TextFilter;
 import cz.aron.api.v1.model.TotalRelation;
+import cz.aron.api.v1.model.TypeCount;
 import cz.aron.api.v1.model.ValuesFilter;
 import cz.aron.domain.DataType;
 import cz.aron.domain.facets.FacetsLoader;
@@ -160,13 +161,14 @@ public class SearchController implements SearchApi {
 
 		QueryMode queryMode = QueryMode.STRICT;
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, plan, filters,
-				bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo())));
+				bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()), true));
 		// zero strict hits - one automatic any-word retry, visibly labeled (B7);
 		// facet filters and the section restriction are never relaxed
 		if (result.total() == 0 && plan != null && plan.relaxable()
 				&& relevanceService.config().relaxOnNoHits()) {
 			result = indexingService.search(new ApuSearchQuery(apuType, plan.relaxed(), filters,
-					bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo())));
+					bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()),
+					true));
 			if (result.total() > 0) {
 				queryMode = QueryMode.RELAXED;
 			}
@@ -201,11 +203,14 @@ public class SearchController implements SearchApi {
 				default -> { /* no facet result */ }
 			}
 		}
+		var typeCounts = result.typeCounts().stream()
+				.map(bucket -> new TypeCount(ApuType.fromValue(bucket.value()), bucket.count()))
+				.toList();
 		return ResponseEntity.ok(new ApuSearchResponse(result.total(),
 				result.totalRelation() == ApuSearchResult.TotalRelation.EQ
 						? TotalRelation.EQ
 						: TotalRelation.GTE,
-				queryMode, items, facetResults));
+				queryMode, items, facetResults, typeCounts));
 	}
 
 	/** The request's own accuracy override, clamped by the server maximum; unset = the server default. */

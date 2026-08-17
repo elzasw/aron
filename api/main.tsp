@@ -368,6 +368,20 @@ model ApuSearchResponse {
 	 * option list (beyond the bucket limit) comes from `getFacetOptions`.
 	 */
 	facets: FacetResult[];
+
+	/**
+	 * Matching APUs per type, count descending. The query and all filters
+	 * apply; the request's own `apuType` restriction does NOT - a user browsing
+	 * one section still sees the other sections' counts and can switch there.
+	 */
+	typeCounts: TypeCount[];
+}
+
+/** Number of matching APUs of one type. */
+model TypeCount {
+	apuType: ApuType;
+
+	count: int64;
 }
 
 /** One search hit. */

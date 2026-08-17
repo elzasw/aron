@@ -8,10 +8,8 @@ Search
    redesign (design document ``doc/search-relevance.md``, decision D-12).
    It is the normative target; the behavior stated here is pinned by
    automated tests — both supported engines (Elasticsearch and embedded
-   Lucene) must satisfy it identically. Implemented so far: result-total
-   accuracy (exact up to the limit, "more than N" above it) and the paging
-   window; the ranking and the extended ordering modes are still being
-   rolled out.
+   Lucene) must satisfy it identically. The behavior below is implemented;
+   only the relevance tuning on production data is still ongoing.
 
 Search behavior
 ===============

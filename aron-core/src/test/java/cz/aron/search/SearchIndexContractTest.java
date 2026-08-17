@@ -487,6 +487,30 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void typeCountsIgnoreTheTypeRestrictionButRespectFilters() {
+		indexApus(List.of(
+				doc(uuid(90), "Fond kronik", "FUND", 1, Map.of("LANG~CODE", List.of("tc-cze"))),
+				doc(uuid(91), "Kronika A", "ARCH_DESC", 1, Map.of("LANG~CODE", List.of("tc-cze"))),
+				doc(uuid(92), "Kronika B", "ARCH_DESC", 1, Map.of("LANG~CODE", List.of("tc-ger")))));
+
+		var result = index.search(new ApuSearchQuery("ARCH_DESC", null,
+				List.of(new FieldFilter.Values("LANG~CODE", List.of("tc-cze"))),
+				List.of(), Set.of(), 0, 10, SortMode.RELEVANCE, null, true));
+
+		// hits and total respect the type restriction
+		assertThat(result.total()).isEqualTo(1);
+		assertThat(result.hits().get(0).uuid()).isEqualTo(uuid(91));
+		// the per-type counts respect the filter but ignore the restriction
+		// (count descending, ties by type)
+		assertThat(result.typeCounts()).containsExactly(
+				new ApuSearchResult.Bucket("ARCH_DESC", 1), new ApuSearchResult.Bucket("FUND", 1));
+
+		// not requested = not computed
+		assertThat(index.search(new ApuSearchQuery("ARCH_DESC", null, List.of(), List.of(), Set.of(),
+				0, 10, SortMode.RELEVANCE)).typeCounts()).isEmpty();
+	}
+
+	@Test
 	void deleteBySourceRemovesOnlyThatSource() {
 		indexApus(List.of(
 				doc(uuid(18), "From source one", 1, Map.of()),

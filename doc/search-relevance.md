@@ -451,12 +451,16 @@ blind against the last complaint.
 2. **Index side** — multi-valued `allText` (position gap), `nameExactCs`,
    `nameExact`, `dateL`/`dateH`, uuid doc-values, `fulltext` flag in the CRC,
    document-layout version on both engines, ENUM label verification (§4.1). One
-   reindex.
+   reindex. **Done 2026-08-17** (ENUM label verification remains open — check
+   on real Elza data whether ENUM values are codes or labels).
 3. **Relevance** — config, planner (syntax, gate, tiers, relaxation), both
-   adapters, contract tests, built-in defaults.
+   adapters, contract tests, built-in defaults. **Done 2026-08-17** — the §5
+   behavior tests pass identically on embedded Lucene and real ES.
 4. **Ordering** — `AUTO` + new modes in the contract, tie-breaks in both
-   adapters, UI sort control.
-5. **Type counts** — aggregation, contract, UI chips.
+   adapters, UI sort control. **Done 2026-08-17.**
+5. **Type counts** — aggregation, contract, UI chips. **Done 2026-08-17**
+   (the apuType restriction moved to the post-filter so the counts can ignore
+   it; facet aggregations re-apply it themselves).
 6. **Documentation** — Czech user help ("Nápověda k vyhledávání": quotes,
    diacritics, AND, `word*`, sort modes, "více než N") served through the
    existing help mechanism; administrator search chapter

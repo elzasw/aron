@@ -20,9 +20,11 @@ import java.util.Map;
  *                      by the request's size
  * @param bounds        dating bounds per requested bounds field; a field has
  *                      no entry when no matching document carries its dating
+ * @param typeCounts    matching documents per APU type, count descending
+ *                      (ties by type); empty unless the query requested them
  */
 public record ApuSearchResult(long total, TotalRelation totalRelation, List<Hit> hits,
-		Map<String, List<Bucket>> buckets, Map<String, Bounds> bounds) {
+		Map<String, List<Bucket>> buckets, Map<String, Bounds> bounds, List<Bucket> typeCounts) {
 
 	/** Accuracy of {@link #total()}. */
 	public enum TotalRelation {

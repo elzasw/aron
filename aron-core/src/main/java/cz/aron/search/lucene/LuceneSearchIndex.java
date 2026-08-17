@@ -262,8 +262,10 @@ public class LuceneSearchIndex implements SearchIndex {
 		try {
 			IndexSearcher searcher = apuSearchers.acquire();
 			try {
+				// mainQuery excludes the apuType restriction, so the typeCounts
+				// enumeration can ignore it; hits/buckets/bounds add it back
 				Query mainQuery = buildMainQuery(query);
-				Query fullQuery = withFacetFilters(mainQuery, query.filters(), null);
+				Query fullQuery = withApuType(withFacetFilters(mainQuery, query.filters(), null), query.apuType());
 				long exactTotal = searcher.count(fullQuery);
 				var hits = new ArrayList<ApuSearchResult.Hit>();
 				if (exactTotal > query.from() && query.size() > 0) {
@@ -283,7 +285,7 @@ public class LuceneSearchIndex implements SearchIndex {
 				return new ApuSearchResult(capped ? query.totalUpTo() : exactTotal,
 						capped ? ApuSearchResult.TotalRelation.GTE : ApuSearchResult.TotalRelation.EQ,
 						hits, countBuckets(searcher, query, mainQuery),
-						computeBounds(searcher, query, mainQuery));
+						computeBounds(searcher, query, mainQuery), countTypes(searcher, query, mainQuery));
 			} finally {
 				apuSearchers.release(searcher);
 			}
@@ -337,7 +339,8 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 		var result = new HashMap<String, List<ApuSearchResult.Bucket>>();
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
-			Query base = withFacetFilters(mainQuery, query.filters(), bucket.filterField());
+			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), bucket.filterField()),
+					query.apuType());
 			var buckets = new ArrayList<ApuSearchResult.Bucket>();
 			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), bucket.bucketField());
 			if (terms != null) {
@@ -371,7 +374,7 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 		var result = new HashMap<String, ApuSearchResult.Bounds>();
 		for (String field : query.boundsFields()) {
-			Query base = withFacetFilters(mainQuery, query.filters(), field);
+			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), field), query.apuType());
 			Long min = minMaxMillis(searcher, base, field + "~L", false);
 			Long max = minMaxMillis(searcher, base, field + "~H", true);
 			if (min != null && max != null) {
@@ -419,15 +422,57 @@ public class LuceneSearchIndex implements SearchIndex {
 		} else {
 			root.add(new MatchAllDocsQuery(), Occur.MUST);
 		}
-		if (query.apuType() != null) {
-			root.add(new TermQuery(new Term("type", query.apuType())), Occur.FILTER);
-		}
+		// the apuType restriction is added by the caller (see search()), so the
+		// typeCounts enumeration can ignore it
 		for (FieldFilter filter : query.filters()) {
 			if (filter instanceof FieldFilter.Text text) {
 				root.add(textFieldQuery(text), Occur.FILTER);
 			}
 		}
 		return root.build();
+	}
+
+	/** ANDs the apuType restriction onto a query ({@code null} type = unchanged). */
+	private static Query withApuType(Query base, String apuType) {
+		if (apuType == null) {
+			return base;
+		}
+		return new BooleanQuery.Builder()
+				.add(base, Occur.MUST)
+				.add(new TermQuery(new Term("type", apuType)), Occur.FILTER)
+				.build();
+	}
+
+	/**
+	 * Matching documents per APU type - fulltext and all facet filters apply,
+	 * the query's own apuType restriction does not (the user can switch
+	 * sections). Ordered by count descending, ties by type.
+	 */
+	private List<ApuSearchResult.Bucket> countTypes(IndexSearcher searcher, ApuSearchQuery query, Query mainQuery)
+			throws IOException {
+		if (!query.typeCounts()) {
+			return List.of();
+		}
+		Query base = withFacetFilters(mainQuery, query.filters(), null);
+		var counts = new ArrayList<ApuSearchResult.Bucket>();
+		Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), "type");
+		if (terms != null) {
+			TermsEnum iterator = terms.iterator();
+			BytesRef term;
+			while ((term = iterator.next()) != null) {
+				String value = term.utf8ToString();
+				long count = searcher.count(new BooleanQuery.Builder()
+						.add(base, Occur.MUST)
+						.add(new TermQuery(new Term("type", value)), Occur.FILTER)
+						.build());
+				if (count > 0) {
+					counts.add(new ApuSearchResult.Bucket(value, count));
+				}
+			}
+		}
+		counts.sort(Comparator.comparingLong(ApuSearchResult.Bucket::count).reversed()
+				.thenComparing(ApuSearchResult.Bucket::value));
+		return counts;
 	}
 
 	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */

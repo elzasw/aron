@@ -16,6 +16,7 @@
     "FINDING_AID": "Archivní pomůcky",
     "ARCH_DESC": "Archiválie",
     "ENTITY": "Přístupové body",
+    "COLLECTION": "Sbírky",
     "ORIGINATOR": "Původci",
     "NEWS": "Aktuality",
     "HELP": "Nápověda"
@@ -32,6 +33,7 @@
     "sidebarPlaceholder": "Vyhledávání",
     "pageSize": "Počet na stránce:",
     "sortLabel": "Řazení:",
+    "typeCountsLabel": "Počty záznamů podle druhu",
     "sort": {
       "AUTO": "Výchozí",
       "RELEVANCE": "Nejlépe odpovídající",

@@ -30,15 +30,26 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  *                     are counted exactly up to this value, beyond it the total
  *                     is reported as {@code (totalUpTo, GTE)}; {@code null} =
  *                     count exactly (callers resolve their configured default)
+ * @param typeCounts   also count matching documents per APU type; the counts
+ *                     respect the fulltext and all filters but IGNORE the
+ *                     query's own {@code apuType} restriction (the user can
+ *                     switch sections)
  */
 public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
 		List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
-		Integer totalUpTo) {
+		Integer totalUpTo, boolean typeCounts) {
+
+	/** Variant without type counts. */
+	public ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
+			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
+			Integer totalUpTo) {
+		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, totalUpTo, false);
+	}
 
 	/** Exact-total variant - the accuracy limit defaults to unlimited. */
 	public ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
 			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort) {
-		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null);
+		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null, false);
 	}
 
 	/**

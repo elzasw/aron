@@ -2,7 +2,7 @@ import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
 import {
   ApuType,
@@ -12,12 +12,14 @@ import {
   FacetDisplay,
   FacetResultKind,
   FacetType,
+  type MenuItemCode,
   QueryMode,
   type SearchFilter,
   SortMode,
   TotalRelation,
 } from "../api/generated";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
+import { SECTIONS } from "../sections";
 import FacetPanel from "./FacetPanel";
 import { parseFilters, serializeFilters } from "./filters";
 import Pagination from "./Pagination";
@@ -86,6 +88,24 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalS,
     fontSize: tokens.fontSizeBase200,
     color: tokens.colorNeutralForeground3,
+  },
+  // per-type counts of the general search: one chip per record type
+  typeChips: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: tokens.spacingHorizontalS,
+  },
+  chip: {
+    padding: `${tokens.spacingVerticalXXS} ${tokens.spacingHorizontalM}`,
+    borderRadius: tokens.borderRadiusCircular,
+    backgroundColor: tokens.colorNeutralBackground3,
+    color: tokens.colorBrandForegroundLink,
+    fontSize: tokens.fontSizeBase200,
+    textDecorationLine: "none",
+    ":hover": {
+      backgroundColor: tokens.colorNeutralBackground3Hover,
+      textDecorationLine: "underline",
+    },
   },
 });
 
@@ -214,6 +234,27 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
         <Title3>{t(titleKey)}</Title3>
         {search.data && (
           <>
+            {apuType === undefined && search.data.typeCounts.length > 0 && (
+              <nav aria-label={t("search.typeCountsLabel")} className={styles.typeChips}>
+                {search.data.typeCounts.map((typeCount) => {
+                  const section = SECTIONS[typeCount.apuType as unknown as MenuItemCode];
+                  const label = `${t(`sections.${typeCount.apuType}`)} (${typeCount.count})`;
+                  return section?.route ? (
+                    <Link
+                      key={typeCount.apuType}
+                      to={`${section.route}${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+                      className={styles.chip}
+                    >
+                      {label}
+                    </Link>
+                  ) : (
+                    <span key={typeCount.apuType} className={styles.chip}>
+                      {label}
+                    </span>
+                  );
+                })}
+              </nav>
+            )}
             <div className={styles.sortRow}>
               <label htmlFor="search-sort">{t("search.sortLabel")}</label>
               <Select

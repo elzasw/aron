@@ -388,6 +388,7 @@ components:
         - queryMode
         - items
         - facets
+        - typeCounts
       properties:
         total:
           type: integer
@@ -419,6 +420,14 @@ components:
             Per-facet results of the section (multi-select semantics), each shaped by
             its facet kind - see the `FacetResult` specializations. A facet's full
             option list (beyond the bucket limit) comes from `getFacetOptions`.
+        typeCounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/TypeCount"
+          description: |-
+            Matching APUs per type, count descending. The query and all filters
+            apply; the request's own `apuType` restriction does NOT - a user browsing
+            one section still sees the other sections' counts and can switch there.
       description: Search response.
     ApuType:
       type: string
@@ -907,6 +916,18 @@ components:
           format: int32
           description: Number of children (0 = leaf).
       description: One node of the archival-description tree.
+    TypeCount:
+      type: object
+      required:
+        - apuType
+        - count
+      properties:
+        apuType:
+          $ref: "#/components/schemas/ApuType"
+        count:
+          type: integer
+          format: int64
+      description: Number of matching APUs of one type.
     UiConfig:
       type: object
       required:

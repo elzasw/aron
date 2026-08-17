@@ -43,6 +43,7 @@ import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
 import cz.aron.test.api.v1.model.SystemInfo;
 import cz.aron.test.api.v1.model.TotalRelation;
+import cz.aron.test.api.v1.model.TypeCount;
 import cz.aron.test.api.v1.model.UiConfig;
 import cz.aron.test.api.v1.model.ValuesFilter;
 
@@ -223,6 +224,11 @@ class NewApiV1Test extends AbstractTest {
 				enumResult -> assertThat(enumResult.getBuckets())
 						.extracting(FacetBucket::getValue, FacetBucket::getCount)
 						.contains(tuple("v1-cze", 2L), tuple("v1-ger", 1L)));
+
+		// per-type counts respect the filter (both v1-cze records are ARCH_DESC)
+		assertThat(response.getTypeCounts())
+				.extracting(TypeCount::getApuType, TypeCount::getCount)
+				.contains(tuple(ApuType.ARCH_DESC, 2L));
 	}
 
 	@Test
