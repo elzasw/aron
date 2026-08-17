@@ -42,5 +42,40 @@
     </part>
    </prts>
   </apu>
+  <!-- siblings + a grandchild exercise the incremental tree windows -->
+  <apu type="ArchDesc" uuid="9f1d0000-0000-4000-8000-90000000000b">
+   <name>V1D Kronika obce Bukov</name>
+   <prnt>9f1d0000-0000-4000-8000-90000000000f</prnt>
+   <prts>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE_MAIN">Kronika obce Bukov</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="9f1d0000-0000-4000-8000-90000000000c">
+   <name>V1D Kronika obce Cetkov</name>
+   <prnt>9f1d0000-0000-4000-8000-90000000000f</prnt>
+   <prts>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE_MAIN">Kronika obce Cetkov</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="9f1d0000-0000-4000-8000-9000000000aa">
+   <name>V1D Zápisy 1850-1860</name>
+   <desc>První svazek</desc>
+   <prnt>9f1d0000-0000-4000-8000-90000000000b</prnt>
+   <prts>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE_MAIN">Zápisy prvního svazku</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
  </apus>
 </apusrc>

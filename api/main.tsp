@@ -472,6 +472,67 @@ namespace Apu {
 		/** Not modified - the client's cached representation is still valid. */
 		@statusCode statusCode: 304;
 	};
+
+	/**
+	 * One window of the archival-description tree around an APU - the source of
+	 * the incremental tree navigation. `BEFORE`/`AFTER` return up to a
+	 * server-configured window of siblings preceding/following the APU in tree
+	 * order; `UNDER` returns the first window of its children. Conditional
+	 * requests behave as in `getDetail`.
+	 */
+	@get
+	@route("/api/v1/apu/{uuid}/tree")
+	op getTreeNodes(
+		@path uuid: string,
+
+		@query direction: TreeDirection,
+
+		@header("If-None-Match") ifNoneMatch?: string,
+
+		@header("If-Modified-Since") ifModifiedSince?: string,
+	): {
+		@statusCode statusCode: 200;
+
+		@header("ETag") eTag?: string;
+
+		@header("Last-Modified") lastModified?: string;
+
+		@body body: TreeNode[];
+	} | {
+		/** Not modified - the client's cached representation is still valid. */
+		@statusCode statusCode: 304;
+	};
+}
+
+/** Directions of the incremental tree navigation. */
+enum TreeDirection {
+	/** Siblings preceding the APU, in tree order. */
+	BEFORE,
+
+	/** Siblings following the APU, in tree order. */
+	AFTER,
+
+	/** Children of the APU (first window). */
+	UNDER,
+}
+
+/** One node of the archival-description tree. */
+model TreeNode {
+	uuid: string;
+
+	name: string;
+
+	/** Tree nodes display `description` when present, `name` otherwise. */
+	description?: string;
+
+	/** Depth within the tree (relative; larger = deeper). */
+	depth: int32;
+
+	/** 1-based position among the node's siblings. */
+	pos: int32;
+
+	/** Number of children (0 = leaf). */
+	childCount: int32;
 }
 
 /** Display-ready detail of one APU (the render model). */
@@ -491,8 +552,13 @@ model ApuDetail {
 	/** Number of child APUs in the archival-description tree (0 = leaf). */
 	childCount: int32;
 
-	/** Ancestor chain, root first; empty for a root or standalone APU. */
-	breadcrumbs: ApuLink[];
+	/**
+	 * The APU's path in the archival-description tree, root first, INCLUDING
+	 * the APU itself as the last element - a single element for root or
+	 * standalone APUs. Drives both the breadcrumb navigation (all but the last
+	 * element) and the seed of the incremental tree (`getTreeNodes`).
+	 */
+	treePath: TreeNode[];
 
 	/** Display-ready parts in display order; parts with no visible items are omitted. */
 	parts: DetailPart[];

@@ -12,11 +12,13 @@ import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { apuApi } from "../api/client";
 import {
+  ApuType,
   type DetailItem,
   DetailItemKind,
   type DetailPart,
   ResponseError,
 } from "../api/generated";
+import ApuTree from "../apu/ApuTree";
 
 /**
  * The fund's reference to its archival-description tree root - rendered as a
@@ -26,15 +28,33 @@ import {
 const ARCHDESC_ROOT_REF = "ARCHDESC~ROOT~REF";
 
 const useStyles = makeStyles({
+  layout: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: tokens.spacingHorizontalXXL,
+    padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
+    // narrow viewports stack the tree above the description
+    "@media (max-width: 860px)": {
+      flexDirection: "column",
+      alignItems: "stretch",
+      padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
+    },
+  },
+  tree: {
+    width: "320px",
+    flexShrink: 0,
+    overflowX: "auto",
+    "@media (max-width: 860px)": {
+      width: "100%",
+    },
+  },
   root: {
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalL,
-    padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
     maxWidth: "1000px",
-    "@media (max-width: 860px)": {
-      padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
-    },
+    minWidth: 0,
+    flexGrow: 1,
   },
   breadcrumbs: {
     display: "flex",
@@ -160,28 +180,35 @@ export default function ApuPage() {
   });
 
   if (detail.isPending) {
-    return <Spinner className={styles.root} />;
+    return <Spinner className={styles.layout} />;
   }
   if (detail.isError) {
     const notFound =
       detail.error instanceof ResponseError && detail.error.response.status === 404;
     return (
-      <div className={styles.root}>
+      <div className={styles.layout}>
         <Text>{t(notFound ? "apu.notFound" : "apu.error")}</Text>
       </div>
     );
   }
 
   const data = detail.data;
+  const ancestors = data.treePath.slice(0, -1);
   const archdescRoot = data.parts
     .flatMap((part) => part.items)
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
   return (
-    <div className={styles.root}>
-      {data.breadcrumbs.length > 0 && (
+    <div className={styles.layout}>
+      {data.apuType === ApuType.ArchDesc && (
+        <aside className={styles.tree}>
+          <ApuTree treePath={data.treePath} currentUuid={data.uuid} />
+        </aside>
+      )}
+      <div className={styles.root}>
+      {ancestors.length > 0 && (
         <nav aria-label={t("apu.breadcrumbs")} className={styles.breadcrumbs}>
-          {data.breadcrumbs.map((ancestor) => (
+          {ancestors.map((ancestor) => (
             <Fragment key={ancestor.uuid}>
               <Link to={`/apu/${ancestor.uuid}`} className={styles.link}>
                 {ancestor.name}
@@ -233,6 +260,7 @@ export default function ApuPage() {
           <Text size={200}>{t("apu.binariesLater")}</Text>
         </section>
       )}
+      </div>
     </div>
   );
 }

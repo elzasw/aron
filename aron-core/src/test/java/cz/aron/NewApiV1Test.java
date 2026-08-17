@@ -22,12 +22,13 @@ import cz.aron.test.api.v1.ApuApi;
 import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
 import cz.aron.test.api.v1.UiApi;
-import cz.aron.test.api.v1.model.ApuLink;
 import cz.aron.test.api.v1.model.ApuSearchRequest;
 import cz.aron.test.api.v1.model.ApuType;
 import cz.aron.test.api.v1.model.DetailItem;
 import cz.aron.test.api.v1.model.DetailItemKind;
 import cz.aron.test.api.v1.model.DetailPart;
+import cz.aron.test.api.v1.model.TreeDirection;
+import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
 import cz.aron.test.api.v1.model.EnumFacetResult;
 import cz.aron.test.api.v1.model.FacetBucket;
@@ -264,6 +265,9 @@ class NewApiV1Test extends AbstractTest {
 	/** Fixture uuids from test-config/import/detail-transfer/apusrc-detail.xml. */
 	private static final String DETAIL_FUND = "9f1d0000-0000-4000-8000-90000000000f";
 	private static final String DETAIL_ARCH_DESC = "9f1d0000-0000-4000-8000-90000000000d";
+	private static final String DETAIL_SIBLING_B = "9f1d0000-0000-4000-8000-90000000000b";
+	private static final String DETAIL_SIBLING_C = "9f1d0000-0000-4000-8000-90000000000c";
+	private static final String DETAIL_GRANDCHILD = "9f1d0000-0000-4000-8000-9000000000aa";
 
 	@Test
 	void detailServesTheRenderModel() {
@@ -274,9 +278,11 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(detail.getApuType()).isEqualTo(ApuType.ARCH_DESC);
 		assertThat(detail.getChildCount()).isZero();
 
-		// breadcrumbs = ancestor chain, root first
-		assertThat(detail.getBreadcrumbs()).extracting(ApuLink::getUuid, ApuLink::getName)
-				.containsExactly(tuple(DETAIL_FUND, "V1D Sbírka kronik"));
+		// tree path = ancestor chain root-first, the APU itself last
+		assertThat(detail.getTreePath()).extracting(TreeNode::getUuid, TreeNode::getName)
+				.containsExactly(
+						tuple(DETAIL_FUND, "V1D Sbírka kronik"),
+						tuple(DETAIL_ARCH_DESC, "V1D Kronika obce Testov"));
 
 		// parts ordered by the display model (PT~TITLE first, XML had PT~BODY first);
 		// the part with only invisible items is omitted
@@ -305,11 +311,58 @@ class NewApiV1Test extends AbstractTest {
 	}
 
 	@Test
-	void detailOfTheFundSeesItsChild() {
+	void detailOfTheFundSeesItsChildren() {
 		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_FUND, null, null);
 		assertThat(detail.getApuType()).isEqualTo(ApuType.FUND);
-		assertThat(detail.getChildCount()).isEqualTo(1);
-		assertThat(detail.getBreadcrumbs()).isEmpty();
+		assertThat(detail.getChildCount()).isEqualTo(3);
+		// a root APU's tree path is just itself
+		assertThat(detail.getTreePath()).extracting(TreeNode::getUuid).containsExactly(DETAIL_FUND);
+	}
+
+	@Test
+	void treeUnderReturnsChildrenInTreeOrder() {
+		var api = new ApuApi(v1ApiClient());
+
+		var children = api.apuGetTreeNodes(DETAIL_FUND, TreeDirection.UNDER, null, null);
+		assertThat(children).extracting(TreeNode::getUuid, TreeNode::getPos, TreeNode::getChildCount)
+				.containsExactly(
+						tuple(DETAIL_ARCH_DESC, 1, 0),
+						tuple(DETAIL_SIBLING_B, 2, 1),
+						tuple(DETAIL_SIBLING_C, 3, 0));
+
+		// the grandchild is one level deeper and shows its description in the tree
+		var grandchildren = api.apuGetTreeNodes(DETAIL_SIBLING_B, TreeDirection.UNDER, null, null);
+		assertThat(grandchildren).hasSize(1);
+		assertThat(grandchildren.get(0).getUuid()).isEqualTo(DETAIL_GRANDCHILD);
+		assertThat(grandchildren.get(0).getDescription()).isEqualTo("První svazek");
+		assertThat(grandchildren.get(0).getDepth()).isGreaterThan(children.get(0).getDepth());
+	}
+
+	@Test
+	void treeSiblingWindowsFollowTheDirection() {
+		var api = new ApuApi(v1ApiClient());
+
+		assertThat(api.apuGetTreeNodes(DETAIL_SIBLING_B, TreeDirection.BEFORE, null, null))
+				.extracting(TreeNode::getUuid).containsExactly(DETAIL_ARCH_DESC);
+		assertThat(api.apuGetTreeNodes(DETAIL_SIBLING_B, TreeDirection.AFTER, null, null))
+				.extracting(TreeNode::getUuid).containsExactly(DETAIL_SIBLING_C);
+		// edges of the level have nothing before/after
+		assertThat(api.apuGetTreeNodes(DETAIL_ARCH_DESC, TreeDirection.BEFORE, null, null)).isEmpty();
+		assertThat(api.apuGetTreeNodes(DETAIL_SIBLING_C, TreeDirection.AFTER, null, null)).isEmpty();
+	}
+
+	@Test
+	void treeAnswers404AndSupportsConditionalRequests() throws Exception {
+		assertThatThrownBy(() -> new ApuApi(v1ApiClient())
+				.apuGetTreeNodes("00000000-0000-4000-8000-000000000000", TreeDirection.UNDER, null, null))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
+
+		var first = get("/api/v1/apu/" + DETAIL_FUND + "/tree?direction=UNDER");
+		assertThat(first.statusCode()).isEqualTo(200);
+		String eTag = first.headers().firstValue("ETag").orElseThrow();
+		var notModified = get("/api/v1/apu/" + DETAIL_FUND + "/tree?direction=UNDER", "If-None-Match", eTag);
+		assertThat(notModified.statusCode()).isEqualTo(304);
 	}
 
 	@Test

@@ -53,6 +53,11 @@
   },
   "apu": {
     "breadcrumbs": "Umístění záznamu",
+    "tree": "Strom archivního popisu",
+    "treeExpand": "Rozbalit {{name}}",
+    "treeCollapse": "Sbalit {{name}}",
+    "treeMoreBefore": "Načíst předchozí",
+    "treeMoreAfter": "Načíst další",
     "notFound": "Záznam nebyl nalezen.",
     "error": "Načtení záznamu se nezdařilo, zkuste to prosím znovu.",
     "attachments": "Přílohy",

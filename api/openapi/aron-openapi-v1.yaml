@@ -88,6 +88,59 @@ paths:
           description: The client has made a conditional request and the resource has not been modified.
       tags:
         - apu
+  /api/v1/apu/{uuid}/tree:
+    get:
+      operationId: Apu_getTreeNodes
+      description: |-
+        One window of the archival-description tree around an APU - the source of
+        the incremental tree navigation. `BEFORE`/`AFTER` return up to a
+        server-configured window of siblings preceding/following the APU in tree
+        order; `UNDER` returns the first window of its children. Conditional
+        requests behave as in `getDetail`.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: direction
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/TreeDirection"
+          explode: false
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: If-Modified-Since
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The request has succeeded.
+          headers:
+            ETag:
+              required: false
+              schema:
+                type: string
+            Last-Modified:
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TreeNode"
+        "304":
+          description: The client has made a conditional request and the resource has not been modified.
+      tags:
+        - apu
   /api/v1/facets:
     get:
       operationId: Search_getFacets
@@ -205,7 +258,7 @@ components:
         - name
         - apuType
         - childCount
-        - breadcrumbs
+        - treePath
         - parts
         - attachments
         - digitalObjects
@@ -226,11 +279,15 @@ components:
           type: integer
           format: int32
           description: Number of child APUs in the archival-description tree (0 = leaf).
-        breadcrumbs:
+        treePath:
           type: array
           items:
-            $ref: "#/components/schemas/ApuLink"
-          description: Ancestor chain, root first; empty for a root or standalone APU.
+            $ref: "#/components/schemas/TreeNode"
+          description: |-
+            The APU's path in the archival-description tree, root first, INCLUDING
+            the APU itself as the last element - a single element for root or
+            standalone APUs. Drives both the breadcrumb navigation (all but the last
+            element) and the seed of the incremental tree (`getTreeNodes`).
         parts:
           type: array
           items:
@@ -784,6 +841,42 @@ components:
         - EQ
         - GTE
       description: Accuracy of a search response's `total`.
+    TreeDirection:
+      type: string
+      enum:
+        - BEFORE
+        - AFTER
+        - UNDER
+      description: Directions of the incremental tree navigation.
+    TreeNode:
+      type: object
+      required:
+        - uuid
+        - name
+        - depth
+        - pos
+        - childCount
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          description: Tree nodes display `description` when present, `name` otherwise.
+        depth:
+          type: integer
+          format: int32
+          description: Depth within the tree (relative; larger = deeper).
+        pos:
+          type: integer
+          format: int32
+          description: 1-based position among the node's siblings.
+        childCount:
+          type: integer
+          format: int32
+          description: Number of children (0 = leaf).
+      description: One node of the archival-description tree.
     UiConfig:
       type: object
       required:

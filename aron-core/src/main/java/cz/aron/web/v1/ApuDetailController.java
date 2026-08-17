@@ -15,14 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.v1.ApuApi;
 import cz.aron.api.v1.model.ApuDetail;
-import cz.aron.api.v1.model.ApuLink;
 import cz.aron.api.v1.model.ApuType;
 import cz.aron.api.v1.model.AttachmentInfo;
 import cz.aron.api.v1.model.DigitalObjectInfo;
 import cz.aron.api.v1.model.FileInfo;
 import cz.aron.api.v1.model.FileType;
+import cz.aron.api.v1.model.TreeDirection;
+import cz.aron.api.v1.model.TreeNode;
 import cz.aron.commons.HttpUtils;
 import cz.aron.domain.ApuAttachment;
 import cz.aron.domain.ApuEntity;
@@ -86,7 +88,7 @@ public class ApuDetailController implements ApuApi {
 		var refLabels = apuService.resolveApuRefLabels(List.of(apu));
 
 		var detail = new ApuDetail(uuid, apu.getName(), ApuType.fromValue(apu.getType().toString()),
-				apu.getChildCnt(), breadcrumbs(apu), detailBuilder.buildParts(parts, refLabels),
+				apu.getChildCnt(), treePath(apu), detailBuilder.buildParts(parts, refLabels),
 				attachments(apu), digitalObjects(apu));
 		detail.setDescription(apu.getDescription());
 		detail.setPermalink(apu.getPermalink());
@@ -98,18 +100,68 @@ public class ApuDetailController implements ApuApi {
 				.body(detail);
 	}
 
-	/** Ancestor chain root-first (the repository returns it nearest-first). */
-	private List<ApuLink> breadcrumbs(ApuEntity apu) {
-		if (apu.getParent() == null) {
-			return List.of();
+	@Override
+	public ResponseEntity<List<TreeNode>> apuGetTreeNodes(String uuid, TreeDirection direction, String ifNoneMatch,
+			String ifModifiedSince) {
+		UUID apuUuid;
+		try {
+			apuUuid = UUID.fromString(uuid);
+		} catch (IllegalArgumentException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
 		}
-		var ancestors = new ArrayList<>(apuEntityRepository.findAncestors(apu.getId()));
-		Collections.reverse(ancestors);
-		return ancestors.stream().map(a -> {
-			var link = new ApuLink(a.uuid().toString(), a.name());
-			link.setDescription(a.description());
-			return link;
-		}).toList();
+		// the service owns the window queries and the conditional-request logic
+		ApuService.Result<List<ApuEntityTreeViewDto>> result = switch (direction) {
+			case BEFORE -> apuService.getEntitiesBefore(apuUuid, ifNoneMatch, ifModifiedSince);
+			case AFTER -> apuService.getEntitiesAfter(apuUuid, ifNoneMatch, ifModifiedSince);
+			case UNDER -> apuService.getEntitiesUnder(apuUuid, ifNoneMatch, ifModifiedSince);
+		};
+		var cacheControl = CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate()
+				.mustRevalidate();
+		if (result instanceof ApuService.NotModified<List<ApuEntityTreeViewDto>> notModified) {
+			return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+					.cacheControl(cacheControl)
+					.eTag(notModified.eTag())
+					.lastModified(notModified.lastModified())
+					.build();
+		}
+		var data = (ApuService.Data<List<ApuEntityTreeViewDto>>) result;
+		return ResponseEntity.ok()
+				.cacheControl(cacheControl)
+				.eTag(data.eTag())
+				.lastModified(data.lastModified())
+				.body(data.value().stream().map(ApuDetailController::treeNode).toList());
+	}
+
+	private static TreeNode treeNode(ApuEntityTreeViewDto dto) {
+		var node = new TreeNode(dto.getId(), dto.getName(), dto.getDepth(), dto.getPos(), dto.getChildCnt());
+		if (dto.getDescription() != null && !dto.getDescription().isBlank()) {
+			node.setDescription(dto.getDescription());
+		}
+		return node;
+	}
+
+	/** The APU's tree path root-first, itself last (ancestors come nearest-first from the repository). */
+	private List<TreeNode> treePath(ApuEntity apu) {
+		var path = new ArrayList<TreeNode>();
+		if (apu.getParent() != null) {
+			var ancestors = new ArrayList<>(apuEntityRepository.findAncestors(apu.getId()));
+			Collections.reverse(ancestors);
+			for (var ancestor : ancestors) {
+				var node = new TreeNode(ancestor.uuid().toString(), ancestor.name(), ancestor.depth(),
+						ancestor.pos(), ancestor.childCnt());
+				if (ancestor.description() != null && !ancestor.description().isBlank()) {
+					node.setDescription(ancestor.description());
+				}
+				path.add(node);
+			}
+		}
+		var self = new TreeNode(apu.getUuid().toString(), apu.getName(), apu.getDepth(), apu.getPos(),
+				apu.getChildCnt());
+		if (apu.getDescription() != null && !apu.getDescription().isBlank()) {
+			self.setDescription(apu.getDescription());
+		}
+		path.add(self);
+		return path;
 	}
 
 	private static List<AttachmentInfo> attachments(ApuEntity apu) {

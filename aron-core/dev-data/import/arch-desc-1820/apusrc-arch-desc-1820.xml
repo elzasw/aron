@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Archival description of the fund "Farní úřad Všestary" (fund-1820): a
+     three-level tree for the detail page's incremental tree. The root uuid is
+     the target of the fund's ARCHDESC_ROOT_REF item. -->
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="d1e50000-1111-4222-9333-add000001820">
+ <apus>
+  <apu type="ArchDesc" uuid="6d05e4b6-336e-4067-ba49-5a2f643119df">
+   <name>Farní úřad Všestary</name>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Farní úřad Všestary</str>
+      <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1950-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000001">
+   <name>Úřední knihy</name>
+   <prnt>6d05e4b6-336e-4067-ba49-5a2f643119df</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Úřední knihy</str>
+      <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1900-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000011">
+   <name>Kronika fary</name>
+   <desc>inv. č. 1</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Kronika fary</str>
+      <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1850-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000012">
+   <name>Kniha zápisů farní rady</name>
+   <desc>inv. č. 2</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Kniha zápisů farní rady</str>
+      <drng type="UNIT_DATE" f="1851-01-01T00:00:00" to="1875-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000013">
+   <name>Matrika biřmovaných</name>
+   <desc>inv. č. 3</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Matrika biřmovaných</str>
+      <drng type="UNIT_DATE" f="1876-01-01T00:00:00" to="1900-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000002">
+   <name>Spisový materiál</name>
+   <prnt>6d05e4b6-336e-4067-ba49-5a2f643119df</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Spisový materiál</str>
+      <drng type="UNIT_DATE" f="1830-01-01T00:00:00" to="1940-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000021">
+   <name>Korespondence s konzistoří</name>
+   <desc>inv. č. 4</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000002</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Korespondence s konzistoří</str>
+      <drng type="UNIT_DATE" f="1830-01-01T00:00:00" to="1880-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000022">
+   <name>Stavba nové fary — spisy</name>
+   <desc>inv. č. 5</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000002</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Stavba nové fary — spisy</str>
+      <drng type="UNIT_DATE" f="1881-01-01T00:00:00" to="1895-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000003">
+   <name>Účetní knihy</name>
+   <prnt>6d05e4b6-336e-4067-ba49-5a2f643119df</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Účetní knihy</str>
+      <drng type="UNIT_DATE" f="1850-01-01T00:00:00" to="1950-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000031">
+   <name>Kniha příjmů a výdajů</name>
+   <desc>inv. č. 6</desc>
+   <prnt>d1e50000-0000-4000-8000-000000000003</prnt>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Kniha příjmů a výdajů</str>
+      <drng type="UNIT_DATE" f="1850-01-01T00:00:00" to="1910-12-31T23:59:59" fmt="Y-Y"/>
+      <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+ </apus>
+</apusrc>
