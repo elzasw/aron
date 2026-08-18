@@ -75,8 +75,8 @@ public abstract class SearchIndexContractTest {
 		document.setName(name);
 		document.setNameSort(CONTENT_LOCALE.sortKey(name));
 		// the fixture mirrors what ApuDocumentBuilder computes for real APUs
-		document.setNameExactCs(ApuDocumentBuilder.normalizeCs(name));
 		document.setNameExact(ApuDocumentBuilder.normalize(name));
+		document.setNameExactFolded(ApuDocumentBuilder.normalizeFolded(name));
 		if (name != null) {
 			document.getAllText().add(name);
 		}
@@ -475,7 +475,7 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void nameSortFollowsCzechCollation() {
+	void nameSortFollowsContentLocaleAlphabet() {
 		indexApus(List.of(
 				doc(uuid(15), "Chalupa", 1, Map.of()),
 				doc(uuid(16), "Cibule", 1, Map.of()),
@@ -484,7 +484,7 @@ public abstract class SearchIndexContractTest {
 		var sorted = index
 				.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10, SortMode.NAME));
 
-		// Czech alphabet: c < h < ch
+		// the test deployment runs cs-CZ: c < h < ch
 		assertThat(sorted.hits()).extracting(ApuSearchResult.Hit::name)
 				.containsExactly("Cibule", "Hrad", "Chalupa");
 	}

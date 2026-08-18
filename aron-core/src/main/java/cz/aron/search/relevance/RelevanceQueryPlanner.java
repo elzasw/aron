@@ -86,9 +86,9 @@ public final class RelevanceQueryPlanner {
 		var plainWords = new StringBuilder();
 		for (String word : remainder.toString().split("\\s+")) {
 			if (word.length() > 1 && word.endsWith("*") && word.indexOf('*') == word.length() - 1) {
-				String normalized = ApuDocumentBuilder.normalize(word.substring(0, word.length() - 1));
-				if (normalized != null && !normalized.isBlank()) {
-					prefixTokens.add(normalized);
+				String folded = ApuDocumentBuilder.normalizeFolded(word.substring(0, word.length() - 1));
+				if (folded != null && !folded.isBlank()) {
+					prefixTokens.add(folded);
 				}
 			} else {
 				plainWords.append(word).append(' ');
@@ -134,13 +134,13 @@ public final class RelevanceQueryPlanner {
 	private static List<Clause> scoring(String query, List<String> phrases, RelevanceConfig config) {
 		// operators stripped: the plain text of the query for the analyzed tiers
 		String plain = (query.replace("\"", " ").replace("*", " ")).trim().replaceAll("\\s+", " ");
-		String normalizedCs = ApuDocumentBuilder.normalizeCs(plain);
 		String normalized = ApuDocumentBuilder.normalize(plain);
+		String normalizedFolded = ApuDocumentBuilder.normalizeFolded(plain);
 
 		var scoring = new ArrayList<Clause>();
-		add(scoring, "nameExactCs", MatchKind.TERM, normalizedCs, config.nameExactCs());
 		add(scoring, "nameExact", MatchKind.TERM, normalized, config.nameExact());
-		add(scoring, "nameExact", MatchKind.PREFIX, normalized, config.namePrefix());
+		add(scoring, "nameExactFolded", MatchKind.TERM, normalizedFolded, config.nameExactFolded());
+		add(scoring, "nameExactFolded", MatchKind.PREFIX, normalizedFolded, config.namePrefix());
 		add(scoring, "name", MatchKind.PHRASE, plain, config.namePhrase());
 		add(scoring, "name", MatchKind.ALL_TERMS, plain, config.nameTerms());
 		for (String refLabelField : config.refLabelFields()) {

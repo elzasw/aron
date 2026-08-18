@@ -110,9 +110,9 @@ class RelevanceQueryPlannerTest {
 		var plan = plan("Řehoř");
 
 		assertThat(plan.scoring()).contains(
-				new Clause("nameExactCs", MatchKind.TERM, "řehoř", 1000),
-				new Clause("nameExact", MatchKind.TERM, "rehor", 800),
-				new Clause("nameExact", MatchKind.PREFIX, "rehor", 200),
+				new Clause("nameExact", MatchKind.TERM, "řehoř", 1000),
+				new Clause("nameExactFolded", MatchKind.TERM, "rehor", 800),
+				new Clause("nameExactFolded", MatchKind.PREFIX, "rehor", 200),
 				new Clause("name", MatchKind.PHRASE, "Řehoř", 100),
 				new Clause("name", MatchKind.ALL_TERMS, "Řehoř", 50),
 				new Clause("description", MatchKind.PHRASE, "Řehoř", 8),
@@ -124,7 +124,7 @@ class RelevanceQueryPlannerTest {
 	void configuredWeightsAndPromotedFieldsOverrideTheDefaults() {
 		var settings = new RelevanceSettingsDto();
 		var name = new RelevanceFieldWeightsDto();
-		name.setExactCs(500f);
+		name.setExact(500f);
 		name.setTerms(0f); // zero disables the tier
 		settings.setName(name);
 		var config = RelevanceConfig.withSettings(settings, List.of("REL~ENTITY~LABEL"),
@@ -132,7 +132,7 @@ class RelevanceQueryPlannerTest {
 
 		var plan = RelevanceQueryPlanner.plan("kronika", config);
 		assertThat(plan.scoring()).contains(
-				new Clause("nameExactCs", MatchKind.TERM, "kronika", 500),
+				new Clause("nameExact", MatchKind.TERM, "kronika", 500),
 				new Clause("REL~ENTITY~LABEL", MatchKind.PHRASE, "kronika", 12),
 				new Clause("REL~ENTITY~LABEL", MatchKind.ANY_TERM, "kronika", 10),
 				new Clause("TITLE~MAIN", MatchKind.PHRASE, "kronika", 60),

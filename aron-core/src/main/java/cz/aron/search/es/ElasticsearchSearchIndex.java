@@ -74,7 +74,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	 * startup bootstrap rebuilds and reindexes it - the analog of the Lucene
 	 * adapter's commit-user-data version.
 	 */
-	private static final String LAYOUT_VERSION = "1";
+	private static final String LAYOUT_VERSION = "2";
 
 	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
 	private static final String BOUNDS_AGG_PREFIX = "bounds~";
@@ -522,8 +522,8 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		indexedApu.setIncomingRelTypes(null);
 		indexedApu.setName(apuDocument.getName());
 		indexedApu.setNameSort(apuDocument.getNameSort());
-		indexedApu.setNameExactCs(apuDocument.getNameExactCs());
 		indexedApu.setNameExact(apuDocument.getNameExact());
+		indexedApu.setNameExactFolded(apuDocument.getNameExactFolded());
 		indexedApu.setAllText(apuDocument.getAllText());
 		indexedApu.setType(apuDocument.getType());
 		for (var rel : apuDocument.getRels()) {

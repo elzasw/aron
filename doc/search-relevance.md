@@ -112,8 +112,8 @@ construction.
 | field | content | purpose |
 |---|---|---|
 | `allText` | **multi-valued** analyzed field: one entry per searchable value — the name, the description, every item value including APU_REF labels, integers as text, and UNITDATE boundary years | the single gate field (§4.2) and the baseline scoring tier |
-| `nameExactCs` | name: lowercased, whitespace-collapsed, **diacritics preserved**; keyword, truncated to 200 chars | true exact-name tier |
-| `nameExact` | same, **diacritics folded** | folded exact + prefix tiers |
+| `nameExact` | name: lowercased, whitespace-collapsed, **diacritics preserved**; keyword, truncated to 200 chars | true exact-name tier |
+| `nameExactFolded` | same, **diacritics folded** | folded exact + prefix tiers |
 | `dateL` / `dateH` | min of all `~L`, max of all `~H` (epoch millis, numeric doc-values) | dating sort with no configuration (§4.4) |
 | `uuid` doc-values | sortable uuid (Lucene: `SortedDocValuesField`; ES: the existing keyword id) | the final tie-break every sort mode needs (§4.4) |
 
@@ -150,7 +150,7 @@ must index the display label (the APU_REF path already does, via
 `fulltext: false` in **types.yaml**: it changes the document and therefore
 requires a reindex. The indexed-fields CRC currently hashes only `code + type`
 (`TypesLoader`), so the flag must be added to its input or the reindex will not
-trigger. The fixed fields (`allText`, `nameExactCs`, `nameExact`,
+trigger. The fixed fields (`allText`, `nameExact`, `nameExactFolded`,
 `dateL`/`dateH`, uuid doc-values) are not covered by that CRC at all, so the
 stored schema metadata gains a **document-layout version** on both engines — ES
 has no equivalent of the Lucene commit-user-data version today.
@@ -208,9 +208,9 @@ the latter takes an int the planner computes from the token count).
 
 | tier | clause | default weight |
 |---|---|---|
-| exact name, diacritics preserved | `term(nameExactCs, normCs(Q))` | 1000 |
-| exact name, folded | `term(nameExact, norm(Q))` | 800 |
-| name prefix | `prefix(nameExact, norm(Q))` | 200 |
+| exact name, diacritics preserved | `term(nameExact, norm(Q))` | 1000 |
+| exact name, folded | `term(nameExactFolded, norm(Q))` | 800 |
+| name prefix | `prefix(nameExactFolded, norm(Q))` | 200 |
 | name phrase | `match_phrase(name, Q)` | 100 |
 | name all terms | `match(name, Q, AND)` | 50 |
 | reference labels | `match(<CODE>~LABEL, Q)` | 10 |
@@ -253,7 +253,7 @@ relevance:
   relaxOnNoHits: true
 
   # Built-in fields (all optional, defaults shown).
-  name:        { exactCs: 1000, exact: 800, prefix: 200, phrase: 100, terms: 50 }
+  name:        { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
   refLabels:   { phrase: 12, terms: 10 }
   description: { phrase: 8, terms: 2 }
   allText:     { terms: 1 }
@@ -449,8 +449,8 @@ blind against the last complaint.
    `search.max-window` (10 000, violations → 400); the cap is deterministic
    on both engines — above `totalUpTo` always `(totalUpTo, GTE)`, even when
    the engine happens to know the exact count (ES match-all shortcut).
-2. **Index side** — multi-valued `allText` (position gap), `nameExactCs`,
-   `nameExact`, `dateL`/`dateH`, uuid doc-values, `fulltext` flag in the CRC,
+2. **Index side** — multi-valued `allText` (position gap), `nameExact`,
+   `nameExactFolded`, `dateL`/`dateH`, uuid doc-values, `fulltext` flag in the CRC,
    document-layout version on both engines, ENUM label verification (§4.1). One
    reindex. **Done 2026-08-17** (ENUM label verification remains open — check
    on real Elza data whether ENUM values are codes or labels).

@@ -23,12 +23,12 @@ public class ApuDocument {
 
 	private String uuid;
 	private String name;
-	/** Czech collation key of the name (hex) - engine-neutral, index-time sorting. */
+	/** Collation key of the name in the content locale (hex) - engine-neutral, index-time sorting. */
 	private String nameSort;
 	/** Normalized name, diacritics preserved (exact-match tier); computed by the builder. */
-	private String nameExactCs;
-	/** Normalized name, diacritics folded (exact/prefix tiers); computed by the builder. */
 	private String nameExact;
+	/** Normalized name, diacritics folded (exact/prefix tiers); computed by the builder. */
+	private String nameExactFolded;
 	private String description;
 	private String type;
 	private boolean containsDigitalObjects;
@@ -107,20 +107,20 @@ public class ApuDocument {
 		this.apuSourceId = apuSourceId;
 	}
 
-	public String getNameExactCs() {
-		return nameExactCs;
-	}
-
-	public void setNameExactCs(String nameExactCs) {
-		this.nameExactCs = nameExactCs;
-	}
-
 	public String getNameExact() {
 		return nameExact;
 	}
 
 	public void setNameExact(String nameExact) {
 		this.nameExact = nameExact;
+	}
+
+	public String getNameExactFolded() {
+		return nameExactFolded;
+	}
+
+	public void setNameExactFolded(String nameExactFolded) {
+		this.nameExactFolded = nameExactFolded;
 	}
 
 	public String getDateL() {

@@ -17,20 +17,21 @@ public class IndexedApu {
     private String name;
 
     /**
-     * Czech collation key of the name, computed at index time (hex-encoded; see
-     * ApuDocumentBuilder). Replaces the former ICU-collation subfield - sorting is
-     * engine-neutral and needs no analysis plugin.
+     * Collation key of the name in the configured content locale, computed at
+     * index time (hex-encoded; see ContentLocale). Replaces the former
+     * ICU-collation subfield - sorting is engine-neutral and needs no analysis
+     * plugin.
      */
     @Field(type = FieldType.Keyword)
     private String nameSort;
 
-    /** Normalized name, diacritics preserved - the exact-match tier (ApuDocumentBuilder.normalizeCs). */
-    @Field(type = FieldType.Keyword)
-    private String nameExactCs;
-
-    /** Normalized name, diacritics folded - the folded exact and prefix tiers (ApuDocumentBuilder.normalize). */
+    /** Normalized name, diacritics preserved - the exact-match tier (ApuDocumentBuilder.normalize). */
     @Field(type = FieldType.Keyword)
     private String nameExact;
+
+    /** Normalized name, diacritics folded - the folded exact and prefix tiers (ApuDocumentBuilder.normalizeFolded). */
+    @Field(type = FieldType.Keyword)
+    private String nameExactFolded;
 
     /**
      * The general-fulltext catch-all (one entry per searchable value; see
@@ -75,20 +76,20 @@ public class IndexedApu {
 		this.nameSort = nameSort;
 	}
 
-	public String getNameExactCs() {
-		return nameExactCs;
-	}
-
-	public void setNameExactCs(String nameExactCs) {
-		this.nameExactCs = nameExactCs;
-	}
-
 	public String getNameExact() {
 		return nameExact;
 	}
 
 	public void setNameExact(String nameExact) {
 		this.nameExact = nameExact;
+	}
+
+	public String getNameExactFolded() {
+		return nameExactFolded;
+	}
+
+	public void setNameExactFolded(String nameExactFolded) {
+		this.nameExactFolded = nameExactFolded;
 	}
 
 	public List<String> getAllText() {

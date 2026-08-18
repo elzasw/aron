@@ -113,7 +113,7 @@ reindex needed**.
      relaxOnNoHits: true
 
      # Built-in fields with their default weights.
-     name:        { exactCs: 1000, exact: 800, prefix: 200, phrase: 100, terms: 50 }
+     name:        { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
      refLabels:   { phrase: 12, terms: 10 }
      description: { phrase: 8, terms: 2 }
      allText:     { terms: 1 }

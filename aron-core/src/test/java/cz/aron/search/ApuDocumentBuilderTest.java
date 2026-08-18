@@ -190,11 +190,11 @@ class ApuDocumentBuilderTest {
 
 		var doc = build(apu, Map.of());
 
-		assertThat(doc.getNameExactCs()).isEqualTo("václav novák");
-		assertThat(doc.getNameExact()).isEqualTo("vaclav novak");
+		assertThat(doc.getNameExact()).isEqualTo("václav novák");
+		assertThat(doc.getNameExactFolded()).isEqualTo("vaclav novak");
 		// the exact keywords are length-capped (Lucene term limit, keyword hygiene)
 		apu.setName("x".repeat(500));
-		assertThat(build(apu, Map.of()).getNameExact()).hasSize(200);
+		assertThat(build(apu, Map.of()).getNameExactFolded()).hasSize(200);
 	}
 
 	@Test
@@ -212,24 +212,12 @@ class ApuDocumentBuilderTest {
 	}
 
 	@Test
-	void nameSortKeyFollowsCzechCollation() {
-		// Czech alphabet: c < h < ch < i; a plain string sort would file "Chalupa"
-		// under C - the collation key must not
-		String cibule = sortKeyOf("Cibule");
-		String hrad = sortKeyOf("Hrad");
-		String chalupa = sortKeyOf("Chalupa");
-		String ivan = sortKeyOf("Ivan");
-		assertThat(cibule).isLessThan(hrad);
-		assertThat(hrad).isLessThan(chalupa);
-		assertThat(chalupa).isLessThan(ivan);
-		// diacritics do not derail the ordering
-		assertThat(sortKeyOf("Čáp")).isGreaterThan(cibule).isLessThan(hrad);
-	}
-
-	private static String sortKeyOf(String name) {
+	void nameSortCarriesTheContentLocaleKey() {
+		// the alphabet itself is ContentLocaleTest's subject; here only the wiring -
+		// the builder must sort by the configured locale, not by the raw name
 		var apu = apu();
-		apu.setName(name);
-		return build(apu, Map.of()).getNameSort();
+		apu.setName("Chalupa");
+		assertThat(build(apu, Map.of()).getNameSort()).isEqualTo(new ContentLocale("cs-CZ").sortKey("Chalupa"));
 	}
 
 	@Test

@@ -104,7 +104,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "3";
+	private static final String LAYOUT_VERSION = "4";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -591,11 +591,11 @@ public class LuceneSearchIndex implements SearchIndex {
 			// index-time Czech collation key computed by ApuDocumentBuilder
 			doc.add(new SortedDocValuesField("nameSort", new BytesRef(apuDocument.getNameSort())));
 		}
-		if (apuDocument.getNameExactCs() != null) {
-			doc.add(new StringField("nameExactCs", apuDocument.getNameExactCs(), Field.Store.NO));
-		}
 		if (apuDocument.getNameExact() != null) {
 			doc.add(new StringField("nameExact", apuDocument.getNameExact(), Field.Store.NO));
+		}
+		if (apuDocument.getNameExactFolded() != null) {
+			doc.add(new StringField("nameExactFolded", apuDocument.getNameExactFolded(), Field.Store.NO));
 		}
 		// multi-valued: the analyzer's position gap keeps phrases inside one value
 		for (String text : apuDocument.getAllText()) {

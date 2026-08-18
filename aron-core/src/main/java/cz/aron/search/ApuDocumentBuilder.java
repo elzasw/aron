@@ -161,8 +161,8 @@ public class ApuDocumentBuilder {
 		document.setDescription(apu.getDescription());
 		document.setName(indexedName);
 		document.setNameSort(contentLocale.sortKey(indexedName));
-		document.setNameExactCs(normalizeCs(indexedName));
 		document.setNameExact(normalize(indexedName));
+		document.setNameExactFolded(normalizeFolded(indexedName));
 		document.setType(apu.getType().toString());
 		// the gate field spans everything searchable, name and description included
 		addAllText(document, true, indexedName);
@@ -221,7 +221,7 @@ public class ApuDocumentBuilder {
 	 * of {@code search.content-locale} lets the query planner stay a pure static utility
 	 * that cannot drift from the index side.
 	 */
-	public static String normalizeCs(String text) {
+	public static String normalize(String text) {
 		if (text == null) {
 			return null;
 		}
@@ -231,9 +231,9 @@ public class ApuDocumentBuilder {
 				: normalized;
 	}
 
-	/** {@link #normalizeCs(String)} plus diacritics folding (the folded exact/prefix tiers). */
-	public static String normalize(String text) {
-		String normalized = normalizeCs(text);
+	/** {@link #normalize(String)} plus diacritics folding (the folded exact/prefix tiers). */
+	public static String normalizeFolded(String text) {
+		String normalized = normalize(text);
 		if (normalized == null) {
 			return null;
 		}

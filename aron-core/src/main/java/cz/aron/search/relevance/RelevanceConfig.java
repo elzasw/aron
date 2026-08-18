@@ -21,7 +21,7 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
 public record RelevanceConfig(
 		int minimumShouldMatchPercent,
 		boolean relaxOnNoHits,
-		float nameExactCs, float nameExact, float namePrefix, float namePhrase, float nameTerms,
+		float nameExact, float nameExactFolded, float namePrefix, float namePhrase, float nameTerms,
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
@@ -51,8 +51,8 @@ public record RelevanceConfig(
 		return new RelevanceConfig(
 				parseMinimumShouldMatch(settings != null ? settings.getMinimumShouldMatch() : null),
 				settings == null || !Boolean.FALSE.equals(settings.getRelaxOnNoHits()),
-				weight(name != null ? name.getExactCs() : null, 1000),
-				weight(name != null ? name.getExact() : null, 800),
+				weight(name != null ? name.getExact() : null, 1000),
+				weight(name != null ? name.getExactFolded() : null, 800),
 				weight(name != null ? name.getPrefix() : null, 200),
 				weight(name != null ? name.getPhrase() : null, 100),
 				weight(name != null ? name.getTerms() : null, 50),

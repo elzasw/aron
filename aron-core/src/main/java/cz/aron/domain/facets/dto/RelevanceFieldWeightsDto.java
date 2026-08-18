@@ -3,9 +3,9 @@ package cz.aron.domain.facets.dto;
 /** Per-field weight overrides of the {@code relevance:} section (all optional). */
 public class RelevanceFieldWeightsDto {
 
-	private Float exactCs;
-
 	private Float exact;
+
+	private Float exactFolded;
 
 	private Float prefix;
 
@@ -13,20 +13,20 @@ public class RelevanceFieldWeightsDto {
 
 	private Float terms;
 
-	public Float getExactCs() {
-		return exactCs;
-	}
-
-	public void setExactCs(Float exactCs) {
-		this.exactCs = exactCs;
-	}
-
 	public Float getExact() {
 		return exact;
 	}
 
 	public void setExact(Float exact) {
 		this.exact = exact;
+	}
+
+	public Float getExactFolded() {
+		return exactFolded;
+	}
+
+	public void setExactFolded(Float exactFolded) {
+		this.exactFolded = exactFolded;
 	}
 
 	public Float getPrefix() {
