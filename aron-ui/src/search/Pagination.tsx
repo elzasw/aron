@@ -1,4 +1,5 @@
 import { Button, Dropdown, makeStyles, mergeClasses, Option, Text, tokens } from "@fluentui/react-components";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
@@ -38,6 +39,11 @@ const useStyles = makeStyles({
     alignItems: "center",
     gap: tokens.spacingHorizontalS,
   },
+  controls: {
+    display: "flex",
+    alignItems: "center",
+    marginRight: tokens.spacingHorizontalL,
+  },
   sizeDropdown: {
     minWidth: "72px",
   },
@@ -49,10 +55,12 @@ interface Props {
   total: number;
   onPage: (page: number) => void;
   onSize: (size: number) => void;
+  /** Extra controls (e.g. the sort select) rendered next to the page-size select. */
+  controls?: ReactNode;
 }
 
 /** Pagination bar: compact circular pager with a window around the current page + page-size select. */
-export default function Pagination({ page, size, total, onPage, onSize }: Props) {
+export default function Pagination({ page, size, total, onPage, onSize, controls }: Props) {
   const styles = useStyles();
   const { t } = useTranslation();
   const pageCount = Math.max(1, Math.ceil(total / size));
@@ -102,6 +110,7 @@ export default function Pagination({ page, size, total, onPage, onSize }: Props)
       {pager(t("search.nextPage"), page + 1, page >= pageCount, "›")}
       {pager(t("search.lastPage"), pageCount, page >= pageCount, "»")}
       <div className={styles.spacer} />
+      {controls !== undefined && <div className={styles.controls}>{controls}</div>}
       <div className={styles.pageSize}>
         <Text size={200}>{t("search.pageSize")}</Text>
         <Dropdown

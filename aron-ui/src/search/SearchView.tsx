@@ -255,26 +255,28 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
                 })}
               </nav>
             )}
-            <div className={styles.sortRow}>
-              <label htmlFor="search-sort">{t("search.sortLabel")}</label>
-              <Select
-                id="search-sort"
-                value={sortParam}
-                onChange={(_, data) => update({ sort: data.value || null, p: null })}
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {t(`search.sort.${option || "AUTO"}`)}
-                  </option>
-                ))}
-              </Select>
-            </div>
             <Pagination
               page={page}
               size={size}
               total={search.data.total}
               onPage={(p) => update({ p: p > 1 ? String(p) : null })}
               onSize={(s) => update({ s: s !== 10 ? String(s) : null, p: null })}
+              controls={
+                <div className={styles.sortRow}>
+                  <label htmlFor="search-sort">{t("search.sortLabel")}</label>
+                  <Select
+                    id="search-sort"
+                    value={sortParam}
+                    onChange={(_, data) => update({ sort: data.value || null, p: null })}
+                  >
+                    {SORT_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {t(`search.sort.${option || "AUTO"}`)}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              }
             />
             <Text size={200} className={styles.status}>
               {t(
