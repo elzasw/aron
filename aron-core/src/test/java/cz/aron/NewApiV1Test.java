@@ -25,7 +25,12 @@ import cz.aron.test.api.v1.UiApi;
 import cz.aron.test.api.v1.model.ApuSearchRequest;
 import cz.aron.test.api.v1.model.ApuType;
 import cz.aron.test.api.v1.model.DetailItem;
+import cz.aron.test.api.v1.model.DatingPrecision;
 import cz.aron.test.api.v1.model.DetailItemKind;
+import cz.aron.test.api.v1.model.LinkItem;
+import cz.aron.test.api.v1.model.RefItem;
+import cz.aron.test.api.v1.model.TextItem;
+import cz.aron.test.api.v1.model.UnitDateItem;
 import cz.aron.test.api.v1.model.DetailPart;
 import cz.aron.test.api.v1.model.PartViewType;
 import cz.aron.test.api.v1.model.QueryMode;
@@ -358,7 +363,7 @@ class NewApiV1Test extends AbstractTest {
 		// the part with only invisible items is omitted
 		assertThat(detail.getParts()).extracting(DetailPart::getCode).containsExactly("PT~TITLE", "PT~BODY");
 		assertThat(detail.getParts().get(0).getItems())
-				.extracting(DetailItem::getValue).containsExactly("Kronika obce Testov");
+				.extracting(item -> ((TextItem) item).getValue()).containsExactly("Kronika obce Testov");
 
 		var body = detail.getParts().get(1);
 		assertThat(body.getLabel()).isEqualTo("Body");
@@ -368,15 +373,24 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(body.getViewType()).isEqualTo(PartViewType.GROUPED);
 		// items in viewOrder (types.yaml declaration order), invisible one filtered;
 		// dating formatted, reference resolved to a link, external link typed
-		assertThat(body.getItems()).extracting(DetailItem::getCode, DetailItem::getKind, DetailItem::getValue)
+		// each kind deserializes into its own model (the `kind` discriminator drives it)
+		assertThat(body.getItems()).extracting(DetailItem::getCode, DetailItem::getKind, Object::getClass)
 				.containsExactly(
-						tuple("UNIT~DATE", DetailItemKind.TEXT, "1850–1910"),
-						tuple("LANG~CODE", DetailItemKind.TEXT, "cze"),
-						tuple("CNT~ITEMS", DetailItemKind.TEXT, "12"),
-						tuple("REL~ENTITY", DetailItemKind.REF, "V1D Sbírka kronik"),
-						tuple("LINK~SOURCE", DetailItemKind.LINK, "Zdroj digitalizace"));
-		assertThat(body.getItems().get(3).getRef().getUuid()).isEqualTo(DETAIL_FUND);
-		assertThat(body.getItems().get(4).getHref()).isEqualTo("https://example.org/kronika");
+						tuple("UNIT~DATE", DetailItemKind.UNITDATE, UnitDateItem.class),
+						tuple("LANG~CODE", DetailItemKind.TEXT, TextItem.class),
+						tuple("CNT~ITEMS", DetailItemKind.TEXT, TextItem.class),
+						tuple("REL~ENTITY", DetailItemKind.REF, RefItem.class),
+						tuple("LINK~SOURCE", DetailItemKind.LINK, LinkItem.class));
+		var unitDate = (UnitDateItem) body.getItems().get(0);
+		assertThat(unitDate.getValue()).isEqualTo("1850–1910");
+		// the dating's machine-readable bounds are fields of the dating item itself
+		assertThat(unitDate.getFrom()).isEqualTo("1850-01-01T00:00:00");
+		assertThat(unitDate.getFromPrecision()).isEqualTo(DatingPrecision.YEAR);
+		assertThat(((TextItem) body.getItems().get(1)).getValue()).isEqualTo("cze");
+		assertThat(((RefItem) body.getItems().get(3)).getRef().getUuid()).isEqualTo(DETAIL_FUND);
+		assertThat(((RefItem) body.getItems().get(3)).getRef().getName()).isEqualTo("V1D Sbírka kronik");
+		assertThat(((LinkItem) body.getItems().get(4)).getCaption()).isEqualTo("Zdroj digitalizace");
+		assertThat(((LinkItem) body.getItems().get(4)).getHref()).isEqualTo("https://example.org/kronika");
 
 		// metadata-only sections of this fixture are empty (binaries arrive with the tiles slice)
 		assertThat(detail.getAttachments()).isEmpty();

@@ -464,37 +464,6 @@ components:
             - $ref: "#/components/schemas/FileInfo"
           description: The attachment's file.
       description: Attachment of an APU (metadata; binary serving arrives with a later slice).
-    Dating:
-      type: object
-      properties:
-        from:
-          type: string
-          description: Lower bound as an ISO local date-time (`1850-01-01T00:00:00`).
-        to:
-          type: string
-          description: Upper bound, same form.
-        fromPrecision:
-          allOf:
-            - $ref: "#/components/schemas/DatingPrecision"
-          description: Granularity the lower bound was recorded in.
-        toPrecision:
-          allOf:
-            - $ref: "#/components/schemas/DatingPrecision"
-          description: Granularity the upper bound was recorded in.
-        fromEstimated:
-          type: boolean
-          description: The lower bound is an estimate (the display string brackets it).
-        toEstimated:
-          type: boolean
-          description: The upper bound is an estimate.
-      description: |-
-        Machine-readable form of a dating, carried next to the formatted `value`.
-
-        The display string stays the server's job - rendering a dating means the
-        archival grammar (granularity, estimates, interval collapsing) and not just
-        date formatting, so clients would have to reimplement it. This is here for
-        what the string cannot do: semantic markup (`<time datetime>`), and
-        consumers that process datings rather than show them.
     DatingBounds:
       type: object
       required:
@@ -536,7 +505,6 @@ components:
         - code
         - label
         - kind
-        - value
       properties:
         code:
           type: string
@@ -546,29 +514,28 @@ components:
           description: Server-localized display label.
         kind:
           $ref: "#/components/schemas/DetailItemKind"
-        value:
-          type: string
-          description: Display value; datings arrive formatted server-side, kind JSON carries the raw JSON string.
-        href:
-          type: string
-          description: Link target (kind LINK; `value` is the caption).
-        ref:
-          allOf:
-            - $ref: "#/components/schemas/ApuLink"
-          description: Referenced APU (kind REF).
-        dating:
-          allOf:
-            - $ref: "#/components/schemas/Dating"
-          description: Machine-readable form of a dating (UNITDATE items).
-      description: One display-ready item of a part.
+      discriminator:
+        propertyName: kind
+        mapping:
+          TEXT: "#/components/schemas/TextItem"
+          UNITDATE: "#/components/schemas/UnitDateItem"
+          LINK: "#/components/schemas/LinkItem"
+          REF: "#/components/schemas/RefItem"
+          JSON: "#/components/schemas/JsonItem"
+      description: |-
+        One display-ready item of a part, discriminated by `kind`: each kind is its
+        own model carrying exactly the fields that kind has, so a client never has to
+        ask which optional fields happen to be filled in (the Elza/CAM `ItemData`
+        pattern).
     DetailItemKind:
       type: string
       enum:
         - TEXT
+        - UNITDATE
         - LINK
         - REF
         - JSON
-      description: Item value kinds - how the client renders the value.
+      description: Item kinds - each one is a model of its own (see {
     DetailPart:
       type: object
       required:
@@ -803,6 +770,32 @@ components:
         - TEXT
         - RANGE
       description: Filter kinds - the SearchFilter discriminator.
+    JsonItem:
+      type: object
+      required:
+        - json
+      properties:
+        json:
+          type: string
+          description: The raw JSON string.
+      allOf:
+        - $ref: "#/components/schemas/DetailItem"
+      description: Structured value (aggregated items), carried as a raw JSON string.
+    LinkItem:
+      type: object
+      required:
+        - href
+        - caption
+      properties:
+        href:
+          type: string
+          description: Link target.
+        caption:
+          type: string
+          description: Text to show for the link; the target itself when the source gave no caption.
+      allOf:
+        - $ref: "#/components/schemas/DetailItem"
+      description: External link.
     MenuItem:
       type: object
       required:
@@ -868,6 +861,18 @@ components:
       allOf:
         - $ref: "#/components/schemas/FacetResult"
       description: "Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name."
+    RefItem:
+      type: object
+      required:
+        - ref
+      properties:
+        ref:
+          allOf:
+            - $ref: "#/components/schemas/ApuLink"
+          description: The referenced APU, resolved to uuid + display name.
+      allOf:
+        - $ref: "#/components/schemas/DetailItem"
+      description: Reference to another APU.
     SearchFilter:
       type: object
       required:
@@ -930,6 +935,17 @@ components:
       allOf:
         - $ref: "#/components/schemas/SearchFilter"
       description: Text filter of a FULLTEXT facet (analyzed match on the facet's field).
+    TextItem:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: Display value.
+      allOf:
+        - $ref: "#/components/schemas/DetailItem"
+      description: "Plain text: strings, enumerations and numbers."
     TotalRelation:
       type: string
       enum:
@@ -1007,6 +1023,44 @@ components:
             $ref: "#/components/schemas/MenuItem"
           description: "Top-level menu: which sections this deployment enables, in display order."
       description: UI configuration of the deployment.
+    UnitDateItem:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: The dating as displayed, in the reader's language.
+        from:
+          type: string
+          description: Lower bound as an ISO local date-time (`1850-01-01T00:00:00`).
+        to:
+          type: string
+          description: Upper bound, same form.
+        fromPrecision:
+          allOf:
+            - $ref: "#/components/schemas/DatingPrecision"
+          description: Granularity the lower bound was recorded in.
+        toPrecision:
+          allOf:
+            - $ref: "#/components/schemas/DatingPrecision"
+          description: Granularity the upper bound was recorded in.
+        fromEstimated:
+          type: boolean
+          description: The lower bound is an estimate (the display string brackets it).
+        toEstimated:
+          type: boolean
+          description: The upper bound is an estimate.
+      allOf:
+        - $ref: "#/components/schemas/DetailItem"
+      description: |-
+        A dating, rendered server-side and carried machine-readably as well.
+
+        The display string stays the server's job - rendering a dating means the
+        archival grammar (granularity, estimates, interval collapsing) and not just
+        date formatting, so clients would have to reimplement it. The bounds are here
+        for what the string cannot do: semantic markup (`<time datetime>`), and
+        consumers that process datings rather than show them.
     ValuesFilter:
       type: object
       required:

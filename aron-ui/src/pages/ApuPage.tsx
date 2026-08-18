@@ -16,6 +16,11 @@ import {
   ApuType,
   type DetailItem,
   DetailItemKind,
+  JsonItem,
+  LinkItem,
+  RefItem,
+  TextItem,
+  UnitDateItem,
   type DetailPart,
   PartViewType,
   ResponseError,
@@ -139,28 +144,61 @@ const useStyles = makeStyles({
   },
 });
 
+/**
+ * The contract discriminates items by `kind`, each kind being its own model.
+ * The generated subtypes inherit `kind` from the base (it is the discriminator,
+ * not a field of theirs), so these predicates are what lets TypeScript narrow -
+ * after them every branch sees only the fields its kind actually has.
+ */
+const isText = (item: DetailItem): item is TextItem => item.kind === DetailItemKind.Text;
+const isUnitDate = (item: DetailItem): item is UnitDateItem => item.kind === DetailItemKind.Unitdate;
+const isLink = (item: DetailItem): item is LinkItem => item.kind === DetailItemKind.Link;
+const isRef = (item: DetailItem): item is RefItem => item.kind === DetailItemKind.Ref;
+const isJson = (item: DetailItem): item is JsonItem => item.kind === DetailItemKind.Json;
+
+/** Plain display text of an item - what a summary or a tooltip shows. */
+function itemText(item: DetailItem): string {
+  if (isText(item) || isUnitDate(item)) {
+    return item.value;
+  }
+  if (isLink(item)) {
+    return item.caption;
+  }
+  if (isRef(item)) {
+    return item.ref.name;
+  }
+  return isJson(item) ? item.json : "";
+}
+
 function ItemValue({ item }: { item: DetailItem }) {
   const styles = useStyles();
-  switch (item.kind) {
-    case DetailItemKind.Ref:
-      return item.ref ? (
-        <Link to={`/apu/${item.ref.uuid}`} className={styles.link}>
-          {item.ref.name}
-        </Link>
-      ) : (
-        <>{item.value}</>
-      );
-    case DetailItemKind.Link:
-      return (
-        <a href={item.href ?? item.value} target="_blank" rel="noreferrer" className={styles.link}>
-          {item.value}
-        </a>
-      );
-    case DetailItemKind.Json:
-      return <pre className={styles.json}>{item.value}</pre>;
-    default:
-      return <>{item.value}</>;
+  if (isRef(item)) {
+    return (
+      <Link to={`/apu/${item.ref.uuid}`} className={styles.link}>
+        {item.ref.name}
+      </Link>
+    );
   }
+  if (isLink(item)) {
+    return (
+      <a href={item.href} target="_blank" rel="noreferrer" className={styles.link}>
+        {item.caption}
+      </a>
+    );
+  }
+  if (isJson(item)) {
+    return <pre className={styles.json}>{item.json}</pre>;
+  }
+  if (isUnitDate(item)) {
+    // a single-valued dating carries its machine-readable form into the markup;
+    // <time> has no range form, so an interval stays plain text
+    return item.from !== undefined && (item.to === undefined || item.to === item.from) ? (
+      <time dateTime={item.from}>{item.value}</time>
+    ) : (
+      <>{item.value}</>
+    );
+  }
+  return <>{itemText(item)}</>;
 }
 
 function ItemRows({ items }: { items: DetailItem[] }) {
@@ -198,7 +236,7 @@ function Part({ part }: { part: DetailPart }) {
   if (part.viewType === PartViewType.Grouped) {
     const summary = items
       .filter((item) => item.kind !== DetailItemKind.Ref)
-      .map((item) => item.value)
+      .map(itemText)
       .join(" ");
     return (
       <section className={styles.part} aria-label={part.label}>
@@ -263,6 +301,7 @@ export default function ApuPage() {
   const ancestors = data.treePath.slice(0, -1);
   const archdescRoot = data.parts
     .flatMap((part) => part.items)
+    .filter(isRef)
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
   return (
@@ -289,7 +328,7 @@ export default function ApuPage() {
       <header className={styles.header}>
         <Title2 as="h2">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}
-        {archdescRoot?.ref && (
+        {archdescRoot && (
           <Link to={`/apu/${archdescRoot.ref.uuid}`} className={styles.link}>
             {archdescRoot.label}
           </Link>

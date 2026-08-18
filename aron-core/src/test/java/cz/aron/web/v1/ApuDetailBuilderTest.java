@@ -19,6 +19,9 @@ import cz.aron.api.v1.model.DetailItem;
 import cz.aron.api.v1.model.DetailItemKind;
 import cz.aron.api.v1.model.DatingPrecision;
 import cz.aron.api.v1.model.DetailPart;
+import cz.aron.api.v1.model.LinkItem;
+import cz.aron.api.v1.model.RefItem;
+import cz.aron.api.v1.model.UnitDateItem;
 import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.dto.IdLabelDto;
 import cz.aron.domain.types.TypesHolder;
@@ -138,12 +141,13 @@ class ApuDetailBuilderTest {
 				Map.of(resolvedUuid.toString(), new IdLabelDto(1L, resolvedUuid, "Václav Novák", null)), CS);
 
 		var items = parts.get(0).getItems();
-		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.REF);
-		assertThat(items.get(0).getValue()).isEqualTo("Václav Novák");
-		assertThat(items.get(0).getRef().getUuid()).isEqualTo(resolvedUuid.toString());
-		assertThat(items.get(0).getRef().getName()).isEqualTo("Václav Novák");
+		// the kind IS the model - no asking which optional fields are filled in
+		assertThat(items.get(0)).isInstanceOf(RefItem.class);
+		assertThat(((RefItem) items.get(0)).getRef().getUuid()).isEqualTo(resolvedUuid.toString());
+		assertThat(((RefItem) items.get(0)).getRef().getName()).isEqualTo("Václav Novák");
 		// unresolved reference still links, labeled by the uuid
-		assertThat(items.get(1).getValue()).isEqualTo("bbbbbbbb-1111-2222-3333-444444444444");
+		assertThat(((RefItem) items.get(1)).getRef().getName())
+				.isEqualTo("bbbbbbbb-1111-2222-3333-444444444444");
 	}
 
 	@Test
@@ -155,11 +159,11 @@ class ApuDetailBuilderTest {
 
 		var items = builder.buildParts(List.of(part("PT~BODY", link, bare)), Map.of(), CS).get(0).getItems();
 
-		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.LINK);
-		assertThat(items.get(0).getValue()).isEqualTo("Zdroj");
-		assertThat(items.get(0).getHref()).isEqualTo("https://example.org");
+		assertThat(items.get(0)).isInstanceOf(LinkItem.class);
+		assertThat(((LinkItem) items.get(0)).getCaption()).isEqualTo("Zdroj");
+		assertThat(((LinkItem) items.get(0)).getHref()).isEqualTo("https://example.org");
 		// no caption - the target doubles as the caption
-		assertThat(items.get(1).getValue()).isEqualTo("https://example.org/bare");
+		assertThat(((LinkItem) items.get(1)).getCaption()).isEqualTo("https://example.org/bare");
 	}
 
 	@Test
@@ -171,10 +175,9 @@ class ApuDetailBuilderTest {
 				Map.of(), CS).get(0).getItems();
 
 		assertThat(items).hasSize(1);
-		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.TEXT);
-		assertThat(items.get(0).getValue()).isEqualTo("[1850]–1910");
-
-		var dating = items.get(0).getDating();
+		assertThat(items.get(0)).isInstanceOf(UnitDateItem.class);
+		var dating = (UnitDateItem) items.get(0);
+		assertThat(dating.getValue()).isEqualTo("[1850]–1910");
 		assertThat(dating.getFrom()).isEqualTo("1850-01-01T00:00:00");
 		assertThat(dating.getTo()).isEqualTo("1910-12-31T23:59:59");
 		assertThat(dating.getFromPrecision()).isEqualTo(DatingPrecision.YEAR);
@@ -189,7 +192,7 @@ class ApuDetailBuilderTest {
 				item("UNIT~DATE", unitDate("1801-01-01T00:00:00", "1900-12-31T23:59:59", "C-C", false, false)))),
 				Map.of(), EN);
 
-		assertThat(parts.get(0).getItems().get(0).getValue()).isEqualTo("19th century");
+		assertThat(((UnitDateItem) parts.get(0).getItems().get(0)).getValue()).isEqualTo("19th century");
 	}
 
 	@Test

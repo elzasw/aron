@@ -16,10 +16,14 @@ import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.api.v1.model.ApuLink;
 import cz.aron.api.v1.model.DetailItem;
+import cz.aron.api.v1.model.DatingPrecision;
 import cz.aron.api.v1.model.DetailItemKind;
 import cz.aron.api.v1.model.DetailPart;
-import cz.aron.api.v1.model.Dating;
-import cz.aron.api.v1.model.DatingPrecision;
+import cz.aron.api.v1.model.JsonItem;
+import cz.aron.api.v1.model.LinkItem;
+import cz.aron.api.v1.model.RefItem;
+import cz.aron.api.v1.model.TextItem;
+import cz.aron.api.v1.model.UnitDateItem;
 import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.dto.IdLabelDto;
@@ -123,44 +127,47 @@ public class ApuDetailBuilder {
 		return ordered.stream().map(Ordered::item).toList();
 	}
 
-	private DetailItem buildItem(ApuPartItem item, ItemType itemType, Map<String, IdLabelDto> refLabels, Locale locale) {
+	private DetailItem buildItem(ApuPartItem item, ItemType itemType, Map<String, IdLabelDto> refLabels,
+			Locale locale) {
 		String value = item.getValue();
 		if ((value == null || value.isBlank()) && (item.getHref() == null || item.getHref().isBlank())) {
 			return null;
 		}
+		String code = itemType.getCode();
 		String label = itemLabel(itemType, locale);
 		switch (itemType.getType()) {
 			case STRING, ENUM, INTEGER:
-				return new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, value);
+				return new TextItem(value, code, label, DetailItemKind.TEXT);
 			case UNITDATE: {
-				UniversalDate dating = parseUnitDate(value);
-				String formatted = dating != null ? UnitDateFormatter.format(dating, locale) : value;
+				UniversalDate parsed = parseUnitDate(value);
+				String formatted = parsed != null ? UnitDateFormatter.format(parsed, locale) : value;
 				if (formatted == null) {
 					return null;
 				}
-				var detailItem = new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, formatted);
-				if (dating != null) {
-					// the machine-readable form travels with the rendered one
-					detailItem.setDating(toDating(dating));
+				var unitDate = new UnitDateItem(formatted, code, label, DetailItemKind.UNITDATE);
+				if (parsed != null) {
+					// the machine-readable bounds travel with the rendered string
+					unitDate.setFrom(parsed.getFrom());
+					unitDate.setTo(parsed.getTo());
+					unitDate.setFromPrecision(precision(UnitDateFormatter.precisionOf(parsed, true)));
+					unitDate.setToPrecision(precision(UnitDateFormatter.precisionOf(parsed, false)));
+					unitDate.setFromEstimated(parsed.isValueFromEstimated());
+					unitDate.setToEstimated(parsed.isValueToEstimated());
 				}
-				return detailItem;
+				return unitDate;
 			}
 			case LINK: {
 				String href = item.getHref() != null && !item.getHref().isBlank() ? item.getHref() : value;
 				String caption = value != null && !value.isBlank() ? value : href;
-				var detailItem = new DetailItem(itemType.getCode(), label, DetailItemKind.LINK, caption);
-				detailItem.setHref(href);
-				return detailItem;
+				return new LinkItem(href, caption, code, label, DetailItemKind.LINK);
 			}
 			case APU_REF: {
 				IdLabelDto refLabel = refLabels.get(value);
 				String name = refLabel != null && refLabel.name() != null ? refLabel.name() : value;
-				var detailItem = new DetailItem(itemType.getCode(), label, DetailItemKind.REF, name);
-				detailItem.setRef(new ApuLink(value, name));
-				return detailItem;
+				return new RefItem(new ApuLink(value, name), code, label, DetailItemKind.REF);
 			}
 			case JSON:
-				return new DetailItem(itemType.getCode(), label, DetailItemKind.JSON, value);
+				return new JsonItem(value, code, label, DetailItemKind.JSON);
 			default:
 				log.warn("Item type {} has no detail rendering.", itemType.getCode());
 				return null;
@@ -174,18 +181,6 @@ public class ApuDetailBuilder {
 			log.warn("Cannot parse UNITDATE value: {}", value, e);
 			return null;
 		}
-	}
-
-	/** Machine-readable companion of the rendered dating (semantic markup, non-display consumers). */
-	private static Dating toDating(UniversalDate date) {
-		var dating = new Dating();
-		dating.setFrom(date.getFrom());
-		dating.setTo(date.getTo());
-		dating.setFromPrecision(precision(UnitDateFormatter.precisionOf(date, true)));
-		dating.setToPrecision(precision(UnitDateFormatter.precisionOf(date, false)));
-		dating.setFromEstimated(date.isValueFromEstimated());
-		dating.setToEstimated(date.isValueToEstimated());
-		return dating;
 	}
 
 	private static DatingPrecision precision(String formatCode) {

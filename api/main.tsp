@@ -678,7 +678,13 @@ enum PartViewType {
 	GROUPED,
 }
 
-/** One display-ready item of a part. */
+/**
+ * One display-ready item of a part, discriminated by `kind`: each kind is its
+ * own model carrying exactly the fields that kind has, so a client never has to
+ * ask which optional fields happen to be filled in (the Elza/CAM `ItemData`
+ * pattern).
+ */
+@discriminator("kind")
 model DetailItem {
 	/** Item-type code (display-model code, tilde form) - lets clients special-case known types. */
 	code: string;
@@ -687,30 +693,33 @@ model DetailItem {
 	label: string;
 
 	kind: DetailItemKind;
+}
 
-	/** Display value; datings arrive formatted server-side, kind JSON carries the raw JSON string. */
+/** Plain text: strings, enumerations and numbers. */
+model TextItem extends DetailItem {
+	@invisible(Lifecycle)
+	kind: DetailItemKind.TEXT;
+
+	/** Display value. */
 	value: string;
-
-	/** Link target (kind LINK; `value` is the caption). */
-	href?: string;
-
-	/** Referenced APU (kind REF). */
-	ref?: ApuLink;
-
-	/** Machine-readable form of a dating (UNITDATE items). */
-	dating?: Dating;
 }
 
 /**
- * Machine-readable form of a dating, carried next to the formatted `value`.
+ * A dating, rendered server-side and carried machine-readably as well.
  *
  * The display string stays the server's job - rendering a dating means the
  * archival grammar (granularity, estimates, interval collapsing) and not just
- * date formatting, so clients would have to reimplement it. This is here for
- * what the string cannot do: semantic markup (`<time datetime>`), and
+ * date formatting, so clients would have to reimplement it. The bounds are here
+ * for what the string cannot do: semantic markup (`<time datetime>`), and
  * consumers that process datings rather than show them.
  */
-model Dating {
+model UnitDateItem extends DetailItem {
+	@invisible(Lifecycle)
+	kind: DetailItemKind.UNITDATE;
+
+	/** The dating as displayed, in the reader's language. */
+	value: string;
+
 	/** Lower bound as an ISO local date-time (`1850-01-01T00:00:00`). */
 	from?: string;
 
@@ -730,6 +739,36 @@ model Dating {
 	toEstimated?: boolean;
 }
 
+/** External link. */
+model LinkItem extends DetailItem {
+	@invisible(Lifecycle)
+	kind: DetailItemKind.LINK;
+
+	/** Link target. */
+	href: string;
+
+	/** Text to show for the link; the target itself when the source gave no caption. */
+	caption: string;
+}
+
+/** Reference to another APU. */
+model RefItem extends DetailItem {
+	@invisible(Lifecycle)
+	kind: DetailItemKind.REF;
+
+	/** The referenced APU, resolved to uuid + display name. */
+	ref: ApuLink;
+}
+
+/** Structured value (aggregated items), carried as a raw JSON string. */
+model JsonItem extends DetailItem {
+	@invisible(Lifecycle)
+	kind: DetailItemKind.JSON;
+
+	/** The raw JSON string. */
+	json: string;
+}
+
 /** Granularity a dating bound was recorded in. */
 enum DatingPrecision {
 	CENTURY,
@@ -739,20 +778,24 @@ enum DatingPrecision {
 	TIME,
 }
 
-/** Item value kinds - how the client renders the value. */
+/** Item kinds - each one is a model of its own (see {@link DetailItem}). */
 enum DetailItemKind {
-	/** Plain text: strings, enumerations, numbers, server-formatted datings. */
+	/** Plain text: strings, enumerations, numbers ({@link TextItem}). */
 	TEXT,
 
-	/** External link - `href` carries the target, `value` the caption. */
+	/** A dating ({@link UnitDateItem}). */
+	UNITDATE,
+
+	/** External link ({@link LinkItem}). */
 	LINK,
 
-	/** Reference to another APU - `ref` carries the resolved target. */
+	/** Reference to another APU ({@link RefItem}). */
 	REF,
 
-	/** Structured value (aggregated items) - `value` is the raw JSON string. */
+	/** Structured value ({@link JsonItem}). */
 	JSON,
 }
+
 
 /** Attachment of an APU (metadata; binary serving arrives with a later slice). */
 model AttachmentInfo {
