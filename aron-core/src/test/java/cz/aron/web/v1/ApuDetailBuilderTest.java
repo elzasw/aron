@@ -17,6 +17,7 @@ import cz.aron.api.rest.model.ApuPart;
 import cz.aron.api.rest.model.ApuPartItem;
 import cz.aron.api.v1.model.DetailItem;
 import cz.aron.api.v1.model.DetailItemKind;
+import cz.aron.api.v1.model.DatingPrecision;
 import cz.aron.api.v1.model.DetailPart;
 import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.dto.IdLabelDto;
@@ -162,23 +163,33 @@ class ApuDetailBuilderTest {
 	}
 
 	@Test
-	void unitDatesAreFormattedForDisplay() {
+	void unitDateItemsCarryBothTheRenderedAndTheMachineReadableForm() {
+		// the rendering table itself is UnitDateFormatterTest's subject; here only
+		// that a UNITDATE item gets the formatted value AND its structured sibling
 		var items = builder.buildParts(List.of(part("PT~BODY",
-				item("UNIT~DATE", unitDate("1850-01-01T00:00:00", "1910-12-31T23:59:59", "Y-Y", false, false)),
-				item("UNIT~DATE", unitDate("1850-01-01T00:00:00", "1850-12-31T23:59:59", "Y-Y", false, false)),
-				item("UNIT~DATE", unitDate("1850-05-01T00:00:00", "1850-05-01T00:00:00", "D", false, false)),
-				item("UNIT~DATE", unitDate("1850-01-01T00:00:00", "1910-12-31T23:59:59", "Y-Y", true, false)),
-				item("UNIT~DATE", unitDate("1801-01-01T00:00:00", "1900-12-31T23:59:59", "C-C", false, false)))),
+				item("UNIT~DATE", unitDate("1850-01-01T00:00:00", "1910-12-31T23:59:59", "Y-Y", true, false)))),
 				Map.of(), CS).get(0).getItems();
 
-		assertThat(items.get(0).getValue()).isEqualTo("1850–1910");
-		// equal sides collapse to a single value
-		assertThat(items.get(1).getValue()).isEqualTo("1850");
-		assertThat(items.get(2).getValue()).isEqualTo("1. 5. 1850");
-		// estimated bound in brackets
-		assertThat(items.get(3).getValue()).isEqualTo("[1850]–1910");
-		// both bounds fall into the same century - collapses like any equal sides
-		assertThat(items.get(4).getValue()).isEqualTo("19. století");
+		assertThat(items).hasSize(1);
+		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.TEXT);
+		assertThat(items.get(0).getValue()).isEqualTo("[1850]–1910");
+
+		var dating = items.get(0).getDating();
+		assertThat(dating.getFrom()).isEqualTo("1850-01-01T00:00:00");
+		assertThat(dating.getTo()).isEqualTo("1910-12-31T23:59:59");
+		assertThat(dating.getFromPrecision()).isEqualTo(DatingPrecision.YEAR);
+		assertThat(dating.getToPrecision()).isEqualTo(DatingPrecision.YEAR);
+		assertThat(dating.getFromEstimated()).isTrue();
+		assertThat(dating.getToEstimated()).isFalse();
+	}
+
+	@Test
+	void datingsFollowThePresentationLanguage() {
+		var parts = builder.buildParts(List.of(part("PT~BODY",
+				item("UNIT~DATE", unitDate("1801-01-01T00:00:00", "1900-12-31T23:59:59", "C-C", false, false)))),
+				Map.of(), EN);
+
+		assertThat(parts.get(0).getItems().get(0).getValue()).isEqualTo("19th century");
 	}
 
 	@Test

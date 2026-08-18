@@ -696,6 +696,47 @@ model DetailItem {
 
 	/** Referenced APU (kind REF). */
 	ref?: ApuLink;
+
+	/** Machine-readable form of a dating (UNITDATE items). */
+	dating?: Dating;
+}
+
+/**
+ * Machine-readable form of a dating, carried next to the formatted `value`.
+ *
+ * The display string stays the server's job - rendering a dating means the
+ * archival grammar (granularity, estimates, interval collapsing) and not just
+ * date formatting, so clients would have to reimplement it. This is here for
+ * what the string cannot do: semantic markup (`<time datetime>`), and
+ * consumers that process datings rather than show them.
+ */
+model Dating {
+	/** Lower bound as an ISO local date-time (`1850-01-01T00:00:00`). */
+	from?: string;
+
+	/** Upper bound, same form. */
+	to?: string;
+
+	/** Granularity the lower bound was recorded in. */
+	fromPrecision?: DatingPrecision;
+
+	/** Granularity the upper bound was recorded in. */
+	toPrecision?: DatingPrecision;
+
+	/** The lower bound is an estimate (the display string brackets it). */
+	fromEstimated?: boolean;
+
+	/** The upper bound is an estimate. */
+	toEstimated?: boolean;
+}
+
+/** Granularity a dating bound was recorded in. */
+enum DatingPrecision {
+	CENTURY,
+	YEAR,
+	MONTH,
+	DAY,
+	TIME,
 }
 
 /** Item value kinds - how the client renders the value. */

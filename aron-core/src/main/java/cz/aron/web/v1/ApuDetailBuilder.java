@@ -18,6 +18,8 @@ import cz.aron.api.v1.model.ApuLink;
 import cz.aron.api.v1.model.DetailItem;
 import cz.aron.api.v1.model.DetailItemKind;
 import cz.aron.api.v1.model.DetailPart;
+import cz.aron.api.v1.model.Dating;
+import cz.aron.api.v1.model.DatingPrecision;
 import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.dto.IdLabelDto;
@@ -131,10 +133,17 @@ public class ApuDetailBuilder {
 			case STRING, ENUM, INTEGER:
 				return new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, value);
 			case UNITDATE: {
-				String formatted = formatUnitDate(value);
-				return formatted != null
-						? new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, formatted)
-						: null;
+				UniversalDate dating = parseUnitDate(value);
+				String formatted = dating != null ? UnitDateFormatter.format(dating, locale) : value;
+				if (formatted == null) {
+					return null;
+				}
+				var detailItem = new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, formatted);
+				if (dating != null) {
+					// the machine-readable form travels with the rendered one
+					detailItem.setDating(toDating(dating));
+				}
+				return detailItem;
 			}
 			case LINK: {
 				String href = item.getHref() != null && !item.getHref().isBlank() ? item.getHref() : value;
@@ -158,13 +167,35 @@ public class ApuDetailBuilder {
 		}
 	}
 
-	private String formatUnitDate(String value) {
+	private UniversalDate parseUnitDate(String value) {
 		try {
-			return UnitDateFormatter.format(objectMapper.readValue(value, UniversalDate.class));
+			return objectMapper.readValue(value, UniversalDate.class);
 		} catch (Exception e) {
 			log.warn("Cannot parse UNITDATE value: {}", value, e);
-			return value;
+			return null;
 		}
+	}
+
+	/** Machine-readable companion of the rendered dating (semantic markup, non-display consumers). */
+	private static Dating toDating(UniversalDate date) {
+		var dating = new Dating();
+		dating.setFrom(date.getFrom());
+		dating.setTo(date.getTo());
+		dating.setFromPrecision(precision(UnitDateFormatter.precisionOf(date, true)));
+		dating.setToPrecision(precision(UnitDateFormatter.precisionOf(date, false)));
+		dating.setFromEstimated(date.isValueFromEstimated());
+		dating.setToEstimated(date.isValueToEstimated());
+		return dating;
+	}
+
+	private static DatingPrecision precision(String formatCode) {
+		return switch (formatCode) {
+			case "C" -> DatingPrecision.CENTURY;
+			case "Y" -> DatingPrecision.YEAR;
+			case "YM" -> DatingPrecision.MONTH;
+			case "D" -> DatingPrecision.DAY;
+			default -> DatingPrecision.TIME;
+		};
 	}
 
 	/**

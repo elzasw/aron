@@ -112,6 +112,25 @@ those are the languages clients may ask for.
    text only — never which records match, nor their order, which follows
    ``search.content-locale``.
 
+Dating vocabulary
+=================
+
+Datings are rendered by the server, because presenting one means applying the
+archival grammar — granularity (century, year, month, date), estimated bounds
+in brackets, intervals whose sides collapse when equal — and not merely
+formatting a date. The dates themselves come from the JDK's CLDR data, so
+month names and date order are correct in any language without configuration.
+
+The words around them — how a century reads, the interval separator — are not
+in CLDR and ship as resource bundles in the application
+(``cz/aron/web/v1/unitdate*.properties``): Czech as the base, plus one file per
+further language. Supporting a new language therefore means adding one
+properties file, not writing date patterns.
+
+Alongside the rendered string, the API also carries the dating in machine form
+(``dating``: bounds, granularity, estimate flags) — for semantic markup and for
+consumers that process datings rather than display them.
+
 searchConfig.yaml
 =================
 

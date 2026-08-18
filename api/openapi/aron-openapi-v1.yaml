@@ -464,6 +464,37 @@ components:
             - $ref: "#/components/schemas/FileInfo"
           description: The attachment's file.
       description: Attachment of an APU (metadata; binary serving arrives with a later slice).
+    Dating:
+      type: object
+      properties:
+        from:
+          type: string
+          description: Lower bound as an ISO local date-time (`1850-01-01T00:00:00`).
+        to:
+          type: string
+          description: Upper bound, same form.
+        fromPrecision:
+          allOf:
+            - $ref: "#/components/schemas/DatingPrecision"
+          description: Granularity the lower bound was recorded in.
+        toPrecision:
+          allOf:
+            - $ref: "#/components/schemas/DatingPrecision"
+          description: Granularity the upper bound was recorded in.
+        fromEstimated:
+          type: boolean
+          description: The lower bound is an estimate (the display string brackets it).
+        toEstimated:
+          type: boolean
+          description: The upper bound is an estimate.
+      description: |-
+        Machine-readable form of a dating, carried next to the formatted `value`.
+
+        The display string stays the server's job - rendering a dating means the
+        archival grammar (granularity, estimates, interval collapsing) and not just
+        date formatting, so clients would have to reimplement it. This is here for
+        what the string cannot do: semantic markup (`<time datetime>`), and
+        consumers that process datings rather than show them.
     DatingBounds:
       type: object
       required:
@@ -490,6 +521,15 @@ components:
       allOf:
         - $ref: "#/components/schemas/FacetResult"
       description: Dating bounds of a UNITDATE facet.
+    DatingPrecision:
+      type: string
+      enum:
+        - CENTURY
+        - YEAR
+        - MONTH
+        - DAY
+        - TIME
+      description: Granularity a dating bound was recorded in.
     DetailItem:
       type: object
       required:
@@ -516,6 +556,10 @@ components:
           allOf:
             - $ref: "#/components/schemas/ApuLink"
           description: Referenced APU (kind REF).
+        dating:
+          allOf:
+            - $ref: "#/components/schemas/Dating"
+          description: Machine-readable form of a dating (UNITDATE items).
       description: One display-ready item of a part.
     DetailItemKind:
       type: string
