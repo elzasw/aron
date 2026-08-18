@@ -21,6 +21,25 @@ using TypeSpec.OpenAPI;
 @info(#{ version: "1.0" })
 namespace AronApi;
 
+/**
+ * Presentation language of the server-rendered display text in a response -
+ * item and part labels, facet labels, formatted datings. An IETF language tag
+ * (`cs`, `en-GB`); an `Accept-Language`-style list with quality values is
+ * accepted too.
+ *
+ * Deliberately an explicit parameter rather than the `Accept-Language` header:
+ * the language is then part of the URL, so caches and shared links carry it.
+ * Absent or unmatched, the deployment's first configured localization applies
+ * (`UiConfig.localizations`).
+ *
+ * This is the *reader's* language. It never affects which records match or the
+ * order they come in - alphabetical ordering follows the language of the
+ * described material, a deployment setting.
+ */
+model LangParam {
+	@query lang?: string;
+}
+
 /** Technical/system endpoints. */
 @tag("system")
 @route("/api/v1/system")
@@ -116,7 +135,7 @@ namespace Search {
 	 */
 	@get
 	@route("/api/v1/facets")
-	op getFacets(@query apuType: ApuType): FacetDef[];
+	op getFacets(@query apuType: ApuType, ...LangParam): FacetDef[];
 
 	/**
 	 * Searches APUs of one type. Facet results follow multi-select semantics:
@@ -497,12 +516,16 @@ namespace Apu {
 	/**
 	 * Detail of one APU. Supports conditional requests: responses carry
 	 * `ETag`/`Last-Modified`, and a request with `If-None-Match` /
-	 * `If-Modified-Since` is answered with 304 when unchanged.
+	 * `If-Modified-Since` is answered with 304 when unchanged. The `ETag`
+	 * covers the presentation language as well, so switching `lang` never
+	 * yields a 304 with the previous language's body.
 	 */
 	@get
 	@route("/api/v1/apu/{uuid}")
 	op getDetail(
 		@path uuid: string,
+
+		...LangParam,
 
 		@header("If-None-Match") ifNoneMatch?: string,
 

@@ -1,0 +1,72 @@
+package cz.aron.web.v1;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import java.util.List;
+import java.util.Locale;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import cz.aron.api.v1.model.UiConfig;
+
+/**
+ * Unit tests of the presentation-language negotiation (no Spring): a request's
+ * lang is matched against the deployment's configured localizations, and
+ * anything unusable falls back to the default rather than failing the request.
+ */
+class PresentationLocalesTest {
+
+	private static PresentationLocales locales(String... localizations) {
+		var loader = new UiConfigLoader("unused", "");
+		ReflectionTestUtils.setField(loader, "config", new UiConfig("Test", List.of(localizations), List.of()));
+		return new PresentationLocales(loader);
+	}
+
+	@Test
+	void firstConfiguredLocalizationIsTheDefault() {
+		var locales = locales("cs_CZ", "en");
+
+		assertThat(locales.getDefault()).isEqualTo(Locale.of("cs", "CZ"));
+		assertThat(locales.resolve(null)).isEqualTo(Locale.of("cs", "CZ"));
+		assertThat(locales.resolve("  ")).isEqualTo(Locale.of("cs", "CZ"));
+	}
+
+	@Test
+	void requestedLanguageWinsWhenConfigured() {
+		var locales = locales("cs_CZ", "en");
+
+		assertThat(locales.resolve("en")).isEqualTo(Locale.ENGLISH);
+		// the underscore spelling of the configuration is accepted from clients too
+		assertThat(locales.resolve("cs_CZ")).isEqualTo(Locale.of("cs", "CZ"));
+	}
+
+	@Test
+	void regionalRequestMatchesTheConfiguredLanguage() {
+		// RFC 4647 lookup: en-GB falls back to the configured plain en
+		assertThat(locales("cs_CZ", "en").resolve("en-GB")).isEqualTo(Locale.ENGLISH);
+	}
+
+	@Test
+	void acceptLanguageStyleListIsHonoured() {
+		// quality values decide; the unsupported language is skipped
+		assertThat(locales("cs_CZ", "en").resolve("de;q=0.9,en;q=0.8")).isEqualTo(Locale.ENGLISH);
+	}
+
+	@Test
+	void unknownOrMalformedLanguageFallsBackInsteadOfFailing() {
+		var locales = locales("cs_CZ", "en");
+
+		assertThat(locales.resolve("de")).isEqualTo(Locale.of("cs", "CZ"));
+		assertThat(locales.resolve("!!!")).isEqualTo(Locale.of("cs", "CZ"));
+	}
+
+	@Test
+	void invalidConfigurationFailsFast() {
+		assertThatThrownBy(() -> locales("!!!"))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("localizations");
+	}
+
+}

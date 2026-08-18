@@ -3,6 +3,7 @@ package cz.aron.web.v1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,6 +30,12 @@ import cz.aron.domain.types.TypesLoader;
  * pattern.
  */
 class ApuDetailBuilderTest {
+
+	/** Presentation language of the fixtures - the test deployment's default. */
+	private static final Locale CS = Locale.of("cs", "CZ");
+
+	/** A configured localization the fixture translates into (types_localization.yaml). */
+	private static final Locale EN = Locale.ENGLISH;
 
 	private static ApuDetailBuilder builder;
 
@@ -69,7 +76,7 @@ class ApuDetailBuilderTest {
 		// XML order scrambled on purpose: PT~BODY before PT~TITLE, items reversed
 		var parts = builder.buildParts(List.of(
 				part("PT~BODY", item("LANG~CODE", "cze"), item("TITLE~MAIN", "Hlavní titul")),
-				part("PT~TITLE", item("TITLE~MAIN", "Titulní část"))), Map.of());
+				part("PT~TITLE", item("TITLE~MAIN", "Titulní část"))), Map.of(), CS);
 
 		// part order = types.yaml partTypes order (PT~TITLE first), labels resolved
 		assertThat(parts).extracting(DetailPart::getCode).containsExactly("PT~TITLE", "PT~BODY");
@@ -93,7 +100,7 @@ class ApuDetailBuilderTest {
 
 		var parts = builder.buildParts(List.of(
 				part("PT~BODY", invisible, item("TITLE~MAIN", ""), nullVisibility),
-				part("PT~TITLE", invisible)), Map.of());
+				part("PT~TITLE", invisible)), Map.of(), CS);
 
 		assertThat(parts).hasSize(1);
 		assertThat(parts.get(0).getItems()).extracting(DetailItem::getCode).containsExactly("LANG~CODE");
@@ -103,7 +110,7 @@ class ApuDetailBuilderTest {
 	void unknownTypesAreSkipped() {
 		var parts = builder.buildParts(List.of(
 				part("PT~NEZNAMY", item("TITLE~MAIN", "Ve známém typu položky")),
-				part("PT~BODY", item("NEZNAMY~TYP", "hodnota"), item("LANG~CODE", "cze"))), Map.of());
+				part("PT~BODY", item("NEZNAMY~TYP", "hodnota"), item("LANG~CODE", "cze"))), Map.of(), CS);
 
 		// unknown part type keeps its part (code as label), unknown item type is dropped
 		assertThat(parts).extracting(DetailPart::getCode).containsExactly("PT~BODY", "PT~NEZNAMY");
@@ -116,7 +123,7 @@ class ApuDetailBuilderTest {
 		var parent = part("PT~TITLE", item("TITLE~MAIN", "Rodič"));
 		parent.addChildPartsItem(part("PT~BODY", item("LANG~CODE", "cze")));
 
-		var parts = builder.buildParts(List.of(parent), Map.of());
+		var parts = builder.buildParts(List.of(parent), Map.of(), CS);
 
 		assertThat(parts).extracting(DetailPart::getCode).containsExactly("PT~TITLE", "PT~BODY");
 	}
@@ -127,7 +134,7 @@ class ApuDetailBuilderTest {
 		var parts = builder.buildParts(List.of(part("PT~BODY",
 				item("REL~ENTITY", resolvedUuid.toString()),
 				item("REL~ENTITY", "bbbbbbbb-1111-2222-3333-444444444444"))),
-				Map.of(resolvedUuid.toString(), new IdLabelDto(1L, resolvedUuid, "Václav Novák", null)));
+				Map.of(resolvedUuid.toString(), new IdLabelDto(1L, resolvedUuid, "Václav Novák", null)), CS);
 
 		var items = parts.get(0).getItems();
 		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.REF);
@@ -145,7 +152,7 @@ class ApuDetailBuilderTest {
 		var bare = item("LINK~SOURCE", null);
 		bare.setHref("https://example.org/bare");
 
-		var items = builder.buildParts(List.of(part("PT~BODY", link, bare)), Map.of()).get(0).getItems();
+		var items = builder.buildParts(List.of(part("PT~BODY", link, bare)), Map.of(), CS).get(0).getItems();
 
 		assertThat(items.get(0).getKind()).isEqualTo(DetailItemKind.LINK);
 		assertThat(items.get(0).getValue()).isEqualTo("Zdroj");
@@ -162,7 +169,7 @@ class ApuDetailBuilderTest {
 				item("UNIT~DATE", unitDate("1850-05-01T00:00:00", "1850-05-01T00:00:00", "D", false, false)),
 				item("UNIT~DATE", unitDate("1850-01-01T00:00:00", "1910-12-31T23:59:59", "Y-Y", true, false)),
 				item("UNIT~DATE", unitDate("1801-01-01T00:00:00", "1900-12-31T23:59:59", "C-C", false, false)))),
-				Map.of()).get(0).getItems();
+				Map.of(), CS).get(0).getItems();
 
 		assertThat(items.get(0).getValue()).isEqualTo("1850–1910");
 		// equal sides collapse to a single value
@@ -172,6 +179,26 @@ class ApuDetailBuilderTest {
 		assertThat(items.get(3).getValue()).isEqualTo("[1850]–1910");
 		// both bounds fall into the same century - collapses like any equal sides
 		assertThat(items.get(4).getValue()).isEqualTo("19. století");
+	}
+
+	@Test
+	void labelsFollowThePresentationLanguage() {
+		var parts = builder.buildParts(List.of(
+				part("PT~TITLE", item("TITLE~MAIN", "Titulní část"))), Map.of(), EN);
+
+		// types_localization.yaml translates both the part and the item type
+		assertThat(parts.get(0).getLabel()).isEqualTo("Title (en)");
+		assertThat(parts.get(0).getItems().get(0).getLabel()).isEqualTo("Main title (en)");
+	}
+
+	@Test
+	void untranslatedLanguagesFallBackToTheSourceNames() {
+		// nothing is translated into German - the types.yaml names stand
+		var parts = builder.buildParts(List.of(
+				part("PT~TITLE", item("TITLE~MAIN", "Titulní část"))), Map.of(), Locale.GERMAN);
+
+		assertThat(parts.get(0).getLabel()).isEqualTo("Title");
+		assertThat(parts.get(0).getItems().get(0).getLabel()).isEqualTo("Main title");
 	}
 
 }

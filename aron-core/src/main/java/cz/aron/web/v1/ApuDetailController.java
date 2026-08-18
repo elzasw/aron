@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -52,8 +53,11 @@ public class ApuDetailController implements ApuApi {
 
 	private final ApuDetailBuilder detailBuilder;
 
+	private final PresentationLocales presentationLocales;
+
 	public ApuDetailController(ApuEntityRepository apuEntityRepository, ApuService apuService,
-			ApuDetailBuilder detailBuilder) {
+			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales) {
+		this.presentationLocales = presentationLocales;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.detailBuilder = detailBuilder;
@@ -61,7 +65,7 @@ public class ApuDetailController implements ApuApi {
 
 	@Override
 	@Transactional(readOnly = true)
-	public ResponseEntity<ApuDetail> apuGetDetail(String uuid, String ifNoneMatch, String ifModifiedSince) {
+	public ResponseEntity<ApuDetail> apuGetDetail(String uuid, String lang, String ifNoneMatch, String ifModifiedSince) {
 		UUID apuUuid;
 		try {
 			apuUuid = UUID.fromString(uuid);
@@ -73,7 +77,10 @@ public class ApuDetailController implements ApuApi {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
 		}
 
-		var expireStatus = HttpUtils.computeExpired(publishedOf(apu), ifNoneMatch, ifModifiedSince);
+		Locale locale = presentationLocales.resolve(lang);
+		// the rendered labels and datings depend on the language, so it discriminates the ETag
+		var expireStatus = HttpUtils.computeExpired(publishedOf(apu), ifNoneMatch, ifModifiedSince,
+				locale.toLanguageTag());
 		var cacheControl = CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate()
 				.mustRevalidate();
 		if (!expireStatus.expired()) {
@@ -88,7 +95,7 @@ public class ApuDetailController implements ApuApi {
 		var refLabels = apuService.resolveApuRefLabels(List.of(apu));
 
 		var detail = new ApuDetail(uuid, apu.getName(), ApuType.fromValue(apu.getType().toString()),
-				apu.getChildCnt(), treePath(apu), detailBuilder.buildParts(parts, refLabels),
+				apu.getChildCnt(), treePath(apu), detailBuilder.buildParts(parts, refLabels, locale),
 				attachments(apu), digitalObjects(apu));
 		detail.setDescription(apu.getDescription());
 		detail.setPermalink(apu.getPermalink());

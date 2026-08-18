@@ -1,3 +1,6 @@
 name: ARON test page template
+localizations:
+  - cs_CZ
+  - en
 header:
   title: ARON 2 test

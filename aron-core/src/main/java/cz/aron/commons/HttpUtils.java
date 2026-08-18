@@ -40,12 +40,25 @@ public final class HttpUtils {
      * @param ifModifiedSince value of the {@code If-Modified-Since} header (may be {@code null})
      */
     public static ExpireStatus computeExpired(LocalDateTime published, String ifNoneMatch, String ifModifiedSince) {
+        return computeExpired(published, ifNoneMatch, ifModifiedSince, null);
+    }
+
+    /**
+     * As {@link #computeExpired(LocalDateTime, String, String)}, for a representation that also
+     * depends on something other than time - the presentation language, say. The variant becomes
+     * part of the entity tag, so a client switching variants gets the new representation instead
+     * of a 304 for the one it already holds.
+     *
+     * @param variant discriminator of the representation ({@code null} = time alone decides)
+     */
+    public static ExpireStatus computeExpired(LocalDateTime published, String ifNoneMatch, String ifModifiedSince,
+            String variant) {
         long lastModified = published
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli();
         // ETag is quoted so it round-trips with the value the client echoes back in If-None-Match
-        String eTag = "\"" + lastModified + "\"";
+        String eTag = variant != null ? "\"" + lastModified + "-" + variant + "\"" : "\"" + lastModified + "\"";
 
         boolean expired = true;
         if (ifNoneMatch != null) {

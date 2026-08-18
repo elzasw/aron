@@ -3,6 +3,7 @@ package cz.aron.web.v1;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import cz.aron.api.v1.model.DetailPart;
 import cz.aron.api.v1.model.PartViewType;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.dto.IdLabelDto;
+import cz.aron.domain.types.LocalizedText;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ApuPartType;
 import cz.aron.domain.types.dto.ItemType;
@@ -52,7 +54,7 @@ public class ApuDetailBuilder {
 	 * (uuid strings) to display names; unresolved references fall back to the
 	 * uuid so the link still works.
 	 */
-	public List<DetailPart> buildParts(List<ApuPart> parts, Map<String, IdLabelDto> refLabels) {
+	public List<DetailPart> buildParts(List<ApuPart> parts, Map<String, IdLabelDto> refLabels, Locale locale) {
 		// display order of parts = declaration order of the types.yaml part types
 		Map<String, Integer> partOrder = new HashMap<>();
 		for (ApuPartType partType : typesHolder.getAllApuPartTypes()) {
@@ -64,11 +66,11 @@ public class ApuDetailBuilder {
 
 		var result = new ArrayList<DetailPart>();
 		for (ApuPart part : flattened) {
-			List<DetailItem> items = buildItems(part.getItems(), refLabels);
+			List<DetailItem> items = buildItems(part.getItems(), refLabels, locale);
 			if (items.isEmpty()) {
 				continue;
 			}
-			var detailPart = new DetailPart(part.getType(), partLabel(part.getType()), viewType(part.getType()),
+			var detailPart = new DetailPart(part.getType(), partLabel(part.getType(), locale), viewType(part.getType()),
 					items);
 			if (part.getValue() != null && !part.getValue().isBlank()) {
 				detailPart.setValue(part.getValue());
@@ -92,7 +94,7 @@ public class ApuDetailBuilder {
 		}
 	}
 
-	private List<DetailItem> buildItems(List<ApuPartItem> items, Map<String, IdLabelDto> refLabels) {
+	private List<DetailItem> buildItems(List<ApuPartItem> items, Map<String, IdLabelDto> refLabels, Locale locale) {
 		record Ordered(int viewOrder, int position, DetailItem item) {
 		}
 		var ordered = new ArrayList<Ordered>();
@@ -107,7 +109,7 @@ public class ApuDetailBuilder {
 					log.warn("Item type not recognized: {}", item.getType());
 					continue;
 				}
-				DetailItem detailItem = buildItem(item, itemType, refLabels);
+				DetailItem detailItem = buildItem(item, itemType, refLabels, locale);
 				if (detailItem != null) {
 					ordered.add(new Ordered(itemType.getViewOrder(), ordered.size(), detailItem));
 				}
@@ -119,12 +121,12 @@ public class ApuDetailBuilder {
 		return ordered.stream().map(Ordered::item).toList();
 	}
 
-	private DetailItem buildItem(ApuPartItem item, ItemType itemType, Map<String, IdLabelDto> refLabels) {
+	private DetailItem buildItem(ApuPartItem item, ItemType itemType, Map<String, IdLabelDto> refLabels, Locale locale) {
 		String value = item.getValue();
 		if ((value == null || value.isBlank()) && (item.getHref() == null || item.getHref().isBlank())) {
 			return null;
 		}
-		String label = itemLabel(itemType);
+		String label = itemLabel(itemType, locale);
 		switch (itemType.getType()) {
 			case STRING, ENUM, INTEGER:
 				return new DetailItem(itemType.getCode(), label, DetailItemKind.TEXT, value);
@@ -165,10 +167,16 @@ public class ApuDetailBuilder {
 		}
 	}
 
-	/** Labels come from the display model (Czech source names); code is the last resort. */
-	private String partLabel(String code) {
+	/**
+	 * Labels come from the display model: the translation for the reader's
+	 * language, else the source name, else the code.
+	 */
+	private String partLabel(String code, Locale locale) {
 		ApuPartType partType = typesHolder.getApuPartTypeForCode(code);
-		return partType != null && partType.getName() != null ? partType.getName() : code;
+		if (partType == null) {
+			return code;
+		}
+		return LocalizedText.pick(partType.getLang(), partType.getName() != null ? partType.getName() : code, locale);
 	}
 
 	/** Unknown part types display standalone (always visible). */
@@ -179,8 +187,9 @@ public class ApuDetailBuilder {
 				: PartViewType.STANDALONE;
 	}
 
-	private static String itemLabel(ItemType itemType) {
-		return itemType.getName() != null ? itemType.getName() : itemType.getCode();
+	private static String itemLabel(ItemType itemType, Locale locale) {
+		return LocalizedText.pick(itemType.getLang(),
+				itemType.getName() != null ? itemType.getName() : itemType.getCode(), locale);
 	}
 
 }

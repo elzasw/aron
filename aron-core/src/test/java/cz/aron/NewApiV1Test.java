@@ -101,9 +101,9 @@ class NewApiV1Test extends AbstractTest {
 	@Test
 	void uiConfigViaGeneratedClient() {
 		UiConfig config = new UiApi(v1ApiClient()).uiGetConfig();
-		// test-config pageTemplate.yaml has no menu/localizations - the defaults apply
+		// test-config pageTemplate.yaml declares two localizations and no menu - the default menu applies
 		assertThat(config.getName()).isEqualTo("ARON test page template");
-		assertThat(config.getLocalizations()).containsExactly("cs_CZ");
+		assertThat(config.getLocalizations()).containsExactly("cs_CZ", "en");
 		assertThat(config.getMenuItems()).extracting(MenuItem::getCode).containsExactly(
 				MenuItemCode.FUND, MenuItemCode.ARCH_DESC, MenuItemCode.ENTITY, MenuItemCode.HELP);
 		// the HELP link falls back to the configured help-url
@@ -120,7 +120,7 @@ class NewApiV1Test extends AbstractTest {
 
 	@Test
 	void facetDefinitionsComeTypedFromDeploymentConfig() {
-		var facets = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC);
+		var facets = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, null);
 
 		// section facets in configuration order; the when-less TEST~FACET applies everywhere
 		assertThat(facets).extracting(FacetDef::getCode)
@@ -296,8 +296,52 @@ class NewApiV1Test extends AbstractTest {
 	private static final String DETAIL_GRANDCHILD = "9f1d0000-0000-4000-8000-9000000000aa";
 
 	@Test
+	void presentationLanguageSwitchesTheServerRenderedLabels() {
+		var apuApi = new ApuApi(v1ApiClient());
+
+		// no lang - the deployment default (cs_CZ), which has no translations: source names
+		var byDefault = apuApi.apuGetDetail(DETAIL_ARCH_DESC, null, null, null);
+		assertThat(byDefault.getParts().get(0).getLabel()).isEqualTo("Title");
+
+		// a configured localization with translations in types_localization.yaml
+		var inEnglish = apuApi.apuGetDetail(DETAIL_ARCH_DESC, "en", null, null);
+		assertThat(inEnglish.getParts().get(0).getLabel()).isEqualTo("Title (en)");
+
+		// an unconfigured language is served in the default rather than refused
+		assertThat(apuApi.apuGetDetail(DETAIL_ARCH_DESC, "de", null, null).getParts().get(0).getLabel())
+				.isEqualTo("Title");
+
+		// facet labels follow the same language
+		var searchApi = new SearchApi(v1ApiClient());
+		assertThat(labelOf(searchApi.searchGetFacets(ApuType.ARCH_DESC, null), "LANG~CODE"))
+				.isEqualTo("Language");
+		assertThat(labelOf(searchApi.searchGetFacets(ApuType.ARCH_DESC, "en"), "LANG~CODE"))
+				.isEqualTo("Language (en)");
+	}
+
+	@Test
+	void conditionalRequestsDoNotServeAnotherLanguagesBody() throws Exception {
+		// the ETag covers the language, so a client holding the Czech copy still
+		// gets a body when it asks for English
+		var czech = get("/api/v1/apu/" + DETAIL_ARCH_DESC);
+		String eTag = czech.headers().firstValue("ETag").orElseThrow();
+		assertThat(eTag).contains("cs-CZ");
+
+		var revalidated = get("/api/v1/apu/" + DETAIL_ARCH_DESC, "If-None-Match", eTag);
+		assertThat(revalidated.statusCode()).isEqualTo(304);
+
+		var english = get("/api/v1/apu/" + DETAIL_ARCH_DESC + "?lang=en", "If-None-Match", eTag);
+		assertThat(english.statusCode()).isEqualTo(200);
+		assertThat(english.headers().firstValue("ETag").orElseThrow()).contains("en");
+	}
+
+	private static String labelOf(java.util.List<FacetDef> facets, String code) {
+		return facets.stream().filter(f -> code.equals(f.getCode())).findFirst().orElseThrow().getLabel();
+	}
+
+	@Test
 	void detailServesTheRenderModel() {
-		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_ARCH_DESC, null, null);
+		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_ARCH_DESC, null, null, null);
 
 		assertThat(detail.getName()).isEqualTo("V1D Kronika obce Testov");
 		assertThat(detail.getDescription()).isEqualTo("1850–1910");
@@ -341,7 +385,7 @@ class NewApiV1Test extends AbstractTest {
 
 	@Test
 	void detailOfTheFundSeesItsChildren() {
-		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_FUND, null, null);
+		var detail = new ApuApi(v1ApiClient()).apuGetDetail(DETAIL_FUND, null, null, null);
 		assertThat(detail.getApuType()).isEqualTo(ApuType.FUND);
 		assertThat(detail.getChildCount()).isEqualTo(3);
 		// a root APU's tree path is just itself
@@ -397,10 +441,10 @@ class NewApiV1Test extends AbstractTest {
 	@Test
 	void detailAnswers404ForUnknownOrMalformedUuid() {
 		assertThatThrownBy(() -> new ApuApi(v1ApiClient())
-				.apuGetDetail("00000000-0000-4000-8000-000000000000", null, null))
+				.apuGetDetail("00000000-0000-4000-8000-000000000000", null, null, null))
 				.isInstanceOfSatisfying(RestClientResponseException.class,
 						e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
-		assertThatThrownBy(() -> new ApuApi(v1ApiClient()).apuGetDetail("neni-uuid", null, null))
+		assertThatThrownBy(() -> new ApuApi(v1ApiClient()).apuGetDetail("neni-uuid", null, null, null))
 				.isInstanceOfSatisfying(RestClientResponseException.class,
 						e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
 	}

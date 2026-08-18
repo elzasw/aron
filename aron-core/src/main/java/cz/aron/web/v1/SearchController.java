@@ -55,6 +55,7 @@ import cz.aron.domain.DataType;
 import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
+import cz.aron.domain.types.LocalizedText;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
@@ -81,6 +82,8 @@ public class SearchController implements SearchApi {
 
 	private final TypesHolder typesHolder;
 
+	private final PresentationLocales presentationLocales;
+
 	private final IndexingService indexingService;
 
 	private final RelevanceService relevanceService;
@@ -97,12 +100,13 @@ public class SearchController implements SearchApi {
 	private List<FacetConfigDto> facets;
 
 	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
-			RelevanceService relevanceService,
+			RelevanceService relevanceService, PresentationLocales presentationLocales,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
 			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
 		this.facetsLoader = facetsLoader;
 		this.typesHolder = typesHolder;
+		this.presentationLocales = presentationLocales;
 		this.indexingService = indexingService;
 		this.relevanceService = relevanceService;
 		this.maxWindow = maxWindow;
@@ -120,8 +124,9 @@ public class SearchController implements SearchApi {
 	}
 
 	@Override
-	public ResponseEntity<List<FacetDef>> searchGetFacets(ApuType apuType) {
-		return ResponseEntity.ok(facetsFor(apuType).stream().map(this::toFacetDef).toList());
+	public ResponseEntity<List<FacetDef>> searchGetFacets(ApuType apuType, String lang) {
+		Locale locale = presentationLocales.resolve(lang);
+		return ResponseEntity.ok(facetsFor(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
 	}
 
 	@Override
@@ -354,8 +359,8 @@ public class SearchController implements SearchApi {
 		return true;
 	}
 
-	private FacetDef toFacetDef(FacetConfigDto facet) {
-		var def = new FacetDef(facet.getSource(), toFacetType(facet.getType()), label(facet),
+	private FacetDef toFacetDef(FacetConfigDto facet, Locale locale) {
+		var def = new FacetDef(facet.getSource(), toFacetType(facet.getType()), label(facet, locale),
 				facet.getDisplay() == DisplayType.DETAIL ? FacetDisplay.DETAIL : FacetDisplay.ALWAYS);
 		def.setTooltip(facet.getTooltip());
 		def.setDescription(facet.getDescription());
@@ -372,13 +377,13 @@ public class SearchController implements SearchApi {
 	}
 
 	/** Facet label: explicit title, otherwise the (localized) item-type name, otherwise the code. */
-	private String label(FacetConfigDto facet) {
+	private String label(FacetConfigDto facet, Locale locale) {
 		if (facet.getTitle() != null && !facet.getTitle().isBlank()) {
 			return facet.getTitle();
 		}
 		var itemType = typesHolder.getItemTypeForCode(facet.getSource());
 		if (itemType != null && itemType.getName() != null) {
-			return itemType.getName();
+			return LocalizedText.pick(itemType.getLang(), itemType.getName(), locale);
 		}
 		return facet.getSource();
 	}

@@ -1,0 +1,11 @@
+# Translations of the display model (optional file next to types.yaml). The
+# source names in types.yaml stay the fallback, so only 'en' is translated here
+# - a request without lang keeps rendering the source names.
+partTypes:
+  en:
+    PT_TITLE: Title (en)
+    PT_BODY: Body (en)
+itemTypes:
+  en:
+    TITLE_MAIN: Main title (en)
+    LANG_CODE: Language (en)

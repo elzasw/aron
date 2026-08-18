@@ -82,6 +82,36 @@ indexing flags:
    rebuild and reindex (see :doc:`operations`). Weight tuning does *not*
    belong here — see the ``relevance`` section of ``searchConfig.yaml``.
 
+types_localization.yaml
+=======================
+
+Optional file **next to** ``types.yaml``; translations of the display labels
+into the languages the portal offers. The names in ``types.yaml`` are the
+source language and remain the fallback, so a deployment without this file
+behaves exactly as before.
+
+.. code-block:: yaml
+
+   partTypes:
+     en:
+       PT_TITLE: Title
+   itemTypes:
+     en:
+       TITLE_MAIN: Main title
+
+Codes are written in the underscore form used in ``types.yaml``. The language
+keys should match the ``localizations`` declared in ``pageTemplate.yaml`` —
+those are the languages clients may ask for.
+
+.. note::
+
+   Which language a response is rendered in comes from the request's ``lang``
+   parameter (an IETF tag such as ``en`` or ``cs-CZ``), matched against the
+   configured ``localizations``; absent or unmatched, the first configured
+   localization applies. This is the **reader's** language and affects display
+   text only — never which records match, nor their order, which follows
+   ``search.content-locale``.
+
 searchConfig.yaml
 =================
 
