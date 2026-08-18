@@ -151,3 +151,20 @@ codes, colors, external URLs). Without a ``menu:`` block the default menu is
 used (funds, archival description, entities + help from ``help-url``).
 Clients never receive raw server configuration files — the UI reads a typed
 ``/api/v1/ui/config`` endpoint.
+
+.. code-block:: yaml
+
+   name: Archiv online
+   localizations:
+     - cs_CZ
+     - en
+
+``localizations`` declares which languages the portal offers; the first is the
+default. The portal ships UI strings for **Czech and English**, so those are
+the languages a deployment can list today — the language switcher shows only
+the ones declared here *and* present in the build, and a single declared
+language shows no switcher at all.
+
+Declaring a language covers the interface strings and the datings. The labels
+of the description items follow only if ``types_localization.yaml`` translates
+them; untranslated ones fall back to the ``types.yaml`` names.

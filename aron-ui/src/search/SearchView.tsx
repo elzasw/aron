@@ -1,5 +1,6 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
+import { useApiLanguage } from "../i18n/useApiLanguage";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
@@ -129,12 +130,13 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const filters = useMemo(() => parseFilters(filterParam), [filterParam]);
   // unset = AUTO: the server picks relevance with a query, name without
   const sortParam = params.get("sort") ?? "";
+  const lang = useApiLanguage();
   const [queryInput, setQueryInput] = useState(query);
   useEffect(() => setQueryInput(query), [query]);
 
   const facetDefs = useQuery({
-    queryKey: ["facets", apuType],
-    queryFn: () => searchApi.searchGetFacets({ apuType: apuType! }),
+    queryKey: ["facets", apuType, lang],
+    queryFn: () => searchApi.searchGetFacets({ apuType: apuType!, lang }),
     enabled: apuType !== undefined,
     staleTime: Infinity,
   });

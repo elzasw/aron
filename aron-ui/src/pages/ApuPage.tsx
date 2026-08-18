@@ -7,6 +7,7 @@ import {
   tokens,
 } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
+import { useApiLanguage } from "../i18n/useApiLanguage";
 import { Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
@@ -234,10 +235,11 @@ export default function ApuPage() {
   const styles = useStyles();
   const { t } = useTranslation();
   const { uuid } = useParams<{ uuid: string }>();
+  const lang = useApiLanguage();
 
   const detail = useQuery({
-    queryKey: ["apu-detail", uuid],
-    queryFn: () => apuApi.apuGetDetail({ uuid: uuid! }),
+    queryKey: ["apu-detail", uuid, lang],
+    queryFn: () => apuApi.apuGetDetail({ uuid: uuid!, lang }),
     enabled: uuid !== undefined,
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error) =>

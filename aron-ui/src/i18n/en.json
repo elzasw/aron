@@ -1,0 +1,98 @@
+{
+  "app": {
+    "title": "Archives online",
+    "footer": {
+      "version": "{{name}} — version {{version}}"
+    }
+  },
+  "nav": {
+    "home": "Home",
+    "search": "Search",
+    "main": "Main menu",
+    "language": "Language",
+    "languageName": {
+      "cs": "Čeština",
+      "en": "English"
+    }
+  },
+  "sections": {
+    "INSTITUTION": "Archives",
+    "FUND": "Archival fonds",
+    "FINDING_AID": "Finding aids",
+    "ARCH_DESC": "Archival records",
+    "ENTITY": "Access points",
+    "COLLECTION": "Collections",
+    "ORIGINATOR": "Originators",
+    "NEWS": "News",
+    "HELP": "Help"
+  },
+  "home": {
+    "searchPlaceholder": "Search without a filter",
+    "searchButton": "Search"
+  },
+  "section": {
+    "placeholder": "This section is being prepared."
+  },
+  "search": {
+    "button": "Search",
+    "sidebarPlaceholder": "Search",
+    "pageSize": "Per page:",
+    "sortLabel": "Sort by:",
+    "typeCountsLabel": "Record counts by kind",
+    "sort": {
+      "AUTO": "Default",
+      "RELEVANCE": "Best match",
+      "NAME": "Name A–Z",
+      "NAME_DESC": "Name Z–A",
+      "DATE_ASC": "Dating ascending",
+      "DATE_DESC": "Dating descending"
+    },
+    "total": "Records found: {{count}}",
+    "totalMore": "Records found: more than {{count}}",
+    "relaxed": "No record matches all the words of the query. Showing records that contain at least some of them.",
+    "noResults": "No records match the given criteria.",
+    "error": "The search failed, please try again.",
+    "pagination": "Result pagination",
+    "page": "Page {{page}}",
+    "firstPage": "First page",
+    "prevPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page"
+  },
+  "facets": {
+    "textPlaceholder": "Enter text",
+    "from": "From:",
+    "to": "To:",
+    "showMore": "Show more ({{count}})",
+    "showLess": "Show less",
+    "optionsPlaceholder": "Find a value",
+    "noOptions": "No matching values"
+  },
+  "apu": {
+    "breadcrumbs": "Record location",
+    "tree": "Archival description tree",
+    "treeExpand": "Expand {{name}}",
+    "treeCollapse": "Collapse {{name}}",
+    "treeMoreBefore": "Load previous",
+    "treeMoreAfter": "Load more",
+    "notFound": "The record was not found.",
+    "error": "Loading the record failed, please try again.",
+    "attachments": "Attachments",
+    "digitalObjects": "Digitised objects",
+    "digitalObjectFiles": "files: {{count}}",
+    "binariesLater": "File viewing will be added in a later phase."
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "home": "Back to home"
+  },
+  "errors": {
+    "requestFailed": "Server communication error",
+    "dismiss": "Dismiss",
+    "boundary": {
+      "heading": "Unexpected application error",
+      "text": "Sorry, the application ran into an error. Technical details:",
+      "reload": "Reload the page"
+    }
+  }
+}
