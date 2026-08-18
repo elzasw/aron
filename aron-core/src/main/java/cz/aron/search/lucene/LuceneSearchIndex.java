@@ -94,7 +94,7 @@ import jakarta.annotation.PreDestroy;
 @Component
 public class LuceneSearchIndex implements SearchIndex {
 
-	private static final String FIELDS_CRC_KEY = "fieldsCrc";
+	private static final String SCHEMA_CRC_KEY = "schemaCrc";
 
 	private static final String LAYOUT_VERSION_KEY = "layoutVersion";
 
@@ -191,14 +191,14 @@ public class LuceneSearchIndex implements SearchIndex {
 	}
 
 	@Override
-	public Long storedFieldsCrc() {
+	public Long storedSchemaCrc() {
 		try (var reader = DirectoryReader.open(apuDirectory)) {
 			var userData = reader.getIndexCommit().getUserData();
 			if (!LAYOUT_VERSION.equals(userData.get(LAYOUT_VERSION_KEY))) {
 				// index written by another layout version = treat as no schema
 				return null;
 			}
-			String crc = userData.get(FIELDS_CRC_KEY);
+			String crc = userData.get(SCHEMA_CRC_KEY);
 			return crc != null ? Long.valueOf(crc) : null;
 		} catch (IndexNotFoundException e) {
 			// no commit yet = schema does not exist
@@ -209,8 +209,8 @@ public class LuceneSearchIndex implements SearchIndex {
 	}
 
 	@Override
-	public void storeFieldsCrc(long crc) {
-		apuWriter.setLiveCommitData(Set.of(Map.entry(FIELDS_CRC_KEY, Long.toString(crc)),
+	public void storeSchemaCrc(long crc) {
+		apuWriter.setLiveCommitData(Set.of(Map.entry(SCHEMA_CRC_KEY, Long.toString(crc)),
 				Map.entry(LAYOUT_VERSION_KEY, LAYOUT_VERSION)));
 		commitAndRefresh();
 	}

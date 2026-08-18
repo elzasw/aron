@@ -7,9 +7,9 @@ Search index lifecycle
 
 The search index is **derived data** — it can always be rebuilt from the
 database, and it needs no backup. At every startup the application compares
-the current indexing configuration (the indexed fields of ``types.yaml`` and
-the internal document layout version) with the values stored in the index's
-own metadata:
+the current indexing configuration (the indexed fields of ``types.yaml``, the
+content locale ``search.content-locale`` and the internal document layout
+version) with the values stored in the index's own metadata:
 
 - unchanged → the index is reused as-is;
 - changed → the schema is dropped, recreated and **all APUs are reindexed

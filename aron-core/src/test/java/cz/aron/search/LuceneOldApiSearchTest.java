@@ -45,6 +45,9 @@ import cz.aron.search.lucene.LuceneSearchIndex;
  */
 class LuceneOldApiSearchTest {
 
+	/** The fixtures mirror ApuDocumentBuilder; the test deployment runs the default search locale. */
+	private static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
+
 	private LuceneOldApiSearch search;
 
 	private LuceneSearchIndex index;
@@ -303,7 +306,7 @@ class LuceneOldApiSearchTest {
 		var document = new ApuDocument();
 		document.setUuid(uuid);
 		document.setName(name);
-		document.setNameSort(ApuDocumentBuilder.czechSortKey(name));
+		document.setNameSort(CONTENT_LOCALE.sortKey(name));
 		document.setType(type);
 		document.setApuSourceId(1);
 		document.getValues().putAll(values);

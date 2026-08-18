@@ -16,8 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestClientResponseException;
 
 import cz.aron.search.ApuDocument;
-import cz.aron.search.ApuDocumentBuilder;
 import cz.aron.search.SearchIndex;
+import cz.aron.search.ContentLocale;
 import cz.aron.test.api.v1.ApuApi;
 import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
@@ -54,6 +54,9 @@ import cz.aron.test.api.v1.model.ValuesFilter;
  * generated client -> real HTTP round trip.
  */
 class NewApiV1Test extends AbstractTest {
+
+	/** The fixtures mirror ApuDocumentBuilder; the test deployment runs the default search locale. */
+	private static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
 
 	@Autowired
 	private SearchIndex searchIndex;
@@ -440,7 +443,7 @@ class NewApiV1Test extends AbstractTest {
 		var document = new ApuDocument();
 		document.setUuid(uuid);
 		document.setName(name);
-		document.setNameSort(ApuDocumentBuilder.czechSortKey(name));
+		document.setNameSort(CONTENT_LOCALE.sortKey(name));
 		document.setType("ARCH_DESC");
 		document.setApuSourceId(999_200L);
 		document.getValues().putAll(values);

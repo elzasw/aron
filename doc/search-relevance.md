@@ -102,7 +102,8 @@ bounds, and the `folding` analyzer (keyword + lowercase + asciifolding).
 ### 4.1 Index side
 
 All additions are computed in `ApuDocumentBuilder` so both engines index
-identical bytes — the same trick already used for `czechSortKey`, and the reason
+identical bytes — the same trick already used for the `nameSort` collation key
+(`ContentLocale.sortKey`), and the reason
 no analyzer divergence can creep into the new tiers. One shared normalizer
 (lowercase, whitespace collapse, optional diacritics folding) is used by the
 builder **and** by the query planner — exact tiers compare like with like by

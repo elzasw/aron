@@ -26,6 +26,9 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  */
 public abstract class SearchIndexContractTest {
 
+	/** The fixtures mirror ApuDocumentBuilder; the test deployment runs the default search locale. */
+	protected static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
+
 	protected SearchIndex index;
 
 	/** Fresh, empty index per test. */
@@ -70,7 +73,7 @@ public abstract class SearchIndexContractTest {
 		var document = new ApuDocument();
 		document.setUuid(uuid);
 		document.setName(name);
-		document.setNameSort(ApuDocumentBuilder.czechSortKey(name));
+		document.setNameSort(CONTENT_LOCALE.sortKey(name));
 		// the fixture mirrors what ApuDocumentBuilder computes for real APUs
 		document.setNameExactCs(ApuDocumentBuilder.normalizeCs(name));
 		document.setNameExact(ApuDocumentBuilder.normalize(name));
@@ -95,12 +98,12 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void fieldsCrcLivesAndDiesWithTheSchema() {
-		assertThat(index.storedFieldsCrc()).isNull();
-		index.storeFieldsCrc(123L);
-		assertThat(index.storedFieldsCrc()).isEqualTo(123L);
+	void schemaCrcLivesAndDiesWithTheSchema() {
+		assertThat(index.storedSchemaCrc()).isNull();
+		index.storeSchemaCrc(123L);
+		assertThat(index.storedSchemaCrc()).isEqualTo(123L);
 		index.dropSchema();
-		assertThat(index.storedFieldsCrc()).isNull();
+		assertThat(index.storedSchemaCrc()).isNull();
 	}
 
 	@Test

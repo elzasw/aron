@@ -39,7 +39,9 @@ Begins-with
 
 Stop words
    Common Czech stop words ("v", "a", "na", …) never cause empty results; a
-   query consisting only of stop words is still answered.
+   query consisting only of stop words is still answered. The stop-word list
+   is Czech regardless of ``search.content-locale`` — that setting governs
+   alphabetical ordering only.
 
 What is searched
    All indexed description items participate in the fulltext search unless
@@ -62,9 +64,12 @@ Result ordering
      - Best match first (see `How ranking works`_); the default whenever a
        query is entered. Ties are ordered alphabetically.
    * - name (A–Z, Z–A)
-     - Czech alphabetical order (``č`` after ``c``, ``ch`` after ``h``);
-       records without a name come last. The default when browsing without
-       a query.
+     - Alphabetical order of the described material's language
+       (``search.content-locale``) — with the default ``cs-CZ`` the Czech
+       alphabet (``č`` after ``c``, ``ch`` after ``h``); records without a
+       name come last. The default when browsing without a query. Every
+       visitor sees the same order, whatever language their browser asks
+       for: the order is a property of the catalogue, not of the reader.
    * - dating (ascending, descending)
      - By the earliest (ascending) or latest (descending) dating of the
        record; records without any dating always come last.

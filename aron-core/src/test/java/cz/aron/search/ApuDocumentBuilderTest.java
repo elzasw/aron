@@ -39,7 +39,7 @@ class ApuDocumentBuilderTest {
 		var typesLoader = new TypesLoader(null, "src/test/resources/test-config/types.yaml");
 		var typesHolder = new TypesHolder(typesLoader);
 		ReflectionTestUtils.invokeMethod(typesHolder, "loadData");
-		builder = new ApuDocumentBuilder(typesHolder, new ObjectMapper());
+		builder = new ApuDocumentBuilder(typesHolder, new ObjectMapper(), new ContentLocale("cs-CZ"));
 	}
 
 	private static ApuPartItem item(String type, String value) {

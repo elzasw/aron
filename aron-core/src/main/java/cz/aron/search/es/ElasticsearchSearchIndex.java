@@ -63,7 +63,7 @@ import cz.aron.search.relevance.RelevancePlan;
 @Component
 public class ElasticsearchSearchIndex implements SearchIndex {
 
-	private static final String FIELDS_CRC_META_KEY = "fieldsCrc";
+	private static final String SCHEMA_CRC_META_KEY = "schemaCrc";
 
 	private static final String LAYOUT_VERSION_META_KEY = "layoutVersion";
 
@@ -123,7 +123,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	}
 
 	@Override
-	public Long storedFieldsCrc() {
+	public Long storedSchemaCrc() {
 		var indexOps = operations.indexOps(IndexCoordinates.of("apu"));
 		if (!indexOps.exists()) {
 			return null;
@@ -131,21 +131,21 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		var mapping = indexOps.getMapping();
 		@SuppressWarnings("unchecked")
 		var meta = (Map<String, Object>) mapping.get("_meta");
-		if (meta == null || meta.get(FIELDS_CRC_META_KEY) == null) {
+		if (meta == null || meta.get(SCHEMA_CRC_META_KEY) == null) {
 			return null;
 		}
 		if (!LAYOUT_VERSION.equals(String.valueOf(meta.get(LAYOUT_VERSION_META_KEY)))) {
 			// index written by another layout version = treat as no schema
 			return null;
 		}
-		return Long.valueOf(meta.get(FIELDS_CRC_META_KEY).toString());
+		return Long.valueOf(meta.get(SCHEMA_CRC_META_KEY).toString());
 	}
 
 	@Override
-	public void storeFieldsCrc(long crc) {
+	public void storeSchemaCrc(long crc) {
 		// partial mapping update - merges _meta without touching field mappings
 		operations.indexOps(IndexCoordinates.of("apu"))
-				.putMapping(Document.parse("{\"_meta\":{\"" + FIELDS_CRC_META_KEY + "\":\"" + crc + "\",\""
+				.putMapping(Document.parse("{\"_meta\":{\"" + SCHEMA_CRC_META_KEY + "\":\"" + crc + "\",\""
 						+ LAYOUT_VERSION_META_KEY + "\":\"" + LAYOUT_VERSION + "\"}}"));
 	}
 

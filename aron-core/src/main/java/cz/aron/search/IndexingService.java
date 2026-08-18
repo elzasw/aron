@@ -79,12 +79,12 @@ public class IndexingService {
 		searchIndex.dropSchema();
 	}
 
-	public Long storedFieldsCrc() {
-		return searchIndex.storedFieldsCrc();
+	public Long storedSchemaCrc() {
+		return searchIndex.storedSchemaCrc();
 	}
 
-	public void storeFieldsCrc(long crc) {
-		searchIndex.storeFieldsCrc(crc);
+	public void storeSchemaCrc(long crc) {
+		searchIndex.storeSchemaCrc(crc);
 	}
 
 }

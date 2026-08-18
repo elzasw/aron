@@ -33,3 +33,9 @@ help-url: https://seznam.cz
 # + volitelne files/); nezmenene prenosy se pri restartu preskakuji.
 #import:
 #  input-dir: ./import
+
+# Jazyk popisovaneho materialu (IETF tag); vychozi cs-CZ. Jeho abeceda urcuje
+# razeni vysledku podle nazvu - stejne pro vsechny navstevniky, nejde o jazyk
+# prohlizece. Zmena vyvola pri dalsim startu prestavbu indexu a reindexaci.
+#search:
+#  content-locale: cs-CZ

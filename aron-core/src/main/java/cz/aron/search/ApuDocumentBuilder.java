@@ -1,8 +1,6 @@
 package cz.aron.search;
 
-import java.text.Collator;
 import java.util.Collections;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -43,18 +41,16 @@ public class ApuDocumentBuilder {
 	/** Length cap of the exact-name keywords (matches the text_long_keyword truncation). */
 	private static final int NAME_EXACT_MAX_LENGTH = 200;
 
-	// Collator is not thread-safe; Czech collation (c < h < ch < i) computed at
-	// index time keeps sorting engine-neutral (the Elza pattern - ElzaLocale)
-	private static final ThreadLocal<Collator> CZECH_COLLATOR = ThreadLocal
-			.withInitial(() -> Collator.getInstance(Locale.of("cs", "CZ")));
-
 	private final TypesHolder typesHolder;
 
 	private final ObjectMapper objectMapper;
 
-	public ApuDocumentBuilder(TypesHolder typesHolder, ObjectMapper objectMapper) {
+	private final ContentLocale contentLocale;
+
+	public ApuDocumentBuilder(TypesHolder typesHolder, ObjectMapper objectMapper, ContentLocale contentLocale) {
 		this.typesHolder = typesHolder;
 		this.objectMapper = objectMapper;
+		this.contentLocale = contentLocale;
 	}
 
 	/**
@@ -164,7 +160,7 @@ public class ApuDocumentBuilder {
 		document.setContainsDigitalObjects(!apu.getDigitalObjects().isEmpty());
 		document.setDescription(apu.getDescription());
 		document.setName(indexedName);
-		document.setNameSort(czechSortKey(indexedName));
+		document.setNameSort(contentLocale.sortKey(indexedName));
 		document.setNameExactCs(normalizeCs(indexedName));
 		document.setNameExact(normalize(indexedName));
 		document.setType(apu.getType().toString());
@@ -215,28 +211,21 @@ public class ApuDocumentBuilder {
 	}
 
 	/**
-	 * Hex-encoded Czech collation key - hex preserves byte order, so a plain
-	 * string/keyword sort of the keys yields correct Czech alphabetical order.
-	 */
-	public static String czechSortKey(String name) {
-		if (name == null) {
-			return null;
-		}
-		byte[] key = CZECH_COLLATOR.get().getCollationKey(name).toByteArray();
-		return HexFormat.of().formatHex(key);
-	}
-
-	/**
 	 * Normalization of the exact-match tiers, diacritics preserved: lowercase,
 	 * whitespace collapsed, length-capped. ONE shared implementation for the
 	 * index side (here) and the query planner - exact tiers compare like with
 	 * like by construction (doc/search-relevance.md §4.1).
+	 * <p>
+	 * Case folding is deliberately locale-independent ({@link Locale#ROOT}): Java
+	 * lowercases differently only for tr/az/lt, and keeping the tiers independent
+	 * of {@code search.content-locale} lets the query planner stay a pure static utility
+	 * that cannot drift from the index side.
 	 */
 	public static String normalizeCs(String text) {
 		if (text == null) {
 			return null;
 		}
-		String normalized = text.trim().replaceAll("\\s+", " ").toLowerCase(Locale.of("cs", "CZ"));
+		String normalized = text.trim().replaceAll("\\s+", " ").toLowerCase(Locale.ROOT);
 		return normalized.length() > NAME_EXACT_MAX_LENGTH
 				? normalized.substring(0, NAME_EXACT_MAX_LENGTH)
 				: normalized;

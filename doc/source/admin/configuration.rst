@@ -26,6 +26,12 @@ application.yml
    * - ``search.lucene.path``
      - Directory of the persisted embedded index; unset = in-memory
        (rebuilt on every start).
+   * - ``search.content-locale``
+     - Language of the described material, as an IETF language tag (default
+       ``cs-CZ``); its alphabet orders name-sorted results for every visitor
+       — this is not the visitor's own locale. Changing it reindexes at the
+       next startup (see :doc:`operations`); an invalid tag stops the
+       startup.
    * - ``types-config``
      - Path to ``types.yaml`` (see below).
    * - ``webResources.pageTemplate``

@@ -1,6 +1,8 @@
 package cz.aron.search;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.zip.CRC32;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,11 +24,12 @@ import cz.aron.service.ApuService;
 import cz.aron.service.IdService;
 
 /**
- * Bootstraps the search schema after startup: compares the CRC of the types.yaml
- * indexed-fields configuration with the value stored in the schema's own
- * metadata ({@link SearchIndex#storedFieldsCrc()}) and rebuilds + reindexes when
- * they differ. The marker lives and dies with the schema it describes, so no
- * external state (the former ./lastConfigCrc.txt) can drift.
+ * Bootstraps the search schema after startup: compares the fingerprint of the
+ * configuration that determines the indexed documents ({@link #currentSchemaCrc()})
+ * with the value stored in the schema's own metadata
+ * ({@link SearchIndex#storedSchemaCrc()}) and rebuilds + reindexes when they
+ * differ. The marker lives and dies with the schema it describes, so no external
+ * state (the former ./lastConfigCrc.txt) can drift.
  */
 @Component
 public class SearchIndexManager implements ApplicationListener<ApplicationReadyEvent>, Ordered {
@@ -48,6 +51,8 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 
 	private final IdService idService;
 
+	private final ContentLocale contentLocale;
+
 	// self-reference through the Spring proxy so @Transactional on batch methods is honored
 	// (calling them directly from reindexAll would be self-invocation and bypass the proxy)
 	@Lazy
@@ -56,7 +61,8 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 
 	public SearchIndexManager(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
 			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository,
-			IdService idService) {
+			IdService idService, ContentLocale contentLocale) {
+		this.contentLocale = contentLocale;
 		this.indexingService = indexingService;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
@@ -77,19 +83,35 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 		idService.initMetadataIds();
 		idService.initDaoIds();
 
-		Long currentCrc = typesHolder.getCurrentIndexedFieldsCrc();
-		Long storedCrc = indexingService.storedFieldsCrc();
+		Long currentCrc = currentSchemaCrc();
+		Long storedCrc = indexingService.storedSchemaCrc();
 		if (!currentCrc.equals(storedCrc)) {
-			log.info("Indexed-fields configuration changed (stored CRC {}, current {}) - rebuilding the search schema.",
+			log.info("Search configuration changed (stored CRC {}, current {}) - rebuilding the search schema.",
 					storedCrc, currentCrc);
 			indexingService.dropSchema();
 			indexingService.createSchema();
 			reindexAll();
-			indexingService.storeFieldsCrc(currentCrc);
+			indexingService.storeSchemaCrc(currentCrc);
 		} else {
 			indexingService.createSchema();
 		}
 		log.info("Search index bootstrap completed.");
+	}
+
+	Long currentSchemaCrc() {
+		return schemaCrc(typesHolder.getCurrentIndexedFieldsCrc(), contentLocale.getLanguageTag());
+	}
+
+	/**
+	 * Fingerprint of everything that decides the content of an indexed document:
+	 * the types.yaml indexed fields and the search locale, whose collation key is
+	 * baked into {@code nameSort}. A change of either invalidates the indexed
+	 * data, so both have to be part of one marker.
+	 */
+	static long schemaCrc(long indexedFieldsCrc, String languageTag) {
+		var crc = new CRC32();
+		crc.update((indexedFieldsCrc + "|" + languageTag).getBytes(StandardCharsets.UTF_8));
+		return crc.getValue();
 	}
 
 	private void reindexAll() {

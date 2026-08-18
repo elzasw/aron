@@ -72,8 +72,8 @@ public interface SearchIndex {
     // schema lifecycle
     void createSchema();                 // no-op if current
     void dropSchema();
-    Long storedFieldsCrc();              // see Q1 (schema-version metadata)
-    void storeFieldsCrc(long crc);
+    Long storedSchemaCrc();              // see Q1 (schema-version metadata)
+    void storeSchemaCrc(long crc);
 
     // write side (used by import + bootstrap reindex)
     void indexApus(Collection<ApuDocument> docs);      // upsert by uuid
@@ -177,8 +177,11 @@ with plain `ASCIIFoldingFilter`, no ICU. `es_settings.json` now uses built-in
 analyzers only (`standard` tokenizer + `lowercase` + `asciifolding`; Czech stop
 words unchanged). The one thing ICU genuinely provided — correct Czech
 alphabetical ordering (c < h < ch < i) — moved to an **index-time collation key**
-(`ApuDocumentBuilder.czechSortKey`: `java.text.Collator` cs locale, hex-encoded,
-stored as the `nameSort` keyword; the Elza pattern, see `ElzaLocale`). Sorting is
+(`ContentLocale.sortKey`: `java.text.Collator` of the configured `search.content-locale`,
+hex-encoded, stored as the `nameSort` keyword; the Elza pattern, see
+`ElzaLocale`). The locale is a deployment setting rather than a compiled-in
+specialization, and it is part of the schema fingerprint
+(`SearchIndexManager.schemaCrc`), so changing it rebuilds and reindexes. Sorting is
 thereby engine-neutral: identical in every adapter, no analysis plugin on any ES
 server, one less version-coupled moving part. The old API's `sort=name` maps to
 `nameSort` internally; external behavior is preserved (both approaches implement
@@ -210,7 +213,7 @@ Edge-case coverage matrix:
 |---|---|
 | Fake diverges from ES (analysis/semantics) | contract limited to engine-shared behavior + same suite on real ES; engine specifics banned from the contract, ES-only tests instead |
 | Ranking/highlights/phrase-prefix (Phase 7 reads) | contract asserts weak invariants (membership, counts); specifics ES-only; dev mode = functional, not relevance-accurate |
-| `_meta` CRC + rebuild trigger on real ES | contract test `fieldsCrcLivesAndDiesWithTheSchema` under es-it |
+| `_meta` CRC + rebuild trigger on real ES | contract test `schemaCrcLivesAndDiesWithTheSchema` under es-it |
 | Old-API aggregation queries (direct path, not port) | frozen; URL surface pinned; behavior smoke under es-it with seeded data (stretch) |
 | Hit order differs between engines | contract forbids order assertions (documented on ApuSearchResult) |
 | Analyzer config drift (es_settings.json edits) | es-it folded-search test breaks loudly; memory adapter approximate by design |

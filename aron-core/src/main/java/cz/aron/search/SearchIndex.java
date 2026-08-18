@@ -26,14 +26,14 @@ public interface SearchIndex {
 	void dropSchema();
 
 	/**
-	 * CRC of the types.yaml indexed-fields configuration the current schema was
-	 * built for, stored in the schema's own metadata (ES: index {@code _meta}).
-	 * {@code null} when the schema does not exist or carries no marker - the
-	 * caller then rebuilds and reindexes.
+	 * Fingerprint of the configuration the current schema was built for
+	 * (see {@link SearchIndexManager#currentSchemaCrc()}), stored in the schema's
+	 * own metadata (ES: index {@code _meta}). {@code null} when the schema does
+	 * not exist or carries no marker - the caller then rebuilds and reindexes.
 	 */
-	Long storedFieldsCrc();
+	Long storedSchemaCrc();
 
-	void storeFieldsCrc(long crc);
+	void storeSchemaCrc(long crc);
 
 	// --- write side -------------------------------------------------------
 
