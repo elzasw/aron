@@ -5,6 +5,15 @@ spring:
       password: postgres
   jpa:
     show-sql: true
+  # Pripojeni k Elasticsearch - plati pro search.engine: elasticsearch (viz
+  # sekce Vyhledavani nize). Bez nastaveni se pouzije http://localhost:9200.
+  # Index vyuziva jen vestavene analyzatory, server nepotrebuje zadne pluginy.
+  #elasticsearch:
+  #  uris: http://localhost:9200
+  #  username: elastic
+  #  password: changeit
+  #  connection-timeout: 5s
+  #  socket-timeout: 60s
 
 types-config: "./config/types.yaml"
 transformation-agent-url: "http://127.0.1:8088/ws/ApuTransformManager"
@@ -45,8 +54,47 @@ help-url: https://seznam.cz
 #  port: 8081
 #  address: 10.0.0.5
 
-# Jazyk popisovaneho materialu (IETF tag); vychozi cs-CZ. Jeho abeceda urcuje
-# razeni vysledku podle nazvu - stejne pro vsechny navstevniky, nejde o jazyk
-# prohlizece. Zmena vyvola pri dalsim startu prestavbu indexu a reindexaci.
-#search:
-#  content-locale: cs-CZ
+# ---------------------------------------------------------------------------
+# Vyhledavani
+# ---------------------------------------------------------------------------
+# Portal ma dva zamenitelne enginy za jednim rozhranim; vybira se klicem
+# search.engine. Jeden artefakt umi oba, prepnuti je zmena konfigurace, ne
+# buildu:
+#
+#   elasticsearch  vychozi a produkcni engine, zaroven referencni chovani
+#                  stareho API. Vyzaduje bezici Elasticsearch - pripojeni se
+#                  konfiguruje klici spring.elasticsearch.* na zacatku souboru.
+#
+#   lucene         vestaveny engine bez externi sluzby (nasazeni bez ES, vyvoj,
+#                  testy). Nove API (/api/v1) obsluhuje plne, stare API jen v
+#                  kvalite pro vyvoj a testy: priblizna fulltextova syntaxe a
+#                  relevance, agregace nad vnorenymi vazbami a strankovani
+#                  searchAfter nejsou podporeny.
+#
+# Pri kazdem startu se index kontroluje proti otisku konfigurace (CRC
+# indexovanych poli z types.yaml + search.content-locale) a pri zmene se
+# prestavi a reindexuje z databaze. Totez plati pro prechod mezi enginy - data
+# zustavaji v databazi, plni se jen index noveho engine.
+search:
+  engine: elasticsearch
+
+  # Jazyk popisovaneho materialu (IETF tag). Jeho abeceda urcuje razeni
+  # vysledku podle nazvu - stejne pro vsechny navstevniky, nejde o jazyk
+  # prohlizece; urcuje take pouzita stop slova (cs, en). Jedina hodnota pro
+  # celou instalaci: razeni je vlastnost seznamu, ne jednotlivych zaznamu.
+  # Neplatny tag zastavi start aplikace, zmena vyvola prestavbu indexu.
+  content-locale: cs-CZ
+
+  # Umisteni vestaveneho Lucene indexu - plati pro engine: lucene. Bez cesty je
+  # index jen v pameti a stavi se pri kazdem startu; s cestou prezije restart.
+  # Adresar patri mimo instalacni adresar aplikace, aby ho neprepsala
+  # aktualizace.
+  #lucene:
+  #  path: ./data/lucene
+
+# Pri engine: lucene neni Elasticsearch pripojen a jeho health indikator by
+# hlasil DOWN - actuator (/actuator/health) se tedy na ES nesmi ptat.
+#management:
+#  health:
+#    elasticsearch:
+#      enabled: false
