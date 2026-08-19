@@ -9,8 +9,6 @@ import java.util.Locale;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import cz.aron.api.v1.model.UiConfig;
-
 /**
  * Unit tests of the presentation-language negotiation (no Spring): a request's
  * lang is matched against the deployment's configured localizations, and
@@ -20,7 +18,9 @@ class PresentationLocalesTest {
 
 	private static PresentationLocales locales(String... localizations) {
 		var loader = new UiConfigLoader("unused", "");
-		ReflectionTestUtils.setField(loader, "config", new UiConfig("Test", List.of(localizations), List.of()));
+		// only the configured localizations matter here - the rest of the page
+		// template is not read (no file behind this loader)
+		ReflectionTestUtils.setField(loader, "localizations", List.of(localizations));
 		return new PresentationLocales(loader);
 	}
 

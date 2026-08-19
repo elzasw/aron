@@ -4,3 +4,13 @@ localizations:
   - en
 header:
   title: ARON 2 test
+footer:
+  links:
+    # well-known code: the UI supplies the label in the reader's language
+    - code: ACCESSIBILITY
+      url: http://accessibility.test.example
+    # free link with a per-language label
+    - url: http://contact.test.example
+      label:
+        cs: Kontakt
+        en: Contact

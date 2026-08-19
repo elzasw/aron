@@ -2,13 +2,21 @@
   "app": {
     "title": "Archiv online",
     "footer": {
-      "version": "{{name}} — verze {{version}}"
+      "version": "{{name}} — verze {{version}}",
+      "label": "Informace o portálu",
+      "link": {
+        "ACCESSIBILITY": "Prohlášení o přístupnosti",
+        "PRIVACY": "Ochrana osobních údajů",
+        "TERMS": "Podmínky užití",
+        "CONTACT": "Kontakt"
+      }
     }
   },
   "nav": {
     "home": "Úvod",
     "search": "Vyhledávání",
     "main": "Hlavní nabídka",
+    "skipToContent": "Přejít na hlavní obsah",
     "language": "Jazyk",
     "languageName": {
       "cs": "Čeština",
@@ -47,6 +55,7 @@
       "DATE_ASC": "Datace vzestupně",
       "DATE_DESC": "Datace sestupně"
     },
+    "loading": "Načítání výsledků…",
     "relaxed": "Všem slovům dotazu neodpovídá žádný záznam. Zobrazujeme záznamy obsahující alespoň některá ze zadaných slov.",
     "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
@@ -70,7 +79,12 @@
     "showMore": "Zobrazit více ({{count}})",
     "showLess": "Zobrazit méně",
     "optionsPlaceholder": "Vyhledat hodnotu",
-    "noOptions": "Žádné odpovídající hodnoty"
+    "noOptions": "Žádné odpovídající hodnoty",
+    "optionsFor": "{{facet}} – vyhledat hodnotu",
+    "fromYear": "{{facet}} – od roku",
+    "toYear": "{{facet}} – do roku",
+    "sliderFromYear": "{{facet}} – posuvník od roku",
+    "sliderToYear": "{{facet}} – posuvník do roku"
   },
   "apu": {
     "breadcrumbs": "Umístění záznamu",

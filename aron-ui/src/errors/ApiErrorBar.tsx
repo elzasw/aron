@@ -30,11 +30,10 @@ export default function ApiErrorBar() {
   const { t } = useTranslation();
   const errors = useSyncExternalStore(subscribeApiErrors, getApiErrors);
 
-  if (errors.length === 0) {
-    return null;
-  }
+  // the container stays mounted even while empty: a live region announces only
+  // what changes inside an element that already exists
   return (
-    <div className={styles.root}>
+    <div className={errors.length > 0 ? styles.root : undefined} role="alert">
       {errors.map((error) => (
         <MessageBar key={error.id} intent="error">
           <MessageBarBody>

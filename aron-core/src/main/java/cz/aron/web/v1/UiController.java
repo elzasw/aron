@@ -27,18 +27,22 @@ public class UiController implements UiApi {
 
 	private final UiConfigLoader uiConfigLoader;
 
+	private final PresentationLocales presentationLocales;
+
 	private final String logoFile;
 
 	private byte[] logoData;
 
-	public UiController(UiConfigLoader uiConfigLoader, @Value("${webResources.logo}") String logoFile) {
+	public UiController(UiConfigLoader uiConfigLoader, PresentationLocales presentationLocales,
+			@Value("${webResources.logo}") String logoFile) {
 		this.uiConfigLoader = uiConfigLoader;
+		this.presentationLocales = presentationLocales;
 		this.logoFile = logoFile;
 	}
 
 	@Override
-	public ResponseEntity<UiConfig> uiGetConfig() {
-		return ResponseEntity.ok(uiConfigLoader.getConfig());
+	public ResponseEntity<UiConfig> uiGetConfig(String lang) {
+		return ResponseEntity.ok(uiConfigLoader.getConfig(presentationLocales.resolve(lang)));
 	}
 
 	@Override

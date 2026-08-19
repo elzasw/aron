@@ -30,14 +30,14 @@ public class PresentationLocales {
 	private final List<Locale> supported;
 
 	public PresentationLocales(UiConfigLoader uiConfigLoader) {
-		this.supported = uiConfigLoader.getConfig().getLocalizations().stream()
+		this.supported = uiConfigLoader.getLocalizations().stream()
 				.map(PresentationLocales::parse)
 				.filter(locale -> locale != null)
 				.toList();
 		if (supported.isEmpty()) {
 			throw new IllegalStateException(
 					"pageTemplate localizations: no usable language tag among "
-							+ uiConfigLoader.getConfig().getLocalizations());
+							+ uiConfigLoader.getLocalizations());
 		}
 		log.info("Presentation languages {}, default {}.", supported, getDefault().toLanguageTag());
 	}

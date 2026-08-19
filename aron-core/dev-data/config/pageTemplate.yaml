@@ -8,6 +8,18 @@ localizations:
   - cs_CZ
   - en_US
 
+# Odkazy v paticce portalu (typovane, viz doc/accessibility.md).
+# Znama role (code) se popisuje sama v jazyce ctenare, volny odkaz ma label -
+# jeden retezec, nebo mapu jazyk -> text.
+footer:
+  links:
+    - code: ACCESSIBILITY
+      url: http://localhost/pristupnost
+    - url: mailto:webmaster@example.com
+      label:
+        cs: Kontakt
+        en: Contact
+
 # Nazev systemu
 # Lze pouzit pro pojmenovani zalozky,
 # zobrazuje vpravo od ikony systému

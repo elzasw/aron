@@ -39,6 +39,8 @@ import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
 import cz.aron.test.api.v1.model.EnumFacetResult;
 import cz.aron.test.api.v1.model.FacetBucket;
+import cz.aron.test.api.v1.model.FooterLink;
+import cz.aron.test.api.v1.model.FooterLinkCode;
 import cz.aron.test.api.v1.model.FacetDef;
 import cz.aron.test.api.v1.model.FacetOptionsRequest;
 import cz.aron.test.api.v1.model.FacetResult;
@@ -105,7 +107,7 @@ class NewApiV1Test extends AbstractTest {
 
 	@Test
 	void uiConfigViaGeneratedClient() {
-		UiConfig config = new UiApi(v1ApiClient()).uiGetConfig();
+		UiConfig config = new UiApi(v1ApiClient()).uiGetConfig(null);
 		// test-config pageTemplate.yaml declares two localizations and no menu - the default menu applies
 		assertThat(config.getName()).isEqualTo("ARON test page template");
 		assertThat(config.getLocalizations()).containsExactly("cs_CZ", "en");
@@ -113,6 +115,17 @@ class NewApiV1Test extends AbstractTest {
 				MenuItemCode.FUND, MenuItemCode.ARCH_DESC, MenuItemCode.ENTITY, MenuItemCode.HELP);
 		// the HELP link falls back to the configured help-url
 		assertThat(config.getMenuItems().get(3).getUrl()).isEqualTo("http://help.test.example");
+		// footer links the deployment publishes: a well-known code the UI labels
+		// itself (the accessibility statement) plus a free, localized link
+		assertThat(config.getFooterLinks())
+				.extracting(FooterLink::getCode, FooterLink::getLabel, FooterLink::getUrl)
+				.containsExactly(
+						tuple(FooterLinkCode.ACCESSIBILITY, null, "http://accessibility.test.example"),
+						tuple(null, "Kontakt", "http://contact.test.example"));
+
+		// the label follows the reader's language
+		assertThat(new UiApi(v1ApiClient()).uiGetConfig("en").getFooterLinks())
+				.extracting(FooterLink::getLabel).containsExactly(null, "Contact");
 	}
 
 	@Test

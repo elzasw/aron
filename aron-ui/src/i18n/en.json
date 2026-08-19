@@ -2,13 +2,21 @@
   "app": {
     "title": "Archives online",
     "footer": {
-      "version": "{{name}} — version {{version}}"
+      "version": "{{name}} — version {{version}}",
+      "label": "Portal information",
+      "link": {
+        "ACCESSIBILITY": "Accessibility statement",
+        "PRIVACY": "Personal data protection",
+        "TERMS": "Terms of use",
+        "CONTACT": "Contact"
+      }
     }
   },
   "nav": {
     "home": "Home",
     "search": "Search",
     "main": "Main menu",
+    "skipToContent": "Skip to main content",
     "language": "Language",
     "languageName": {
       "cs": "Čeština",
@@ -47,6 +55,7 @@
       "DATE_ASC": "Dating ascending",
       "DATE_DESC": "Dating descending"
     },
+    "loading": "Loading results…",
     "relaxed": "No record matches all the words of the query. Showing records that contain at least some of them.",
     "noResults": "No records match the given criteria.",
     "error": "The search failed, please try again.",
@@ -68,7 +77,12 @@
     "showMore": "Show more ({{count}})",
     "showLess": "Show less",
     "optionsPlaceholder": "Find a value",
-    "noOptions": "No matching values"
+    "noOptions": "No matching values",
+    "optionsFor": "{{facet}} – find a value",
+    "fromYear": "{{facet}} – from year",
+    "toYear": "{{facet}} – to year",
+    "sliderFromYear": "{{facet}} – slider from year",
+    "sliderToYear": "{{facet}} – slider to year"
   },
   "apu": {
     "breadcrumbs": "Record location",

@@ -27,6 +27,9 @@ const useStyles = makeStyles({
     borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
   },
   title: {
+    margin: "0",
+    fontSize: tokens.fontSizeBase300,
+    lineHeight: tokens.lineHeightBase300,
     fontWeight: tokens.fontWeightSemibold,
   },
   // per-condition hit count next to the facet name (muted, like bucket counts)
@@ -112,6 +115,12 @@ const useStyles = makeStyles({
     "::-moz-range-track": {
       backgroundColor: "transparent",
     },
+    // the thumb suppresses the browser's own ring - put it back for keyboard use
+    ":focus-visible": {
+      outline: `2px solid ${tokens.colorStrokeFocus2}`,
+      outlineOffset: "2px",
+      borderRadius: tokens.borderRadiusMedium,
+    },
   },
   sliderBounds: {
     display: "flex",
@@ -147,14 +156,17 @@ export default function FacetPanel({ def, filters, result, apuType, query, total
     (def.type === FacetType.Fulltext || def.type === FacetType.Unitdate) &&
     filters.some((f) => f.facet === def.code);
 
+  // the heading names the group, so a screen reader can jump between facets
+  const headingId = `facet-${def.code}`;
+
   return (
-    <div className={styles.facet} title={def.tooltip} role="group" aria-label={def.label}>
-      <Text className={styles.title}>
+    <div className={styles.facet} title={def.tooltip} role="group" aria-labelledby={headingId}>
+      <h2 id={headingId} className={styles.title}>
         {def.label}
         {conditionEntered && total !== undefined && (
           <span className={styles.titleCount}>({total})</span>
         )}
-      </Text>
+      </h2>
       {def.type === FacetType.Enum && (
         <EnumFacet def={def} filters={filters} result={result} onFilters={onFilters} />
       )}
@@ -296,6 +308,7 @@ function RefFacet({ def, filters, result, apuType, query, onFilters }: Props) {
       ))}
       <Input
         value={q}
+        aria-label={t("facets.optionsFor", { facet: def.label })}
         placeholder={t("facets.optionsPlaceholder")}
         onChange={(_, data) => setQ(data.value)}
         contentAfter={options.isFetching ? <Spinner size="extra-tiny" /> : undefined}
@@ -335,6 +348,7 @@ function TextFacet({ def, filters, onFilters }: Pick<Props, "def" | "filters" | 
   return (
     <Input
       value={value}
+      aria-label={def.label}
       placeholder={t("facets.textPlaceholder")}
       onChange={(_, data) => setValue(data.value)}
       onKeyDown={(e) => e.key === "Enter" && onFilters(setText(filters, def.code, value))}
@@ -423,7 +437,7 @@ function RangeFacet({
             <input
               type="range"
               className={styles.sliderInput}
-              aria-label={t("facets.from")}
+              aria-label={t("facets.sliderFromYear", { facet: def.label })}
               min={slider.min}
               max={slider.max}
               value={slider.lo}
@@ -432,7 +446,7 @@ function RangeFacet({
             <input
               type="range"
               className={styles.sliderInput}
-              aria-label={t("facets.to")}
+              aria-label={t("facets.sliderToYear", { facet: def.label })}
               min={slider.min}
               max={slider.max}
               value={slider.hi}
@@ -446,19 +460,25 @@ function RangeFacet({
         </>
       )}
       <div className={styles.rangeRow}>
-        <Text size={200}>{t("facets.from")}</Text>
+        <Text size={200} aria-hidden="true">
+          {t("facets.from")}
+        </Text>
         <Input
           className={styles.rangeInput}
           type="number"
           value={from}
+          aria-label={t("facets.fromYear", { facet: def.label })}
           placeholder={bounds !== undefined ? String(bounds.minYear) : undefined}
           onChange={(_, data) => setFrom(data.value)}
         />
-        <Text size={200}>{t("facets.to")}</Text>
+        <Text size={200} aria-hidden="true">
+          {t("facets.to")}
+        </Text>
         <Input
           className={styles.rangeInput}
           type="number"
           value={to}
+          aria-label={t("facets.toYear", { facet: def.label })}
           placeholder={bounds !== undefined ? String(bounds.maxYear) : undefined}
           onChange={(_, data) => setTo(data.value)}
         />

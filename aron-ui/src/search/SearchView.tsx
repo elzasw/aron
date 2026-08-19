@@ -196,6 +196,18 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
       : ((result as EnumFacetResult).buckets ?? []).length > 0;
   };
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
+
+  // what the live region below reports: the failure, the wait, or the outcome
+  const statusText = search.isError
+    ? t("search.error")
+    : search.isPending
+      ? t("search.loading")
+      : search.data
+        ? t(
+            search.data.totalRelation === TotalRelation.Gte ? "search.totalMore" : "search.total",
+            { count: search.data.total },
+          )
+        : "";
   const visibleFacets = (facetDefs.data ?? []).filter(
     (def) =>
       def.display === FacetDisplay.Always &&
@@ -210,6 +222,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
           <Input
             className={styles.searchInput}
             value={queryInput}
+            aria-label={t("search.sidebarPlaceholder")}
             placeholder={t("search.sidebarPlaceholder")}
             onChange={(_, data) => setQueryInput(data.value)}
             onKeyDown={(e) => e.key === "Enter" && submitQuery()}
@@ -233,7 +246,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
           ))}
       </div>
       <div className={styles.main}>
-        <Title3>{t(titleKey)}</Title3>
+        <Title3 as="h1">{t(titleKey)}</Title3>
         {search.data && (
           <>
             {apuType === undefined && search.data.typeCounts.length > 0 && (
@@ -280,24 +293,21 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
                 </div>
               }
             />
-            <Text size={200} className={styles.status}>
-              {t(
-                search.data.totalRelation === TotalRelation.Gte
-                  ? "search.totalMore"
-                  : "search.total",
-                { count: search.data.total },
-              )}
-            </Text>
-            {search.data.queryMode === QueryMode.Relaxed && (
-              <Text size={200} role="status">
-                {t("search.relaxed")}
-              </Text>
-            )}
-            <ResultList items={search.data.items} />
           </>
         )}
+        {/* One live region, always mounted: filters and paging apply without a
+            navigation, so the outcome (count, loading, failure) has to be
+            announced rather than only redrawn - WCAG 4.1.3. */}
+        <div role="status" aria-live="polite" className={styles.status}>
+          <Text size={200}>{statusText}</Text>
+          {search.data?.queryMode === QueryMode.Relaxed && (
+            <div>
+              <Text size={200}>{t("search.relaxed")}</Text>
+            </div>
+          )}
+        </div>
+        {search.data && <ResultList items={search.data.items} />}
         {search.isPending && <Spinner />}
-        {search.isError && <Text>{t("search.error")}</Text>}
       </div>
     </div>
   );

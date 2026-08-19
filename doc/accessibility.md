@@ -73,23 +73,42 @@ Architectural properties that carry most of the accessibility weight:
   see §4).
 - **Errors are surfaced, never swallowed** — failed API requests appear in a
   visible error bar with the server's message, and a render crash produces a
-  readable error page instead of a blank one (`role="alert"`).
+  readable error page instead of a blank one. The error bar is a live region
+  that stays mounted while empty, so a later failure is announced rather than
+  only drawn.
+- **The repeated header can be bypassed** — a skip link (first Tab stop) moves
+  focus to the main region, which is also where focus lands after an in-app
+  route change, so a screen reader reads the new page instead of staying in the
+  old context (WCAG 2.4.1).
+- **Real headings and named controls** — each page owns one `<h1>`, facets are
+  `<h2>`-headed groups, and every input carries an accessible name independent
+  of its placeholder (the dating fields and slider thumbs name their facet and
+  which end of the range they set).
+- **Asynchronous outcomes are announced** — filters and paging apply without a
+  navigation, so the search page keeps one polite live region reporting the
+  result count, the wait and any failure (WCAG 4.1.3).
+- **Footer links are deployment configuration, not code** — the accessibility
+  statement, privacy information or contacts a deployment publishes come typed
+  from `/api/v1/ui/config` (see §6).
 
 ## 4. Known gaps and the plan
 
 Honest current state. Each gap names the criterion it belongs to, so the
 statement can cite it (or so it disappears from the statement once fixed).
 
-### Phase A — structural fixes (~1 day)
+### Phase A — structural fixes — **done**
 
-| Gap | Criterion |
+| Fixed | Criterion |
 |---|---|
-| No skip link; the repeated header menu cannot be bypassed | 2.4.1 Bypass Blocks (A) |
-| Page headings are visual only — Fluent typography renders `<span>` unless `as` is given; the only real `<h1>` is the screen-reader brand name in the header | 1.3.1 (A), 2.4.6 (AA) |
-| Search inputs (main query, text facets) are labelled by placeholder only | 3.3.2 (A), 4.1.2 (A) |
-| Result count, loading and error states change without navigation and are not announced (filters auto-apply) | 4.1.3 Status Messages (AA) |
-| SPA route change does not move focus, so screen-reader users stay on the old context | 2.4.3 (A, practice) |
-| The slider thumbs suppress the native focus ring and expose no `aria-valuetext` (year) | 2.4.7 (AA), 4.1.2 (A) |
+| Skip link past the repeated header, focusing the main region | 2.4.1 Bypass Blocks (A) |
+| One real `<h1>` per page, `<h2>` per facet and per record section (Fluent typography renders `<span>` unless `as` is given, which is what hid this) | 1.3.1 (A), 2.4.6 (AA) |
+| Accessible names on every input — search boxes, facet text filters, type-ahead, year fields and both slider thumbs (which name their facet and range end) | 3.3.2 (A), 4.1.2 (A) |
+| One polite live region on the search page reporting count, wait and failure; the API error bar stays mounted so later errors are announced | 4.1.3 Status Messages (AA) |
+| Focus moves to the main region on an in-app route change | 2.4.3 (A, practice) |
+| Focus ring restored on the slider thumbs (`:focus-visible`) | 2.4.7 (AA) |
+
+The slider needs no `aria-valuetext`: its value *is* the year, which is what a
+reader should hear.
 
 ### Phase B — permanent automated gate (~0.5–1 day)
 
@@ -113,13 +132,40 @@ statement can cite it (or so it disappears from the statement once fixed).
   browse the tree. Record the result and the date in §5's log; that record is
   what the statement's "assessment method" field refers to.
 
-### Phase D — the deployment's statement needs a home (~0.5 day, contract-first)
+### Phase D — the deployment's statement needs a home — **done**
 
-The statement must be reachable from the portal. There is no place for it today:
-`ui/config` carries only `help-url`. Proposal: add an optional
-`accessibilityUrl` to the UI configuration (`pageTemplate.yaml` →
-`/api/v1/ui/config`) and render it as a footer link. Small TypeSpec change plus
-a footer line — but it is the piece that makes a deployment *able* to comply.
+The statement must be reachable from the portal, and a deployment publishes more
+than one such page (privacy information, operator contacts). Rather than a
+single hardcoded field, the UI configuration carries a **list of footer links**
+(`pageTemplate.yaml` → `footer.links` → `/api/v1/ui/config`):
+
+```yaml
+footer:
+  links:
+    - code: ACCESSIBILITY                       # well-known role, UI labels it
+      url: https://archiv.example/pristupnost
+    - url: https://archiv.example/kontakt       # free link, own label
+      label:
+        cs: Kontakt
+        en: Contact
+```
+
+A link is either a **well-known role** (`ACCESSIBILITY`, `PRIVACY`, `TERMS`,
+`CONTACT`) that the UI labels in the reader's language, or a free link with its
+own label — one string, or a per-language mapping the server resolves like every
+other display text. A link with neither fails the startup, the way every other
+configuration error here does.
+
+Two consequences worth stating:
+
+- ARON is **not always a standalone portal**. When it is embedded in a
+  customer's own web presentation that renders its own footer, the deployment
+  configures no links and the obligations belong to the host page — an empty
+  list is a valid, deliberate configuration.
+- The old portal's footer was raw HTML in the page template
+  (`homepage.footerCenter`). Typed links replace it: the client never receives
+  markup from configuration, so a deployment cannot inject scripts into the
+  portal through it.
 
 ## 5. How conformance is maintained
 
@@ -146,13 +192,17 @@ than audited once:
 
 | Date | Scope | Method | Result |
 |---|---|---|---|
-| — | initial review of the search and record pages | source review (this chapter) | gaps recorded in §4 |
+| 2026-08-19 | initial review of the search and record pages | source review (this chapter) | gaps recorded in §4 |
+| 2026-08-19 | Phase A + D | implementation + component tests (skip link, footer links, facet naming) | §4 Phase A and D closed; B and C open |
 
 ## 6. Deployment responsibilities
 
 Even a fully conformant platform can be deployed inaccessibly. A customer's
 statement must cover these, because the platform cannot decide them:
 
+- **Publishing the statement** — configure it as a footer link with the
+  `ACCESSIBILITY` code (§4, Phase D). A deployment embedded in a customer portal
+  publishes it on the host page instead.
 - **Configured texts and documents** — page template texts, news, help pages and
   any linked PDF are the deployment's content; a non-accessible PDF stays
   non-accessible.

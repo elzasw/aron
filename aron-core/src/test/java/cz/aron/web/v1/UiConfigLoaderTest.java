@@ -2,17 +2,22 @@ package cz.aron.web.v1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import cz.aron.api.v1.model.FooterLink;
+import cz.aron.api.v1.model.FooterLinkCode;
 import cz.aron.api.v1.model.MenuItem;
 import cz.aron.api.v1.model.MenuItemCode;
+import cz.aron.api.v1.model.UiConfig;
 
 /** Plain unit test of the pageTemplate.yaml → UiConfig conversion (no Spring). */
 class UiConfigLoaderTest {
@@ -22,6 +27,8 @@ class UiConfigLoaderTest {
 	@TempDir
 	Path tempDir;
 
+	private static final Locale CZECH = Locale.forLanguageTag("cs");
+
 	private UiConfigLoader loader(String yaml, String helpUrl) throws IOException {
 		Path file = tempDir.resolve("pageTemplate.yaml");
 		Files.writeString(file, yaml, StandardCharsets.UTF_8);
@@ -30,26 +37,31 @@ class UiConfigLoaderTest {
 		return loader;
 	}
 
+	private UiConfig config(String yaml) throws IOException {
+		return loader(yaml, HELP_URL).getConfig(CZECH);
+	}
+
 	@Test
 	void minimalTemplateGetsDefaults() throws IOException {
-		var config = loader("name: Testovací portál\n", HELP_URL).getConfig();
+		var config = config("name: Testovací portál\n");
 
 		assertThat(config.getName()).isEqualTo("Testovací portál");
 		assertThat(config.getLocalizations()).containsExactly("cs_CZ");
 		assertThat(config.getMenuItems()).extracting(MenuItem::getCode).containsExactly(
 				MenuItemCode.FUND, MenuItemCode.ARCH_DESC, MenuItemCode.ENTITY, MenuItemCode.HELP);
 		assertThat(config.getMenuItems().get(3).getUrl()).isEqualTo(HELP_URL);
+		// a deployment without a footer section publishes no links
+		assertThat(config.getFooterLinks()).isEmpty();
 	}
 
 	@Test
 	void missingNameFallsBackToPortalDefault() throws IOException {
-		assertThat(loader("localizations:\n  - cs_CZ\n  - en_US\n", HELP_URL).getConfig().getName())
-				.isEqualTo("Archiv online");
+		assertThat(config("localizations:\n  - cs_CZ\n  - en_US\n").getName()).isEqualTo("Archiv online");
 	}
 
 	@Test
 	void explicitMenuIsPassedThroughTyped() throws IOException {
-		var config = loader("""
+		var config = config("""
 				name: Portál
 				localizations:
 				  - cs_CZ
@@ -60,7 +72,7 @@ class UiConfigLoaderTest {
 				    color: "#79a7d1"
 				  - code: NEWS
 				    url: https://archiv.example/aktuality
-				""", HELP_URL).getConfig();
+				""");
 
 		assertThat(config.getLocalizations()).containsExactly("cs_CZ", "en_US");
 		assertThat(config.getMenuItems()).extracting(MenuItem::getCode).containsExactly(
@@ -72,9 +84,57 @@ class UiConfigLoaderTest {
 
 	@Test
 	void helpWithoutAnyUrlIsDropped() throws IOException {
-		var config = loader("menu:\n  - code: FUND\n  - code: HELP\n", "").getConfig();
+		var config = loader("menu:\n  - code: FUND\n  - code: HELP\n", "").getConfig(CZECH);
 
 		assertThat(config.getMenuItems()).extracting(MenuItem::getCode).containsExactly(MenuItemCode.FUND);
+	}
+
+	@Test
+	void footerLinksCarryCodesAndLocalizedLabels() throws IOException {
+		// the accessibility statement a public-sector deployment must publish is
+		// a well-known code the UI labels itself; free links carry their label
+		String yaml = """
+				localizations:
+				  - cs_CZ
+				  - en
+				footer:
+				  links:
+				    - code: ACCESSIBILITY
+				      url: https://archiv.example/pristupnost
+				    - url: https://archiv.example/kontakt
+				      label:
+				        cs: Kontakt
+				        en: Contact
+				    - url: https://archiv.example/provozovatel
+				      label: Provozovatel
+				""";
+
+		var czech = loader(yaml, HELP_URL).getConfig(CZECH).getFooterLinks();
+		assertThat(czech).extracting(FooterLink::getCode, FooterLink::getLabel, FooterLink::getUrl).containsExactly(
+				tuple(FooterLinkCode.ACCESSIBILITY, null, "https://archiv.example/pristupnost"),
+				tuple(null, "Kontakt", "https://archiv.example/kontakt"),
+				tuple(null, "Provozovatel", "https://archiv.example/provozovatel"));
+
+		// labels follow the reader's language; a single-string label is the source
+		// language and stays as it is
+		var english = loader(yaml, HELP_URL).getConfig(Locale.ENGLISH).getFooterLinks();
+		assertThat(english).extracting(FooterLink::getLabel)
+				.containsExactly(null, "Contact", "Provozovatel");
+	}
+
+	@Test
+	void footerLinkWithoutCodeOrLabelFailsTheStartup() {
+		assertThatThrownBy(() -> loader("footer:\n  links:\n    - url: https://archiv.example/x\n", HELP_URL))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("https://archiv.example/x");
+	}
+
+	@Test
+	void unknownFooterLinkCodeFailsTheStartup() {
+		assertThatThrownBy(() -> loader(
+				"footer:\n  links:\n    - code: TYPO\n      url: https://archiv.example/x\n", HELP_URL))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("TYPO");
 	}
 
 	@Test

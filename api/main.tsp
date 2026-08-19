@@ -67,10 +67,14 @@ model SystemInfo {
 @tag("ui")
 @route("/api/v1/ui")
 namespace Ui {
-	/** UI configuration: portal name, available localizations, top-level menu. */
+	/**
+	 * UI configuration: portal name, available localizations, top-level menu and
+	 * footer links. Footer link labels are server-rendered in the requested
+	 * language.
+	 */
 	@get
 	@route("/config")
-	op getConfig(): UiConfig;
+	op getConfig(...LangParam): UiConfig;
 
 	/** Portal logo image (deployment-supplied; format varies, see Content-Type). */
 	@get
@@ -95,6 +99,52 @@ model UiConfig {
 
 	/** Top-level menu: which sections this deployment enables, in display order. */
 	menuItems: MenuItem[];
+
+	/**
+	 * Links the deployment publishes in the portal footer, in display order -
+	 * legally required ones (the accessibility statement of a public-sector
+	 * body), operator information, contacts, anything else the deployment adds.
+	 *
+	 * Empty is a valid configuration: a portal embedded in a customer's own web
+	 * presentation lets the host render its footer, and the obligations then
+	 * belong to the host page.
+	 */
+	footerLinks: FooterLink[];
+}
+
+/**
+ * Roles a footer link can have. A well-known role lets the UI label the link
+ * itself (in the reader's language) and lets a deployment be checked for the
+ * links it is legally required to publish; anything else is a plain labelled
+ * link with no code.
+ */
+enum FooterLinkCode {
+	/** Accessibility statement - public-sector deployments must publish one. */
+	ACCESSIBILITY,
+
+	/** Personal-data / privacy information. */
+	PRIVACY,
+
+	/** Terms of use. */
+	TERMS,
+
+	/** Contact of the operator. */
+	CONTACT,
+}
+
+/** One footer link of the deployment. */
+model FooterLink {
+	/** Well-known role, when the link has one. */
+	code?: FooterLinkCode;
+
+	/**
+	 * Display label in the requested language. Absent only for a well-known
+	 * `code`, which the UI labels itself; a link without a code always carries
+	 * one.
+	 */
+	label?: string;
+
+	url: string;
 }
 
 /** One item of the top-level menu. */

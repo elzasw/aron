@@ -219,8 +219,12 @@ paths:
   /api/v1/ui/config:
     get:
       operationId: Ui_getConfig
-      description: 'UI configuration: portal name, available localizations, top-level menu.'
-      parameters: []
+      description: |-
+        UI configuration: portal name, available localizations, top-level menu and
+        footer links. Footer link labels are server-rendered in the requested
+        language.
+      parameters:
+        - $ref: '#/components/parameters/LangParam'
       responses:
         '200':
           description: The request has succeeded.
@@ -770,6 +774,36 @@ components:
         - TEXT
         - RANGE
       description: Filter kinds - the SearchFilter discriminator.
+    FooterLink:
+      type: object
+      required:
+        - url
+      properties:
+        code:
+          allOf:
+            - $ref: '#/components/schemas/FooterLinkCode'
+          description: Well-known role, when the link has one.
+        label:
+          type: string
+          description: |-
+            Display label in the requested language. Absent only for a well-known
+            `code`, which the UI labels itself; a link without a code always carries
+            one.
+        url:
+          type: string
+      description: One footer link of the deployment.
+    FooterLinkCode:
+      type: string
+      enum:
+        - ACCESSIBILITY
+        - PRIVACY
+        - TERMS
+        - CONTACT
+      description: |-
+        Roles a footer link can have. A well-known role lets the UI label the link
+        itself (in the reader's language) and lets a deployment be checked for the
+        links it is legally required to publish; anything else is a plain labelled
+        link with no code.
     JsonItem:
       type: object
       required:
@@ -1008,6 +1042,7 @@ components:
         - name
         - localizations
         - menuItems
+        - footerLinks
       properties:
         name:
           type: string
@@ -1024,6 +1059,18 @@ components:
           items:
             $ref: '#/components/schemas/MenuItem'
           description: 'Top-level menu: which sections this deployment enables, in display order.'
+        footerLinks:
+          type: array
+          items:
+            $ref: '#/components/schemas/FooterLink'
+          description: |-
+            Links the deployment publishes in the portal footer, in display order -
+            legally required ones (the accessibility statement of a public-sector
+            body), operator information, contacts, anything else the deployment adds.
+
+            Empty is a valid configuration: a portal embedded in a customer's own web
+            presentation lets the host render its footer, and the obligations then
+            belong to the host page.
       description: UI configuration of the deployment.
     UnitDateItem:
       type: object

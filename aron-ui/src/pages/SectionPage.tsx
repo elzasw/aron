@@ -19,7 +19,7 @@ export default function SectionPage({ code }: { code: MenuItemCode }) {
 
   return (
     <div className={styles.root}>
-      <Title1>{t(SECTIONS[code].labelKey)}</Title1>
+      <Title1 as="h1">{t(SECTIONS[code].labelKey)}</Title1>
       <Text>{t("section.placeholder")}</Text>
     </div>
   );

@@ -24,7 +24,7 @@ export default function NotFoundPage() {
 
   return (
     <div className={styles.root}>
-      <Title1>{t("notFound.heading")}</Title1>
+      <Title1 as="h1">{t("notFound.heading")}</Title1>
       <Link to="/" className={styles.homeLink}>
         {t("notFound.home")}
       </Link>

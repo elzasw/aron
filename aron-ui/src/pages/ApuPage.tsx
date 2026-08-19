@@ -262,7 +262,7 @@ function Part({ part }: { part: DetailPart }) {
   const single = items.length === 1;
   return (
     <section className={styles.part} aria-label={single ? items[0].label : part.label}>
-      {!single && <Subtitle2>{part.label}</Subtitle2>}
+      {!single && <Subtitle2 as="h2">{part.label}</Subtitle2>}
       <ItemRows items={items} />
     </section>
   );
@@ -326,7 +326,7 @@ export default function ApuPage() {
         </nav>
       )}
       <header className={styles.header}>
-        <Title2 as="h2">{data.name}</Title2>
+        <Title2 as="h1">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}
         {archdescRoot && (
           <Link to={`/apu/${archdescRoot.ref.uuid}`} className={styles.link}>
@@ -339,7 +339,7 @@ export default function ApuPage() {
       ))}
       {data.attachments.length > 0 && (
         <section className={styles.part} aria-label={t("apu.attachments")}>
-          <Subtitle2>{t("apu.attachments")}</Subtitle2>
+          <Subtitle2 as="h2">{t("apu.attachments")}</Subtitle2>
           <ul className={styles.fileList}>
             {data.attachments.map((attachment, index) => (
               <li key={index}>
@@ -352,7 +352,7 @@ export default function ApuPage() {
       )}
       {data.digitalObjects.length > 0 && (
         <section className={styles.part} aria-label={t("apu.digitalObjects")}>
-          <Subtitle2>{t("apu.digitalObjects")}</Subtitle2>
+          <Subtitle2 as="h2">{t("apu.digitalObjects")}</Subtitle2>
           <ul className={styles.fileList}>
             {data.digitalObjects.map((digitalObject) => (
               <li key={digitalObject.uuid}>

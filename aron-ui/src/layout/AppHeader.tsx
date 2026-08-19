@@ -1,9 +1,9 @@
 import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
-import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink } from "react-router-dom";
-import { logoUrl, uiApi } from "../api/client";
+import { logoUrl } from "../api/client";
+import { useUiConfig } from "../api/useUiConfig";
 import { MenuItem } from "../api/generated";
 import { SECTIONS } from "../sections";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -89,10 +89,7 @@ export default function AppHeader() {
   const styles = useStyles();
   const { t } = useTranslation();
   const [logoFailed, setLogoFailed] = useState(false);
-  const { data: config } = useQuery({
-    queryKey: ["ui-config"],
-    queryFn: () => uiApi.uiGetConfig(),
-  });
+  const { data: config } = useUiConfig();
   const name = config?.name ?? t("app.title");
 
   useEffect(() => {
@@ -110,7 +107,9 @@ export default function AppHeader() {
           <img className={styles.logo} src={logoUrl} alt="" onError={() => setLogoFailed(true)} />
         )}
         {logoFailed && <span className={styles.title}>{name}</span>}
-        <h1 className={styles.screenReaderOnly}>{name}</h1>
+        {/* names the link when the logo carries the wordmark; the page's own
+            heading is its h1, so the portal name must not take that role */}
+        {!logoFailed && <span className={styles.screenReaderOnly}>{name}</span>}
       </Link>
       <nav className={styles.nav} aria-label={t("nav.main")}>
         {(config?.menuItems ?? []).map((item) => (
