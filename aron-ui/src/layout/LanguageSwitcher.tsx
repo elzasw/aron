@@ -76,7 +76,10 @@ export default function LanguageSwitcher({ localizations }: { localizations: str
               : styles.languageBadge
           }
           aria-pressed={language === active}
-          aria-label={t(`nav.languageName.${language}`)}
+          // the accessible name spells the language out but must still contain
+          // the visible code, or speech input ("click CS") cannot address the
+          // control - WCAG 2.5.3 Label in Name
+          aria-label={`${t(`nav.languageName.${language}`)} (${language.toUpperCase()})`}
           title={t(`nav.languageName.${language}`)}
           onClick={() => setLanguage(language)}
         >

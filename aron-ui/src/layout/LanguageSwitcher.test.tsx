@@ -25,23 +25,34 @@ describe("LanguageSwitcher", () => {
   it("marks the active language as pressed", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
-    expect(screen.getByRole("button", { name: "Čeština" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "false");
+    expect(screen.getByRole("button", { name: "Čeština (CS)" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveAttribute("aria-pressed", "false");
   });
 
   it("names each language in the language itself, for screen readers", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
     // the lang attribute makes a screen reader pronounce the name correctly
-    expect(screen.getByRole("button", { name: "English" })).toHaveAttribute("lang", "en");
+    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveAttribute("lang", "en");
     expect(screen.getByRole("group")).toHaveAccessibleName("Jazyk");
+  });
+
+  it("keeps the visible code inside the accessible name (WCAG 2.5.3)", () => {
+    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
+
+    // speech input addresses a control by what it shows ("click CS"), so the
+    // spelled-out name must contain that text - a real Lighthouse finding
+    for (const code of ["CS", "EN"]) {
+      const button = screen.getByText(code);
+      expect(button).toHaveAccessibleName(expect.stringContaining(code));
+    }
   });
 
   it("switches the language on click", async () => {
     const user = userEvent.setup();
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
-    await user.click(screen.getByRole("button", { name: "English" }));
+    await user.click(screen.getByRole("button", { name: "English (EN)" }));
 
     expect(i18n.language).toBe("en");
     // the control itself re-renders in the new language
@@ -53,9 +64,9 @@ describe("LanguageSwitcher", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
     await user.tab();
-    expect(screen.getByRole("button", { name: "Čeština" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Čeština (CS)" })).toHaveFocus();
     await user.tab();
-    expect(screen.getByRole("button", { name: "English" })).toHaveFocus();
+    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveFocus();
 
     await user.keyboard("{Enter}");
     expect(i18n.language).toBe("en");

@@ -134,12 +134,20 @@ adjusting state during render instead of in an effect, which is the documented
 React pattern and removed one redundant render pass from the search box, the
 facet filters and the description tree.
 
-### Phase C — browser-verified checks + manual pass (~1 day + audit)
+### Phase C — browser-verified checks + manual pass (partly done)
 
-- What jsdom cannot check runs against the real app in dev mode (H2 + embedded
-  Lucene + seed data, no external services): **contrast (1.4.3), reflow at
-  320 px / 400 % zoom (1.4.10), focus visibility (2.4.7)** — via Lighthouse or
-  Playwright + axe.
+- **Browser run done** (Lighthouse 13, mobile 412 px, against the deployed
+  `/aron/main/arch-desc`): accessibility 95 → the two findings below fixed;
+  what jsdom cannot judge **passed**: colour contrast (1.4.3), target size
+  (2.5.8), heading order, one main landmark, document language, link names.
+  Findings, both now fixed and pinned by tests:
+  - Fluent's `Dropdown` trigger (page size) had no accessible name — the visible
+    label is now bound with `aria-labelledby` (Fluent's documented pattern).
+  - The language buttons showed `CS`/`EN` but were named "Čeština"/"English",
+    which speech input cannot address (2.5.3 Label in Name) — the name now
+    contains the visible code.
+- **Still open**: reflow at 320 px / 400 % zoom, focus visibility through a real
+  keyboard pass, and the record detail page (the run covered a search page).
 - A **manual keyboard pass** (tab order, no traps, everything reachable) and a
   **screen-reader pass with NVDA** (the reference reader for Czech public
   administration) on the core journeys: search → filter → open a record →
@@ -210,6 +218,7 @@ than audited once:
 | 2026-08-19 | initial review of the search and record pages | source review (this chapter) | gaps recorded in §4 |
 | 2026-08-19 | Phase A + D | implementation + component tests (skip link, footer links, facet naming) | §4 Phase A and D closed; B and C open |
 | 2026-08-19 | Phase B | ESLint + jsx-a11y over the whole UI, axe over the frame and every facet kind | no findings left; the gate now runs in every build |
+| 2026-08-19 | search page of the DEV deployment (`/aron/main/arch-desc`) | Lighthouse 13, mobile 412 px | score 95; contrast and target size pass; 2 findings (dropdown name, label in name) fixed the same day |
 
 ## 6. Deployment responsibilities
 

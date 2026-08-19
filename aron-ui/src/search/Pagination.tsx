@@ -5,6 +5,8 @@ import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const PAGE_SIZES = [10, 20, 50];
 
+const PAGE_SIZE_LABEL_ID = "page-size-label";
+
 const useStyles = makeStyles({
   bar: {
     display: "flex",
@@ -112,9 +114,14 @@ export default function Pagination({ page, size, total, onPage, onSize, controls
       <div className={styles.spacer} />
       {controls !== undefined && <div className={styles.controls}>{controls}</div>}
       <div className={styles.pageSize}>
-        <Text size={200}>{t("search.pageSize")}</Text>
+        {/* the visible text is the dropdown's label; Fluent's trigger button has
+            no name of its own (Fluent's documented aria-labelledby pattern) */}
+        <Text size={200} id={PAGE_SIZE_LABEL_ID}>
+          {t("search.pageSize")}
+        </Text>
         <Dropdown
           className={styles.sizeDropdown}
+          aria-labelledby={PAGE_SIZE_LABEL_ID}
           value={String(size)}
           selectedOptions={[String(size)]}
           onOptionSelect={(_, data) => data.optionValue && onSize(Number(data.optionValue))}
