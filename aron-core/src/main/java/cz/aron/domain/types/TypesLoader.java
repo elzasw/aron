@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
 import cz.aron.domain.DataType;
+import cz.aron.commons.LocalizationFile;
 import cz.aron.domain.types.dto.ApuPartType;
 import cz.aron.domain.types.dto.ItemType;
 import cz.aron.domain.types.dto.ItemTypeGroup;
@@ -42,18 +43,7 @@ public class TypesLoader {
 
     public TypesConfigDto loadTypes() {
         log.debug("Loading types from config.");
-        var localizationsPath = Paths.get(typesConfig).getParent().resolve("types_localization.yaml");
-        Map<String,Object> localization = Collections.emptyMap();
-        if (Files.isRegularFile(localizationsPath)) {
-            try(InputStream inputStream = Files.newInputStream(localizationsPath)) {
-                Yaml yaml = new Yaml();
-                localization = yaml.load(inputStream);
-                log.info("Localizations downloaded {}",localizationsPath);
-            } catch (IOException ex) {
-                log.error("Fail to load localizations {}", localizationsPath, ex);
-                throw new RuntimeException(ex);
-            }
-        }
+        Map<String, Object> localization = LocalizationFile.besides(typesConfig);
         try (InputStream inputStream = Files.newInputStream(Paths.get(typesConfig));
             CheckedInputStream checkedInputStream = new CheckedInputStream(inputStream, new CRC32())) {
             Yaml yaml = new Yaml();

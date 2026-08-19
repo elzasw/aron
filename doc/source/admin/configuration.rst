@@ -85,13 +85,37 @@ indexing flags:
    rebuild and reindex (see :doc:`operations`). Weight tuning does *not*
    belong here — see the ``relevance`` section of ``searchConfig.yaml``.
 
-types_localization.yaml
-=======================
+Translating configured text
+===========================
 
-Optional file **next to** ``types.yaml``; translations of the display labels
-into the languages the portal offers. The names in ``types.yaml`` are the
-source language and remain the fallback, so a deployment without this file
-behaves exactly as before.
+Text a deployment writes into its configuration — item labels, the portal name,
+facet titles — is translated in a **sibling file**: next to ``<config>.yaml``
+put ``<config>_localization.yaml``. The configured file keeps one language, the
+source language, which stays the fallback; further languages are added without
+touching it. Every such file is optional, so a deployment that adds none behaves
+exactly as before.
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+
+   * - Sibling file
+     - Translates
+   * - ``types_localization.yaml``
+     - Labels of part types and item types (``types.yaml``).
+   * - ``searchConfig_localization.yaml``
+     - Facet ``title``, ``tooltip`` and ``description`` (``searchConfig.yaml``).
+   * - ``pageTemplate_localization.yaml``
+     - Portal name (``pageTemplate.yaml``).
+
+The one exception is **footer links**, whose labels are written inline in
+``pageTemplate.yaml`` (``label: {cs: …, en: …}``): a link is identified by its
+URL rather than by a code, so there is no stable key a sibling file could use.
+
+types_localization.yaml
+-----------------------
+
+Translations of the display labels in ``types.yaml``.
 
 .. code-block:: yaml
 
@@ -105,6 +129,34 @@ behaves exactly as before.
 Codes are written in the underscore form used in ``types.yaml``. The language
 keys should match the ``localizations`` declared in ``pageTemplate.yaml`` —
 those are the languages clients may ask for.
+
+searchConfig_localization.yaml
+------------------------------
+
+Display texts of the facets, keyed by the facet's ``source`` code exactly as
+written in ``searchConfig.yaml``. Any of the three texts may be omitted; an
+omitted one falls back to ``searchConfig.yaml``.
+
+.. code-block:: yaml
+
+   facets:
+     en:
+       LANG_CODE:
+         title: Language
+         tooltip: Language of the described material
+
+A facet without an explicit ``title`` is labelled by its item type instead, so
+translating it belongs in ``types_localization.yaml``.
+
+pageTemplate_localization.yaml
+------------------------------
+
+The portal name; a single field, so no codes are involved.
+
+.. code-block:: yaml
+
+   name:
+     en: Archives online
 
 .. note::
 

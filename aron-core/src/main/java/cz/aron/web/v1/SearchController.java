@@ -362,8 +362,8 @@ public class SearchController implements SearchApi {
 	private FacetDef toFacetDef(FacetConfigDto facet, Locale locale) {
 		var def = new FacetDef(facet.getSource(), toFacetType(facet.getType()), label(facet, locale),
 				facet.getDisplay() == DisplayType.DETAIL ? FacetDisplay.DETAIL : FacetDisplay.ALWAYS);
-		def.setTooltip(facet.getTooltip());
-		def.setDescription(facet.getDescription());
+		def.setTooltip(LocalizedText.pick(facet.getTooltipTranslations(), facet.getTooltip(), locale));
+		def.setDescription(LocalizedText.pick(facet.getDescriptionTranslations(), facet.getDescription(), locale));
 		if (facet.getOrderBy() != null) {
 			def.setOrderBy("ASC".equalsIgnoreCase(facet.getOrderBy()) ? FacetOrder.ASC : FacetOrder.FREQ);
 		}
@@ -379,7 +379,7 @@ public class SearchController implements SearchApi {
 	/** Facet label: explicit title, otherwise the (localized) item-type name, otherwise the code. */
 	private String label(FacetConfigDto facet, Locale locale) {
 		if (facet.getTitle() != null && !facet.getTitle().isBlank()) {
-			return facet.getTitle();
+			return LocalizedText.pick(facet.getTitleTranslations(), facet.getTitle(), locale);
 		}
 		var itemType = typesHolder.getItemTypeForCode(facet.getSource());
 		if (itemType != null && itemType.getName() != null) {

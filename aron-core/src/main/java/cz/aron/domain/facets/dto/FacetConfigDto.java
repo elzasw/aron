@@ -3,6 +3,8 @@ package cz.aron.domain.facets.dto;
 import java.util.ArrayList;
 import java.util.List;
 
+import cz.aron.domain.types.dto.LocalizedItem;
+
 public class FacetConfigDto {
 //    private WhenConfigDto when;
     private Object when;
@@ -15,6 +17,14 @@ public class FacetConfigDto {
     private int maxDisplayedItems;
     private String tooltip;
     private String description;
+    /**
+     * Translations of the three display texts, filled from
+     * searchConfig_localization.yaml; the values above are the source language
+     * and stay the fallback.
+     */
+    private List<LocalizedItem> titleTranslations = new ArrayList<>();
+    private List<LocalizedItem> tooltipTranslations = new ArrayList<>();
+    private List<LocalizedItem> descriptionTranslations = new ArrayList<>();
     private List<Object> tooltips;
     private String orderBy;
     private List<String> order = new ArrayList<>();
@@ -39,6 +49,18 @@ public class FacetConfigDto {
 	public void setSource(String source) {
 		this.source = source;
 	}
+	public List<LocalizedItem> getTitleTranslations() {
+		return titleTranslations;
+	}
+
+	public List<LocalizedItem> getTooltipTranslations() {
+		return tooltipTranslations;
+	}
+
+	public List<LocalizedItem> getDescriptionTranslations() {
+		return descriptionTranslations;
+	}
+
 	public String getTitle() {
 		return title;
 	}

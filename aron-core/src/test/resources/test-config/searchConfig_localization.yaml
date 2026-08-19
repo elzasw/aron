@@ -1,0 +1,8 @@
+# Facet display texts per language, keyed by the facet's source code exactly as
+# written in searchConfig.yaml (underscore form).
+facets:
+  en:
+    TEST_FACET:
+      title: Test facet (en)
+    TITLE_MAIN:
+      tooltip: Enter part of the name

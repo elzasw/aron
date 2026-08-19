@@ -1,0 +1,3 @@
+# Portal name per language; pageTemplate.yaml keeps the source language.
+name:
+  en: ARON test page template (en)

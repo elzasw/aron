@@ -18,6 +18,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import cz.aron.api.v1.model.FooterLink;
 import cz.aron.api.v1.model.FooterLinkCode;
+import cz.aron.commons.LocalizationFile;
 import cz.aron.api.v1.model.MenuItem;
 import cz.aron.api.v1.model.MenuItemCode;
 import cz.aron.api.v1.model.UiConfig;
@@ -69,6 +70,8 @@ public class UiConfigLoader {
 
 	private String name;
 
+	private List<LocalizedItem> nameTranslations;
+
 	private List<String> localizations;
 
 	private List<MenuItem> menuItems;
@@ -89,6 +92,7 @@ public class UiConfigLoader {
 	void load() {
 		Map<String, Object> pageTemplate = readPageTemplate();
 		name = pageTemplate.get("name") instanceof String s && !s.isBlank() ? s : "Archiv online";
+		nameTranslations = readNameTranslations();
 		localizations = readLocalizations(pageTemplate);
 		menuItems = readMenu(pageTemplate);
 		footerLinks = readFooterLinks(pageTemplate);
@@ -114,7 +118,23 @@ public class UiConfigLoader {
 					return footerLink;
 				})
 				.toList();
-		return new UiConfig(name, localizations, menuItems, links);
+		return new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links);
+	}
+
+	/**
+	 * Portal name per language, from pageTemplate_localization.yaml. Written as
+	 * {@code name: {en: ...}} - a single field, so no code keys are involved.
+	 */
+	private List<LocalizedItem> readNameTranslations() {
+		var translations = new ArrayList<LocalizedItem>();
+		if (LocalizationFile.besides(pageTemplateFile).get("name") instanceof Map<?, ?> byLanguage) {
+			byLanguage.forEach((language, text) -> {
+				if (text instanceof String value && !value.isBlank()) {
+					translations.add(new LocalizedItem(String.valueOf(language), value));
+				}
+			});
+		}
+		return translations;
 	}
 
 	private Map<String, Object> readPageTemplate() {

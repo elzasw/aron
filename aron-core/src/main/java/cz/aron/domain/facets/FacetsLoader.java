@@ -7,14 +7,17 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
+import cz.aron.commons.LocalizationFile;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.facets.dto.FacetsConfigDto;
+import cz.aron.domain.types.dto.LocalizedItem;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class FacetsLoader {
@@ -40,8 +43,12 @@ public class FacetsLoader {
         Yaml yaml = new Yaml();
         String yamlConfig = Files.readString(Paths.get(facetConfig), StandardCharsets.UTF_8);
         FacetsConfigDto facetsConfigDto = yaml.loadAs(yamlConfig, FacetsConfigDto.class);
+        // translations are keyed by the source code as written here, so they are
+        // applied before the underscores below become tildes
+        var translations = LocalizationFile.byCode(LocalizationFile.besides(facetConfig), "facets");
         //we replace underscores with tildes because otherwise indexing would turn them to dots
         for (FacetConfigDto facet : facetsConfigDto.getFacets()) {
+            applyTranslations(facet, translations.get(facet.getSource()));
             if (facet.getSource() != null) {
                 facet.setSource(facet.getSource().replace("_", "~"));
             }
@@ -57,5 +64,28 @@ public class FacetsLoader {
             }
         }
         return facetsConfigDto;
+    }
+
+    /** Adds the per-language display texts of one facet ({@code language -> {title, tooltip, description}}). */
+    private static void applyTranslations(FacetConfigDto facet, Map<String, Object> byLanguage) {
+        if (byLanguage == null) {
+            return;
+        }
+        byLanguage.forEach((language, texts) -> {
+            if (!(texts instanceof Map<?, ?> fields)) {
+                log.warn("searchConfig translations: {}/{} is not a mapping of title/tooltip/description - ignored.",
+                        language, facet.getSource());
+                return;
+            }
+            add(facet.getTitleTranslations(), language, fields.get("title"));
+            add(facet.getTooltipTranslations(), language, fields.get("tooltip"));
+            add(facet.getDescriptionTranslations(), language, fields.get("description"));
+        });
+    }
+
+    private static void add(List<LocalizedItem> translations, String language, Object text) {
+        if (text instanceof String value && !value.isBlank()) {
+            translations.add(new LocalizedItem(language, value));
+        }
     }
 }

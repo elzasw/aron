@@ -314,6 +314,33 @@ class NewApiV1Test extends AbstractTest {
 	private static final String DETAIL_GRANDCHILD = "9f1d0000-0000-4000-8000-9000000000aa";
 
 	@Test
+	void deploymentConfiguredTextIsLocalizedToo() {
+		// the deployment's own text lives in the config files, its translations in
+		// the *_localization.yaml sibling; the config keeps the source language
+		var uiApi = new UiApi(v1ApiClient());
+		assertThat(uiApi.uiGetConfig(null).getName()).isEqualTo("ARON test page template");
+		assertThat(uiApi.uiGetConfig("en").getName()).isEqualTo("ARON test page template (en)");
+		// a language with no translation keeps the source language
+		assertThat(uiApi.uiGetConfig("de").getName()).isEqualTo("ARON test page template");
+
+		var searchApi = new SearchApi(v1ApiClient());
+		var czech = facetsByCode(searchApi.searchGetFacets(ApuType.ARCH_DESC, null));
+		var english = facetsByCode(searchApi.searchGetFacets(ApuType.ARCH_DESC, "en"));
+
+		// an explicit facet title is translated like any other display text
+		assertThat(czech.get("TEST~FACET").getLabel()).isEqualTo("Test facet");
+		assertThat(english.get("TEST~FACET").getLabel()).isEqualTo("Test facet (en)");
+		// so are tooltips; an untranslated one falls back
+		assertThat(czech.get("TITLE~MAIN").getTooltip()).isEqualTo("Zadejte část názvu");
+		assertThat(english.get("TITLE~MAIN").getTooltip()).isEqualTo("Enter part of the name");
+		assertThat(english.get("LANG~CODE").getLabel()).isEqualTo("Language (en)");
+	}
+
+	private static java.util.Map<String, FacetDef> facetsByCode(java.util.List<FacetDef> facets) {
+		return facets.stream().collect(Collectors.toMap(FacetDef::getCode, Function.identity()));
+	}
+
+	@Test
 	void presentationLanguageSwitchesTheServerRenderedLabels() {
 		var apuApi = new ApuApi(v1ApiClient());
 
