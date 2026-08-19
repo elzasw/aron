@@ -35,9 +35,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<cxf.version>4.0.0</cxf.version>
 		<!-- TypeSpec / frontend toolchain (csc pattern): the build installs its own
-		     Node into <module>/.node - no Node/npm needed on the host. Node 22 LTS:
-		     current npm tooling (openapi-generator-cli) needs require(esm) support,
-		     available from 20.19/22.12. TypeSpec pinned to the tested ~1.11 line. -->
+		     Node into <module>/.node - no Node/npm needed on the host. Vite 6 needs
+		     require(esm) support, available from Node 20.19/22.12. TypeSpec pinned to
+		     the tested ~1.11 line. -->
 		<frontend-maven-plugin.version>1.15.1</frontend-maven-plugin.version>
 		<!-- Matches the build image (jdk25-nodejs26); the build still installs its
 		     own copy so no Node is needed on a developer machine. -->

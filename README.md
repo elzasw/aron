@@ -155,18 +155,98 @@ Elasticsearch — override `search.engine=elasticsearch` and
 
 ## UI development
 
-For the edit-refresh loop run the Vite dev server against a running backend —
-typically the dev mode, so nothing needs to be installed:
+The portal UI (`aron-ui`) is a Vite + React SPA. For the edit–refresh loop it runs
+on its own dev server with hot module replacement and proxies the API to a
+running backend, so both sides restart independently.
+
+### Starting it
+
+Two processes, two terminals:
 
 ```
 cd aron-core && mvn spring-boot:run -Pdev    # backend on :8080, zero external services
 cd aron-ui && npm run dev                    # UI on :5173, proxies /api to :8080
 ```
 
-`npm run dev` first regenerates the TypeScript client from the committed
-`api/openapi/aron-openapi-v1.yaml`. Running npm directly needs Node ≥ 20 and a
-JDK on the host; alternatively use the Maven-installed Node
-(`aron-ui\.node\node\npm.cmd run dev`).
+Then open <http://localhost:5173>. Edits under `src/` reach the browser without a
+reload, keeping the page state. A fresh clone needs one `mvn install` (or
+`build.bat`) first — that installs the npm dependencies and generates the
+TypeScript API client the UI imports.
+
+Any backend on `:8080` will do — the dev mode above is the usual choice because
+it needs nothing installed, but a full stack from the run sandbox (see
+[Run](#run)) works the same way. If your backend listens elsewhere, change the
+proxy target in `aron-ui/vite.config.ts`.
+
+### The generated API client — built by Maven
+
+The UI imports a TypeScript client generated from the committed contract
+`api/openapi/aron-openapi-v1.yaml` into `aron-ui/src/api/generated` (gitignored,
+never hand-edited). **Maven generates it**, using the same
+`openapi-generator-maven-plugin` and the same version that generates the server
+interfaces: openapi-generator is a Java tool, and its npm wrapper would insist on
+finding `java` on the `PATH`. The npm scripts therefore need no JVM at all — any
+`mvn install` (or `build.bat`) prepares the client, and the dev loop afterwards
+is pure Node.
+
+Skip that step and `vite`/`tsc` report `src/api/generated` as an unresolved
+import \u2014 run the Maven build, not an npm script.
+
+After changing the contract, regenerate before restarting the dev server:
+
+```
+mvn -pl api,aron-ui generate-sources   # TypeSpec -> YAML -> TypeScript client
+```
+
+When only the YAML changed, `mvn -pl aron-ui generate-sources` alone takes
+seconds. The backend's server interfaces come from the same YAML, so restart the
+backend as well.
+
+### npm on the host
+
+`npm run dev` needs an npm on the host (Node ≥ 20). If you would rather not
+install one, use the Node the Maven build already downloaded into
+`aron-ui\.node\node` — its version is pinned in the root pom and matches the
+build image:
+
+```
+cd aron-ui
+.node\node\npm.cmd run dev
+```
+
+In a fresh clone the dependencies have to be installed first: `npm install`, or
+simply any `mvn install` of the module, which does it in `generate-resources`.
+
+### What the dev server covers — and what it does not
+
+- **Only `/api/**` is proxied** to `http://localhost:8080` (`vite.config.ts`) —
+  the new `/api/v1` and the old `/api/aron` alike, which also covers the images
+  the UI reads through the API (logo, top image). Everything else, including
+  deep links into SPA routes, is served by Vite itself.
+- **No deployment prefix.** The dev page is the plain `index.html` from the
+  sources, without the shell tokens, so `window.serverContextPath` is absent and
+  the effective prefix is empty. Subpath deployment is therefore not exercised
+  here — verify it against the built artifact (`SubpathServingTest` pins it as
+  well).
+- **The built shell cannot be served statically.** `dist/index.html` carries the
+  `__CONTEXT_PATH_*__`, `__PAGE_TITLE__` and `__PAGE_LANG__` tokens that
+  `IndexController` substitutes per request, so `vite preview` (or any plain file
+  server) leaves them unsubstituted. To see the real build, run it through the
+  backend: `mvn install` and then the jar, or an IDE configuration with the
+  `aron-distribution` classpath.
+
+### Checks before committing
+
+```
+cd aron-ui
+npm run typecheck    # tsc --noEmit
+npm run lint         # ESLint incl. jsx-a11y; warnings fail too
+npm test             # vitest + jsdom, one-shot
+npm run test:watch   # the same suite in watch mode while developing
+```
+
+`mvn install` runs the lint and the tests in its `test` phase, so a plain build
+applies the same gate; `-DskipTests` skips both suites.
 
 ## Development
 

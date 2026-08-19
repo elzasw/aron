@@ -22,6 +22,40 @@
 
 	<build>
 		<plugins>
+			<!-- TypeScript client of the /api/v1 contract, from the committed YAML the
+			     api module emits. The generator is a Java tool, so Maven runs it - never
+			     an npm script: its npm wrapper resolves `java` from PATH alone, while the
+			     npm scripts must stay JVM-free so the Vite dev loop needs nothing but the
+			     Node installed below. The version comes from the root pom, the same that
+			     generates the server interfaces. Output is gitignored and never
+			     hand-edited; cleanupOutput drops what a contract rename orphaned. -->
+			<plugin>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>api-v1-ts-client</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<generatorName>typescript-fetch</generatorName>
+							<inputSpec>${project.basedir}/../api/openapi/aron-openapi-v1.yaml</inputSpec>
+							<output>${project.basedir}/src/api/generated</output>
+							<skipValidateSpec>true</skipValidateSpec>
+							<cleanupOutput>true</cleanupOutput>
+							<!-- TypeScript output: nothing here belongs on a Java source root -->
+							<addCompileSourceRoot>false</addCompileSourceRoot>
+							<configOptions>
+								<supportsES6>true</supportsES6>
+								<withInterfaces>true</withInterfaces>
+							</configOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<plugin>
 				<groupId>com.github.eirslett</groupId>
 				<artifactId>frontend-maven-plugin</artifactId>

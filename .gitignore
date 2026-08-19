@@ -30,6 +30,3 @@ aron-ui/src/api/generated/
 .classpath
 .settings/
 .vscode/
-
-# openapi-generator-cli scratch config (written into the working dir by the UI client generator)
-/openapitools.json
