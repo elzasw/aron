@@ -36,7 +36,6 @@
       "filter": {
         "stop_filter": {
           "type": "stop",
-          "_comment": "the list of the content locale; substituted at index creation from cz.aron.search.StopWords",
           "stopwords": ["__STOP_WORDS__"]
         },
         "200_char_trunc": {
