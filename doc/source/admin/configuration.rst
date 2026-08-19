@@ -63,6 +63,15 @@ application.yml
    * - ``server.servlet.context-path``
      - Optional subpath for standalone subpath deployments (see
        :doc:`install`).
+   * - ``soap.port``
+     - Optional separate port for the internal SOAP interfaces
+       (``/cxf/**``). Unset = they share the main server port. When set, the
+       split is strict: ``/cxf/**`` is served only on this port and this port
+       serves nothing else (see :doc:`install`).
+   * - ``soap.address``
+     - Optional network interface the ``soap.port`` listener binds to (for
+       example an internal address). Unset = all interfaces. An unusable
+       address stops the startup.
 
 types.yaml
 ==========

@@ -36,6 +36,15 @@ help-url: https://seznam.cz
 #import:
 #  input-dir: ./import
 
+# Volitelny samostatny port pro interni SOAP rozhrani (/cxf/ft a
+# /cxf/management). Bez nastaveni sdileji hlavni port serveru jako dosud.
+# Pokud je nastaven, plati striktne: /cxf/** obsluhuje jen tento port a tento
+# port neobsluhuje nic jineho. Volitelna adresa omezi naslouchani na jedno
+# rozhrani (vnitrni sit).
+#soap:
+#  port: 8081
+#  address: 10.0.0.5
+
 # Jazyk popisovaneho materialu (IETF tag); vychozi cs-CZ. Jeho abeceda urcuje
 # razeni vysledku podle nazvu - stejne pro vsechny navstevniky, nejde o jazyk
 # prohlizece. Zmena vyvola pri dalsim startu prestavbu indexu a reindexaci.

@@ -77,7 +77,8 @@ URL layout
    * - ``/cxf/**``
      - **Internal** SOAP interfaces used by Transfagent: ``/cxf/ft`` for data
        ingest (file transfer) and ``/cxf/management`` for withdrawing data it
-       has published. Never expose them publicly.
+       has published. Never expose them publicly; they can also be moved to a
+       separate port, see below.
 
 Reverse proxy and subpath deployment
 ====================================
@@ -90,9 +91,34 @@ rebuilding**:
 - Behind a reverse proxy: forward the prefix in the ``X-Forwarded-Prefix``
   header; the application folds it into the effective context path.
 
+Separate port for the internal interfaces
+=========================================
+
+By default the internal SOAP interfaces share the main server port and are kept
+private by the proxy rules below. A deployment can instead give them their own
+listener::
+
+   soap:
+     port: 8081
+     address: 10.0.0.5   # optional: bind to the internal interface only
+
+The split is then strict: ``/cxf/**`` is served **only** on ``soap.port``, and
+that port serves **only** ``/cxf/**`` — no portal, no REST API, no actuator. With
+``soap.address`` the interfaces are not even reachable from the public network,
+so a mistake in the proxy configuration cannot expose them. Unset ``soap.port``
+keeps the current behaviour, which is also what development uses.
+
+The endpoints keep their paths — ``http://host:8081/cxf/ft`` and
+``http://host:8081/cxf/management``. The one exception is a standalone subpath
+deployment (``server.servlet.context-path``): the paths carry that prefix on
+every port, exactly as they do today on the main one
+(``http://host:8081/aron/cxf/ft``).
+
 Proxy rules for a public deployment:
 
 - **Block** ``/cxf/**`` — these are service-to-service interfaces for
-  Transfagent (ingest and data withdrawal), not part of the public API.
+  Transfagent (ingest and data withdrawal), not part of the public API. With
+  ``soap.port`` configured the proxy has nothing to block: the paths do not
+  exist on the public port.
 - Decide explicitly whether ``/actuator/**`` is reachable from the outside;
   in most deployments it should be restricted to the monitoring network.
