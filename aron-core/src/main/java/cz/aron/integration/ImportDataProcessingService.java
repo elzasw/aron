@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
@@ -67,6 +68,30 @@ public class ImportDataProcessingService {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+    }
+
+    /**
+     * Deletes the given ApuSources (identified by the uuid of their APUX package)
+     * under the same lock as an APUSRC import, so a delete can never interleave with
+     * an import of the same data.
+     *
+     * @return number of sources that existed and were deleted
+     */
+    public int deleteApuSources(List<UUID> apuSourceUuids) {
+        if (!apuLock.tryLock()) {
+            throw new RuntimeException("Concurrent apu upload is running");
+        }
+        try {
+            int deleted = 0;
+            for (UUID uuid : apuSourceUuids) {
+                if (apuProcessor.deleteApuSource(uuid)) {
+                    deleted++;
+                }
+            }
+            return deleted;
+        } finally {
+            apuLock.unlock();
         }
     }
 

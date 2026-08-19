@@ -75,8 +75,9 @@ URL layout
      - Spring Boot Actuator (health, metrics). Intentionally outside the
        ``/api`` namespace.
    * - ``/cxf/**``
-     - **Internal** SOAP file-transfer endpoint used by Transfagent for data
-       ingest. Never expose it publicly.
+     - **Internal** SOAP interfaces used by Transfagent: ``/cxf/ft`` for data
+       ingest (file transfer) and ``/cxf/management`` for withdrawing data it
+       has published. Never expose them publicly.
 
 Reverse proxy and subpath deployment
 ====================================
@@ -91,7 +92,7 @@ rebuilding**:
 
 Proxy rules for a public deployment:
 
-- **Block** ``/cxf/**`` — it is a service-to-service interface for the
-  Transfagent ingest, not part of the public API.
+- **Block** ``/cxf/**`` — these are service-to-service interfaces for
+  Transfagent (ingest and data withdrawal), not part of the public API.
 - Decide explicitly whether ``/actuator/**`` is reachable from the outside;
   in most deployments it should be restricted to the monitoring network.

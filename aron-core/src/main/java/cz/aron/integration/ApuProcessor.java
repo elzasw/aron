@@ -170,7 +170,7 @@ public class ApuProcessor {
 
 		// mark Relation to be removed when not used anymore
 		var numDeletedRelations = relationRepository.markToRemoveByApuSourceId(apuSourceId);
-		log.debug("Processing apu source {}, disconnect {} existing daos, delete {} relations", uuid,
+		log.debug("Apu source {}, disconnect {} existing daos, delete {} relations", uuid,
 				numDisconnected, numDeletedRelations);
 		apuEntityRepository.flush();
 
@@ -181,9 +181,40 @@ public class ApuProcessor {
 		var numDeletedAttachments = apuAttachmentRepository.deleteAllByApuSourceId(apuSourceId);
 		apuEntityRepository.clearParentsByApuSourceId(apuSourceId);
 		var numDeletedApus = apuEntityRepository.deleteAllByApuSourceId(apuSourceId);
-		log.debug("Processing apu source {}, original data deleted, {} apus, {} attachments, {} files", uuid,
+		log.debug("Apu source {}, existing data deleted, {} apus, {} attachments, {} files", uuid,
 				numDeletedApus, numDeletedAttachments, numDeletedFiles);
 		entityManager.clear();
+	}
+
+	/**
+	 * Deletes the given ApuSource with everything derived from it: its APUs (with
+	 * their attachments and attachment file records), its relations and its
+	 * documents in the search index. Digital objects are only disconnected, exactly
+	 * as on a reimport - they arrive in their own transfers and are reattached when
+	 * the source is imported again; the binary files of the deleted attachments stay
+	 * in the file storage, again as on a reimport.
+	 * <p>
+	 * Relations of OTHER sources pointing to the deleted APUs survive - they are
+	 * plain uuid references - and those sources keep the labels they were indexed
+	 * with until they are reimported.
+	 *
+	 * @return {@code false} when no such ApuSource exists; deleting data that is
+	 *         already gone is not an error, so a repeated request is harmless
+	 */
+	@Transactional
+	public boolean deleteApuSource(UUID uuid) {
+		var apuSource = apuSourceRepository.findByUuid(uuid);
+		if (apuSource == null) {
+			log.info("Apu source {} not found, nothing to delete", uuid);
+			return false;
+		}
+		long apuSourceId = apuSource.getId();
+		removeExistingApusAndRelations(apuSourceId, uuid.toString());
+		// unlike a reimport, nothing recreates the relations marked to be removed
+		relationRepository.deleteAllByApuSourceId(apuSourceId);
+		apuSourceRepository.deleteById(apuSourceId);
+		log.info("Apu source {} deleted", uuid);
+		return true;
 	}
 
     /**

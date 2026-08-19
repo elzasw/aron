@@ -41,6 +41,27 @@ not changed are skipped using a content-hash journal stored in the database
 (``import_journal`` table), so leaving processed transfers in place is
 harmless.
 
+Withdrawing published data
+--------------------------
+
+Data is deleted the same way it arrives — on request of the publishing system.
+Transfagent calls the internal management interface at ``/cxf/management``
+(SOAP, contract ``wsdl/aron_core.wsdl``, operation ``DeleteApuSources``) with
+the uuids of the APUX packages to withdraw. For each package the portal deletes
+its APUs, their attachments and relations, and removes them from the search
+index; digital objects are only detached, because they are transferred
+separately and are reattached if the package is imported again. Uuids that are
+not present are ignored, so a repeated request is harmless.
+
+Two consequences worth knowing:
+
+- Binary files of deleted attachments stay in the file storage
+  (``files.storage``) — as they do after a reimport.
+- Withdrawal does not touch the input-directory journal. A package deleted
+  this way and still present as a transfer folder is **not** reimported at the
+  next startup unless its content changes; delete the folder, or its
+  ``import_journal`` row, if the data should come back.
+
 Database
 ========
 
