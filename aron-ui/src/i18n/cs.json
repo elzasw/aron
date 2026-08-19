@@ -18,6 +18,7 @@
     "main": "Hlavní nabídka",
     "skipToContent": "Přejít na hlavní obsah",
     "language": "Jazyk",
+    "languageCurrent": "Jazyk: {{language}} ({{code}})",
     "languageName": {
       "cs": "Čeština",
       "en": "English"

@@ -18,6 +18,7 @@
     "main": "Main menu",
     "skipToContent": "Skip to main content",
     "language": "Language",
+    "languageCurrent": "Language: {{language}} ({{code}})",
     "languageName": {
       "cs": "Čeština",
       "en": "English"

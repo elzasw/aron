@@ -62,7 +62,9 @@ Architectural properties that carry most of the accessibility weight:
 - **Semantic relationships instead of visual-only cues** — the archival
   description tree uses `role="tree"`/`treeitem` with `aria-level`,
   `aria-expanded` and `aria-selected`; pagination marks the current page with
-  `aria-current="page"`; the language switcher uses `aria-pressed`.
+  `aria-current="page"`; the language menu offers `menuitemradio` options with
+  `aria-checked`, each naming its language in that language (`lang`), so the
+  choice is readable rather than guessed from a flag.
 - **All search state lives in the URL** (query, filters, page, size, sort).
   Results are reachable by a shareable link, survive reload, and nothing depends
   on a timed interaction (WCAG 2.2.1) or on drag gestures (2.5.7).
@@ -162,6 +164,10 @@ facet filters and the description tree.
     contains the visible code.
 - **Still open**: reflow at 320 px / 400 % zoom, focus visibility through a real
   keyboard pass, and the record detail page (the run covered a search page).
+  Specifically for the popovers (language menu, page-size dropdown): moving
+  focus *inside* them is Fluent's roving focus, which jsdom does not run, so the
+  unit tests stop at "opens from the keyboard" — walking and choosing an option
+  by keyboard has to be tried in a browser.
 - A **manual keyboard pass** (tab order, no traps, everything reachable) and a
   **screen-reader pass with NVDA** (the reference reader for Czech public
   administration) on the core journeys: search → filter → open a record →

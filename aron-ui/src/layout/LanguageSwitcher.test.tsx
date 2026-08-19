@@ -2,7 +2,14 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import { expectNoA11yViolations } from "../test/a11y";
 import LanguageSwitcher from "./LanguageSwitcher";
+
+/** Opens the language menu and returns its options. */
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button"));
+  return screen.findAllByRole("menuitemradio");
+}
 
 describe("LanguageSwitcher", () => {
   beforeEach(async () => {
@@ -16,60 +23,68 @@ describe("LanguageSwitcher", () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("offers only languages the deployment declares AND the build has", () => {
+  it("offers only languages the deployment declares AND the build has", async () => {
+    const user = userEvent.setup();
     render(<LanguageSwitcher localizations={["cs_CZ", "en", "de_DE"]} />);
 
-    expect(screen.getAllByRole("button").map((button) => button.textContent)).toEqual(["CS", "EN"]);
+    const options = await openMenu(user);
+    expect(options.map((option) => option.textContent)).toEqual(["ČeštinaCS", "EnglishEN"]);
   });
 
-  it("marks the active language as pressed", () => {
-    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
-
-    expect(screen.getByRole("button", { name: "Čeština (CS)" })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveAttribute("aria-pressed", "false");
-  });
-
-  it("names each language in the language itself, for screen readers", () => {
-    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
-
-    // the lang attribute makes a screen reader pronounce the name correctly
-    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveAttribute("lang", "en");
-    expect(screen.getByRole("group")).toHaveAccessibleName("Jazyk");
-  });
-
-  it("keeps the visible code inside the accessible name (WCAG 2.5.3)", () => {
-    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
-
-    // speech input addresses a control by what it shows ("click CS"), so the
-    // spelled-out name must contain that text - a real Lighthouse finding
-    for (const code of ["CS", "EN"]) {
-      const button = screen.getByText(code);
-      expect(button).toHaveAccessibleName(expect.stringContaining(code));
-    }
-  });
-
-  it("switches the language on click", async () => {
+  it("says which language is in effect, in the menu and on the trigger", async () => {
     const user = userEvent.setup();
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
-    await user.click(screen.getByRole("button", { name: "English (EN)" }));
+    // the trigger shows the short code, the menu the language itself
+    expect(screen.getByRole("button")).toHaveTextContent("CS");
+
+    const options = await openMenu(user);
+    expect(options[0]).toHaveAttribute("aria-checked", "true");
+    expect(options[1]).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("keeps the visible code inside the trigger's accessible name (WCAG 2.5.3)", () => {
+    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
+
+    // speech input addresses a control by what it shows ("click CS")
+    expect(screen.getByRole("button")).toHaveAccessibleName("Jazyk: Čeština (CS)");
+  });
+
+  it("names each language in the language itself, for screen readers", async () => {
+    const user = userEvent.setup();
+    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
+
+    await openMenu(user);
+    // the lang attribute makes a screen reader pronounce the name correctly
+    expect(screen.getByText("English")).toHaveAttribute("lang", "en");
+    expect(screen.getByText("Čeština")).toHaveAttribute("lang", "cs");
+  });
+
+  it("switches the language on selection", async () => {
+    const user = userEvent.setup();
+    render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
+
+    const options = await openMenu(user);
+    await user.click(options[1]);
 
     expect(i18n.language).toBe("en");
     // the control itself re-renders in the new language
-    expect(screen.getByRole("group")).toHaveAccessibleName("Language");
+    expect(screen.getByRole("button")).toHaveAccessibleName("Language: English (EN)");
   });
 
-  it("is operable from the keyboard alone", async () => {
+  it("is reachable and opens from the keyboard alone", async () => {
     const user = userEvent.setup();
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
     await user.tab();
-    expect(screen.getByRole("button", { name: "Čeština (CS)" })).toHaveFocus();
-    await user.tab();
-    expect(screen.getByRole("button", { name: "English (EN)" })).toHaveFocus();
+    expect(screen.getByRole("button")).toHaveFocus();
 
     await user.keyboard("{Enter}");
-    expect(i18n.language).toBe("en");
+
+    expect(await screen.findAllByRole("menuitemradio")).toHaveLength(2);
+    // walking the options themselves is Fluent's roving focus (tabster), which
+    // needs a real browser - jsdom does not run it. Verified in the browser
+    // pass instead (doc/accessibility.md §4, Phase C).
   });
 
   it("falls back when the reader's language is not offered here", async () => {
@@ -80,5 +95,16 @@ describe("LanguageSwitcher", () => {
     render(<LanguageSwitcher localizations={["cs_CZ"]} />);
 
     expect(i18n.language).toBe("cs");
+  });
+
+  it("has no structural accessibility violations, open or closed", async () => {
+    const user = userEvent.setup();
+    const { container, baseElement } = render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
+
+    await expectNoA11yViolations(container, ["region"]);
+
+    // the popover renders in a portal, so the whole document is the subject
+    await openMenu(user);
+    await expectNoA11yViolations(baseElement as HTMLElement, ["region"]);
   });
 });
