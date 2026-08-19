@@ -23,6 +23,10 @@ class SpaServingTest extends AbstractTest {
 		assertThat(contentType(response)).startsWith("text/html");
 		assertThat(response.body()).contains("<base href=\"/\"");
 		assertThat(response.body()).contains("window.serverContextPath = \"\"");
+		// the first paint already states the deployment's own name and default
+		// language - before any script has run
+		assertThat(response.body()).contains("<html lang=\"cs\">");
+		assertThat(response.body()).contains("<title>ARON test page template</title>");
 	}
 
 	@Test

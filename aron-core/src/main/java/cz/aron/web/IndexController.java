@@ -2,6 +2,7 @@ package cz.aron.web;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -11,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import cz.aron.web.v1.PresentationLocales;
+import cz.aron.web.v1.UiConfigLoader;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -40,7 +43,14 @@ public class IndexController {
 
 	private final String shellTemplate;
 
-	public IndexController(ResourceLoader resourceLoader) throws IOException {
+	private final UiConfigLoader uiConfigLoader;
+
+	private final PresentationLocales presentationLocales;
+
+	public IndexController(ResourceLoader resourceLoader, UiConfigLoader uiConfigLoader,
+			PresentationLocales presentationLocales) throws IOException {
+		this.uiConfigLoader = uiConfigLoader;
+		this.presentationLocales = presentationLocales;
 		Resource shell = resourceLoader.getResource(UI_SHELL);
 		if (!shell.exists()) {
 			shell = resourceLoader.getResource(PLACEHOLDER_SHELL);
@@ -52,9 +62,15 @@ public class IndexController {
 			"/entity/**", "/originator/**", "/news/**" })
 	public ResponseEntity<String> spaShell(HttpServletRequest request) {
 		String contextPath = request.getContextPath();
+		// the reader's own language is a client-side choice the server cannot know,
+		// so the first paint states the deployment's default; the UI corrects both
+		// once it has loaded
+		Locale defaultLocale = presentationLocales.getDefault();
 		String html = shellTemplate
 				.replace("__CONTEXT_PATH_HTML__", htmlAttributeEscape(contextPath))
-				.replace("__CONTEXT_PATH_JS__", jsStringEscape(contextPath));
+				.replace("__CONTEXT_PATH_JS__", jsStringEscape(contextPath))
+				.replace("__PAGE_LANG__", htmlAttributeEscape(defaultLocale.getLanguage()))
+				.replace("__PAGE_TITLE__", htmlTextEscape(uiConfigLoader.getConfig(defaultLocale).getName()));
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_HTML)
 				.cacheControl(CacheControl.noCache())
@@ -68,6 +84,11 @@ public class IndexController {
 	 */
 	private static String htmlAttributeEscape(String value) {
 		return value.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
+	/** Element text: the portal name comes from deployment configuration, not from the request. */
+	private static String htmlTextEscape(String value) {
+		return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
 	}
 
 	private static String jsStringEscape(String value) {

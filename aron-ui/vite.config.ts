@@ -7,6 +7,12 @@ import { defineConfig, type Plugin } from "vite";
 // into the BUILT page so the dev server keeps a plain, working one.
 function injectDeploymentPrefixTokens(): Plugin {
   const anchor = '<base href="/" />';
+  // the deployment's own name and default language belong to the first paint too:
+  // without them the tab shows this file's placeholder until React has loaded
+  const tokens: [RegExp, string][] = [
+    [/<html lang="[^"]*">/, '<html lang="__PAGE_LANG__">'],
+    [/<title>[^<]*<\/title>/, "<title>__PAGE_TITLE__</title>"],
+  ];
   return {
     name: "aron-context-path-tokens",
     apply: "build",
@@ -14,8 +20,15 @@ function injectDeploymentPrefixTokens(): Plugin {
       if (!html.includes(anchor)) {
         throw new Error(`index.html: expected ${anchor} - cannot tokenize the shell`);
       }
+      let tokenized = html.replace(anchor, '<base href="__CONTEXT_PATH_HTML__/" />');
+      for (const [pattern, replacement] of tokens) {
+        if (!pattern.test(tokenized)) {
+          throw new Error(`index.html: expected ${pattern} - cannot tokenize the shell`);
+        }
+        tokenized = tokenized.replace(pattern, replacement);
+      }
       return {
-        html: html.replace(anchor, '<base href="__CONTEXT_PATH_HTML__/" />'),
+        html: tokenized,
         tags: [
           {
             tag: "script",
