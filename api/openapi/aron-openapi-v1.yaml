@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: ARON Portal API
-  version: "1.0"
+  version: '1.0'
   description: |-
     ARON portal API (v1) - the contract between the ARON backend and its user
     interface (and possible external consumers).
@@ -31,12 +31,12 @@ paths:
         widened.
       parameters: []
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApuSearchResponse"
+                $ref: '#/components/schemas/ApuSearchResponse'
       tags:
         - search
       requestBody:
@@ -44,7 +44,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ApuSearchRequest"
+              $ref: '#/components/schemas/ApuSearchRequest'
   /api/v1/apu/{uuid}:
     get:
       operationId: Apu_getDetail
@@ -60,7 +60,7 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: "#/components/parameters/LangParam"
+        - $ref: '#/components/parameters/LangParam'
         - name: If-None-Match
           in: header
           required: false
@@ -72,7 +72,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           headers:
             ETag:
@@ -86,8 +86,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/ApuDetail"
-        "304":
+                $ref: '#/components/schemas/ApuDetail'
+        '304':
           description: The client has made a conditional request and the resource has not been modified.
       tags:
         - apu
@@ -110,7 +110,7 @@ paths:
           in: query
           required: true
           schema:
-            $ref: "#/components/schemas/TreeDirection"
+            $ref: '#/components/schemas/TreeDirection'
           explode: false
         - name: If-None-Match
           in: header
@@ -123,7 +123,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           headers:
             ETag:
@@ -139,8 +139,8 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/TreeNode"
-        "304":
+                  $ref: '#/components/schemas/TreeNode'
+        '304':
           description: The client has made a conditional request and the resource has not been modified.
       tags:
         - apu
@@ -156,18 +156,18 @@ paths:
           in: query
           required: true
           schema:
-            $ref: "#/components/schemas/ApuType"
+            $ref: '#/components/schemas/ApuType'
           explode: false
-        - $ref: "#/components/parameters/LangParam"
+        - $ref: '#/components/parameters/LangParam'
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/FacetDef"
+                  $ref: '#/components/schemas/FacetDef'
       tags:
         - search
   /api/v1/facets/{code}/options:
@@ -188,12 +188,12 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/FacetOptionsResponse"
+                $ref: '#/components/schemas/FacetOptionsResponse'
       tags:
         - search
       requestBody:
@@ -201,33 +201,33 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/FacetOptionsRequest"
+              $ref: '#/components/schemas/FacetOptionsRequest'
   /api/v1/system/info:
     get:
       operationId: System_getInfo
       description: Basic information about the running application.
       parameters: []
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/SystemInfo"
+                $ref: '#/components/schemas/SystemInfo'
       tags:
         - system
   /api/v1/ui/config:
     get:
       operationId: Ui_getConfig
-      description: "UI configuration: portal name, available localizations, top-level menu."
+      description: 'UI configuration: portal name, available localizations, top-level menu.'
       parameters: []
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UiConfig"
+                $ref: '#/components/schemas/UiConfig'
       tags:
         - ui
   /api/v1/ui/logo:
@@ -236,7 +236,7 @@ paths:
       description: Portal logo image (deployment-supplied; format varies, see Content-Type).
       parameters: []
       responses:
-        "200":
+        '200':
           description: The request has succeeded.
           content:
             image/svg+xml:
@@ -283,7 +283,7 @@ components:
         description:
           type: string
         apuType:
-          $ref: "#/components/schemas/ApuType"
+          $ref: '#/components/schemas/ApuType'
         permalink:
           type: string
           description: Public permalink of this APU, when assigned.
@@ -294,7 +294,7 @@ components:
         treePath:
           type: array
           items:
-            $ref: "#/components/schemas/TreeNode"
+            $ref: '#/components/schemas/TreeNode'
           description: |-
             The APU's path in the archival-description tree, root first, INCLUDING
             the APU itself as the last element - a single element for root or
@@ -303,17 +303,17 @@ components:
         parts:
           type: array
           items:
-            $ref: "#/components/schemas/DetailPart"
+            $ref: '#/components/schemas/DetailPart'
           description: Display-ready parts in display order; parts with no visible items are omitted.
         attachments:
           type: array
           items:
-            $ref: "#/components/schemas/AttachmentInfo"
+            $ref: '#/components/schemas/AttachmentInfo'
           description: Attachments (metadata only; binary serving arrives with a later slice).
         digitalObjects:
           type: array
           items:
-            $ref: "#/components/schemas/DigitalObjectInfo"
+            $ref: '#/components/schemas/DigitalObjectInfo'
           description: Digital objects (metadata only; file/tile serving arrives with a later slice).
       description: Display-ready detail of one APU (the render model).
     ApuLink:
@@ -344,7 +344,7 @@ components:
         description:
           type: string
         apuType:
-          $ref: "#/components/schemas/ApuType"
+          $ref: '#/components/schemas/ApuType'
         containsDigitalObjects:
           type: boolean
       description: One search hit.
@@ -353,7 +353,7 @@ components:
       properties:
         apuType:
           allOf:
-            - $ref: "#/components/schemas/ApuType"
+            - $ref: '#/components/schemas/ApuType'
           description: Section restriction; unset = search across all types (general search, no facets).
         query:
           type: string
@@ -361,7 +361,7 @@ components:
         filters:
           type: array
           items:
-            $ref: "#/components/schemas/SearchFilter"
+            $ref: '#/components/schemas/SearchFilter'
           description: Active filters; each references a facet of the section by its code.
         from:
           type: integer
@@ -381,7 +381,7 @@ components:
           default: 10
         sort:
           allOf:
-            - $ref: "#/components/schemas/SortMode"
+            - $ref: '#/components/schemas/SortMode'
           default: AUTO
         totalUpTo:
           type: integer
@@ -411,11 +411,11 @@ components:
             exact.
         totalRelation:
           allOf:
-            - $ref: "#/components/schemas/TotalRelation"
+            - $ref: '#/components/schemas/TotalRelation'
           description: EQ = `total` is exact; GTE = at least `total` APUs match.
         queryMode:
           allOf:
-            - $ref: "#/components/schemas/QueryMode"
+            - $ref: '#/components/schemas/QueryMode'
           description: |-
             STRICT = every query word had to match. RELAXED = the strict query had no
             hits and the server automatically retried with any-word matching - the UI
@@ -423,11 +423,11 @@ components:
         items:
           type: array
           items:
-            $ref: "#/components/schemas/ApuSearchItem"
+            $ref: '#/components/schemas/ApuSearchItem'
         facets:
           type: array
           items:
-            $ref: "#/components/schemas/FacetResult"
+            $ref: '#/components/schemas/FacetResult'
           description: |-
             Per-facet results of the section (multi-select semantics), each shaped by
             its facet kind - see the `FacetResult` specializations. A facet's full
@@ -435,7 +435,7 @@ components:
         typeCounts:
           type: array
           items:
-            $ref: "#/components/schemas/TypeCount"
+            $ref: '#/components/schemas/TypeCount'
           description: |-
             Matching APUs per type, count descending. The query and all filters
             apply; the request's own `apuType` restriction does NOT - a user browsing
@@ -461,7 +461,7 @@ components:
           description: Display name.
         file:
           allOf:
-            - $ref: "#/components/schemas/FileInfo"
+            - $ref: '#/components/schemas/FileInfo'
           description: The attachment's file.
       description: Attachment of an APU (metadata; binary serving arrives with a later slice).
     DatingBounds:
@@ -485,10 +485,10 @@ components:
       properties:
         bounds:
           allOf:
-            - $ref: "#/components/schemas/DatingBounds"
+            - $ref: '#/components/schemas/DatingBounds'
           description: Absent when no matching document carries a dating.
       allOf:
-        - $ref: "#/components/schemas/FacetResult"
+        - $ref: '#/components/schemas/FacetResult'
       description: Dating bounds of a UNITDATE facet.
     DatingPrecision:
       type: string
@@ -513,15 +513,15 @@ components:
           type: string
           description: Server-localized display label.
         kind:
-          $ref: "#/components/schemas/DetailItemKind"
+          $ref: '#/components/schemas/DetailItemKind'
       discriminator:
         propertyName: kind
         mapping:
-          TEXT: "#/components/schemas/TextItem"
-          UNITDATE: "#/components/schemas/UnitDateItem"
-          LINK: "#/components/schemas/LinkItem"
-          REF: "#/components/schemas/RefItem"
-          JSON: "#/components/schemas/JsonItem"
+          TEXT: '#/components/schemas/TextItem'
+          UNITDATE: '#/components/schemas/UnitDateItem'
+          LINK: '#/components/schemas/LinkItem'
+          REF: '#/components/schemas/RefItem'
+          JSON: '#/components/schemas/JsonItem'
       description: |-
         One display-ready item of a part, discriminated by `kind`: each kind is its
         own model carrying exactly the fields that kind has, so a client never has to
@@ -551,14 +551,14 @@ components:
           type: string
           description: Server-localized display label.
         viewType:
-          $ref: "#/components/schemas/PartViewType"
+          $ref: '#/components/schemas/PartViewType'
         value:
           type: string
           description: Textual value of the whole part, when the source supplied one.
         items:
           type: array
           items:
-            $ref: "#/components/schemas/DetailItem"
+            $ref: '#/components/schemas/DetailItem'
           description: Display-ready items in display order (invisible items already filtered out).
       description: One display-ready part of the detail.
     DigitalObjectInfo:
@@ -576,7 +576,7 @@ components:
         files:
           type: array
           items:
-            $ref: "#/components/schemas/FileInfo"
+            $ref: '#/components/schemas/FileInfo'
           description: Files of the object in display order.
       description: Digital object (digitized attachment) of an APU.
     EnumFacetResult:
@@ -587,9 +587,9 @@ components:
         buckets:
           type: array
           items:
-            $ref: "#/components/schemas/FacetBucket"
+            $ref: '#/components/schemas/FacetBucket'
       allOf:
-        - $ref: "#/components/schemas/FacetResult"
+        - $ref: '#/components/schemas/FacetResult'
       description: Value buckets of an ENUM facet (`value` doubles as the display label).
     FacetBucket:
       type: object
@@ -619,7 +619,7 @@ components:
           type: string
           description: Facet code = source item-type code (tilde form, e.g. `LANG~CODE`); used in filters.
         type:
-          $ref: "#/components/schemas/FacetType"
+          $ref: '#/components/schemas/FacetType'
         label:
           type: string
           description: Display label (server-localized).
@@ -628,10 +628,10 @@ components:
         description:
           type: string
         display:
-          $ref: "#/components/schemas/FacetDisplay"
+          $ref: '#/components/schemas/FacetDisplay'
         orderBy:
           allOf:
-            - $ref: "#/components/schemas/FacetOrder"
+            - $ref: '#/components/schemas/FacetOrder'
           description: Bucket ordering (ENUM facets).
         displayedItems:
           type: integer
@@ -655,7 +655,7 @@ components:
       properties:
         apuType:
           allOf:
-            - $ref: "#/components/schemas/ApuType"
+            - $ref: '#/components/schemas/ApuType'
           description: Section whose facet configuration applies (facets are section-scoped).
         query:
           type: string
@@ -663,7 +663,7 @@ components:
         filters:
           type: array
           items:
-            $ref: "#/components/schemas/SearchFilter"
+            $ref: '#/components/schemas/SearchFilter'
           description: Active filters of the current search; the facet's own VALUES filter is ignored.
         q:
           type: string
@@ -684,8 +684,8 @@ components:
         options:
           type: array
           items:
-            $ref: "#/components/schemas/FacetBucket"
-      description: "Facet options, ordered per the facet configuration (default: count descending)."
+            $ref: '#/components/schemas/FacetBucket'
+      description: 'Facet options, ordered per the facet configuration (default: count descending).'
     FacetOrder:
       type: string
       enum:
@@ -700,7 +700,7 @@ components:
       properties:
         kind:
           allOf:
-            - $ref: "#/components/schemas/FacetResultKind"
+            - $ref: '#/components/schemas/FacetResultKind'
           description: Result kind - the discriminator; follows the facet's type.
         code:
           type: string
@@ -708,9 +708,9 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          ENUM: "#/components/schemas/EnumFacetResult"
-          REF: "#/components/schemas/RefFacetResult"
-          DATING: "#/components/schemas/DatingFacetResult"
+          ENUM: '#/components/schemas/EnumFacetResult'
+          REF: '#/components/schemas/RefFacetResult'
+          DATING: '#/components/schemas/DatingFacetResult'
       description: |-
         Result of one facet, discriminated by `kind` - each facet kind carries only
         the fields it really has (same TypeSpec pattern as `SearchFilter`).
@@ -741,7 +741,7 @@ components:
           description: File id for the (future) file-serving endpoints.
         fileType:
           allOf:
-            - $ref: "#/components/schemas/FileType"
+            - $ref: '#/components/schemas/FileType'
           description: Role of the file within its digital object.
         name:
           type: string
@@ -779,7 +779,7 @@ components:
           type: string
           description: The raw JSON string.
       allOf:
-        - $ref: "#/components/schemas/DetailItem"
+        - $ref: '#/components/schemas/DetailItem'
       description: Structured value (aggregated items), carried as a raw JSON string.
     LinkItem:
       type: object
@@ -794,7 +794,7 @@ components:
           type: string
           description: Text to show for the link; the target itself when the source gave no caption.
       allOf:
-        - $ref: "#/components/schemas/DetailItem"
+        - $ref: '#/components/schemas/DetailItem'
       description: External link.
     MenuItem:
       type: object
@@ -803,7 +803,7 @@ components:
       properties:
         code:
           allOf:
-            - $ref: "#/components/schemas/MenuItemCode"
+            - $ref: '#/components/schemas/MenuItemCode'
           description: Section code; the UI maps it to its route and localized label.
         color:
           type: string
@@ -844,7 +844,7 @@ components:
         to:
           type: string
       allOf:
-        - $ref: "#/components/schemas/SearchFilter"
+        - $ref: '#/components/schemas/SearchFilter'
       description: |-
         Dating filter of a UNITDATE facet: matches documents whose interval
         intersects [from, to]. Bounds accept a year (`1190`), a date (`1190-05-01`)
@@ -857,10 +857,10 @@ components:
         buckets:
           type: array
           items:
-            $ref: "#/components/schemas/FacetBucket"
+            $ref: '#/components/schemas/FacetBucket'
       allOf:
-        - $ref: "#/components/schemas/FacetResult"
-      description: "Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name."
+        - $ref: '#/components/schemas/FacetResult'
+      description: 'Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name.'
     RefItem:
       type: object
       required:
@@ -868,10 +868,10 @@ components:
       properties:
         ref:
           allOf:
-            - $ref: "#/components/schemas/ApuLink"
+            - $ref: '#/components/schemas/ApuLink'
           description: The referenced APU, resolved to uuid + display name.
       allOf:
-        - $ref: "#/components/schemas/DetailItem"
+        - $ref: '#/components/schemas/DetailItem'
       description: Reference to another APU.
     SearchFilter:
       type: object
@@ -881,7 +881,7 @@ components:
       properties:
         kind:
           allOf:
-            - $ref: "#/components/schemas/FilterKind"
+            - $ref: '#/components/schemas/FilterKind'
           description: |-
             Filter kind - the discriminator. A named enum so the base and every
             subtype share one type.
@@ -891,14 +891,16 @@ components:
       discriminator:
         propertyName: kind
         mapping:
-          VALUES: "#/components/schemas/ValuesFilter"
-          TEXT: "#/components/schemas/TextFilter"
-          RANGE: "#/components/schemas/RangeFilter"
+          VALUES: '#/components/schemas/ValuesFilter'
+          TEXT: '#/components/schemas/TextFilter'
+          RANGE: '#/components/schemas/RangeFilter'
       description: |-
-        One active filter, discriminated by `kind`. TypeSpec requires every subtype
-        to re-declare the discriminator literal; the emitted OpenAPI is post-processed
-        (scripts/strip-discriminator-redeclaration.mjs) into the classic
-        parent-only-property shape that code generators handle (CAM pattern).
+        One active filter, discriminated by `kind` - the Elza/CAM `ItemData` pattern
+        this contract uses throughout (see also `FacetResult` and `DetailItem`): the
+        subtype narrows the discriminator to one enum member and marks it
+        `@invisible(Lifecycle)`, which keeps it out of the child schema. The emitted
+        OpenAPI is then the parent-only-property shape every generator handles;
+        redeclaring the literal in the child breaks them.
     SortMode:
       type: string
       enum:
@@ -933,7 +935,7 @@ components:
         q:
           type: string
       allOf:
-        - $ref: "#/components/schemas/SearchFilter"
+        - $ref: '#/components/schemas/SearchFilter'
       description: Text filter of a FULLTEXT facet (analyzed match on the facet's field).
     TextItem:
       type: object
@@ -944,8 +946,8 @@ components:
           type: string
           description: Display value.
       allOf:
-        - $ref: "#/components/schemas/DetailItem"
-      description: "Plain text: strings, enumerations and numbers."
+        - $ref: '#/components/schemas/DetailItem'
+      description: 'Plain text: strings, enumerations and numbers.'
     TotalRelation:
       type: string
       enum:
@@ -995,7 +997,7 @@ components:
         - count
       properties:
         apuType:
-          $ref: "#/components/schemas/ApuType"
+          $ref: '#/components/schemas/ApuType'
         count:
           type: integer
           format: int64
@@ -1020,8 +1022,8 @@ components:
         menuItems:
           type: array
           items:
-            $ref: "#/components/schemas/MenuItem"
-          description: "Top-level menu: which sections this deployment enables, in display order."
+            $ref: '#/components/schemas/MenuItem'
+          description: 'Top-level menu: which sections this deployment enables, in display order.'
       description: UI configuration of the deployment.
     UnitDateItem:
       type: object
@@ -1039,11 +1041,11 @@ components:
           description: Upper bound, same form.
         fromPrecision:
           allOf:
-            - $ref: "#/components/schemas/DatingPrecision"
+            - $ref: '#/components/schemas/DatingPrecision'
           description: Granularity the lower bound was recorded in.
         toPrecision:
           allOf:
-            - $ref: "#/components/schemas/DatingPrecision"
+            - $ref: '#/components/schemas/DatingPrecision'
           description: Granularity the upper bound was recorded in.
         fromEstimated:
           type: boolean
@@ -1052,7 +1054,7 @@ components:
           type: boolean
           description: The upper bound is an estimate.
       allOf:
-        - $ref: "#/components/schemas/DetailItem"
+        - $ref: '#/components/schemas/DetailItem'
       description: |-
         A dating, rendered server-side and carried machine-readably as well.
 
@@ -1071,5 +1073,5 @@ components:
           items:
             type: string
       allOf:
-        - $ref: "#/components/schemas/SearchFilter"
+        - $ref: '#/components/schemas/SearchFilter'
       description: Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR).

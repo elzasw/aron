@@ -5,7 +5,7 @@
   "type": "module",
   "description": "TypeSpec definition of the ARON portal API (/api/v1); emits OpenAPI 3.",
   "scripts": {
-    "build": "tsp compile . && node scripts/strip-discriminator-redeclaration.mjs openapi/aron-openapi-v1.yaml",
+    "build": "tsp compile .",
     "watch": "tsp compile . --watch",
     "format": "tsp format \"**/*.tsp\"",
     "check": "tsp compile . --no-emit"
@@ -14,7 +14,6 @@
     "@typespec/compiler": "~1.11.0",
     "@typespec/http": "~1.11.0",
     "@typespec/openapi": "~1.11.0",
-    "@typespec/openapi3": "~1.11.0",
-    "yaml": "^2.5.0"
+    "@typespec/openapi3": "~1.11.0"
   }
 }

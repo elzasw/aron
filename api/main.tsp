@@ -320,10 +320,12 @@ enum FilterKind {
 }
 
 /**
- * One active filter, discriminated by `kind`. TypeSpec requires every subtype
- * to re-declare the discriminator literal; the emitted OpenAPI is post-processed
- * (scripts/strip-discriminator-redeclaration.mjs) into the classic
- * parent-only-property shape that code generators handle (CAM pattern).
+ * One active filter, discriminated by `kind` - the Elza/CAM `ItemData` pattern
+ * this contract uses throughout (see also `FacetResult` and `DetailItem`): the
+ * subtype narrows the discriminator to one enum member and marks it
+ * `@invisible(Lifecycle)`, which keeps it out of the child schema. The emitted
+ * OpenAPI is then the parent-only-property shape every generator handles;
+ * redeclaring the literal in the child breaks them.
  */
 @discriminator("kind")
 model SearchFilter {
@@ -339,12 +341,14 @@ model SearchFilter {
 
 /** Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR). */
 model ValuesFilter extends SearchFilter {
+	@invisible(Lifecycle)
 	kind: FilterKind.VALUES;
 	values: string[];
 }
 
 /** Text filter of a FULLTEXT facet (analyzed match on the facet's field). */
 model TextFilter extends SearchFilter {
+	@invisible(Lifecycle)
 	kind: FilterKind.TEXT;
 	q: string;
 }
@@ -355,6 +359,7 @@ model TextFilter extends SearchFilter {
  * or a full ISO date-time; either bound may be omitted.
  */
 model RangeFilter extends SearchFilter {
+	@invisible(Lifecycle)
 	kind: FilterKind.RANGE;
 	from?: string;
 	to?: string;
@@ -439,18 +444,21 @@ model FacetResult {
 
 /** Value buckets of an ENUM facet (`value` doubles as the display label). */
 model EnumFacetResult extends FacetResult {
+	@invisible(Lifecycle)
 	kind: FacetResultKind.ENUM;
 	buckets: FacetBucket[];
 }
 
 /** Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name. */
 model RefFacetResult extends FacetResult {
+	@invisible(Lifecycle)
 	kind: FacetResultKind.REF;
 	buckets: FacetBucket[];
 }
 
 /** Dating bounds of a UNITDATE facet. */
 model DatingFacetResult extends FacetResult {
+	@invisible(Lifecycle)
 	kind: FacetResultKind.DATING;
 
 	/** Absent when no matching document carries a dating. */

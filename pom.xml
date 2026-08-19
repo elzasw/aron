@@ -48,10 +48,11 @@
 		<!-- Internal artifact; resolves from the LightComp Maven repository
 		     (mvn.lightcomp.cz, configured as a mirror in settings.xml / on CI). -->
 		<file-transfer.version>2.0</file-transfer.version>
-		<!-- Current line. Discriminator inheritance works because the api module
-		     post-processes the emitted OpenAPI into the parent-only-property shape
-		     (see api/scripts/strip-discriminator-redeclaration.mjs) - without it
-		     every generator line (7.6/7.15/7.24) breaks on the TypeSpec output. -->
+		<!-- Current line. Discriminated inheritance reaches the generators in the
+		     parent-only-property shape they all handle; subtypes mark the
+		     discriminator @invisible(Lifecycle) in main.tsp, so no post-processing
+		     of the emitted OpenAPI is involved. Redeclaring it in a child instead
+		     breaks every generator line (7.6/7.15/7.24). -->
 		<openapi-generator.version>7.24.0</openapi-generator.version>
 		<!-- Embedded search engine (search.engine=lucene) - same Lucene generation
 		     that Elasticsearch 9.x embeds. -->
