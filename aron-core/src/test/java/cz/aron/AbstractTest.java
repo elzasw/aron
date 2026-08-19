@@ -27,8 +27,19 @@ import cz.aron.test.api.v1.invoker.ApiClient;
  * to the feature's test class.
  */
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+		properties = AbstractTest.CLASSPATH_CONFIG_ONLY)
 public abstract class AbstractTest {
+
+	/**
+	 * Restricts config-data discovery to the classpath, so the suite sees exactly
+	 * application.yml + application-test.yml and nothing else. Without it a
+	 * deployment configuration in the working directory ({@code ./config/}) would
+	 * WIN over the test overlay - an external plain application.yml outranks a
+	 * profile-specific one from the jar - and a developer's own database would
+	 * silently replace H2.
+	 */
+	static final String CLASSPATH_CONFIG_ONLY = "spring.config.location=optional:classpath:/";
 
 	@LocalServerPort
 	protected int port;

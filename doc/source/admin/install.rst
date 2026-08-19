@@ -42,7 +42,7 @@ backend **and** the web UI, plus an external configuration directory:
        images/                # logo, top image
 
 ``config/application.yml`` is resolved relative to the working directory; a
-template is provided at ``aron-core/config/application.yml.template`` in the
+template is provided at ``distribution/config/application.yml.template`` in the
 source tree.
 
 Running

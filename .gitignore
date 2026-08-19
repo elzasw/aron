@@ -16,6 +16,12 @@ aron-ui/src/api/generated/
 # Local toolchain config (machine-specific paths) - copied from set-env.bat.template
 /set-env.bat
 
+# Local run sandbox(es) - the deployment-shaped working directory used for IDE
+# runs and `java -jar` checks (see README, "Local run sandbox"). Holds the
+# developer's own configuration and runtime data; never committed.
+/run/
+/run-*/
+
 # IDE / OS
 .idea/
 *.iml

@@ -25,6 +25,7 @@ import cz.aron.repository.ApuEntityRepository;
  * collide on the changelog table.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+		AbstractTest.CLASSPATH_CONFIG_ONLY,
 		"server.servlet.context-path=/aron",
 		"spring.datasource.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=VALUE,ORDER;DB_CLOSE_DELAY=-1",
 		"spring.liquibase.url=jdbc:h2:mem:testdb-subpath;MODE=PostgreSQL;DATABASE_TO_UPPER=false;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1" })
