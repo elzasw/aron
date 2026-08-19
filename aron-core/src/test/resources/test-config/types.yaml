@@ -14,6 +14,9 @@ itemTypes:
     name: Dating
     type: UNITDATE
     indexed: true
+  # ENUM values arrive from Transfagent as display text (APUX ItemEnum is a plain
+  # string, no code/label pair) - the terse values in these fixtures are just
+  # short test data, not codes the portal would have to resolve.
   - code: LANG_CODE
     name: Language
     type: ENUM

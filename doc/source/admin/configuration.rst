@@ -79,6 +79,13 @@ indexing flags:
   (the other names of an access point); its values rank just below the
   primary name (default: no; see :doc:`search`).
 
+.. note::
+
+   Values of ``ENUM`` items are **not** configured here and are not translated
+   by the portal: Transfagent delivers them as the text to display. Like record
+   names and descriptions they are content, so their language is the language
+   the source system recorded them in.
+
 .. important::
 
    ``types.yaml`` describes **what the search index contains**. Any change to
