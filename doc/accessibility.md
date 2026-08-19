@@ -110,15 +110,29 @@ statement can cite it (or so it disappears from the statement once fixed).
 The slider needs no `aria-valuetext`: its value *is* the year, which is what a
 reader should hear.
 
-### Phase B — permanent automated gate (~0.5–1 day)
+### Phase B — permanent automated gate — **done**
 
-- Add **ESLint + `eslint-plugin-jsx-a11y`** to `aron-ui` (the module currently
-  has no linting at all) and run it in the Maven build, so a missing label or a
-  role misuse fails the build rather than a review.
-- Add **axe-core assertions to the existing vitest suite**: one shared helper
-  (`expectNoA11yViolations`) used by page-level render tests. jsdom cannot judge
-  colour contrast or layout, but it reliably catches structure, naming and role
-  errors — which is where regressions actually happen.
+Two checks run in the Maven `test` phase (so also on CI, and skipped together by
+`-DskipTests`):
+
+- **ESLint with `eslint-plugin-jsx-a11y`** (`aron-ui/eslint.config.js`, the
+  module had no linting at all before): a missing label, a role misuse or a
+  handler on a non-interactive element fails the build. Warnings fail too
+  (`--max-warnings=0`), so a suppression has to be written down with its reason
+  instead of accumulating silently. Formatting is deliberately not linted — it
+  is not what breaks a screen reader.
+- **axe-core over rendered markup** in the vitest suite via
+  `expectNoA11yViolations` (`src/test/a11y.ts`), asserted for the application
+  frame and for every facet kind. jsdom has no layout engine, so colour contrast
+  is explicitly disabled here and belongs to Phase C; what this does catch —
+  structure, names, relationships, duplicate ids — is where regressions actually
+  appear.
+
+Setting the gate up also surfaced three React state-sync smells the rules flag
+as cascading renders (`react-hooks/set-state-in-effect`). They were fixed by
+adjusting state during render instead of in an effect, which is the documented
+React pattern and removed one redundant render pass from the search box, the
+facet filters and the description tree.
 
 ### Phase C — browser-verified checks + manual pass (~1 day + audit)
 
@@ -176,9 +190,10 @@ than audited once:
    the component is keyboard-operable, has an accessible name, uses a real
    heading/landmark where it structures content, and announces asynchronous
    state changes.
-2. **Automated gate in the build** — lint + axe unit assertions run in
-   `mvn install` through the `aron-ui` module, i.e. also on CI. A pull request
-   that regresses structure does not build.
+2. **Automated gate in the build** — `npm run lint` (ESLint + jsx-a11y) and the
+   axe assertions in the vitest suite run in the `test` phase of the `aron-ui`
+   module, i.e. in `mvn install` and on CI. A change that regresses structure
+   does not build. New page-level tests should call `expectNoA11yViolations`.
 3. **Periodic manual audit** — the Phase C keyboard + NVDA pass repeated at
    least annually and before a release that reshapes the UI. Results and dates
    go into the log below.
@@ -194,6 +209,7 @@ than audited once:
 |---|---|---|---|
 | 2026-08-19 | initial review of the search and record pages | source review (this chapter) | gaps recorded in §4 |
 | 2026-08-19 | Phase A + D | implementation + component tests (skip link, footer links, facet naming) | §4 Phase A and D closed; B and C open |
+| 2026-08-19 | Phase B | ESLint + jsx-a11y over the whole UI, axe over the frame and every facet kind | no findings left; the gate now runs in every build |
 
 ## 6. Deployment responsibilities
 

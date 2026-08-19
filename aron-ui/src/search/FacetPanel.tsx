@@ -332,7 +332,13 @@ function TextFacet({ def, filters, onFilters }: Pick<Props, "def" | "filters" | 
   const { t } = useTranslation();
   const applied = textOf(filters, def.code);
   const [value, setValue] = useState(applied);
-  useEffect(() => setValue(applied), [applied]);
+  // follow the filter when it changes elsewhere (shared link, reset). Adjusting
+  // state while rendering rather than in an effect keeps it to one render pass.
+  const [lastApplied, setLastApplied] = useState(applied);
+  if (applied !== lastApplied) {
+    setLastApplied(applied);
+    setValue(applied);
+  }
 
   // the filter applies while typing (old-portal behavior, same 700 ms
   // debounce); Enter just applies immediately
@@ -343,7 +349,10 @@ function TextFacet({ def, filters, onFilters }: Pick<Props, "def" | "filters" | 
     if (debounced !== applied) {
       onFilters(setText(filters, def.code, debounced));
     }
-  }, [debounced]); // deliberately not on applied/filters - see the guard
+    // only the debounced keystroke may trigger this; the guard above makes the
+    // echo of our own apply a no-op
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debounced]);
 
   return (
     <Input
@@ -376,10 +385,15 @@ function RangeFacet({
   const applied = rangeOf(filters, def.code);
   const [from, setFrom] = useState(applied.from ?? "");
   const [to, setTo] = useState(applied.to ?? "");
-  useEffect(() => {
+  // follow the applied range (shared link, reset, our own clamped apply) during
+  // render rather than through an effect - see TextFacet
+  const appliedKey = `${applied.from ?? ""}|${applied.to ?? ""}`;
+  const [lastAppliedKey, setLastAppliedKey] = useState(appliedKey);
+  if (appliedKey !== lastAppliedKey) {
+    setLastAppliedKey(appliedKey);
     setFrom(applied.from ?? "");
     setTo(applied.to ?? "");
-  }, [applied.from, applied.to]);
+  }
 
   const clampYear = (value: string) => {
     if (value === "" || bounds === undefined) {
@@ -403,11 +417,13 @@ function RangeFacet({
     const nextFrom = clampYear(debouncedFrom);
     const nextTo = clampYear(debouncedTo);
     if (nextFrom !== (applied.from ?? "") || nextTo !== (applied.to ?? "")) {
-      setFrom(nextFrom);
-      setTo(nextTo);
+      // the fields follow the clamped values through the resync above once the
+      // filter is applied, so the effect only has to publish it
       onFilters(setRange(filters, def.code, nextFrom, nextTo));
     }
-  }, [debouncedFrom, debouncedTo]); // deliberately not on applied/filters - the guard makes echoes no-ops
+    // only a debounced edit may trigger this; the guard above absorbs the echo
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedFrom, debouncedTo]);
 
   // slider thumbs live inside the available bounds; unset fields sit at the edges
   const slider = bounds !== undefined && bounds.maxYear > bounds.minYear

@@ -110,6 +110,15 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
+  // a different record means a different tree: drop what the reader had folded.
+  // Adjusting during render rather than in the loading effect below keeps the
+  // stale collapse from surviving one paint.
+  const [lastUuid, setLastUuid] = useState(currentUuid);
+  if (currentUuid !== lastUuid) {
+    setLastUuid(currentUuid);
+    setCollapsed(new Set());
+  }
+
   const fetchNodes = (uuid: string, direction: TreeDirection) =>
     apuApi.apuGetTreeNodes({ uuid, direction });
 
@@ -161,11 +170,13 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
         }
       }
     };
-    setCollapsed(new Set());
     load();
     return () => {
       cancelled = true;
     };
+    // treePath always changes together with the record it leads to, and its
+    // array identity is new on every render - reloading on it would loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUuid]);
 
   const childrenLoaded = (node: LoadedNode) =>

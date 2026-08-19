@@ -59,8 +59,23 @@
 						</configuration>
 					</execution>
 					<execution>
+						<!-- Accessibility gate (doc/accessibility.md §5): eslint-plugin-jsx-a11y
+						     turns a missing label or a role misuse into a build failure. Runs
+						     before the tests, in the same phase, so -DskipTests skips both. -->
+						<id>npm-lint</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>test</phase>
+						<configuration>
+							<arguments>run lint</arguments>
+							<skip>${skipTests}</skip>
+						</configuration>
+					</execution>
+					<execution>
 						<!-- Vitest + jsdom; no browser, no external service, so it fits the
-						     project's "mvn test needs nothing installed" rule. -->
+						     project's "mvn test needs nothing installed" rule. Includes axe
+						     assertions over rendered markup (src/test/a11y.ts). -->
 						<id>npm-test</id>
 						<goals>
 							<goal>npm</goal>

@@ -1,7 +1,7 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
@@ -132,7 +132,13 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const sortParam = params.get("sort") ?? "";
   const lang = useApiLanguage();
   const [queryInput, setQueryInput] = useState(query);
-  useEffect(() => setQueryInput(query), [query]);
+  // the box follows the query in the URL (back/forward, shared link); adjusting
+  // state during render costs one pass instead of an effect's cascade
+  const [lastQuery, setLastQuery] = useState(query);
+  if (query !== lastQuery) {
+    setLastQuery(query);
+    setQueryInput(query);
+  }
 
   const facetDefs = useQuery({
     queryKey: ["facets", apuType, lang],

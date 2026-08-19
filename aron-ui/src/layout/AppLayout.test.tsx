@@ -5,6 +5,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FooterLinkCode, type UiConfig } from "../api/generated";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import { expectNoA11yViolations } from "../test/a11y";
 import AppLayout from "./AppLayout";
 
 const config: UiConfig = {
@@ -79,5 +80,12 @@ describe("AppLayout", () => {
 
     // an empty region that already exists is what makes an addition announceable
     expect(screen.getByRole("alert")).toBeEmptyDOMElement();
+  });
+
+  it("has no structural accessibility violations", async () => {
+    const { container } = renderLayout();
+    await screen.findByRole("link", { name: "Prohlášení o přístupnosti" });
+
+    await expectNoA11yViolations(container);
   });
 });

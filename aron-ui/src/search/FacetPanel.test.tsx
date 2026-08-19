@@ -9,6 +9,7 @@ import {
   FacetType,
 } from "../api/generated";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import { expectNoA11yViolations } from "../test/a11y";
 import FacetPanel from "./FacetPanel";
 
 function facet(code: string, type: FacetType, label: string): FacetDef {
@@ -64,5 +65,25 @@ describe("FacetPanel", () => {
     // the year fields are numeric and carry their own names
     expect(screen.getByRole("spinbutton", { name: "Datace vzniku – od roku" })).toBeInTheDocument();
     expect(screen.getByRole("spinbutton", { name: "Datace vzniku – do roku" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["text", facet("TITLE~MAIN", FacetType.Fulltext, "Název")],
+    ["enum", facet("LANG~CODE", FacetType.Enum, "Jazyk")],
+    ["dating", facet("UNIT~DATE", FacetType.Unitdate, "Datace vzniku")],
+  ])("has no structural accessibility violations (%s facet)", async (_kind, def) => {
+    const { container } = renderFacet(
+      def,
+      def.type === FacetType.Unitdate
+        ? {
+            kind: FacetResultKind.Dating,
+            code: def.code,
+            bounds: { minYear: 1201, maxYear: 1961 },
+          }
+        : undefined,
+    );
+
+    // "region" only makes sense for a whole page, not for one rendered facet
+    await expectNoA11yViolations(container, ["region"]);
   });
 });
