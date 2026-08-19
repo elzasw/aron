@@ -84,6 +84,23 @@ namespace Ui {
 
 		@body body: bytes;
 	};
+
+	/**
+	 * One deployment-supplied image of the structured search results (record and
+	 * field icons, thumbnail stand-ins) from the configured image directory.
+	 * Clients never build these URLs themselves - `ResultLayout` and
+	 * `StructuredResult` carry ready-to-use ones.
+	 */
+	@get
+	@route("/result-images/{name}")
+	op getResultImage(
+		/** File name within the deployment's image directory; no path segments. */
+		@path name: string,
+	): {
+		@header contentType: "image/svg+xml" | "image/png" | "image/jpeg";
+
+		@body body: bytes;
+	};
 }
 
 /** UI configuration of the deployment. */
@@ -210,6 +227,18 @@ namespace Search {
 	@post
 	@route("/api/v1/facets/{code}/options")
 	op getFacetOptions(@path code: string, @body request: FacetOptionsRequest): FacetOptionsResponse;
+
+	/**
+	 * Deployment layout of structured search results: how the record and field
+	 * codes carried by `StructuredResult` are presented. Language-dependent
+	 * (prefixes and labels are deployment text).
+	 *
+	 * Empty lists are a valid answer - a deployment that configures no layout
+	 * still gets structured results, rendered with the client's own defaults.
+	 */
+	@get
+	@route("/api/v1/search/result-layout")
+	op getResultLayout(...LangParam): ResultLayout;
 }
 
 /** Types of archival presentation units. */
@@ -465,6 +494,123 @@ model ApuSearchItem {
 	description?: string;
 	apuType: ApuType;
 	containsDigitalObjects: boolean;
+
+	/**
+	 * Structured presentation of this record, when the source system delivered
+	 * one. Present per record: a list can mix records that have one with records
+	 * that do not, and a client without it renders `name` and `description` as
+	 * usual - there is no deployment flag to turn this on.
+	 *
+	 * The record and field codes are a deployment vocabulary (the source system
+	 * chose them); `getResultLayout` says how to present them.
+	 */
+	structured?: StructuredResult;
+}
+
+/**
+ * Pre-rendered structured presentation of one record: rows of coded fields, as
+ * delivered by the source system in the APUX exchange format. The portal stores
+ * and lays it out, it does not compose it.
+ */
+model StructuredResult {
+	/** Record-shape code (an archival level in practice); keys the layout's icon. */
+	code: string;
+
+	/** Rows in display order. */
+	rows: ResultRow[];
+
+	/**
+	 * Thumbnail image, ready to use: an external absolute URL when the source
+	 * delivered one, otherwise this deployment's own `/ui/result-images` URL.
+	 */
+	thumbnailUrl?: string;
+
+	/** Where the thumbnail leads; unset = this record's own detail page. */
+	thumbnailLinkUrl?: string;
+}
+
+/** One row of a structured result: the fields shown on one line. */
+model ResultRow {
+	fields: ResultField[];
+}
+
+/** One field of a row. */
+model ResultField {
+	/** Field code; keys the layout's styling, prefix and label. */
+	code: string;
+
+	values: ResultValue[];
+}
+
+/** One value of a field; with `refUuid` it is a link to another record. */
+model ResultValue {
+	text: string;
+
+	/** Referenced APU - the value renders as a link to its detail. */
+	refUuid?: string;
+}
+
+/**
+ * How one deployment presents its structured search results. Fetched once per
+ * language and cached by clients; the codes it keys on come from the data, so a
+ * code with no entry here simply renders plain.
+ */
+model ResultLayout {
+	/** Styling per field code, in no particular order. */
+	fields: ResultFieldStyle[];
+
+	/** Icon per `StructuredResult.code`. */
+	icons: ResultIcon[];
+
+	/** Separator between fields of one row; unset = the client default (" | "). */
+	fieldSeparator?: string;
+}
+
+/** Presentation of one field code. */
+model ResultFieldStyle {
+	code: string;
+
+	/**
+	 * This field is the record's heading - its text becomes the link to the
+	 * record's detail. At most one field of a record should be marked; with none,
+	 * clients fall back to the record's `name`.
+	 */
+	heading?: boolean;
+
+	/** Localized text shown before the values ("Inv. č.: "). */
+	prefix?: string;
+
+	/**
+	 * Localized name of the field for readers who get no visual context (screen
+	 * readers, tooltips). Defaults to `prefix` when that is set.
+	 */
+	label?: string;
+
+	/** Separator between the field's own values; unset = a space. */
+	valueSeparator?: string;
+
+	/** CSS color of the text; unset = the client's own body color. */
+	color?: string;
+
+	/** Font-size multiplier, 1 = base text size. */
+	scale?: float32;
+
+	bold?: boolean;
+
+	/** Icon shown before the field, ready to use (see `getResultImage`). */
+	iconUrl?: string;
+}
+
+/** Icon of one record-shape code. */
+model ResultIcon {
+	/** The `StructuredResult.code` this icon belongs to. */
+	code: string;
+
+	/** Ready-to-use URL of the deployment image (see `getResultImage`). */
+	url: string;
+
+	/** Rendered width in CSS pixels; unset = the client default. */
+	size?: int32;
 }
 
 /** Facet result kinds - the FacetResult discriminator (follows the facet's type). */

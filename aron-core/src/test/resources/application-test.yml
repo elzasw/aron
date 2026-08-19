@@ -54,5 +54,7 @@ webResources:
   facets: ./src/test/resources/test-config/searchConfig.yaml
   logo: ./src/test/resources/test-config/logo.svg
   topImage: ./src/test/resources/test-config/book.png
+  resultLayout: ./src/test/resources/test-config/resultLayout.yaml
+  resultImages: ./src/test/resources/test-config/images
 
 help-url: http://help.test.example

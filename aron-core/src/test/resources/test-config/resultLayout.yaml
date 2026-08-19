@@ -1,0 +1,27 @@
+# Layout of the structured search results (webResources.resultLayout). The codes
+# come from the data - see the <result> element in import/detail-transfer.
+fieldSeparator: " | "
+iconSize: 35
+icons:
+  - code: A_IB
+    image: record.svg
+  - code: A_IM
+    image: record.svg
+    size: 28
+fields:
+  - code: N
+    heading: true
+    scale: 1.2
+    bold: true
+  - code: D
+    color: black
+    bold: true
+  - code: J_S
+    prefix: "sign.: "
+    valueSeparator: ", "
+    image: field.svg
+  - code: J_IC
+    prefix: "Inv. č.: "
+  - code: J_F
+    label: "Archivní soubor"
+    color: "#666666"

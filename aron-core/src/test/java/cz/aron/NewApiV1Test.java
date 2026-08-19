@@ -22,6 +22,7 @@ import cz.aron.test.api.v1.ApuApi;
 import cz.aron.test.api.v1.SearchApi;
 import cz.aron.test.api.v1.SystemApi;
 import cz.aron.test.api.v1.UiApi;
+import cz.aron.test.api.v1.model.ApuSearchItem;
 import cz.aron.test.api.v1.model.ApuSearchRequest;
 import cz.aron.test.api.v1.model.ApuType;
 import cz.aron.test.api.v1.model.DetailItem;
@@ -46,6 +47,10 @@ import cz.aron.test.api.v1.model.FacetOptionsRequest;
 import cz.aron.test.api.v1.model.FacetResult;
 import cz.aron.test.api.v1.model.FacetType;
 import cz.aron.test.api.v1.model.RefFacetResult;
+import cz.aron.test.api.v1.model.ResultField;
+import cz.aron.test.api.v1.model.ResultFieldStyle;
+import cz.aron.test.api.v1.model.ResultIcon;
+import cz.aron.test.api.v1.model.ResultValue;
 import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
 import cz.aron.test.api.v1.model.SystemInfo;
@@ -382,6 +387,92 @@ class NewApiV1Test extends AbstractTest {
 
 	private static String labelOf(java.util.List<FacetDef> facets, String code) {
 		return facets.stream().filter(f -> code.equals(f.getCode())).findFirst().orElseThrow().getLabel();
+	}
+
+	// --- structured search results ---------------------------------------------
+
+	@Test
+	void searchHitsCarryTheirStructuredResultWhenTheDataHasOne() {
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		request.setQuery("Kronika");
+		request.setSize(20);
+		var items = new SearchApi(v1ApiClient()).searchSearch(request).getItems().stream()
+				.collect(Collectors.toMap(ApuSearchItem::getUuid, Function.identity(), (a, b) -> a));
+
+		// the fixture APU carries a <result>; its siblings do not, and one response
+		// covers both - which is why the feature needs no deployment flag
+		var structured = items.get(DETAIL_ARCH_DESC).getStructured();
+		assertThat(structured).isNotNull();
+		assertThat(items.get(DETAIL_SIBLING_B).getStructured()).isNull();
+
+		assertThat(structured.getCode()).isEqualTo("A_IB");
+		// a thumbnail given as a deployment image name is resolved to a usable URL
+		assertThat(structured.getThumbnailUrl()).isEqualTo("/api/v1/ui/result-images/record.svg");
+		assertThat(structured.getThumbnailLinkUrl()).isEqualTo("https://example.org/kronika-nahled");
+
+		// rows in delivery order; a row can hold more than one field
+		assertThat(structured.getRows()).hasSize(4);
+		assertThat(structured.getRows().get(2).getFields()).extracting(ResultField::getCode)
+				.containsExactly("J_S", "J_IC");
+		assertThat(structured.getRows().get(0).getFields().get(0).getValues())
+				.extracting(ResultValue::getText, ResultValue::getRefUuid)
+				.containsExactly(tuple("Kronika obce Testov", null));
+		// a field can hold several values, and a value can reference another record
+		assertThat(structured.getRows().get(2).getFields().get(0).getValues())
+				.extracting(ResultValue::getText).containsExactly("K-12", "K-12a");
+		assertThat(structured.getRows().get(3).getFields().get(0).getValues())
+				.extracting(ResultValue::getText, ResultValue::getRefUuid)
+				.containsExactly(tuple("V1D Sbírka kronik", DETAIL_FUND));
+	}
+
+	@Test
+	void resultLayoutComesTypedFromDeploymentConfigInTheReadersLanguage() {
+		var searchApi = new SearchApi(v1ApiClient());
+
+		var czech = searchApi.searchGetResultLayout(null);
+		assertThat(czech.getFieldSeparator()).isEqualTo(" | ");
+		var byCode = czech.getFields().stream()
+				.collect(Collectors.toMap(ResultFieldStyle::getCode, Function.identity()));
+		assertThat(byCode.get("N").getHeading()).isTrue();
+		assertThat(byCode.get("N").getScale()).isEqualTo(1.2f);
+		assertThat(byCode.get("J_S").getPrefix()).isEqualTo("sign.: ");
+		assertThat(byCode.get("J_S").getValueSeparator()).isEqualTo(", ");
+		// a field image is resolved to a usable URL, like the record icons below
+		assertThat(byCode.get("J_S").getIconUrl()).isEqualTo("/api/v1/ui/result-images/field.svg");
+		// the label defaults to the visible prefix; a field styled without either stays unlabeled
+		assertThat(byCode.get("J_IC").getLabel()).isEqualTo("Inv. č.: ");
+		assertThat(byCode.get("D").getLabel()).isNull();
+		// the global iconSize fills in for icons that do not set their own
+		assertThat(czech.getIcons()).extracting(ResultIcon::getCode, ResultIcon::getUrl, ResultIcon::getSize)
+				.containsExactly(
+						tuple("A_IB", "/api/v1/ui/result-images/record.svg", 35),
+						tuple("A_IM", "/api/v1/ui/result-images/record.svg", 28));
+
+		// prefixes and labels are deployment text, translated in the sibling file
+		var english = searchApi.searchGetResultLayout("en").getFields().stream()
+				.collect(Collectors.toMap(ResultFieldStyle::getCode, Function.identity()));
+		assertThat(english.get("J_S").getPrefix()).isEqualTo("ref.: ");
+		assertThat(english.get("J_F").getLabel()).isEqualTo("Archival fonds");
+		// an untranslated language keeps the configured source language
+		assertThat(searchApi.searchGetResultLayout("de").getFields().stream()
+				.filter(field -> "J_S".equals(field.getCode()))
+				.findFirst().orElseThrow().getPrefix())
+				.isEqualTo("sign.: ");
+	}
+
+	@Test
+	void resultImagesServeOnlyPlainNamesFromTheConfiguredDirectory() throws Exception {
+		var image = getBytes("/api/v1/ui/result-images/record.svg");
+		assertThat(image.statusCode()).isEqualTo(200);
+		assertThat(contentType(image)).isEqualTo("image/svg+xml");
+		assertThat(new String(image.body(), java.nio.charset.StandardCharsets.UTF_8)).contains("<svg");
+
+		// an unknown name, a name outside the directory and an unsupported format
+		// are all 404 - the file set is deployment data, not part of the app
+		assertThat(get("/api/v1/ui/result-images/neexistuje.svg").statusCode()).isEqualTo(404);
+		assertThat(get("/api/v1/ui/result-images/types.yaml").statusCode()).isEqualTo(404);
+		assertThat(get("/api/v1/ui/result-images/..%2F..%2Ftypes.yaml").statusCode()).isIn(400, 404);
 	}
 
 	@Test

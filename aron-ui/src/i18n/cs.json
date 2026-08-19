@@ -70,7 +70,8 @@
     "total_other": "Nalezeno {{count}} záznamů",
     "totalMore_one": "Nalezeno více než {{count}} záznam",
     "totalMore_few": "Nalezeno více než {{count}} záznamy",
-    "totalMore_other": "Nalezeno více než {{count}} záznamů"
+    "totalMore_other": "Nalezeno více než {{count}} záznamů",
+    "thumbnailLink": "Náhled: {{name}}"
   },
   "facets": {
     "textPlaceholder": "Zadejte text",

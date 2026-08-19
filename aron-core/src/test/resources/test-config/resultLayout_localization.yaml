@@ -1,0 +1,11 @@
+# Display texts of resultLayout.yaml per language, keyed by the field code. The
+# source language stays in resultLayout.yaml and remains the fallback, so only
+# 'en' is translated here.
+fields:
+  en:
+    J_S:
+      prefix: "ref.: "
+    J_IC:
+      prefix: "Inv. no.: "
+    J_F:
+      label: "Archival fonds"

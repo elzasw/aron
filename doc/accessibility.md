@@ -110,6 +110,20 @@ statement can cite it (or so it disappears from the statement once fixed).
 The slider needs no `aria-valuetext`: its value *is* the year, which is what a
 reader should hear.
 
+**Structured search results** (added with the feature, same criteria): a record
+delivered as a structured presentation is a list item with a real `<h3>` whose
+link leads into the record; referenced values are their own links, and the
+thumbnail is a third, separately named one. The old portal wrapped the entire
+card in one link and nested the value links inside it (invalid markup, 4.1.2,
+and unreachable targets by keyboard) — the new card deliberately is not a link.
+Field codes carry no meaning, so a field whose prefix is not shown announces the
+deployment's configured `label` instead (1.3.1); the `" | "` separators between
+fields are `aria-hidden`, being visual chrome rather than content. Record and
+field icons are decorative (`alt=""`) — the heading already names the card.
+Still the deployment's own responsibility: the **contrast** of the colours it
+configures in `resultLayout.yaml` (1.4.3), which is Phase C territory, and
+giving every styled field either a `prefix` or a `label`.
+
 ### Phase B — permanent automated gate — **done**
 
 Two checks run in the Maven `test` phase (so also on CI, and skipped together by
@@ -235,6 +249,11 @@ statement must cover these, because the platform cannot decide them:
   the portal name as a screen-reader heading, so a missing description does not
   break the page; a logo that carries information beyond the name needs that
   information in the configured portal name.
+- **Structured-result layout** (`resultLayout.yaml`) — the colours it sets must
+  reach 4.5:1 against the card background, and every field it styles needs
+  either a visible `prefix` or a `label`: a field code says nothing to a reader
+  who cannot see the layout. See the configuration chapter of the administration
+  guide.
 - **Section accent colours** — configurable per deployment (`menu` colours).
   They are used as a 4 px underline while the active item is also marked by its
   background, so they are not the sole indicator, but a deployment picking

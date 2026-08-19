@@ -35,6 +35,14 @@ webResources:
   facets: ./config/searchConfig.yaml
   logo: ./config/images/logo.svg
   topImage: ./config/images/book.png
+  # Vzhled strukturovanych vysledku vyhledavani - volitelne. Bez souboru se
+  # strukturovane vysledky stale zobrazuji, jen bez ikon, predsazenych textu a
+  # zvyraznene hlavicky. Prekladatelne texty patri do
+  # resultLayout_localization.yaml vedle nej. Adresar resultImages nese ikony
+  # zaznamu a polozek, ktere soubor odkazuje jmenem (a nahledy dodane v datech
+  # jako jmeno souboru misto URL).
+  #resultLayout: ./config/resultLayout.yaml
+  #resultImages: ./config/images/results
 
 help-url: https://seznam.cz
 # Odkazy v paticce (prohlaseni o pristupnosti, kontakty, ...) se konfiguruji
@@ -91,6 +99,12 @@ search:
   # aktualizace.
   #lucene:
   #  path: ./data/lucene
+
+  # Strukturovane vysledky vyhledavani: AUTO (vychozi) je prilozi ke kazdemu
+  # zaznamu, ktery je v datech ma - dostupnost je vlastnost dat, ne
+  # konfigurace, takze zadny prepinac neni potreba. OFF je vypne cele
+  # (vysledky se zobrazi nazvem a popisem) a usetri dotaz do databaze.
+  #structured-results: AUTO
 
 # Pri engine: lucene neni Elasticsearch pripojen a jeho health indikator by
 # hlasil DOWN - actuator (/actuator/health) se tedy na ES nesmi ptat.

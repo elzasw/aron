@@ -45,6 +45,7 @@ import cz.aron.api.v1.model.FacetResultKind;
 import cz.aron.api.v1.model.QueryMode;
 import cz.aron.api.v1.model.RefFacetResult;
 import cz.aron.api.v1.model.RangeFilter;
+import cz.aron.api.v1.model.ResultLayout;
 import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
 import cz.aron.api.v1.model.TextFilter;
@@ -63,6 +64,7 @@ import cz.aron.search.FieldFilter;
 import cz.aron.search.IndexingService;
 import cz.aron.search.relevance.RelevancePlan;
 import cz.aron.search.relevance.RelevanceService;
+import cz.aron.service.ApuService;
 import jakarta.annotation.PostConstruct;
 
 /**
@@ -88,6 +90,19 @@ public class SearchController implements SearchApi {
 
 	private final RelevanceService relevanceService;
 
+	private final ApuService apuService;
+
+	private final ResultLayoutLoader resultLayoutLoader;
+
+	private final ResultImages resultImages;
+
+	/**
+	 * Whether hits carry their stored structured presentation. {@code AUTO} (the
+	 * default) attaches it to every hit that has one - availability is data, not
+	 * configuration; {@code OFF} serves plain hits and skips the lookup.
+	 */
+	private final boolean structuredResults;
+
 	/** Page window cap: {@code from + size} must stay within (protects deep paging). */
 	private final int maxWindow;
 
@@ -100,7 +115,9 @@ public class SearchController implements SearchApi {
 	private List<FacetConfigDto> facets;
 
 	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
-			RelevanceService relevanceService, PresentationLocales presentationLocales,
+			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
+			ResultLayoutLoader resultLayoutLoader, ResultImages resultImages,
+			@Value("${search.structured-results:AUTO}") String structuredResults,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
 			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
@@ -109,9 +126,22 @@ public class SearchController implements SearchApi {
 		this.presentationLocales = presentationLocales;
 		this.indexingService = indexingService;
 		this.relevanceService = relevanceService;
+		this.apuService = apuService;
+		this.resultLayoutLoader = resultLayoutLoader;
+		this.resultImages = resultImages;
+		this.structuredResults = parseStructuredResults(structuredResults);
 		this.maxWindow = maxWindow;
 		this.totalUpToDefault = totalUpToDefault;
 		this.totalUpToMax = totalUpToMax;
+	}
+
+	private static boolean parseStructuredResults(String value) {
+		return switch (value == null ? "AUTO" : value.trim().toUpperCase(Locale.ROOT)) {
+			case "AUTO" -> true;
+			case "OFF" -> false;
+			default -> throw new IllegalStateException(
+					"search.structured-results must be AUTO or OFF, not '" + value + "'");
+		};
 	}
 
 	@PostConstruct
@@ -187,6 +217,7 @@ public class SearchController implements SearchApi {
 					return item;
 				})
 				.toList();
+		attachStructuredResults(items);
 		var facetResults = new ArrayList<FacetResult>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
@@ -216,6 +247,30 @@ public class SearchController implements SearchApi {
 						? TotalRelation.EQ
 						: TotalRelation.GTE,
 				queryMode, items, facetResults, typeCounts));
+	}
+
+	/**
+	 * Attaches the stored structured presentation to every hit of the page that
+	 * has one - one lookup by the page's uuids, the same the old API's
+	 * /apu/listresults does. A hit without a stored result keeps no
+	 * {@code structured} field at all: clients then render name and description,
+	 * which is why the feature needs no deployment flag.
+	 */
+	private void attachStructuredResults(List<ApuSearchItem> items) {
+		if (!structuredResults || items.isEmpty()) {
+			return;
+		}
+		var uuids = items.stream().map(item -> java.util.UUID.fromString(item.getUuid())).toList();
+		var stored = apuService.findAllResultsByUuidIn(uuids);
+		for (ApuSearchItem item : items) {
+			item.setStructured(
+					StructuredResultMapper.toApi(stored.get(item.getUuid()), resultImages::thumbnailUrl));
+		}
+	}
+
+	@Override
+	public ResponseEntity<ResultLayout> searchGetResultLayout(String lang) {
+		return ResponseEntity.ok(resultLayoutLoader.getLayout(presentationLocales.resolve(lang)));
 	}
 
 	/** The request's own accuracy override, clamped by the server maximum; unset = the server default. */

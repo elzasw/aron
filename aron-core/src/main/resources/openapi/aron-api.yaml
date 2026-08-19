@@ -603,8 +603,15 @@ components:
         t:
           type: string
         tn:
+          description: >-
+            Thumbnail: either an absolute URL or the name of a deployment-supplied
+            image.
           type: string
-        tnLink:
+        tn_link:
+          description: >-
+            Target of the thumbnail link; absent means the APU's own detail page.
+            The snake_case name is the wire format Transfagent produces and the
+            old UI reads - it must not be camel-cased.
           type: string
         l:
           type: array

@@ -57,6 +57,9 @@ webResources:
   facets: ./dev-data/config/searchConfig.yaml
   logo: ./dev-data/config/logo.svg
   topImage: ./dev-data/config/photo.png
+  # structured search results: the three books of arch-desc-1820 carry a <result>
+  resultLayout: ./dev-data/config/resultLayout.yaml
+  resultImages: ./dev-data/config/images/results
 
 help-url: http://localhost
 

@@ -68,7 +68,8 @@
     "total_one": "{{count}} record found",
     "total_other": "{{count}} records found",
     "totalMore_one": "More than {{count}} record found",
-    "totalMore_other": "More than {{count}} records found"
+    "totalMore_other": "More than {{count}} records found",
+    "thumbnailLink": "Preview: {{name}}"
   },
   "facets": {
     "textPlaceholder": "Enter text",

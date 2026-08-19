@@ -13,7 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import cz.aron.api.rest.model.ResultRowItem;
+import cz.aron.api.rest.model.ResultRowItemValue;
+import cz.aron.api.rest.model.StructuredResult;
 import cz.aron.domain.ApuEntity;
+import cz.aron.mapper.StructuredResultSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.search.ApuDocument;
 import cz.aron.search.SearchIndex;
@@ -36,6 +40,9 @@ class OldApiSearchTest extends AbstractTest {
 
 	private static final String APU_TYPE = "OLDAPI~KIND";
 
+	/** Own type for the structured-result fixture, so it cannot skew the counts above. */
+	private static final String APU_TYPE_STRUCTURED = "OLDAPI~STRUCTURED";
+
 	@Autowired
 	private SearchIndex searchIndex;
 
@@ -52,6 +59,7 @@ class OldApiSearchTest extends AbstractTest {
 		if (!apuEntityRepository.existsById(999_101L)) {
 			saveEntity(999_101L, uuid(1), "OldApi pořadač", "První testovací záznam");
 			saveEntity(999_102L, uuid(2), "OldApi deník", "Druhý testovací záznam");
+			saveStructured(999_103L, uuid(3), "OldApi mapa");
 		}
 		searchIndex.indexApus(List.of(
 				doc(uuid(1), "OldApi pořadač", Map.of(
@@ -62,6 +70,7 @@ class OldApiSearchTest extends AbstractTest {
 						"LANG~CODE", List.of("oldapi-ger"),
 						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
 						"UNIT~DATE~H", List.of("1910-12-31T23:59:59")))));
+		searchIndex.indexApus(List.of(doc(uuid(3), "OldApi mapa", APU_TYPE_STRUCTURED, Map.of())));
 	}
 
 	@Test
@@ -135,6 +144,28 @@ class OldApiSearchTest extends AbstractTest {
 		assertThat(body.get("count").asLong()).isEqualTo(2);
 		assertThat(body.get("items")).hasSize(2);
 		assertThat(body.get("items").get(0).get("id").asText()).isIn(uuid(1), uuid(2));
+	}
+
+	@Test
+	void listResultsServesTheStoredBlobInTheWireFormat() throws Exception {
+		var response = post("/api/aron/apu/listresults?listType=TEST", """
+				{"size":5,"filters":[{"field":"type","operation":"EQ","value":"%s"}]}
+				""".formatted(APU_TYPE_STRUCTURED));
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		JsonNode body = objectMapper.readTree(response.body());
+		assertThat(body.get("items")).hasSize(1);
+		JsonNode item = body.get("items").get(0);
+		assertThat(item.get("id").asText()).isEqualTo(uuid(3));
+		assertThat(item.get("t").asText()).isEqualTo("A_D");
+		assertThat(item.get("tn").asText()).isEqualTo("mapa.svg");
+		// snake_case is the wire format the old UI reads - camel-casing it here
+		// silently hid every thumbnail link
+		assertThat(item.has("tnLink")).isFalse();
+		assertThat(item.get("tn_link").asText()).isEqualTo("https://example.org/mapa");
+		var value = item.get("l").get(0).get(0);
+		assertThat(value.get("t").asText()).isEqualTo("N");
+		assertThat(value.get("v").get(0).get("v").asText()).isEqualTo("Mapa katastru");
 	}
 
 	@Test
@@ -218,12 +249,38 @@ class OldApiSearchTest extends AbstractTest {
 		apuEntityRepository.save(apu);
 	}
 
+	/** An APU carrying a stored structured result, as the import writes it. */
+	private void saveStructured(long id, String uuid, String name) {
+		var value = new ResultRowItemValue();
+		value.setV("Mapa katastru");
+		var field = new ResultRowItem();
+		field.setT("N");
+		field.addVItem(value);
+		var result = new StructuredResult();
+		result.setId(uuid);
+		result.setT("A_D");
+		result.setTn("mapa.svg");
+		result.setTnLink("https://example.org/mapa");
+		result.addLItem(List.of(field));
+
+		ApuEntity apu = new ApuEntity();
+		apu.setId(id);
+		apu.setUuid(UUID.fromString(uuid));
+		apu.setName(name);
+		apu.setResult(StructuredResultSerializer.serialize(result));
+		apuEntityRepository.save(apu);
+	}
+
 	private static ApuDocument doc(String uuid, String name, Map<String, List<Object>> values) {
+		return doc(uuid, name, APU_TYPE, values);
+	}
+
+	private static ApuDocument doc(String uuid, String name, String type, Map<String, List<Object>> values) {
 		var document = new ApuDocument();
 		document.setUuid(uuid);
 		document.setName(name);
 		document.setNameSort(CONTENT_LOCALE.sortKey(name));
-		document.setType(APU_TYPE);
+		document.setType(type);
 		document.setApuSourceId(999_100L);
 		document.getValues().putAll(values);
 		return document;

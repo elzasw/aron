@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Archival description of the fund "Farní úřad Všestary" (fund-1820): a
      three-level tree for the detail page's incremental tree. The root uuid is
-     the target of the fund's ARCHDESC_ROOT_REF item. -->
+     the target of the fund's ARCHDESC_ROOT_REF item.
+
+     The three books under "Úřední knihy" also carry a <result> - the structured
+     search presentation a source system delivers (laid out by
+     dev-data/config/resultLayout.yaml). The leaves under "Spisový materiál"
+     deliberately carry none, so the result page shows both card kinds. -->
 <apusrc xmlns="http://www.aron.cz/apux/2020" uuid="d1e50000-1111-4222-9333-add000001820">
  <apus>
   <apu type="ArchDesc" uuid="6d05e4b6-336e-4067-ba49-5a2f643119df">
@@ -32,6 +37,7 @@
   <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000011">
    <name>Kronika fary</name>
    <desc>inv. č. 1</desc>
+   <result>{"id":"d1e50000-0000-4000-8000-000000000011","t":"A_IB","tn":"archival-item-book.svg","l":[[{"t":"N","v":[{"v":"Kronika fary"}]}],[{"t":"D","v":[{"v":"1820–1850"}]}],[{"t":"J_IC","v":[{"v":"1"}]},{"t":"J_UC","v":[{"v":"kniha 1"}]}],[{"t":"J_I","v":[{"v":"Státní okresní archiv Hradec Králové","id":"3051c1f6-3828-44b9-8987-0ffac0ca5188"}]},{"t":"J_F","v":[{"v":"Farní úřad Všestary","id":"f8e57e89-ab4c-4215-a4b5-39fcaf5ce859"}]}],[{"t":"J_C","v":[{"v":"Úřední knihy","id":"d1e50000-0000-4000-8000-000000000001"}]}]]}</result>
    <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
    <prts>
     <part type="PT_ARCH_DESC">
@@ -46,6 +52,7 @@
   <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000012">
    <name>Kniha zápisů farní rady</name>
    <desc>inv. č. 2</desc>
+   <result>{"id":"d1e50000-0000-4000-8000-000000000012","t":"A_IB","l":[[{"t":"N","v":[{"v":"Kniha zápisů farní rady"}]}],[{"t":"D","v":[{"v":"1851–1875"}]}],[{"t":"J_IC","v":[{"v":"2"}]},{"t":"J_UC","v":[{"v":"kniha 2"}]}],[{"t":"J_I","v":[{"v":"Státní okresní archiv Hradec Králové","id":"3051c1f6-3828-44b9-8987-0ffac0ca5188"}]},{"t":"J_F","v":[{"v":"Farní úřad Všestary","id":"f8e57e89-ab4c-4215-a4b5-39fcaf5ce859"}]}],[{"t":"J_C","v":[{"v":"Úřední knihy","id":"d1e50000-0000-4000-8000-000000000001"}]}]]}</result>
    <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
    <prts>
     <part type="PT_ARCH_DESC">
@@ -60,6 +67,7 @@
   <apu type="ArchDesc" uuid="d1e50000-0000-4000-8000-000000000013">
    <name>Matrika biřmovaných</name>
    <desc>inv. č. 3</desc>
+   <result>{"id":"d1e50000-0000-4000-8000-000000000013","t":"A_IM","tn":"archival-item-matrika.svg","tn_link":"https://www.portafontium.eu/","l":[[{"t":"N","v":[{"v":"Matrika biřmovaných"}]}],[{"t":"D","v":[{"v":"1876–1900"}]}],[{"t":"J_IC","v":[{"v":"3"}]},{"t":"J_UC","v":[{"v":"kniha 3"}]}],[{"t":"J_I","v":[{"v":"Státní okresní archiv Hradec Králové","id":"3051c1f6-3828-44b9-8987-0ffac0ca5188"}]},{"t":"J_F","v":[{"v":"Farní úřad Všestary","id":"f8e57e89-ab4c-4215-a4b5-39fcaf5ce859"}]}],[{"t":"J_C","v":[{"v":"Úřední knihy","id":"d1e50000-0000-4000-8000-000000000001"}]}]]}</result>
    <prnt>d1e50000-0000-4000-8000-000000000001</prnt>
    <prts>
     <part type="PT_ARCH_DESC">

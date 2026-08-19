@@ -1,0 +1,14 @@
+# Display texts of resultLayout.yaml per language. The Czech source stays in
+# resultLayout.yaml and remains the fallback.
+fields:
+  en:
+    J_IC:
+      prefix: "Inv. no.: "
+    J_UC:
+      prefix: "Storage: "
+    J_I:
+      label: "Archives"
+    J_F:
+      label: "Archival fonds"
+    J_C:
+      label: "Parent unit"

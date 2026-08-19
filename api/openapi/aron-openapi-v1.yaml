@@ -202,6 +202,27 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/FacetOptionsRequest'
+  /api/v1/search/result-layout:
+    get:
+      operationId: Search_getResultLayout
+      description: |-
+        Deployment layout of structured search results: how the record and field
+        codes carried by `StructuredResult` are presented. Language-dependent
+        (prefixes and labels are deployment text).
+
+        Empty lists are a valid answer - a deployment that configures no layout
+        still gets structured results, rendered with the client's own defaults.
+      parameters:
+        - $ref: '#/components/parameters/LangParam'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultLayout'
+      tags:
+        - search
   /api/v1/system/info:
     get:
       operationId: System_getInfo
@@ -239,6 +260,39 @@ paths:
       operationId: Ui_getLogo
       description: Portal logo image (deployment-supplied; format varies, see Content-Type).
       parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+      tags:
+        - ui
+  /api/v1/ui/result-images/{name}:
+    get:
+      operationId: Ui_getResultImage
+      description: |-
+        One deployment-supplied image of the structured search results (record and
+        field icons, thumbnail stand-ins) from the configured image directory.
+        Clients never build these URLs themselves - `ResultLayout` and
+        `StructuredResult` carry ready-to-use ones.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: File name within the deployment's image directory; no path segments.
+          schema:
+            type: string
       responses:
         '200':
           description: The request has succeeded.
@@ -351,6 +405,17 @@ components:
           $ref: '#/components/schemas/ApuType'
         containsDigitalObjects:
           type: boolean
+        structured:
+          allOf:
+            - $ref: '#/components/schemas/StructuredResult'
+          description: |-
+            Structured presentation of this record, when the source system delivered
+            one. Present per record: a list can mix records that have one with records
+            that do not, and a client without it renders `name` and `description` as
+            usual - there is no deployment flag to turn this on.
+
+            The record and field codes are a deployment vocabulary (the source system
+            chose them); `getResultLayout` says how to present them.
       description: One search hit.
     ApuSearchRequest:
       type: object
@@ -907,6 +972,118 @@ components:
       allOf:
         - $ref: '#/components/schemas/DetailItem'
       description: Reference to another APU.
+    ResultField:
+      type: object
+      required:
+        - code
+        - values
+      properties:
+        code:
+          type: string
+          description: Field code; keys the layout's styling, prefix and label.
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultValue'
+      description: One field of a row.
+    ResultFieldStyle:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+        heading:
+          type: boolean
+          description: |-
+            This field is the record's heading - its text becomes the link to the
+            record's detail. At most one field of a record should be marked; with none,
+            clients fall back to the record's `name`.
+        prefix:
+          type: string
+          description: 'Localized text shown before the values ("Inv. č.: ").'
+        label:
+          type: string
+          description: |-
+            Localized name of the field for readers who get no visual context (screen
+            readers, tooltips). Defaults to `prefix` when that is set.
+        valueSeparator:
+          type: string
+          description: Separator between the field's own values; unset = a space.
+        color:
+          type: string
+          description: CSS color of the text; unset = the client's own body color.
+        scale:
+          type: number
+          format: float
+          description: Font-size multiplier, 1 = base text size.
+        bold:
+          type: boolean
+        iconUrl:
+          type: string
+          description: Icon shown before the field, ready to use (see `getResultImage`).
+      description: Presentation of one field code.
+    ResultIcon:
+      type: object
+      required:
+        - code
+        - url
+      properties:
+        code:
+          type: string
+          description: The `StructuredResult.code` this icon belongs to.
+        url:
+          type: string
+          description: Ready-to-use URL of the deployment image (see `getResultImage`).
+        size:
+          type: integer
+          format: int32
+          description: Rendered width in CSS pixels; unset = the client default.
+      description: Icon of one record-shape code.
+    ResultLayout:
+      type: object
+      required:
+        - fields
+        - icons
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultFieldStyle'
+          description: Styling per field code, in no particular order.
+        icons:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultIcon'
+          description: Icon per `StructuredResult.code`.
+        fieldSeparator:
+          type: string
+          description: Separator between fields of one row; unset = the client default (" | ").
+      description: |-
+        How one deployment presents its structured search results. Fetched once per
+        language and cached by clients; the codes it keys on come from the data, so a
+        code with no entry here simply renders plain.
+    ResultRow:
+      type: object
+      required:
+        - fields
+      properties:
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultField'
+      description: 'One row of a structured result: the fields shown on one line.'
+    ResultValue:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+        refUuid:
+          type: string
+          description: Referenced APU - the value renders as a link to its detail.
+      description: One value of a field; with `refUuid` it is a link to another record.
     SearchFilter:
       type: object
       required:
@@ -948,6 +1125,32 @@ components:
         Named sort modes. Every mode tie-breaks deterministically (name, then uuid),
         so paging is stable. Records without the sorted value (no name, no dating)
         always sort last.
+    StructuredResult:
+      type: object
+      required:
+        - code
+        - rows
+      properties:
+        code:
+          type: string
+          description: Record-shape code (an archival level in practice); keys the layout's icon.
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultRow'
+          description: Rows in display order.
+        thumbnailUrl:
+          type: string
+          description: |-
+            Thumbnail image, ready to use: an external absolute URL when the source
+            delivered one, otherwise this deployment's own `/ui/result-images` URL.
+        thumbnailLinkUrl:
+          type: string
+          description: Where the thumbnail leads; unset = this record's own detail page.
+      description: |-
+        Pre-rendered structured presentation of one record: rows of coded fields, as
+        delivered by the source system in the APUX exchange format. The portal stores
+        and lays it out, it does not compose it.
     SystemInfo:
       type: object
       required:

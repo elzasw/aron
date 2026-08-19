@@ -47,6 +47,16 @@ application.yml
        (``searchConfig.yaml``, see :doc:`search`).
    * - ``webResources.logo`` / ``webResources.topImage``
      - Branding images served to the UI.
+   * - ``webResources.resultLayout``
+     - Optional layout of the structured search results
+       (``resultLayout.yaml``, see below). Unset = the built-in defaults.
+   * - ``webResources.resultImages``
+     - Optional directory of the images the structured results use (record and
+       field icons, thumbnails delivered by name). Only plain file names from
+       this directory are served.
+   * - ``search.structured-results``
+     - ``AUTO`` (default) attaches the structured presentation to every record
+       that has one; ``OFF`` disables the feature for the whole deployment.
    * - ``help-url``
      - External help link shown in the default menu.
    * - ``import.input-dir``
@@ -240,3 +250,126 @@ language shows no switcher at all.
 Declaring a language covers the interface strings and the datings. The labels
 of the description items follow only if ``types_localization.yaml`` translates
 them; untranslated ones fall back to the ``types.yaml`` names.
+
+Structured search results
+=========================
+
+A source system can deliver, alongside a record, a **pre-rendered structured
+presentation** of it: rows of coded fields, optionally a thumbnail. Transfagent
+carries it in the APUX ``result`` element and the portal stores it with the
+record. A search hit that has one is presented with it; a hit that has none is
+presented by its name and description as usual.
+
+There is no switch to turn this on. Whether a record has a structured
+presentation is a property of the data, so the portal simply uses it when it is
+there — a deployment whose source system delivers none never sees the feature,
+and a partially reimported one stays readable. ``search.structured-results:
+OFF`` exists for the opposite case: a deployment that *has* the data but prefers
+the plain presentation.
+
+The codes in the data (``A_IB``, ``N``, ``J_S``, …) are the source system's own,
+so the portal cannot know what they mean. ``resultLayout.yaml`` says how to
+present them; without it the rows still render, only without icons, prefixes
+and an emphasised heading.
+
+.. code-block:: yaml
+
+   fieldSeparator: " | "     # between fields of one row (default " | ")
+   iconSize: 35              # default record-icon width in pixels
+   icons:                    # keyed by the record code
+     - code: A_IB
+       image: archival-item-book.svg
+     - code: A_IM
+       image: archival-item-matrika.svg
+       size: 28
+   fields:                   # keyed by the field code
+     - code: N
+       heading: true         # this field's text links to the record
+       scale: 1.2            # font size, 1 = base text
+       bold: true
+     - code: J_IC
+       prefix: "Inv. č.: "   # visible text before the values
+       image: J_IC.svg
+     - code: J_S
+       valueSeparator: ", "  # between the field's own values (default a space)
+       color: "#666666"
+       label: "Signatura"    # field name for screen readers, when no prefix shows
+
+Field keys: ``code``, ``heading``, ``prefix``, ``label``, ``valueSeparator``,
+``color``, ``scale``, ``bold``, ``image``. Icon keys: ``code``, ``image``,
+``size``. An unknown key stops the startup rather than being ignored, and so
+does an ``image`` reference when ``webResources.resultImages`` is not
+configured.
+
+Notes on the individual keys:
+
+- **heading** marks the one field whose text becomes the link into the record.
+  Mark exactly one. With none marked, the first field of the first row is used;
+  if that yields no text, the record's own name is.
+- **label** is what a screen reader announces before the values. A field with a
+  ``prefix`` needs none — the prefix is already its name. A field with neither
+  is announced as bare values, which is why giving every styled field one of
+  the two is part of meeting the accessibility obligation (see
+  ``doc/accessibility.md``).
+- **color** is applied to text only, never as a background. The contrast against
+  the card background is the deployment's responsibility (WCAG 2.1 AA requires
+  4.5:1 for body text).
+- **image** is a plain file name inside ``webResources.resultImages`` — no
+  subdirectories, no paths. The portal serves those files at
+  ``/api/v1/ui/result-images/<name>`` (``svg``, ``png``, ``jpeg``) and builds the
+  URLs itself, so nothing has to be hosted next to the application.
+
+``prefix`` and ``label`` are display text, so they are translated in the sibling
+``resultLayout_localization.yaml``:
+
+.. code-block:: yaml
+
+   fields:
+     en:
+       J_IC:
+         prefix: "Inv. no.: "
+       J_S:
+         label: "Reference code"
+
+The **values** are never translated: they arrive already rendered from the
+source system, like record names and descriptions.
+
+Coming from the old portal
+--------------------------
+
+The old portal read the same information from a static ``app/config.json``
+served next to the application, switched on with ``useStructuredResults: true``
+in ``configuration.js``. Both are gone: the layout is server configuration now
+and the switch is unnecessary. The keys map as follows.
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+
+   * - ``config.json``
+     - ``resultLayout.yaml``
+   * - ``itemProperties[].type``
+     - ``fields[].code``
+   * - ``class: header``
+     - ``heading: true``
+   * - ``size: N``
+     - ``scale`` — the old value was ``1 + (N-1)/10`` em, so ``size: 3`` becomes
+       ``scale: 1.2``
+   * - ``separator``
+     - ``valueSeparator``
+   * - ``icon``
+     - ``image`` (the file moves into ``webResources.resultImages``)
+   * - ``itemSeparator``
+     - ``fieldSeparator``
+   * - ``typeIcons[].type`` / ``.icon``
+     - ``icons[].code`` / ``.image``
+   * - ``typeIconSize``
+     - ``iconSize``
+   * - ``typeIcon``
+     - dropped — configuring ``icons`` is what enables them
+   * - ``useStructuredResults``
+     - dropped — see above; the opposite case is
+       ``search.structured-results: OFF``
+
+``color``, ``bold`` and ``prefix`` keep their names and meaning. Prefixes that
+were Czech-only in ``config.json`` can now be translated in the sibling file.

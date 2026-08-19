@@ -17,6 +17,12 @@
   <apu type="ArchDesc" uuid="9f1d0000-0000-4000-8000-90000000000d">
    <name>V1D Kronika obce Testov</name>
    <desc>1850–1910</desc>
+   <!-- Structured search result as the source system delivers it (abbreviated
+        exchange shape): rows of coded fields, a referenced value carrying an
+        uuid, a thumbnail given as a deployment image name rather than a URL.
+        The sibling APUs below deliberately have none - one response then covers
+        both the structured and the plain card. -->
+   <result>{"id":"9f1d0000-0000-4000-8000-90000000000d","t":"A_IB","tn":"record.svg","tn_link":"https://example.org/kronika-nahled","l":[[{"t":"N","v":[{"v":"Kronika obce Testov"}]}],[{"t":"D","v":[{"v":"1850–1910"}]}],[{"t":"J_S","v":[{"v":"K-12"},{"v":"K-12a"}]},{"t":"J_IC","v":[{"v":"12"}]}],[{"t":"J_F","v":[{"v":"V1D Sbírka kronik","id":"9f1d0000-0000-4000-8000-90000000000f"}]}]]}</result>
    <prnt>9f1d0000-0000-4000-8000-90000000000f</prnt>
    <prts>
     <part type="PT_BODY">
