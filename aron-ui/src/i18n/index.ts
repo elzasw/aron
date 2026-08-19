@@ -4,14 +4,6 @@ import cs from "./cs.json";
 import en from "./en.json";
 
 /**
- * Every further language must cover the Czech key set - Czech is the source
- * language, so a missing key would silently fall back to it and ship a
- * half-translated page. Typing the bundle against cs.json makes that a
- * compile error in `npm run build` instead of something a reader discovers.
- */
-const translations: Record<string, typeof cs> = { cs, en };
-
-/**
  * Languages this build ships strings for. Czech is the source language and the
  * fallback; a deployment decides which of these it actually offers through the
  * `localizations` of /api/v1/ui/config, so shipping a bundle does not force it
@@ -22,6 +14,16 @@ export const BUNDLED_LANGUAGES = ["cs", "en"] as const;
 export type BundledLanguage = (typeof BUNDLED_LANGUAGES)[number];
 
 export const DEFAULT_LANGUAGE: BundledLanguage = "cs";
+
+/**
+ * Every further language must cover the Czech key set - Czech is the source
+ * language, so a missing key would silently fall back to it and ship a
+ * half-translated page. That rule is checked by `translations.test.ts` rather
+ * than by the type system: plural families legitimately differ per language
+ * (Czech needs `_few`, English does not), so identical key sets are the wrong
+ * test - equal key sets *with plural suffixes stripped* is the right one.
+ */
+export const BUNDLES: Record<BundledLanguage, unknown> = { cs, en };
 
 const STORAGE_KEY = "aron.language";
 
@@ -67,8 +69,8 @@ i18n.use(initReactI18next).init({
   fallbackLng: DEFAULT_LANGUAGE,
   supportedLngs: BUNDLED_LANGUAGES,
   resources: {
-    cs: { translation: translations.cs },
-    en: { translation: translations.en },
+    cs: { translation: cs },
+    en: { translation: en },
   },
   interpolation: {
     // React already escapes rendered values

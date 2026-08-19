@@ -47,8 +47,6 @@
       "DATE_ASC": "Dating ascending",
       "DATE_DESC": "Dating descending"
     },
-    "total": "Records found: {{count}}",
-    "totalMore": "Records found: more than {{count}}",
     "relaxed": "No record matches all the words of the query. Showing records that contain at least some of them.",
     "noResults": "No records match the given criteria.",
     "error": "The search failed, please try again.",
@@ -57,7 +55,11 @@
     "firstPage": "First page",
     "prevPage": "Previous page",
     "nextPage": "Next page",
-    "lastPage": "Last page"
+    "lastPage": "Last page",
+    "total_one": "{{count}} record found",
+    "total_other": "{{count}} records found",
+    "totalMore_one": "More than {{count}} record found",
+    "totalMore_other": "More than {{count}} records found"
   },
   "facets": {
     "textPlaceholder": "Enter text",
@@ -79,8 +81,9 @@
     "error": "Loading the record failed, please try again.",
     "attachments": "Attachments",
     "digitalObjects": "Digitised objects",
-    "digitalObjectFiles": "files: {{count}}",
-    "binariesLater": "File viewing will be added in a later phase."
+    "binariesLater": "File viewing will be added in a later phase.",
+    "digitalObjectFiles_one": "{{count}} file",
+    "digitalObjectFiles_other": "{{count}} files"
   },
   "notFound": {
     "heading": "Page not found",

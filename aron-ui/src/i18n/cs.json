@@ -47,8 +47,6 @@
       "DATE_ASC": "Datace vzestupně",
       "DATE_DESC": "Datace sestupně"
     },
-    "total": "Nalezeno záznamů: {{count}}",
-    "totalMore": "Nalezeno záznamů: více než {{count}}",
     "relaxed": "Všem slovům dotazu neodpovídá žádný záznam. Zobrazujeme záznamy obsahující alespoň některá ze zadaných slov.",
     "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
@@ -57,7 +55,13 @@
     "firstPage": "První stránka",
     "prevPage": "Předchozí stránka",
     "nextPage": "Další stránka",
-    "lastPage": "Poslední stránka"
+    "lastPage": "Poslední stránka",
+    "total_one": "Nalezen {{count}} záznam",
+    "total_few": "Nalezeny {{count}} záznamy",
+    "total_other": "Nalezeno {{count}} záznamů",
+    "totalMore_one": "Nalezeno více než {{count}} záznam",
+    "totalMore_few": "Nalezeno více než {{count}} záznamy",
+    "totalMore_other": "Nalezeno více než {{count}} záznamů"
   },
   "facets": {
     "textPlaceholder": "Zadejte text",
@@ -79,8 +83,10 @@
     "error": "Načtení záznamu se nezdařilo, zkuste to prosím znovu.",
     "attachments": "Přílohy",
     "digitalObjects": "Digitalizáty",
-    "digitalObjectFiles": "počet souborů: {{count}}",
-    "binariesLater": "Prohlížení souborů bude doplněno v další fázi."
+    "binariesLater": "Prohlížení souborů bude doplněno v další fázi.",
+    "digitalObjectFiles_one": "{{count}} soubor",
+    "digitalObjectFiles_few": "{{count}} soubory",
+    "digitalObjectFiles_other": "{{count}} souborů"
   },
   "notFound": {
     "heading": "Stránka nenalezena",
