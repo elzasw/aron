@@ -58,6 +58,19 @@
 							<arguments>run build</arguments>
 						</configuration>
 					</execution>
+					<execution>
+						<!-- Vitest + jsdom; no browser, no external service, so it fits the
+						     project's "mvn test needs nothing installed" rule. -->
+						<id>npm-test</id>
+						<goals>
+							<goal>npm</goal>
+						</goals>
+						<phase>test</phase>
+						<configuration>
+							<arguments>run test</arguments>
+							<skip>${skipTests}</skip>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 

@@ -30,6 +30,8 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!-- declared so -DskipTests also reaches the UI test execution (aron-ui) -->
+		<skipTests>false</skipTests>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<cxf.version>4.0.0</cxf.version>
 		<!-- TypeSpec / frontend toolchain (csc pattern): the build installs its own
