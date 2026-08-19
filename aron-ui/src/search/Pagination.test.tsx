@@ -20,16 +20,16 @@ describe("Pagination", () => {
 
     // Fluent's trigger button has no name of its own - a real Lighthouse
     // finding on the deployed portal
-    expect(screen.getByRole("combobox")).toHaveAccessibleName("Počet na stránce:");
+    expect(screen.getByRole("combobox")).toHaveAccessibleName("Per page:");
   });
 
   it("names every pager control and marks the current page", () => {
     renderPagination();
 
-    for (const name of ["První stránka", "Předchozí stránka", "Další stránka", "Poslední stránka"]) {
+    for (const name of ["First page", "Previous page", "Next page", "Last page"]) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     }
-    expect(screen.getByRole("button", { name: "Stránka 2" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Page 2" })).toHaveAttribute(
       "aria-current",
       "page",
     );

@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import i18n, { DEFAULT_LANGUAGE, languageOf, offeredLanguages, setLanguage } from "./index";
+import i18n, {
+  DEFAULT_LANGUAGE,
+  languageOf,
+  offeredLanguages,
+  pickInitialLanguage,
+  setLanguage,
+} from "./index";
 
 describe("language codes", () => {
   it("takes the language subtag of a server localization code", () => {
@@ -31,6 +37,25 @@ describe("offered languages", () => {
   });
 });
 
+describe("initial language", () => {
+  it("prefers the reader's choice, then the browser, then the deployment", () => {
+    expect(pickInitialLanguage("cs", "en", "en")).toBe("cs");
+    expect(pickInitialLanguage(undefined, "cs", "en")).toBe("cs");
+    // nobody asked for a language this build has: the deployment's own default
+    // decides, which is how a Czech deployment stays Czech
+    expect(pickInitialLanguage(undefined, undefined, "cs")).toBe("cs");
+  });
+
+  it("skips candidates this build has no strings for", () => {
+    expect(pickInitialLanguage("de", "fr", "cs")).toBe("cs");
+    expect(pickInitialLanguage(undefined, "de", undefined)).toBe(DEFAULT_LANGUAGE);
+  });
+
+  it("falls back to the source language when nothing is known", () => {
+    expect(pickInitialLanguage(undefined, undefined, undefined)).toBe("en");
+  });
+});
+
 describe("switching", () => {
   beforeEach(async () => {
     window.localStorage.clear();
@@ -38,18 +63,18 @@ describe("switching", () => {
   });
 
   it("changes the language and remembers the choice", () => {
-    setLanguage("en");
+    setLanguage("cs");
 
-    expect(i18n.language).toBe("en");
-    expect(window.localStorage.getItem("aron.language")).toBe("en");
+    expect(i18n.language).toBe("cs");
+    expect(window.localStorage.getItem("aron.language")).toBe("cs");
   });
 
   it("keeps the document language truthful for screen readers", () => {
-    setLanguage("en");
-    expect(document.documentElement.lang).toBe("en");
-
     setLanguage("cs");
     expect(document.documentElement.lang).toBe("cs");
+
+    setLanguage("en");
+    expect(document.documentElement.lang).toBe("en");
   });
 
   it("ignores a language this build has no strings for", () => {

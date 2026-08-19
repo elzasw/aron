@@ -106,10 +106,10 @@ describe("StructuredResultCard", () => {
     renderCard();
 
     expect(
-      screen.getByRole("link", { name: "Náhled: Kronika obce Testov" }),
+      screen.getByRole("link", { name: "Preview: Kronika obce Testov" }),
     ).toHaveAttribute("href", "/apu/apu-uuid");
     // decorative images carry no accessible name
-    expect(screen.getByRole("link", { name: /Náhled/ }).querySelector("img")).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Preview/ }).querySelector("img")).toHaveAttribute(
       "alt",
       "",
     );
@@ -118,7 +118,7 @@ describe("StructuredResultCard", () => {
   it("uses the source system's own thumbnail target when it gave one", () => {
     renderCard({ ...STRUCTURED, thumbnailLinkUrl: "https://example.org/nahled" });
 
-    expect(screen.getByRole("link", { name: /Náhled/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: /Preview/ })).toHaveAttribute(
       "href",
       "https://example.org/nahled",
     );

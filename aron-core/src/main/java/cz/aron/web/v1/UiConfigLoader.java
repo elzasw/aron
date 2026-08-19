@@ -91,7 +91,7 @@ public class UiConfigLoader {
 	@PostConstruct
 	void load() {
 		Map<String, Object> pageTemplate = readPageTemplate();
-		name = pageTemplate.get("name") instanceof String s && !s.isBlank() ? s : "Archiv online";
+		name = pageTemplate.get("name") instanceof String s && !s.isBlank() ? s : "Archives online";
 		nameTranslations = readNameTranslations();
 		localizations = readLocalizations(pageTemplate);
 		menuItems = readMenu(pageTemplate);
@@ -146,11 +146,17 @@ public class UiConfigLoader {
 		}
 	}
 
+	/**
+	 * Presentation languages of the deployment; the first is its default. English
+	 * is the source language, so an unconfigured deployment gets English - a
+	 * Czech one declares {@code localizations: [cs_CZ, en]} and is Czech by
+	 * default for every reader who has not asked for something else.
+	 */
 	private static List<String> readLocalizations(Map<String, Object> pageTemplate) {
 		if (pageTemplate.get("localizations") instanceof List<?> values && !values.isEmpty()) {
 			return values.stream().map(String::valueOf).toList();
 		}
-		return List.of("cs_CZ");
+		return List.of("en");
 	}
 
 	private List<MenuItem> readMenu(Map<String, Object> pageTemplate) {

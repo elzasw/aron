@@ -77,13 +77,14 @@ class UnitDateFormatterTest {
 
 	@Test
 	void untranslatedLanguageFallsBackToTheSourceLanguage() {
-		// no unitdate_de bundle: German gets the base (Czech) vocabulary, but CLDR
-		// still renders the German date - the fallback is the words, not the format
+		// no unitdate_de bundle: German gets the base (English) vocabulary, but
+		// CLDR still renders the German date - the fallback is the words, not the
+		// format
 		var date = dating("1850-05-01T00:00:00", "1850-05-01T00:00:00", "D", false, false);
 		assertThat(UnitDateFormatter.format(date, Locale.GERMAN)).isEqualTo("01.05.1850");
 
 		var century = dating("1801-01-01T00:00:00", "1900-12-31T23:59:59", "C-C", false, false);
-		assertThat(UnitDateFormatter.format(century, Locale.GERMAN)).isEqualTo("19." + NBSP + "stolet\u00ED");
+		assertThat(UnitDateFormatter.format(century, Locale.GERMAN)).isEqualTo("19th century");
 	}
 
 	@Test

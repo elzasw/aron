@@ -46,7 +46,9 @@ class UiConfigLoaderTest {
 		var config = config("name: Testovací portál\n");
 
 		assertThat(config.getName()).isEqualTo("Testovací portál");
-		assertThat(config.getLocalizations()).containsExactly("cs_CZ");
+		// English is the source language: an unconfigured deployment gets it, a
+		// Czech one declares cs_CZ first
+		assertThat(config.getLocalizations()).containsExactly("en");
 		assertThat(config.getMenuItems()).extracting(MenuItem::getCode).containsExactly(
 				MenuItemCode.FUND, MenuItemCode.ARCH_DESC, MenuItemCode.ENTITY, MenuItemCode.HELP);
 		assertThat(config.getMenuItems().get(3).getUrl()).isEqualTo(HELP_URL);
@@ -56,7 +58,7 @@ class UiConfigLoaderTest {
 
 	@Test
 	void missingNameFallsBackToPortalDefault() throws IOException {
-		assertThat(config("localizations:\n  - cs_CZ\n  - en_US\n").getName()).isEqualTo("Archiv online");
+		assertThat(config("localizations:\n  - cs_CZ\n  - en_US\n").getName()).isEqualTo("Archives online");
 	}
 
 	@Test

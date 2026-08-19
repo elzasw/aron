@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
@@ -36,18 +36,20 @@ describe("LanguageSwitcher", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
     // the trigger shows the short code, the menu the language itself
-    expect(screen.getByRole("button")).toHaveTextContent("CS");
+    expect(screen.getByRole("button")).toHaveTextContent("EN");
 
+    // the deployment lists Czech first, so it is the first option - English is
+    // the one in effect
     const options = await openMenu(user);
-    expect(options[0]).toHaveAttribute("aria-checked", "true");
-    expect(options[1]).toHaveAttribute("aria-checked", "false");
+    expect(options[0]).toHaveAttribute("aria-checked", "false");
+    expect(options[1]).toHaveAttribute("aria-checked", "true");
   });
 
   it("keeps the visible code inside the trigger's accessible name (WCAG 2.5.3)", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
-    // speech input addresses a control by what it shows ("click CS")
-    expect(screen.getByRole("button")).toHaveAccessibleName("Jazyk: Čeština (CS)");
+    // speech input addresses a control by what it shows ("click EN")
+    expect(screen.getByRole("button")).toHaveAccessibleName("Language: English (EN)");
   });
 
   it("names each language in the language itself, for screen readers", async () => {
@@ -65,11 +67,11 @@ describe("LanguageSwitcher", () => {
     render(<LanguageSwitcher localizations={["cs_CZ", "en"]} />);
 
     const options = await openMenu(user);
-    await user.click(options[1]);
+    await user.click(options[0]);
 
-    expect(i18n.language).toBe("en");
+    expect(i18n.language).toBe("cs");
     // the control itself re-renders in the new language
-    expect(screen.getByRole("button")).toHaveAccessibleName("Language: English (EN)");
+    expect(screen.getByRole("button")).toHaveAccessibleName("Jazyk: Čeština (CS)");
   });
 
   it("is reachable and opens from the keyboard alone", async () => {
@@ -88,13 +90,11 @@ describe("LanguageSwitcher", () => {
   });
 
   it("falls back when the reader's language is not offered here", async () => {
-    await i18n.changeLanguage("en");
-
     // this deployment offers Czech only: showing English chrome would promise
     // text the server will not render in English
     render(<LanguageSwitcher localizations={["cs_CZ"]} />);
 
-    expect(i18n.language).toBe("cs");
+    await waitFor(() => expect(i18n.language).toBe("cs"));
   });
 
   it("has no structural accessibility violations, open or closed", async () => {

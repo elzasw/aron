@@ -4,26 +4,28 @@ import cs from "./cs.json";
 import en from "./en.json";
 
 /**
- * Languages this build ships strings for. Czech is the source language and the
- * fallback; a deployment decides which of these it actually offers through the
- * `localizations` of /api/v1/ui/config, so shipping a bundle does not force it
- * on anyone.
+ * Languages this build ships strings for. English is the source language and
+ * the last-resort fallback; a deployment decides which of these it actually
+ * offers through the `localizations` of /api/v1/ui/config, so shipping a bundle
+ * does not force it on anyone, and a Czech deployment simply declares Czech
+ * first (see {@link pickInitialLanguage}).
  */
-export const BUNDLED_LANGUAGES = ["cs", "en"] as const;
+export const BUNDLED_LANGUAGES = ["en", "cs"] as const;
 
 export type BundledLanguage = (typeof BUNDLED_LANGUAGES)[number];
 
-export const DEFAULT_LANGUAGE: BundledLanguage = "cs";
+/** Source language: what an untranslated string falls back to. */
+export const DEFAULT_LANGUAGE: BundledLanguage = "en";
 
 /**
- * Every further language must cover the Czech key set - Czech is the source
+ * Every further language must cover the English key set - English is the source
  * language, so a missing key would silently fall back to it and ship a
  * half-translated page. That rule is checked by `translations.test.ts` rather
  * than by the type system: plural families legitimately differ per language
  * (Czech needs `_few`, English does not), so identical key sets are the wrong
  * test - equal key sets *with plural suffixes stripped* is the right one.
  */
-export const BUNDLES: Record<BundledLanguage, unknown> = { cs, en };
+export const BUNDLES: Record<BundledLanguage, unknown> = { en, cs };
 
 const STORAGE_KEY = "aron.language";
 
@@ -62,10 +64,42 @@ function preferredLanguage(): BundledLanguage | undefined {
   return undefined;
 }
 
+/**
+ * The deployment's default language, which the server injects into the SPA
+ * shell (`<html lang>`, see IndexController). Reading it here rather than
+ * waiting for /api/v1/ui/config keeps the first paint in the right language.
+ * Absent in the Vite dev server, and an unsubstituted token means the build was
+ * served without the server at all.
+ */
+function deploymentLanguage(): string | undefined {
+  const injected = document.documentElement.lang;
+  return injected && !injected.startsWith("__") ? languageOf(injected) : undefined;
+}
+
+/**
+ * Language to start in. The reader's own choice wins, then the browser's
+ * preference, then what the deployment declared first in its `localizations`
+ * (this is how a Czech deployment stays Czech for everyone who has not asked
+ * for something else), and only then the source language. A candidate this
+ * build has no strings for is skipped rather than shown half-translated; a
+ * language this *deployment* does not offer is corrected by LanguageSwitcher
+ * once the configuration arrives.
+ */
+export function pickInitialLanguage(
+  stored: string | undefined,
+  preferred: string | undefined,
+  deployment: string | undefined,
+): BundledLanguage {
+  for (const candidate of [stored, preferred, deployment]) {
+    if (candidate !== undefined && isBundled(candidate)) {
+      return candidate;
+    }
+  }
+  return DEFAULT_LANGUAGE;
+}
+
 i18n.use(initReactI18next).init({
-  // the reader's own choice wins over the browser's preference; neither can
-  // pick a language this build has no strings for
-  lng: storedLanguage() ?? preferredLanguage() ?? DEFAULT_LANGUAGE,
+  lng: pickInitialLanguage(storedLanguage(), preferredLanguage(), deploymentLanguage()),
   fallbackLng: DEFAULT_LANGUAGE,
   supportedLngs: BUNDLED_LANGUAGES,
   resources: {

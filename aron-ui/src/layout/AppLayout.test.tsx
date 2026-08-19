@@ -10,7 +10,9 @@ import AppLayout from "./AppLayout";
 
 const config: UiConfig = {
   name: "Testovací portál",
-  localizations: ["cs_CZ"],
+  // a bilingual deployment: the chrome stays in the source language, so the
+  // assertions below read as the strings the code ships
+  localizations: ["en", "cs_CZ"],
   menuItems: [],
   footerLinks: [
     { code: FooterLinkCode.Accessibility, url: "https://archiv.example/pristupnost" },
@@ -54,7 +56,7 @@ describe("AppLayout", () => {
 
     // the skip link is the first thing Tab reaches
     await user.tab();
-    const skipLink = screen.getByRole("link", { name: "Přejít na hlavní obsah" });
+    const skipLink = screen.getByRole("link", { name: "Skip to main content" });
     expect(skipLink).toHaveFocus();
 
     await user.keyboard("{Enter}");
@@ -66,7 +68,7 @@ describe("AppLayout", () => {
 
     // the accessibility statement carries no server label - the UI names it
     expect(
-      await screen.findByRole("link", { name: "Prohlášení o přístupnosti" }),
+      await screen.findByRole("link", { name: "Accessibility statement" }),
     ).toHaveAttribute("href", "https://archiv.example/pristupnost");
     // a free link keeps the label the deployment configured
     expect(screen.getByRole("link", { name: "Kontakt" })).toHaveAttribute(
@@ -84,7 +86,7 @@ describe("AppLayout", () => {
 
   it("has no structural accessibility violations", async () => {
     const { container } = renderLayout();
-    await screen.findByRole("link", { name: "Prohlášení o přístupnosti" });
+    await screen.findByRole("link", { name: "Accessibility statement" });
 
     await expectNoA11yViolations(container);
   });

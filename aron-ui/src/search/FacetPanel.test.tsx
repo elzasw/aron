@@ -35,17 +35,17 @@ describe("FacetPanel", () => {
   });
 
   it("names a text filter by its facet, not by a placeholder alone", () => {
-    renderFacet(facet("TITLE~MAIN", FacetType.Fulltext, "Název archivního souboru"));
+    renderFacet(facet("TITLE~MAIN", FacetType.Fulltext, "Fonds name"));
 
     // a placeholder disappears once the user types - the control needs a name
-    expect(screen.getByRole("textbox", { name: "Název archivního souboru" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Fonds name" })).toBeInTheDocument();
   });
 
   it("heads every facet, so a screen reader can move between them", () => {
-    renderFacet(facet("LANG~CODE", FacetType.Enum, "Jazyk"));
+    renderFacet(facet("LANG~CODE", FacetType.Enum, "Language"));
 
-    expect(screen.getByRole("heading", { level: 2, name: "Jazyk" })).toBeInTheDocument();
-    expect(screen.getByRole("group")).toHaveAccessibleName("Jazyk");
+    expect(screen.getByRole("heading", { level: 2, name: "Language" })).toBeInTheDocument();
+    expect(screen.getByRole("group")).toHaveAccessibleName("Language");
   });
 
   it("names both ends of the dating range, slider and field alike", () => {
@@ -54,23 +54,19 @@ describe("FacetPanel", () => {
       code: "UNIT~DATE",
       bounds: { minYear: 1201, maxYear: 1961 },
     };
-    renderFacet(facet("UNIT~DATE", FacetType.Unitdate, "Datace vzniku"), bounds);
+    renderFacet(facet("UNIT~DATE", FacetType.Unitdate, "Dating"), bounds);
 
-    expect(screen.getByRole("slider", { name: "Datace vzniku – posuvník od roku" })).toHaveValue(
-      "1201",
-    );
-    expect(screen.getByRole("slider", { name: "Datace vzniku – posuvník do roku" })).toHaveValue(
-      "1961",
-    );
+    expect(screen.getByRole("slider", { name: "Dating – slider from year" })).toHaveValue("1201");
+    expect(screen.getByRole("slider", { name: "Dating – slider to year" })).toHaveValue("1961");
     // the year fields are numeric and carry their own names
-    expect(screen.getByRole("spinbutton", { name: "Datace vzniku – od roku" })).toBeInTheDocument();
-    expect(screen.getByRole("spinbutton", { name: "Datace vzniku – do roku" })).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "Dating – from year" })).toBeInTheDocument();
+    expect(screen.getByRole("spinbutton", { name: "Dating – to year" })).toBeInTheDocument();
   });
 
   it.each([
-    ["text", facet("TITLE~MAIN", FacetType.Fulltext, "Název")],
-    ["enum", facet("LANG~CODE", FacetType.Enum, "Jazyk")],
-    ["dating", facet("UNIT~DATE", FacetType.Unitdate, "Datace vzniku")],
+    ["text", facet("TITLE~MAIN", FacetType.Fulltext, "Title")],
+    ["enum", facet("LANG~CODE", FacetType.Enum, "Language")],
+    ["dating", facet("UNIT~DATE", FacetType.Unitdate, "Dating")],
   ])("has no structural accessibility violations (%s facet)", async (_kind, def) => {
     const { container } = renderFacet(
       def,

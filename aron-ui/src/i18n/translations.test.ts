@@ -30,12 +30,12 @@ describe("translation bundles", () => {
   it("cover the same strings in every language", () => {
     // plural families count once: Czech needs _few where English does not, so
     // comparing raw keys would forbid a correct translation
-    const czech = familiesOf(DEFAULT_LANGUAGE);
+    const source = familiesOf(DEFAULT_LANGUAGE);
 
     for (const language of BUNDLED_LANGUAGES.filter((l) => l !== DEFAULT_LANGUAGE)) {
       const other = familiesOf(language);
-      expect([...czech].filter((key) => !other.has(key)), `missing in ${language}`).toEqual([]);
-      expect([...other].filter((key) => !czech.has(key)), `absent from the source language`).toEqual([]);
+      expect([...source].filter((key) => !other.has(key)), `missing in ${language}`).toEqual([]);
+      expect([...other].filter((key) => !source.has(key)), `absent from the source language`).toEqual([]);
     }
   });
 
@@ -79,14 +79,29 @@ describe("counted strings", () => {
     expect(i18n.t("apu.digitalObjectFiles", { count: 1 })).toBe("1 file");
   });
 
-  it("never leak the source language into another one", async () => {
-    await i18n.changeLanguage("en");
+  it("render every counted string from the language's own bundle", async () => {
+    // a missing plural category falls back to the source language silently.
+    // Comparing the rendered string with that language's own template catches
+    // it in any script - unlike looking for foreign characters, which only
+    // works while the source language has letters the others lack.
+    for (const language of BUNDLED_LANGUAGES) {
+      await i18n.changeLanguage(language);
+      const rules = new Intl.PluralRules(language);
+      const bundle = BUNDLES[language] as Record<string, unknown>;
+      const families = new Set(keysOf(language).filter((key) => family(key) !== key).map(family));
 
-    for (const key of ["search.total", "search.totalMore", "apu.digitalObjectFiles"]) {
-      for (const count of COUNTS) {
-        // a missing English plural would fall back to Czech, which is exactly
-        // the failure the bundles must not have
-        expect(i18n.t(key, { count }), `${key} @ ${count}`).not.toMatch(/[áčďěňřšťůž]/i);
+      for (const base of families) {
+        for (const count of COUNTS) {
+          const key = `${base}_${rules.select(count)}`;
+          const template = key.split(".").reduce<unknown>(
+            (node, part) => (node as Record<string, unknown> | undefined)?.[part],
+            bundle,
+          );
+          expect(typeof template, `${language}: ${key}`).toBe("string");
+          expect(i18n.t(base, { count }), `${language}: ${base} @ ${count}`).toBe(
+            (template as string).replace("{{count}}", String(count)),
+          );
+        }
       }
     }
   });
