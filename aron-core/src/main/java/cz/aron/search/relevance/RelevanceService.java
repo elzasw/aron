@@ -13,6 +13,7 @@ import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.RelevanceItemWeightsDto;
 import cz.aron.domain.facets.dto.RelevanceSettingsDto;
 import cz.aron.domain.types.TypesHolder;
+import cz.aron.search.ContentLocale;
 import cz.aron.domain.types.dto.ItemType;
 import jakarta.annotation.PostConstruct;
 
@@ -32,9 +33,13 @@ public class RelevanceService {
 
 	private final TypesHolder typesHolder;
 
+	/** Stop words are the described material's, so the query chains follow the content locale. */
+	private final ContentLocale contentLocale;
+
 	private RelevanceConfig config;
 
-	public RelevanceService(FacetsLoader facetsLoader, TypesHolder typesHolder) {
+	public RelevanceService(FacetsLoader facetsLoader, TypesHolder typesHolder, ContentLocale contentLocale) {
+		this.contentLocale = contentLocale;
 		this.facetsLoader = facetsLoader;
 		this.typesHolder = typesHolder;
 	}
@@ -75,7 +80,8 @@ public class RelevanceService {
 			}
 		}
 
-		config = RelevanceConfig.withSettings(settings, refLabelFields, promotedFields);
+		config = RelevanceConfig.withSettings(settings, refLabelFields, promotedFields,
+				QueryAnalyzers.of(contentLocale.getLocale()));
 		log.info("Relevance configuration loaded: minimumShouldMatch={}%, relaxOnNoHits={}, "
 				+ "refLabelFields={}, promotedFields={}.",
 				config.minimumShouldMatchPercent(), config.relaxOnNoHits(),

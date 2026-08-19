@@ -1,0 +1,37 @@
+# Translations of the display model (optional file next to types.yaml). The
+# names in types.yaml are the source language and stay the fallback, so this
+# file only needs the codes a reader actually meets - here the ones the dev seed
+# data and the configured facets use. Codes are written in the underscore form.
+partTypes:
+  en:
+    PT_NAME: Name
+    PT_TITLE: Title
+    PT_INST_INFO: Archive information
+    PT_ARCH_DESC: Archival description
+    PT_FUND_INFO: Fonds information
+    PT_AE_INFO: Entity information
+    PT_IDENT: Identifier
+itemTypes:
+  en:
+    NAME: Name
+    TITLE: Title
+    UNIT_DATE: Date of creation
+    INST_CODE: Archive code
+    INST_REF: Institution
+    FUND_REF: Archival fonds
+    FUND_INST_REF: Institution
+    FUND_AP_REF: Index term
+    FUND_MARK: Fonds mark
+    CISLO_NAD: Fonds number
+    AP_REF: Entity reference
+    AE_CLASS: Entity class
+    ORIGINATOR_REF: Originator
+    ORIG_PLACES_REF: Places of origin
+    ARCHDESC_ROOT_REF: Records in the fonds
+    FINDINGAID_ID: Finding aid number
+    UNIT_TYPE: Kind of record
+    RECORD_TYPE: Record kind
+    UNIT_ID_INDEX: Reference code assigned by the archive
+    DATE_OF_CONTENT: Date of content
+    DATE_OTHER: Other dating
+    DIGITAL: Digitised

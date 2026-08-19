@@ -17,6 +17,7 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
  * @param relaxOnNoHits             retry any-word when the strict query has no hits
  * @param refLabelFields            physical {@code ~LABEL} fields of APU_REF item types
  * @param promotedFields            item fields promoted above the allText baseline
+ * @param analyzers                 token chains of the described material's language
  */
 public record RelevanceConfig(
 		int minimumShouldMatchPercent,
@@ -28,7 +29,8 @@ public record RelevanceConfig(
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
 		List<String> refLabelFields,
-		List<PromotedField> promotedFields) {
+		List<PromotedField> promotedFields,
+		QueryAnalyzers analyzers) {
 
 	/** One promoted item field with its weights. */
 	public record PromotedField(String field, float phrase, float terms) {
@@ -36,7 +38,7 @@ public record RelevanceConfig(
 
 	/** Built-in defaults with no reference-label or promoted fields (tests, simple callers). */
 	public static RelevanceConfig defaults() {
-		return withSettings(null, List.of(), List.of());
+		return withSettings(null, List.of(), List.of(), QueryAnalyzers.DEFAULT);
 	}
 
 	/**
@@ -45,7 +47,7 @@ public record RelevanceConfig(
 	 * resolved from the caller (item-type codes are a types.yaml concern).
 	 */
 	public static RelevanceConfig withSettings(RelevanceSettingsDto settings, List<String> refLabelFields,
-			List<PromotedField> promotedFields) {
+			List<PromotedField> promotedFields, QueryAnalyzers analyzers) {
 		RelevanceFieldWeightsDto name = settings != null ? settings.getName() : null;
 		RelevanceFieldWeightsDto nameVariants = settings != null ? settings.getNameVariants() : null;
 		RelevanceFieldWeightsDto refLabels = settings != null ? settings.getRefLabels() : null;
@@ -71,7 +73,8 @@ public record RelevanceConfig(
 				weight(description != null ? description.getTerms() : null, 2),
 				weight(allText != null ? allText.getTerms() : null, 1),
 				List.copyOf(refLabelFields),
-				List.copyOf(promotedFields));
+				List.copyOf(promotedFields),
+				analyzers);
 	}
 
 	private static float weight(Float configured, float defaultWeight) {

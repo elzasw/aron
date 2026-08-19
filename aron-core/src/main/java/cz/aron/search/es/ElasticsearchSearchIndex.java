@@ -45,9 +45,11 @@ import cz.aron.indexing.IndexConfig;
 import cz.aron.indexing.IndexedApu;
 import cz.aron.indexing.IndexedRelation;
 import cz.aron.search.ApuDocument;
+import cz.aron.search.ContentLocale;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
+import cz.aron.search.StopWords;
 import cz.aron.search.RelationDocument;
 import cz.aron.search.SearchIndex;
 import cz.aron.search.relevance.RelevancePlan;
@@ -62,6 +64,9 @@ import cz.aron.search.relevance.RelevancePlan;
 @ConditionalOnProperty(name = "search.engine", havingValue = "elasticsearch", matchIfMissing = true)
 @Component
 public class ElasticsearchSearchIndex implements SearchIndex {
+
+	/** Placeholder of the content locale's stop-word list in es_settings.json. */
+	private static final String STOP_WORDS_TOKEN = "__STOP_WORDS__";
 
 	private static final String SCHEMA_CRC_META_KEY = "schemaCrc";
 
@@ -92,13 +97,17 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	private final Resource settingsResource;
 
+	private final ContentLocale contentLocale;
+
 	public ElasticsearchSearchIndex(ElasticsearchOperations operations, ElasticsearchConverter converter,
 			TypesHolder typesHolder,
-			@Value("classpath:elasticsearch/es_settings.json") Resource settingsResource) {
+			@Value("classpath:elasticsearch/es_settings.json") Resource settingsResource,
+			ContentLocale contentLocale) {
 		this.operations = operations;
 		this.converter = converter;
 		this.typesHolder = typesHolder;
 		this.settingsResource = settingsResource;
+		this.contentLocale = contentLocale;
 	}
 
 	@Override
@@ -501,7 +510,11 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	private Settings loadSettings() {
 		try {
-			return Settings.parse(settingsResource.getContentAsString(StandardCharsets.UTF_8));
+			// the stop-word list follows the described material's language; the same
+			// list the query planner uses, so both sides drop the same words
+			String settings = settingsResource.getContentAsString(StandardCharsets.UTF_8)
+					.replace(STOP_WORDS_TOKEN, StopWords.elasticsearchList(contentLocale.getLocale()));
+			return Settings.parse(settings);
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}

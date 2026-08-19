@@ -97,7 +97,7 @@ class RelevanceQueryPlannerTest {
 	void minimumShouldMatchFollowsTheConfiguredPercent() {
 		var settings = new RelevanceSettingsDto();
 		settings.setMinimumShouldMatch("50%");
-		var config = RelevanceConfig.withSettings(settings, List.of(), List.of());
+		var config = RelevanceConfig.withSettings(settings, List.of(), List.of(), QueryAnalyzers.DEFAULT);
 
 		var plan = RelevanceQueryPlanner.plan("jedna dva tri ctyri", config);
 		assertThat(plan.minimumShouldMatch()).isEqualTo(2);
@@ -134,7 +134,7 @@ class RelevanceQueryPlannerTest {
 		name.setTerms(0f); // zero disables the tier
 		settings.setName(name);
 		var config = RelevanceConfig.withSettings(settings, List.of("REL~ENTITY~LABEL"),
-				List.of(new RelevanceConfig.PromotedField("TITLE~MAIN", 60, 30)));
+				List.of(new RelevanceConfig.PromotedField("TITLE~MAIN", 60, 30)), QueryAnalyzers.DEFAULT);
 
 		var plan = RelevanceQueryPlanner.plan("kronika", config);
 		assertThat(plan.scoring()).contains(
@@ -147,4 +147,33 @@ class RelevanceQueryPlannerTest {
 				.doesNotContain(org.assertj.core.groups.Tuple.tuple("name", MatchKind.ALL_TERMS));
 	}
 
+	@Test
+	void stopWordsFollowTheLanguageOfTheDescribedMaterial() {
+		// the gate drops the language's own stop words: Czech "v", German "und"
+		var czech = RelevanceConfig.withSettings(null, List.of(), List.of(),
+				QueryAnalyzers.of(java.util.Locale.of("cs", "CZ")));
+		var german = RelevanceConfig.withSettings(null, List.of(), List.of(),
+				QueryAnalyzers.of(java.util.Locale.GERMAN));
+
+		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", czech)))
+				.containsExactly("kostel", "praze");
+		// a German corpus keeps "v" (not a German stop word) and drops "und" instead
+		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", german)))
+				.containsExactly("kostel", "v", "praze");
+		assertThat(gateTerms(RelevanceQueryPlanner.plan("kirche und turm", german)))
+				.containsExactly("kirche", "turm");
+	}
+
+	@Test
+	void aLanguageWithoutAListKeepsEveryWord() {
+		var slovak = RelevanceConfig.withSettings(null, List.of(), List.of(),
+				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
+
+		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostol v prahe", slovak)))
+				.containsExactly("kostol", "v", "prahe");
+	}
+
+	private static List<String> gateTerms(RelevancePlan plan) {
+		return plan.gate().stream().map(Clause::text).toList();
+	}
 }

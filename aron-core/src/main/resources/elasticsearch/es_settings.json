@@ -30,13 +30,14 @@
         "folding_and_tokenizing_stop": {
           "type": "custom",
           "tokenizer": "standard",
-          "filter": ["lowercase", "cs_stop_filter", "asciifolding"]
+          "filter": ["lowercase", "stop_filter", "asciifolding"]
         }
       },
       "filter": {
-        "cs_stop_filter": {
+        "stop_filter": {
           "type": "stop",
-          "stopwords": ["_czech_"]
+          "_comment": "the list of the content locale; substituted at index creation from cz.aron.search.StopWords",
+          "stopwords": ["__STOP_WORDS__"]
         },
         "200_char_trunc": {
           "type": "truncate",

@@ -29,6 +29,7 @@ application.yml
    * - ``search.content-locale``
      - Language of the described material, as an IETF language tag (default
        ``cs-CZ``); its alphabet orders name-sorted results for every visitor
+       and its stop words are the ones searching ignores (see :doc:`search`)
        — this is not the visitor's own locale. Changing it reindexes at the
        next startup (see :doc:`operations`); an invalid tag stops the
        startup.

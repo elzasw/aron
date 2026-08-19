@@ -41,7 +41,7 @@ class ElasticsearchSearchIndexIT extends SearchIndexContractTest {
 		ReflectionTestUtils.invokeMethod(typesHolder, "loadData");
 
 		elasticsearchIndex = new ElasticsearchSearchIndex(operations, converter, typesHolder,
-				new ClassPathResource("elasticsearch/es_settings.json"));
+				new ClassPathResource("elasticsearch/es_settings.json"), new ContentLocale("cs-CZ"));
 	}
 
 	@Override

@@ -8,13 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.CharArraySet;
-import org.apache.lucene.analysis.LowerCaseFilter;
-import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.cz.CzechAnalyzer;
-import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter;
-import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import cz.aron.search.ApuDocumentBuilder;
@@ -46,12 +40,6 @@ public final class RelevanceQueryPlanner {
 	private static final int MAX_TOKENS = 32;
 
 	private static final Pattern PHRASE = Pattern.compile("\"([^\"]*)\"");
-
-	private static final CharArraySet CZECH_STOP_SET = CzechAnalyzer.getDefaultStopSet();
-
-	private static final Analyzer CANONICAL = foldingAnalyzer(true);
-
-	private static final Analyzer NON_STOP = foldingAnalyzer(false);
 
 	private RelevanceQueryPlanner() {
 	}
@@ -96,9 +84,9 @@ public final class RelevanceQueryPlanner {
 		}
 
 		// canonical tokens; stop-word-only queries fall back to the non-stop chain (B5)
-		List<String> tokens = analyze(CANONICAL, plainWords.toString());
+		List<String> tokens = analyze(config.analyzers().canonical(), plainWords.toString());
 		if (tokens.isEmpty() && phrases.isEmpty() && prefixTokens.isEmpty()) {
-			tokens = analyze(NON_STOP, plainWords.toString());
+			tokens = analyze(config.analyzers().nonStop(), plainWords.toString());
 		}
 
 		var gate = new ArrayList<Clause>();
@@ -191,21 +179,6 @@ public final class RelevanceQueryPlanner {
 			throw new UncheckedIOException(e);
 		}
 		return tokens;
-	}
-
-	private static Analyzer foldingAnalyzer(boolean stopWords) {
-		return new Analyzer() {
-			@Override
-			protected TokenStreamComponents createComponents(String fieldName) {
-				var tokenizer = new StandardTokenizer();
-				TokenStream stream = new LowerCaseFilter(tokenizer);
-				if (stopWords) {
-					stream = new StopFilter(stream, CZECH_STOP_SET);
-				}
-				stream = new ASCIIFoldingFilter(stream);
-				return new TokenStreamComponents(tokenizer, stream);
-			}
-		};
 	}
 
 }

@@ -38,10 +38,12 @@ Begins-with
    other query operators.
 
 Stop words
-   Common Czech stop words ("v", "a", "na", …) never cause empty results; a
-   query consisting only of stop words is still answered. The stop-word list
-   is Czech regardless of ``search.content-locale`` — that setting governs
-   alphabetical ordering only.
+   Common stop words of the described material's language ("v", "a", "na", …
+   in Czech) never cause empty results; a query consisting only of stop words
+   is still answered. The list follows ``search.content-locale`` and is the
+   same on both engines. Supported: Czech, Danish, Dutch, English, French,
+   German, Hungarian, Italian, Norwegian, Russian, Spanish and Swedish; any
+   other language removes nothing, which only makes matching stricter.
 
 What is searched
    All indexed description items participate in the fulltext search unless
