@@ -38,6 +38,11 @@ itemTypes:
     name: Source link
     type: LINK
     indexed: false
+  - code: NAME_ALT
+    name: Variant name form
+    type: STRING
+    indexed: true
+    nameVariant: true
   - code: NOTE_NOFT
     name: Indexed note excluded from the general fulltext
     type: STRING

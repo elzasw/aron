@@ -93,6 +93,22 @@ public abstract class SearchIndexContractTest {
 		return document;
 	}
 
+	/**
+	 * Fixture with variant name forms - mirrors what ApuDocumentBuilder computes
+	 * for items marked {@code nameVariant} (analyzed field, normalized exact
+	 * companions, plus the regular allText participation).
+	 */
+	protected static ApuDocument docWithNameVariants(String uuid, String name, String... variants) {
+		var document = doc(uuid, name, 1, Map.of());
+		for (String variant : variants) {
+			document.getNameVariants().add(variant);
+			document.getNameVariantsExact().add(ApuDocumentBuilder.normalize(variant));
+			document.getNameVariantsExactFolded().add(ApuDocumentBuilder.normalizeFolded(variant));
+			document.getAllText().add(variant);
+		}
+		return document;
+	}
+
 	private static String uuid(int n) {
 		return UUID.nameUUIDFromBytes(("contract-" + n).getBytes()).toString();
 	}
@@ -206,6 +222,36 @@ public abstract class SearchIndexContractTest {
 
 		assertThat(index.search(ApuSearchQuery.fulltext("kronika")).hits())
 				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(71), uuid(70));
+	}
+
+	@Test
+	void variantNamesRankAboveContentBelowThePrimaryName() {
+		// B14: an entity is findable by its variant forms; a variant match beats
+		// a record merely containing the words, and loses to a primary-name match
+		indexApus(List.of(
+				docWithNameVariants(uuid(75), "Česko", "Czech Republic", "Czechia", "Česká republika"),
+				docWithAllText(uuid(76), "Studie", "text zmiňující Czech Republic v obsahu"),
+				doc(uuid(77), "Czechia", 1, Map.of())));
+
+		// exact variant beats the content mention
+		assertThat(index.search(ApuSearchQuery.fulltext("Czech Republic")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(75), uuid(76));
+		// the primary name beats the same value as a variant
+		assertThat(index.search(ApuSearchQuery.fulltext("Czechia")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(77), uuid(75));
+	}
+
+	@Test
+	void variantNamesFollowTheDiacriticsRankingRule() {
+		// B14 + B3: typed diacritics prefer the exact variant form
+		indexApus(List.of(
+				docWithNameVariants(uuid(78), "Entita A", "Řehoř"),
+				docWithNameVariants(uuid(79), "Entita B", "Rehor")));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("Řehoř")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(78), uuid(79));
+		assertThat(index.search(ApuSearchQuery.fulltext("Rehor")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(79), uuid(78));
 	}
 
 	@Test

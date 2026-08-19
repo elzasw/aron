@@ -97,10 +97,12 @@ public class TypesLoader {
             List<String> indexedFields = new ArrayList<>();
             for (ItemType itemType : typesConfigDto.getItemTypes()) {
                 if (itemType.isIndexed()) {
-                    // the fulltext flag changes what the allText field contains, so it
-                    // is part of the indexed-fields CRC - toggling it must reindex
+                    // the fulltext and nameVariant flags change what the allText and
+                    // variant-name fields contain, so they are part of the
+                    // indexed-fields CRC - toggling either must reindex
                     indexedFields.add(itemType.getCode() + itemType.getType().name()
-                            + (itemType.isFulltextEnabled() ? "" : "~NOFT"));
+                            + (itemType.isFulltextEnabled() ? "" : "~NOFT")
+                            + (itemType.isNameVariantEnabled() ? "~NVAR" : ""));
                 }
             }
             Collections.sort(indexedFields);

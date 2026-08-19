@@ -12,6 +12,12 @@ public class ItemType {
     private boolean indexed = true;
     /** Whether the item's value enters the general fulltext (allText); default true. */
     private Boolean fulltext;
+    /**
+     * Marks the item as a variant name form of the APU (e.g. the other names of
+     * an access point - Praha/Prague): its values additionally feed the
+     * variant-name relevance tiers (doc/search-relevance.md §4.2). Default false.
+     */
+    private Boolean nameVariant;
     private Boolean indexFolding;
     private Boolean caseInsensitive;
     /**
@@ -73,6 +79,16 @@ public class ItemType {
 	/** Fulltext participation (allText): on unless explicitly disabled. */
 	public boolean isFulltextEnabled() {
 		return !Boolean.FALSE.equals(fulltext);
+	}
+	public Boolean getNameVariant() {
+		return nameVariant;
+	}
+	public void setNameVariant(Boolean nameVariant) {
+		this.nameVariant = nameVariant;
+	}
+	/** Variant-name participation: off unless explicitly enabled. */
+	public boolean isNameVariantEnabled() {
+		return Boolean.TRUE.equals(nameVariant);
 	}
 	public List<LocalizedItem> getLang() {
 		return lang;

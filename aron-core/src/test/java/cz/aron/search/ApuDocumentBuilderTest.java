@@ -162,6 +162,24 @@ class ApuDocumentBuilderTest {
 	}
 
 	@Test
+	void nameVariantItemsFeedTheVariantFieldsAndAllText() {
+		var apu = apu(
+				item("NAME~ALT", "Czech Republic"),
+				item("NAME~ALT", "Česká republika"),
+				item("TITLE~MAIN", "obyčejný titul"));
+
+		var doc = build(apu, Map.of());
+
+		// only items marked nameVariant enter the variant fields
+		assertThat(doc.getNameVariants()).containsExactly("Czech Republic", "Česká republika");
+		// exact companions come through the shared normalizer
+		assertThat(doc.getNameVariantsExact()).containsExactly("czech republic", "česká republika");
+		assertThat(doc.getNameVariantsExactFolded()).containsExactly("czech republic", "ceska republika");
+		// variants stay part of the general fulltext too
+		assertThat(doc.getAllText()).contains("Czech Republic", "Česká republika");
+	}
+
+	@Test
 	void allTextCollectsEverySearchableValue() {
 		var target = "99999999-8888-7777-6666-555555555555";
 		var apu = apu(

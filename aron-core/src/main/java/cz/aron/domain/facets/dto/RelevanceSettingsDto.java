@@ -20,6 +20,9 @@ public class RelevanceSettingsDto {
 
 	private RelevanceFieldWeightsDto name;
 
+	/** Variant name forms (item types marked {@code nameVariant} in types.yaml). */
+	private RelevanceFieldWeightsDto nameVariants;
+
 	private RelevanceFieldWeightsDto refLabels;
 
 	private RelevanceFieldWeightsDto description;
@@ -51,6 +54,14 @@ public class RelevanceSettingsDto {
 
 	public void setName(RelevanceFieldWeightsDto name) {
 		this.name = name;
+	}
+
+	public RelevanceFieldWeightsDto getNameVariants() {
+		return nameVariants;
+	}
+
+	public void setNameVariants(RelevanceFieldWeightsDto nameVariants) {
+		this.nameVariants = nameVariants;
 	}
 
 	public RelevanceFieldWeightsDto getRefLabels() {

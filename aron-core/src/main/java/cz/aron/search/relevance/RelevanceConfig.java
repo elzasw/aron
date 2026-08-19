@@ -22,6 +22,8 @@ public record RelevanceConfig(
 		int minimumShouldMatchPercent,
 		boolean relaxOnNoHits,
 		float nameExact, float nameExactFolded, float namePrefix, float namePhrase, float nameTerms,
+		float nameVariantsExact, float nameVariantsExactFolded, float nameVariantsPrefix,
+		float nameVariantsPhrase, float nameVariantsTerms,
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
@@ -45,6 +47,7 @@ public record RelevanceConfig(
 	public static RelevanceConfig withSettings(RelevanceSettingsDto settings, List<String> refLabelFields,
 			List<PromotedField> promotedFields) {
 		RelevanceFieldWeightsDto name = settings != null ? settings.getName() : null;
+		RelevanceFieldWeightsDto nameVariants = settings != null ? settings.getNameVariants() : null;
 		RelevanceFieldWeightsDto refLabels = settings != null ? settings.getRefLabels() : null;
 		RelevanceFieldWeightsDto description = settings != null ? settings.getDescription() : null;
 		RelevanceFieldWeightsDto allText = settings != null ? settings.getAllText() : null;
@@ -56,6 +59,12 @@ public record RelevanceConfig(
 				weight(name != null ? name.getPrefix() : null, 200),
 				weight(name != null ? name.getPhrase() : null, 100),
 				weight(name != null ? name.getTerms() : null, 50),
+				// preferred name ~ 5x a variant form (the CAM/Elza rule, see §2)
+				weight(nameVariants != null ? nameVariants.getExact() : null, 200),
+				weight(nameVariants != null ? nameVariants.getExactFolded() : null, 160),
+				weight(nameVariants != null ? nameVariants.getPrefix() : null, 40),
+				weight(nameVariants != null ? nameVariants.getPhrase() : null, 20),
+				weight(nameVariants != null ? nameVariants.getTerms() : null, 10),
 				weight(refLabels != null ? refLabels.getPhrase() : null, 12),
 				weight(refLabels != null ? refLabels.getTerms() : null, 10),
 				weight(description != null ? description.getPhrase() : null, 8),

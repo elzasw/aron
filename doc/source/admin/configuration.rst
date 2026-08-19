@@ -73,7 +73,10 @@ indexing flags:
 
 - ``indexed`` — whether the item is written to the search index at all;
 - ``fulltext`` — whether the item's value participates in the general
-  fulltext search (default: yes; see :doc:`search`).
+  fulltext search (default: yes; see :doc:`search`);
+- ``nameVariant`` — marks the item as a variant name form of the record
+  (the other names of an access point); its values rank just below the
+  primary name (default: no; see :doc:`search`).
 
 .. important::
 

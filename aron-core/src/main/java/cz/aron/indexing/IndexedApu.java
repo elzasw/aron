@@ -42,6 +42,21 @@ public class IndexedApu {
     @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING)
     private List<String> allText = new ArrayList<>();
 
+    /**
+     * Variant name forms (item types marked nameVariant in types.yaml) with
+     * their normalized exact companions - the variant-name relevance tiers
+     * (doc/search-relevance.md §4.2). Multi-valued; the position gap keeps
+     * phrases inside one variant.
+     */
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private List<String> nameVariants = new ArrayList<>();
+
+    @Field(type = FieldType.Keyword)
+    private List<String> nameVariantsExact = new ArrayList<>();
+
+    @Field(type = FieldType.Keyword)
+    private List<String> nameVariantsExactFolded = new ArrayList<>();
+
     @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP)
     private String description;
 
@@ -98,6 +113,30 @@ public class IndexedApu {
 
 	public void setAllText(List<String> allText) {
 		this.allText = allText;
+	}
+
+	public List<String> getNameVariants() {
+		return nameVariants;
+	}
+
+	public void setNameVariants(List<String> nameVariants) {
+		this.nameVariants = nameVariants;
+	}
+
+	public List<String> getNameVariantsExact() {
+		return nameVariantsExact;
+	}
+
+	public void setNameVariantsExact(List<String> nameVariantsExact) {
+		this.nameVariantsExact = nameVariantsExact;
+	}
+
+	public List<String> getNameVariantsExactFolded() {
+		return nameVariantsExactFolded;
+	}
+
+	public void setNameVariantsExactFolded(List<String> nameVariantsExactFolded) {
+		this.nameVariantsExactFolded = nameVariantsExactFolded;
 	}
 
 	public String getId() {

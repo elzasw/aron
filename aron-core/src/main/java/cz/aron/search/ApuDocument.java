@@ -45,6 +45,15 @@ public class ApuDocument {
 	 * position gap so phrases never match across two different values.
 	 */
 	private final List<String> allText = new ArrayList<>();
+	/**
+	 * Variant name forms of the APU (values of item types marked
+	 * {@code nameVariant} in types.yaml - the other names of an access point).
+	 * Multi-valued analyzed field plus its normalized exact companions, computed
+	 * by the builder with the SAME normalizer as the primary name.
+	 */
+	private final List<String> nameVariants = new ArrayList<>();
+	private final List<String> nameVariantsExact = new ArrayList<>();
+	private final List<String> nameVariantsExactFolded = new ArrayList<>();
 	private final Map<String, List<Object>> values = new HashMap<>();
 
 	/** Outgoing reference to another APU, resolved with its display label. */
@@ -141,6 +150,18 @@ public class ApuDocument {
 
 	public List<String> getAllText() {
 		return allText;
+	}
+
+	public List<String> getNameVariants() {
+		return nameVariants;
+	}
+
+	public List<String> getNameVariantsExact() {
+		return nameVariantsExact;
+	}
+
+	public List<String> getNameVariantsExactFolded() {
+		return nameVariantsExactFolded;
 	}
 
 	public List<Rel> getRels() {

@@ -88,9 +88,13 @@ to weakest:
 2. the name begins with the query,
 3. the name contains the query as a phrase,
 4. the name contains all query words,
-5. labels of referenced records (originators, places, …),
-6. the description,
-7. any other indexed item.
+5. a **variant name form** matches the same way (the other names of an
+   access point — Praha/Prague; item types marked ``nameVariant: true`` in
+   ``types.yaml``) — the whole ladder repeats one level lower, a preferred
+   name counting roughly five times a variant,
+6. labels of referenced records (originators, places, …),
+7. the description,
+8. any other indexed item.
 
 Within a tier, standard fulltext scoring applies — shorter fields matching
 more of the query score higher, so a record whose name *is* the query
@@ -113,8 +117,9 @@ reindex needed**.
      relaxOnNoHits: true
 
      # Built-in fields with their default weights.
-     name:        { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
-     refLabels:   { phrase: 12, terms: 10 }
+     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
+     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10 }
+     refLabels:    { phrase: 12, terms: 10 }
      description: { phrase: 8, terms: 2 }
      allText:     { terms: 1 }
 

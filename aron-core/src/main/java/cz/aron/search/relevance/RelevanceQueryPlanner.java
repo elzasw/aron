@@ -143,6 +143,13 @@ public final class RelevanceQueryPlanner {
 		add(scoring, "nameExactFolded", MatchKind.PREFIX, normalizedFolded, config.namePrefix());
 		add(scoring, "name", MatchKind.PHRASE, plain, config.namePhrase());
 		add(scoring, "name", MatchKind.ALL_TERMS, plain, config.nameTerms());
+		// variant name forms (item types marked nameVariant): the same ladder one
+		// level below the primary name - preferred ~ 5x a variant (§2)
+		add(scoring, "nameVariantsExact", MatchKind.TERM, normalized, config.nameVariantsExact());
+		add(scoring, "nameVariantsExactFolded", MatchKind.TERM, normalizedFolded, config.nameVariantsExactFolded());
+		add(scoring, "nameVariantsExactFolded", MatchKind.PREFIX, normalizedFolded, config.nameVariantsPrefix());
+		add(scoring, "nameVariants", MatchKind.PHRASE, plain, config.nameVariantsPhrase());
+		add(scoring, "nameVariants", MatchKind.ALL_TERMS, plain, config.nameVariantsTerms());
 		for (String refLabelField : config.refLabelFields()) {
 			add(scoring, refLabelField, MatchKind.PHRASE, plain, config.refLabelsPhrase());
 			add(scoring, refLabelField, MatchKind.ANY_TERM, plain, config.refLabelsTerms());

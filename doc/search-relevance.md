@@ -114,6 +114,7 @@ construction.
 | `allText` | **multi-valued** analyzed field: one entry per searchable value — the name, the description, every item value including APU_REF labels, integers as text, and UNITDATE boundary years | the single gate field (§4.2) and the baseline scoring tier |
 | `nameExact` | name: lowercased, whitespace-collapsed, **diacritics preserved**; keyword, truncated to 200 chars | true exact-name tier |
 | `nameExactFolded` | same, **diacritics folded** | folded exact + prefix tiers |
+| `nameVariants` (+ `~Exact`, `~ExactFolded`) | values of item types marked **`nameVariant: true`** in types.yaml (the other name forms of an access point — Praha/Prague), analyzed multi-valued + the same normalized exact companions as the primary name | variant-name tiers (§4.2) |
 | `dateL` / `dateH` | min of all `~L`, max of all `~H` (epoch millis, numeric doc-values) | dating sort with no configuration (§4.4) |
 | `uuid` doc-values | sortable uuid (Lucene: `SortedDocValuesField`; ES: the existing keyword id) | the final tie-break every sort mode needs (§4.4) |
 
@@ -211,6 +212,11 @@ the latter takes an int the planner computes from the token count).
 | exact name, diacritics preserved | `term(nameExact, norm(Q))` | 1000 |
 | exact name, folded | `term(nameExactFolded, norm(Q))` | 800 |
 | name prefix | `prefix(nameExactFolded, norm(Q))` | 200 |
+| exact variant name, diacritics preserved | `term(nameVariantsExact, norm(Q))` | 200 |
+| exact variant name, folded | `term(nameVariantsExactFolded, norm(Q))` | 160 |
+| variant-name prefix | `prefix(nameVariantsExactFolded, norm(Q))` | 40 |
+| variant-name phrase | `match_phrase(nameVariants, Q)` | 20 |
+| variant name all terms | `match(nameVariants, Q, AND)` | 10 |
 | name phrase | `match_phrase(name, Q)` | 100 |
 | name all terms | `match(name, Q, AND)` | 50 |
 | reference labels | `match(<CODE>~LABEL, Q)` | 10 |
@@ -253,8 +259,11 @@ relevance:
   relaxOnNoHits: true
 
   # Built-in fields (all optional, defaults shown).
-  name:        { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
-  refLabels:   { phrase: 12, terms: 10 }
+  name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
+  # variant name forms (item types marked nameVariant in types.yaml);
+  # the defaults follow the CAM/Elza rule "preferred ~ 5x a variant" (§2)
+  nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10 }
+  refLabels:    { phrase: 12, terms: 10 }
   description: { phrase: 8, terms: 2 }
   allText:     { terms: 1 }
 
@@ -412,6 +421,7 @@ this table so they cannot diverge from what is tested.
 | B11 | Totals are exact up to the configured limit, above it reported as "more than N" (`totalRelation: GTE`) | API test |
 | B12 | At most 32 query words are used; extra words are ignored | planner unit test |
 | B13 | Only the boundary years of a dating are text-searchable ("1945" does not match an APU dated 1940–1950); searching inside date ranges is the dating facet's job | documented limitation, contract test |
+| B14 | A record is findable by its variant name forms (item types marked `nameVariant`); a variant match ranks above content matches and below a primary-name match of the same kind, and the diacritics rule (B3) applies to variants too | contract test |
 
 "Contract test" = `SearchIndexContractTest` (both engines must pass identically);
 "planner unit" = `RelevanceQueryPlannerTest` (no Spring, no engine);
@@ -494,6 +504,12 @@ Second round (2026-08-17, after critical review):
 | R-10 | `SortMode.AUTO` as the contract default (server-side resolution made explicit); every sort mode ends in a `uuid` tie-break; date sorts are numeric with missing-last |
 | R-11 | Trailing `word*` is the only wildcard operator; `*` elsewhere and unbalanced quotes are literal; relaxation is reported via `queryMode` in the response |
 | R-12 | The observable behavior is a **normative, tested specification** (§5); Czech user help and the admin docs derive from it; relevance quality guarded by a golden-query set under `-Pes-it` |
+
+Third round (2026-08-19):
+
+| # | Decision |
+|---|---|
+| R-13 | **Variant name forms** (the CAM/Elza preferred-vs-variant scheme, e.g. an access point's other names Praha/Prague): item types marked `nameVariant: true` in types.yaml feed dedicated index fields (`nameVariants` + normalized exact companions, same normalizer as the primary name, CRC-tracked) and a tier ladder one level below the primary name — defaults follow the measured rule *preferred ≈ 5 × variant* (exact 200/160, prefix 40, phrase 20, terms 10), overridable via `relevance.nameVariants`. Marking is per item type, not per item group |
 
 ## 9. Deliberately not done
 

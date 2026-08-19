@@ -115,6 +115,12 @@ class RelevanceQueryPlannerTest {
 				new Clause("nameExactFolded", MatchKind.PREFIX, "rehor", 200),
 				new Clause("name", MatchKind.PHRASE, "Řehoř", 100),
 				new Clause("name", MatchKind.ALL_TERMS, "Řehoř", 50),
+				// variant name forms: the same ladder, preferred ~ 5x a variant
+				new Clause("nameVariantsExact", MatchKind.TERM, "řehoř", 200),
+				new Clause("nameVariantsExactFolded", MatchKind.TERM, "rehor", 160),
+				new Clause("nameVariantsExactFolded", MatchKind.PREFIX, "rehor", 40),
+				new Clause("nameVariants", MatchKind.PHRASE, "Řehoř", 20),
+				new Clause("nameVariants", MatchKind.ALL_TERMS, "Řehoř", 10),
 				new Clause("description", MatchKind.PHRASE, "Řehoř", 8),
 				new Clause("description", MatchKind.ANY_TERM, "Řehoř", 2),
 				new Clause("allText", MatchKind.ANY_TERM, "Řehoř", 1));

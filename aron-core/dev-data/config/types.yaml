@@ -84,6 +84,11 @@ itemTypes:
     # ENUM | APU_REF | INTEGER | STRING | UNITDATE | LINK | ITEM_AGGREG
     type: STRING
     #
+    # Variantni forma jmena APU (dalsi jmena pristupoveho bodu -
+    # Praha/Prague): hodnoty navic vstupuji do variantnich urovni
+    # relevance (mezi hlavnim jmenem a obsahem). Vychozi je false.
+    nameVariant: true
+    #
     # Vyrazeni z obecneho fulltextu (allText); vychozi je true.
     # Vahy relevance patri do searchConfig.yaml (sekce relevance).
     # fulltext: false

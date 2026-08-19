@@ -91,11 +91,13 @@ public class ApuDocumentBuilder {
 						} else {
 							data = value;
 							addAllText(document, fulltext, value);
+							addNameVariant(document, itemType, value);
 						}
 						break;
 					case ENUM:
 						data = value;
 						addAllText(document, fulltext, value);
+						addNameVariant(document, itemType, value);
 						break;
 					case INTEGER:
 						data = Integer.valueOf(value);
@@ -175,6 +177,20 @@ public class ApuDocumentBuilder {
 		if (fulltext && value != null && !value.isBlank()) {
 			document.getAllText().add(value);
 		}
+	}
+
+	/**
+	 * Values of {@code nameVariant} item types feed the variant-name tiers: the
+	 * analyzed field plus normalized exact companions - the same normalizer as
+	 * the primary name, so the planner compares like with like.
+	 */
+	private static void addNameVariant(ApuDocument document, ItemType itemType, String value) {
+		if (!itemType.isNameVariantEnabled() || value == null || value.isBlank()) {
+			return;
+		}
+		document.getNameVariants().add(value);
+		document.getNameVariantsExact().add(normalize(value));
+		document.getNameVariantsExactFolded().add(normalizeFolded(value));
 	}
 
 	/** Boundary year of an ISO local date-time bound ("1850-01-01T00:00:00" - "1850"). */
