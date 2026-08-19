@@ -18,6 +18,10 @@ import org.springframework.stereotype.Component;
  * language of the described material and decides alphabetical order for every
  * reader alike.
  * <p>
+ * Matching ignores regions in both directions: a requested {@code en-GB} is
+ * served by a configured {@code en}, and a requested {@code en} by a configured
+ * {@code en_US} (see {@link #byLanguage(List)}).
+ * <p>
  * An unusable {@code lang} - malformed, or matching no configured localization
  * - falls back to the first configured one rather than failing the request: a
  * reader following someone else's link should still get the page.
@@ -50,7 +54,12 @@ public class PresentationLocales {
 		if (requested != null && !requested.isBlank()) {
 			try {
 				// RFC 4647 lookup: cs-CZ matches a configured cs, and q-values are honoured
-				Locale match = Locale.lookup(Locale.LanguageRange.parse(requested.replace('_', '-')), supported);
+				List<Locale.LanguageRange> ranges = Locale.LanguageRange.parse(requested.replace('_', '-'));
+				Locale match = Locale.lookup(ranges, supported);
+				if (match != null) {
+					return match;
+				}
+				match = byLanguage(ranges);
 				if (match != null) {
 					return match;
 				}
@@ -59,6 +68,38 @@ public class PresentationLocales {
 			}
 		}
 		return getDefault();
+	}
+
+	/**
+	 * Match on the language alone, for the direction RFC 4647 lookup does not
+	 * cover: it truncates the <em>range</em> and never the tag, so {@code en}
+	 * does not find a deployment that configured {@code en_US} - while
+	 * {@code en-GB} does find a configured {@code en}.
+	 * <p>
+	 * Both directions have to work, because the two sides are written by
+	 * different people for different reasons: a deployment names its
+	 * localizations with the region it thinks in, and the reader's language is
+	 * chosen per language (the UI's switcher and its string bundles have no
+	 * regions at all). Without this, an English reader of a deployment that
+	 * wrote {@code en_US} silently got every server-rendered label in the
+	 * default language.
+	 * <p>
+	 * Ranges come from {@code parse} in descending priority, so an
+	 * {@code Accept-Language} list keeps its order here too.
+	 */
+	private Locale byLanguage(List<Locale.LanguageRange> ranges) {
+		for (Locale.LanguageRange range : ranges) {
+			String language = range.getRange().split("-")[0];
+			if (language.isEmpty() || "*".equals(language)) {
+				continue;
+			}
+			for (Locale candidate : supported) {
+				if (candidate.getLanguage().equalsIgnoreCase(language)) {
+					return candidate;
+				}
+			}
+		}
+		return null;
 	}
 
 	/** The deployment's first configured localization. */
