@@ -13,6 +13,9 @@ public class RelevanceFieldWeightsDto {
 
 	private Float terms;
 
+	/** Per-token word-prefix tier (partial matching, doc/search-relevance.md R-14). */
+	private Float wordPrefix;
+
 	public Float getExact() {
 		return exact;
 	}
@@ -51,6 +54,14 @@ public class RelevanceFieldWeightsDto {
 
 	public void setTerms(Float terms) {
 		this.terms = terms;
+	}
+
+	public Float getWordPrefix() {
+		return wordPrefix;
+	}
+
+	public void setWordPrefix(Float wordPrefix) {
+		this.wordPrefix = wordPrefix;
 	}
 
 }

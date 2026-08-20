@@ -32,10 +32,15 @@ Phrases
    exact phrase. A phrase never matches across values of two different
    description items. An unbalanced quote has no special meaning.
 
-Begins-with
-   A trailing asterisk (``kron*``) matches words beginning with the prefix.
-   An asterisk in any other position is a literal character; there are no
-   other query operators.
+Partial words
+   Partially typed words match automatically: a word of at least three
+   letters (``relevance.prefixMinLength``) also matches the *beginning* of a
+   word — "pardub" finds Pardubice, "univ bratisl" finds both "Univerzita
+   Bratislava" and "Bratislavská univerzita". Shorter fragments must match a
+   whole word, and fragments never match the middle of a word. Records
+   matching the words exactly always rank above partially matched ones.
+   There are no query operators besides quotes — an asterisk is a literal
+   character with no meaning.
 
 Stop words
    Common stop words of the described material's language ("v", "a", "na", …
@@ -119,8 +124,10 @@ reindex needed**.
      relaxOnNoHits: true
 
      # Built-in fields with their default weights.
-     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50 }
-     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10 }
+     # Minimum word length for automatic partial (word-prefix) matching.
+     prefixMinLength: 3
+     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30 }
+     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8 }
      refLabels:    { phrase: 12, terms: 10 }
      description: { phrase: 8, terms: 2 }
      allText:     { terms: 1 }

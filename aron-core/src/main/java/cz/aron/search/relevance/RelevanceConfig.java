@@ -22,9 +22,12 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
 public record RelevanceConfig(
 		int minimumShouldMatchPercent,
 		boolean relaxOnNoHits,
+		int prefixMinLength,
 		float nameExact, float nameExactFolded, float namePrefix, float namePhrase, float nameTerms,
+		float nameWordPrefix,
 		float nameVariantsExact, float nameVariantsExactFolded, float nameVariantsPrefix,
 		float nameVariantsPhrase, float nameVariantsTerms,
+		float nameVariantsWordPrefix,
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
@@ -56,17 +59,21 @@ public record RelevanceConfig(
 		return new RelevanceConfig(
 				parseMinimumShouldMatch(settings != null ? settings.getMinimumShouldMatch() : null),
 				settings == null || !Boolean.FALSE.equals(settings.getRelaxOnNoHits()),
+				parsePrefixMinLength(settings != null ? settings.getPrefixMinLength() : null),
 				weight(name != null ? name.getExact() : null, 1000),
 				weight(name != null ? name.getExactFolded() : null, 800),
 				weight(name != null ? name.getPrefix() : null, 200),
 				weight(name != null ? name.getPhrase() : null, 100),
 				weight(name != null ? name.getTerms() : null, 50),
+				// partial words rank below every full-word tier (exact beats partial)
+				weight(name != null ? name.getWordPrefix() : null, 30),
 				// preferred name ~ 5x a variant form (the CAM/Elza rule, see §2)
 				weight(nameVariants != null ? nameVariants.getExact() : null, 200),
 				weight(nameVariants != null ? nameVariants.getExactFolded() : null, 160),
 				weight(nameVariants != null ? nameVariants.getPrefix() : null, 40),
 				weight(nameVariants != null ? nameVariants.getPhrase() : null, 20),
 				weight(nameVariants != null ? nameVariants.getTerms() : null, 10),
+				weight(nameVariants != null ? nameVariants.getWordPrefix() : null, 8),
 				weight(refLabels != null ? refLabels.getPhrase() : null, 12),
 				weight(refLabels != null ? refLabels.getTerms() : null, 10),
 				weight(description != null ? description.getPhrase() : null, 8),
@@ -79,6 +86,17 @@ public record RelevanceConfig(
 
 	private static float weight(Float configured, float defaultWeight) {
 		return configured != null ? configured : defaultWeight;
+	}
+
+	/** Tokens at least this long match as word prefixes; shorter must match whole (default 3). */
+	private static int parsePrefixMinLength(Integer value) {
+		if (value == null) {
+			return 3;
+		}
+		if (value < 1) {
+			throw new IllegalArgumentException("relevance.prefixMinLength must be at least 1: " + value);
+		}
+		return value;
 	}
 
 	/** Accepts {@code 75%}, {@code 75} or unset (= 100). */

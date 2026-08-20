@@ -17,10 +17,11 @@ import cz.aron.search.relevance.RelevancePlan.MatchKind;
 
 /**
  * Plans one fulltext query (doc/search-relevance.md §4.2): parses the minimal
- * user syntax (quoted phrases, trailing {@code word*} prefix, everything else
- * literal), tokenizes with ONE canonical analyzer, and emits the non-scoring
- * gate plus the weighted scoring tiers. Pure logic - unit-tested without an
- * engine or Spring.
+ * user syntax (quoted phrases; everything else literal), tokenizes with ONE
+ * canonical analyzer, and emits the non-scoring gate plus the weighted scoring
+ * tiers. Tokens of at least {@code relevance.prefixMinLength} letters gate as
+ * word prefixes ("pardub" finds Pardubice, R-14); shorter tokens must match a
+ * whole word. Pure logic - unit-tested without an engine or Spring.
  *
  * <p>Tokenization deliberately uses the Lucene analysis library (standard
  * tokenizer + lowercase + ASCII folding + the {@code _czech_} stop set): it is
@@ -68,39 +69,25 @@ public final class RelevanceQueryPlanner {
 		}
 		remainder.append(query.substring(consumed));
 
-		// a trailing star marks a begins-with word; stars elsewhere are literal
-		// (the analyzers drop them) - B6
-		var prefixTokens = new ArrayList<String>();
-		var plainWords = new StringBuilder();
-		for (String word : remainder.toString().split("\\s+")) {
-			if (word.length() > 1 && word.endsWith("*") && word.indexOf('*') == word.length() - 1) {
-				String folded = ApuDocumentBuilder.normalizeFolded(word.substring(0, word.length() - 1));
-				if (folded != null && !folded.isBlank()) {
-					prefixTokens.add(folded);
-				}
-			} else {
-				plainWords.append(word).append(' ');
-			}
-		}
+		// no other operators: a star has no meaning (the analyzers drop it) - B6
 
 		// canonical tokens; stop-word-only queries fall back to the non-stop chain (B5)
-		List<String> tokens = analyze(config.analyzers().canonical(), plainWords.toString());
-		if (tokens.isEmpty() && phrases.isEmpty() && prefixTokens.isEmpty()) {
-			tokens = analyze(config.analyzers().nonStop(), plainWords.toString());
+		List<String> tokens = analyze(config.analyzers().canonical(), remainder.toString());
+		if (tokens.isEmpty() && phrases.isEmpty()) {
+			tokens = analyze(config.analyzers().nonStop(), remainder.toString());
+		}
+		if (tokens.size() > MAX_TOKENS) {
+			tokens = tokens.subList(0, MAX_TOKENS);
 		}
 
 		var gate = new ArrayList<Clause>();
 		for (String token : tokens) {
-			if (gate.size() >= MAX_TOKENS) {
-				break;
-			}
-			gate.add(new Clause(ALL_TEXT, MatchKind.TERM, token, 0));
-		}
-		for (String prefix : prefixTokens) {
-			if (gate.size() >= MAX_TOKENS) {
-				break;
-			}
-			gate.add(new Clause(ALL_TEXT, MatchKind.PREFIX, prefix, 0));
+			// automatic partial matching (R-14): a long-enough token matches the
+			// BEGINNING of a word ("pardub" finds Pardubice); short tokens must
+			// match whole, so stop-word-length fragments stay precise. The gate
+			// is non-scoring - full-word tiers keep exact matches ranked first.
+			gate.add(new Clause(ALL_TEXT,
+					token.length() >= config.prefixMinLength() ? MatchKind.PREFIX : MatchKind.TERM, token, 0));
 		}
 		for (String phrase : phrases) {
 			if (gate.size() >= MAX_TOKENS) {
@@ -115,11 +102,12 @@ public final class RelevanceQueryPlanner {
 		int minimumShouldMatch = Math.clamp(
 				Math.round(gate.size() * config.minimumShouldMatchPercent() / 100.0f), 1, gate.size());
 
-		return new RelevancePlan(gate, minimumShouldMatch, scoring(query, phrases, config));
+		return new RelevancePlan(gate, minimumShouldMatch, scoring(query, phrases, tokens, config));
 	}
 
 	/** The weighted tiers of §4.2; a non-positive weight disables its tier. */
-	private static List<Clause> scoring(String query, List<String> phrases, RelevanceConfig config) {
+	private static List<Clause> scoring(String query, List<String> phrases, List<String> tokens,
+			RelevanceConfig config) {
 		// operators stripped: the plain text of the query for the analyzed tiers
 		String plain = (query.replace("\"", " ").replace("*", " ")).trim().replaceAll("\\s+", " ");
 		String normalized = ApuDocumentBuilder.normalize(plain);
@@ -138,6 +126,17 @@ public final class RelevanceQueryPlanner {
 		add(scoring, "nameVariantsExactFolded", MatchKind.PREFIX, normalizedFolded, config.nameVariantsPrefix());
 		add(scoring, "nameVariants", MatchKind.PHRASE, plain, config.nameVariantsPhrase());
 		add(scoring, "nameVariants", MatchKind.ALL_TERMS, plain, config.nameVariantsTerms());
+		// per-token word prefixes: partially typed words still rank name bearers
+		// first ("univ bratisl" - Univerzita Bratislava). Deliberately BELOW the
+		// full-word tiers, so an exact match always outranks a partial one; a
+		// full word is a prefix of itself, so fully matching documents earn
+		// these tiers too and never fall behind
+		for (String token : tokens) {
+			if (token.length() >= config.prefixMinLength()) {
+				add(scoring, "name", MatchKind.PREFIX, token, config.nameWordPrefix());
+				add(scoring, "nameVariants", MatchKind.PREFIX, token, config.nameVariantsWordPrefix());
+			}
+		}
 		for (String refLabelField : config.refLabelFields()) {
 			add(scoring, refLabelField, MatchKind.PHRASE, plain, config.refLabelsPhrase());
 			add(scoring, refLabelField, MatchKind.ANY_TERM, plain, config.refLabelsTerms());

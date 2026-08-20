@@ -18,6 +18,12 @@ public class RelevanceSettingsDto {
 	/** Retry with any-word matching when the strict query yields no hits. */
 	private Boolean relaxOnNoHits;
 
+	/**
+	 * Minimum token length for automatic partial (word-prefix) matching;
+	 * shorter tokens must match a whole word. Default 3.
+	 */
+	private Integer prefixMinLength;
+
 	private RelevanceFieldWeightsDto name;
 
 	/** Variant name forms (item types marked {@code nameVariant} in types.yaml). */
@@ -46,6 +52,14 @@ public class RelevanceSettingsDto {
 
 	public void setRelaxOnNoHits(Boolean relaxOnNoHits) {
 		this.relaxOnNoHits = relaxOnNoHits;
+	}
+
+	public Integer getPrefixMinLength() {
+		return prefixMinLength;
+	}
+
+	public void setPrefixMinLength(Integer prefixMinLength) {
+		this.prefixMinLength = prefixMinLength;
 	}
 
 	public RelevanceFieldWeightsDto getName() {

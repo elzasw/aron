@@ -32,14 +32,25 @@ class RelevanceQueryPlannerTest {
 	}
 
 	@Test
-	void tokensAreFoldedAndGateOnAllText() {
+	void tokensAreFoldedAndGateOnAllTextAsWordPrefixes() {
+		// R-14: long-enough tokens gate as word prefixes ("pardub" - Pardubice)
 		var plan = plan("Václav NOVÁK");
 
 		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.TERM, "vaclav", 0),
-				new Clause("allText", MatchKind.TERM, "novak", 0));
+				new Clause("allText", MatchKind.PREFIX, "vaclav", 0),
+				new Clause("allText", MatchKind.PREFIX, "novak", 0));
 		// strict default: every token must match
 		assertThat(plan.minimumShouldMatch()).isEqualTo(2);
+	}
+
+	@Test
+	void shortTokensMustMatchWholeWords() {
+		// below relevance.prefixMinLength (default 3) a token stays exact - a
+		// two-letter fragment must not match the start of every longer word
+		var plan = plan("sv Praze");
+		assertThat(plan.gate()).containsExactly(
+				new Clause("allText", MatchKind.TERM, "sv", 0),
+				new Clause("allText", MatchKind.PREFIX, "praze", 0));
 	}
 
 	@Test
@@ -49,36 +60,37 @@ class RelevanceQueryPlannerTest {
 		assertThat(mixed.gate()).extracting(Clause::text).containsExactly("kostel", "praze");
 		assertThat(mixed.minimumShouldMatch()).isEqualTo(2);
 
-		// a stop-word-only query falls back to the non-stop chain
+		// a stop-word-only query falls back to the non-stop chain; single
+		// letters match whole words, never as prefixes
 		var stopOnly = plan("v");
-		assertThat(stopOnly.gate()).extracting(Clause::text).containsExactly("v");
+		assertThat(stopOnly.gate()).containsExactly(new Clause("allText", MatchKind.TERM, "v", 0));
 	}
 
 	@Test
 	void quotedPhrasesBecomePhraseClauses() {
-		// B4: balanced quotes = phrase; the words around it stay tokens
+		// B4: balanced quotes = phrase (exact words); the words around it stay tokens
 		var plan = plan("zápis \"kronika města\"");
 		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.TERM, "zapis", 0),
+				new Clause("allText", MatchKind.PREFIX, "zapis", 0),
 				new Clause("allText", MatchKind.PHRASE, "kronika města", 0));
 
 		// an unbalanced quote is literal (the analyzers drop it)
 		var unbalanced = plan("kronika \"města");
 		assertThat(unbalanced.gate()).extracting(Clause::kind)
-				.containsOnly(MatchKind.TERM);
+				.containsOnly(MatchKind.PREFIX);
 		assertThat(unbalanced.gate()).extracting(Clause::text).containsExactly("kronika", "mesta");
 	}
 
 	@Test
-	void trailingStarIsThePrefixOperatorEverythingElseIsLiteral() {
-		// B6
+	void starsHaveNoMeaning() {
+		// B6 (R-14): the former word* operator is gone - partial matching is
+		// automatic; stars anywhere are dropped by the analyzers
 		var plan = plan("kron* *ika ko*stel");
 		assertThat(plan.gate()).containsExactly(
-				// stars in other positions are dropped by analysis, words remain
-				new Clause("allText", MatchKind.TERM, "ika", 0),
+				new Clause("allText", MatchKind.PREFIX, "kron", 0),
+				new Clause("allText", MatchKind.PREFIX, "ika", 0),
 				new Clause("allText", MatchKind.TERM, "ko", 0),
-				new Clause("allText", MatchKind.TERM, "stel", 0),
-				new Clause("allText", MatchKind.PREFIX, "kron", 0));
+				new Clause("allText", MatchKind.PREFIX, "stel", 0));
 	}
 
 	@Test
@@ -121,6 +133,9 @@ class RelevanceQueryPlannerTest {
 				new Clause("nameVariantsExactFolded", MatchKind.PREFIX, "rehor", 40),
 				new Clause("nameVariants", MatchKind.PHRASE, "Řehoř", 20),
 				new Clause("nameVariants", MatchKind.ALL_TERMS, "Řehoř", 10),
+				// per-token word prefixes (R-14): below every full-word tier
+				new Clause("name", MatchKind.PREFIX, "rehor", 30),
+				new Clause("nameVariants", MatchKind.PREFIX, "rehor", 8),
 				new Clause("description", MatchKind.PHRASE, "Řehoř", 8),
 				new Clause("description", MatchKind.ANY_TERM, "Řehoř", 2),
 				new Clause("allText", MatchKind.ANY_TERM, "Řehoř", 1));

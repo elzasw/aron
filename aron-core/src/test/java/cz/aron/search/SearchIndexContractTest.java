@@ -205,12 +205,39 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void trailingStarMeansBeginsWith() {
-		// B6: word* is the only wildcard; a bare word is never a prefix
+	void partialWordsMatchAutomatically() {
+		// B6 (R-14): every long-enough word matches the BEGINNING of a word;
+		// a star has no meaning (the former operator is gone)
 		indexApus(List.of(doc(uuid(68), "Kronika obce", 1, Map.of())));
 
+		assertThat(index.search(ApuSearchQuery.fulltext("kron")).total()).isEqualTo(1);
 		assertThat(index.search(ApuSearchQuery.fulltext("kron*")).total()).isEqualTo(1);
-		assertThat(index.search(ApuSearchQuery.fulltext("kron")).total()).isZero();
+		// partial words combine like whole ones: AND, any order
+		assertThat(index.search(ApuSearchQuery.fulltext("obc kron")).total()).isEqualTo(1);
+		// short fragments must match a whole word - "ob" is not a prefix here
+		assertThat(index.search(ApuSearchQuery.fulltext("ob kron")).total()).isZero();
+		// mid-word fragments do not match (word beginnings only)
+		assertThat(index.search(ApuSearchQuery.fulltext("ronika")).total()).isZero();
+	}
+
+	@Test
+	void partialWordsRankNameBearersFirstAndExactAbovePartial() {
+		// R-14 ("univ bratisl"): both word orders are found; records carrying
+		// the words in the NAME precede content mentions; and an exact name
+		// still outranks a partial match of the same words
+		indexApus(List.of(
+				doc(uuid(93), "Univerzita Bratislava", 1, Map.of()),
+				doc(uuid(94), "Bratislavská univerzita", 1, Map.of()),
+				docWithAllText(uuid(95), "Sbírka spisů", "korespondence s Univerzitou Bratislavskou"),
+				doc(uuid(96), "Univ Bratisl", 1, Map.of())));
+
+		var hits = index.search(ApuSearchQuery.fulltext("univ bratisl")).hits();
+		assertThat(hits).extracting(ApuSearchResult.Hit::uuid)
+				.containsExactlyInAnyOrder(uuid(93), uuid(94), uuid(95), uuid(96));
+		// the exactly matching name wins over partial name matches...
+		assertThat(hits.get(0).uuid()).isEqualTo(uuid(96));
+		// ...and the content-only mention comes last
+		assertThat(hits.get(3).uuid()).isEqualTo(uuid(95));
 	}
 
 	@Test
