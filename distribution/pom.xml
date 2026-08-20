@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.lightcomp</groupId>
 		<artifactId>aron2</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>aron-distribution</artifactId>
 	<name>ARON 2 Distribution</name>
@@ -52,6 +52,15 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<!-- The parent skips deployment for every module; this one is the
+			     release artifact, so it publishes. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
 			</plugin>
 		</plugins>
 	</build>

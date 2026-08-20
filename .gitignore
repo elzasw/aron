@@ -1,6 +1,15 @@
 # Maven
 target/
 
+# maven-release-plugin working files. Gitignored deliberately: release:prepare
+# refuses to start when the working copy has anything uncommitted, so a retried
+# or interrupted release would block on its own leftovers.
+release.properties
+pom.xml.releaseBackup
+pom.xml.tag
+pom.xml.next
+pom.xml.branch
+
 # Sphinx documentation build output
 doc/build/
 

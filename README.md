@@ -259,6 +259,23 @@ applies the same gate; `-DskipTests` skips both suites.
   They are also isolated from any configuration in the working directory, so a
   local run sandbox can never influence a test run.
 
+### Versions and releases
+
+`main` carries the frozen placeholder version `2.0-SNAPSHOT` and is never
+released. Each version line lives on its own branch — `release-2.0.x` for the
+2.0.x releases — and only there does the pom version move (`2.0.0-SNAPSHOT` →
+tag `aron2-2.0.0` → `2.0.1-SNAPSHOT`). Keeping main's version fixed means
+merging main into a release branch never conflicts on it, and no release
+bookkeeping ever lands on main.
+
+Releases are cut by `maven-release-plugin` from the release branch, run by the
+build pipeline rather than locally. The released artifact is the executable jar
+(the `distribution` module); the other modules are internal to the build and are
+not published. The pipeline supplies the Git URL (`-Daron2.scm.url`, which is why
+`<scm>` reads that property and is empty here) and the target repository
+(`-DaltDeploymentRepository`, which is why there is no `distributionManagement`)
+— this repository holds no deployment coordinates of its own.
+
 ### Optional Elasticsearch integration tests
 
 The search layer has an additional, **optional** test set that runs the search
