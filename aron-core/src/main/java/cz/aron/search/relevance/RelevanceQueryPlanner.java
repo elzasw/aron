@@ -19,8 +19,10 @@ import cz.aron.search.relevance.RelevancePlan.MatchKind;
  * Plans one fulltext query (doc/search-relevance.md §4.2): parses the minimal
  * user syntax (quoted phrases; everything else literal), tokenizes with ONE
  * canonical analyzer, and emits the non-scoring gate plus the weighted scoring
- * tiers. Tokens of at least {@code relevance.prefixMinLength} letters gate as
- * word prefixes ("pardub" finds Pardubice, R-14); shorter tokens must match a
+ * tiers. Tokens of at least {@code relevance.partialMinLength} letters match
+ * as substrings of a word ("ardub" finds Pardubice, R-15) - expressed as an
+ * all-trigrams match on the {@code *Grams} companion fields, which both
+ * engines' ngram analyzers decompose identically; shorter tokens must match a
  * whole word. Pure logic - unit-tested without an engine or Spring.
  *
  * <p>Tokenization deliberately uses the Lucene analysis library (standard
@@ -36,6 +38,9 @@ public final class RelevanceQueryPlanner {
 
 	/** Gate and baseline field: the multi-valued catch-all of every searchable value. */
 	public static final String ALL_TEXT = "allText";
+
+	/** Trigram companion of allText - the substring gate field (R-15). */
+	public static final String ALL_TEXT_GRAMS = "allTextGrams";
 
 	/** At most this many query tokens are used; extra tokens are ignored (B12). */
 	private static final int MAX_TOKENS = 32;
@@ -82,12 +87,17 @@ public final class RelevanceQueryPlanner {
 
 		var gate = new ArrayList<Clause>();
 		for (String token : tokens) {
-			// automatic partial matching (R-14): a long-enough token matches the
-			// BEGINNING of a word ("pardub" finds Pardubice); short tokens must
-			// match whole, so stop-word-length fragments stay precise. The gate
-			// is non-scoring - full-word tiers keep exact matches ranked first.
-			gate.add(new Clause(ALL_TEXT,
-					token.length() >= config.prefixMinLength() ? MatchKind.PREFIX : MatchKind.TERM, token, 0));
+			// automatic partial matching (R-15): a long-enough token matches
+			// ANYWHERE inside a word ("ardub" finds Pardubice) - all of its
+			// trigrams must be present; short tokens must match whole, so
+			// stop-word-length fragments stay precise. The gate is non-scoring -
+			// full-word tiers keep exact matches ranked first. The planner
+			// decomposes the trigrams ITSELF: the engines' ngram analyzers emit
+			// grams at one position, which ES's match query treats as synonyms
+			// (OR) - pre-split grams keep the all-of-them semantics on both.
+			gate.add(token.length() >= config.partialMinLength()
+					? new Clause(ALL_TEXT_GRAMS, MatchKind.ALL_TERMS, trigrams(token), 0)
+					: new Clause(ALL_TEXT, MatchKind.TERM, token, 0));
 		}
 		for (String phrase : phrases) {
 			if (gate.size() >= MAX_TOKENS) {
@@ -126,15 +136,18 @@ public final class RelevanceQueryPlanner {
 		add(scoring, "nameVariantsExactFolded", MatchKind.PREFIX, normalizedFolded, config.nameVariantsPrefix());
 		add(scoring, "nameVariants", MatchKind.PHRASE, plain, config.nameVariantsPhrase());
 		add(scoring, "nameVariants", MatchKind.ALL_TERMS, plain, config.nameVariantsTerms());
-		// per-token word prefixes: partially typed words still rank name bearers
+		// per-token partial tiers: partially typed words still rank name bearers
 		// first ("univ bratisl" - Univerzita Bratislava). Deliberately BELOW the
-		// full-word tiers, so an exact match always outranks a partial one; a
-		// full word is a prefix of itself, so fully matching documents earn
-		// these tiers too and never fall behind
+		// full-word tiers, so an exact match always outranks a partial one, and
+		// a word-start match (PREFIX on the analyzed terms) above a mid-word one
+		// (all-trigrams on the *Grams companion); a full word satisfies both, so
+		// fully matching documents never fall behind
 		for (String token : tokens) {
-			if (token.length() >= config.prefixMinLength()) {
+			if (token.length() >= config.partialMinLength()) {
 				add(scoring, "name", MatchKind.PREFIX, token, config.nameWordPrefix());
+				add(scoring, "nameGrams", MatchKind.ALL_TERMS, trigrams(token), config.nameContains());
 				add(scoring, "nameVariants", MatchKind.PREFIX, token, config.nameVariantsWordPrefix());
+				add(scoring, "nameVariantsGrams", MatchKind.ALL_TERMS, trigrams(token), config.nameVariantsContains());
 			}
 		}
 		for (String refLabelField : config.refLabelFields()) {
@@ -154,6 +167,25 @@ public final class RelevanceQueryPlanner {
 			add(scoring, "name", MatchKind.PHRASE, phrase, config.namePhrase());
 		}
 		return scoring;
+	}
+
+	/**
+	 * The token's overlapping trigrams, space-separated ("pardub" - "par ard
+	 * rdu dub"): what the {@code *Grams} fields hold per word, matched with
+	 * all-of-them semantics. Callers guarantee length >= 3.
+	 */
+	static String trigrams(String token) {
+		if (token.length() <= 3) {
+			return token;
+		}
+		var grams = new StringBuilder();
+		for (int i = 0; i + 3 <= token.length(); i++) {
+			if (i > 0) {
+				grams.append(' ');
+			}
+			grams.append(token, i, i + 3);
+		}
+		return grams.toString();
 	}
 
 	private static void add(List<Clause> scoring, String field, MatchKind kind, String text, float weight) {

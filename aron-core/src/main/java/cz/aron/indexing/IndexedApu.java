@@ -57,6 +57,23 @@ public class IndexedApu {
     @Field(type = FieldType.Keyword)
     private List<String> nameVariantsExactFolded = new ArrayList<>();
 
+    /**
+     * Trigram companions of allText / name / nameVariants - substring matching
+     * ("ardub" finds Pardubice, doc/search-relevance.md R-15). The same source
+     * values, the ngram analyzer on the INDEX side only: the query planner
+     * pre-splits a token into its trigrams (the analyzer would stack them at
+     * one position, which a match query treats as synonyms - OR), and the
+     * plain folding search analyzer keeps a match(AND) requiring all of them.
+     */
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_NGRAM, searchAnalyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private List<String> allTextGrams = new ArrayList<>();
+
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_NGRAM, searchAnalyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private String nameGrams;
+
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_NGRAM, searchAnalyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private List<String> nameVariantsGrams = new ArrayList<>();
+
     @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING_STOP)
     private String description;
 
@@ -137,6 +154,30 @@ public class IndexedApu {
 
 	public void setNameVariantsExactFolded(List<String> nameVariantsExactFolded) {
 		this.nameVariantsExactFolded = nameVariantsExactFolded;
+	}
+
+	public List<String> getAllTextGrams() {
+		return allTextGrams;
+	}
+
+	public void setAllTextGrams(List<String> allTextGrams) {
+		this.allTextGrams = allTextGrams;
+	}
+
+	public String getNameGrams() {
+		return nameGrams;
+	}
+
+	public void setNameGrams(String nameGrams) {
+		this.nameGrams = nameGrams;
+	}
+
+	public List<String> getNameVariantsGrams() {
+		return nameVariantsGrams;
+	}
+
+	public void setNameVariantsGrams(List<String> nameVariantsGrams) {
+		this.nameVariantsGrams = nameVariantsGrams;
 	}
 
 	public String getId() {

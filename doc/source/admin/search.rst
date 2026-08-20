@@ -33,14 +33,17 @@ Phrases
    description items. An unbalanced quote has no special meaning.
 
 Partial words
-   Partially typed words match automatically: a word of at least three
-   letters (``relevance.prefixMinLength``) also matches the *beginning* of a
-   word — "pardub" finds Pardubice, "univ bratisl" finds both "Univerzita
-   Bratislava" and "Bratislavská univerzita". Shorter fragments must match a
-   whole word, and fragments never match the middle of a word. Records
-   matching the words exactly always rank above partially matched ones.
-   There are no query operators besides quotes — an asterisk is a literal
-   character with no meaning.
+   Partially typed words match automatically: a fragment of at least three
+   letters (``relevance.partialMinLength``) matches *anywhere inside* a
+   word — "pardub" and "ardub" both find Pardubice, "univ bratisl" finds
+   both "Univerzita Bratislava" and "Bratislavská univerzita". Shorter
+   fragments must match a whole word, and fragments never span word
+   boundaries. Ranking is unaffected by the extra recall: records matching
+   the words exactly rank above word-start matches, which rank above
+   mid-word matches. There are no query operators besides quotes — an
+   asterisk is a literal character with no meaning. (Substring matching is
+   served by trigram companion fields; it costs index size, not query
+   time.)
 
 Stop words
    Common stop words of the described material's language ("v", "a", "na", …
@@ -123,11 +126,12 @@ reindex needed**.
      # Retry with "any word" when nothing matches (default: true).
      relaxOnNoHits: true
 
+     # Minimum fragment length for automatic partial (substring) matching.
+     partialMinLength: 3
+
      # Built-in fields with their default weights.
-     # Minimum word length for automatic partial (word-prefix) matching.
-     prefixMinLength: 3
-     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30 }
-     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8 }
+     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30, contains: 15 }
+     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8, contains: 4 }
      refLabels:    { phrase: 12, terms: 10 }
      description: { phrase: 8, terms: 2 }
      allText:     { terms: 1 }
@@ -175,10 +179,3 @@ Protective limits, configurable in ``application.yml``:
      - Per-query time budget.
 
 At most 32 query words are used; extra words are ignored.
-
-.. todo::
-
-   Implementation of this chapter is being rolled out in stages (see the
-   rollout plan in ``doc/search-relevance.md``): total-count reporting first,
-   then the index additions, ranking, ordering modes and type counts. Update
-   the note at the top of this chapter as stages land.

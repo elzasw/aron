@@ -10,6 +10,9 @@ public final class IndexConfig {
 
 	public static final String FOLDING_AND_TOKENIZING = "folding_and_tokenizing";
 
+	/** Trigram chain of the substring-match companions (doc/search-relevance.md R-15). */
+	public static final String FOLDING_AND_NGRAM = "folding_and_ngram";
+
 	public static final String FOLDING_AND_TOKENIZING_STOP = "folding_and_tokenizing_stop";
 
 	public static final String TEXT_LONG_KEYWORD = "text_long_keyword";

@@ -22,12 +22,12 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
 public record RelevanceConfig(
 		int minimumShouldMatchPercent,
 		boolean relaxOnNoHits,
-		int prefixMinLength,
+		int partialMinLength,
 		float nameExact, float nameExactFolded, float namePrefix, float namePhrase, float nameTerms,
-		float nameWordPrefix,
+		float nameWordPrefix, float nameContains,
 		float nameVariantsExact, float nameVariantsExactFolded, float nameVariantsPrefix,
 		float nameVariantsPhrase, float nameVariantsTerms,
-		float nameVariantsWordPrefix,
+		float nameVariantsWordPrefix, float nameVariantsContains,
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
@@ -59,14 +59,16 @@ public record RelevanceConfig(
 		return new RelevanceConfig(
 				parseMinimumShouldMatch(settings != null ? settings.getMinimumShouldMatch() : null),
 				settings == null || !Boolean.FALSE.equals(settings.getRelaxOnNoHits()),
-				parsePrefixMinLength(settings != null ? settings.getPrefixMinLength() : null),
+				parsePartialMinLength(settings != null ? settings.getPartialMinLength() : null),
 				weight(name != null ? name.getExact() : null, 1000),
 				weight(name != null ? name.getExactFolded() : null, 800),
 				weight(name != null ? name.getPrefix() : null, 200),
 				weight(name != null ? name.getPhrase() : null, 100),
 				weight(name != null ? name.getTerms() : null, 50),
-				// partial words rank below every full-word tier (exact beats partial)
+				// partial words rank below every full-word tier (exact beats
+				// partial), a word-start match above a mid-word one
 				weight(name != null ? name.getWordPrefix() : null, 30),
+				weight(name != null ? name.getContains() : null, 15),
 				// preferred name ~ 5x a variant form (the CAM/Elza rule, see §2)
 				weight(nameVariants != null ? nameVariants.getExact() : null, 200),
 				weight(nameVariants != null ? nameVariants.getExactFolded() : null, 160),
@@ -74,6 +76,7 @@ public record RelevanceConfig(
 				weight(nameVariants != null ? nameVariants.getPhrase() : null, 20),
 				weight(nameVariants != null ? nameVariants.getTerms() : null, 10),
 				weight(nameVariants != null ? nameVariants.getWordPrefix() : null, 8),
+				weight(nameVariants != null ? nameVariants.getContains() : null, 4),
 				weight(refLabels != null ? refLabels.getPhrase() : null, 12),
 				weight(refLabels != null ? refLabels.getTerms() : null, 10),
 				weight(description != null ? description.getPhrase() : null, 8),
@@ -88,13 +91,17 @@ public record RelevanceConfig(
 		return configured != null ? configured : defaultWeight;
 	}
 
-	/** Tokens at least this long match as word prefixes; shorter must match whole (default 3). */
-	private static int parsePrefixMinLength(Integer value) {
+	/**
+	 * Tokens at least this long match partially (substring); shorter must match
+	 * whole. The floor is the trigram size of the {@code *Grams} companions -
+	 * a shorter fragment yields no trigram and could never match.
+	 */
+	private static int parsePartialMinLength(Integer value) {
 		if (value == null) {
 			return 3;
 		}
-		if (value < 1) {
-			throw new IllegalArgumentException("relevance.prefixMinLength must be at least 1: " + value);
+		if (value < 3) {
+			throw new IllegalArgumentException("relevance.partialMinLength must be at least 3: " + value);
 		}
 		return value;
 	}

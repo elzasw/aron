@@ -206,18 +206,34 @@ public abstract class SearchIndexContractTest {
 
 	@Test
 	void partialWordsMatchAutomatically() {
-		// B6 (R-14): every long-enough word matches the BEGINNING of a word;
+		// B6 (R-15): every long-enough fragment matches ANYWHERE inside a word;
 		// a star has no meaning (the former operator is gone)
 		indexApus(List.of(doc(uuid(68), "Kronika obce", 1, Map.of())));
 
 		assertThat(index.search(ApuSearchQuery.fulltext("kron")).total()).isEqualTo(1);
 		assertThat(index.search(ApuSearchQuery.fulltext("kron*")).total()).isEqualTo(1);
+		// mid-word fragments match too ("ardub" finds Pardubice)
+		assertThat(index.search(ApuSearchQuery.fulltext("ronika")).total()).isEqualTo(1);
 		// partial words combine like whole ones: AND, any order
 		assertThat(index.search(ApuSearchQuery.fulltext("obc kron")).total()).isEqualTo(1);
-		// short fragments must match a whole word - "ob" is not a prefix here
+		assertThat(index.search(ApuSearchQuery.fulltext("nika bce")).total()).isEqualTo(1);
+		// short fragments must match a whole word - "ob" matches nothing here
 		assertThat(index.search(ApuSearchQuery.fulltext("ob kron")).total()).isZero();
-		// mid-word fragments do not match (word beginnings only)
-		assertThat(index.search(ApuSearchQuery.fulltext("ronika")).total()).isZero();
+		// fragments never match across word boundaries
+		assertThat(index.search(ApuSearchQuery.fulltext("kaobce")).total()).isZero();
+	}
+
+	@Test
+	void wordStartMatchesOutrankMidWordMatches() {
+		// B6 (R-15 ranking): exact > word start > contains
+		indexApus(List.of(
+				doc(uuid(97), "Nekronika", 1, Map.of()),
+				doc(uuid(98), "Kronika obce", 1, Map.of()),
+				doc(uuid(99), "Kron", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("kron")).hits())
+				.extracting(ApuSearchResult.Hit::uuid)
+				.containsExactly(uuid(99), uuid(98), uuid(97));
 	}
 
 	@Test

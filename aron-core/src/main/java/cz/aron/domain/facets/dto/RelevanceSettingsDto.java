@@ -19,10 +19,11 @@ public class RelevanceSettingsDto {
 	private Boolean relaxOnNoHits;
 
 	/**
-	 * Minimum token length for automatic partial (word-prefix) matching;
-	 * shorter tokens must match a whole word. Default 3.
+	 * Minimum token length for automatic partial (substring) matching; shorter
+	 * tokens must match a whole word. Default 3 (also the floor - the trigram
+	 * size of the substring companions).
 	 */
-	private Integer prefixMinLength;
+	private Integer partialMinLength;
 
 	private RelevanceFieldWeightsDto name;
 
@@ -54,12 +55,17 @@ public class RelevanceSettingsDto {
 		this.relaxOnNoHits = relaxOnNoHits;
 	}
 
-	public Integer getPrefixMinLength() {
-		return prefixMinLength;
+	public Integer getPartialMinLength() {
+		return partialMinLength;
 	}
 
+	public void setPartialMinLength(Integer partialMinLength) {
+		this.partialMinLength = partialMinLength;
+	}
+
+	/** Legacy alias of {@link #setPartialMinLength} (the key's pre-substring name). */
 	public void setPrefixMinLength(Integer prefixMinLength) {
-		this.prefixMinLength = prefixMinLength;
+		this.partialMinLength = prefixMinLength;
 	}
 
 	public RelevanceFieldWeightsDto getName() {

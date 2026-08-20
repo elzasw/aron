@@ -32,32 +32,35 @@ class RelevanceQueryPlannerTest {
 	}
 
 	@Test
-	void tokensAreFoldedAndGateOnAllTextAsWordPrefixes() {
-		// R-14: long-enough tokens gate as word prefixes ("pardub" - Pardubice)
+	void tokensAreFoldedAndGateAsSubstrings() {
+		// R-15: long-enough tokens gate as all-trigrams substring matches on the
+		// allTextGrams companion ("ardub" - Pardubice)
 		var plan = plan("Václav NOVÁK");
 
+		// pre-split trigrams: what the *Grams fields hold, all-of-them semantics
 		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.PREFIX, "vaclav", 0),
-				new Clause("allText", MatchKind.PREFIX, "novak", 0));
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "vac acl cla lav", 0),
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "nov ova vak", 0));
 		// strict default: every token must match
 		assertThat(plan.minimumShouldMatch()).isEqualTo(2);
 	}
 
 	@Test
 	void shortTokensMustMatchWholeWords() {
-		// below relevance.prefixMinLength (default 3) a token stays exact - a
-		// two-letter fragment must not match the start of every longer word
+		// below relevance.partialMinLength (default 3) a token stays exact - a
+		// two-letter fragment must not match inside every longer word
 		var plan = plan("sv Praze");
 		assertThat(plan.gate()).containsExactly(
 				new Clause("allText", MatchKind.TERM, "sv", 0),
-				new Clause("allText", MatchKind.PREFIX, "praze", 0));
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "pra raz aze", 0));
 	}
 
 	@Test
 	void stopWordsAreDroppedButNeverCauseEmptyGates() {
 		// B5: "v" disappears from a mixed query, the required count follows
 		var mixed = plan("kostel v Praze");
-		assertThat(mixed.gate()).extracting(Clause::text).containsExactly("kostel", "praze");
+		assertThat(mixed.gate()).extracting(Clause::text)
+				.containsExactly("kos ost ste tel", "pra raz aze");
 		assertThat(mixed.minimumShouldMatch()).isEqualTo(2);
 
 		// a stop-word-only query falls back to the non-stop chain; single
@@ -71,26 +74,27 @@ class RelevanceQueryPlannerTest {
 		// B4: balanced quotes = phrase (exact words); the words around it stay tokens
 		var plan = plan("zápis \"kronika města\"");
 		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.PREFIX, "zapis", 0),
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "zap api pis", 0),
 				new Clause("allText", MatchKind.PHRASE, "kronika města", 0));
 
 		// an unbalanced quote is literal (the analyzers drop it)
 		var unbalanced = plan("kronika \"města");
 		assertThat(unbalanced.gate()).extracting(Clause::kind)
-				.containsOnly(MatchKind.PREFIX);
-		assertThat(unbalanced.gate()).extracting(Clause::text).containsExactly("kronika", "mesta");
+				.containsOnly(MatchKind.ALL_TERMS);
+		assertThat(unbalanced.gate()).extracting(Clause::text)
+				.containsExactly("kro ron oni nik ika", "mes est sta");
 	}
 
 	@Test
 	void starsHaveNoMeaning() {
-		// B6 (R-14): the former word* operator is gone - partial matching is
-		// automatic; stars anywhere are dropped by the analyzers
+		// B6 (R-14/R-15): the former word* operator is gone - partial matching
+		// is automatic; stars anywhere are dropped by the analyzers
 		var plan = plan("kron* *ika ko*stel");
 		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.PREFIX, "kron", 0),
-				new Clause("allText", MatchKind.PREFIX, "ika", 0),
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "kro ron", 0),
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "ika", 0),
 				new Clause("allText", MatchKind.TERM, "ko", 0),
-				new Clause("allText", MatchKind.PREFIX, "stel", 0));
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "ste tel", 0));
 	}
 
 	@Test
@@ -133,9 +137,12 @@ class RelevanceQueryPlannerTest {
 				new Clause("nameVariantsExactFolded", MatchKind.PREFIX, "rehor", 40),
 				new Clause("nameVariants", MatchKind.PHRASE, "Řehoř", 20),
 				new Clause("nameVariants", MatchKind.ALL_TERMS, "Řehoř", 10),
-				// per-token word prefixes (R-14): below every full-word tier
+				// per-token partial tiers (R-14/R-15): below every full-word tier,
+				// word starts above mid-word containment
 				new Clause("name", MatchKind.PREFIX, "rehor", 30),
+				new Clause("nameGrams", MatchKind.ALL_TERMS, "reh eho hor", 15),
 				new Clause("nameVariants", MatchKind.PREFIX, "rehor", 8),
+				new Clause("nameVariantsGrams", MatchKind.ALL_TERMS, "reh eho hor", 4),
 				new Clause("description", MatchKind.PHRASE, "Řehoř", 8),
 				new Clause("description", MatchKind.ANY_TERM, "Řehoř", 2),
 				new Clause("allText", MatchKind.ANY_TERM, "Řehoř", 1));
@@ -171,12 +178,12 @@ class RelevanceQueryPlannerTest {
 				QueryAnalyzers.of(java.util.Locale.GERMAN));
 
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", czech)))
-				.containsExactly("kostel", "praze");
+				.containsExactly("kos ost ste tel", "pra raz aze");
 		// a German corpus keeps "v" (not a German stop word) and drops "und" instead
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", german)))
-				.containsExactly("kostel", "v", "praze");
+				.containsExactly("kos ost ste tel", "v", "pra raz aze");
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kirche und turm", german)))
-				.containsExactly("kirche", "turm");
+				.containsExactly("kir irc rch che", "tur urm");
 	}
 
 	@Test
@@ -185,7 +192,7 @@ class RelevanceQueryPlannerTest {
 				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
 
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostol v prahe", slovak)))
-				.containsExactly("kostol", "v", "prahe");
+				.containsExactly("kos ost sto tol", "v", "pra rah ahe");
 	}
 
 	private static List<String> gateTerms(RelevancePlan plan) {

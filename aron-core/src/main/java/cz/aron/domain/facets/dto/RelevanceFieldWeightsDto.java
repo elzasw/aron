@@ -16,6 +16,9 @@ public class RelevanceFieldWeightsDto {
 	/** Per-token word-prefix tier (partial matching, doc/search-relevance.md R-14). */
 	private Float wordPrefix;
 
+	/** Per-token substring tier - a mid-word match (doc/search-relevance.md R-15). */
+	private Float contains;
+
 	public Float getExact() {
 		return exact;
 	}
@@ -62,6 +65,14 @@ public class RelevanceFieldWeightsDto {
 
 	public void setWordPrefix(Float wordPrefix) {
 		this.wordPrefix = wordPrefix;
+	}
+
+	public Float getContains() {
+		return contains;
+	}
+
+	public void setContains(Float contains) {
+		this.contains = contains;
 	}
 
 }

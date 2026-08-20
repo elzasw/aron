@@ -115,6 +115,7 @@ construction.
 | `nameExact` | name: lowercased, whitespace-collapsed, **diacritics preserved**; keyword, truncated to 200 chars | true exact-name tier |
 | `nameExactFolded` | same, **diacritics folded** | folded exact + prefix tiers |
 | `nameVariants` (+ `~Exact`, `~ExactFolded`) | values of item types marked **`nameVariant: true`** in types.yaml (the other name forms of an access point — Praha/Prague), analyzed multi-valued + the same normalized exact companions as the primary name | variant-name tiers (§4.2) |
+| `allTextGrams`, `nameGrams`, `nameVariantsGrams` | trigram companions of allText/name/nameVariants (same source values, the `folding_and_ngram` chain on both index and query side) | substring matching (R-15): a fragment decomposes into its trigrams, all must be present |
 | `dateL` / `dateH` | min of all `~L`, max of all `~H` (epoch millis, numeric doc-values) | dating sort with no configuration (§4.4) |
 | `uuid` doc-values | sortable uuid (Lucene: `SortedDocValuesField`; ES: the existing keyword id) | the final tie-break every sort mode needs (§4.4) |
 
@@ -161,10 +162,11 @@ has no equivalent of the Lucene commit-user-data version today.
 **User-visible syntax** — deliberately minimal, fully specified in §5:
 
 - plain words — every word must occur (AND); word order does not affect
-  matching, only ranking. A word of at least `prefixMinLength` letters
-  (default 3) matches **the beginning of a word** automatically — "pardub"
-  finds Pardubice, "univ bratisl" finds both "Univerzita Bratislava" and
-  "Bratislavská univerzita" (R-14). Shorter fragments must match a whole word;
+  matching, only ranking. A fragment of at least `partialMinLength` letters
+  (default 3) matches **anywhere inside a word** automatically — "pardub" and
+  "ardub" both find Pardubice, "univ bratisl" finds both "Univerzita
+  Bratislava" and "Bratislavská univerzita" (R-14/R-15). Shorter fragments
+  must match a whole word; fragments never span word boundaries;
 - `"…"` — exact phrase, exact words (never across item boundaries);
 - everything else is literal: `*` anywhere, unbalanced quotes, and all other
   punctuation carry no operator meaning. (The first frnk testing round showed
@@ -180,9 +182,10 @@ back to the non-stop analyzer and the gate still runs against `allText`, which
 keeps stop words (§4.1). Per-field scoring clauses use each field's own
 analyzer. At most **32 tokens** are used; extra tokens are ignored (B12).
 
-**Gate — strict AND, non-scoring.** One clause per token — a **word-prefix**
-match on `allText` for tokens of at least `prefixMinLength` letters, an exact
-term match for shorter ones, a phrase match for quoted phrases — combined with
+**Gate — strict AND, non-scoring.** One clause per token — an **all-trigrams
+substring** match on `allTextGrams` for tokens of at least `partialMinLength`
+letters, an exact term match on `allText` for shorter ones, a phrase match for
+quoted phrases — combined with
 `minimumShouldMatch` (default: all), executed in **filter context**: ES
 `bool.filter`, Lucene `Occur.FILTER`. The gate contributes **no score**; if it
 did, every document would receive an unweighted BM25 contribution on top of the
@@ -190,14 +193,16 @@ tiers and the weight table would not mean what it says. A document matching
 only in `allText` is scored by the baseline tier — that is the tier's job.
 
 Because the gate is non-scoring, automatic partial matching adds **recall
-only**: every scoring tier except the per-token word-prefix pair matches full
+only**: every scoring tier except the per-token partial tiers matches full
 words or whole values, so a record matching the query exactly always
-accumulates strictly more score than one matched partially (a full word is a
-prefix of itself, so exact matches earn the prefix tiers too). Trailing-only
-prefixes stay index-friendly — CAM/Elza's substring matching (`*value*`) pays
-for its leading wildcard with full term-dictionary scans; the mid-word half is
-deliberately not replicated (§9), and ES `index_prefixes` on `allText` is the
-ready optimization should prefix filters ever show up in profiles.
+accumulates strictly more score than one matched partially, and a word-start
+match more than a mid-word one (a full word satisfies its own prefix and all
+its trigrams, so exact matches earn the partial tiers too). Substring matching
+is **index-side trigrams**, not wildcards: CAM/Elza reach the same behavior
+with `*value*` wildcard queries whose leading wildcard scans the whole term
+dictionary on every query — the trigram companions trade index size (the
+`allTextGrams` postings) for term-lookup queries that stay fast and
+filter-cacheable at portal scale.
 
 Rationale for AND over OR, and over a graded `minimum_should_match`: this portal
 is facet-driven *and* offers user-selected ordering. Ranking is what makes loose
@@ -232,7 +237,9 @@ the latter takes an int the planner computes from the token count).
 | variant-name phrase | `match_phrase(nameVariants, Q)` | 20 |
 | variant name all terms | `match(nameVariants, Q, AND)` | 10 |
 | name word prefix (per token) | `prefix(name, token)` | 30 |
+| name contains (per token) | `match(nameGrams, token, AND)` | 15 |
 | variant-name word prefix (per token) | `prefix(nameVariants, token)` | 8 |
+| variant-name contains (per token) | `match(nameVariantsGrams, token, AND)` | 4 |
 | name phrase | `match_phrase(name, Q)` | 100 |
 | name all terms | `match(name, Q, AND)` | 50 |
 | reference labels | `match(<CODE>~LABEL, Q)` | 10 |
@@ -273,15 +280,15 @@ relevance:
   minimumShouldMatch: 100%
   # Retry relaxed when the strict query yields no hits.
   relaxOnNoHits: true
-  # Tokens at least this long match word beginnings automatically (R-14);
-  # shorter fragments must match a whole word.
-  prefixMinLength: 3
+  # Fragments at least this long match inside words automatically (R-15);
+  # shorter ones must match a whole word. Floor 3 (the trigram size).
+  partialMinLength: 3
 
   # Built-in fields (all optional, defaults shown).
-  name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30 }
+  name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30, contains: 15 }
   # variant name forms (item types marked nameVariant in types.yaml);
   # the defaults follow the CAM/Elza rule "preferred ~ 5x a variant" (§2)
-  nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8 }
+  nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8, contains: 4 }
   refLabels:    { phrase: 12, terms: 10 }
   description: { phrase: 8, terms: 2 }
   allText:     { terms: 1 }
@@ -432,7 +439,7 @@ this table so they cannot diverge from what is tested.
 | B3 | Diacritics-insensitive matching: "rehor" finds "Řehoř"; when diacritics are typed, the exact-diacritics name ranks above the folded match | contract test |
 | B4 | `"…"` is an exact phrase; a phrase never matches across values of two different items; an unbalanced quote is treated as a literal character | planner unit + contract test |
 | B5 | Stop words ("v", "a", "na") never cause empty results; a query consisting only of stop words still searches them | planner unit + contract test |
-| B6 | Partial matching is automatic: a word of at least 3 letters (`prefixMinLength`) also matches the BEGINNING of a word ("pardub" finds Pardubice); shorter fragments and quoted phrases match whole words only; mid-word fragments never match; a record matching the words exactly always ranks above one matched only partially; `*` has no meaning anywhere | planner unit + contract test |
+| B6 | Partial matching is automatic: a fragment of at least 3 letters (`partialMinLength`) matches ANYWHERE inside a word ("pardub" and "ardub" both find Pardubice); shorter fragments and quoted phrases match whole words only; fragments never span word boundaries; ranking keeps exact > word-start > mid-word; `*` has no meaning anywhere | planner unit + contract test |
 | B7 | Zero strict hits → one automatic relaxed retry (any-word), reported as `queryMode: RELAXED`; facet filters and the section restriction are never relaxed | API test |
 | B8 | Relevance order (ordering guarantee only, never absolute scores): exact name → name begins-with → phrase in name → all words in name → reference labels → description → anything else | contract test |
 | B9 | Alphabetical order follows the Czech alphabet (č after c, ch after h); items without a name sort last | contract test |
@@ -529,7 +536,8 @@ Third round (2026-08-19):
 | # | Decision |
 |---|---|
 | R-13 | **Variant name forms** (the CAM/Elza preferred-vs-variant scheme, e.g. an access point's other names Praha/Prague): item types marked `nameVariant: true` in types.yaml feed dedicated index fields (`nameVariants` + normalized exact companions, same normalizer as the primary name, CRC-tracked) and a tier ladder one level below the primary name — defaults follow the measured rule *preferred ≈ 5 × variant* (exact 200/160, prefix 40, phrase 20, terms 10), overridable via `relevance.nameVariants`. Marking is per item type, not per item group |
-| R-14 | **Automatic partial matching, no `*` operator** (first frnk user-testing round): every token of at least `prefixMinLength` letters (default 3) gates as a word prefix — "pardub" finds Pardubice, "univ bratisl" finds both word orders and both name forms; the former `word*` operator is dropped ("not intuitive anymore"). Exact matches keep outranking partial ones by construction: the gate is non-scoring and full-word tiers stay reserved for complete matches; per-token word-prefix tiers (name 30, variants 8) rank partial name bearers above content mentions. Word beginnings only — CAM/Elza's `*value*` substring matching (their partial-match precedent) includes a leading wildcard the port deliberately does not replicate; index-side n-grams are the upgrade path if mid-word matching is ever needed |
+| R-14 | **Automatic partial matching, no `*` operator** (first frnk user-testing round): every token of at least `prefixMinLength` letters (default 3) gates as a word prefix — "pardub" finds Pardubice, "univ bratisl" finds both word orders and both name forms; the former `word*` operator is dropped ("not intuitive anymore"). Exact matches keep outranking partial ones by construction: the gate is non-scoring and full-word tiers stay reserved for complete matches; per-token word-prefix tiers (name 30, variants 8) rank partial name bearers above content mentions. Word beginnings only — CAM/Elza's `*value*` substring matching (their partial-match precedent) includes a leading wildcard the port deliberately does not replicate; index-side n-grams are the upgrade path if mid-word matching is ever needed. **Superseded by R-15 on the mid-word half** |
+| R-15 | **Full substring matching** (second frnk finding: "ardub" must find Pardubice, matching CAM/Elza behavior): trigram companion fields (`allTextGrams`, `nameGrams`, `nameVariantsGrams` - `folding_and_ngram` analyzer on both engines) turn a fragment into an all-trigrams match; the gate uses `allTextGrams`, per-token `contains` scoring tiers (name 15, variants 4) sit below the word-prefix tiers, so the ladder is exact > word-start > contains > content-only. `prefixMinLength` renamed to `partialMinLength` (floor 3 = the trigram size; the old key stays accepted). Index-side n-grams, never leading wildcards - the index grows, queries stay term lookups |
 
 ## 9. Deliberately not done
 

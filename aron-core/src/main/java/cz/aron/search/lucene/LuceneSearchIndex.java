@@ -19,6 +19,8 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.LowerCaseFilter;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilter;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.ngram.NGramTokenFilter;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
@@ -104,7 +106,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "5";
+	private static final String LAYOUT_VERSION = "6";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -138,6 +140,33 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 	}
 
+	/**
+	 * The folding chain plus fixed trigrams - the substring-match companions
+	 * ({@code *Grams} fields, R-15). Mirrors the ES {@code folding_and_ngram}
+	 * analyzer; tokens shorter than the gram size yield nothing on both engines.
+	 */
+	private static final class GramAnalyzer extends Analyzer {
+		@Override
+		protected TokenStreamComponents createComponents(String fieldName) {
+			var tokenizer = new StandardTokenizer();
+			TokenStream stream = new LowerCaseFilter(tokenizer);
+			stream = new ASCIIFoldingFilter(stream);
+			stream = new NGramTokenFilter(stream, 3, 3, false);
+			return new TokenStreamComponents(tokenizer, stream);
+		}
+
+		@Override
+		public int getPositionIncrementGap(String fieldName) {
+			return 100;
+		}
+	}
+
+	/** Per-field routing: the gram fields run the trigram chain, everything else the folding chain. */
+	private final Analyzer fieldAnalyzer = new PerFieldAnalyzerWrapper(foldingAnalyzer, Map.of(
+			"allTextGrams", new GramAnalyzer(),
+			"nameGrams", new GramAnalyzer(),
+			"nameVariantsGrams", new GramAnalyzer()));
+
 	public LuceneSearchIndex(TypesHolder typesHolder, @Value("${search.lucene.path:}") String path) {
 		this.typesHolder = typesHolder;
 		try {
@@ -151,8 +180,8 @@ public class LuceneSearchIndex implements SearchIndex {
 				apuDirectory = FSDirectory.open(root.resolve("apu"));
 				relsDirectory = FSDirectory.open(root.resolve("rels"));
 			}
-			apuWriter = new IndexWriter(apuDirectory, new IndexWriterConfig(foldingAnalyzer));
-			relsWriter = new IndexWriter(relsDirectory, new IndexWriterConfig(foldingAnalyzer));
+			apuWriter = new IndexWriter(apuDirectory, new IndexWriterConfig(fieldAnalyzer));
+			relsWriter = new IndexWriter(relsDirectory, new IndexWriterConfig(fieldAnalyzer));
 			apuSearchers = new SearcherManager(apuWriter, null);
 		} catch (IOException e) {
 			throw new UncheckedIOException("Fail to open Lucene search index", e);
@@ -496,6 +525,8 @@ public class LuceneSearchIndex implements SearchIndex {
 		return builder.build();
 	}
 
+	// gram-field clauses arrive PRE-SPLIT into trigrams from the planner, so the
+	// plain folding chain is right for the query side of every field
 	private Query termsQuery(String field, String text, Occur occur) throws IOException {
 		var bool = new BooleanQuery.Builder();
 		for (String token : analyze(text)) {
@@ -604,6 +635,16 @@ public class LuceneSearchIndex implements SearchIndex {
 		// variant name forms with their normalized exact companions (§4.2)
 		for (String variant : apuDocument.getNameVariants()) {
 			doc.add(new TextField("nameVariants", variant, Field.Store.NO));
+		}
+		// substring-match companions: same sources, the trigram analyzer (R-15)
+		for (String text : apuDocument.getAllText()) {
+			doc.add(new TextField("allTextGrams", text, Field.Store.NO));
+		}
+		if (apuDocument.getName() != null) {
+			doc.add(new TextField("nameGrams", apuDocument.getName(), Field.Store.NO));
+		}
+		for (String variant : apuDocument.getNameVariants()) {
+			doc.add(new TextField("nameVariantsGrams", variant, Field.Store.NO));
 		}
 		for (String variant : apuDocument.getNameVariantsExact()) {
 			doc.add(new StringField("nameVariantsExact", variant, Field.Store.NO));

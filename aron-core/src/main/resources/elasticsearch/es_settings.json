@@ -27,6 +27,11 @@
           "tokenizer": "standard",
           "filter": ["lowercase", "asciifolding", "max_token_length_trunc"]
         },
+        "folding_and_ngram": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "asciifolding", "gram_3"]
+        },
         "folding_and_tokenizing_stop": {
           "type": "custom",
           "tokenizer": "standard",
@@ -34,6 +39,11 @@
         }
       },
       "filter": {
+        "gram_3": {
+          "type": "ngram",
+          "min_gram": 3,
+          "max_gram": 3
+        },
         "stop_filter": {
           "type": "stop",
           "stopwords": ["__STOP_WORDS__"]
