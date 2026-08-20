@@ -25,7 +25,9 @@ import jakarta.servlet.http.HttpServletRequest;
  * {@code server.forward-headers-strategy=framework} - is substituted per request
  * into {@code <base href>} and the {@code window.serverContextPath} JavaScript
  * global, so the same artifact works at the URL root and under any subpath
- * without rebuild.
+ * without rebuild. The deployment's name, default language and primary colour
+ * are substituted with it, so the first paint is truthful before any script
+ * runs.
  * <p>
  * Shell resolution: the real UI's template ({@code META-INF/aron-ui/index.html},
  * provided by the aron-ui resource jar - present in the distribution) is
@@ -70,11 +72,26 @@ public class IndexController {
 				.replace("__CONTEXT_PATH_HTML__", htmlAttributeEscape(contextPath))
 				.replace("__CONTEXT_PATH_JS__", jsStringEscape(contextPath))
 				.replace("__PAGE_LANG__", htmlAttributeEscape(defaultLocale.getLanguage()))
-				.replace("__PAGE_TITLE__", htmlTextEscape(uiConfigLoader.getConfig(defaultLocale).getName()));
+				.replace("__PAGE_TITLE__", htmlTextEscape(uiConfigLoader.getConfig(defaultLocale).getName()))
+				.replace("__PRIMARY_COLOR_CSS__", primaryColorDeclarations());
 		return ResponseEntity.ok()
 				.contentType(MediaType.TEXT_HTML)
 				.cacheControl(CacheControl.noCache())
 				.body(html);
+	}
+
+	/**
+	 * The deployment's primary colour as custom properties the UI's palette reads,
+	 * or nothing when it keeps the portal default (the UI's own fallbacks then
+	 * apply). The values are validated as CSS colours when the configuration is
+	 * loaded, so nothing here can escape the stylesheet.
+	 */
+	private String primaryColorDeclarations() {
+		UiConfigLoader.PrimaryColor color = uiConfigLoader.getPrimaryColor();
+		if (color == null) {
+			return "";
+		}
+		return "--aron-primary-dark: " + color.dark() + "; --aron-primary-main: " + color.main() + ";";
 	}
 
 	/**

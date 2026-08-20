@@ -2,6 +2,10 @@ name: ARON test page template
 localizations:
   - cs_CZ
   - en
+# the deployment's own primary colour instead of the portal default
+primaryColor:
+  dark: hsl(272, 14%, 21%)
+  main: hsl(272, 14%, 31%)
 header:
   title: ARON 2 test
 footer:

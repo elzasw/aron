@@ -2,9 +2,9 @@ import react from "@vitejs/plugin-react";
 import { defineConfig, type Plugin } from "vite";
 
 // The built index.html is not served raw: IndexController uses it as the SPA
-// shell template and substitutes the effective deployment prefix per request
-// into <base href> and window.serverContextPath. The tokens are injected only
-// into the BUILT page so the dev server keeps a plain, working one.
+// shell template and substitutes the effective deployment prefix, name, language
+// and primary colour per request. The tokens are injected only into the BUILT
+// page so the dev server keeps a plain, working one.
 function injectDeploymentPrefixTokens(): Plugin {
   const anchor = '<base href="/" />';
   // the deployment's own name and default language belong to the first paint too:
@@ -33,6 +33,14 @@ function injectDeploymentPrefixTokens(): Plugin {
           {
             tag: "script",
             children: 'window.serverContextPath = "__CONTEXT_PATH_JS__";',
+            injectTo: "head-prepend",
+          },
+          {
+            // the deployment's own primary colour, so the header is not repainted
+            // after the first paint; empty when it configures none, and the
+            // var() fallbacks in palette.ts then give the portal default
+            tag: "style",
+            children: ":root { __PRIMARY_COLOR_CSS__ }",
             injectTo: "head-prepend",
           },
         ],

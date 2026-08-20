@@ -27,6 +27,10 @@ class SpaServingTest extends AbstractTest {
 		// language - before any script has run
 		assertThat(response.body()).contains("<html lang=\"cs\">");
 		assertThat(response.body()).contains("<title>ARON test page template</title>");
+		// ...including the deployment's own primary colour, so the header is not
+		// repainted once the UI has loaded
+		assertThat(response.body()).contains("--aron-primary-dark: hsl(272, 14%, 21%);");
+		assertThat(response.body()).contains("--aron-primary-main: hsl(272, 14%, 31%);");
 	}
 
 	@Test

@@ -3,21 +3,21 @@ import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { ResultField, ResultValue, StructuredResult } from "../api/generated";
-import { PRIMARY_DARK } from "../layout/palette";
+import { PRIMARY_MAIN } from "../layout/palette";
 import type { ResultLayoutLookup } from "./useResultLayout";
 
 type Styles = ReturnType<typeof useStyles>;
 
 const useStyles = makeStyles({
-  // the tile the record icon sits on: the header's color, the card's full
-  // height, and it ends halfway across the icon - the icon's right half is on
-  // the card itself (the original portal's results list). Its width therefore
-  // follows the icon size, which the callers set.
+  // the tile the record icon sits on: the primary color one shade lighter than
+  // the header, the card's full height, and it ends halfway across the icon -
+  // the icon's right half is on the card itself (the original portal's results
+  // list). Its width therefore follows the icon size, which the callers set.
   icon: {
     flexShrink: 0,
     display: "flex",
     alignItems: "flex-start",
-    backgroundColor: PRIMARY_DARK,
+    backgroundColor: PRIMARY_MAIN,
     padding: `${tokens.spacingVerticalM} 0 ${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
   },
   body: {

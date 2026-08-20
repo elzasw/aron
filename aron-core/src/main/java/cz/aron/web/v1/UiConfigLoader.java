@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,8 @@ import jakarta.annotation.PostConstruct;
  * Builds the typed {@link UiConfig} of the /api/v1/ui/config endpoint from the
  * deployment's pageTemplate.yaml ({@code webResources.pageTemplate}). Recognized
  * keys: {@code name}, {@code localizations}, the optional {@code menu} list
- * ({@code code} + optional {@code color}/{@code url} per item) and the optional
- * {@code footer.links} list. Without a {@code menu} key the deployment gets the
+ * ({@code code} + optional {@code color}/{@code url} per item), the optional
+ * {@code primaryColor} pair and the optional {@code footer.links} list. Without a {@code menu} key the deployment gets the
  * default portal menu: FUND, ARCH_DESC, ENTITY, plus HELP when {@code help-url}
  * is configured.
  * <p>
@@ -56,6 +57,21 @@ import jakarta.annotation.PostConstruct;
  *         en: Contact
  * </pre>
  *
+ * The optional primary colour is the deployment's own instead of the portal
+ * default, as the original portal's {@code primaryColor} was:
+ *
+ * <pre>
+ * primaryColor:
+ *   dark: hsl(272, 14%, 21%)
+ *   main: hsl(272, 14%, 31%)
+ * </pre>
+ *
+ * It reaches the UI through the SPA shell rather than this endpoint
+ * ({@code cz.aron.web.IndexController}), so the very first paint already has
+ * the deployment's colour. Both shades are required together and must be plain
+ * CSS colours - a value that is not one fails the startup, because it would
+ * otherwise end up in the page's stylesheet unnoticed.
+ * <p>
  * Configuration is parsed once at startup; {@link #getConfig(Locale)} renders it
  * for one reader's language (labels only - the rest is language-independent).
  */
@@ -78,6 +94,25 @@ public class UiConfigLoader {
 
 	private List<FooterLinkConfig> footerLinks;
 
+	private PrimaryColor primaryColor;
+
+	/**
+	 * Primary colour of one deployment: the header's shade and the lighter one of
+	 * active menu items and record-icon tiles (the original portal's primary.dark
+	 * and primary.main).
+	 */
+	public record PrimaryColor(String dark, String main) {
+	}
+
+	/**
+	 * Colour syntax accepted in configuration: a CSS name, a hex code or a
+	 * functional notation. A whitelist rather than escaping - the value is written
+	 * into the page's stylesheet, where a stray semicolon or closing brace would
+	 * mean something.
+	 */
+	private static final Pattern COLOR = Pattern
+			.compile("[a-zA-Z]{3,20}|#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\\([a-zA-Z0-9.%,/ +-]{3,60}\\)");
+
 	/** Parsed footer link: the localized labels are picked per request. */
 	private record FooterLinkConfig(FooterLinkCode code, String label, List<LocalizedItem> translations, String url) {
 	}
@@ -95,12 +130,21 @@ public class UiConfigLoader {
 		nameTranslations = readNameTranslations();
 		localizations = readLocalizations(pageTemplate);
 		menuItems = readMenu(pageTemplate);
+		primaryColor = readPrimaryColor(pageTemplate);
 		footerLinks = readFooterLinks(pageTemplate);
 	}
 
 	/** Configured presentation languages - needed before a locale can be resolved. */
 	public List<String> getLocalizations() {
 		return localizations;
+	}
+
+	/**
+	 * The deployment's own primary colour, or {@code null} when it keeps the
+	 * portal default. Served in the SPA shell, not in {@link #getConfig(Locale)}.
+	 */
+	public PrimaryColor getPrimaryColor() {
+		return primaryColor;
 	}
 
 	/** Typed configuration for one reader's language. */
@@ -157,6 +201,30 @@ public class UiConfigLoader {
 			return values.stream().map(String::valueOf).toList();
 		}
 		return List.of("en");
+	}
+
+	/**
+	 * Both shades are read together: a deployment that sets one and not the other
+	 * would get its own header above portal-coloured tiles, which is a mistake
+	 * rather than a configuration.
+	 */
+	private static PrimaryColor readPrimaryColor(Map<String, Object> pageTemplate) {
+		if (!(pageTemplate.get("primaryColor") instanceof Map<?, ?> colors)) {
+			return null;
+		}
+		return new PrimaryColor(readColor(colors, "dark"), readColor(colors, "main"));
+	}
+
+	private static String readColor(Map<?, ?> colors, String shade) {
+		if (!(colors.get(shade) instanceof String value) || value.isBlank()) {
+			throw new IllegalStateException("pageTemplate primaryColor: '" + shade + "' is missing");
+		}
+		String color = value.trim();
+		if (!COLOR.matcher(color).matches()) {
+			throw new IllegalStateException(
+					"pageTemplate primaryColor." + shade + ": '" + color + "' is not a CSS color");
+		}
+		return color;
 	}
 
 	private List<MenuItem> readMenu(Map<String, Object> pageTemplate) {

@@ -140,6 +140,42 @@ class UiConfigLoaderTest {
 	}
 
 	@Test
+	void primaryColorIsOptionalAndReadAsAPair() throws IOException {
+		// a deployment that configures none keeps the portal default, which lives
+		// in the UI's palette - not here
+		assertThat(loader("name: Portál", HELP_URL).getPrimaryColor()).isNull();
+
+		var color = loader("""
+				primaryColor:
+				  dark: hsl(272, 14%, 21%)
+				  main: "#5b4a63"
+				""", HELP_URL).getPrimaryColor();
+		assertThat(color.dark()).isEqualTo("hsl(272, 14%, 21%)");
+		assertThat(color.main()).isEqualTo("#5b4a63");
+	}
+
+	@Test
+	void halfConfiguredOrUnusablePrimaryColorFailsTheStartup() {
+		// one shade alone would put the deployment's own header above tiles in the
+		// portal's colour
+		assertThatThrownBy(() -> loader("""
+				primaryColor:
+				  dark: black
+				""", HELP_URL))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("main");
+		// the value ends up in the page's stylesheet, so anything that is not a
+		// colour stops the startup instead of being written there
+		assertThatThrownBy(() -> loader("""
+				primaryColor:
+				  dark: "red; } body { display: none"
+				  main: red
+				""", HELP_URL))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("is not a CSS color");
+	}
+
+	@Test
 	void unknownMenuCodeFailsTheStartup() {
 		assertThatThrownBy(() -> loader("menu:\n  - code: TYPO\n", HELP_URL))
 				.isInstanceOf(IllegalStateException.class)

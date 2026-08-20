@@ -260,6 +260,10 @@ statement must cover these, because the platform cannot decide them:
   either a visible `prefix` or a `label`: a field code says nothing to a reader
   who cannot see the layout. See the configuration chapter of the administration
   guide.
+- **Primary colour** — configurable per deployment (`primaryColor`). The portal
+  puts white text and icons on it, so the deployment that changes it owns the
+  contrast: 4.5:1 for the header's text, 3:1 for large text and UI components
+  (the default palette meets both).
 - **Section accent colours** — configurable per deployment (`menu` colours).
   They are used as a 4 px underline while the active item is also marked by its
   background, so they are not the sole indicator, but a deployment picking

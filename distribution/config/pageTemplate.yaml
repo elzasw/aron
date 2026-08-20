@@ -32,6 +32,19 @@ localizations:
 # nabidka ridi viditelnost, ne existenci sekce. Barvu polozky lze pridat klicem
 # color, bez nej plati vychozi paleta portalu (odpovida barvam stareho portalu).
 
+# Hlavni barva portalu. Klic zde neni: bez nej plati vychozi paleta portalu
+# (odpovida staremu portalu). Nasazeni, ktere ma vlastni barvu, uvede oba odstiny
+# - tmavsi nese zahlavi, svetlejsi aktivni polozku nabidky a plochu pod ikonou
+# zaznamu ve vysledcich:
+#
+#primaryColor:
+#  dark: hsl(272, 14%, 21%)
+#  main: hsl(272, 14%, 31%)
+#
+# Barvu server vklada uz do stranky, takze plati pri prvnim vykresleni. Za
+# kontrast bileho textu na tehle barve odpovida nasazeni (WCAG 2.1 AA zada 4,5:1
+# pro bezny text) - viz doc/accessibility.md.
+
 # Odkazy v paticce - stranky, ktere nasazeni publikuje. Znama role (code) se
 # popise sama v jazyce ctenare, volny odkaz ma label (jeden retezec, nebo mapu
 # jazyk -> text). Prohlaseni o pristupnosti je pro organy verejne spravy
