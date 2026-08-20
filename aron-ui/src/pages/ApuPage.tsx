@@ -69,21 +69,27 @@ const useStyles = makeStyles({
   // arrangement): the tree keeps its place while the description is read, and
   // the page itself never scrolls - a second, outer scrollbar would move the
   // tree's own horizontal one out of reach.
+  //
+  // Positioned against the main region rather than flowing inside it. In flow,
+  // the region is sized by this content and would have to be allowed to shrink
+  // back below it, which is the same permission a long page needs in order to
+  // grow - one rule cannot serve both. Positioned, this page contributes no
+  // height at all, so the region keeps exactly the frame's leftover and every
+  // page that flows normally is left alone.
   layout: {
+    position: "absolute",
+    inset: 0,
     display: "flex",
     alignItems: "stretch",
-    flexGrow: 1,
-    minHeight: 0,
     // the gutter is split by the separator, so each half stays modest
     gap: tokens.spacingHorizontalL,
     padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
-    // narrow viewports stack the tree above the description, and then the
-    // document scrolls again: two nested scroll areas on a phone are worse
-    // than one long page, and a frame-tall pane leaves nothing for the text
+    // narrow viewports stack the tree above the description and the document
+    // scrolls again: two nested scroll areas on a phone are worse than one long
+    // page, and a frame-tall pane leaves nothing for the text
     "@media (max-width: 860px)": {
+      position: "static",
       flexDirection: "column",
-      flexGrow: 0,
-      minHeight: "auto",
       gap: tokens.spacingVerticalXL,
       padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
     },

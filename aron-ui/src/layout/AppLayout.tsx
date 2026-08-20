@@ -44,6 +44,10 @@ const useStyles = makeStyles({
     flexGrow: 1,
     display: "flex",
     flexDirection: "column",
+    // the anchor a page can fill exactly (see ApuPage): a page positioned
+    // against this contributes no height of its own, so the region keeps the
+    // frame's leftover. A page in normal flow is unaffected and still grows.
+    position: "relative",
     // focused programmatically after a route change - no ring for a region
     ":focus": {
       outline: "none",
