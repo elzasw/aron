@@ -49,6 +49,9 @@
     "pageSize": "Per page:",
     "sortLabel": "Sort by:",
     "typeCountsLabel": "Record counts by kind",
+    "relatedTo": "Related to",
+    "relatedRemove": "Remove the relation filter",
+    "activeFilters": "Active filters",
     "sort": {
       "AUTO": "Default",
       "RELEVANCE": "Best match",
@@ -94,6 +97,8 @@
     "treeCollapse": "Collapse {{name}}",
     "treeMoreBefore": "Load previous",
     "treeMoreAfter": "Load more",
+    "findRelated": "Find related",
+    "findRelatedFor": "Find records related to {{name}}",
     "notFound": "The record was not found.",
     "error": "Loading the record failed, please try again.",
     "attachments": "Attachments",

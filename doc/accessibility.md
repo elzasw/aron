@@ -259,6 +259,7 @@ than audited once:
 | 2026-08-19 | Phase A + D | implementation + component tests (skip link, footer links, facet naming) | §4 Phase A and D closed; B and C open |
 | 2026-08-19 | Phase B | ESLint + jsx-a11y over the whole UI, axe over the frame and every facet kind | no findings left; the gate now runs in every build |
 | 2026-08-19 | search page of the DEV deployment (`/aron/main/arch-desc`) | Lighthouse 13, mobile 412 px | score 95; contrast and target size pass; 2 findings (dropdown name, label in name) fixed the same day |
+| 2026-08-21 | new surfaces of the relation filter (record-page action, sidebar constraint chips) | component tests by role and accessible name + axe (`related.test.tsx`) | no findings; the action is a real link, each chip has a named remove control |
 
 ## 6. Deployment responsibilities
 

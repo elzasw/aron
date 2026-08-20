@@ -19,6 +19,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -375,8 +376,41 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			if (filter instanceof FieldFilter.Text text) {
 				bool.filter(Query.of(q -> q.matchPhrasePrefix(m -> m.field(text.field()).query(text.text()))));
 			}
+			if (filter instanceof FieldFilter.Related related) {
+				bool.filter(relatedQuery(related));
+			}
 		}
 		return Query.of(q -> q.bool(bool.build()));
+	}
+
+	/**
+	 * Relation query: the reference fields matching any named target, ORed with
+	 * the document's own id being one of the pre-resolved uuids. Lives in the
+	 * query (not the post_filter), so every aggregation respects it - a relation
+	 * restriction is not a facet the reader can widen by re-selecting.
+	 */
+	private static Query relatedQuery(FieldFilter.Related related) {
+		var or = new BoolQuery.Builder();
+		boolean any = false;
+		if (!related.targets().isEmpty()) {
+			var targets = related.targets().stream().map(FieldValue::of).toList();
+			for (String field : related.refFields()) {
+				or.should(Query.of(q -> q.terms(t -> t.field(field).terms(v -> v.value(targets)))));
+				any = true;
+			}
+		}
+		if (!related.uuids().isEmpty()) {
+			var uuids = related.uuids().stream().map(FieldValue::of).toList();
+			or.should(Query.of(q -> q.terms(t -> t.field("id").terms(v -> v.value(uuids)))));
+			any = true;
+		}
+		if (!any) {
+			// an empty bool matches everything, so say "nothing" explicitly: a record
+			// with no visible reference is related to nothing, not to all
+			return Query.of(q -> q.matchNone(m -> m));
+		}
+		or.minimumShouldMatch("1");
+		return Query.of(q -> q.bool(or.build()));
 	}
 
 	/** ANDs the apuType restriction onto a (nullable) filter; {@code null} when neither applies. */

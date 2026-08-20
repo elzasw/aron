@@ -51,6 +51,7 @@ import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.SortedNumericSortField;
+import org.apache.lucene.search.TermInSetQuery;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
@@ -457,8 +458,37 @@ public class LuceneSearchIndex implements SearchIndex {
 			if (filter instanceof FieldFilter.Text text) {
 				root.add(textFieldQuery(text), Occur.FILTER);
 			}
+			if (filter instanceof FieldFilter.Related related) {
+				root.add(relatedQuery(related), Occur.FILTER);
+			}
 		}
 		return root.build();
+	}
+
+	/**
+	 * Relation query: the reference fields matching any named target, ORed with
+	 * the document's own uuid being one of the pre-resolved ones. Part of the
+	 * main query (not of the per-facet filters), so bucket counts respect it.
+	 * A query with no clause matches nothing, which is what an empty relation
+	 * should do.
+	 */
+	private static Query relatedQuery(FieldFilter.Related related) {
+		var or = new BooleanQuery.Builder();
+		// one set query per field rather than a clause per (field, target) pair:
+		// the built-in relation facet spans every reference field, so the pairwise
+		// form would hit Lucene's clause limit on a handful of targets
+		if (!related.targets().isEmpty()) {
+			var targets = related.targets().stream().map(BytesRef::new).toList();
+			for (String field : related.refFields()) {
+				or.add(new TermInSetQuery(field, targets), Occur.SHOULD);
+			}
+		}
+		if (!related.uuids().isEmpty()) {
+			or.add(new TermInSetQuery("uuid", related.uuids().stream().map(BytesRef::new).toList()),
+					Occur.SHOULD);
+		}
+		or.setMinimumNumberShouldMatch(1);
+		return or.build();
 	}
 
 	/** ANDs the apuType restriction onto a query ({@code null} type = unchanged). */

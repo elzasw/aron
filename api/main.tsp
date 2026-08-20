@@ -216,7 +216,7 @@ namespace Search {
 	op search(@body request: ApuSearchRequest): ApuSearchResponse;
 
 	/**
-	 * Options of one enumerated facet (ENUM/MULTI_REF) for its picker - the
+	 * Options of one enumerated facet (ENUM/REF) for its picker - the
 	 * type-ahead companion of `search`. The same multi-select semantics apply:
 	 * the request's query and filters constrain the options EXCEPT the facet's
 	 * own VALUES filter. `q` narrows options by their display label (label of
@@ -259,22 +259,33 @@ enum FacetType {
 	/** Enumerated values with bucket counts; multi-select works as OR. */
 	ENUM,
 
-	/** Reference to archival entities; filterable by value (suggest UI arrives later). */
-	MULTI_REF,
+	/**
+	 * Relation to another APU: the facet's values are APU uuids, and a document
+	 * matches when one of its reference items points at one of them. Filtered by
+	 * `ValuesFilter` on the facet's own field, or by `RelatedFilter`, which adds
+	 * the direction and the built-in all-reference-types scope.
+	 *
+	 * One type on purpose: the old portal split this three ways, of which one
+	 * was never implemented and the other two differed only by narrowing on the
+	 * relation type - which belongs on the filter, not in a facet type.
+	 */
+	REF,
 
 	/** Dating interval. */
 	UNITDATE,
-
-	/** Advanced reference facet (not yet supported by the UI). */
-	MULTI_REF_EXT,
-
-	/** Advanced reference facet (not yet supported by the UI). */
-	MULTI_TYPE_REF,
 }
 
 /** When the facet is offered. */
 enum FacetDisplay {
+	/** Offered in the section's search sidebar from the start. */
 	ALWAYS,
+
+	/**
+	 * Not offered by default - reached through the advanced-search dialog, or
+	 * set for the reader by an action elsewhere in the portal (the record
+	 * page's "find related"). A facet carrying an active filter is shown
+	 * regardless, so the reader can always see the constraint and undo it.
+	 */
 	DETAIL,
 }
 
@@ -396,6 +407,7 @@ enum FilterKind {
 	VALUES,
 	TEXT,
 	RANGE,
+	RELATED,
 }
 
 /**
@@ -418,7 +430,7 @@ model SearchFilter {
 	facet: string;
 }
 
-/** Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR). */
+/** Selected values of an ENUM/REF facet; a document matches ANY of them (OR). */
 model ValuesFilter extends SearchFilter {
 	@invisible(Lifecycle)
 	kind: FilterKind.VALUES;
@@ -442,6 +454,46 @@ model RangeFilter extends SearchFilter {
 	kind: FilterKind.RANGE;
 	from?: string;
 	to?: string;
+}
+
+/** Which end of the relation the APUs named by a `RelatedFilter` sit on. */
+enum RelationDirection {
+	/** The document references one of the named APUs. */
+	INCOMING,
+
+	/**
+	 * The document is one of the records a named APU visibly references - the
+	 * links its own page shows. Reference items the source system marked
+	 * index-only (APUX `visible="false"`) are deliberately left out: they exist
+	 * to make the record carrying them findable, not to lead the reader on to
+	 * records that page never showed.
+	 */
+	OUTGOING,
+
+	/** Either of the above. */
+	BOTH,
+}
+
+/**
+ * Relation filter of a reference facet: matches documents related to ANY of the
+ * named APUs (OR) through one of the relation types the facet spans. Two such
+ * filters on the same facet therefore AND - "related to Germany and to
+ * Postbox" is two conditions, not one condition with two values.
+ *
+ * The reserved facet code `~RELATED` is the built-in facet spanning EVERY
+ * reference item type; a leading tilde cannot occur in an item-type code, so
+ * the reserved code can never collide with a deployment's own facet. That is
+ * the facet a record page's "find related" action filters on, and the one case
+ * that asks for `BOTH` directions.
+ */
+model RelatedFilter extends SearchFilter {
+	@invisible(Lifecycle)
+	kind: FilterKind.RELATED;
+
+	/** UUIDs of the APUs the relation leads to; a document matches ANY of them (OR). */
+	apus: string[];
+
+	direction?: RelationDirection = RelationDirection.INCOMING;
 }
 
 /** Search response. */
@@ -618,7 +670,7 @@ enum FacetResultKind {
 	/** Value buckets of an ENUM facet. */
 	ENUM,
 
-	/** Reference buckets of a MULTI_REF facet. */
+	/** Reference buckets of a REF facet. */
 	REF,
 
 	/** Dating bounds of a UNITDATE facet. */
@@ -645,7 +697,7 @@ model EnumFacetResult extends FacetResult {
 	buckets: FacetBucket[];
 }
 
-/** Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name. */
+/** Reference buckets of a REF facet: `value` = APU uuid, `label` = display name. */
 model RefFacetResult extends FacetResult {
 	@invisible(Lifecycle)
 	kind: FacetResultKind.REF;

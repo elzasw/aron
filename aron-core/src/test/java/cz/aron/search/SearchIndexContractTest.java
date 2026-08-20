@@ -668,6 +668,63 @@ public abstract class SearchIndexContractTest {
 				.doesNotThrowAnyException();
 	}
 
+
+	@Test
+	void relatedFilterMatchesEitherEndOfTheRelation() {
+		indexApus(List.of(
+				doc(uuid(80), "Referencing A", 1, Map.of("REL~ENTITY", List.of(uuid(82)))),
+				doc(uuid(81), "Referencing B", 1, Map.of("REL~ENTITY", List.of(uuid(82)))),
+				doc(uuid(82), "The entity", 1, Map.of("REL~ENTITY", List.of(uuid(84)))),
+				doc(uuid(83), "Points elsewhere", 1, Map.of("REL~ENTITY", List.of(uuid(84)))),
+				doc(uuid(84), "What the entity points at", 1, Map.of())));
+
+		// incoming: whoever references the entity through a field in scope
+		assertThat(index.search(query(null, List.of(
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(82)), List.of())))).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactlyInAnyOrder(uuid(80), uuid(81));
+
+		// outgoing: the pre-resolved targets, matched on the document's own uuid
+		assertThat(index.search(query(null, List.of(
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(), List.of(uuid(84)))))).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(84));
+
+		// both halves at once - one relation, either end of it
+		assertThat(index.search(query(null, List.of(
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(82)), List.of(uuid(84)))))).hits())
+				.extracting(ApuSearchResult.Hit::uuid)
+				.containsExactlyInAnyOrder(uuid(80), uuid(81), uuid(84));
+
+		// a field outside the scope does not relate
+		assertThat(index.search(query(null, List.of(
+				new FieldFilter.Related(List.of("LANG~CODE"), List.of(uuid(82)), List.of()))))
+				.total()).isZero();
+
+		// nothing to relate to matches nothing (never everything)
+		assertThat(index.search(query(null, List.of(
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(), List.of())))).total()).isZero();
+	}
+
+	@Test
+	void relatedFilterNarrowsFacetBucketsToo() {
+		indexApus(List.of(
+				doc(uuid(85), "Czech, related", 1,
+						Map.of("LANG~CODE", List.of("cze"), "REL~ENTITY", List.of(uuid(88)))),
+				doc(uuid(86), "German, related", 1,
+						Map.of("LANG~CODE", List.of("ger"), "REL~ENTITY", List.of(uuid(88)))),
+				doc(uuid(87), "Latin, unrelated", 1, Map.of("LANG~CODE", List.of("lat")))));
+
+		var result = index.search(new ApuSearchQuery(null, null,
+				List.of(new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(88)), List.of())),
+				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)),
+				Set.of(), 0, 10, SortMode.RELEVANCE));
+
+		assertThat(result.total()).isEqualTo(2);
+		// a relation restriction is not a facet the reader can widen, so unlike a
+		// Values filter it also constrains the buckets
+		assertThat(result.buckets().get("LANG~CODE")).containsExactlyInAnyOrder(
+				new ApuSearchResult.Bucket("cze", 1), new ApuSearchResult.Bucket("ger", 1));
+	}
+
 	private static ApuSearchQuery query(String fulltext, List<FieldFilter> filters) {
 		return new ApuSearchQuery(null,
 				RelevanceQueryPlanner.plan(fulltext, RelevanceConfig.defaults()),

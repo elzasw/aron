@@ -170,7 +170,7 @@ export default function FacetPanel({ def, filters, result, apuType, query, total
       {def.type === FacetType.Enum && (
         <EnumFacet def={def} filters={filters} result={result} onFilters={onFilters} />
       )}
-      {def.type === FacetType.MultiRef && (
+      {def.type === FacetType.Ref && (
         <RefFacet
           def={def}
           filters={filters}

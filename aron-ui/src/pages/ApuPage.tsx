@@ -25,6 +25,7 @@ import {
 import ApuTree from "../apu/ApuTree";
 import { useApuDetail } from "../apu/useApuDetail";
 import Splitter from "../layout/Splitter";
+import { relatedSearchUrl } from "../search/filters";
 
 /**
  * The fund's reference to its archival-description tree root - rendered as a
@@ -119,6 +120,25 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalXS,
+  },
+  actions: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: tokens.spacingHorizontalS,
+    paddingTop: tokens.spacingVerticalXS,
+  },
+  // a navigation, so a real link - styled as the outlined button it reads as
+  action: {
+    padding: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalM}`,
+    borderRadius: tokens.borderRadiusMedium,
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    color: tokens.colorBrandForegroundLink,
+    fontSize: tokens.fontSizeBase200,
+    textDecorationLine: "none",
+    ":hover": {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+      textDecorationLine: "underline",
+    },
   },
   part: {
     display: "flex",
@@ -361,6 +381,15 @@ export default function ApuPage() {
       <header className={styles.header}>
         <Title2 as="h1">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}
+        <div className={styles.actions}>
+          <Link
+            to={relatedSearchUrl(data.uuid)}
+            className={styles.action}
+            aria-label={t("apu.findRelatedFor", { name: data.name })}
+          >
+            {t("apu.findRelated")}
+          </Link>
+        </div>
         {archdescRoot && (
           <Link to={`/apu/${archdescRoot.ref.uuid}`} className={styles.link}>
             {archdescRoot.label}

@@ -174,7 +174,7 @@ paths:
     post:
       operationId: Search_getFacetOptions
       description: |-
-        Options of one enumerated facet (ENUM/MULTI_REF) for its picker - the
+        Options of one enumerated facet (ENUM/REF) for its picker - the
         type-ahead companion of `search`. The same multi-select semantics apply:
         the request's query and filters constrain the options EXCEPT the facet's
         own VALUES filter. `q` narrows options by their display label (label of
@@ -795,10 +795,8 @@ components:
       enum:
         - FULLTEXT
         - ENUM
-        - MULTI_REF
+        - REF
         - UNITDATE
-        - MULTI_REF_EXT
-        - MULTI_TYPE_REF
       description: Facet kinds (mirrors the searchConfig.yaml model).
     FileInfo:
       type: object
@@ -838,6 +836,7 @@ components:
         - VALUES
         - TEXT
         - RANGE
+        - RELATED
       description: Filter kinds - the SearchFilter discriminator.
     FooterLink:
       type: object
@@ -959,7 +958,7 @@ components:
             $ref: '#/components/schemas/FacetBucket'
       allOf:
         - $ref: '#/components/schemas/FacetResult'
-      description: 'Reference buckets of a MULTI_REF facet: `value` = APU uuid, `label` = display name.'
+      description: 'Reference buckets of a REF facet: `value` = APU uuid, `label` = display name.'
     RefItem:
       type: object
       required:
@@ -972,6 +971,40 @@ components:
       allOf:
         - $ref: '#/components/schemas/DetailItem'
       description: Reference to another APU.
+    RelatedFilter:
+      type: object
+      required:
+        - apus
+      properties:
+        apus:
+          type: array
+          items:
+            type: string
+          description: UUIDs of the APUs the relation leads to; a document matches ANY of them (OR).
+        direction:
+          allOf:
+            - $ref: '#/components/schemas/RelationDirection'
+          default: INCOMING
+      allOf:
+        - $ref: '#/components/schemas/SearchFilter'
+      description: |-
+        Relation filter of a reference facet: matches documents related to ANY of the
+        named APUs (OR) through one of the relation types the facet spans. Two such
+        filters on the same facet therefore AND - "related to Germany and to
+        Postbox" is two conditions, not one condition with two values.
+
+        The reserved facet code `~RELATED` is the built-in facet spanning EVERY
+        reference item type; a leading tilde cannot occur in an item-type code, so
+        the reserved code can never collide with a deployment's own facet. That is
+        the facet a record page's "find related" action filters on, and the one case
+        that asks for `BOTH` directions.
+    RelationDirection:
+      type: string
+      enum:
+        - INCOMING
+        - OUTGOING
+        - BOTH
+      description: Which end of the relation the APUs named by a `RelatedFilter` sit on.
     ResultField:
       type: object
       required:
@@ -1105,6 +1138,7 @@ components:
           VALUES: '#/components/schemas/ValuesFilter'
           TEXT: '#/components/schemas/TextFilter'
           RANGE: '#/components/schemas/RangeFilter'
+          RELATED: '#/components/schemas/RelatedFilter'
       description: |-
         One active filter, discriminated by `kind` - the Elza/CAM `ItemData` pattern
         this contract uses throughout (see also `FacetResult` and `DetailItem`): the
@@ -1324,4 +1358,4 @@ components:
             type: string
       allOf:
         - $ref: '#/components/schemas/SearchFilter'
-      description: Selected values of an ENUM/MULTI_REF facet; a document matches ANY of them (OR).
+      description: Selected values of an ENUM/REF facet; a document matches ANY of them (OR).

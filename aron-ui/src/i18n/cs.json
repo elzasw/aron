@@ -49,6 +49,9 @@
     "pageSize": "Počet na stránce:",
     "sortLabel": "Řazení:",
     "typeCountsLabel": "Počty záznamů podle druhu",
+    "relatedTo": "Souvisí s",
+    "relatedRemove": "Odebrat filtr souvisejících",
+    "activeFilters": "Aktivní filtry",
     "sort": {
       "AUTO": "Výchozí",
       "RELEVANCE": "Nejlépe odpovídající",
@@ -96,6 +99,8 @@
     "treeCollapse": "Sbalit {{name}}",
     "treeMoreBefore": "Načíst předchozí",
     "treeMoreAfter": "Načíst další",
+    "findRelated": "Najít související",
+    "findRelatedFor": "Najít záznamy související se {{name}}",
     "notFound": "Záznam nebyl nalezen.",
     "error": "Načtení záznamu se nezdařilo, zkuste to prosím znovu.",
     "attachments": "Přílohy",

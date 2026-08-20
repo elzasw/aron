@@ -17,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,8 @@ import cz.aron.api.v1.model.FacetResultKind;
 import cz.aron.api.v1.model.QueryMode;
 import cz.aron.api.v1.model.RefFacetResult;
 import cz.aron.api.v1.model.RangeFilter;
+import cz.aron.api.v1.model.RelatedFilter;
+import cz.aron.api.v1.model.RelationDirection;
 import cz.aron.api.v1.model.ResultLayout;
 import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SortMode;
@@ -58,6 +61,9 @@ import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.types.LocalizedText;
 import cz.aron.domain.types.TypesHolder;
+import cz.aron.domain.types.dto.ItemType;
+import cz.aron.mapper.ApuSerializer;
+import cz.aron.repository.ApuEntityRepository;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
@@ -80,6 +86,14 @@ public class SearchController implements SearchApi {
 	/** Upper bound of buckets requested from the engine per facet (= the contract's max options size). */
 	private static final int BUCKET_LIMIT = 1000;
 
+	/**
+	 * Reserved code of the built-in relation facet: it spans EVERY reference item
+	 * type and exists for every section, so a "find related" action works without
+	 * a deployment configuring anything. A leading tilde cannot occur in an
+	 * item-type code, so the code can never collide with a configured facet.
+	 */
+	public static final String RELATED_FACET = "~RELATED";
+
 	private final FacetsLoader facetsLoader;
 
 	private final TypesHolder typesHolder;
@@ -91,6 +105,8 @@ public class SearchController implements SearchApi {
 	private final RelevanceService relevanceService;
 
 	private final ApuService apuService;
+
+	private final ApuEntityRepository apuEntityRepository;
 
 	private final ResultLayoutLoader resultLayoutLoader;
 
@@ -114,9 +130,12 @@ public class SearchController implements SearchApi {
 
 	private List<FacetConfigDto> facets;
 
+	/** Every indexed reference item field - the built-in relation facet's scope. */
+	private List<String> referenceFields;
+
 	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
 			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
-			ResultLayoutLoader resultLayoutLoader, ResultImages resultImages,
+			ApuEntityRepository apuEntityRepository, ResultLayoutLoader resultLayoutLoader, ResultImages resultImages,
 			@Value("${search.structured-results:AUTO}") String structuredResults,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
@@ -127,6 +146,7 @@ public class SearchController implements SearchApi {
 		this.indexingService = indexingService;
 		this.relevanceService = relevanceService;
 		this.apuService = apuService;
+		this.apuEntityRepository = apuEntityRepository;
 		this.resultLayoutLoader = resultLayoutLoader;
 		this.resultImages = resultImages;
 		this.structuredResults = parseStructuredResults(structuredResults);
@@ -151,6 +171,12 @@ public class SearchController implements SearchApi {
 		} catch (IOException e) {
 			throw new UncheckedIOException("Fail to load facet configuration", e);
 		}
+		// unindexed reference items carry no field to match on, so they would only
+		// add dead clauses to every relation query
+		referenceFields = typesHolder.getAllItemTypes().stream()
+				.filter(itemType -> DataType.APU_REF.equals(itemType.getType()) && itemType.isIndexed())
+				.map(ItemType::getCode)
+				.toList();
 	}
 
 	@Override
@@ -338,15 +364,16 @@ public class SearchController implements SearchApi {
 	}
 
 	private FieldFilter toFieldFilter(SearchFilter filter, Map<String, FacetConfigDto> byCode) {
+		if (filter instanceof RelatedFilter related) {
+			return toRelatedFilter(related, byCode);
+		}
 		FacetConfigDto facet = byCode.get(filter.getFacet());
 		if (facet == null) {
 			throw badRequest("Unknown facet '" + filter.getFacet() + "' for the requested apuType.");
 		}
 		if (filter instanceof ValuesFilter values) {
 			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.ENUM
-					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF
-					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF_EXT
-					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_TYPE_REF) {
+					&& facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF) {
 				throw badRequest("Facet '" + filter.getFacet() + "' does not accept a VALUES filter.");
 			}
 			if (values.getValues() == null || values.getValues().isEmpty()) {
@@ -378,6 +405,93 @@ public class SearchController implements SearchApi {
 		throw badRequest("Unsupported filter kind.");
 	}
 
+	/**
+	 * Resolves a relation filter into the port's field-level form. The facet
+	 * decides the scope - one reference field for a configured REF facet, every
+	 * one of them for the built-in {@link #RELATED_FACET} - and the direction
+	 * decides which ends of the relation count.
+	 *
+	 * <p>OUTGOING is expanded here, above the port: the named APUs' own
+	 * reference items are read and the index-only ones (APUX {@code
+	 * visible="false"}) dropped, so this half follows exactly the links a
+	 * reader saw on that record's page. Engines stay free of the display model.
+	 */
+	private FieldFilter toRelatedFilter(RelatedFilter related, Map<String, FacetConfigDto> byCode) {
+		if (related.getApus() == null || related.getApus().isEmpty()) {
+			throw badRequest("RELATED filter of facet '" + related.getFacet() + "' names no APU.");
+		}
+		List<UUID> apus = related.getApus().stream().map(value -> parseUuid(value, related.getFacet())).toList();
+		List<String> scope;
+		// the built-in facet spans every reference type, so it restricts nothing when
+		// following a record's own references outwards (null = any item type); a
+		// configured facet follows only its own field
+		Set<String> outgoingScope = null;
+		if (RELATED_FACET.equals(related.getFacet())) {
+			scope = referenceFields;
+		} else {
+			FacetConfigDto facet = byCode.get(related.getFacet());
+			if (facet == null) {
+				throw badRequest("Unknown facet '" + related.getFacet() + "' for the requested apuType.");
+			}
+			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF) {
+				throw badRequest("Facet '" + related.getFacet() + "' does not accept a RELATED filter.");
+			}
+			scope = List.of(facet.getSource());
+			outgoingScope = Set.of(facet.getSource());
+		}
+		RelationDirection direction = related.getDirection() != null
+				? related.getDirection()
+				: RelationDirection.INCOMING;
+		List<String> targets = direction == RelationDirection.OUTGOING
+				? List.of()
+				: apus.stream().map(UUID::toString).toList();
+		List<String> uuids = direction == RelationDirection.INCOMING
+				? List.of()
+				: visibleReferencesOf(apus, outgoingScope);
+		return new FieldFilter.Related(scope, targets, uuids);
+	}
+
+	/**
+	 * The APUs the given records visibly reference - {@code scope} restricts the
+	 * reference item types followed, {@code null} follows every one of them
+	 * (indexability is irrelevant here: the match is on the target's own uuid).
+	 * An unknown uuid contributes nothing rather than failing the request - a
+	 * relation to a record that is not published is simply no relation.
+	 */
+	private List<String> visibleReferencesOf(List<UUID> apus, Set<String> scope) {
+		var targets = new LinkedHashSet<String>();
+		for (UUID uuid : apus) {
+			var apu = apuEntityRepository.findByUuid(uuid);
+			if (apu == null) {
+				continue;
+			}
+			for (var part : ApuSerializer.deserialize(apu.getData())) {
+				if (part.getItems() == null) {
+					continue;
+				}
+				for (var item : part.getItems()) {
+					if (Boolean.FALSE.equals(item.getVisible())
+							|| (scope != null && !scope.contains(item.getType()))) {
+						continue;
+					}
+					ItemType itemType = typesHolder.getItemTypeForCode(item.getType());
+					if (itemType != null && DataType.APU_REF.equals(itemType.getType())) {
+						targets.add(item.getValue());
+					}
+				}
+			}
+		}
+		return List.copyOf(targets);
+	}
+
+	private static UUID parseUuid(String value, String facet) {
+		try {
+			return UUID.fromString(value);
+		} catch (IllegalArgumentException e) {
+			throw badRequest("RELATED filter of facet '" + facet + "' has a malformed uuid '" + value + "'.");
+		}
+	}
+
 	/** Accepts a year (1190), a date (1190-05-01) or a full ISO date-time; expands to the interval edge. */
 	private static LocalDateTime parseBound(String value, boolean upper, String facet) {
 		if (value == null || value.isBlank()) {
@@ -398,8 +512,17 @@ public class SearchController implements SearchApi {
 		}
 	}
 
+	/**
+	 * The section's facets, minus the kinds the new API does not serve
+	 * ({@code MULTI_REF_EXT} - see {@link cz.aron.domain.facets.dto.FacetType}).
+	 * Not advertising them also keeps them out of filter validation: the new API
+	 * behaves as if a facet it cannot serve were not configured.
+	 */
 	private List<FacetConfigDto> facetsFor(ApuType apuType) {
-		return facets.stream().filter(f -> appliesTo(f, apuType)).toList();
+		return facets.stream()
+				.filter(f -> f.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF_EXT)
+				.filter(f -> appliesTo(f, apuType))
+				.toList();
 	}
 
 	/** A facet without a when-condition applies to every APU type. */
@@ -448,10 +571,10 @@ public class SearchController implements SearchApi {
 		return switch (type) {
 			case FULLTEXT, FULLTEXTF -> cz.aron.api.v1.model.FacetType.FULLTEXT;
 			case ENUM -> cz.aron.api.v1.model.FacetType.ENUM;
-			case MULTI_REF -> cz.aron.api.v1.model.FacetType.MULTI_REF;
+			case MULTI_REF -> cz.aron.api.v1.model.FacetType.REF;
 			case UNITDATE -> cz.aron.api.v1.model.FacetType.UNITDATE;
-			case MULTI_REF_EXT -> cz.aron.api.v1.model.FacetType.MULTI_REF_EXT;
-			case MULTI_TYPE_REF -> cz.aron.api.v1.model.FacetType.MULTI_TYPE_REF;
+			// filtered out by facetsFor, so it never reaches a client
+			case MULTI_REF_EXT -> throw new IllegalStateException("MULTI_REF_EXT is not served by /api/v1.");
 		};
 	}
 

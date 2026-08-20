@@ -365,3 +365,55 @@ the new API. The port grew accordingly - still new-API-shaped:
 The Lucene min/max brick added for the old API's MIN/MAX metrics
 (`LuceneSearchIndex.minMaxMillis`) now serves both the old-API aggregations and
 the port's bounds - the convergence intended in §7.
+
+## 9. Relation filter — "find related" (2026-08-21)
+
+The old portal's *Najít související* button sent a hand-built boolean tree to
+the generic old API: `AND(NOT(id EQ uuid), AKF(uuid))`, where `AKF` matched the
+uuid against every keyword field of the document. Only two kinds of field could
+ever equal a uuid — the document's own `id` (hence the `NOT`) and the dynamic
+`APU_REF` item fields — so the effective meaning was *every record whose
+reference item points at this one*. Both engines already serve `AKF` on the
+frozen old-API path (`QueryBuilder`, `LuceneOldApiSearch`); this section is
+about the new API.
+
+The port grew **one** filter, `FieldFilter.Related(refFields, targets, uuids)`,
+matching a document that either references any of `targets` through any of
+`refFields`, or is itself one of `uuids`. The two halves are ORed — one
+relation, either end of it.
+
+Three decisions are worth keeping:
+
+- **Everything interpretive is resolved above the port.** `refFields` comes from
+  the facet's scope (one item field, or every reference field for the built-in
+  `~RELATED` facet), and `uuids` from expanding the named APUs' own visible
+  references. The adapters therefore need neither types.yaml nor the display
+  model — the port's query model stays new-API-shaped.
+- **The clause belongs in the main query, not the facet-filter layer.** Facet
+  filters are excluded per facet to give multi-select its "widen your own
+  selection" behavior; a relation restriction is not a facet the reader can
+  widen, so it must constrain bucket counts too. Putting it where the Text
+  filters already sit gets that for free on both engines (ES aggregations run on
+  the query, before the post_filter) and is pinned by
+  `relatedFilterNarrowsFacetBucketsToo`.
+- **Direction is asymmetric about `visible="false"`, deliberately.** APUX marks
+  an item index-only to make *its own* record findable by it ("slouží jen pro
+  dohledání jednotky popisu"). Searching *inwards* therefore honors such
+  references; searching *outwards* ignores them, or the reader would be led to
+  records the page they came from never showed. A village indexed against both
+  its region and the whole country stays findable under either, while its own
+  related search offers only what it displays.
+
+No index change and no reindex: the fields queried are the ones
+`ApuDocumentBuilder` has always written. The self-exclusion of the old tree is
+gone with the field it worked around — a record now matches itself only by
+genuinely referencing itself.
+
+The separate `rels` index (§5, Q3) is still not needed for this: the flat
+`<code>` fields evaluate the filter exactly, because the field name *is* the
+relation type. Its remaining candidate use is enumerating *which* relation types
+connect to a given record (with counts) for a narrowing UI — the old portal's
+`MULTI_REF_EXT`, whose entity type-ahead also needs the never-populated
+`incomingRelTypeGroups`. Both stay unimplemented; the `relation` DB table
+(source, relation, target) can answer the same question with plain SQL if that
+slice lands.

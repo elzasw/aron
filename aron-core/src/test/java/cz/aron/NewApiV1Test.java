@@ -3,6 +3,7 @@ package cz.aron;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static cz.aron.web.v1.SearchController.RELATED_FACET;
 
 import java.util.List;
 import java.util.Map;
@@ -57,6 +58,8 @@ import cz.aron.test.api.v1.model.SystemInfo;
 import cz.aron.test.api.v1.model.TotalRelation;
 import cz.aron.test.api.v1.model.TypeCount;
 import cz.aron.test.api.v1.model.UiConfig;
+import cz.aron.test.api.v1.model.RelatedFilter;
+import cz.aron.test.api.v1.model.RelationDirection;
 import cz.aron.test.api.v1.model.ValuesFilter;
 
 /**
@@ -611,6 +614,88 @@ class NewApiV1Test extends AbstractTest {
 
 	// --- helpers --------------------------------------------------------------
 
+
+	/**
+	 * The relation filter over the built-in {@code ~RELATED} facet - what a
+	 * record page's "find related" action sends. INCOMING is the default and
+	 * spans every reference item type; OUTGOING follows only the references the
+	 * record actually shows, so an index-only one never leads the reader on.
+	 */
+	@Test
+	void relatedFilterSearchesBothEndsOfTheRelation() {
+		var searchApi = new SearchApi(v1ApiClient());
+
+		// incoming (the default): whoever references the fund
+		var incoming = new ApuSearchRequest();
+		incoming.setFilters(List.of(relatedFilter(DETAIL_FUND)));
+		assertThat(searchApi.searchSearch(incoming).getItems())
+				.extracting(ApuSearchItem::getUuid).contains(DETAIL_ARCH_DESC);
+
+		// ... and the index-only reference makes its own record findable too
+		var byIndexOnly = new ApuSearchRequest();
+		byIndexOnly.setFilters(List.of(relatedFilter(DETAIL_SIBLING_B)));
+		assertThat(searchApi.searchSearch(byIndexOnly).getItems())
+				.extracting(ApuSearchItem::getUuid).contains(DETAIL_ARCH_DESC);
+
+		// outgoing: the visible reference only - the index-only one is not a link
+		// the reader was offered, so it is not a way out of this record either
+		var outgoing = new ApuSearchRequest();
+		var outgoingFilter = relatedFilter(DETAIL_ARCH_DESC);
+		outgoingFilter.setDirection(RelationDirection.OUTGOING);
+		outgoing.setFilters(List.of(outgoingFilter));
+		assertThat(searchApi.searchSearch(outgoing).getItems())
+				.extracting(ApuSearchItem::getUuid)
+				.containsExactly(DETAIL_FUND);
+
+		// a record that shows no reference relates to nothing outwards - the
+		// clause must not degenerate into "match everything"
+		var nothingToFollow = new ApuSearchRequest();
+		var emptyOutgoing = relatedFilter(DETAIL_SIBLING_B);
+		emptyOutgoing.setDirection(RelationDirection.OUTGOING);
+		nothingToFollow.setFilters(List.of(emptyOutgoing));
+		var response = searchApi.searchSearch(nothingToFollow);
+		assertThat(response.getTotal()).isZero();
+		assertThat(response.getItems()).isEmpty();
+	}
+
+	@Test
+	void relatedFilterOnAConfiguredFacetStaysWithinItsField() {
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		var filter = relatedFilter(DETAIL_FUND);
+		filter.setFacet("REL~ENTITY");
+		request.setFilters(List.of(filter));
+		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getItems())
+				.extracting(ApuSearchItem::getUuid).containsExactly(DETAIL_ARCH_DESC);
+
+		// a facet that is not a relation cannot carry the filter
+		var wrongFacet = new ApuSearchRequest();
+		wrongFacet.setApuType(ApuType.ARCH_DESC);
+		var onEnum = relatedFilter(DETAIL_FUND);
+		onEnum.setFacet("LANG~CODE");
+		wrongFacet.setFilters(List.of(onEnum));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(wrongFacet))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+	}
+
+	@Test
+	void relatedFilterRejectsAnUnusableTarget() {
+		var malformed = new ApuSearchRequest();
+		malformed.setFilters(List.of(relatedFilter("not-a-uuid")));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(malformed))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+
+		var empty = new ApuSearchRequest();
+		var noApus = new RelatedFilter();
+		noApus.setFacet(RELATED_FACET);
+		empty.setFilters(List.of(noApus));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(empty))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+	}
+
 	private static String uuid(int n) {
 		return UUID.nameUUIDFromBytes(("v1-search-" + n).getBytes()).toString();
 	}
@@ -619,6 +704,15 @@ class NewApiV1Test extends AbstractTest {
 		var request = new FacetOptionsRequest();
 		request.setApuType(apuType);
 		return request;
+	}
+
+
+	/** RELATED filter on the built-in relation facet (what the "find related" action sends). */
+	private static RelatedFilter relatedFilter(String apu) {
+		var filter = new RelatedFilter();
+		filter.setFacet(RELATED_FACET);
+		filter.setApus(List.of(apu));
+		return filter;
 	}
 
 	private static ValuesFilter valuesFilter(String facet, String value) {

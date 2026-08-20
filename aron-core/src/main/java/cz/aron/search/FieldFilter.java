@@ -5,12 +5,10 @@ import java.util.List;
 
 /**
  * Engine-neutral field-level filter of the search port. Facet semantics (facet
- * code → field + filter kind, per searchConfig.yaml) are resolved above the
+ * code -> field + filter kind, per searchConfig.yaml) are resolved above the
  * port (cz.aron.web.v1), so adapters work with plain index fields.
  */
 public sealed interface FieldFilter {
-
-	String field();
 
 	/** The document matches ANY of the values (OR); exact keyword semantics. */
 	record Values(String field, List<String> values) implements FieldFilter {
@@ -30,6 +28,22 @@ public sealed interface FieldFilter {
 	 * {@code null} = open bound.
 	 */
 	record Range(String field, LocalDateTime from, LocalDateTime to) implements FieldFilter {
+	}
+
+	/**
+	 * Relation to other APUs, matching a document that either
+	 * <ul>
+	 * <li>references one of {@code targets} through one of {@code refFields}
+	 * (the reference item fields the facet spans), or</li>
+	 * <li>is itself one of {@code uuids}.</li>
+	 * </ul>
+	 * The two halves are ORed - one relation, either end of it. Both lists are
+	 * resolved above the port: {@code refFields} from the facet's scope,
+	 * {@code uuids} by expanding the named APUs' own visible references, so the
+	 * adapters need no knowledge of types.yaml or of the reference direction.
+	 * Empty on both sides matches nothing.
+	 */
+	record Related(List<String> refFields, List<String> targets, List<String> uuids) implements FieldFilter {
 	}
 
 }

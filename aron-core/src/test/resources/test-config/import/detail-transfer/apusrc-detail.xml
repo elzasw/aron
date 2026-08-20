@@ -29,6 +29,9 @@
      <value>Obsahová část</value>
      <itms>
       <ref type="REL_ENTITY">9f1d0000-0000-4000-8000-90000000000f</ref>
+      <!-- index-only reference: findable by it, never shown, and deliberately
+           NOT followed when searching outwards from this record -->
+      <ref type="REL_ENTITY" visible="false">9f1d0000-0000-4000-8000-90000000000b</ref>
       <lnk type="LINK_SOURCE" visible="true"><name>Zdroj digitalizace</name><link>https://example.org/kronika</link></lnk>
       <enm type="LANG_CODE">cze</enm>
       <str type="TITLE_MAIN" visible="false">Skrytý pracovní název</str>

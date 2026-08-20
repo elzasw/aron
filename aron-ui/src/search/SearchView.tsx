@@ -10,7 +10,6 @@ import {
   type DatingFacetResult,
   type EnumFacetResult,
   type FacetDef,
-  FacetDisplay,
   FacetResultKind,
   FacetType,
   type MenuItemCode,
@@ -22,8 +21,9 @@ import {
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import { SECTIONS } from "../sections";
 import FacetPanel from "./FacetPanel";
-import { parseFilters, serializeFilters } from "./filters";
+import { facetIsOffered, parseFilters, serializeFilters } from "./filters";
 import Pagination from "./Pagination";
+import RelatedChips from "./RelatedChips";
 import ResultList from "./ResultList";
 
 const useStyles = makeStyles({
@@ -179,10 +179,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const submitQuery = () => update({ q: queryInput.trim() || null, p: null });
 
   const resultOf = (code: string) => search.data?.facets.find((f) => f.code === code);
-  // MULTI_REF_EXT/MULTI_TYPE_REF facets wait for their contract slice; DETAIL facets for the advanced dialog
+  // every facet type in the contract has a widget below; the list is the seam for
+  // the next one - an unsupported type is hidden rather than rendered empty
   const supportedTypes: FacetType[] = [
     FacetType.Enum,
-    FacetType.MultiRef,
+    FacetType.Ref,
     FacetType.Fulltext,
     FacetType.Unitdate,
   ];
@@ -214,9 +215,25 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             { count: search.data.total },
           )
         : "";
+  // switching section keeps what the reader has narrowed to - the query and every
+  // filter, the relation constraint included (it is not bound to one section)
+  const sectionParams = (() => {
+    const next = new URLSearchParams();
+    if (query) {
+      next.set("q", query);
+    }
+    if (filterParam) {
+      next.set("f", filterParam);
+    }
+    const serialized = next.toString();
+    return serialized ? `?${serialized}` : "";
+  })();
+
+  // offered by default, or - the DETAIL case - because it carries a constraint
+  // the reader has to be able to see and undo
   const visibleFacets = (facetDefs.data ?? []).filter(
     (def) =>
-      def.display === FacetDisplay.Always &&
+      facetIsOffered(def.display, hasActiveFilter(def.code)) &&
       supportedTypes.includes(def.type) &&
       (hasActiveFilter(def.code) || hasData(def)),
   );
@@ -237,6 +254,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             {t("search.button")}
           </Button>
         </div>
+        <RelatedChips filters={filters} onFilters={onFilters} />
         {apuType !== undefined &&
           visibleFacets.map((def) => (
             <FacetPanel
@@ -263,7 +281,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
                   return section?.route ? (
                     <Link
                       key={typeCount.apuType}
-                      to={`${section.route}${query ? `?q=${encodeURIComponent(query)}` : ""}`}
+                      to={`${section.route}${sectionParams}`}
                       className={styles.chip}
                     >
                       {label}
