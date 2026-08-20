@@ -1,0 +1,12 @@
+# Aktuality portalu (stare API, /api/aron/news). Vychozi konfigurace zadne
+# neuvadi - nasazeni si je doplni.
+#
+# Format polozky:
+#
+# - date: "1. 1. 2026"
+#   name: "Nadpis aktuality"
+#   text: "Text aktuality."
+#   attachments:
+#     - link: "https://example.org/soubor.pdf"
+#       name: "Prilozeny soubor"
+[]

@@ -9,11 +9,26 @@ Transfagent application.
 Contents of this bundle
 -----------------------
 
-  aron2.jar                      the whole application - backend and web UI in
-                                 one executable jar with an embedded web server
-  config/application.yml.template annotated configuration template
-  README.txt                     this file
-  LICENSE                        license terms
+  aron2.jar             the whole application - backend and web UI in one
+                        executable jar with an embedded web server
+  config/               a complete default configuration for a Czech archive:
+                        application.yml.template  annotated main configuration
+                        types.yaml                display model of the records
+                        searchConfig.yaml         search facets
+                        pageTemplate.yaml         portal name, menu, footer
+                        resultLayout.yaml         structured search results
+                        news.yaml, favoriteQueries.yaml
+                        images/results/           record and field icons
+                        logo.svg, topImage.png    PLACEHOLDER branding
+  README.txt            this file
+  LICENSE               license terms
+
+The configuration is a working starting point, not a finished deployment. Two
+things always need replacing: the branding (logo.svg, topImage.png are neutral
+placeholders) and the URLs in pageTemplate.yaml and application.yml, which point
+at example.org. The display model and the facets match the Czech national
+description standard and can usually stay as they are - but they must match what
+the source system actually delivers, so review them against your data.
 
 The administrator documentation is not part of this bundle; it is published
 separately alongside the release.
@@ -58,11 +73,19 @@ Installation
    is started from. Keep data directories OUTSIDE the installation directory so
    an upgrade cannot overwrite them.
 
-4) Add the deployment's own presentation configuration into config/ and point
-   the keys types-config and webResources.* at it: the display model
-   (types.yaml), the portal page template, the search facets, the logo and the
-   remaining branding files. These files describe the archive being published,
-   so they are specific to each deployment and are not part of this bundle.
+4) Make the shipped configuration your own. It already works as it stands, so
+   this is editing, not authoring:
+
+     - config/pageTemplate.yaml - the portal name, which sections the menu
+       offers, and the footer links. The shipped links point at example.org;
+       a public-sector body must publish an accessibility statement there.
+     - config/logo.svg and config/topImage.png - neutral placeholders, replace
+       them with your own branding.
+     - help-url in application.yml - the target of the HELP menu item.
+     - config/types.yaml and config/searchConfig.yaml - the display model and
+       the search facets. These follow the Czech national description standard
+       and usually need no change, but they have to match the description items
+       the source system actually delivers.
 
 5) Start the application from the installation directory:
 

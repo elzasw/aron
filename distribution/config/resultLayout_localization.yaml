@@ -1,0 +1,23 @@
+# Prekladatelne texty z resultLayout.yaml po jazycich. Cestina zustava
+# v resultLayout.yaml jako zdrojovy jazyk a soucasne jako zaloha, takze pridani
+# jazyka nevyzaduje zasah do konfiguracniho souboru.
+fields:
+  en:
+    G:
+      label: "Geographic object"
+    J_IC:
+      prefix: "Inv. no.: "
+    J_RO:
+      prefix: "Reference code: "
+    J_PC:
+      prefix: "Item no.: "
+    J_UC:
+      prefix: "Storage: "
+    J_I:
+      label: "Archives"
+    J_F:
+      label: "Archival fonds"
+    J_C:
+      label: "Parent unit"
+    J_G:
+      label: "Geographic scope"

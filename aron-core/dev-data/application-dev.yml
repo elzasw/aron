@@ -38,7 +38,12 @@ management:
     elasticsearch:
       enabled: false
 
-types-config: ./dev-data/config/types.yaml
+# The display model, the facets and the result layout are the SHARED Czech
+# defaults from distribution/config - the same files a release bundles. Dev mode
+# runs on them on purpose: the shipped defaults are then exercised on every dev
+# run instead of drifting away unnoticed. Editing them changes what deployments
+# get. Only the dev-flavoured presentation files below stay local.
+types-config: ../distribution/config/types.yaml
 transformation-agent-url: "http://localhost:8088/ws/ApuTransformManager"
 
 files:
@@ -54,12 +59,12 @@ webResources:
   pageTemplate: ./dev-data/config/pageTemplate.yaml
   news: ./dev-data/config/news.yaml
   favoriteQueries: ./dev-data/config/favoriteQueries.yaml
-  facets: ./dev-data/config/searchConfig.yaml
+  facets: ../distribution/config/searchConfig.yaml
   logo: ./dev-data/config/logo.svg
   topImage: ./dev-data/config/photo.png
   # structured search results: the three books of arch-desc-1820 carry a <result>
-  resultLayout: ./dev-data/config/resultLayout.yaml
-  resultImages: ./dev-data/config/images/results
+  resultLayout: ../distribution/config/resultLayout.yaml
+  resultImages: ../distribution/config/images/results
 
 help-url: http://localhost
 

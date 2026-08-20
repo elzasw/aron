@@ -1,0 +1,91 @@
+# Vzhled strukturovanych vysledku vyhledavani - vychozi ceska konfigurace.
+#
+# Kody polozek i kody podob zaznamu jsou slovnikem zdrojoveho systemu (prichazeji
+# v elementu <result> v APUX), portal je proto nezna a nedokaze pojmenovat sam.
+# Tento soubor je prevodem konfigurace stareho portalu (app/config.json) do formy
+# ARON 2: puvodni itemProperties jsou fields, typeIcons jsou icons a puvodni
+# "size" nahradil nasobitel scale.
+#
+# Kod bez zaznamu se zobrazi bez uprav, takze neuplna konfigurace nic nerozbije.
+# Prekladatelne texty (prefix, label) patri do resultLayout_localization.yaml.
+
+fieldSeparator: " | "
+iconSize: 35
+
+# Podoby zaznamu - ikona vlevo u karty vysledku.
+icons:
+  - code: F
+    image: F.svg
+  - code: A_R
+    image: archival-root.svg
+  - code: A_S
+    image: archival-serie.svg
+  - code: A_F
+    image: archival-folder.svg
+  - code: A_I
+    image: archival-item.svg
+  - code: A_IM
+    image: archival-item-matrika.svg
+  - code: A_IB
+    image: archival-item-book.svg
+  - code: A_D
+    image: archival-item-map.svg
+  - code: A_IP
+    image: archival-item-part.svg
+  - code: AP_C
+    image: AP_C.svg
+  - code: AP_P
+    image: AP_P.svg
+  - code: AP_F
+    image: AP_F.svg
+  - code: AP_G
+    image: AP_G.svg
+  - code: AP_E
+    image: AP_E.svg
+  - code: AP_W
+    image: AP_W.svg
+  - code: AP_T
+    image: AP_T.svg
+
+# Polozky karty vysledku.
+fields:
+  # Nazev zaznamu je zaroven jedinym odkazem do zaznamu.
+  - code: N
+    heading: true
+    scale: 1.15
+    bold: true
+  - code: D
+    color: "#1a1a1a"
+    bold: true
+  - code: CONT
+    color: "#1a1a1a"
+  - code: G
+    color: "#666666"
+    label: "Geografický objekt"
+  - code: J_IC
+    prefix: "Inv. č.: "
+    image: J_IC.svg
+  - code: J_RO
+    prefix: "Ref. označení: "
+    image: J_IC.svg
+  - code: J_PC
+    prefix: "Poř. č.: "
+    image: J_IC.svg
+  - code: J_UC
+    prefix: "Uložení: "
+    image: J_UC.svg
+  - code: J_S
+    color: "#666666"
+    image: J_S.svg
+  - code: J_I
+    label: "Archiv"
+    image: J_I.svg
+  - code: J_F
+    label: "Archivní soubor"
+    image: J_F.svg
+  - code: J_C
+    label: "Nadřazená jednotka"
+    image: J_C.svg
+  - code: J_G
+    label: "Zeměpisné určení"
+    image: J_G.svg

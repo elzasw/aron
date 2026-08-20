@@ -31,15 +31,15 @@
 			<directory>src/assembly/content</directory>
 			<outputDirectory/>
 		</fileSet>
-		<!-- Taken from the distribution module rather than copied here, so the
-		     template a developer copies into run/ and the one a deployment gets
-		     can never drift apart. -->
+		<!-- The whole default configuration, taken from the distribution module
+		     rather than copied here: the set a developer copies into run/, the set
+		     dev mode runs on and the set a deployment receives can never drift
+		     apart. Czech defaults - display model, facets, result layout and its
+		     icons - plus the annotated application.yml.template and placeholder
+		     branding a deployment replaces. -->
 		<fileSet>
 			<directory>${project.basedir}/../distribution/config</directory>
 			<outputDirectory>config</outputDirectory>
-			<includes>
-				<include>application.yml.template</include>
-			</includes>
 		</fileSet>
 	</fileSets>
 

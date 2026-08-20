@@ -1,0 +1,45 @@
+# Vychozi ceska konfigurace portalu. Nasazeni tento soubor prepisuje svym -
+# nazvem, nabidkou a odkazy v paticce.
+
+# Nazev nasazeni. Server jej vklada do stranky jeste pred spustenim skriptu,
+# takze je spravny uz pri prvnim vykresleni (zalozka prohlizece i zahlavi).
+name: Archiv online
+
+# Dostupne prekladatelne jazyky nasazeni. Prepinac jazyka se nabizi jen tam, kde
+# je jazyku vic; ctenar si vybira sam a volba se pamatuje. Prvni polozka je
+# vychozi jazyk nasazeni. Regiony se pri parovani ignoruji, takze cs_CZ obslouzi
+# i ctenare s cs.
+localizations:
+  - cs_CZ
+  - en
+
+# Nabidka portalu. Bez tohoto klice plati vychozi FUND, ARCH_DESC, ENTITY a HELP;
+# zde je uveden plny rozsah stareho portalu. Barvu polozky lze pridat klicem
+# color, bez nej plati vychozi paleta portalu (odpovida barvam stareho portalu).
+# HELP je odkaz mimo portal - bere url z klice help-url v application.yml.
+menu:
+  - code: FUND
+  - code: ARCH_DESC
+  - code: FINDING_AID
+  - code: ENTITY
+  - code: ORIGINATOR
+  - code: INSTITUTION
+  - code: NEWS
+  - code: HELP
+
+# Odkazy v paticce - stranky, ktere nasazeni publikuje. Znama role (code) se
+# popise sama v jazyce ctenare, volny odkaz ma label (jeden retezec, nebo mapu
+# jazyk -> text). Prohlaseni o pristupnosti je pro organy verejne spravy
+# povinnost (zakon c. 99/2019 Sb.) - viz doc/accessibility.md.
+#
+# Prazdna paticka je legitimni: portal vlozeny do stranek zrizovatele necha
+# paticku na hostiteli. Nasazeni proto tyto odkazy nahradi vlastnimi, nebo je
+# odstrani.
+footer:
+  links:
+    - code: ACCESSIBILITY
+      url: https://example.org/pristupnost
+    - url: https://example.org/kontakt
+      label:
+        cs: Kontakt
+        en: Contact

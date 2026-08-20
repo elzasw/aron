@@ -1,0 +1,54 @@
+# Pripravene dotazy ("Mohlo by vas zajimat") - stare API, /api/aron/favoriteQueries.
+# Vychozi vyber miri na druhy archivalii, ktere badatele hledaji nejcasteji;
+# filtruje se hodnotami prvku popisu UNIT_TYPE, jak je dodava zdrojovy system.
+# Hodnoty musi odpovidat datum konkretniho nasazeni - co v datech neni, nic
+# nenajde.
+#
+# icon je trida ikony (Font Awesome) stareho portalu; novy portal aktuality ani
+# pripravene dotazy zatim nezobrazuje.
+---
+- icon: fas fa-book
+  label: Matriky
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - matrika
+- icon: fas fa-feather
+  label: Kroniky
+  tooltip: úřední i neúřední kroniky
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - kronika
+- icon: fas fa-map
+  label: Mapy a plány
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - mapa
+- icon: fas fa-landmark
+  label: Evidence nemovitostí
+  tooltip: pozemkové knihy, gruntovní knihy
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - evidence nemovitostí
+- icon: fas fa-address-card
+  label: Evidence obyvatel
+  tooltip: seznamy obyvatel, soupisy duší, sčítací operáty, urbáře
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - evidence obyvatel
+- icon: fas fa-camera
+  label: Fotografie
+  type: ARCH_DESC
+  filters:
+    - source: UNIT_TYPE
+      value:
+        - fotografie na papírové podložce

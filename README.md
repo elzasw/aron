@@ -58,11 +58,19 @@ points to the rest of the configuration. A deployment — and equally a local ru
     pageTemplate.yaml      # portal name, localizations, menu, footer links
     news.yaml
     favoriteQueries.yaml
-    images/                # logo, top image
+    resultLayout.yaml      # structured search results (optional)
+    logo.svg               # branding: portal logo
+    topImage.png           # branding: home-page image
+    images/results/        # record and field icons of the result layout
 ```
 
-A commented template of `application.yml` ships with the sources at
-`distribution/config/application.yml.template`.
+`distribution/config/` holds this whole set as the **default Czech
+configuration**: a commented `application.yml.template` plus reasonable defaults
+for the display model (`types.yaml`), the search facets (`searchConfig.yaml`),
+the structured-result layout with its record icons, and placeholder branding a
+deployment replaces. A release bundles the directory as it is, and dev mode runs
+on the same display model, facets and result layout, so the shipped defaults are
+exercised rather than left to rot.
 
 ### Local run sandbox
 
@@ -75,24 +83,19 @@ none of which belongs in the repository. Several sandboxes side by side
 One-time setup:
 
 ```
-mkdir run\config\images
-copy distribution\config\application.yml.template run\config\application.yml
-copy aron-core\dev-data\config\*.yaml run\config\
-copy aron-core\dev-data\config\logo.svg run\config\images\
-copy aron-core\dev-data\config\photo.png run\config\images\book.png
+xcopy /E /I distribution\config run\config
+copy run\config\application.yml.template run\config\application.yml
 ```
 
-The last three lines seed the sandbox with the dev-mode configuration set, which
-is a complete and working starting point — replace it with the deployment's own
-files once you need real data. Then edit `run\config\application.yml`; only two
-things actually need your attention:
+That seeds the sandbox with the default configuration set - a complete and
+working starting point; replace the branding and, once you have real data, the
+display model and facets with the deployment's own. Then edit
+`run\config\application.yml`; only one thing actually needs your attention:
 
-- `spring.datasource.*` — your PostgreSQL connection,
-- `files.storage`, `files.transfer.path` and `tile.folder` — the template has
-  absolute placeholder paths there; point them anywhere you like (relative paths
-  resolve against `run\`).
+- `spring.datasource.*` — your PostgreSQL connection.
 
-The `config/...` paths in the template are already correct for this layout.
+The `config/...` paths and the data directories in the template are already
+correct for this layout (they resolve against `run\`).
 Run the deployable artifact from the sandbox:
 
 ```

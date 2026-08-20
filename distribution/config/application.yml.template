@@ -33,16 +33,16 @@ webResources:
   news: ./config/news.yaml
   favoriteQueries: ./config/favoriteQueries.yaml
   facets: ./config/searchConfig.yaml
-  logo: ./config/images/logo.svg
-  topImage: ./config/images/book.png
+  logo: ./config/logo.svg
+  topImage: ./config/topImage.png
   # Vzhled strukturovanych vysledku vyhledavani - volitelne. Bez souboru se
   # strukturovane vysledky stale zobrazuji, jen bez ikon, predsazenych textu a
   # zvyraznene hlavicky. Prekladatelne texty patri do
   # resultLayout_localization.yaml vedle nej. Adresar resultImages nese ikony
   # zaznamu a polozek, ktere soubor odkazuje jmenem (a nahledy dodane v datech
   # jako jmeno souboru misto URL).
-  #resultLayout: ./config/resultLayout.yaml
-  #resultImages: ./config/images/results
+  resultLayout: ./config/resultLayout.yaml
+  resultImages: ./config/images/results
 
 # Cil polozky HELP v nabidce portalu. Klic je povinny (cte ho stare API);
 # nasazeni sem patri vlastni stranku napovedy.

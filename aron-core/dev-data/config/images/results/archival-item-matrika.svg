@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img">
-  <path fill="hsl(210,20%,30%)" d="M8 3h16a2 2 0 0 1 2 2v22a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v22h16V5H8Z"/>
-  <path fill="hsl(28,85%,55%)" d="M18 3h4v10l-2-2-2 2z"/>
-  <path fill="hsl(210,20%,55%)" d="M9 18h14v2H9zm0 4h14v2H9z"/>
-</svg>
