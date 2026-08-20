@@ -4,7 +4,7 @@ spring:
       username: postgres
       password: postgres
   jpa:
-    show-sql: true
+    show-sql: false
   # Pripojeni k Elasticsearch - plati pro search.engine: elasticsearch (viz
   # sekce Vyhledavani nize). Bez nastaveni se pouzije http://localhost:9200.
   # Index vyuziva jen vestavene analyzatory, server nepotrebuje zadne pluginy.
@@ -16,15 +16,15 @@ spring:
   #  socket-timeout: 60s
 
 types-config: "./config/types.yaml"
-transformation-agent-url: "http://127.0.1:8088/ws/ApuTransformManager"
+transformation-agent-url: "http://127.0.0.1:8088/ws/ApuTransformManager"
 
 files:
-  storage: c:/projects/crp/data/fileStorage
+  storage: ./data/fileStorage
   transfer:
-    path: c:/projects/crp/aronFileTransfer
+    path: ./data/fileTransfer
 
 tile:
-  folder: c:/projects/crp/data/tiles
+  folder: ./data/tiles
   format: jpg
 
 
@@ -44,7 +44,10 @@ webResources:
   #resultLayout: ./config/resultLayout.yaml
   #resultImages: ./config/images/results
 
-help-url: https://seznam.cz
+# Cil polozky HELP v nabidce portalu. Klic je povinny (cte ho stare API);
+# nasazeni sem patri vlastni stranku napovedy.
+help-url: https://example.org/aron/help
+
 # Odkazy v paticce (prohlaseni o pristupnosti, kontakty, ...) se konfiguruji
 # v pageTemplate.yaml v sekci footer.links - viz doc/accessibility.md.
 # Volitelny import ze vstupniho adresare - souborova alternativa k nahravani
