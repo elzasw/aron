@@ -24,14 +24,15 @@
 	<!--
 	  Module order is significant: the api contract module regenerates its OpenAPI
 	  (consumed by aron-core's code generators and aron-ui's client generator)
-	  first; the distribution module assembles the deployable jar and therefore
-	  builds last. See PLAN.md.
+	  first; distribution assembles the deployable jar and bundle zips it into the
+	  release artifact, so those two build last. See PLAN.md.
 	-->
 	<modules>
 		<module>api</module>
 		<module>aron-core</module>
 		<module>aron-ui</module>
 		<module>distribution</module>
+		<module>bundle</module>
 	</modules>
 
 	<properties>

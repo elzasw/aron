@@ -15,6 +15,7 @@ License: [Apache-2.0](LICENSE).
 | `aron-core` | Backend (Spring Boot library jar) |
 | `aron-ui` | Portal UI (React + Vite + TypeScript + Fluent UI v9), packaged as a resource jar |
 | `distribution` | Assembles the executable fat jar `distribution/target/aron2.jar` (backend + UI); holds the `config/application.yml` template |
+| `bundle` | Assembles the release bundle `bundle/target/aron2-<version>.zip` (jar, configuration template, installation readme) |
 
 ## Prerequisites
 
@@ -269,9 +270,12 @@ merging main into a release branch never conflicts on it, and no release
 bookkeeping ever lands on main.
 
 Releases are cut by `maven-release-plugin` from the release branch, run by the
-build pipeline rather than locally. The released artifact is the executable jar
-(the `distribution` module); the other modules are internal to the build and are
-not published. The pipeline supplies the Git URL (`-Daron2.scm.url`, which is why
+build pipeline rather than locally. A release publishes exactly one artifact: the
+bundle `aron2-<version>.zip` (executable jar, configuration template,
+installation readme). The module jars are internal to the build and are not
+published — the fat jar reaches a deployment inside the bundle. The Sphinx
+administrator documentation is not in the bundle; it is published separately.
+The pipeline supplies the Git URL (`-Daron2.scm.url`, which is why
 `<scm>` reads that property and is empty here) and the target repository
 (`-DaltDeploymentRepository`, which is why there is no `distributionManagement`)
 — this repository holds no deployment coordinates of its own.

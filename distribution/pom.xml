@@ -53,15 +53,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- The parent skips deployment for every module; this one is the
-			     release artifact, so it publishes. -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>false</skip>
-				</configuration>
-			</plugin>
 		</plugins>
 	</build>
 

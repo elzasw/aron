@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.lightcomp</groupId>
+		<artifactId>aron2</artifactId>
+		<version>2.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>aron-bundle</artifactId>
+	<packaging>pom</packaging>
+	<name>ARON 2 Bundle</name>
+	<description>Assembles the release bundle target/aron2-&lt;version&gt;.zip: the
+		executable jar, the configuration template and a short installation readme.
+		This is the ONLY artifact a release publishes - the module jars are internal
+		to the build and nothing outside it consumes them. Built by the Elza/CAM
+		pattern: packaging is pom, so the assembly zip is the module's artifact
+		rather than an attachment next to a jar. The Sphinx administrator
+		documentation is deliberately not included; it is published separately.</description>
+
+	<dependencies>
+		<!-- The executable fat jar. Transitive dependencies are excluded in the
+		     assembly descriptor: the jar's own pom still lists aron-core and
+		     aron-ui, which are already inside it. -->
+		<dependency>
+			<groupId>com.lightcomp</groupId>
+			<artifactId>aron-distribution</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<!-- target/aron2-<version>.zip; the name a person downloads. The coordinates
+		     in the repository stay aron-bundle-<version>.zip. -->
+		<finalName>aron2-${project.version}</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>bundle</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<descriptors>
+						<descriptor>src/assembly/bundle.xml</descriptor>
+					</descriptors>
+					<!-- Without this the zip would be an attachment with a classifier;
+					     with it the zip is the artifact of this pom-packaged module. -->
+					<appendAssemblyId>false</appendAssemblyId>
+				</configuration>
+			</plugin>
+			<!-- The parent skips deployment for every module; the bundle is what a
+			     release publishes. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<configuration>
+					<skip>false</skip>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
