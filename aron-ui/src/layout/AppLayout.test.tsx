@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FooterLinkCode, type UiConfig } from "../api/generated";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
@@ -36,7 +36,16 @@ function renderLayout(initialPath = "/") {
       <MemoryRouter initialEntries={[initialPath]}>
         <Routes>
           <Route element={<AppLayout />}>
-            <Route index element={<h1>Úvod</h1>} />
+            <Route
+              index
+              element={
+                <>
+                  <h1>Úvod</h1>
+                  {/* an in-app navigation to drive the route-change behavior */}
+                  <Link to="/apu">Vyhledávání</Link>
+                </>
+              }
+            />
             <Route path="apu" element={<h1>Vyhledávání</h1>} />
           </Route>
         </Routes>
@@ -61,6 +70,25 @@ describe("AppLayout", () => {
 
     await user.keyboard("{Enter}");
     expect(screen.getByRole("main")).toHaveFocus();
+  });
+
+  it("starts a new page at its top instead of scrolling the header away", async () => {
+    const user = userEvent.setup();
+    // jsdom implements no scrolling; the spy is also the assertion
+    const scrollTo = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+    renderLayout();
+    const main = screen.getByRole("main");
+    const focus = vi.spyOn(main, "focus");
+
+    await user.click(screen.getByRole("link", { name: "Vyhledávání" }));
+
+    expect(screen.getByRole("heading", { level: 1, name: "Vyhledávání" })).toBeInTheDocument();
+    // the reader lands at the top of the new page...
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0 });
+    // ...and the focus that makes a screen reader read it must not scroll on its
+    // own, which would put the main region's top at the viewport top
+    expect(focus).toHaveBeenCalledWith({ preventScroll: true });
+    expect(main).toHaveFocus();
   });
 
   it("publishes the deployment's footer links, labelling the well-known ones itself", async () => {

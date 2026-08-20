@@ -2,7 +2,7 @@ import { makeStyles, Text, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigationType } from "react-router-dom";
 import { systemApi } from "../api/client";
 import { useUiConfig } from "../api/useUiConfig";
 import ApiErrorBar from "../errors/ApiErrorBar";
@@ -83,8 +83,9 @@ export default function AppLayout() {
   const styles = useStyles();
   const { t } = useTranslation();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const mainRef = useRef<HTMLElement>(null);
-  const initialRender = useRef(true);
+  const shownPath = useRef<string | null>(null);
   const { data: info } = useQuery({
     queryKey: ["system-info"],
     queryFn: () => systemApi.systemGetInfo(),
@@ -92,12 +93,27 @@ export default function AppLayout() {
   const { data: config } = useUiConfig();
 
   useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
+    // only a new page counts: the search page navigates to itself whenever a
+    // filter changes, and taking the focus back would drop the reader out of
+    // the control they just used
+    if (shownPath.current === location.pathname) {
       return;
     }
-    mainRef.current?.focus();
-  }, [location.pathname]);
+    const firstPage = shownPath.current === null;
+    shownPath.current = location.pathname;
+    if (firstPage) {
+      return;
+    }
+    // a new page starts at its top; going back leaves the position alone, so
+    // the browser can restore where the reader was
+    if (navigationType !== "POP") {
+      window.scrollTo({ top: 0 });
+    }
+    // the scroll above is the only one: focusing without preventScroll would
+    // make the browser pull the main region's top to the viewport top and take
+    // the header with it
+    mainRef.current?.focus({ preventScroll: true });
+  }, [location.pathname, navigationType]);
 
   const focusMain = () => mainRef.current?.focus();
   const footerLinks = config?.footerLinks ?? [];
