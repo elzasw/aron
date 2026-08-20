@@ -171,6 +171,11 @@ profile starts the ordinary official ES distribution as a separate local process
 (downloaded once, cached; started/stopped around the failsafe ITs; no Docker).
 The ITs see only `search.engine=elasticsearch` + `spring.elasticsearch.uris` —
 the provisioning mechanism is invisible to them and therefore swappable.
+That swappability is used: `-Des.home` points the profile at an already installed
+distribution, which it then leaves alone — no download, no extraction, no delete.
+CI relies on it (a prepared image carries the distribution, so a blocking job
+never depends on artifacts.elastic.co); locally the default self-provisioning
+still applies.
 **ICU dropped (review decision 2026-08-15):** the real requirement is matching
 words with and without diacritics (češka ↔ ceska) — CAM and Elza both meet it
 with plain `ASCIIFoldingFilter`, no ICU. `es_settings.json` now uses built-in

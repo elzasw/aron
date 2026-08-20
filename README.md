@@ -290,3 +290,8 @@ distribution (cached after the first run), starts it as a local process on port
 19200 (a development ES on 9200 does not collide), runs the `*IT` tests and
 stops it again. No Docker involved. The default build never touches
 Elasticsearch. Details: `doc/search-port.md`.
+
+An already installed distribution is used as it is: point `-Des.home` at it and
+the profile skips the download and the extraction, and neither deletes nor
+modifies the installation. That is how CI runs it (from a prepared image), and it
+works the same for a local ES you want to keep.

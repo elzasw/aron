@@ -349,37 +349,44 @@
 									<goal>run</goal>
 								</goals>
 								<configuration>
-									<target>
+									<target xmlns:unless="ant:unless">
 										<property name="es.version" value="9.5.1"/>
 										<property name="es.cache" value="${user.home}/.m2/es-cache"/>
 										<property name="es.home" value="${project.build.directory}/elasticsearch-it"/>
-										<condition property="es.dist" value="elasticsearch-${es.version}-windows-x86_64.zip">
-											<os family="windows"/>
-										</condition>
-										<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz"/>
-										<mkdir dir="${es.cache}"/>
-										<!-- keep only the current version's distribution: without pruning
-										     the cache grows by ~600MB with every es.version bump -->
-										<delete quiet="true">
-											<fileset dir="${es.cache}" includes="elasticsearch-*" excludes="${es.dist}"/>
-										</delete>
-										<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}"
-											dest="${es.cache}/${es.dist}" skipexisting="true"/>
-										<delete dir="${es.home}" quiet="true"/>
-										<mkdir dir="${es.home}"/>
-										<exec osfamily="windows" executable="powershell" failonerror="true">
-											<arg value="-NoProfile"/>
-											<arg value="-Command"/>
-											<arg value="Expand-Archive -Force '${es.cache}/${es.dist}' '${es.home}-tmp'; Get-ChildItem '${es.home}-tmp/elasticsearch-${es.version}' | Move-Item -Destination '${es.home}'; Remove-Item -Recurse -Force '${es.home}-tmp'"/>
-										</exec>
-										<!-- tar preserves the executable bits ant's untar cannot -->
-										<exec osfamily="unix" executable="tar" failonerror="true">
-											<arg value="-xzf"/>
-											<arg value="${es.cache}/${es.dist}"/>
-											<arg value="-C"/>
-											<arg value="${es.home}"/>
-											<arg value="--strip-components=1"/>
-										</exec>
+										<!-- A pre-installed distribution (the CI image) is used as it is:
+										     no download, no extraction, and above all no delete of a
+										     directory this build does not own. Everything inside the guard
+										     is provisioning; starting ES is common to both paths. -->
+										<available property="es.preinstalled" file="${es.home}/bin/elasticsearch"/>
+										<sequential unless:set="es.preinstalled">
+											<condition property="es.dist" value="elasticsearch-${es.version}-windows-x86_64.zip">
+												<os family="windows"/>
+											</condition>
+											<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz"/>
+											<mkdir dir="${es.cache}"/>
+											<!-- keep only the current version's distribution: without pruning
+											     the cache grows by ~600MB with every es.version bump -->
+											<delete quiet="true">
+												<fileset dir="${es.cache}" includes="elasticsearch-*" excludes="${es.dist}"/>
+											</delete>
+											<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}"
+												dest="${es.cache}/${es.dist}" skipexisting="true"/>
+											<delete dir="${es.home}" quiet="true"/>
+											<mkdir dir="${es.home}"/>
+											<exec osfamily="windows" executable="powershell" failonerror="true">
+												<arg value="-NoProfile"/>
+												<arg value="-Command"/>
+												<arg value="Expand-Archive -Force '${es.cache}/${es.dist}' '${es.home}-tmp'; Get-ChildItem '${es.home}-tmp/elasticsearch-${es.version}' | Move-Item -Destination '${es.home}'; Remove-Item -Recurse -Force '${es.home}-tmp'"/>
+											</exec>
+											<!-- tar preserves the executable bits ant's untar cannot -->
+											<exec osfamily="unix" executable="tar" failonerror="true">
+												<arg value="-xzf"/>
+												<arg value="${es.cache}/${es.dist}"/>
+												<arg value="-C"/>
+												<arg value="${es.home}"/>
+												<arg value="--strip-components=1"/>
+											</exec>
+										</sequential>
 										<!-- start with test-friendly settings; ES writes its JVM pid to es.pid -->
 										<exec osfamily="windows" executable="powershell" failonerror="true">
 											<arg value="-NoProfile"/>
