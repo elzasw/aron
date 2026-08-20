@@ -394,8 +394,10 @@ assertion.
   `StructuredResultCard`, otherwise today's card. The list becomes a real
   `<ul>` / `<li>`.
 - new `src/search/StructuredResultCard.tsx`:
-  - type accent stripe as today (by `apuType`, unchanged), then the record icon
-    from `layout.icons` when the record's `code` has one,
+  - the record icon from `layout.icons` when the record's `code` has one, on a
+    tile in the portal header's colour (`PRIMARY_DARK`) spanning the card's
+    height - the old portal's results list, whose icon background is its own
+    primary colour,
   - one element per row; fields of a row joined by
     `layout.fieldSeparator ?? " | "`, values of a field by
     `style.valueSeparator ?? " "`,

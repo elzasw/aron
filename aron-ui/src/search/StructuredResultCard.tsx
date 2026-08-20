@@ -3,16 +3,23 @@ import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import type { ResultField, ResultValue, StructuredResult } from "../api/generated";
+import { PRIMARY_DARK } from "../layout/palette";
 import type { ResultLayoutLookup } from "./useResultLayout";
 
 type Styles = ReturnType<typeof useStyles>;
 
 const useStyles = makeStyles({
+  // the record icon sits on a tile in the header's color, full card height; the
+  // minimum width keeps the text of neighbouring cards aligned when the
+  // deployment gives its icons different sizes
   icon: {
     flexShrink: 0,
     display: "flex",
     alignItems: "flex-start",
-    padding: `${tokens.spacingVerticalM} 0 ${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
+    justifyContent: "center",
+    minWidth: "56px",
+    backgroundColor: PRIMARY_DARK,
+    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`,
   },
   body: {
     display: "flex",
