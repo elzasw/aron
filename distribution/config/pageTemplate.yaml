@@ -13,19 +13,24 @@ localizations:
   - cs_CZ
   - en
 
-# Nabidka portalu. Bez tohoto klice plati vychozi FUND, ARCH_DESC, ENTITY a HELP;
-# zde je uveden plny rozsah stareho portalu. Barvu polozky lze pridat klicem
+# Nabidka portalu. Klic zde zamerne neni: bez nej plati vychozi nabidka portalu -
+# archivni soubory, archivalie, archivni entity a napoveda (ta jen tehdy, kdyz je
+# nastaven help-url). Archivni pomucky, puvodci, archivy a aktuality jsou ve
+# vychozim stavu vypnute; nasazeni, ktere je publikuje, si nabidku vypise cele:
+#
+#menu:
+#  - code: FUND
+#  - code: ARCH_DESC
+#  - code: FINDING_AID     # archivni pomucky
+#  - code: ENTITY
+#  - code: ORIGINATOR      # puvodci
+#  - code: INSTITUTION     # archivy
+#  - code: NEWS            # aktuality
+#  - code: HELP
+#
+# Sekce, ktera v nabidce neni, prestava byt videt, ale jeji adresa dal funguje -
+# nabidka ridi viditelnost, ne existenci sekce. Barvu polozky lze pridat klicem
 # color, bez nej plati vychozi paleta portalu (odpovida barvam stareho portalu).
-# HELP je odkaz mimo portal - bere url z klice help-url v application.yml.
-menu:
-  - code: FUND
-  - code: ARCH_DESC
-  - code: FINDING_AID
-  - code: ENTITY
-  - code: ORIGINATOR
-  - code: INSTITUTION
-  - code: NEWS
-  - code: HELP
 
 # Odkazy v paticce - stranky, ktere nasazeni publikuje. Znama role (code) se
 # popise sama v jazyce ctenare, volny odkaz ma label (jeden retezec, nebo mapu
