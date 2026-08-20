@@ -1,4 +1,4 @@
-import { MenuItemCode } from "./api/generated";
+import { ApuType, MenuItemCode } from "./api/generated";
 
 /**
  * Section metadata of the portal. Which sections a deployment shows (and their
@@ -56,4 +56,17 @@ export const SECTIONS: Record<MenuItemCode, SectionDef> = {
     // must stay visible against the navy header background
     defaultColor: "#3e6ca3",
   },
+};
+
+/**
+ * Section a record of this type belongs to - what the breadcrumb strip names
+ * between the home page and the record's own path. Partial by nature: a record
+ * type the menu has no section for (COLLECTION) simply contributes no crumb.
+ */
+export const SECTION_OF_APU_TYPE: Partial<Record<ApuType, MenuItemCode>> = {
+  [ApuType.Institution]: MenuItemCode.Institution,
+  [ApuType.Fund]: MenuItemCode.Fund,
+  [ApuType.FindingAid]: MenuItemCode.FindingAid,
+  [ApuType.ArchDesc]: MenuItemCode.ArchDesc,
+  [ApuType.Entity]: MenuItemCode.Entity,
 };

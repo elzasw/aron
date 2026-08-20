@@ -13,22 +13,31 @@ import { TreeDirection, type TreeNode } from "../api/generated";
  *
  * A node is one line. Descriptions run to whole sentences, so wrapping labels
  * would turn the pane into a wall of text and drown the indentation that
- * carries the structure; the full text stays in the markup (and in the tooltip)
- * while the drawing is clipped, and the pane is resizable - which is what makes
- * clipping acceptable rather than a loss.
+ * carries the structure. What a line may not do is grow without end either, so
+ * a label stops at LABEL_LIMIT and the rest is reachable three ways: the pane
+ * scrolls sideways (the old portal's `treeHorizontalScroll`, here always on),
+ * the splitter widens it, and the tooltip carries the whole text.
  */
 
 /** Loaded node; parentUuid is derived client-side (the seed path is a chain). */
 type LoadedNode = TreeNode & { parentUuid?: string };
+
+/**
+ * How far a node label may run before it is clipped. Wide enough for a title to
+ * identify the record, narrow enough that one sentence cannot stretch the pane
+ * to a width no scrollbar can navigate.
+ */
+const LABEL_LIMIT = "60ch";
 
 const useStyles = makeStyles({
   root: {
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalXS,
-    // the pane is the tree's own viewport: it scrolls, the page stays put
+    // the pane is the tree's own viewport: it scrolls, the page stays put -
+    // sideways too, which is how a deep row reaches its end
     overflowY: "auto",
-    overflowX: "hidden",
+    overflowX: "auto",
     // the tree keeps the reader's place itself when rows arrive above them, so
     // the browser must not also correct the scroll position - both would apply
     overflowAnchor: "none",
@@ -49,8 +58,11 @@ const useStyles = makeStyles({
     gap: tokens.spacingHorizontalXS,
     minHeight: "24px",
     borderRadius: tokens.borderRadiusSmall,
-    // a label is clipped rather than allowed to widen the pane
-    overflow: "hidden",
+    // as wide as its content, so a long row makes the pane scroll instead of
+    // shrinking the label - but never narrower than the pane, or the current
+    // row's highlight would stop short of the edge
+    width: "max-content",
+    minWidth: "100%",
   },
   // the open record keeps a visible place in the tree, not only a bold label
   currentRow: {
@@ -80,11 +92,12 @@ const useStyles = makeStyles({
     textAlign: "left",
     fontSize: tokens.fontSizeBase300,
     color: tokens.colorNeutralForeground1,
-    flexGrow: 1,
-    minWidth: 0,
     whiteSpace: "nowrap",
+    maxWidth: LABEL_LIMIT,
     overflow: "hidden",
     textOverflow: "ellipsis",
+    // room for the ellipsis to sit clear of the pane's right edge
+    paddingRight: tokens.spacingHorizontalS,
     ":hover": { textDecorationLine: "underline" },
   },
   current: {

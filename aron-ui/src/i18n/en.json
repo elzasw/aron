@@ -17,6 +17,7 @@
     "search": "Search",
     "main": "Main menu",
     "skipToContent": "Skip to main content",
+    "breadcrumbs": "Breadcrumb",
     "language": "Language",
     "languageCurrent": "Language: {{language}} ({{code}})",
     "languageName": {
@@ -87,7 +88,6 @@
     "sliderToYear": "{{facet}} – slider to year"
   },
   "apu": {
-    "breadcrumbs": "Record location",
     "tree": "Archival description tree",
     "treeWidth": "Width of the archival description tree",
     "treeExpand": "Expand {{name}}",

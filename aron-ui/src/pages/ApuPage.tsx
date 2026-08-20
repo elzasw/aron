@@ -6,12 +6,9 @@ import {
   Title2,
   tokens,
 } from "@fluentui/react-components";
-import { useQuery } from "@tanstack/react-query";
-import { useApiLanguage } from "../i18n/useApiLanguage";
 import { type CSSProperties, Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
-import { apuApi } from "../api/client";
 import {
   ApuType,
   type DetailItem,
@@ -26,6 +23,7 @@ import {
   ResponseError,
 } from "../api/generated";
 import ApuTree from "../apu/ApuTree";
+import { useApuDetail } from "../apu/useApuDetail";
 import Splitter from "../layout/Splitter";
 
 /**
@@ -111,13 +109,6 @@ const useStyles = makeStyles({
     maxWidth: "1000px",
     minWidth: 0,
     flexGrow: 1,
-  },
-  breadcrumbs: {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "center",
-    gap: tokens.spacingHorizontalXS,
-    color: tokens.colorNeutralForeground3,
   },
   link: {
     color: tokens.colorBrandForegroundLink,
@@ -322,17 +313,9 @@ export default function ApuPage() {
   const styles = useStyles();
   const { t } = useTranslation();
   const { uuid } = useParams<{ uuid: string }>();
-  const lang = useApiLanguage();
   const [treeWidth, setTreeWidth] = useState(storedTreeWidth);
-
-  const detail = useQuery({
-    queryKey: ["apu-detail", uuid, lang],
-    queryFn: () => apuApi.apuGetDetail({ uuid: uuid!, lang }),
-    enabled: uuid !== undefined,
-    staleTime: 5 * 60 * 1000,
-    retry: (failureCount, error) =>
-      !(error instanceof ResponseError && error.response.status === 404) && failureCount < 2,
-  });
+  // the same query the breadcrumb strip reads - one request, one truth
+  const detail = useApuDetail(uuid);
 
   if (detail.isPending) {
     return <Spinner className={styles.layout} />;
@@ -348,7 +331,6 @@ export default function ApuPage() {
   }
 
   const data = detail.data;
-  const ancestors = data.treePath.slice(0, -1);
   const archdescRoot = data.parts
     .flatMap((part) => part.items)
     .filter(isRef)
@@ -376,19 +358,6 @@ export default function ApuPage() {
         </>
       )}
       <div className={styles.root}>
-      {ancestors.length > 0 && (
-        <nav aria-label={t("apu.breadcrumbs")} className={styles.breadcrumbs}>
-          {ancestors.map((ancestor) => (
-            <Fragment key={ancestor.uuid}>
-              <Link to={`/apu/${ancestor.uuid}`} className={styles.link}>
-                {ancestor.name}
-              </Link>
-              <span aria-hidden="true">›</span>
-            </Fragment>
-          ))}
-          <span aria-current="page">{data.name}</span>
-        </nav>
-      )}
       <header className={styles.header}>
         <Title2 as="h1">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}

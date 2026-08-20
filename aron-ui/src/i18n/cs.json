@@ -17,6 +17,7 @@
     "search": "Vyhledávání",
     "main": "Hlavní nabídka",
     "skipToContent": "Přejít na hlavní obsah",
+    "breadcrumbs": "Navigační cesta",
     "language": "Jazyk",
     "languageCurrent": "Jazyk: {{language}} ({{code}})",
     "languageName": {
@@ -89,7 +90,6 @@
     "sliderToYear": "{{facet}} – posuvník do roku"
   },
   "apu": {
-    "breadcrumbs": "Umístění záznamu",
     "tree": "Strom archivního popisu",
     "treeWidth": "Šířka stromu archivního popisu",
     "treeExpand": "Rozbalit {{name}}",

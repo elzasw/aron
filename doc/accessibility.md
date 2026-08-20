@@ -61,7 +61,10 @@ Architectural properties that carry most of the accessibility weight:
   (main menu, breadcrumbs, pagination, type counts), `<main>`, `<footer>`.
 - **Semantic relationships instead of visual-only cues** — the archival
   description tree uses `role="tree"`/`treeitem` with `aria-level`,
-  `aria-expanded` and `aria-selected`; pagination marks the current page with
+  `aria-expanded` and `aria-selected`; the breadcrumb strip is one labelled
+  `<nav>` around an ordered list whose last step carries `aria-current="page"`
+  (a record continues that same trail rather than opening a second one, so a
+  screen-reader user hears one location); pagination marks the current page with
   `aria-current="page"`; the language menu offers `menuitemradio` options with
   `aria-checked`, each naming its language in that language (`lang`), so the
   choice is readable rather than guessed from a flag.
