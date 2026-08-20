@@ -10,13 +10,10 @@
 	<artifactId>aron-bundle</artifactId>
 	<packaging>pom</packaging>
 	<name>ARON 2 Bundle</name>
-	<description>Assembles the release bundle target/aron2-&lt;version&gt;.zip: the
-		executable jar, the configuration template and a short installation readme.
-		This is the ONLY artifact a release publishes - the module jars are internal
-		to the build and nothing outside it consumes them. Built by the Elza/CAM
-		pattern: packaging is pom, so the assembly zip is the module's artifact
-		rather than an attachment next to a jar. The Sphinx administrator
-		documentation is deliberately not included; it is published separately.</description>
+	<description>Assembles target/aron2-&lt;version&gt;.zip - the executable jar, the
+		default configuration and an installation readme. The only artifact a release
+		publishes; packaging is pom so the zip is the module's own artifact (Elza/CAM
+		pattern). Administrator documentation is published separately.</description>
 
 	<dependencies>
 		<!-- The executable fat jar. Transitive dependencies are excluded in the
