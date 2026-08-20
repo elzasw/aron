@@ -9,17 +9,16 @@ import type { ResultLayoutLookup } from "./useResultLayout";
 type Styles = ReturnType<typeof useStyles>;
 
 const useStyles = makeStyles({
-  // the record icon sits on a tile in the header's color, full card height; the
-  // minimum width keeps the text of neighbouring cards aligned when the
-  // deployment gives its icons different sizes
+  // the tile the record icon sits on: the header's color, the card's full
+  // height, and it ends halfway across the icon - the icon's right half is on
+  // the card itself (the original portal's results list). Its width therefore
+  // follows the icon size, which the callers set.
   icon: {
     flexShrink: 0,
     display: "flex",
     alignItems: "flex-start",
-    justifyContent: "center",
-    minWidth: "56px",
     backgroundColor: PRIMARY_DARK,
-    padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalM}`,
+    padding: `${tokens.spacingVerticalM} 0 ${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
   },
   body: {
     display: "flex",
@@ -134,10 +133,17 @@ export default function StructuredResultCard({
   return (
     <>
       {icon && (
-        <div className={styles.icon}>
+        // the tile keeps the icon's left half; the negative margin lets the
+        // other half overhang it, and the tile's own margin leaves room for it
+        <div className={styles.icon} style={{ marginRight: icon.size / 2 }}>
           {/* the heading names the card; a record-shape icon adds no information a
               reader could act on */}
-          <img src={icon.url} alt="" width={icon.size} />
+          <img
+            src={icon.url}
+            alt=""
+            width={icon.size}
+            style={{ marginRight: -icon.size / 2 }}
+          />
         </div>
       )}
       <div className={styles.body}>

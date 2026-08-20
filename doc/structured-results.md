@@ -396,7 +396,8 @@ assertion.
 - new `src/search/StructuredResultCard.tsx`:
   - the record icon from `layout.icons` when the record's `code` has one, on a
     tile in the portal header's colour (`PRIMARY_DARK`) spanning the card's
-    height - the old portal's results list, whose icon background is its own
+    height and ending halfway across the icon, so the icon's right half lies on
+    the card - the old portal's results list, whose icon background is its own
     primary colour,
   - one element per row; fields of a row joined by
     `layout.fieldSeparator ?? " | "`, values of a field by
