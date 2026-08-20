@@ -67,7 +67,17 @@ Architectural properties that carry most of the accessibility weight:
   choice is readable rather than guessed from a flag.
 - **All search state lives in the URL** (query, filters, page, size, sort).
   Results are reachable by a shareable link, survive reload, and nothing depends
-  on a timed interaction (WCAG 2.2.1) or on drag gestures (2.5.7).
+  on a timed interaction (WCAG 2.2.1).
+- **No function needs a drag** (WCAG 2.5.7) — the one draggable control, the
+  splitter between the description tree and the record (`layout/Splitter.tsx`),
+  is a focusable `separator` carrying its width as a value that the arrow keys
+  and Home/End move, so the pane can be resized from the keyboard alone
+  (2.1.1). The width is remembered, so nobody has to set it twice.
+- **The description tree positions itself without stealing focus** — a record
+  opened by its own URL sits anywhere inside its fund, so the tree scrolls its
+  own pane to put the open record in the middle. It scrolls the pane, never the
+  document, which would take the header out of view, and it moves no focus: the
+  route change has already parked focus on the main region.
 - **No CAPTCHA, no session timeout, no auto-playing media** in the public
   portal, so the whole family of criteria around those does not arise.
 - **Responsive layout** — below 860 px the search page stacks its sidebar above
@@ -167,7 +177,14 @@ facet filters and the description tree.
   Specifically for the popovers (language menu, page-size dropdown): moving
   focus *inside* them is Fluent's roving focus, which jsdom does not run, so the
   unit tests stop at "opens from the keyboard" — walking and choosing an option
-  by keyboard has to be tried in a browser.
+  by keyboard has to be tried in a browser. The record page's splitter belongs
+  to the same list: its keyboard resizing is pinned by tests, but the grip's
+  contrast and its target size need the browser pass.
+- **Open, and bigger than a browser pass**: the description tree keeps
+  `role="tree"` while every node is its own tab stop. An ARIA tree is expected
+  to be one tab stop walked with the arrow keys (roving focus), so tabbing
+  through a long fund is laborious today. This is a design change, not a fix,
+  and is tracked here rather than done in passing.
 - A **manual keyboard pass** (tab order, no traps, everything reachable) and a
   **screen-reader pass with NVDA** (the reference reader for Czech public
   administration) on the core journeys: search → filter → open a record →

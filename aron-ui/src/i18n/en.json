@@ -89,6 +89,7 @@
   "apu": {
     "breadcrumbs": "Record location",
     "tree": "Archival description tree",
+    "treeWidth": "Width of the archival description tree",
     "treeExpand": "Expand {{name}}",
     "treeCollapse": "Collapse {{name}}",
     "treeMoreBefore": "Load previous",

@@ -8,7 +8,7 @@ import {
 } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
-import { Fragment, useState } from "react";
+import { type CSSProperties, Fragment, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import { apuApi } from "../api/client";
@@ -26,6 +26,7 @@ import {
   ResponseError,
 } from "../api/generated";
 import ApuTree from "../apu/ApuTree";
+import Splitter from "../layout/Splitter";
 
 /**
  * The fund's reference to its archival-description tree root - rendered as a
@@ -34,25 +35,73 @@ import ApuTree from "../apu/ApuTree";
  */
 const ARCHDESC_ROOT_REF = "ARCHDESC~ROOT~REF";
 
+/**
+ * Width of the tree pane: the reader drags the splitter, and the value travels
+ * to the stylesheet as a custom property (see the `tree` rule) so the narrow
+ * layout can still drop it. It is remembered because the fitting width is a
+ * property of the reader's screen and their material, not of one record.
+ */
+const TREE_WIDTH_VAR = "--aron-tree-width";
+const DEFAULT_TREE_WIDTH = 320;
+const MIN_TREE_WIDTH = 200;
+const MAX_TREE_WIDTH = 640;
+const TREE_WIDTH_KEY = "aron.treeWidth";
+
+function storedTreeWidth(): number {
+  try {
+    const stored = Number(window.localStorage.getItem(TREE_WIDTH_KEY));
+    return stored >= MIN_TREE_WIDTH && stored <= MAX_TREE_WIDTH ? stored : DEFAULT_TREE_WIDTH;
+  } catch {
+    // storage can be unavailable (private mode, blocked cookies) - not fatal
+    return DEFAULT_TREE_WIDTH;
+  }
+}
+
+function rememberTreeWidth(width: number): void {
+  try {
+    window.localStorage.setItem(TREE_WIDTH_KEY, String(width));
+  } catch {
+    // a reader without storage simply starts from the default width again
+  }
+}
+
 const useStyles = makeStyles({
   layout: {
     display: "flex",
     alignItems: "flex-start",
-    gap: tokens.spacingHorizontalXXL,
+    // the gutter is split by the separator, so each half stays modest
+    gap: tokens.spacingHorizontalL,
     padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
     // narrow viewports stack the tree above the description
     "@media (max-width: 860px)": {
       flexDirection: "column",
       alignItems: "stretch",
+      gap: tokens.spacingVerticalXL,
       padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
     },
   },
   tree: {
-    width: "320px",
+    // the reader's width, kept as a custom property so the stacked layout below
+    // can still override it - an inline width could not be overridden at all
+    width: `var(${TREE_WIDTH_VAR}, ${DEFAULT_TREE_WIDTH}px)`,
     flexShrink: 0,
-    overflowX: "auto",
+    minWidth: 0,
+    display: "flex",
+    flexDirection: "column",
+    // the tree stays beside the description while the description scrolls
+    position: "sticky",
+    top: tokens.spacingVerticalM,
+    maxHeight: `calc(100vh - 2 * ${tokens.spacingVerticalM})`,
     "@media (max-width: 860px)": {
       width: "100%",
+      position: "static",
+      maxHeight: "60vh",
+    },
+  },
+  // stacked, the panes sit above each other and there is no width to drag
+  splitter: {
+    "@media (max-width: 860px)": {
+      display: "none",
     },
   },
   root: {
@@ -274,6 +323,7 @@ export default function ApuPage() {
   const { t } = useTranslation();
   const { uuid } = useParams<{ uuid: string }>();
   const lang = useApiLanguage();
+  const [treeWidth, setTreeWidth] = useState(storedTreeWidth);
 
   const detail = useQuery({
     queryKey: ["apu-detail", uuid, lang],
@@ -305,11 +355,25 @@ export default function ApuPage() {
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
   return (
-    <div className={styles.layout}>
+    <div
+      className={styles.layout}
+      style={{ [TREE_WIDTH_VAR]: `${treeWidth}px` } as CSSProperties}
+    >
       {data.apuType === ApuType.ArchDesc && (
-        <aside className={styles.tree}>
-          <ApuTree treePath={data.treePath} currentUuid={data.uuid} />
-        </aside>
+        <>
+          <aside className={styles.tree}>
+            <ApuTree treePath={data.treePath} currentUuid={data.uuid} />
+          </aside>
+          <Splitter
+            label={t("apu.treeWidth")}
+            value={treeWidth}
+            min={MIN_TREE_WIDTH}
+            max={MAX_TREE_WIDTH}
+            onChange={setTreeWidth}
+            onCommit={rememberTreeWidth}
+            className={styles.splitter}
+          />
+        </>
       )}
       <div className={styles.root}>
       {ancestors.length > 0 && (

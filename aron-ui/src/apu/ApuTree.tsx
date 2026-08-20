@@ -1,5 +1,5 @@
 import { Button, makeStyles, mergeClasses, Spinner, tokens } from "@fluentui/react-components";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apuApi } from "../api/client";
@@ -10,6 +10,12 @@ import { TreeDirection, type TreeNode } from "../api/generated";
  * a flat node list in tree order rendered by depth. Seeded from the detail's
  * treePath; sibling windows and children load on demand through
  * `GET /apu/{uuid}/tree?direction=BEFORE|AFTER|UNDER`.
+ *
+ * A node is one line. Descriptions run to whole sentences, so wrapping labels
+ * would turn the pane into a wall of text and drown the indentation that
+ * carries the structure; the full text stays in the markup (and in the tooltip)
+ * while the drawing is clipped, and the pane is resizable - which is what makes
+ * clipping acceptable rather than a loss.
  */
 
 /** Loaded node; parentUuid is derived client-side (the seed path is a chain). */
@@ -20,6 +26,15 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalXS,
+    // the pane is the tree's own viewport: it scrolls, the page stays put
+    overflowY: "auto",
+    overflowX: "hidden",
+    // the tree keeps the reader's place itself when rows arrive above them, so
+    // the browser must not also correct the scroll position - both would apply
+    overflowAnchor: "none",
+    flexGrow: 1,
+    minHeight: 0,
+    minWidth: 0,
   },
   list: {
     listStyleType: "none",
@@ -32,7 +47,14 @@ const useStyles = makeStyles({
     display: "flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalXS,
-    minHeight: "28px",
+    minHeight: "24px",
+    borderRadius: tokens.borderRadiusSmall,
+    // a label is clipped rather than allowed to widen the pane
+    overflow: "hidden",
+  },
+  // the open record keeps a visible place in the tree, not only a bold label
+  currentRow: {
+    backgroundColor: tokens.colorNeutralBackground1Selected,
   },
   toggle: {
     minWidth: "24px",
@@ -43,6 +65,13 @@ const useStyles = makeStyles({
     width: "24px",
     flexShrink: 0,
   },
+  // the old portal's leaf marker: a node without children reads as an end point
+  leaf: {
+    width: "24px",
+    flexShrink: 0,
+    textAlign: "center",
+    color: tokens.colorNeutralForeground4,
+  },
   label: {
     background: "none",
     border: "none",
@@ -50,11 +79,15 @@ const useStyles = makeStyles({
     cursor: "pointer",
     textAlign: "left",
     fontSize: tokens.fontSizeBase300,
-    color: tokens.colorBrandForegroundLink,
+    color: tokens.colorNeutralForeground1,
+    flexGrow: 1,
+    minWidth: 0,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
     ":hover": { textDecorationLine: "underline" },
   },
   current: {
-    color: tokens.colorNeutralForeground1,
     fontWeight: tokens.fontWeightSemibold,
     cursor: "default",
     ":hover": { textDecorationLine: "none" },
@@ -109,6 +142,12 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
   const [nodes, setNodes] = useState<LoadedNode[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  /** APU whose fan-out has landed - the moment the tree can be positioned. */
+  const [seeded, setSeeded] = useState<string>();
+  const paneRef = useRef<HTMLDivElement>(null);
+  const currentRowRef = useRef<HTMLDivElement>(null);
+  /** Where the reader was before rows were inserted above them. */
+  const anchor = useRef<{ scrollTop: number; scrollHeight: number } | null>(null);
 
   // a different record means a different tree: drop what the reader had folded.
   // Adjusting during render rather than in the loading effect below keeps the
@@ -167,6 +206,7 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
       } finally {
         if (!cancelled) {
           setLoading(false);
+          setSeeded(currentUuid);
         }
       }
     };
@@ -178,6 +218,36 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
     // array identity is new on every render - reloading on it would loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUuid]);
+
+  // A record opened by its own URL lands the reader anywhere inside the fund, so
+  // the tree brings the open record into view itself - once per record, as soon
+  // as its surroundings have arrived. The pane is scrolled directly instead of
+  // through scrollIntoView(), which would scroll the page as well and take the
+  // header out of view.
+  useEffect(() => {
+    const pane = paneRef.current;
+    const row = currentRowRef.current;
+    if (seeded !== currentUuid || pane === null || row === null) {
+      return;
+    }
+    const rowBox = row.getBoundingClientRect();
+    pane.scrollTop +=
+      rowBox.top - pane.getBoundingClientRect().top - (pane.clientHeight - rowBox.height) / 2;
+  }, [seeded, currentUuid]);
+
+  // Earlier siblings arrive above what the reader is reading, so the pane is
+  // moved down by exactly what appeared: the rows grow upwards and the node
+  // they were asked for stays under the same pixel. Runs before the paint, or
+  // the jump would be visible.
+  useLayoutEffect(() => {
+    const pane = paneRef.current;
+    const kept = anchor.current;
+    anchor.current = null;
+    if (pane === null || kept === null) {
+      return;
+    }
+    pane.scrollTop = kept.scrollTop + pane.scrollHeight - kept.scrollHeight;
+  }, [nodes]);
 
   const childrenLoaded = (node: LoadedNode) =>
     nodes.some((candidate) => candidate.parentUuid === node.uuid);
@@ -206,6 +276,14 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
     setLoading(true);
     try {
       const fetched = await fetchNodes(edge.uuid, direction);
+      if (direction === TreeDirection.Before && paneRef.current !== null) {
+        // rows about to appear above the reader would otherwise push everything
+        // down by their height; remember the place to restore (see below)
+        anchor.current = {
+          scrollTop: paneRef.current.scrollTop,
+          scrollHeight: paneRef.current.scrollHeight,
+        };
+      }
       setNodes((current) => insertNodes(current, edge.uuid, direction, fetched));
     } finally {
       setLoading(false);
@@ -229,7 +307,7 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
     nodes.filter((node) => node.parentUuid === parentUuid);
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} ref={paneRef}>
       <ul role="tree" aria-label={t("apu.tree")} className={styles.list}>
         {nodes.map((node) => {
           if (hidden(node)) {
@@ -267,7 +345,11 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
                   </Button>
                 </div>
               )}
-              <div className={styles.row} style={{ paddingLeft: `${(node.depth - minDepth) * 16}px` }}>
+              <div
+                className={mergeClasses(styles.row, isCurrent && styles.currentRow)}
+                style={{ paddingLeft: `${(node.depth - minDepth) * 16}px` }}
+                ref={isCurrent ? currentRowRef : undefined}
+              >
                 {expandable ? (
                   <Button
                     appearance="transparent"
@@ -279,10 +361,14 @@ export default function ApuTree({ treePath, currentUuid }: { treePath: TreeNode[
                     <span aria-hidden="true">{expanded ? "▾" : "▸"}</span>
                   </Button>
                 ) : (
-                  <span className={styles.togglePlaceholder} />
+                  <span aria-hidden="true" className={styles.leaf}>
+                    &ndash;
+                  </span>
                 )}
+                {/* the drawn label may be clipped - the tooltip is the whole text */}
                 <button
                   type="button"
+                  title={label}
                   className={mergeClasses(styles.label, isCurrent && styles.current)}
                   aria-current={isCurrent ? "page" : undefined}
                   onClick={() => !isCurrent && navigate(`/apu/${node.uuid}`)}
