@@ -18,7 +18,9 @@ const queryClient = new QueryClient({
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <FluentProvider theme={webLightTheme}>
+    {/* the provider renders a div of its own; it has to carry the viewport
+        height too, or the frame below it has nothing to measure against */}
+    <FluentProvider theme={webLightTheme} style={{ height: "100%" }}>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter basename={serverContextPath}>

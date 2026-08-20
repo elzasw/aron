@@ -21,6 +21,7 @@ const useStyles = makeStyles({
     position: "relative",
     display: "flex",
     justifyContent: "center",
+    alignItems: "center",
     flexShrink: 0,
     width: "12px",
     padding: 0,
@@ -45,11 +46,9 @@ const useStyles = makeStyles({
       outlineOffset: "-2px",
     },
   },
-  // the row is far taller than the viewport, so the grip sticks near the middle
-  // of the screen instead of scrolling out of reach
+  // the panes are as tall as the frame, so the middle of the separator is also
+  // the middle of the screen - no need to follow the reader
   grip: {
-    position: "sticky",
-    top: "45vh",
     width: "4px",
     height: "36px",
     borderRadius: tokens.borderRadiusCircular,

@@ -85,7 +85,11 @@ Architectural properties that carry most of the accessibility weight:
   portal, so the whole family of criteria around those does not arise.
 - **Responsive layout** — below 860 px the search page stacks its sidebar above
   the results and the header wraps (WCAG 1.4.10 reflow; verification pending,
-  see §4).
+  see §4). The record page's two panes each scroll on their own so the page
+  itself does not, but **only on wide viewports**: below 860 px it stacks and
+  the document scrolls again, because a viewport-tall frame at 400 % zoom (or on
+  a phone) leaves the content almost no room. The frame never becomes one big
+  inner scroller for that reason.
 - **Errors are surfaced, never swallowed** — failed API requests appear in a
   visible error bar with the server's message, and a render crash produces a
   readable error page instead of a blank one. The error bar is a live region

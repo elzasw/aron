@@ -4,3 +4,11 @@ body,
   height: 100%;
   margin: 0;
 }
+
+/* The application frame is exactly one viewport tall (AppLayout), so a page
+   longer than the viewport paints past it. This keeps the ground under that
+   overflow the same colour as the frame - it mirrors webLightTheme's
+   colorNeutralBackground1, the theme main.tsx applies. */
+html {
+  background-color: #ffffff;
+}

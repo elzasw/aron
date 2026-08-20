@@ -13,10 +13,15 @@ import Breadcrumbs from "./Breadcrumbs";
 const MAIN_ID = "main-content";
 
 const useStyles = makeStyles({
+  // The frame is one viewport tall, which is what gives the routed content a
+  // height to divide: a page whose panes scroll internally (the record detail)
+  // then fits exactly and the document does not scroll at all. A page that
+  // cannot shrink still grows past the frame and the document scrolls as
+  // before, footer and all - the frame decides nothing for such a page.
   root: {
     display: "flex",
     flexDirection: "column",
-    minHeight: "100%",
+    height: "100%",
     backgroundColor: tokens.colorNeutralBackground1,
   },
   // off-screen until focused: the first Tab of the page reveals it

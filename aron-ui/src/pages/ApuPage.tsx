@@ -65,16 +65,25 @@ function rememberTreeWidth(width: number): void {
 }
 
 const useStyles = makeStyles({
+  // Two panes filling the frame, each scrolling on its own (the old portal's
+  // arrangement): the tree keeps its place while the description is read, and
+  // the page itself never scrolls - a second, outer scrollbar would move the
+  // tree's own horizontal one out of reach.
   layout: {
     display: "flex",
-    alignItems: "flex-start",
+    alignItems: "stretch",
+    flexGrow: 1,
+    minHeight: 0,
     // the gutter is split by the separator, so each half stays modest
     gap: tokens.spacingHorizontalL,
     padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
-    // narrow viewports stack the tree above the description
+    // narrow viewports stack the tree above the description, and then the
+    // document scrolls again: two nested scroll areas on a phone are worse
+    // than one long page, and a frame-tall pane leaves nothing for the text
     "@media (max-width: 860px)": {
       flexDirection: "column",
-      alignItems: "stretch",
+      flexGrow: 0,
+      minHeight: "auto",
       gap: tokens.spacingVerticalXL,
       padding: `${tokens.spacingVerticalL} ${tokens.spacingHorizontalM}`,
     },
@@ -87,13 +96,10 @@ const useStyles = makeStyles({
     minWidth: 0,
     display: "flex",
     flexDirection: "column",
-    // the tree stays beside the description while the description scrolls
-    position: "sticky",
-    top: tokens.spacingVerticalM,
-    maxHeight: `calc(100vh - 2 * ${tokens.spacingVerticalM})`,
+    // stretched to the pane row; the tree scrolls inside it
+    minHeight: 0,
     "@media (max-width: 860px)": {
       width: "100%",
-      position: "static",
       maxHeight: "60vh",
     },
   },
@@ -103,6 +109,7 @@ const useStyles = makeStyles({
       display: "none",
     },
   },
+  // the description: the pane that scrolls when a record is long
   root: {
     display: "flex",
     flexDirection: "column",
@@ -110,6 +117,14 @@ const useStyles = makeStyles({
     maxWidth: "1000px",
     minWidth: 0,
     flexGrow: 1,
+    minHeight: 0,
+    overflowY: "auto",
+    // room for the scrollbar so it does not sit on the text
+    paddingRight: tokens.spacingHorizontalM,
+    "@media (max-width: 860px)": {
+      overflowY: "visible",
+      paddingRight: 0,
+    },
   },
   link: {
     color: tokens.colorBrandForegroundLink,
@@ -377,7 +392,10 @@ export default function ApuPage() {
           />
         </>
       )}
-      <div className={styles.root}>
+      {/* keyed by the record: the description is its own scroll area, and a new
+          element starts at its top - the reader never opens a record halfway
+          down because the previous one was scrolled */}
+      <div className={styles.root} key={data.uuid}>
       <header className={styles.header}>
         <Title2 as="h1">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}
