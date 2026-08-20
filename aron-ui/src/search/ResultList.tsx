@@ -14,6 +14,9 @@ const useStyles = makeStyles({
     margin: "0",
     padding: "0",
   },
+  // one row: the icon strip and, beside it, everything else. It must not wrap -
+  // a strip pushed onto a line of its own is only as tall as that line instead
+  // of the whole card. What stacks on a narrow screen stacks inside the content.
   card: {
     display: "flex",
     backgroundColor: tokens.colorNeutralBackground1,
@@ -21,8 +24,6 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusMedium,
     boxShadow: tokens.shadow2,
     overflow: "hidden",
-    // a card with a thumbnail stacks instead of squeezing the text on narrow screens
-    flexWrap: "wrap",
   },
   body: {
     display: "flex",

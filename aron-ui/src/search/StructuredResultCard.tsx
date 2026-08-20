@@ -20,13 +20,26 @@ const useStyles = makeStyles({
     backgroundColor: PRIMARY_MAIN,
     padding: `${tokens.spacingVerticalM} 0 ${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
   },
+  // everything beside the strip. This is the part that wraps: on a card too
+  // narrow for both, the thumbnail stacks under the text instead of squeezing it.
+  content: {
+    display: "flex",
+    flexWrap: "wrap",
+    flexGrow: 1,
+    flexBasis: 0,
+    minWidth: "0",
+  },
   body: {
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalXXS,
     padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalL}`,
     flexGrow: 1,
-    minWidth: "0",
+    // basis 0, or a long heading would ask for its whole single-line width and
+    // wrap out of the row. The min-width is where the thumbnail stacks instead
+    // of squeezing the text, capped at the card so nothing narrower is clipped.
+    flexBasis: 0,
+    minWidth: "min(16rem, 100%)",
   },
   heading: {
     margin: "0",
@@ -146,55 +159,57 @@ export default function StructuredResultCard({
           />
         </div>
       )}
-      <div className={styles.body}>
-        <h3 className={styles.heading}>
-          <Link to={`/apu/${uuid}`} className={styles.headingLink}>
-            {headingText || name}
-          </Link>
-        </h3>
-        {structured.rows.map((row, rowIndex) => {
-          // the heading is rendered above; its row keeps the remaining fields
-          const fields = row.fields.filter((field) => field !== headingField);
-          if (fields.length === 0) {
-            return null;
-          }
-          return (
-            <div key={rowIndex} className={styles.row}>
-              {fields.map((field, fieldIndex) => (
-                <Fragment key={`${field.code}-${fieldIndex}`}>
-                  {fieldIndex > 0 && (
-                    <span className={styles.separator} aria-hidden="true">
-                      {layout.fieldSeparator}
-                    </span>
-                  )}
-                  <Field field={field} layout={layout} styles={styles} />
-                </Fragment>
-              ))}
-            </div>
-          );
-        })}
-      </div>
-      {structured.thumbnailUrl && (
-        <div className={styles.thumbnail}>
-          {/* the link carries the name, so the image adds no duplicate text; the
-              target is the source system's own when it gave one, else the record */}
-          {structured.thumbnailLinkUrl ? (
-            <a
-              href={structured.thumbnailLinkUrl}
-              aria-label={t("search.thumbnailLink", { name: headingText || name })}
-            >
-              <img src={structured.thumbnailUrl} alt="" className={styles.thumbnailImage} />
-            </a>
-          ) : (
-            <Link
-              to={`/apu/${uuid}`}
-              aria-label={t("search.thumbnailLink", { name: headingText || name })}
-            >
-              <img src={structured.thumbnailUrl} alt="" className={styles.thumbnailImage} />
+      <div className={styles.content}>
+        <div className={styles.body}>
+          <h3 className={styles.heading}>
+            <Link to={`/apu/${uuid}`} className={styles.headingLink}>
+              {headingText || name}
             </Link>
-          )}
+          </h3>
+          {structured.rows.map((row, rowIndex) => {
+            // the heading is rendered above; its row keeps the remaining fields
+            const fields = row.fields.filter((field) => field !== headingField);
+            if (fields.length === 0) {
+              return null;
+            }
+            return (
+              <div key={rowIndex} className={styles.row}>
+                {fields.map((field, fieldIndex) => (
+                  <Fragment key={`${field.code}-${fieldIndex}`}>
+                    {fieldIndex > 0 && (
+                      <span className={styles.separator} aria-hidden="true">
+                        {layout.fieldSeparator}
+                      </span>
+                    )}
+                    <Field field={field} layout={layout} styles={styles} />
+                  </Fragment>
+                ))}
+              </div>
+            );
+          })}
         </div>
-      )}
+        {structured.thumbnailUrl && (
+          <div className={styles.thumbnail}>
+            {/* the link carries the name, so the image adds no duplicate text; the
+                target is the source system's own when it gave one, else the record */}
+            {structured.thumbnailLinkUrl ? (
+              <a
+                href={structured.thumbnailLinkUrl}
+                aria-label={t("search.thumbnailLink", { name: headingText || name })}
+              >
+                <img src={structured.thumbnailUrl} alt="" className={styles.thumbnailImage} />
+              </a>
+            ) : (
+              <Link
+                to={`/apu/${uuid}`}
+                aria-label={t("search.thumbnailLink", { name: headingText || name })}
+              >
+                <img src={structured.thumbnailUrl} alt="" className={styles.thumbnailImage} />
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </>
   );
 }
