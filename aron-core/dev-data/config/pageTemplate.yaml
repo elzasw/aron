@@ -26,10 +26,11 @@ footer:
 name: ARchiv ONline
 
 homepage:
-  # Dev ukazka vsech moznosti dlazdic. Fazety a ikony vysledku se berou ze
-  # SPOLECNE ceske konfigurace, obrazky dlazdic z ./dev-data/config/images
-  # (demo-*.svg, do nasazeni se nedodavaji) - webResources.resultImages proto
-  # uvadi oba adresare.
+  # Dev ukazka vsech moznosti dlazdic. Fazety, ikony vysledku i zastupne obrazky
+  # dlazdic (home-*.svg) se berou ze SPOLECNE ceske konfigurace; dev navic pridava
+  # vlastni adresar ./dev-data/config/images se znackou odkazu (demo-mark.svg),
+  # ktera se do nasazeni nedodava - webResources.resultImages proto uvadi oba,
+  # presne jako nasazeni, ktere si drzi vlastni obrazky mimo balik.
   groups:
     # GRID: obrazkove dlazdice. Prvni je "hero" pres 2x2 pole, dalsi pres 2x1,
     # posledni bez obrazku - nese hlavni barvu portalu, takze skupina drzi tvar
@@ -39,7 +40,7 @@ homepage:
       tiles:
         - label: { cs: Matriky, en: Parish registers }
           note: { cs: církevní i civilní, en: church and civil }
-          image: { name: demo-matriky.svg }
+          image: { name: home-matriky.svg }
           columnSpan: 2
           rowSpan: 2
           apuType: ARCH_DESC
@@ -49,16 +50,16 @@ homepage:
               to: 1850
         - label: { cs: Mapy a plány, en: Maps and plans }
           # vyrez: subjekt je vlevo dole, proto se drzi tam
-          image: { name: demo-mapy.svg, positionX: left, positionY: bottom }
+          image: { name: home-mapy.svg, positionX: left, positionY: bottom }
           columnSpan: 2
           apuType: ARCH_DESC
         - label: { cs: Kroniky, en: Chronicles }
-          image: { name: demo-kroniky.svg }
+          image: { name: home-kroniky.svg }
           columnSpan: 2
           apuType: ARCH_DESC
         - label: { cs: Fotografie, en: Photographs }
           note: { cs: města a obce, en: towns and villages }
-          image: { name: demo-fotografie.svg, positionY: top }
+          image: { name: home-fotografie.svg, positionY: top }
           columnSpan: 2
           apuType: ARCH_DESC
         - label: { cs: Archivní soubory, en: Funds }

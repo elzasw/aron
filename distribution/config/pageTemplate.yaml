@@ -84,6 +84,12 @@ footer:
 # webResources.resultImages (positionX/positionY posunou vyrez u fotografie,
 # columnSpan/rowSpan roztahnou dlazdici v mrizce na 2 pole).
 #
+# Obrazky home-*.svg v config/images/results jsou ZASTUPNE, jako logo.svg
+# a topImage.png: nakres misto fotografie, aby bylo videt, co dlazdice umi.
+# Nasazeni je vymeni za vlastni grafiku (stejna jmena = zadna zmena tohoto
+# souboru), nebo klic image smaze. Za citelnost bileho popisu na vlastni
+# fotografii odpovida nasazeni - viz doc/accessibility.md.
+#
 # Hodnoty filtru jsou data: co v datech nasazeni neni, nic nenajde - seznam
 # nize miri na druhy archivalii, ktere badatele hledaji nejcasteji.
 homepage:
@@ -91,26 +97,40 @@ homepage:
     - label:
         cs: Mohlo by vás zajímat
         en: You might be interested in
-      style: LIST
+      style: GRID
       tiles:
+        # Prvni dlazdice je "hero" pres 2x2 pole. Obrazek je zastupny (home-*.svg
+        # v adresari images/results, viz nize) - nasazeni jej vymeni za vlastni
+        # fotografii, nebo klic image smaze a dlazdice pak nese hlavni barvu.
         - label: { cs: Matriky, en: Parish registers }
+          image: { name: home-matriky.svg }
+          columnSpan: 2
+          rowSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_TYPE
               values: [matrika]
         - label: { cs: Kroniky, en: Chronicles }
           note: { cs: úřední i neúřední kroniky, en: official and unofficial chronicles }
+          image: { name: home-kroniky.svg }
+          columnSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_TYPE
               values: [kronika]
         - label: { cs: Mapy a plány, en: Maps and plans }
+          # vyrez: subjekt lezi vlevo dole, proto se drzi tam
+          image: { name: home-mapy.svg, positionX: left, positionY: bottom }
+          columnSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_TYPE
               values: [mapa]
+        # Bez klice image: dlazdice nese hlavni barvu portalu, takze skupina
+        # drzi tvar i tam, kde nasazeni obrazky nedoda.
         - label: { cs: Evidence nemovitostí, en: Property records }
           note: { cs: pozemkové knihy, gruntovní knihy, en: land registers }
+          columnSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_TYPE
@@ -119,11 +139,14 @@ homepage:
           note:
             cs: seznamy obyvatel, soupisy duší, sčítací operáty, urbáře
             en: population lists, censuses, urbaria
+          columnSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_TYPE
               values: [evidence obyvatel]
         - label: { cs: Archiválie s digitalizáty, en: Records with digitised images }
+          image: { name: home-fotografie.svg, positionY: top }
+          columnSpan: 2
           apuType: ARCH_DESC
           filters:
             - facet: DIGITAL
