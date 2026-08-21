@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.lightcomp</groupId>
-	<artifactId>aron2</artifactId>
+	<artifactId>aron</artifactId>
 	<!--
 	  The version line lives on a release branch (release-2.0.x for 2.0.x) and moves
 	  only there; on main this stays a placeholder that is never released, so merging
@@ -69,9 +69,9 @@
 		<maven-release-plugin.version>3.1.1</maven-release-plugin.version>
 		<!-- Git URL for maven-release-plugin, deliberately empty here: this
 		     repository is publicly mirrored, so the internal Git host is supplied
-		     by the release pipeline (-Daron2.scm.url=...). Without it a release
+		     by the release pipeline (-Daron.scm.url=...). Without it a release
 		     stops with "Missing required setting: scm connection". -->
-		<aron2.scm.url/>
+		<aron.scm.url/>
 	</properties>
 
 	<dependencyManagement>
@@ -153,7 +153,7 @@
 					<version>3.6.0</version>
 				</plugin>
 				<!-- Releases are cut on a release-<line> branch by the pipeline
-				     (release:prepare + release:perform). Tags read aron2-<version>;
+				     (release:prepare + release:perform). Tags read aron-<version>;
 				     the [maven-release-plugin] commit prefix is load-bearing - CI
 				     skips builds of the plugin's own commits by matching it. -->
 				<plugin>
@@ -162,7 +162,7 @@
 					<version>${maven-release-plugin.version}</version>
 					<configuration>
 						<autoVersionSubmodules>true</autoVersionSubmodules>
-						<tagNameFormat>aron2-@{project.version}</tagNameFormat>
+						<tagNameFormat>aron-@{project.version}</tagNameFormat>
 					</configuration>
 				</plugin>
 				<!-- Only the distribution module is published (it overrides this):
@@ -181,15 +181,15 @@
 
 	<!--
 	  Consumed by maven-release-plugin only; the URL itself comes from the release
-	  pipeline (aron2.scm.url above), which is what keeps the internal Git host out
+	  pipeline (aron.scm.url above), which is what keeps the internal Git host out
 	  of this publicly mirrored repository. The release repository is supplied the
 	  same way (-DaltDeploymentRepository), hence no distributionManagement here.
 	-->
 	<scm child.scm.connection.inherit.append.path="false"
 		child.scm.developerConnection.inherit.append.path="false"
 		child.scm.url.inherit.append.path="false">
-		<connection>${aron2.scm.url}</connection>
-		<developerConnection>${aron2.scm.url}</developerConnection>
+		<connection>${aron.scm.url}</connection>
+		<developerConnection>${aron.scm.url}</developerConnection>
 		<!-- Blanks the browse URL inherited from spring-boot-starter-parent, which
 		     would otherwise claim this source lives in the Spring Boot repository. -->
 		<url/>

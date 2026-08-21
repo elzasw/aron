@@ -9,7 +9,7 @@
 	</formats>
 	<!-- No wrapping directory: the zip unpacks straight into an installation
 	     directory, giving it the layout the readme and the jar expect
-	     (aron2.jar next to config/). -->
+	     (aron.jar next to config/). -->
 	<includeBaseDirectory>false</includeBaseDirectory>
 
 	<dependencySets>
@@ -22,7 +22,7 @@
 			<outputDirectory/>
 			<!-- Unversioned on purpose: the version is in the zip name, while the
 			     service unit and the run command refer to a stable file name. -->
-			<outputFileNameMapping>aron2.jar</outputFileNameMapping>
+			<outputFileNameMapping>aron.jar</outputFileNameMapping>
 		</dependencySet>
 	</dependencySets>
 

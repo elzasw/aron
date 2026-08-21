@@ -116,7 +116,7 @@ class NewApiV1Test extends AbstractTest {
 	@Test
 	void systemInfoViaGeneratedClient() {
 		SystemInfo info = new SystemApi(v1ApiClient()).systemGetInfo();
-		assertThat(info.getName()).isEqualTo("aron2");
+		assertThat(info.getName()).isEqualTo("aron");
 		assertThat(info.getVersion()).isNotBlank();
 	}
 

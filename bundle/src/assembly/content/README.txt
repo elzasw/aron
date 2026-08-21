@@ -9,7 +9,7 @@ Transfagent application.
 Contents of this bundle
 -----------------------
 
-  aron2.jar             the whole application - backend and web UI in one
+  aron.jar              the whole application - backend and web UI in one
                         executable jar with an embedded web server
   config/               a complete default configuration for a Czech archive:
                         application.yml.template  annotated main configuration
@@ -58,8 +58,8 @@ Installation
 
    The schema itself is created and upgraded by the application on startup.
 
-2) Unpack this bundle into an installation directory, for example /opt/aron2.
-   The result is aron2.jar with a config/ directory next to it.
+2) Unpack this bundle into an installation directory, for example /opt/aron.
+   The result is aron.jar with a config/ directory next to it.
 
 3) Copy the template and edit your copy:
 
@@ -89,7 +89,7 @@ Installation
 
 5) Start the application from the installation directory:
 
-     java -jar aron2.jar
+     java -jar aron.jar
 
    It reads config/application.yml relative to the working directory, so start
    it from the installation directory - or pass the location explicitly with
@@ -122,6 +122,6 @@ an internal network interface.
 Upgrading
 ---------
 
-Replace aron2.jar and restart. Configuration and data are kept outside the jar,
+Replace aron.jar and restart. Configuration and data are kept outside the jar,
 the database schema is upgraded on startup, and the search index is rebuilt
 automatically when the indexed-field configuration changed.

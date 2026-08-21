@@ -35,7 +35,7 @@ const config: UiConfig = {
 
 vi.mock("../api/client", () => ({
   logoUrl: "/api/v1/ui/logo",
-  systemApi: { systemGetInfo: vi.fn(() => Promise.resolve({ name: "aron2", version: "1.0" })) },
+  systemApi: { systemGetInfo: vi.fn(() => Promise.resolve({ name: "aron", version: "1.0" })) },
   uiApi: { uiGetConfig: vi.fn(() => Promise.resolve(config)) },
   apuApi: {
     apuGetDetail: vi.fn(() => Promise.resolve(RECORD)),

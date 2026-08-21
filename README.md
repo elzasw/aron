@@ -14,8 +14,8 @@ License: [Apache-2.0](LICENSE).
 | `api` | TypeSpec contract of the portal API (`/api/v1`); emits the committed `openapi/aron-openapi-v1.yaml` |
 | `aron-core` | Backend (Spring Boot library jar) |
 | `aron-ui` | Portal UI (React + Vite + TypeScript + Fluent UI v9), packaged as a resource jar |
-| `distribution` | Assembles the executable fat jar `distribution/target/aron2.jar` (backend + UI); holds the `config/application.yml` template |
-| `bundle` | Assembles the release bundle `bundle/target/aron2-<version>.zip` (jar, configuration template, installation readme) |
+| `distribution` | Assembles the executable fat jar `distribution/target/aron.jar` (backend + UI); holds the `config/application.yml` template |
+| `bundle` | Assembles the release bundle `bundle/target/aron-<version>.zip` (jar, configuration template, installation readme) |
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ mvn install          # with your own toolchain
 `set-env.bat.template` and point it at your JDK/Maven installs (the file is
 gitignored; never commit machine paths).
 
-The build produces the deployable artifact `distribution/target/aron2.jar`.
+The build produces the deployable artifact `distribution/target/aron.jar`.
 No Node/npm is needed on the host: the `api` and `aron-ui` modules install their
 own Node toolchain (into `<module>/.node`); the first build downloads it and the
 npm dependencies (internet required).
@@ -100,7 +100,7 @@ Run the deployable artifact from the sandbox:
 
 ```
 cd run
-java -jar ..\distribution\target\aron2.jar
+java -jar ..\distribution\target\aron.jar
 ```
 
 ### Running from the IDE
@@ -268,17 +268,17 @@ applies the same gate; `-DskipTests` skips both suites.
 `main` carries the frozen placeholder version `2.0-SNAPSHOT` and is never
 released. Each version line lives on its own branch — `release-2.0.x` for the
 2.0.x releases — and only there does the pom version move (`2.0.0-SNAPSHOT` →
-tag `aron2-2.0.0` → `2.0.1-SNAPSHOT`). Keeping main's version fixed means
+tag `aron-2.0.0` → `2.0.1-SNAPSHOT`). Keeping main's version fixed means
 merging main into a release branch never conflicts on it, and no release
 bookkeeping ever lands on main.
 
 Releases are cut by `maven-release-plugin` from the release branch, run by the
 build pipeline rather than locally. A release publishes exactly one artifact: the
-bundle `aron2-<version>.zip` (executable jar, configuration template,
+bundle `aron-<version>.zip` (executable jar, configuration template,
 installation readme). The module jars are internal to the build and are not
 published — the fat jar reaches a deployment inside the bundle. The Sphinx
 administrator documentation is not in the bundle; it is published separately.
-The pipeline supplies the Git URL (`-Daron2.scm.url`, which is why
+The pipeline supplies the Git URL (`-Daron.scm.url`, which is why
 `<scm>` reads that property and is empty here) and the target repository
 (`-DaltDeploymentRepository`, which is why there is no `distributionManagement`)
 — this repository holds no deployment coordinates of its own.

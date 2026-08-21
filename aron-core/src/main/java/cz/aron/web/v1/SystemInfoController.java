@@ -37,7 +37,7 @@ public class SystemInfoController implements SystemApi {
 
 	@Override
 	public ResponseEntity<SystemInfo> systemGetInfo() {
-		var info = new SystemInfo("aron2");
+		var info = new SystemInfo("aron");
 		info.setVersion(version);
 		return ResponseEntity.ok(info);
 	}

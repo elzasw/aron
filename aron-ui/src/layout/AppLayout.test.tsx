@@ -43,7 +43,7 @@ const config: UiConfig = {
 // mockResolvedValue: restoreMocks (vitest.config.ts) clears the latter between
 // tests, leaving the query with no data
 const systemGetInfo = vi.fn<() => Promise<{ name: string; version?: string }>>(() =>
-  Promise.resolve({ name: "aron2", version: "1.0" }),
+  Promise.resolve({ name: "aron", version: "1.0" }),
 );
 
 vi.mock("../api/client", () => ({
@@ -144,14 +144,14 @@ describe("AppLayout", () => {
 
   it("shows the running version only when the deployment discloses it", async () => {
     renderLayout();
-    expect(await screen.findByText(/aron2/)).toBeTruthy();
+    expect(await screen.findByText(/aron/)).toBeTruthy();
 
     // withheld, the server sends no version at all - so there is nothing to show
-    systemGetInfo.mockImplementationOnce(() => Promise.resolve({ name: "aron2" }));
+    systemGetInfo.mockImplementationOnce(() => Promise.resolve({ name: "aron" }));
     cleanup();
     renderLayout();
     await screen.findByRole("link", { name: "Accessibility statement" });
-    expect(screen.queryByText(/aron2/)).toBeNull();
+    expect(screen.queryByText(/aron/)).toBeNull();
   });
 
   it("publishes the deployment's footer links, labelling the well-known ones itself", async () => {

@@ -25,13 +25,13 @@ Prerequisites
 Artifact and layout
 ===================
 
-A deployment consists of one executable jar (``aron2.jar``) containing the
+A deployment consists of one executable jar (``aron.jar``) containing the
 backend **and** the web UI, plus an external configuration directory:
 
 .. code-block:: text
 
-   /opt/aron2/
-     aron2.jar
+   /opt/aron/
+     aron.jar
      config/
        application.yml        # main configuration (template ships with the sources)
        types.yaml             # display / indexing model of description items
@@ -50,7 +50,7 @@ Running
 
 .. code-block:: shell
 
-   java -jar aron2.jar
+   java -jar aron.jar
 
 The application creates and migrates its database schema automatically
 (Liquibase) and bootstraps the search index at startup (see
