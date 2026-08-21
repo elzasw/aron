@@ -26,43 +26,73 @@ footer:
 name: ARchiv ONline
 
 homepage:
-  # Obsah elementu na uvodni strance
-  footerCenter: '<p>Základní informace</p><p>ARchiv ONline je webová aplikace <a href="https://vychodoceskearchivy.cz/">Státního oblastního archivu v Zámrsku</a> sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů.</p><p>Copyright &copy; 2021 Státní oblastní archiv v Zámrsku</p>'
-  footerRight: "<p>KONTAKT</p><p>webmaster@ahapa.cz</p>"
-
-# Uvodni strana - dev varianta. Fazety a obrazky se berou ze SPOLECNE ceske
-# konfigurace (../distribution/config), takze dlazdice mirí na fazety, ktere
-# dev data skutecne plni: UNIT_DATE u archivalii, jinak cela sekce bez filtru.
-homepage:
+  # Dev ukazka vsech moznosti dlazdic. Fazety a ikony vysledku se berou ze
+  # SPOLECNE ceske konfigurace, obrazky dlazdic z ./dev-data/config/images
+  # (demo-*.svg, do nasazeni se nedodavaji) - webResources.resultImages proto
+  # uvadi oba adresare.
   groups:
+    # GRID: obrazkove dlazdice. Prvni je "hero" pres 2x2 pole, dalsi pres 2x1,
+    # posledni bez obrazku - nese hlavni barvu portalu, takze skupina drzi tvar
+    # i kdyz nasazeni obrazek nedoda.
     - label: { cs: Mohlo by vás zajímat, en: You might be interested in }
+      style: GRID
+      tiles:
+        - label: { cs: Matriky, en: Parish registers }
+          note: { cs: církevní i civilní, en: church and civil }
+          image: { name: demo-matriky.svg }
+          columnSpan: 2
+          rowSpan: 2
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_DATE
+              from: 1800
+              to: 1850
+        - label: { cs: Mapy a plány, en: Maps and plans }
+          # vyrez: subjekt je vlevo dole, proto se drzi tam
+          image: { name: demo-mapy.svg, positionX: left, positionY: bottom }
+          columnSpan: 2
+          apuType: ARCH_DESC
+        - label: { cs: Kroniky, en: Chronicles }
+          image: { name: demo-kroniky.svg }
+          columnSpan: 2
+          apuType: ARCH_DESC
+        - label: { cs: Fotografie, en: Photographs }
+          note: { cs: mesta a obce, en: towns and villages }
+          image: { name: demo-fotografie.svg, positionY: top }
+          columnSpan: 2
+          apuType: ARCH_DESC
+        - label: { cs: Archivní soubory, en: Funds }
+          note: { cs: bez obrázku - hlavní barva portálu, en: no picture - the portal colour }
+          columnSpan: 2
+          apuType: FUND
+
+    # LIST: radky odkazu. Znacka (image) je tu mala, vedle popisu - stejny klic
+    # jako u obrazkove dlazdice, jen jinak vykresleny.
+    - label: { cs: Jiné zdroje, en: Other sources }
       style: LIST
       tiles:
-        - label: { cs: Archiválie z první poloviny 19. století, en: Records from the early 19th century }
+        - label: Porta fontium
+          note: { cs: česko-bavorská digitální knihovna, en: Czech-Bavarian digital library }
+          image: { name: demo-mark.svg }
+          url: https://www.portafontium.eu
+        - label: { cs: Archiválie z první poloviny 19. století, en: Records of the early 19th century }
           note: { cs: datace 1800-1850, en: dated 1800-1850 }
           apuType: ARCH_DESC
           filters:
             - facet: UNIT_DATE
               from: 1800
               to: 1850
-        - label: { cs: Všechny archivní soubory, en: All funds }
-          apuType: FUND
-    - label: { cs: Jiné zdroje, en: Other sources }
-      style: GRID
-      tiles:
-        - label: { cs: Mapy v portálu, en: Maps in the portal }
-          image: { name: archival-item-map.svg, positionX: center, positionY: center }
-          columnSpan: 2
-          apuType: ARCH_DESC
-        - label: Porta fontium
-          note: { cs: česko-bavorská digitální knihovna, en: Czech-Bavarian digital library }
-          url: https://www.portafontium.eu
+        - label: { cs: Napište nám, en: Write to us }
+          image: { name: demo-mark.svg }
+          url: "mailto:webmaster@example.com"
 
-  # Pas na konci uvodni strany - dev varianta (nahrada za footerCenter /
-  # footerRight stareho portalu, ktere nesly HTML z konfigurace).
+  # Pas na konci uvodni strany - nahrada za footerCenter / footerRight stareho
+  # portalu, ktere nesly HTML z konfigurace. Odkaz uvnitr vety se zapisuje
+  # zastupnym jmenem a doplni se v links daneho odstavce.
   footer:
     columns:
-      - paragraphs:
+      - heading: { cs: Základní informace, en: About }
+        paragraphs:
           - text:
               cs: "Prezentační web ARchiv ONline je webová aplikace {archiv} sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů."
               en: "ARchiv ONline is a web application of the {archiv}, presenting archival descriptions and their digitised images."
@@ -72,7 +102,22 @@ homepage:
                   cs: Státního oblastního archivu v Zámrsku
                   en: State Regional Archives in Zamrsk
                 url: https://vychodoceskearchivy.cz/
+          - text:
+              cs: "© 2026 Státní oblastní archiv v Zámrsku | {portal} · {porta}"
+              en: "© 2026 State Regional Archives in Zamrsk | {portal} · {porta}"
+            links:
+              portal:
+                label: vychodoceskearchivy.cz
+                url: https://vychodoceskearchivy.cz/
+              porta:
+                label: portafontium.eu
+                url: https://www.portafontium.eu
       - heading: { cs: Kontakt, en: Contact }
         links:
           - label: webmaster@example.com
             url: "mailto:webmaster@example.com"
+          # znacka u odkazu: soubor nasazeni, ne jmeno, ktere by znal portal -
+          # prejmenovana sit (z Twitteru se stalo X) je vymena souboru
+          - label: { cs: Archiv na sociální síti, en: The archive's social profile }
+            url: https://example.org/social
+            image: { name: demo-mark.svg }

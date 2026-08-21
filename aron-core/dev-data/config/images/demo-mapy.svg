@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+  <!-- Dev demo picture: a cadastral sheet. The subject sits low and left, which
+       is what `positionX`/`positionY` are for on a tile that crops it. -->
+  <defs>
+    <linearGradient id="sheet" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6ddc8"/>
+      <stop offset="1" stop-color="#cbbf9f"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#sheet)"/>
+  <!-- parcels -->
+  <g stroke="#6b7f5e" stroke-width="1.6" fill="none">
+    <path d="M40 250l30-70 60-20 40 30 50-10 40 40 30-20" stroke="#8a6f4a" stroke-width="2.4"/>
+    <path d="M70 180l-20-60 50-30 60 20 30-40 70 30"/>
+    <path d="M130 90l20 70 60 10 30 60"/>
+    <path d="M210 60l30 90 60 30"/>
+  </g>
+  <!-- parcel fills, the wash of a hand-coloured sheet -->
+  <g fill-opacity="0.35">
+    <polygon points="70,180 130,90 150,160 90,250" fill="#c98f5a"/>
+    <polygon points="130,90 210,60 240,150 150,160" fill="#a9b58a"/>
+    <polygon points="240,150 300,180 270,250 190,220" fill="#c2b07a"/>
+  </g>
+  <!-- watercourse -->
+  <path d="M0 210q60-30 110 0t120 10 170-40" stroke="#7d99ad" stroke-width="7"
+        fill="none" stroke-opacity="0.65"/>
+</svg>

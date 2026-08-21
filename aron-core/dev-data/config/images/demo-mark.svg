@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Dev demo mark: the small sign a LIST tile or a footer link can carry. It
+       stands in for a deployment's own mark (an archive's badge, a social
+       profile) - which is a file it swaps, never a name this portal knows. -->
+  <circle cx="12" cy="12" r="11" fill="#5f5bc2"/>
+  <path d="M7 8.5h10M7 12h10M7 15.5h6" stroke="#ffffff" stroke-width="1.8"
+        stroke-linecap="round" fill="none"/>
+</svg>

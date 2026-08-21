@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+  <!-- Dev demo picture: a ruled register page. Abstract on purpose - it stands
+       in for a photograph a deployment would supply, and shows what a GRID tile
+       does with one (cover, position, span). Never shipped: dev-data only. -->
+  <defs>
+    <linearGradient id="parchment" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d8c39a"/>
+      <stop offset="0.55" stop-color="#c2a875"/>
+      <stop offset="1" stop-color="#9d8354"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#parchment)"/>
+  <g stroke="#6d5836" stroke-opacity="0.35" stroke-width="1">
+    <path d="M0 60h400M0 90h400M0 120h400M0 150h400M0 180h400M0 210h400M0 240h400"/>
+  </g>
+  <g stroke="#6d5836" stroke-opacity="0.5" stroke-width="1.5">
+    <path d="M120 40v230M250 40v230"/>
+  </g>
+  <!-- handwriting, suggested rather than drawn -->
+  <g stroke="#4a3a20" stroke-opacity="0.55" stroke-width="2.5" fill="none" stroke-linecap="round">
+    <path d="M18 82q10-12 18 0t18 0t16-4M18 112q14-10 24 0t20-2M18 142q10-12 20-2t18 0t20-6"/>
+    <path d="M136 82q12-10 22 0t18-4M136 112q10-12 20 0t22-2M136 142q14-8 22 0t20-4"/>
+    <path d="M266 82q12-10 24 0t20-2M266 112q10-12 22 0t18-4M266 142q14-8 24 0t18-2"/>
+    <path d="M18 172q10-12 20 0t18-2M136 172q12-10 22 0t18-4M266 172q10-12 22 0t20-2"/>
+    <path d="M18 202q12-10 22 0t16-2M136 202q10-12 20 0t20-4"/>
+  </g>
+</svg>

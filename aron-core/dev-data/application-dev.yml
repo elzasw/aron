@@ -64,7 +64,10 @@ webResources:
   topImage: ./dev-data/config/photo.png
   # structured search results: the three books of arch-desc-1820 carry a <result>
   resultLayout: ../distribution/config/resultLayout.yaml
-  resultImages: ../distribution/config/images/results
+  # Two directories: the SHARED result icons stay shared, and dev adds pictures
+  # of its own for the home page (demo-*.svg, never shipped). A name is looked
+  # up in order, first hit wins.
+  resultImages: ../distribution/config/images/results,./dev-data/config/images
 
 help-url: http://localhost
 

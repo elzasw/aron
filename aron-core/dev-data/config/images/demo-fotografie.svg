@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice">
+  <!-- Dev demo picture: a sepia townscape, the kind of subject that sits high in
+       the frame - `positionY: top` on a tile that crops it keeps the skyline. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#cdb894"/>
+      <stop offset="1" stop-color="#a08a68"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#sky)"/>
+  <!-- roofline -->
+  <g fill="#6b5a44">
+    <polygon points="0,180 40,140 80,180 80,300 0,300"/>
+    <polygon points="80,170 130,120 180,170 180,300 80,300"/>
+    <polygon points="180,185 215,150 250,185 250,300 180,300"/>
+    <polygon points="250,160 300,110 350,160 350,300 250,300"/>
+    <polygon points="350,180 375,155 400,180 400,300 350,300"/>
+  </g>
+  <!-- tower -->
+  <polygon points="205,150 220,60 235,150" fill="#57482f"/>
+  <circle cx="220" cy="105" r="7" fill="#d9c79a"/>
+  <!-- windows -->
+  <g fill="#d3c2a0" fill-opacity="0.8">
+    <rect x="24" y="205" width="14" height="20"/><rect x="52" y="205" width="14" height="20"/>
+    <rect x="104" y="200" width="14" height="22"/><rect x="140" y="200" width="14" height="22"/>
+    <rect x="200" y="215" width="14" height="20"/><rect x="228" y="215" width="14" height="20"/>
+    <rect x="274" y="195" width="16" height="24"/><rect x="312" y="195" width="16" height="24"/>
+  </g>
+  <!-- foreground, in shadow -->
+  <rect x="0" y="270" width="400" height="30" fill="#4a3d2b" fill-opacity="0.85"/>
+</svg>
