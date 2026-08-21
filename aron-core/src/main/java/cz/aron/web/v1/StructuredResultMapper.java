@@ -30,7 +30,7 @@ public final class StructuredResultMapper {
 	/**
 	 * Maps one stored result. {@code thumbnailUrl} resolves a thumbnail that
 	 * arrives as a deployment image name rather than a URL (see
-	 * {@link ResultImages#thumbnailUrl(String)}).
+	 * {@link DeploymentImages#thumbnailUrl(String)}).
 	 * <p>
 	 * The stored {@code id} is deliberately dropped: the search hit already
 	 * carries the record's uuid, and a stored id disagreeing with it is a data

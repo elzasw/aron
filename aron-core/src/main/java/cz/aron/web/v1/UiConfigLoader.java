@@ -87,7 +87,7 @@ public class UiConfigLoader {
 
 	private final FacetScope facetScope;
 
-	private final ResultImages images;
+	private final DeploymentImages images;
 
 	private String name;
 
@@ -121,7 +121,7 @@ public class UiConfigLoader {
 			.compile("[a-zA-Z]{3,20}|#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\\([a-zA-Z0-9.%,/ +-]{3,60}\\)");
 
 	public UiConfigLoader(@Value("${webResources.pageTemplate}") String pageTemplateFile,
-			@Value("${help-url:}") String helpUrl, FacetScope facetScope, ResultImages images) {
+			@Value("${help-url:}") String helpUrl, FacetScope facetScope, DeploymentImages images) {
 		this.pageTemplateFile = pageTemplateFile;
 		this.helpUrl = helpUrl;
 		this.facetScope = facetScope;
@@ -164,7 +164,7 @@ public class UiConfigLoader {
 		var config = new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links);
 		if (homePage != null) {
 			// image URLs carry this request's context path, so they are built here
-			// rather than at startup (see ResultImages)
+			// rather than at startup (see DeploymentImages)
 			config.setHomePage(homePage.render(locale, images::url));
 		}
 		return config;

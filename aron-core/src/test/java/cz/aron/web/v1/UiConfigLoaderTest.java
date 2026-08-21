@@ -39,7 +39,7 @@ class UiConfigLoaderTest {
 		Path file = tempDir.resolve("pageTemplate.yaml");
 		Files.writeString(file, yaml, StandardCharsets.UTF_8);
 		var loader = new UiConfigLoader(file.toString(), helpUrl, new FacetScope(List.of()),
-				new ResultImages(new MockHttpServletRequest(), ""));
+				new DeploymentImages(new MockHttpServletRequest(), ""));
 		loader.load();
 		return loader;
 	}

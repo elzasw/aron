@@ -50,7 +50,7 @@ application.yml
    * - ``webResources.resultLayout``
      - Optional layout of the structured search results
        (``resultLayout.yaml``, see below). Unset = the built-in defaults.
-   * - ``webResources.resultImages``
+   * - ``webResources.images``
      - Optional directory of the images the portal serves by name: the record
        and field icons of the structured results, the pictures of the home
        page's tiles, and thumbnails delivered by name. Several directories may
@@ -321,7 +321,7 @@ the two files cannot disagree:
 - ``UNITDATE`` facet — ``from:`` and/or ``to:`` (a year, a date, or a full
   timestamp)
 
-``image`` names a file of ``webResources.resultImages`` (see above);
+``image`` names a file of ``webResources.images`` (see above);
 ``positionX``/``positionY`` move the crop of a picture whose subject is not in
 the middle, and take a percentage or a CSS keyword. In a ``GRID`` group the
 picture fills the tile; in a ``LIST`` group it is a small mark beside the label.
@@ -341,7 +341,7 @@ Columns of an optional ``heading``, prose ``paragraphs`` and a list of
 ``links``; prose comes first. A link takes ``label`` (or a well-known ``code``,
 which the portal labels itself), ``url``, and an optional ``image`` — the small
 mark a reader recognises the link by, again a file of
-``webResources.resultImages``. Marks are files rather than names the portal
+``webResources.images``. Marks are files rather than names the portal
 knows, so a service that renames itself is a file the deployment swaps.
 
 Prose carries its links **inside** the sentence. The deployment writes a named
@@ -407,7 +407,7 @@ and an emphasised heading.
 Field keys: ``code``, ``heading``, ``prefix``, ``label``, ``valueSeparator``,
 ``color``, ``scale``, ``bold``, ``image``. Icon keys: ``code``, ``image``,
 ``size``. An unknown key stops the startup rather than being ignored, and so
-does an ``image`` reference when ``webResources.resultImages`` is not
+does an ``image`` reference when ``webResources.images`` is not
 configured.
 
 Notes on the individual keys:
@@ -423,9 +423,9 @@ Notes on the individual keys:
 - **color** is applied to text only, never as a background. The contrast against
   the card background is the deployment's responsibility (WCAG 2.1 AA requires
   4.5:1 for body text).
-- **image** is a plain file name inside ``webResources.resultImages`` — no
+- **image** is a plain file name inside ``webResources.images`` — no
   subdirectories, no paths. The portal serves those files at
-  ``/api/v1/ui/result-images/<name>`` (``svg``, ``png``, ``jpeg``) and builds the
+  ``/api/v1/ui/images/<name>`` (``svg``, ``png``, ``jpeg``) and builds the
   URLs itself, so nothing has to be hosted next to the application. When the
   setting lists several directories, the name is looked up in each in turn.
 
@@ -468,7 +468,7 @@ and the switch is unnecessary. The keys map as follows.
    * - ``separator``
      - ``valueSeparator``
    * - ``icon``
-     - ``image`` (the file moves into ``webResources.resultImages``)
+     - ``image`` (the file moves into ``webResources.images``)
    * - ``itemSeparator``
      - ``fieldSeparator``
    * - ``typeIcons[].type`` / ``.icon``

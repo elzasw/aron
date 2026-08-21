@@ -81,10 +81,10 @@ footer:
 #
 # label a note lze zapsat jednim retezcem (zdrojovy jazyk), nebo mapou
 # jazyk -> text. Volitelny obrazek se jmenuje jmenem souboru z adresare
-# webResources.resultImages (positionX/positionY posunou vyrez u fotografie,
+# webResources.images (positionX/positionY posunou vyrez u fotografie,
 # columnSpan/rowSpan roztahnou dlazdici v mrizce na 2 pole).
 #
-# Obrazky home-*.svg v config/images/results jsou ZASTUPNE, jako logo.svg
+# Obrazky home-*.svg v config/images jsou ZASTUPNE, jako logo.svg
 # a topImage.png: nakres misto fotografie, aby bylo videt, co dlazdice umi.
 # Nasazeni je vymeni za vlastni grafiku (stejna jmena = zadna zmena tohoto
 # souboru), nebo klic image smaze. Za citelnost bileho popisu na vlastni
@@ -194,7 +194,7 @@ homepage:
               en: The archive's website
             url: https://example.org
           # Odkaz muze nest malou znacku, po ktere ho ctenar pozna (profil na
-          # socialni siti). Znacka je soubor z adresare webResources.resultImages,
+          # socialni siti). Znacka je soubor z adresare webResources.images,
           # ne jmeno, ktere by znal portal - proto se prejmenovani znacky
           # (z Twitteru se stalo X) resi vymenou souboru a nova sit pridanim
           # dalsiho. Popis (label) zustava jmenem odkazu i pro cteni hlasem,

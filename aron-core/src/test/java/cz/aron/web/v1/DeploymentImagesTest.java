@@ -17,7 +17,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * validation that is the whole risk surface of serving files from a configured
  * directory.
  */
-class ResultImagesTest {
+class DeploymentImagesTest {
 
 	@TempDir
 	Path directory;
@@ -26,7 +26,7 @@ class ResultImagesTest {
 	@TempDir
 	Path ownDirectory;
 
-	private ResultImages images;
+	private DeploymentImages images;
 
 	@BeforeEach
 	void configure() throws IOException {
@@ -37,12 +37,12 @@ class ResultImagesTest {
 		Files.writeString(directory.getParent().resolve("outside.svg"), "<svg/>");
 		var request = new MockHttpServletRequest();
 		request.setContextPath("/aron");
-		images = new ResultImages(request, directory.toString());
+		images = new DeploymentImages(request, directory.toString());
 	}
 
 	@Test
 	void urlsCarryTheDeploymentsOwnPrefix() {
-		assertThat(images.url("record.svg")).isEqualTo("/aron/api/v1/ui/result-images/record.svg");
+		assertThat(images.url("record.svg")).isEqualTo("/aron/api/v1/ui/images/record.svg");
 	}
 
 	@Test
@@ -50,14 +50,14 @@ class ResultImagesTest {
 		assertThat(images.thumbnailUrl("https://images.example.org/x.jp2"))
 				.isEqualTo("https://images.example.org/x.jp2");
 		assertThat(images.thumbnailUrl("//images.example.org/x.jp2")).isEqualTo("//images.example.org/x.jp2");
-		assertThat(images.thumbnailUrl("record.svg")).isEqualTo("/aron/api/v1/ui/result-images/record.svg");
+		assertThat(images.thumbnailUrl("record.svg")).isEqualTo("/aron/api/v1/ui/images/record.svg");
 
 		// a name that could not be served is dropped rather than emitted as a URL
 		// that answers 404
 		assertThat(images.thumbnailUrl("sub/nested.svg")).isNull();
 		assertThat(images.thumbnailUrl(null)).isNull();
 		assertThat(images.thumbnailUrl(" ")).isNull();
-		var unconfigured = new ResultImages(new MockHttpServletRequest(), "");
+		var unconfigured = new DeploymentImages(new MockHttpServletRequest(), "");
 		assertThat(unconfigured.isConfigured()).isFalse();
 		assertThat(unconfigured.thumbnailUrl("record.svg")).isNull();
 		assertThat(unconfigured.thumbnailUrl("https://images.example.org/x.jp2"))
@@ -71,7 +71,7 @@ class ResultImagesTest {
 		Files.writeString(ownDirectory.resolve("tile.svg"), "<svg/>");
 		// same name in both: the earlier directory wins
 		Files.writeString(ownDirectory.resolve("record.svg"), "<svg id='own'/>");
-		var both = new ResultImages(new MockHttpServletRequest(), directory + " , " + ownDirectory);
+		var both = new DeploymentImages(new MockHttpServletRequest(), directory + " , " + ownDirectory);
 
 		assertThat(both.isConfigured()).isTrue();
 		assertThat(both.resolve("tile.svg")).isEqualTo(ownDirectory.resolve("tile.svg"));

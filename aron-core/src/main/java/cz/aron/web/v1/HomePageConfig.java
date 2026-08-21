@@ -244,7 +244,7 @@ final class HomePageConfig {
 			}
 			if (!imageIsServable.test(image)) {
 				throw new IllegalStateException(where + ": image '" + image
-						+ "' is not a readable file of the webResources.resultImages directory");
+						+ "' is not a readable file of the webResources.images directory");
 			}
 			positionX = position(node.get("positionX"), where);
 			positionY = position(node.get("positionY"), where);

@@ -25,7 +25,7 @@ class StructuredResultMapperTest {
 	/** Stands in for the deployment's image resolution; only bare names reach it. */
 	private static final UnaryOperator<String> IMAGES = name -> name == null || name.startsWith("http")
 			? name
-			: "/ctx/api/v1/ui/result-images/" + name;
+			: "/ctx/api/v1/ui/images/" + name;
 
 	@Test
 	void mapsRowsFieldsAndReferencedValues() {
@@ -57,7 +57,7 @@ class StructuredResultMapperTest {
 		named.setTn("record.svg");
 		named.setTnLink("https://example.org/nahled");
 		var mapped = StructuredResultMapper.toApi(named, IMAGES);
-		assertThat(mapped.getThumbnailUrl()).isEqualTo("/ctx/api/v1/ui/result-images/record.svg");
+		assertThat(mapped.getThumbnailUrl()).isEqualTo("/ctx/api/v1/ui/images/record.svg");
 		assertThat(mapped.getThumbnailLinkUrl()).isEqualTo("https://example.org/nahled");
 
 		var external = minimal();

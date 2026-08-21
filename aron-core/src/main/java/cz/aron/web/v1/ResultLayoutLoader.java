@@ -72,7 +72,7 @@ public class ResultLayoutLoader {
 
 	private final String layoutFile;
 
-	private final ResultImages images;
+	private final DeploymentImages images;
 
 	private String fieldSeparator;
 
@@ -89,7 +89,7 @@ public class ResultLayoutLoader {
 	private record IconConfig(String code, String image, Integer size) {
 	}
 
-	public ResultLayoutLoader(@Value("${webResources.resultLayout:}") String layoutFile, ResultImages images) {
+	public ResultLayoutLoader(@Value("${webResources.resultLayout:}") String layoutFile, DeploymentImages images) {
 		this.layoutFile = layoutFile;
 		this.images = images;
 	}
@@ -187,7 +187,7 @@ public class ResultLayoutLoader {
 		}
 		if (!images.isConfigured()) {
 			throw new IllegalStateException("resultLayout: item '" + code + "' references the image '" + name
-					+ "' but webResources.resultImages is not configured");
+					+ "' but webResources.images is not configured");
 		}
 		return name;
 	}

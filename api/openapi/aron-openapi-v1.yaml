@@ -255,11 +255,21 @@ paths:
                 $ref: '#/components/schemas/UiConfig'
       tags:
         - ui
-  /api/v1/ui/logo:
+  /api/v1/ui/images/{name}:
     get:
-      operationId: Ui_getLogo
-      description: Portal logo image (deployment-supplied; format varies, see Content-Type).
-      parameters: []
+      operationId: Ui_getImage
+      description: |-
+        One image the deployment supplies by name - a record or field icon of the
+        structured results, a picture of a home-page tile, a mark beside a link, a
+        thumbnail delivered as a file name. Clients never build these URLs
+        themselves: whatever carries an image carries a ready-to-use one.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          description: File name within the deployment's image directory; no path segments.
+          schema:
+            type: string
       responses:
         '200':
           description: The request has succeeded.
@@ -278,21 +288,11 @@ paths:
                 format: binary
       tags:
         - ui
-  /api/v1/ui/result-images/{name}:
+  /api/v1/ui/logo:
     get:
-      operationId: Ui_getResultImage
-      description: |-
-        One deployment-supplied image of the structured search results (record and
-        field icons, thumbnail stand-ins) from the configured image directory.
-        Clients never build these URLs themselves - `ResultLayout` and
-        `StructuredResult` carry ready-to-use ones.
-      parameters:
-        - name: name
-          in: path
-          required: true
-          description: File name within the deployment's image directory; no path segments.
-          schema:
-            type: string
+      operationId: Ui_getLogo
+      description: Portal logo image (deployment-supplied; format varies, see Content-Type).
+      parameters: []
       responses:
         '200':
           description: The request has succeeded.
@@ -1196,7 +1196,7 @@ components:
           type: boolean
         iconUrl:
           type: string
-          description: Icon shown before the field, ready to use (see `getResultImage`).
+          description: Icon shown before the field, ready to use (see `getImage`).
       description: Presentation of one field code.
     ResultIcon:
       type: object
@@ -1209,7 +1209,7 @@ components:
           description: The `StructuredResult.code` this icon belongs to.
         url:
           type: string
-          description: Ready-to-use URL of the deployment image (see `getResultImage`).
+          description: Ready-to-use URL of the deployment image (see `getImage`).
         size:
           type: integer
           format: int32
@@ -1343,7 +1343,7 @@ components:
           type: string
           description: |-
             Thumbnail image, ready to use: an external absolute URL when the source
-            delivered one, otherwise this deployment's own `/ui/result-images` URL.
+            delivered one, otherwise this deployment's own `/ui/images` URL.
         thumbnailLinkUrl:
           type: string
           description: Where the thumbnail leads; unset = this record's own detail page.

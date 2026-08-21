@@ -54,7 +54,7 @@ class HomePageConfigTest {
 	}
 
 	private static HomePage render(String yaml) {
-		return parse(yaml).render(CZECH, name -> "/aron/api/v1/ui/result-images/" + name);
+		return parse(yaml).render(CZECH, name -> "/aron/api/v1/ui/images/" + name);
 	}
 
 	@Test
@@ -95,7 +95,7 @@ class HomePageConfigTest {
 		assertThat(tile.getLabel()).isEqualTo("Matriky");
 		assertThat(tile.getNote()).isEqualTo("církevní i civilní");
 		// the server builds the URL, so nothing absolute is baked into a client
-		assertThat(tile.getImageUrl()).isEqualTo("/aron/api/v1/ui/result-images/matriky.jpg");
+		assertThat(tile.getImageUrl()).isEqualTo("/aron/api/v1/ui/images/matriky.jpg");
 		assertThat(tile.getImagePositionY()).isEqualTo("30%");
 		assertThat(tile.getColumnSpan()).isEqualTo(2);
 		assertThat(tile.getApuType()).isEqualTo(ApuType.ARCH_DESC);
@@ -328,7 +328,7 @@ class HomePageConfigTest {
 				          image: { name: ../secrets.txt }
 				"""))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("resultImages");
+				.hasMessageContaining("webResources.images");
 		// a wider tile would break the responsive grid
 		assertThatThrownBy(() -> parse("""
 				homepage:

@@ -68,15 +68,15 @@ class ResultLayoutLoaderTest {
 		assertThat(signature.getPrefix()).isEqualTo("sign.: ");
 		assertThat(signature.getValueSeparator()).isEqualTo(", ");
 		assertThat(signature.getColor()).isEqualTo("#666666");
-		assertThat(signature.getIconUrl()).isEqualTo("/aron/api/v1/ui/result-images/field.svg");
+		assertThat(signature.getIconUrl()).isEqualTo("/aron/api/v1/ui/images/field.svg");
 		// the label of a field styled with a prefix is that prefix
 		assertThat(signature.getLabel()).isEqualTo("sign.: ");
 		assertThat(layout.getFields().get(0).getLabel()).isNull();
 
 		// the global iconSize fills in where an icon does not set its own
 		assertThat(layout.getIcons()).extracting(ResultIcon::getCode, ResultIcon::getUrl, ResultIcon::getSize)
-				.containsExactly(tuple("A_IB", "/aron/api/v1/ui/result-images/record.svg", 35),
-						tuple("A_IM", "/aron/api/v1/ui/result-images/record.svg", 28));
+				.containsExactly(tuple("A_IB", "/aron/api/v1/ui/images/record.svg", 35),
+						tuple("A_IM", "/aron/api/v1/ui/images/record.svg", 28));
 	}
 
 	@Test
@@ -143,7 +143,7 @@ class ResultLayoutLoaderTest {
 				    image: record.svg
 				""", null, false))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("webResources.resultImages is not configured");
+				.hasMessageContaining("webResources.images is not configured");
 
 		assertThatThrownBy(() -> new ResultLayoutLoader(directory.resolve("chybi.yaml").toString(),
 				images(true)).load())
@@ -174,10 +174,10 @@ class ResultLayoutLoaderTest {
 	}
 
 	/** Image resolution for a deployment served under the /aron subpath. */
-	private ResultImages images(boolean configured) {
+	private DeploymentImages images(boolean configured) {
 		var request = new MockHttpServletRequest();
 		request.setContextPath("/aron");
-		return new ResultImages(request, configured ? directory.toString() : "");
+		return new DeploymentImages(request, configured ? directory.toString() : "");
 	}
 
 	private static String prefixOf(ResultLayoutLoader loader, String language, String code) {

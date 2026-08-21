@@ -29,7 +29,7 @@ const matriky: SearchTile = {
   kind: TileKind.Search,
   label: "Matriky",
   note: "církevní i civilní",
-  imageUrl: "/api/v1/ui/result-images/matriky.jpg",
+  imageUrl: "/api/v1/ui/images/matriky.jpg",
   imagePositionY: "30%",
   columnSpan: 2,
   rowSpan: 2,
@@ -91,7 +91,7 @@ const config: UiConfig = {
             {
               label: "badatelna@test.example",
               url: "mailto:badatelna@test.example",
-              imageUrl: "/api/v1/ui/result-images/mail.svg",
+              imageUrl: "/api/v1/ui/images/mail.svg",
             },
           ],
         },

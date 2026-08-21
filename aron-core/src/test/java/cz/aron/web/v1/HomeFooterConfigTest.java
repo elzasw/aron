@@ -32,7 +32,7 @@ class HomeFooterConfigTest {
 	}
 
 	private static HomeFooter render(String yaml, Locale locale) {
-		return parse(yaml).render(locale, name -> "/aron/api/v1/ui/result-images/" + name);
+		return parse(yaml).render(locale, name -> "/aron/api/v1/ui/images/" + name);
 	}
 
 	/** The real MZA footer: prose naming the operating archive, plus a contact column. */
@@ -150,8 +150,8 @@ class HomeFooterConfigTest {
 		// that renames itself is a file swap - no vocabulary of ours to change
 		assertThat(links).extracting(FooterLink::getLabel, FooterLink::getImageUrl, FooterLink::getCode)
 				.containsExactly(
-						tuple("Facebook", "/aron/api/v1/ui/result-images/facebook.svg", null),
-						tuple("X", "/aron/api/v1/ui/result-images/x.svg", null),
+						tuple("Facebook", "/aron/api/v1/ui/images/facebook.svg", null),
+						tuple("X", "/aron/api/v1/ui/images/x.svg", null),
 						// a well-known code may sit in a column too; the UI labels it
 						tuple(null, null, FooterLinkCode.ACCESSIBILITY));
 	}
@@ -167,7 +167,7 @@ class HomeFooterConfigTest {
 				          image: { name: ../secrets.txt }
 				"""))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("resultImages");
+				.hasMessageContaining("webResources.images");
 	}
 
 	@Test

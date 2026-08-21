@@ -17,7 +17,7 @@ import org.springframework.web.util.UriUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * The deployment's served images ({@code webResources.resultImages}, one
+ * The deployment's served images ({@code webResources.images}, one
  * directory or a comma-separated list of them): the record and field icons of
  * {@code resultLayout.yaml}, the pictures of the home page's tiles and links,
  * and the thumbnails that arrive in the data as a bare file name rather than a
@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
  * <p>
  * Two directions, one place: {@link #url(String)} builds the URL clients
  * receive, {@link #resolve(String)} turns a served name back into a file for
- * {@code /api/v1/ui/result-images/{name}}.
+ * {@code /api/v1/ui/images/{name}}.
  * <p>
  * URLs are built here rather than by clients so nothing absolute is baked into
  * a build (the one-artifact rule): the name is prefixed with the request's own
@@ -34,9 +34,9 @@ import jakarta.servlet.http.HttpServletRequest;
  * root and any subpath.
  */
 @Component
-public class ResultImages {
+public class DeploymentImages {
 
-	private static final Logger log = LoggerFactory.getLogger(ResultImages.class);
+	private static final Logger log = LoggerFactory.getLogger(DeploymentImages.class);
 
 	/**
 	 * A served name is a file name, never a path. Everything else - path
@@ -45,7 +45,7 @@ public class ResultImages {
 	 */
 	private static final Pattern NAME = Pattern.compile("[A-Za-z0-9._-]{1,128}");
 
-	private static final String PATH = "/api/v1/ui/result-images/";
+	private static final String PATH = "/api/v1/ui/images/";
 
 	private final HttpServletRequest request;
 
@@ -58,8 +58,8 @@ public class ResultImages {
 	 */
 	private final List<Path> directories;
 
-	public ResultImages(HttpServletRequest request,
-			@Value("${webResources.resultImages:}") String directories) {
+	public DeploymentImages(HttpServletRequest request,
+			@Value("${webResources.images:}") String directories) {
 		this.request = request;
 		this.directories = Stream.of((directories == null ? "" : directories).split(","))
 				.map(String::trim)
@@ -93,7 +93,7 @@ public class ResultImages {
 			return value;
 		}
 		if (directories.isEmpty()) {
-			log.debug("Thumbnail '{}' is a deployment image name but webResources.resultImages is not configured.",
+			log.debug("Thumbnail '{}' is a deployment image name but webResources.images is not configured.",
 					value);
 			return null;
 		}

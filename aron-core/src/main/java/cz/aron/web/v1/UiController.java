@@ -23,7 +23,7 @@ import cz.aron.api.v1.model.UiConfig;
  * Implements the /api/v1/ui endpoints: typed UI configuration
  * ({@link UiConfigLoader}), the deployment-supplied logo
  * ({@code webResources.logo}) and the images of the structured search results
- * ({@link ResultImages}); image formats follow the file extension. Unlike the
+ * ({@link DeploymentImages}); image formats follow the file extension. Unlike the
  * old API's /pageTemplate, clients never receive raw server configuration files.
  */
 @RestController
@@ -33,17 +33,17 @@ public class UiController implements UiApi {
 
 	private final PresentationLocales presentationLocales;
 
-	private final ResultImages resultImages;
+	private final DeploymentImages deploymentImages;
 
 	private final String logoFile;
 
 	private byte[] logoData;
 
 	public UiController(UiConfigLoader uiConfigLoader, PresentationLocales presentationLocales,
-			ResultImages resultImages, @Value("${webResources.logo}") String logoFile) {
+			DeploymentImages deploymentImages, @Value("${webResources.logo}") String logoFile) {
 		this.uiConfigLoader = uiConfigLoader;
 		this.presentationLocales = presentationLocales;
-		this.resultImages = resultImages;
+		this.deploymentImages = deploymentImages;
 		this.logoFile = logoFile;
 	}
 
@@ -73,8 +73,8 @@ public class UiController implements UiApi {
 	 * is deployment data rather than part of the application.
 	 */
 	@Override
-	public ResponseEntity<Resource> uiGetResultImage(String name) {
-		Path file = resultImages.resolve(name);
+	public ResponseEntity<Resource> uiGetImage(String name) {
+		Path file = deploymentImages.resolve(name);
 		MediaType mediaType = file != null ? mediaTypeOf(name) : null;
 		if (mediaType == null) {
 			return ResponseEntity.notFound().build();

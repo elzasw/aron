@@ -19,7 +19,7 @@ class PresentationLocalesTest {
 
 	private static PresentationLocales locales(String... localizations) {
 		var loader = new UiConfigLoader("unused", "", new FacetScope(List.of()),
-				new ResultImages(new MockHttpServletRequest(), ""));
+				new DeploymentImages(new MockHttpServletRequest(), ""));
 		// only the configured localizations matter here - the rest of the page
 		// template is not read (no file behind this loader)
 		ReflectionTestUtils.setField(loader, "localizations", List.of(localizations));

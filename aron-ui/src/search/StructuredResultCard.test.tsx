@@ -17,7 +17,7 @@ vi.mock("../api/client", () => ({
 
 const LAYOUT: ResultLayout = {
   fieldSeparator: " | ",
-  icons: [{ code: "A_IB", url: "/api/v1/ui/result-images/record.svg", size: 35 }],
+  icons: [{ code: "A_IB", url: "/api/v1/ui/images/record.svg", size: 35 }],
   fields: [
     { code: "N", heading: true, bold: true, scale: 1.2 },
     { code: "J_S", prefix: "sign.: ", valueSeparator: ", ", label: "sign.: " },
@@ -28,7 +28,7 @@ const LAYOUT: ResultLayout = {
 /** The fixture record: a heading row, a two-field row, a referenced value. */
 const STRUCTURED: NonNullable<ApuSearchItem["structured"]> = {
   code: "A_IB",
-  thumbnailUrl: "/api/v1/ui/result-images/record.svg",
+  thumbnailUrl: "/api/v1/ui/images/record.svg",
   rows: [
     { fields: [{ code: "N", values: [{ text: "Kronika obce Testov" }] }] },
     {

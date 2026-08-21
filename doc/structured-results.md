@@ -300,7 +300,7 @@ New `webResources` keys, sibling-localized per the standing rule:
 ```yaml
 webResources:
   resultLayout: ./config/resultLayout.yaml     # optional; absent = client defaults
-  resultImages: ./config/images/results/       # optional; icons + thumbnail fallbacks
+  images: ./config/images/results/       # optional; icons + thumbnail fallbacks
 ```
 
 ```yaml
@@ -346,8 +346,8 @@ a one-off, documented in the admin docs.
 
 ### 4.4 Images
 
-`GET /api/v1/ui/result-images/{name}` serves one file from
-`webResources.resultImages`, content type from the extension — the same shape as
+`GET /api/v1/ui/images/{name}` serves one file from
+`webResources.images`, content type from the extension — the same shape as
 `UiController.uiGetLogo`, plus:
 
 - `name` must match `[A-Za-z0-9._-]{1,128}` and the resolved path must stay
@@ -359,7 +359,7 @@ a one-off, documented in the admin docs.
 
 **URLs are resolved server-side.** `tn` is either an external absolute URL
 (passed through) or a bare image name; the layout's `image` is always a name.
-The server turns a name into `<contextPath>/api/v1/ui/result-images/<name>`
+The server turns a name into `<contextPath>/api/v1/ui/images/<name>`
 using the request's own context path, which already folds `X-Forwarded-Prefix`
 (`forward-headers-strategy: framework`). Clients therefore get one
 always-usable `thumbnailUrl` / `url` and need no resolution rule, and the
@@ -507,10 +507,10 @@ Backend
   `api/openapi/aron-openapi-v1.yaml` committed with it.
 - `cz.aron.web.v1`: `StructuredResultMapper` (stored → contract, the only
   reader), `ResultLayoutLoader` (`resultLayout.yaml` + sibling, strict keys),
-  `ResultImages` (name validation + URL building), `SearchController`
+  `DeploymentImages` (name validation + URL building), `SearchController`
   (`attachStructuredResults`, `searchGetResultLayout`), `UiController`
   (`uiGetResultImage`).
-- `webResources.resultLayout` / `webResources.resultImages` and
+- `webResources.resultLayout` / `webResources.images` and
   `search.structured-results` in the configuration template and the admin docs.
 
 UI
@@ -522,7 +522,7 @@ UI
 
 Tests
 
-- `StructuredResultMapperTest`, `ResultLayoutLoaderTest`, `ResultImagesTest`
+- `StructuredResultMapperTest`, `ResultLayoutLoaderTest`, `DeploymentImagesTest`
   (plain unit tests); `NewApiV1Test` — a mixed response, the layout in two
   languages, the image endpoint including the traversal cases; a real `<result>`
   in the `detail-transfer` fixture so import → store → search is finally covered

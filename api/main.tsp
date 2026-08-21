@@ -86,14 +86,14 @@ namespace Ui {
 	};
 
 	/**
-	 * One deployment-supplied image of the structured search results (record and
-	 * field icons, thumbnail stand-ins) from the configured image directory.
-	 * Clients never build these URLs themselves - `ResultLayout` and
-	 * `StructuredResult` carry ready-to-use ones.
+	 * One image the deployment supplies by name - a record or field icon of the
+	 * structured results, a picture of a home-page tile, a mark beside a link, a
+	 * thumbnail delivered as a file name. Clients never build these URLs
+	 * themselves: whatever carries an image carries a ready-to-use one.
 	 */
 	@get
-	@route("/result-images/{name}")
-	op getResultImage(
+	@route("/images/{name}")
+	op getImage(
 		/** File name within the deployment's image directory; no path segments. */
 		@path name: string,
 	): {
@@ -759,7 +759,7 @@ model StructuredResult {
 
 	/**
 	 * Thumbnail image, ready to use: an external absolute URL when the source
-	 * delivered one, otherwise this deployment's own `/ui/result-images` URL.
+	 * delivered one, otherwise this deployment's own `/ui/images` URL.
 	 */
 	thumbnailUrl?: string;
 
@@ -835,7 +835,7 @@ model ResultFieldStyle {
 
 	bold?: boolean;
 
-	/** Icon shown before the field, ready to use (see `getResultImage`). */
+	/** Icon shown before the field, ready to use (see `getImage`). */
 	iconUrl?: string;
 }
 
@@ -844,7 +844,7 @@ model ResultIcon {
 	/** The `StructuredResult.code` this icon belongs to. */
 	code: string;
 
-	/** Ready-to-use URL of the deployment image (see `getResultImage`). */
+	/** Ready-to-use URL of the deployment image (see `getImage`). */
 	url: string;
 
 	/** Rendered width in CSS pixels; unset = the client default. */

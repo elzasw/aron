@@ -29,7 +29,7 @@ homepage:
   # Dev ukazka vsech moznosti dlazdic. Fazety, ikony vysledku i zastupne obrazky
   # dlazdic (home-*.svg) se berou ze SPOLECNE ceske konfigurace; dev navic pridava
   # vlastni adresar ./dev-data/config/images se znackou odkazu (demo-mark.svg),
-  # ktera se do nasazeni nedodava - webResources.resultImages proto uvadi oba,
+  # ktera se do nasazeni nedodava - webResources.images proto uvadi oba,
   # presne jako nasazeni, ktere si drzi vlastni obrazky mimo balik.
   groups:
     # GRID: obrazkove dlazdice. Prvni je "hero" pres 2x2 pole, dalsi pres 2x1,

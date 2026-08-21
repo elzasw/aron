@@ -38,14 +38,14 @@ webResources:
   # Vzhled strukturovanych vysledku vyhledavani - volitelne. Bez souboru se
   # strukturovane vysledky stale zobrazuji, jen bez ikon, predsazenych textu a
   # zvyraznene hlavicky. Prekladatelne texty patri do
-  # resultLayout_localization.yaml vedle nej. Adresar resultImages nese ikony
+  # resultLayout_localization.yaml vedle nej. Adresar images nese ikony
   # zaznamu a polozek, ktere soubor odkazuje jmenem (a nahledy dodane v datech
   # jako jmeno souboru misto URL), a take obrazky dlazdic uvodni strany
   # (home-*.svg, viz homepage v pageTemplate.yaml). Lze uvest vic adresaru
   # oddelenych carkou - jmeno se hleda po sobe, plati prvni nalez; nasazeni si
   # tak muze drzet vlastni obrazky mimo adresar dodavany s balikem.
   resultLayout: ./config/resultLayout.yaml
-  resultImages: ./config/images/results
+  images: ./config/images
 
 # Cil polozky HELP v nabidce portalu. Klic je povinny (cte ho stare API);
 # nasazeni sem patri vlastni stranku napovedy.

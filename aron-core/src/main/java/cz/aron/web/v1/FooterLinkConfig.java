@@ -103,7 +103,7 @@ record FooterLinkConfig(FooterLinkCode code, ConfiguredText label, String image,
 		}
 		if (!imageIsServable.test(name)) {
 			throw new IllegalStateException("pageTemplate " + where + ": item '" + url + "': image '" + name
-					+ "' is not a readable file of the webResources.resultImages directory");
+					+ "' is not a readable file of the webResources.images directory");
 		}
 		return name;
 	}

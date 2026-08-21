@@ -106,7 +106,7 @@ public class SearchController implements SearchApi {
 
 	private final ResultLayoutLoader resultLayoutLoader;
 
-	private final ResultImages resultImages;
+	private final DeploymentImages deploymentImages;
 
 	/**
 	 * Whether hits carry their stored structured presentation. {@code AUTO} (the
@@ -129,7 +129,7 @@ public class SearchController implements SearchApi {
 
 	public SearchController(FacetScope facetScope, TypesHolder typesHolder, IndexingService indexingService,
 			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
-			ApuEntityRepository apuEntityRepository, ResultLayoutLoader resultLayoutLoader, ResultImages resultImages,
+			ApuEntityRepository apuEntityRepository, ResultLayoutLoader resultLayoutLoader, DeploymentImages deploymentImages,
 			@Value("${search.structured-results:AUTO}") String structuredResults,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
@@ -142,7 +142,7 @@ public class SearchController implements SearchApi {
 		this.apuService = apuService;
 		this.apuEntityRepository = apuEntityRepository;
 		this.resultLayoutLoader = resultLayoutLoader;
-		this.resultImages = resultImages;
+		this.deploymentImages = deploymentImages;
 		this.structuredResults = parseStructuredResults(structuredResults);
 		this.maxWindow = maxWindow;
 		this.totalUpToDefault = totalUpToDefault;
@@ -279,7 +279,7 @@ public class SearchController implements SearchApi {
 		var stored = apuService.findAllResultsByUuidIn(uuids);
 		for (ApuSearchItem item : items) {
 			item.setStructured(
-					StructuredResultMapper.toApi(stored.get(item.getUuid()), resultImages::thumbnailUrl));
+					StructuredResultMapper.toApi(stored.get(item.getUuid()), deploymentImages::thumbnailUrl));
 		}
 	}
 

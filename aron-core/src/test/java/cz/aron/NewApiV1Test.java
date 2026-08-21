@@ -161,7 +161,7 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(search.getColumnSpan()).isEqualTo(2);
 		assertThat(search.getImagePositionY()).isEqualTo("30%");
 		// the server builds the image URL from the request's own context path
-		assertThat(search.getImageUrl()).isEqualTo("/api/v1/ui/result-images/record.svg");
+		assertThat(search.getImageUrl()).isEqualTo("/api/v1/ui/images/record.svg");
 		assertThat(search.getFilters()).singleElement().isInstanceOfSatisfying(ValuesFilter.class, filter -> {
 			// searchConfig.yaml writes LANG_CODE; the API's facet code is the tilde form
 			assertThat(filter.getFacet()).isEqualTo("LANG~CODE");
@@ -199,7 +199,7 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(footer.getColumns().get(1).getLinks())
 				.extracting(FooterLink::getLabel, FooterLink::getUrl, FooterLink::getImageUrl)
 				.containsExactly(tuple("badatelna@test.example", "mailto:badatelna@test.example",
-						"/api/v1/ui/result-images/field.svg"));
+						"/api/v1/ui/images/field.svg"));
 
 		// the whole band follows the reader's language, runs included
 		var english = new UiApi(v1ApiClient()).uiGetConfig("en").getHomePage().getFooter();
@@ -485,7 +485,7 @@ class NewApiV1Test extends AbstractTest {
 
 		assertThat(structured.getCode()).isEqualTo("A_IB");
 		// a thumbnail given as a deployment image name is resolved to a usable URL
-		assertThat(structured.getThumbnailUrl()).isEqualTo("/api/v1/ui/result-images/record.svg");
+		assertThat(structured.getThumbnailUrl()).isEqualTo("/api/v1/ui/images/record.svg");
 		assertThat(structured.getThumbnailLinkUrl()).isEqualTo("https://example.org/kronika-nahled");
 
 		// rows in delivery order; a row can hold more than one field
@@ -516,15 +516,15 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(byCode.get("J_S").getPrefix()).isEqualTo("sign.: ");
 		assertThat(byCode.get("J_S").getValueSeparator()).isEqualTo(", ");
 		// a field image is resolved to a usable URL, like the record icons below
-		assertThat(byCode.get("J_S").getIconUrl()).isEqualTo("/api/v1/ui/result-images/field.svg");
+		assertThat(byCode.get("J_S").getIconUrl()).isEqualTo("/api/v1/ui/images/field.svg");
 		// the label defaults to the visible prefix; a field styled without either stays unlabeled
 		assertThat(byCode.get("J_IC").getLabel()).isEqualTo("Inv. č.: ");
 		assertThat(byCode.get("D").getLabel()).isNull();
 		// the global iconSize fills in for icons that do not set their own
 		assertThat(czech.getIcons()).extracting(ResultIcon::getCode, ResultIcon::getUrl, ResultIcon::getSize)
 				.containsExactly(
-						tuple("A_IB", "/api/v1/ui/result-images/record.svg", 35),
-						tuple("A_IM", "/api/v1/ui/result-images/record.svg", 28));
+						tuple("A_IB", "/api/v1/ui/images/record.svg", 35),
+						tuple("A_IM", "/api/v1/ui/images/record.svg", 28));
 
 		// prefixes and labels are deployment text, translated in the sibling file
 		var english = searchApi.searchGetResultLayout("en").getFields().stream()
@@ -539,17 +539,17 @@ class NewApiV1Test extends AbstractTest {
 	}
 
 	@Test
-	void resultImagesServeOnlyPlainNamesFromTheConfiguredDirectory() throws Exception {
-		var image = getBytes("/api/v1/ui/result-images/record.svg");
+	void deploymentImagesServeOnlyPlainNamesFromTheConfiguredDirectory() throws Exception {
+		var image = getBytes("/api/v1/ui/images/record.svg");
 		assertThat(image.statusCode()).isEqualTo(200);
 		assertThat(contentType(image)).isEqualTo("image/svg+xml");
 		assertThat(new String(image.body(), java.nio.charset.StandardCharsets.UTF_8)).contains("<svg");
 
 		// an unknown name, a name outside the directory and an unsupported format
 		// are all 404 - the file set is deployment data, not part of the app
-		assertThat(get("/api/v1/ui/result-images/neexistuje.svg").statusCode()).isEqualTo(404);
-		assertThat(get("/api/v1/ui/result-images/types.yaml").statusCode()).isEqualTo(404);
-		assertThat(get("/api/v1/ui/result-images/..%2F..%2Ftypes.yaml").statusCode()).isIn(400, 404);
+		assertThat(get("/api/v1/ui/images/neexistuje.svg").statusCode()).isEqualTo(404);
+		assertThat(get("/api/v1/ui/images/types.yaml").statusCode()).isEqualTo(404);
+		assertThat(get("/api/v1/ui/images/..%2F..%2Ftypes.yaml").statusCode()).isIn(400, 404);
 	}
 
 	@Test

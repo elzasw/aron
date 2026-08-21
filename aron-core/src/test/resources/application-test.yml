@@ -55,6 +55,6 @@ webResources:
   logo: ./src/test/resources/test-config/logo.svg
   topImage: ./src/test/resources/test-config/book.png
   resultLayout: ./src/test/resources/test-config/resultLayout.yaml
-  resultImages: ./src/test/resources/test-config/images
+  images: ./src/test/resources/test-config/images
 
 help-url: http://help.test.example
