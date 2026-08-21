@@ -127,6 +127,13 @@ model UiConfig {
 	 * belong to the host page.
 	 */
 	footerLinks: FooterLink[];
+
+	/**
+	 * What the deployment publishes on its own home page: groups of curated
+	 * entry points. Absent when it configures none - the home page is then the
+	 * search box alone.
+	 */
+	homePage?: HomePage;
 }
 
 /**
@@ -162,6 +169,25 @@ model FooterLink {
 	label?: string;
 
 	url: string;
+
+	/**
+	 * Ready-to-use URL of a small mark to show beside the label, for links a
+	 * reader recognizes by their sign rather than by their name. Deployment-
+	 * supplied and server-built, like every other configured image, so this
+	 * contract names no third party: the marks a portal shows are its operator's
+	 * own affair, they change without warning (Twitter became X), and a closed
+	 * list of them here would turn every rename into a breaking change and every
+	 * addition into a release. Swapping the file is enough.
+	 *
+	 * Always **same-origin**: the deployment configures a file of its own image
+	 * directory, never a URL, so no page needs a third-party host - which keeps
+	 * a strict `img-src` workable and keeps the reader's browser from announcing
+	 * the visit to whoever hosts the mark.
+	 *
+	 * The `label` stays the link's accessible name, so the mark never carries
+	 * meaning on its own.
+	 */
+	imageUrl?: string;
 }
 
 /** One item of the top-level menu. */
@@ -186,6 +212,166 @@ enum MenuItemCode {
 	ORIGINATOR,
 	NEWS,
 	HELP,
+}
+
+/**
+ * The deployment's home page: groups of curated entry points - the "prepared
+ * queries" a reader is offered before typing anything, and links to related
+ * institutions. Which record types exist is not configured here; the menu
+ * decides that (`MenuItem`).
+ */
+model HomePage {
+	groups: TileGroup[];
+
+	/**
+	 * The deployment's own footer band at the foot of the home page: who runs
+	 * the portal, what it presents, how to reach them. Deliberately part of the
+	 * home page rather than of the application frame - the frame is one viewport
+	 * tall and every row of it is taken from the routed content, so a band on
+	 * every page would cost the record detail its pane height for good. The
+	 * frame keeps the slim `footerLinks` row, which is where a deployment's
+	 * legally required links stay visible everywhere.
+	 */
+	footer?: HomeFooter;
+}
+
+/** The home page's footer band: columns, in display order. */
+model HomeFooter {
+	columns: FooterColumn[];
+}
+
+/**
+ * One column of the band. Its prose comes first, then its links - a footer
+ * column reads that way round, so the order needs no configuration.
+ */
+model FooterColumn {
+	/** Column heading in the reader's language, when it has one. */
+	heading?: string;
+
+	paragraphs: FooterParagraph[];
+
+	links: FooterLink[];
+}
+
+/**
+ * One paragraph of prose. A list of runs rather than a string, because these
+ * sentences carry links inside them ("a web application of the *Moravian
+ * Provincial Archives* presenting ..."): the deployment writes the sentence
+ * with named placeholders and the server resolves them, so the portal renders
+ * real anchors it controls and never configured markup.
+ */
+model FooterParagraph {
+	runs: TextRun[];
+}
+
+/**
+ * One stretch of a paragraph: plain text, or - when `url` is set - a link.
+ * Deliberately not a discriminated union: with one optional field and no
+ * ambiguity, a union would buy three models and a type predicate for nothing.
+ */
+model TextRun {
+	text: string;
+
+	url?: string;
+}
+
+/** One labelled group of tiles, rendered in one style. */
+model TileGroup {
+	/**
+	 * Group heading in the reader's language. Required: a group of links is a
+	 * navigable region and needs a name of its own.
+	 */
+	label: string;
+
+	style: TileStyle;
+
+	tiles: HomeTile[];
+}
+
+/** How a group lays its tiles out. */
+enum TileStyle {
+	/** Compact rows - suits a long list of links, with a small image per row. */
+	LIST,
+
+	/**
+	 * Picture tiles on a responsive grid. A tile with no image keeps the
+	 * deployment's primary colour, so an imageless grid is still coherent.
+	 */
+	GRID,
+}
+
+/** Where a tile leads - the discriminator of {@link HomeTile}. */
+enum TileKind {
+	/** Out of the portal. */
+	LINK,
+
+	/** Into one section's search. */
+	SEARCH,
+}
+
+/**
+ * One entry point on the home page, discriminated by `kind` - the same
+ * `ItemData` pattern as `SearchFilter` and `DetailItem`.
+ */
+@discriminator("kind")
+model HomeTile {
+	kind: TileKind;
+
+	/** Tile label in the reader's language. */
+	label: string;
+
+	/** One line below the label - what the tile covers. Always visible. */
+	note?: string;
+
+	/**
+	 * Ready-to-use URL of the tile's image, built by the server from the
+	 * deployment's image directory - clients never assemble one, which is what
+	 * keeps a single artifact serving the URL root and any subpath. Always
+	 * same-origin: configuration names a file, never a URL.
+	 */
+	imageUrl?: string;
+
+	/**
+	 * CSS background position of the image, for a photo whose subject is not in
+	 * the middle. A percentage or a keyword; absent = centred.
+	 */
+	imagePositionX?: string;
+
+	imagePositionY?: string;
+
+	/** Grid cells the tile spans (GRID only), 1-2; absent = one cell. */
+	columnSpan?: int32;
+
+	rowSpan?: int32;
+}
+
+/** A tile leading out of the portal - another archive, a related project. */
+model LinkTile extends HomeTile {
+	@invisible(Lifecycle)
+	kind: TileKind.LINK;
+
+	/** Absolute `http`/`https`/`mailto` URL. */
+	url: string;
+}
+
+/**
+ * A tile leading into one section's search with the deployment's own filters
+ * already applied. The filters are this contract's own `SearchFilter`s, so the
+ * search page receives them as ordinary constraints the reader can see in the
+ * sidebar and undo - a tile is a starting point, not a locked scope.
+ *
+ * `apuType` is required: filters are validated against the section's configured
+ * facets, and the general search (no section) has none.
+ */
+model SearchTile extends HomeTile {
+	@invisible(Lifecycle)
+	kind: TileKind.SEARCH;
+
+	apuType: ApuType;
+
+	query?: string;
+
+	filters: SearchFilter[];
 }
 
 /**

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
@@ -17,8 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;
 
-import cz.aron.api.v1.model.FooterLink;
-import cz.aron.api.v1.model.FooterLinkCode;
+import cz.aron.api.v1.model.HomePage;
 import cz.aron.commons.LocalizationFile;
 import cz.aron.api.v1.model.MenuItem;
 import cz.aron.api.v1.model.MenuItemCode;
@@ -32,9 +32,10 @@ import jakarta.annotation.PostConstruct;
  * deployment's pageTemplate.yaml ({@code webResources.pageTemplate}). Recognized
  * keys: {@code name}, {@code localizations}, the optional {@code menu} list
  * ({@code code} + optional {@code color}/{@code url} per item), the optional
- * {@code primaryColor} pair and the optional {@code footer.links} list. Without a {@code menu} key the deployment gets the
- * default portal menu: FUND, ARCH_DESC, ENTITY, plus HELP when {@code help-url}
- * is configured.
+ * {@code primaryColor} pair, the optional {@code footer.links} list and the
+ * optional {@code homepage} section ({@link HomePageConfig}). Without a
+ * {@code menu} key the deployment gets the default portal menu: FUND,
+ * ARCH_DESC, ENTITY, plus HELP when {@code help-url} is configured.
  * <p>
  * A HELP item without an explicit url falls back to {@code help-url}; when
  * neither is set the item is dropped (with a warning). An unknown menu code
@@ -84,6 +85,10 @@ public class UiConfigLoader {
 
 	private final String helpUrl;
 
+	private final FacetScope facetScope;
+
+	private final ResultImages images;
+
 	private String name;
 
 	private List<LocalizedItem> nameTranslations;
@@ -95,6 +100,8 @@ public class UiConfigLoader {
 	private List<FooterLinkConfig> footerLinks;
 
 	private PrimaryColor primaryColor;
+
+	private HomePageConfig homePage;
 
 	/**
 	 * Primary colour of one deployment: the header's shade and the lighter one of
@@ -113,14 +120,12 @@ public class UiConfigLoader {
 	private static final Pattern COLOR = Pattern
 			.compile("[a-zA-Z]{3,20}|#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\\([a-zA-Z0-9.%,/ +-]{3,60}\\)");
 
-	/** Parsed footer link: the localized labels are picked per request. */
-	private record FooterLinkConfig(FooterLinkCode code, String label, List<LocalizedItem> translations, String url) {
-	}
-
 	public UiConfigLoader(@Value("${webResources.pageTemplate}") String pageTemplateFile,
-			@Value("${help-url:}") String helpUrl) {
+			@Value("${help-url:}") String helpUrl, FacetScope facetScope, ResultImages images) {
 		this.pageTemplateFile = pageTemplateFile;
 		this.helpUrl = helpUrl;
+		this.facetScope = facetScope;
+		this.images = images;
 	}
 
 	@PostConstruct
@@ -131,7 +136,13 @@ public class UiConfigLoader {
 		localizations = readLocalizations(pageTemplate);
 		menuItems = readMenu(pageTemplate);
 		primaryColor = readPrimaryColor(pageTemplate);
-		footerLinks = readFooterLinks(pageTemplate);
+		// an image name is checked against the directory here, at startup: a link
+		// or tile pointing at a missing file would otherwise show a broken picture
+		Predicate<String> imageIsServable = name -> images.resolve(name) != null;
+		footerLinks = pageTemplate.get("footer") instanceof Map<?, ?> footer
+				? FooterLinkConfig.parse(footer.get("links"), "footer.links", imageIsServable)
+				: List.of();
+		homePage = HomePageConfig.parse(pageTemplate.get("homepage"), facetScope, imageIsServable);
 	}
 
 	/** Configured presentation languages - needed before a locale can be resolved. */
@@ -149,20 +160,14 @@ public class UiConfigLoader {
 
 	/** Typed configuration for one reader's language. */
 	public UiConfig getConfig(Locale locale) {
-		var links = footerLinks.stream()
-				.map(link -> {
-					var footerLink = new FooterLink(link.url());
-					if (link.code() != null) {
-						footerLink.code(link.code());
-					}
-					String label = LocalizedText.pick(link.translations(), link.label(), locale);
-					if (label != null && !label.isBlank()) {
-						footerLink.label(label);
-					}
-					return footerLink;
-				})
-				.toList();
-		return new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links);
+		var links = footerLinks.stream().map(link -> link.render(locale, images::url)).toList();
+		var config = new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links);
+		if (homePage != null) {
+			// image URLs carry this request's context path, so they are built here
+			// rather than at startup (see ResultImages)
+			config.setHomePage(homePage.render(locale, images::url));
+		}
+		return config;
 	}
 
 	/**
@@ -270,59 +275,11 @@ public class UiConfigLoader {
 		items.add(item);
 	}
 
-	private static List<FooterLinkConfig> readFooterLinks(Map<String, Object> pageTemplate) {
-		if (!(pageTemplate.get("footer") instanceof Map<?, ?> footer)
-				|| !(footer.get("links") instanceof List<?> entries)) {
-			return List.of();
-		}
-		var links = new ArrayList<FooterLinkConfig>();
-		for (Object entry : entries) {
-			if (!(entry instanceof Map<?, ?> map)) {
-				throw new IllegalStateException("pageTemplate footer.links: each item must be a mapping");
-			}
-			String url = map.get("url") instanceof String value && !value.isBlank() ? value : null;
-			if (url == null) {
-				throw new IllegalStateException("pageTemplate footer.links: an item has no 'url'");
-			}
-			FooterLinkCode code = map.get("code") != null ? parseFooterCode(String.valueOf(map.get("code"))) : null;
-			String label = map.get("label") instanceof String value && !value.isBlank() ? value : null;
-			List<LocalizedItem> translations = readLabelTranslations(map.get("label"));
-			if (code == null && label == null && translations.isEmpty()) {
-				throw new IllegalStateException(
-						"pageTemplate footer.links: item '" + url + "' needs a known 'code' or a 'label'");
-			}
-			links.add(new FooterLinkConfig(code, label, translations, url));
-		}
-		return links;
-	}
-
-	/** A label is either one string (source language) or a language → text mapping. */
-	private static List<LocalizedItem> readLabelTranslations(Object label) {
-		if (!(label instanceof Map<?, ?> byLanguage)) {
-			return List.of();
-		}
-		var translations = new ArrayList<LocalizedItem>();
-		byLanguage.forEach((language, text) -> {
-			if (text != null && !String.valueOf(text).isBlank()) {
-				translations.add(new LocalizedItem(String.valueOf(language), String.valueOf(text)));
-			}
-		});
-		return translations;
-	}
-
 	private static MenuItemCode parseCode(String value) {
 		try {
 			return MenuItemCode.fromValue(value);
 		} catch (IllegalArgumentException e) {
 			throw new IllegalStateException("pageTemplate menu: unknown menu item code '" + value + "'", e);
-		}
-	}
-
-	private static FooterLinkCode parseFooterCode(String value) {
-		try {
-			return FooterLinkCode.fromValue(value);
-		} catch (IllegalArgumentException e) {
-			throw new IllegalStateException("pageTemplate footer.links: unknown link code '" + value + "'", e);
 		}
 	}
 

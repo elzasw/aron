@@ -29,3 +29,50 @@ homepage:
   # Obsah elementu na uvodni strance
   footerCenter: '<p>Základní informace</p><p>ARchiv ONline je webová aplikace <a href="https://vychodoceskearchivy.cz/">Státního oblastního archivu v Zámrsku</a> sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů.</p><p>Copyright &copy; 2021 Státní oblastní archiv v Zámrsku</p>'
   footerRight: "<p>KONTAKT</p><p>webmaster@ahapa.cz</p>"
+
+# Uvodni strana - dev varianta. Fazety a obrazky se berou ze SPOLECNE ceske
+# konfigurace (../distribution/config), takze dlazdice mirí na fazety, ktere
+# dev data skutecne plni: UNIT_DATE u archivalii, jinak cela sekce bez filtru.
+homepage:
+  groups:
+    - label: { cs: Mohlo by vás zajímat, en: You might be interested in }
+      style: LIST
+      tiles:
+        - label: { cs: Archiválie z první poloviny 19. století, en: Records from the early 19th century }
+          note: { cs: datace 1800-1850, en: dated 1800-1850 }
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_DATE
+              from: 1800
+              to: 1850
+        - label: { cs: Všechny archivní soubory, en: All funds }
+          apuType: FUND
+    - label: { cs: Jiné zdroje, en: Other sources }
+      style: GRID
+      tiles:
+        - label: { cs: Mapy v portálu, en: Maps in the portal }
+          image: { name: archival-item-map.svg, positionX: center, positionY: center }
+          columnSpan: 2
+          apuType: ARCH_DESC
+        - label: Porta fontium
+          note: { cs: česko-bavorská digitální knihovna, en: Czech-Bavarian digital library }
+          url: https://www.portafontium.eu
+
+  # Pas na konci uvodni strany - dev varianta (nahrada za footerCenter /
+  # footerRight stareho portalu, ktere nesly HTML z konfigurace).
+  footer:
+    columns:
+      - paragraphs:
+          - text:
+              cs: "Prezentační web ARchiv ONline je webová aplikace {archiv} sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů."
+              en: "ARchiv ONline is a web application of the {archiv}, presenting archival descriptions and their digitised images."
+            links:
+              archiv:
+                label:
+                  cs: Státního oblastního archivu v Zámrsku
+                  en: State Regional Archives in Zamrsk
+                url: https://vychodoceskearchivy.cz/
+      - heading: { cs: Kontakt, en: Contact }
+        links:
+          - label: webmaster@example.com
+            url: "mailto:webmaster@example.com"

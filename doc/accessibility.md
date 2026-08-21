@@ -143,6 +143,23 @@ Still the deployment's own responsibility: the **contrast** of the colours it
 configures in `resultLayout.yaml` (1.4.3), which is Phase C territory, and
 giving every styled field either a `prefix` or a `label`.
 
+**Home page entry points and footer band** (added with the feature, same
+criteria): each configured group is a `<section>` named by its own `<h2>`, so a
+reader is told what a set of links is for (1.3.1, 2.4.6). A tile *is* one link
+and contains no other interactive element — the opposite of a result card, whose
+own links would end up nested inside it — so the whole tile is the target, which
+only helps 2.5.5/2.5.8. A tile's second line is visible text, not the old
+portal's hover-only `title` (invisible to touch and to the keyboard); tile
+pictures and link marks are decorative (CSS background, or `alt=""`), the label
+being the accessible name (1.1.1). The band is a labelled `<section>`, never a
+second `<footer>`: the frame keeps the page's one `contentinfo`, which is where
+the links a deployment must publish live. Prose links inside a sentence are real
+anchors built from server-resolved runs — configured markup never reaches the
+page, so this gate keeps covering the whole of it (4.1.2). Still the
+deployment's own responsibility, and Phase C territory: the **contrast** of
+white label text over the `primaryColor` band and over any photograph it
+supplies (1.4.3).
+
 ### Phase B — permanent automated gate — **done**
 
 Two checks run in the Maven `test` phase (so also on CI, and skipped together by
@@ -156,7 +173,7 @@ Two checks run in the Maven `test` phase (so also on CI, and skipped together by
   is not what breaks a screen reader.
 - **axe-core over rendered markup** in the vitest suite via
   `expectNoA11yViolations` (`src/test/a11y.ts`), asserted for the application
-  frame and for every facet kind. jsdom has no layout engine, so colour contrast
+  frame, the home page with its tiles and footer band, and every facet kind. jsdom has no layout engine, so colour contrast
   is explicitly disabled here and belongs to Phase C; what this does catch —
   structure, names, relationships, duplicate ids — is where regressions actually
   appear.
@@ -180,7 +197,9 @@ facet filters and the description tree.
     which speech input cannot address (2.5.3 Label in Name) — the name now
     contains the visible code.
 - **Still open**: reflow at 320 px / 400 % zoom, focus visibility through a real
-  keyboard pass, and the record detail page (the run covered a search page).
+  keyboard pass, the record detail page (the run covered a search page), and the
+  home page's picture tiles and footer band — both put text on a deployment's
+  own colour or photograph, which is exactly what jsdom cannot judge.
   Specifically for the popovers (language menu, page-size dropdown): moving
   focus *inside* them is Fluent's roving focus, which jsdom does not run, so the
   unit tests stop at "opens from the keyboard" — walking and choosing an option

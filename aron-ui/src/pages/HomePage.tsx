@@ -3,18 +3,29 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useUiConfig } from "../api/useUiConfig";
+import HomeFooterBand from "../home/HomeFooterBand";
+import HomeTileGroups from "../home/HomeTileGroups";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const useStyles = makeStyles({
+  // the band is full-bleed, so the page pads its own content instead of itself
   root: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+  },
+  content: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: tokens.spacingVerticalXXXL,
+    width: "100%",
+    maxWidth: "1100px",
     padding: `${tokens.spacingVerticalXXXL} ${tokens.spacingHorizontalXXL}`,
+    boxSizing: "border-box",
   },
   searchCard: {
     width: "100%",
-    maxWidth: "1100px",
     padding: tokens.spacingHorizontalXXL,
   },
   searchRow: {
@@ -57,8 +68,10 @@ const useStyles = makeStyles({
 });
 
 /**
- * Portal home page: the central search entry. Favorite queries, news and the
- * theme image arrive with later slices.
+ * Portal home page: the central search entry, then whatever the deployment
+ * publishes below it - its curated entry points and its own footer band, both
+ * from /api/v1/ui/config. A deployment that configures neither gets the search
+ * box alone, which is a configuration and not an omission.
  */
 export default function HomePage() {
   const styles = useStyles();
@@ -72,26 +85,32 @@ export default function HomePage() {
     navigate(query.trim() ? `/apu?q=${encodeURIComponent(query.trim())}` : "/apu");
   };
 
+  const homePage = config?.homePage;
+
   return (
     <div className={styles.root}>
-      <h1 className={styles.screenReaderOnly}>{name}</h1>
-      <Card className={styles.searchCard}>
-        <div className={styles.searchRow}>
-          <Input
-            className={styles.searchInput}
-            appearance="outline"
-            size="large"
-            aria-label={t("home.searchPlaceholder")}
-            placeholder={t("home.searchPlaceholder")}
-            value={query}
-            onChange={(_, data) => setQuery(data.value)}
-            onKeyDown={(e) => e.key === "Enter" && search()}
-          />
-          <Button className={styles.searchButton} appearance="primary" onClick={search}>
-            {t("home.searchButton")}
-          </Button>
-        </div>
-      </Card>
+      <div className={styles.content}>
+        <h1 className={styles.screenReaderOnly}>{name}</h1>
+        <Card className={styles.searchCard}>
+          <div className={styles.searchRow}>
+            <Input
+              className={styles.searchInput}
+              appearance="outline"
+              size="large"
+              aria-label={t("home.searchPlaceholder")}
+              placeholder={t("home.searchPlaceholder")}
+              value={query}
+              onChange={(_, data) => setQuery(data.value)}
+              onKeyDown={(e) => e.key === "Enter" && search()}
+            />
+            <Button className={styles.searchButton} appearance="primary" onClick={search}>
+              {t("home.searchButton")}
+            </Button>
+          </div>
+        </Card>
+        {homePage && homePage.groups.length > 0 && <HomeTileGroups groups={homePage.groups} />}
+      </div>
+      {homePage?.footer && <HomeFooterBand footer={homePage.footer} />}
     </div>
   );
 }

@@ -4,8 +4,10 @@
 # Hodnoty musi odpovidat datum konkretniho nasazeni - co v datech neni, nic
 # nenajde.
 #
-# icon je trida ikony (Font Awesome) stareho portalu; novy portal aktuality ani
-# pripravene dotazy zatim nezobrazuje.
+# icon je trida ikony (Font Awesome) stareho portalu. Novy portal tento soubor
+# necte: jeho pripravene dotazy jsou dlazdice v pageTemplate.yaml (klic
+# homepage), kde se filtry zapisuji stejnym slovnikem jako searchConfig.yaml a
+# kontroluji se pri startu.
 ---
 - icon: fas fa-book
   label: Matriky

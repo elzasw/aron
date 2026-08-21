@@ -18,3 +18,43 @@ footer:
       label:
         cs: Kontakt
         en: Contact
+# home page: one tile of every shape, so the reader-facing conversion is covered
+homepage:
+  groups:
+    - label: { cs: Mohlo by vás zajímat, en: You might be interested in }
+      style: GRID
+      tiles:
+        - label: { cs: Česky psané, en: Written in Czech }
+          note: { cs: podle jazyka popisu, en: by description language }
+          image: { name: record.svg, positionY: 30% }
+          columnSpan: 2
+          rowSpan: 2
+          apuType: ARCH_DESC
+          filters:
+            - facet: LANG_CODE
+              values: [cze]
+        - label: Porta fontium
+          url: https://www.portafontium.eu
+    - label: { cs: Celé sekce, en: Whole sections }
+      tiles:
+        - label: { cs: Archivní soubory, en: Funds }
+          apuType: FUND
+          query: zamrsk
+  # footer band: prose with an inline link, plus a column of icon links
+  footer:
+    columns:
+      - heading: { cs: Základní informace, en: About }
+        paragraphs:
+          - text:
+              cs: "Portál je aplikace {archiv} a zpřístupňuje popis archiválií."
+              en: "The portal is an application of the {archiv} and presents archival descriptions."
+            links:
+              archiv:
+                label: { cs: Testovacího archivu, en: Test Archives }
+                url: http://archiv.test.example
+          - text: "© 2026"
+      - heading: { cs: Kontakt, en: Contact }
+        links:
+          - label: badatelna@test.example
+            url: "mailto:badatelna@test.example"
+            image: { name: field.svg }

@@ -1,7 +1,5 @@
 package cz.aron.web.v1;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.text.Normalizer;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -15,7 +13,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -56,7 +53,6 @@ import cz.aron.api.v1.model.TotalRelation;
 import cz.aron.api.v1.model.TypeCount;
 import cz.aron.api.v1.model.ValuesFilter;
 import cz.aron.domain.DataType;
-import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.types.LocalizedText;
@@ -94,7 +90,7 @@ public class SearchController implements SearchApi {
 	 */
 	public static final String RELATED_FACET = "~RELATED";
 
-	private final FacetsLoader facetsLoader;
+	private final FacetScope facetScope;
 
 	private final TypesHolder typesHolder;
 
@@ -128,19 +124,17 @@ public class SearchController implements SearchApi {
 	/** Upper clamp for the request's own {@code totalUpTo} override. */
 	private final int totalUpToMax;
 
-	private List<FacetConfigDto> facets;
-
 	/** Every indexed reference item field - the built-in relation facet's scope. */
 	private List<String> referenceFields;
 
-	public SearchController(FacetsLoader facetsLoader, TypesHolder typesHolder, IndexingService indexingService,
+	public SearchController(FacetScope facetScope, TypesHolder typesHolder, IndexingService indexingService,
 			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
 			ApuEntityRepository apuEntityRepository, ResultLayoutLoader resultLayoutLoader, ResultImages resultImages,
 			@Value("${search.structured-results:AUTO}") String structuredResults,
 			@Value("${search.max-window:10000}") int maxWindow,
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
 			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
-		this.facetsLoader = facetsLoader;
+		this.facetScope = facetScope;
 		this.typesHolder = typesHolder;
 		this.presentationLocales = presentationLocales;
 		this.indexingService = indexingService;
@@ -166,11 +160,6 @@ public class SearchController implements SearchApi {
 
 	@PostConstruct
 	void load() {
-		try {
-			facets = facetsLoader.loadFacets();
-		} catch (IOException e) {
-			throw new UncheckedIOException("Fail to load facet configuration", e);
-		}
 		// unindexed reference items carry no field to match on, so they would only
 		// add dead clauses to every relation query
 		referenceFields = typesHolder.getAllItemTypes().stream()
@@ -182,13 +171,13 @@ public class SearchController implements SearchApi {
 	@Override
 	public ResponseEntity<List<FacetDef>> searchGetFacets(ApuType apuType, String lang) {
 		Locale locale = presentationLocales.resolve(lang);
-		return ResponseEntity.ok(facetsFor(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
+		return ResponseEntity.ok(facetScope.facetsFor(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
 	}
 
 	@Override
 	public ResponseEntity<ApuSearchResponse> searchSearch(ApuSearchRequest request) {
 		List<FacetConfigDto> sectionFacets = request.getApuType() != null
-				? facetsFor(request.getApuType())
+				? facetScope.facetsFor(request.getApuType())
 				: List.of();
 		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
 				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
@@ -326,7 +315,7 @@ public class SearchController implements SearchApi {
 	 */
 	@Override
 	public ResponseEntity<FacetOptionsResponse> searchGetFacetOptions(String code, FacetOptionsRequest request) {
-		List<FacetConfigDto> sectionFacets = facetsFor(request.getApuType());
+		List<FacetConfigDto> sectionFacets = facetScope.facetsFor(request.getApuType());
 		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
 				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
 		FacetConfigDto facet = byCode.get(code);
@@ -510,31 +499,6 @@ public class SearchController implements SearchApi {
 		} catch (DateTimeParseException | NumberFormatException e) {
 			throw badRequest("Invalid date bound '" + value + "' of facet '" + facet + "'.");
 		}
-	}
-
-	/**
-	 * The section's facets, minus the kinds the new API does not serve
-	 * ({@code MULTI_REF_EXT} - see {@link cz.aron.domain.facets.dto.FacetType}).
-	 * Not advertising them also keeps them out of filter validation: the new API
-	 * behaves as if a facet it cannot serve were not configured.
-	 */
-	private List<FacetConfigDto> facetsFor(ApuType apuType) {
-		return facets.stream()
-				.filter(f -> f.getType() != cz.aron.domain.facets.dto.FacetType.MULTI_REF_EXT)
-				.filter(f -> appliesTo(f, apuType))
-				.toList();
-	}
-
-	/** A facet without a when-condition applies to every APU type. */
-	private static boolean appliesTo(FacetConfigDto facet, ApuType apuType) {
-		if (facet.getWhen() == null) {
-			return true;
-		}
-		if (facet.getWhen() instanceof Map<?, ?> when) {
-			Object condition = when.get("apuType");
-			return condition == null || Objects.equals(String.valueOf(condition), apuType.getValue());
-		}
-		return true;
 	}
 
 	private FacetDef toFacetDef(FacetConfigDto facet, Locale locale) {

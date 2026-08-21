@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -17,7 +18,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 class PresentationLocalesTest {
 
 	private static PresentationLocales locales(String... localizations) {
-		var loader = new UiConfigLoader("unused", "");
+		var loader = new UiConfigLoader("unused", "", new FacetScope(List.of()),
+				new ResultImages(new MockHttpServletRequest(), ""));
 		// only the configured localizations matter here - the rest of the page
 		// template is not read (no file behind this loader)
 		ReflectionTestUtils.setField(loader, "localizations", List.of(localizations));

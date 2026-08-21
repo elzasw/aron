@@ -8,10 +8,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.mock.web.MockHttpServletRequest;
 
 import cz.aron.api.v1.model.FooterLink;
 import cz.aron.api.v1.model.FooterLinkCode;
@@ -19,7 +21,11 @@ import cz.aron.api.v1.model.MenuItem;
 import cz.aron.api.v1.model.MenuItemCode;
 import cz.aron.api.v1.model.UiConfig;
 
-/** Plain unit test of the pageTemplate.yaml → UiConfig conversion (no Spring). */
+/**
+ * Plain unit test of the pageTemplate.yaml → UiConfig conversion (no Spring). The
+ * {@code homepage:} section has its own test ({@link HomePageConfigTest}), so the
+ * fixtures here need no facets and no image directory.
+ */
 class UiConfigLoaderTest {
 
 	private static final String HELP_URL = "http://help.example";
@@ -32,7 +38,8 @@ class UiConfigLoaderTest {
 	private UiConfigLoader loader(String yaml, String helpUrl) throws IOException {
 		Path file = tempDir.resolve("pageTemplate.yaml");
 		Files.writeString(file, yaml, StandardCharsets.UTF_8);
-		var loader = new UiConfigLoader(file.toString(), helpUrl);
+		var loader = new UiConfigLoader(file.toString(), helpUrl, new FacetScope(List.of()),
+				new ResultImages(new MockHttpServletRequest(), ""));
 		loader.load();
 		return loader;
 	}

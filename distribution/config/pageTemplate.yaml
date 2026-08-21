@@ -61,3 +61,122 @@ footer:
       label:
         cs: Kontakt
         en: Contact
+
+# Uvodni strana portalu - pripravene vstupy pro ctenare, ktery jeste nic
+# nenapsal ("Mohlo by vas zajimat" stareho portalu). Klic je volitelny: bez nej
+# je na uvodni strane jen vyhledavaci pole.
+#
+# Kazda skupina ma nazev (label), zpusob zobrazeni (style) a dlazdice (tiles):
+#   LIST - radky odkazu; vhodne pro delsi seznam
+#   GRID - obrazkove dlazdice v mrizce; dlazdice bez obrazku nese hlavni barvu
+#          portalu. Bez klice style plati LIST.
+#
+# Dlazdice vede bud VEN z portalu (url - absolutni http(s) nebo mailto), nebo DO
+# vyhledavani jedne sekce (apuType + volitelne query a filters) - nikdy oboji.
+# Filtry se zapisuji stejnym slovnikem jako searchConfig.yaml (facet se jmenuje
+# podle prvku popisu, podtrzitka jako tam); druh filtru se dovozuje z typu
+# fazety, takze se nemuze rozejit s konfiguraci vyhledavani. Chybna fazeta
+# zastavi start serveru - dlazdice, kterou server neumi obslouzit, by ctenare
+# zavedla na chybovou stranku.
+#
+# label a note lze zapsat jednim retezcem (zdrojovy jazyk), nebo mapou
+# jazyk -> text. Volitelny obrazek se jmenuje jmenem souboru z adresare
+# webResources.resultImages (positionX/positionY posunou vyrez u fotografie,
+# columnSpan/rowSpan roztahnou dlazdici v mrizce na 2 pole).
+#
+# Hodnoty filtru jsou data: co v datech nasazeni neni, nic nenajde - seznam
+# nize miri na druhy archivalii, ktere badatele hledaji nejcasteji.
+homepage:
+  groups:
+    - label:
+        cs: Mohlo by vás zajímat
+        en: You might be interested in
+      style: LIST
+      tiles:
+        - label: { cs: Matriky, en: Parish registers }
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_TYPE
+              values: [matrika]
+        - label: { cs: Kroniky, en: Chronicles }
+          note: { cs: úřední i neúřední kroniky, en: official and unofficial chronicles }
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_TYPE
+              values: [kronika]
+        - label: { cs: Mapy a plány, en: Maps and plans }
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_TYPE
+              values: [mapa]
+        - label: { cs: Evidence nemovitostí, en: Property records }
+          note: { cs: pozemkové knihy, gruntovní knihy, en: land registers }
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_TYPE
+              values: [evidence nemovitostí]
+        - label: { cs: Evidence obyvatel, en: Population records }
+          note:
+            cs: seznamy obyvatel, soupisy duší, sčítací operáty, urbáře
+            en: population lists, censuses, urbaria
+          apuType: ARCH_DESC
+          filters:
+            - facet: UNIT_TYPE
+              values: [evidence obyvatel]
+        - label: { cs: Archiválie s digitalizáty, en: Records with digitised images }
+          apuType: ARCH_DESC
+          filters:
+            - facet: DIGITAL
+              values: [Ano]
+
+  # Pas na konci uvodni strany - kdo portal provozuje, co zpristupnuje a kam se
+  # obratit. Zamerne jen na uvodni strance: ram aplikace je vysoky jednu
+  # obrazovku a kazdy jeho radek ubira z obsahu, takze pas na kazde strance by
+  # natrvalo zmensil panely detailu zaznamu. Povinne odkazy (prohlaseni o
+  # pristupnosti) zustavaji v paticce ramu, kde jsou videt vsude - viz
+  # footer.links vyse.
+  #
+  # Sloupec ma volitelny nadpis (heading), odstavce (paragraphs) a odkazy
+  # (links); prose je vzdy pred odkazy. Odkaz uvnitr vety se zapisuje
+  # zastupnym jmenem {jmeno} a doplni se v links daneho odstavce - proto
+  # neni potreba zadne HTML a portal vykresluje jen odkazy, ktere sam ridi.
+  # Zastupne jmeno se musi vyskytovat v kazde jazykove variante textu, jinak
+  # se server nespusti.
+  footer:
+    columns:
+      - heading:
+          cs: Základní informace
+          en: About
+        paragraphs:
+          - text:
+              cs: "Prezentační web Archiv online je webová aplikace {archiv} sloužící ke zpřístupnění popisu archiválií a jejich digitalizátů."
+              en: "Archives online is a web application of the {archiv}, presenting archival descriptions and their digitised images."
+            links:
+              archiv:
+                label:
+                  cs: Státního oblastního archivu
+                  en: State Regional Archives
+                url: https://example.org
+          - text:
+              cs: "© 2026 Státní oblastní archiv"
+              en: "© 2026 State Regional Archives"
+      - heading:
+          cs: Kontakt
+          en: Contact
+        links:
+          - label: badatelna@example.org
+            url: "mailto:badatelna@example.org"
+          - label:
+              cs: Webové stránky archivu
+              en: The archive's website
+            url: https://example.org
+          # Odkaz muze nest malou znacku, po ktere ho ctenar pozna (profil na
+          # socialni siti). Znacka je soubor z adresare webResources.resultImages,
+          # ne jmeno, ktere by znal portal - proto se prejmenovani znacky
+          # (z Twitteru se stalo X) resi vymenou souboru a nova sit pridanim
+          # dalsiho. Popis (label) zustava jmenem odkazu i pro cteni hlasem,
+          # takze znacka nikdy nenese vyznam sama:
+          #
+          #- label: Facebook
+          #  url: https://facebook.com/archiv
+          #  image: { name: facebook.svg }

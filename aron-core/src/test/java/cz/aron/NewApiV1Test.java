@@ -41,6 +41,7 @@ import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
 import cz.aron.test.api.v1.model.EnumFacetResult;
 import cz.aron.test.api.v1.model.FacetBucket;
+import cz.aron.test.api.v1.model.FooterColumn;
 import cz.aron.test.api.v1.model.FooterLink;
 import cz.aron.test.api.v1.model.FooterLinkCode;
 import cz.aron.test.api.v1.model.FacetDef;
@@ -54,7 +55,13 @@ import cz.aron.test.api.v1.model.ResultIcon;
 import cz.aron.test.api.v1.model.ResultValue;
 import cz.aron.test.api.v1.model.MenuItem;
 import cz.aron.test.api.v1.model.MenuItemCode;
+import cz.aron.test.api.v1.model.LinkTile;
+import cz.aron.test.api.v1.model.SearchTile;
 import cz.aron.test.api.v1.model.SystemInfo;
+import cz.aron.test.api.v1.model.TileGroup;
+import cz.aron.test.api.v1.model.TileKind;
+import cz.aron.test.api.v1.model.TileStyle;
+import cz.aron.test.api.v1.model.TextRun;
 import cz.aron.test.api.v1.model.TotalRelation;
 import cz.aron.test.api.v1.model.TypeCount;
 import cz.aron.test.api.v1.model.UiConfig;
@@ -134,6 +141,73 @@ class NewApiV1Test extends AbstractTest {
 		// the label follows the reader's language
 		assertThat(new UiApi(v1ApiClient()).uiGetConfig("en").getFooterLinks())
 				.extracting(FooterLink::getLabel).containsExactly(null, "Contact");
+	}
+
+	@Test
+	void uiConfigCarriesTheDeploymentsHomePage() {
+		var page = new UiApi(v1ApiClient()).uiGetConfig(null).getHomePage();
+
+		assertThat(page.getGroups()).extracting(TileGroup::getLabel, TileGroup::getStyle).containsExactly(
+				tuple("Mohlo by vás zajímat", TileStyle.GRID),
+				// a group with no configured style is a plain row of links
+				tuple("Celé sekce", TileStyle.LIST));
+
+		// a tile leading into a section carries typed filters, so the search page
+		// receives the constraint as one the reader can see and undo
+		var search = (SearchTile) page.getGroups().get(0).getTiles().get(0);
+		assertThat(search.getKind()).isEqualTo(TileKind.SEARCH);
+		assertThat(search.getApuType()).isEqualTo(ApuType.ARCH_DESC);
+		assertThat(search.getNote()).isEqualTo("podle jazyka popisu");
+		assertThat(search.getColumnSpan()).isEqualTo(2);
+		assertThat(search.getImagePositionY()).isEqualTo("30%");
+		// the server builds the image URL from the request's own context path
+		assertThat(search.getImageUrl()).isEqualTo("/api/v1/ui/result-images/record.svg");
+		assertThat(search.getFilters()).singleElement().isInstanceOfSatisfying(ValuesFilter.class, filter -> {
+			// searchConfig.yaml writes LANG_CODE; the API's facet code is the tilde form
+			assertThat(filter.getFacet()).isEqualTo("LANG~CODE");
+			assertThat(filter.getValues()).containsExactly("cze");
+		});
+
+		var link = (LinkTile) page.getGroups().get(0).getTiles().get(1);
+		assertThat(link.getKind()).isEqualTo(TileKind.LINK);
+		assertThat(link.getUrl()).isEqualTo("https://www.portafontium.eu");
+
+		// tile labels follow the reader's language like every other configured text
+		var english = new UiApi(v1ApiClient()).uiGetConfig("en").getHomePage();
+		assertThat(english.getGroups().get(0).getTiles().get(0).getLabel()).isEqualTo("Written in Czech");
+	}
+
+	@Test
+	void uiConfigCarriesTheHomePagesFooterBand() {
+		var footer = new UiApi(v1ApiClient()).uiGetConfig(null).getHomePage().getFooter();
+
+		assertThat(footer.getColumns()).extracting(FooterColumn::getHeading)
+				.containsExactly("Základní informace", "Kontakt");
+
+		// prose carries its link inside the sentence: the deployment writes a named
+		// placeholder and the server resolves it into runs, so the portal renders
+		// its own anchors and never configured markup
+		var prose = footer.getColumns().get(0).getParagraphs();
+		assertThat(prose.get(0).getRuns()).extracting(TextRun::getText, TextRun::getUrl).containsExactly(
+				tuple("Portál je aplikace ", null),
+				tuple("Testovacího archivu", "http://archiv.test.example"),
+				tuple(" a zpřístupňuje popis archiválií.", null));
+		assertThat(prose.get(1).getRuns()).extracting(TextRun::getText).containsExactly("© 2026");
+
+		// a link may carry a deployment-supplied mark, its URL built by the server;
+		// the label stays the accessible name
+		assertThat(footer.getColumns().get(1).getLinks())
+				.extracting(FooterLink::getLabel, FooterLink::getUrl, FooterLink::getImageUrl)
+				.containsExactly(tuple("badatelna@test.example", "mailto:badatelna@test.example",
+						"/api/v1/ui/result-images/field.svg"));
+
+		// the whole band follows the reader's language, runs included
+		var english = new UiApi(v1ApiClient()).uiGetConfig("en").getHomePage().getFooter();
+		assertThat(english.getColumns().get(0).getParagraphs().get(0).getRuns())
+				.extracting(TextRun::getText, TextRun::getUrl).containsExactly(
+						tuple("The portal is an application of the ", null),
+						tuple("Test Archives", "http://archiv.test.example"),
+						tuple(" and presents archival descriptions.", null));
 	}
 
 	@Test
