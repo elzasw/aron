@@ -24,11 +24,11 @@
 	<!--
 	  Project identity. Declared rather than inherited: spring-boot-starter-parent
 	  supplies a url, licenses and developers of its own, so without these the
-	  published pom credits VMware, Inc. and links to spring.io. The url is blank
-	  for the same reason <scm><url/> is - set it once the project has a public
-	  home page.
+	  published pom credits VMware, Inc. and links to spring.io. The url is the
+	  public mirror on GitHub, which is where a reader of this pom can actually
+	  find the project.
 	-->
-	<url/>
+	<url>https://github.com/elzasw/aron</url>
 	<organization>
 		<name>LightComp v.o.s.</name>
 		<url>https://www.lightcomp.cz</url>
@@ -229,9 +229,11 @@
 		child.scm.url.inherit.append.path="false">
 		<connection>${aron.scm.url}</connection>
 		<developerConnection>${aron.scm.url}</developerConnection>
-		<!-- Blanks the browse URL inherited from spring-boot-starter-parent, which
-		     would otherwise claim this source lives in the Spring Boot repository. -->
-		<url/>
+		<!-- The browsable location is the public GitHub mirror; the internal Git
+		     host stays out of this repository. Without a value here the URL
+		     inherited from spring-boot-starter-parent would claim this source
+		     lives in the Spring Boot repository. -->
+		<url>https://github.com/elzasw/aron</url>
 		<tag>HEAD</tag>
 	</scm>
 
