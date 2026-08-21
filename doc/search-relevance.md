@@ -455,7 +455,7 @@ this table so they cannot diverge from what is tested.
 
 **Relevance quality** (are the *right* documents on top for real queries) is not
 pinnable by unit assertions. It is covered by a **golden-query set**: 15–20 real
-queries against amadeus data with expected top hits, run under `-Pes-it` as a
+queries against real deployment data with expected top hits, run under `-Pes-it` as a
 report, not a build failure. Without it, every future weight tweak is tuned
 blind against the last complaint.
 

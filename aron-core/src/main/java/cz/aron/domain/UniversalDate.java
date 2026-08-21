@@ -43,7 +43,7 @@ public class UniversalDate {
      *   <li>one-sided interval (i.e.: {@code Y-}) NOTE one sided intervals can't actually be used in this class</li>
      * </ul>
      *
-     * @see <a href="https://frnk.lightcomp.cz/download/cam/modely/index.html?goto=9:3:1:308">TimeInterval#fmt</a>
+     * @see "TimeInterval#fmt in the CAM data model"
      */
     private String format;
 
