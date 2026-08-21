@@ -345,6 +345,13 @@ UI: a sort control beside the result count (Nejlépe odpovídající / Název A�
 Název Z–A / Datace vzestupně / Datace klesající), keyboard-operable with an ARIA
 label, and the selection carried in the URL so results stay shareable.
 
+The control offers **no separate "default" entry**: `AUTO` and `RELEVANCE` order
+a list identically — with a query by definition, without one because the
+unscored relevance chain falls through to `nameSort` — so the two share one
+menu item, labelled as relevance, which sends no `sort` parameter and leaves the
+rule with the server. A visible "Default" would name an order the reader cannot
+tell apart from the one below it.
+
 ### 4.5 Type counts, not type priors
 
 The response carries `typeCounts: [{ apuType, count }]` — a terms aggregation on

@@ -53,7 +53,6 @@
     "relatedRemove": "Remove the relation filter",
     "activeFilters": "Active filters",
     "sort": {
-      "AUTO": "Default",
       "RELEVANCE": "Best match",
       "NAME": "Name A–Z",
       "NAME_DESC": "Name Z–A",

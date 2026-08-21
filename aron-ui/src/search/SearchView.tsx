@@ -110,8 +110,13 @@ const useStyles = makeStyles({
   },
 });
 
-/** URL `sort` values; the empty string is AUTO (parameter absent, server decides). */
-const SORT_OPTIONS = ["", "RELEVANCE", "NAME", "NAME_DESC", "DATE_ASC", "DATE_DESC"] as const;
+/**
+ * URL `sort` values. The empty string sends no `sort` parameter, i.e. the
+ * contract's AUTO: relevance with a query, name without one. Both are what
+ * RELEVANCE itself yields - with nothing scored, its name tie-break decides -
+ * so the two share this single entry, labelled as relevance.
+ */
+const SORT_OPTIONS = ["", "NAME", "NAME_DESC", "DATE_ASC", "DATE_DESC"] as const;
 
 /**
  * The search experience of one portal section (apuType set) or of the general
@@ -310,7 +315,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
                   >
                     {SORT_OPTIONS.map((option) => (
                       <option key={option} value={option}>
-                        {t(`search.sort.${option || "AUTO"}`)}
+                        {t(`search.sort.${option || "RELEVANCE"}`)}
                       </option>
                     ))}
                   </Select>
