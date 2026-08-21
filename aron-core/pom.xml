@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.lightcomp</groupId>
 		<artifactId>aron</artifactId>
-		<version>2.0.0-BETA-1-SNAPSHOT</version>
+		<version>2.0.0-BETA-1</version>
 	</parent>
 	<artifactId>aron-core</artifactId>
 	<name>aron-core</name>
@@ -350,66 +349,63 @@
 								</goals>
 								<configuration>
 									<target xmlns:unless="ant:unless">
-										<property name="es.version" value="9.5.1"/>
-										<property name="es.cache" value="${user.home}/.m2/es-cache"/>
-										<property name="es.home" value="${project.build.directory}/elasticsearch-it"/>
+										<property name="es.version" value="9.5.1" />
+										<property name="es.cache" value="${user.home}/.m2/es-cache" />
+										<property name="es.home" value="${project.build.directory}/elasticsearch-it" />
 										<!-- A pre-installed distribution (the CI image) is used as it is:
 										     no download, no extraction, and above all no delete of a
 										     directory this build does not own. Everything inside the guard
 										     is provisioning; starting ES is common to both paths. -->
-										<available property="es.preinstalled" file="${es.home}/bin/elasticsearch"/>
+										<available property="es.preinstalled" file="${es.home}/bin/elasticsearch" />
 										<sequential unless:set="es.preinstalled">
 											<condition property="es.dist" value="elasticsearch-${es.version}-windows-x86_64.zip">
-												<os family="windows"/>
+												<os family="windows" />
 											</condition>
-											<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz"/>
-											<mkdir dir="${es.cache}"/>
+											<property name="es.dist" value="elasticsearch-${es.version}-linux-x86_64.tar.gz" />
+											<mkdir dir="${es.cache}" />
 											<!-- keep only the current version's distribution: without pruning
 											     the cache grows by ~600MB with every es.version bump -->
 											<delete quiet="true">
-												<fileset dir="${es.cache}" includes="elasticsearch-*" excludes="${es.dist}"/>
+												<fileset dir="${es.cache}" includes="elasticsearch-*" excludes="${es.dist}" />
 											</delete>
-											<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}"
-												dest="${es.cache}/${es.dist}" skipexisting="true"/>
-											<delete dir="${es.home}" quiet="true"/>
-											<mkdir dir="${es.home}"/>
+											<get src="https://artifacts.elastic.co/downloads/elasticsearch/${es.dist}" dest="${es.cache}/${es.dist}" skipexisting="true" />
+											<delete dir="${es.home}" quiet="true" />
+											<mkdir dir="${es.home}" />
 											<exec osfamily="windows" executable="powershell" failonerror="true">
-												<arg value="-NoProfile"/>
-												<arg value="-Command"/>
-												<arg value="Expand-Archive -Force '${es.cache}/${es.dist}' '${es.home}-tmp'; Get-ChildItem '${es.home}-tmp/elasticsearch-${es.version}' | Move-Item -Destination '${es.home}'; Remove-Item -Recurse -Force '${es.home}-tmp'"/>
+												<arg value="-NoProfile" />
+												<arg value="-Command" />
+												<arg value="Expand-Archive -Force '${es.cache}/${es.dist}' '${es.home}-tmp'; Get-ChildItem '${es.home}-tmp/elasticsearch-${es.version}' | Move-Item -Destination '${es.home}'; Remove-Item -Recurse -Force '${es.home}-tmp'" />
 											</exec>
 											<!-- tar preserves the executable bits ant's untar cannot -->
 											<exec osfamily="unix" executable="tar" failonerror="true">
-												<arg value="-xzf"/>
-												<arg value="${es.cache}/${es.dist}"/>
-												<arg value="-C"/>
-												<arg value="${es.home}"/>
-												<arg value="--strip-components=1"/>
+												<arg value="-xzf" />
+												<arg value="${es.cache}/${es.dist}" />
+												<arg value="-C" />
+												<arg value="${es.home}" />
+												<arg value="--strip-components=1" />
 											</exec>
 										</sequential>
 										<!-- start with test-friendly settings; ES writes its JVM pid to es.pid -->
 										<exec osfamily="windows" executable="powershell" failonerror="true">
-											<arg value="-NoProfile"/>
-											<arg value="-Command"/>
-											<arg value="$env:ES_JAVA_OPTS='-Xms512m -Xmx512m'; Start-Process -FilePath '${es.home}/bin/elasticsearch.bat' -ArgumentList '-Ehttp.port=19200','-Etransport.port=19300','-Ecluster.name=aron2-it','-Ediscovery.type=single-node','-Expack.security.enabled=false','-p','${es.home}/es.pid' -WindowStyle Hidden"/>
+											<arg value="-NoProfile" />
+											<arg value="-Command" />
+											<arg value="$env:ES_JAVA_OPTS='-Xms512m -Xmx512m'; Start-Process -FilePath '${es.home}/bin/elasticsearch.bat' -ArgumentList '-Ehttp.port=19200','-Etransport.port=19300','-Ecluster.name=aron2-it','-Ediscovery.type=single-node','-Expack.security.enabled=false','-p','${es.home}/es.pid' -WindowStyle Hidden" />
 										</exec>
 										<exec osfamily="unix" executable="${es.home}/bin/elasticsearch" failonerror="true">
-											<env key="ES_JAVA_OPTS" value="-Xms512m -Xmx512m"/>
-											<arg value="-d"/>
-											<arg value="-p"/>
-											<arg value="${es.home}/es.pid"/>
-											<arg value="-Ehttp.port=19200"/>
-											<arg value="-Etransport.port=19300"/>
-											<arg value="-Ecluster.name=aron2-it"/>
-											<arg value="-Ediscovery.type=single-node"/>
-											<arg value="-Expack.security.enabled=false"/>
+											<env key="ES_JAVA_OPTS" value="-Xms512m -Xmx512m" />
+											<arg value="-d" />
+											<arg value="-p" />
+											<arg value="${es.home}/es.pid" />
+											<arg value="-Ehttp.port=19200" />
+											<arg value="-Etransport.port=19300" />
+											<arg value="-Ecluster.name=aron2-it" />
+											<arg value="-Ediscovery.type=single-node" />
+											<arg value="-Expack.security.enabled=false" />
 										</exec>
-										<waitfor maxwait="180" maxwaitunit="second" checkevery="2"
-											checkeveryunit="second" timeoutproperty="es.start.timeout">
-											<http url="http://localhost:19200/_cluster/health"/>
+										<waitfor maxwait="180" maxwaitunit="second" checkevery="2" checkeveryunit="second" timeoutproperty="es.start.timeout">
+											<http url="http://localhost:19200/_cluster/health" />
 										</waitfor>
-										<fail if="es.start.timeout"
-											message="Elasticsearch did not become available on port 19200 within 180s - see ${es.home}/logs"/>
+										<fail if="es.start.timeout" message="Elasticsearch did not become available on port 19200 within 180s - see ${es.home}/logs" />
 									</target>
 								</configuration>
 							</execution>
@@ -421,15 +417,15 @@
 								</goals>
 								<configuration>
 									<target>
-										<property name="es.home" value="${project.build.directory}/elasticsearch-it"/>
+										<property name="es.home" value="${project.build.directory}/elasticsearch-it" />
 										<exec osfamily="windows" executable="powershell">
-											<arg value="-NoProfile"/>
-											<arg value="-Command"/>
-											<arg value="if (Test-Path '${es.home}/es.pid') { Stop-Process -Id (Get-Content '${es.home}/es.pid') -Force -ErrorAction SilentlyContinue }"/>
+											<arg value="-NoProfile" />
+											<arg value="-Command" />
+											<arg value="if (Test-Path '${es.home}/es.pid') { Stop-Process -Id (Get-Content '${es.home}/es.pid') -Force -ErrorAction SilentlyContinue }" />
 										</exec>
 										<exec osfamily="unix" executable="sh">
-											<arg value="-c"/>
-											<arg value="[ -f '${es.home}/es.pid' ] &amp;&amp; kill $(cat '${es.home}/es.pid') || true"/>
+											<arg value="-c" />
+											<arg value="[ -f '${es.home}/es.pid' ] &amp;&amp; kill $(cat '${es.home}/es.pid') || true" />
 										</exec>
 									</target>
 								</configuration>
