@@ -55,8 +55,16 @@ model SystemInfo {
 	/** Application name. */
 	name: string;
 
-	/** Application version (build version; "dev" when built without build info). */
-	version: string;
+	/**
+	 * Application version (build version; "dev" when built without build info).
+	 *
+	 * Absent unless the deployment exposes it (`system.expose-version`). Which
+	 * version is running answers a support question and helps whoever debugs an
+	 * installation, and it tells a reader of a public portal nothing they can
+	 * act on - so a deployment that does not want it disclosed does not send it,
+	 * rather than sending it and asking the client not to show it.
+	 */
+	version?: string;
 }
 
 /**

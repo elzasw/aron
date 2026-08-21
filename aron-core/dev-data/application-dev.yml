@@ -55,6 +55,10 @@ tile:
   folder: ./target/dev-data/tiles
   format: jpg
 
+# dev is exactly the case the switch exists for
+system:
+  expose-version: true
+
 webResources:
   pageTemplate: ./dev-data/config/pageTemplate.yaml
   news: ./dev-data/config/news.yaml

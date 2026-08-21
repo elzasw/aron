@@ -151,8 +151,9 @@ own links would end up nested inside it — so the whole tile is the target, whi
 only helps 2.5.5/2.5.8. A tile's second line is visible text, not the old
 portal's hover-only `title` (invisible to touch and to the keyboard); tile
 pictures and link marks are decorative (CSS background, or `alt=""`), the label
-being the accessible name (1.1.1). The band is a labelled `<section>`, never a
-second `<footer>`: the frame keeps the page's one `contentinfo`, which is where
+being the accessible name (1.1.1). The deployment's footer columns sit **inside
+the frame's one `<footer>`** - the page's single `contentinfo` - so there is one
+footer landmark and the columns need no label of their own; that is also where
 the links a deployment must publish live. Prose links inside a sentence are real
 anchors built from server-resolved runs — configured markup never reaches the
 page, so this gate keeps covering the whole of it (4.1.2). Still the

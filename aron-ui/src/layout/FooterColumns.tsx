@@ -1,19 +1,8 @@
 import { makeStyles, tokens } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import type { FooterLink, FooterParagraph, HomeFooter } from "../api/generated";
-import { PRIMARY_DARK } from "../layout/palette";
 
 const useStyles = makeStyles({
-  // full-bleed band, like the original portal's: it ends the home page rather
-  // than sitting inside its column
-  band: {
-    width: "100%",
-    backgroundColor: PRIMARY_DARK,
-    color: "#ffffff",
-    marginTop: tokens.spacingVerticalXXXL,
-    padding: `${tokens.spacingVerticalXXL} ${tokens.spacingHorizontalXXL}`,
-    boxSizing: "border-box",
-  },
   columns: {
     display: "flex",
     flexWrap: "wrap",
@@ -53,7 +42,7 @@ const useStyles = makeStyles({
     display: "inline-flex",
     alignItems: "center",
     gap: tokens.spacingHorizontalXS,
-    color: "#ffffff",
+    color: "inherit",
     fontSize: tokens.fontSizeBase300,
   },
   mark: {
@@ -61,7 +50,13 @@ const useStyles = makeStyles({
     width: "auto",
     flexShrink: 0,
   },
+  // a link inside a sentence keeps the prose's colour; the underline carries it
+  inlineLink: {
+    color: "inherit",
+  },
 });
+
+type Styles = ReturnType<typeof useStyles>;
 
 /**
  * One paragraph. The runs come from the server: the deployment wrote one
@@ -69,12 +64,12 @@ const useStyles = makeStyles({
  * inside the prose are anchors this component renders - configured markup never
  * reaches the page.
  */
-function Paragraph({ paragraph, className }: { paragraph: FooterParagraph; className: string }) {
+function Paragraph({ paragraph, styles }: { paragraph: FooterParagraph; styles: Styles }) {
   return (
-    <p className={className}>
+    <p className={styles.paragraph}>
       {paragraph.runs.map((run, index) =>
         run.url ? (
-          <a key={index} href={run.url} style={{ color: "inherit" }}>
+          <a key={index} href={run.url} className={styles.inlineLink}>
             {run.text}
           </a>
         ) : (
@@ -86,7 +81,7 @@ function Paragraph({ paragraph, className }: { paragraph: FooterParagraph; class
 }
 
 /** A link of a column; a configured mark is decoration, the label names it. */
-function ColumnLink({ link, styles }: { link: FooterLink; styles: ReturnType<typeof useStyles> }) {
+function ColumnLink({ link, styles }: { link: FooterLink; styles: Styles }) {
   const { t } = useTranslation();
   const label = link.label ?? (link.code ? t(`app.footer.link.${link.code}`) : link.url);
   return (
@@ -100,38 +95,36 @@ function ColumnLink({ link, styles }: { link: FooterLink; styles: ReturnType<typ
 }
 
 /**
- * The deployment's own band at the foot of the home page: who runs the portal,
- * what it presents, how to reach them. Only here and not in the application
- * frame - the frame is one viewport tall and every row of it comes out of the
- * routed content, so a band on every page would cost the record detail its
- * pane height for good.
+ * The deployment's own columns of the page footer: who runs the portal, what it
+ * presents, how to reach them. Rendered by `AppLayout` inside the frame's one
+ * `<footer>` - that is where a reader expects this, and it needs no landmark or
+ * label of its own there.
  *
- * Not a `<footer>` either: the frame already has the page's one `contentinfo`
- * landmark, which is where the links a deployment must publish live.
+ * Shown on the home page only. Not because it belongs to that page, but because
+ * the frame is one viewport tall and every row of footer comes out of the routed
+ * content: columns on every page would cost the record detail its pane height
+ * for good.
  */
-export default function HomeFooterBand({ footer }: { footer: HomeFooter }) {
+export default function FooterColumns({ footer }: { footer: HomeFooter }) {
   const styles = useStyles();
-  const { t } = useTranslation();
 
   return (
-    <section className={styles.band} aria-label={t("home.about")}>
-      <div className={styles.columns}>
-        {footer.columns.map((column, index) => (
-          <div className={styles.column} key={index}>
-            {column.heading && <h2 className={styles.heading}>{column.heading}</h2>}
-            {column.paragraphs.map((paragraph, paragraphIndex) => (
-              <Paragraph key={paragraphIndex} paragraph={paragraph} className={styles.paragraph} />
-            ))}
-            {column.links.length > 0 && (
-              <ul className={styles.list}>
-                {column.links.map((link) => (
-                  <ColumnLink key={link.url} link={link} styles={styles} />
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
+    <div className={styles.columns}>
+      {footer.columns.map((column, index) => (
+        <div className={styles.column} key={index}>
+          {column.heading && <h2 className={styles.heading}>{column.heading}</h2>}
+          {column.paragraphs.map((paragraph, paragraphIndex) => (
+            <Paragraph key={paragraphIndex} paragraph={paragraph} styles={styles} />
+          ))}
+          {column.links.length > 0 && (
+            <ul className={styles.list}>
+              {column.links.map((link) => (
+                <ColumnLink key={link.url} link={link} styles={styles} />
+              ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }

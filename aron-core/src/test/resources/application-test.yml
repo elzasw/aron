@@ -47,6 +47,10 @@ tile:
   folder: ./target/test-data/tiles
   format: jpg
 
+# the version is asserted by NewApiV1Test, so the suite exposes it
+system:
+  expose-version: true
+
 webResources:
   pageTemplate: ./src/test/resources/test-config/pageTemplate.yaml
   news: ./src/test/resources/test-config/news.yaml

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
@@ -7,6 +7,24 @@ import { FooterLinkCode, type UiConfig } from "../api/generated";
 import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
 import AppLayout from "./AppLayout";
+
+const footerColumns = {
+  columns: [
+    {
+      heading: "Základní informace",
+      paragraphs: [
+        {
+          runs: [
+            { text: "Portál je aplikace " },
+            { text: "Testovacího archivu", url: "http://archiv.test.example" },
+            { text: "." },
+          ],
+        },
+      ],
+      links: [],
+    },
+  ],
+};
 
 const config: UiConfig = {
   name: "Testovací portál",
@@ -18,14 +36,19 @@ const config: UiConfig = {
     { code: FooterLinkCode.Accessibility, url: "https://archiv.example/pristupnost" },
     { label: "Kontakt", url: "https://archiv.example/kontakt" },
   ],
+  homePage: { groups: [], footer: footerColumns },
 };
+
+// the implementation is passed to vi.fn() rather than set with
+// mockResolvedValue: restoreMocks (vitest.config.ts) clears the latter between
+// tests, leaving the query with no data
+const systemGetInfo = vi.fn<() => Promise<{ name: string; version?: string }>>(() =>
+  Promise.resolve({ name: "aron2", version: "1.0" }),
+);
 
 vi.mock("../api/client", () => ({
   logoUrl: "/api/v1/ui/logo",
-  // the implementation is passed to vi.fn() rather than set with
-  // mockResolvedValue: restoreMocks (vitest.config.ts) clears the latter
-  // between tests, leaving the query with no data
-  systemApi: { systemGetInfo: vi.fn(() => Promise.resolve({ name: "aron2", version: "1.0" })) },
+  systemApi: { systemGetInfo: () => systemGetInfo() },
   uiApi: { uiGetConfig: vi.fn(() => Promise.resolve(config)) },
 }));
 
@@ -89,6 +112,46 @@ describe("AppLayout", () => {
     // own, which would put the main region's top at the viewport top
     expect(focus).toHaveBeenCalledWith({ preventScroll: true });
     expect(main).toHaveFocus();
+  });
+
+  it("keeps the deployment's own columns inside the page's one footer", async () => {
+    renderLayout();
+
+    // the footer element exists before the configuration arrives, so wait for
+    // the configured content rather than for the landmark
+    const inline = await screen.findByRole("link", { name: "Testovacího archivu" });
+    // one footer, not a band above it: the columns a deployment configures and
+    // the links it must publish are parts of the same contentinfo
+    const footer = screen.getByRole("contentinfo");
+    expect(screen.getAllByRole("contentinfo")).toHaveLength(1);
+    expect(footer.textContent).toContain("Portál je aplikace Testovacího archivu.");
+    // a link inside the prose is a real anchor, not configured markup
+    expect(inline).toHaveAttribute("href", "http://archiv.test.example");
+    // the columns need no landmark of their own inside the footer
+    expect(screen.queryByRole("region", { name: "Základní informace" })).toBeNull();
+  });
+
+  it("carries the columns only where they are configured for", async () => {
+    renderLayout("/apu");
+
+    // every page keeps the links it must publish...
+    await screen.findByRole("link", { name: "Accessibility statement" });
+    const footer = screen.getByRole("contentinfo");
+    // ...but not the columns: each row of footer comes out of the routed
+    // content, and the record detail cannot spare it
+    expect(footer.textContent).not.toContain("Portál je aplikace");
+  });
+
+  it("shows the running version only when the deployment discloses it", async () => {
+    renderLayout();
+    expect(await screen.findByText(/aron2/)).toBeTruthy();
+
+    // withheld, the server sends no version at all - so there is nothing to show
+    systemGetInfo.mockImplementationOnce(() => Promise.resolve({ name: "aron2" }));
+    cleanup();
+    renderLayout();
+    await screen.findByRole("link", { name: "Accessibility statement" });
+    expect(screen.queryByText(/aron2/)).toBeNull();
   });
 
   it("publishes the deployment's footer links, labelling the well-known ones itself", async () => {

@@ -160,19 +160,6 @@ describe("HomePage", () => {
     expect(external.getAttribute("target")).toBeNull();
   });
 
-  it("renders footer prose with its link inside the sentence", async () => {
-    renderHome();
-
-    const band = await screen.findByRole("region", { name: "About this portal" });
-    expect(band.textContent).toContain("Portál je aplikace Testovacího archivu a zpřístupňuje popis archiválií.");
-    const inline = screen.getByRole("link", { name: "Testovacího archivu" });
-    expect(inline.getAttribute("href")).toBe("http://archiv.test.example");
-
-    // a mark is decoration; the label names the link
-    const contact = screen.getByRole("link", { name: "badatelna@test.example" });
-    expect(contact.querySelector("img")!.getAttribute("alt")).toBe("");
-  });
-
   it("shows the search box alone when the deployment configures no home page", async () => {
     uiGetConfig.mockImplementationOnce(() =>
       Promise.resolve({ ...config, homePage: undefined }),
@@ -180,7 +167,6 @@ describe("HomePage", () => {
     renderHome();
 
     expect(await screen.findByRole("button", { name: "Search" })).toBeTruthy();
-    expect(screen.queryByRole("region", { name: "About this portal" })).toBeNull();
     expect(screen.queryByRole("heading", { name: "Mohlo by vás zajímat" })).toBeNull();
   });
 

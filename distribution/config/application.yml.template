@@ -47,6 +47,13 @@ webResources:
   resultLayout: ./config/resultLayout.yaml
   images: ./config/images
 
+# Zobrazovat v paticce verzi bezici aplikace. Vypnuto: ctenar portalu s ni nic
+# neudela a nasazeni ji nemusi zverejnovat. Zapnuta se hodi na testovacich
+# serverech a pri hledani zavady - server ji pak posila i v /api/v1/system/info,
+# takze zamlceni znamena neposilat ji, ne posilat a nezobrazovat.
+#system:
+#  expose-version: true
+
 # Cil polozky HELP v nabidce portalu. Klic je povinny (cte ho stare API);
 # nasazeni sem patri vlastni stranku napovedy.
 help-url: https://example.org/aron/help

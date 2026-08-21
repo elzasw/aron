@@ -38,8 +38,7 @@
   },
   "home": {
     "searchPlaceholder": "Vyhledávání bez filtru",
-    "searchButton": "Hledat",
-    "about": "O portálu"
+    "searchButton": "Hledat"
   },
   "section": {
     "placeholder": "Obsah sekce se připravuje."

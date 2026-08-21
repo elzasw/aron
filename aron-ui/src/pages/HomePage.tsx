@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useUiConfig } from "../api/useUiConfig";
-import HomeFooterBand from "../home/HomeFooterBand";
 import HomeTileGroups from "../home/HomeTileGroups";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
@@ -69,9 +68,10 @@ const useStyles = makeStyles({
 
 /**
  * Portal home page: the central search entry, then whatever the deployment
- * publishes below it - its curated entry points and its own footer band, both
- * from /api/v1/ui/config. A deployment that configures neither gets the search
- * box alone, which is a configuration and not an omission.
+ * publishes below it: its curated entry points, from /api/v1/ui/config. A
+ * deployment that configures none gets the search box alone, which is a
+ * configuration and not an omission. Its footer columns are configured next to
+ * them but rendered by the frame's one footer (see FooterColumns).
  */
 export default function HomePage() {
   const styles = useStyles();
@@ -110,7 +110,6 @@ export default function HomePage() {
         </Card>
         {homePage && homePage.groups.length > 0 && <HomeTileGroups groups={homePage.groups} />}
       </div>
-      {homePage?.footer && <HomeFooterBand footer={homePage.footer} />}
     </div>
   );
 }

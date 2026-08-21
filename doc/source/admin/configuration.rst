@@ -59,6 +59,10 @@ application.yml
    * - ``search.structured-results``
      - ``AUTO`` (default) attaches the structured presentation to every record
        that has one; ``OFF`` disables the feature for the whole deployment.
+   * - ``system.expose-version``
+     - ``false`` (default) keeps the running version out of the footer and out
+       of ``/api/v1/system/info`` — a reader can do nothing with it. ``true``
+       publishes it, which is what a test server or a support case wants.
    * - ``help-url``
      - External help link shown in the default menu.
    * - ``import.input-dir``
@@ -356,9 +360,11 @@ English sentence forgets is one the English reader never gets, so either
 mistake stops the startup. A stray brace does too; there is no escape for a
 literal one.
 
-The band belongs to the home page only. The links a deployment is required to
-publish (the accessibility statement above all) belong in ``footer.links``,
-which the portal shows on every page.
+The columns are shown inside the portal's own page footer, and only on the home
+page: every row of footer takes height from the content above it, and the record
+detail — one screen tall, with its own scrolling panes — cannot spare it. The
+links a deployment is required to publish (the accessibility statement above
+all) belong in ``footer.links``; they sit in the same footer on every page.
 
 Structured search results
 =========================

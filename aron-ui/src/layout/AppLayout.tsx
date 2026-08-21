@@ -1,4 +1,4 @@
-import { makeStyles, Text, tokens } from "@fluentui/react-components";
+import { makeStyles, mergeClasses, Text, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,8 @@ import { useUiConfig } from "../api/useUiConfig";
 import ApiErrorBar from "../errors/ApiErrorBar";
 import AppHeader from "./AppHeader";
 import Breadcrumbs from "./Breadcrumbs";
+import FooterColumns from "./FooterColumns";
+import { PRIMARY_DARK } from "./palette";
 
 /** Target of the skip link; also the element focused after a route change. */
 const MAIN_ID = "main-content";
@@ -53,17 +55,37 @@ const useStyles = makeStyles({
       outline: "none",
     },
   },
+  // One footer, in the header's colour, so the page is bookended and the
+  // deployment's own columns and the links it must publish read as one thing
+  // rather than as two stacked bands.
   footer: {
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: PRIMARY_DARK,
+    color: "#ffffff",
+  },
+  // the deployment's columns, where it configures them (home page only)
+  columns: {
+    padding: `${tokens.spacingVerticalXXL} ${tokens.spacingHorizontalXXL}`,
+    "@media (max-width: 860px)": {
+      padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalM}`,
+    },
+  },
+  // the row every page carries. A divider rather than a border between blocks:
+  // it separates two parts of one footer, so it is drawn in the footer's own ink.
+  utilities: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
     gap: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalL}`,
     padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalXXL}`,
-    color: tokens.colorNeutralForeground3,
-    borderTop: `1px solid ${tokens.colorNeutralStroke2}`,
+    fontSize: tokens.fontSizeBase200,
     "@media (max-width: 860px)": {
       padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
     },
+  },
+  withColumns: {
+    borderTop: "1px solid rgba(255, 255, 255, 0.2)",
   },
   footerLinks: {
     display: "flex",
@@ -71,18 +93,21 @@ const useStyles = makeStyles({
     gap: `${tokens.spacingVerticalXS} ${tokens.spacingHorizontalL}`,
   },
   footerLink: {
-    color: tokens.colorNeutralForeground2,
+    color: "inherit",
     fontSize: tokens.fontSizeBase200,
   },
   version: {
     marginLeft: "auto",
+    color: "inherit",
   },
 });
 
 /**
  * Application frame: configuration-driven header, breadcrumb strip, routed
- * content, footer with the deployment's published links and the running
- * backend's version.
+ * content, and one footer - the page's single `contentinfo`. It carries the
+ * links a deployment must publish everywhere, the running version where the
+ * deployment discloses it, and on the home page the deployment's own columns
+ * above them, so a reader sees one footer rather than two stacked bands.
  *
  * Accessibility (doc/accessibility.md): the skip link lets a keyboard user pass
  * the repeated header, and a route change parks focus on the main region so a
@@ -126,6 +151,9 @@ export default function AppLayout() {
 
   const focusMain = () => mainRef.current?.focus();
   const footerLinks = config?.footerLinks ?? [];
+  // the deployment's footer columns, on the page they are configured for; see
+  // FooterColumns for why they are not on every page
+  const columns = location.pathname === "/" ? config?.homePage?.footer : undefined;
 
   return (
     <div className={styles.root}>
@@ -149,20 +177,31 @@ export default function AppLayout() {
         <Outlet />
       </main>
       <footer className={styles.footer}>
-        {footerLinks.length > 0 && (
-          <nav aria-label={t("app.footer.label")} className={styles.footerLinks}>
-            {footerLinks.map((link) => (
-              <a key={link.url} className={styles.footerLink} href={link.url}>
-                {/* a well-known link is labelled by the UI in the reader's
-                    language; a free link brings its own label */}
-                {link.label ?? (link.code ? t(`app.footer.link.${link.code}`) : link.url)}
-              </a>
-            ))}
-          </nav>
+        {columns && (
+          <div className={styles.columns}>
+            <FooterColumns footer={columns} />
+          </div>
         )}
-        <Text size={200} className={styles.version}>
-          {info ? t("app.footer.version", { name: info.name, version: info.version }) : " "}
-        </Text>
+        <div className={mergeClasses(styles.utilities, columns && styles.withColumns)}>
+          {footerLinks.length > 0 && (
+            <nav aria-label={t("app.footer.label")} className={styles.footerLinks}>
+              {footerLinks.map((link) => (
+                <a key={link.url} className={styles.footerLink} href={link.url}>
+                  {/* a well-known link is labelled by the UI in the reader's
+                      language; a free link brings its own label */}
+                  {link.label ?? (link.code ? t(`app.footer.link.${link.code}`) : link.url)}
+                </a>
+              ))}
+            </nav>
+          )}
+          {/* the running version only where the deployment discloses it
+              (system.expose-version); withheld, the server sends none */}
+          {info?.version && (
+            <Text size={200} className={styles.version}>
+              {t("app.footer.version", { name: info.name, version: info.version })}
+            </Text>
+          )}
+        </div>
       </footer>
     </div>
   );

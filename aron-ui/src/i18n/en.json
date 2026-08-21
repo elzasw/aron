@@ -38,8 +38,7 @@
   },
   "home": {
     "searchPlaceholder": "Search without a filter",
-    "searchButton": "Search",
-    "about": "About this portal"
+    "searchButton": "Search"
   },
   "section": {
     "placeholder": "This section is being prepared."
