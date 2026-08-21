@@ -29,13 +29,21 @@ License: [Apache-2.0](LICENSE).
 ## Build
 
 ```
-build.bat            # Windows: uses set-env.bat if present, else the Maven wrapper
-mvn install          # with your own toolchain
+build.bat            # Windows: full build (clean install) of all modules
+mvn.bat <goals>      # Windows: any Maven command, same toolchain
+mvn install          # with your own toolchain on the PATH
 ```
 
-`build.bat` picks up a local toolchain from `set-env.bat` — copy
+`mvn.bat` is the general entry point: it sets up the toolchain and forwards
+whatever you give it — `mvn.bat versions:set -DnewVersion=2.1.0-SNAPSHOT`,
+`mvn.bat -pl api,aron-ui generate-sources` — and leaves the current directory
+alone, so it works from inside a module too (`..\mvn.bat spring-boot:run -Pdev`
+from `aron-core`). `build.bat` is the same wrapper with `clean install` fixed.
+
+Both pick up a local toolchain from `set-env.bat` — copy
 `set-env.bat.template` and point it at your JDK/Maven installs (the file is
-gitignored; never commit machine paths).
+gitignored; never commit machine paths). Without it the bundled wrapper
+(`mvnw.cmd`) runs instead, which needs only `JAVA_HOME`.
 
 The build produces the deployable artifact `distribution/target/aron.jar`.
 No Node/npm is needed on the host: the `api` and `aron-ui` modules install their
