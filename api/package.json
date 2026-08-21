@@ -1,6 +1,7 @@
 {
   "name": "aron-api",
   "version": "0.0.1",
+  "license": "Apache-2.0",
   "private": true,
   "type": "module",
   "description": "TypeSpec definition of the ARON portal API (/api/v1); emits OpenAPI 3.",

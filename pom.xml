@@ -22,6 +22,45 @@
 	<description>Archiv online, new generation - connected records presentation</description>
 
 	<!--
+	  Project identity. Declared rather than inherited: spring-boot-starter-parent
+	  supplies a url, licenses and developers of its own, so without these the
+	  published pom credits VMware, Inc. and links to spring.io. The url is blank
+	  for the same reason <scm><url/> is - set it once the project has a public
+	  home page.
+	-->
+	<url/>
+	<organization>
+		<name>LightComp v.o.s.</name>
+		<url>https://www.lightcomp.cz</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>Petr Pytelka</name>
+			<organization>LightComp v.o.s.</organization>
+			<organizationUrl>https://www.lightcomp.cz</organizationUrl>
+			<roles>
+				<role>architect</role>
+				<role>developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Karel Žáček</name>
+			<organization>LightComp v.o.s.</organization>
+			<organizationUrl>https://www.lightcomp.cz</organizationUrl>
+			<roles>
+				<role>developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<!--
 	  Module order is significant: the api contract module regenerates its OpenAPI
 	  (consumed by aron-core's code generators and aron-ui's client generator)
 	  first; distribution assembles the deployable jar and bundle zips it into the
