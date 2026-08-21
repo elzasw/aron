@@ -57,7 +57,7 @@ homepage:
           columnSpan: 2
           apuType: ARCH_DESC
         - label: { cs: Fotografie, en: Photographs }
-          note: { cs: mesta a obce, en: towns and villages }
+          note: { cs: města a obce, en: towns and villages }
           image: { name: demo-fotografie.svg, positionY: top }
           columnSpan: 2
           apuType: ARCH_DESC
@@ -116,6 +116,11 @@ homepage:
         links:
           - label: webmaster@example.com
             url: "mailto:webmaster@example.com"
+          # znama role: popis dodava PORTAL v jazyce ctenare, konfigurace zadny
+          # nepise - proto tu neni label. Povinne odkazy (prohlaseni o
+          # pristupnosti) ale patri do footer.links vyse, aby byly videt vsude.
+          - code: CONTACT
+            url: https://example.org/kontakt
           # znacka u odkazu: soubor nasazeni, ne jmeno, ktere by znal portal -
           # prejmenovana sit (z Twitteru se stalo X) je vymena souboru
           - label: { cs: Archiv na sociální síti, en: The archive's social profile }

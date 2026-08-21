@@ -1,0 +1,10 @@
+# Prelozitelne texty vedle pageTemplate.yaml. Sem patri to, co ma stabilni klic
+# - zde nazev portalu; pageTemplate.yaml si drzi zdrojovy jazyk a je zaroven
+# zaloha, takze pridani jazyka do nej nezasahuje.
+#
+# Texty uvodni strany (skupiny, dlazdice, paticka) se naopak pisou primo
+# v pageTemplate.yaml jako mapa jazyk -> text: dlazdice zadny stabilni klic nema,
+# tak by se v tomto souboru nemely ceho drzet. Stejna vyjimka plati pro odkazy
+# v paticce - odkaz je urcen svou adresou.
+name:
+  en: Archives online
