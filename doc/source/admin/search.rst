@@ -129,6 +129,66 @@ Within a tier, standard fulltext scoring applies — shorter fields matching
 more of the query score higher, so a record whose name *is* the query
 outranks a record that merely mentions it.
 
+Which facets a section offers
+=============================
+
+Each facet in ``searchConfig.yaml`` carries an optional ``when`` condition
+saying where it is offered. Only two forms exist, and **anything else stops
+the startup** rather than being quietly ignored — a condition the server
+cannot read used to mean "offered everywhere", which is invisible until a
+reader is shown a facet belonging to another kind of record.
+
+.. code-block:: yaml
+
+   facets:
+     # bound to one section
+     - when:
+         apuType: FUND
+       type: FULLTEXT
+       source: TITLE
+
+     # the section, plus a dependency on what another facet has selected
+     - when:
+         all:
+           - apuType: ARCH_DESC
+           - filter: REGISTRY_TYPE
+             value: rejstřík zeměpisný
+       type: MULTI_REF
+       source: REG_GEO_REF
+
+``apuType`` must be one of ``ARCH_DESC``, ``COLLECTION``, ``ENTITY``,
+``FINDING_AID``, ``FUND``, ``INSTITUTION``. A facet with no ``when`` at all —
+or an ``all`` naming no ``apuType`` — belongs to every section.
+
+.. note::
+
+   The new portal does not yet act on the ``filter``/``value`` half: such a
+   facet is offered throughout its section rather than only once that value
+   is selected. The old portal honours it. The condition is still checked, so
+   a mistake in it is reported at startup.
+
+Ordering a facet's values
+=========================
+
+``orderBy`` sorts an enumerated facet's values by frequency (``FREQ``, the
+default) or alphabetically (``ASC``). ``order`` overrides that for the values
+an archive wants offered first, whatever their frequency:
+
+.. code-block:: yaml
+
+   - when:
+       apuType: ARCH_DESC
+     type: ENUM
+     source: UNIT_TYPE
+     orderBy: FREQ
+     order:
+       - matrika
+       - kroniky
+
+The listed values lead, in the order given; everything else follows in
+``orderBy`` order, so the list names a leading run rather than the whole
+facet. A listed value the data does not contain simply does not appear.
+
 Tuning the weights
 ==================
 

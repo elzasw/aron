@@ -630,13 +630,35 @@ public class SearchController implements SearchApi {
 		}).collect(Collectors.toCollection(ArrayList::new));
 	}
 
-	/** ASC = alphabetical by display label, otherwise (FREQ, the default) by count with a label tiebreak. */
+	/**
+	 * The deployment's own sequence first, then {@code orderBy}: ASC =
+	 * alphabetical by display label, otherwise (FREQ, the default) by count with a
+	 * label tiebreak.
+	 *
+	 * <p>{@code order:} in searchConfig.yaml names the values that lead, in the
+	 * order given - the kinds of material an archive wants offered first, which
+	 * frequency would bury. It names a leading run rather than the whole list
+	 * (the shipped UNIT_TYPE facet names ten values of a hundred and still sets
+	 * {@code orderBy: FREQ}), so whatever it does not mention follows, ordered as
+	 * it would have been anyway. Matching is on the bucket's value, which is what
+	 * the file lists.
+	 */
 	private static List<FacetBucket> orderFacetBuckets(List<FacetBucket> buckets, FacetConfigDto facet) {
 		Function<FacetBucket, String> label = b -> b.getLabel() != null ? b.getLabel() : b.getValue();
-		Comparator<FacetBucket> comparator = "ASC".equalsIgnoreCase(facet.getOrderBy())
+		Comparator<FacetBucket> within = "ASC".equalsIgnoreCase(facet.getOrderBy())
 				? Comparator.comparing(label)
 				: Comparator.comparingLong(FacetBucket::getCount).reversed().thenComparing(label);
+		List<String> configured = facet.getOrder();
+		Comparator<FacetBucket> comparator = configured == null || configured.isEmpty()
+				? within
+				: Comparator.comparingInt((FacetBucket b) -> rankOf(b, configured)).thenComparing(within);
 		return buckets.stream().sorted(comparator).toList();
+	}
+
+	/** Position of a bucket in the configured order; unnamed values sort after all of them. */
+	private static int rankOf(FacetBucket bucket, List<String> configured) {
+		int rank = configured.indexOf(bucket.getValue());
+		return rank >= 0 ? rank : configured.size();
 	}
 
 	/**

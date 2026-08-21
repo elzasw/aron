@@ -49,6 +49,11 @@ public class FacetsLoader {
         //we replace underscores with tildes because otherwise indexing would turn them to dots
         for (FacetConfigDto facet : facetsConfigDto.getFacets()) {
             applyTranslations(facet, translations.get(facet.getSource()));
+            // the when-condition is checked here, while the source still reads as
+            // the file spells it, so an error names something the operator can
+            // search for; an unreadable condition fails the startup rather than
+            // quietly widening the facet's scope (see FacetCondition)
+            FacetCondition.parse(facet.getWhen(), facet.getSource());
             if (facet.getSource() != null) {
                 facet.setSource(facet.getSource().replace("_", "~"));
             }

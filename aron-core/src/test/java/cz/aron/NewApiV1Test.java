@@ -99,14 +99,16 @@ class NewApiV1Test extends AbstractTest {
 				"REL~ENTITY~LABEL", List.of("Karel Novák"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-a|Karel Novák"),
 				"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
-				"UNIT~DATE~H", List.of("1850-12-31T23:59:59")));
+				"UNIT~DATE~H", List.of("1850-12-31T23:59:59"),
+				"ORDERED~CODE", List.of("aaa-most", "zzz-last-by-name")));
 		var record2 = doc(uuid(2), "V1S sbírka listin", Map.of(
 				"LANG~CODE", List.of("v1-cze"),
 				"REL~ENTITY", List.of("ent-v1-b"),
 				"REL~ENTITY~LABEL", List.of("Jan Dvořák"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-b|Jan Dvořák"),
 				"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
-				"UNIT~DATE~H", List.of("1910-12-31T23:59:59")));
+				"UNIT~DATE~H", List.of("1910-12-31T23:59:59"),
+				"ORDERED~CODE", List.of("aaa-most", "mmm-middle")));
 		var record3 = doc(uuid(3), "V1S kronika", Map.of("LANG~CODE", List.of("v1-ger")));
 		var fund = doc(uuid(4), "V1S fond města", Map.of(
 				"REL~ENTITY", List.of("ent-v1-f"),
@@ -227,7 +229,8 @@ class NewApiV1Test extends AbstractTest {
 
 		// section facets in configuration order; the when-less TEST~FACET applies everywhere
 		assertThat(facets).extracting(FacetDef::getCode)
-				.containsExactly("TEST~FACET", "TITLE~MAIN", "LANG~CODE", "UNIT~DATE", "REL~ENTITY");
+				.containsExactly("TEST~FACET", "TITLE~MAIN", "LANG~CODE", "UNIT~DATE", "REL~ENTITY",
+						"DEPENDENT~FACET", "ORDERED~CODE");
 		var byCode = facets.stream().collect(Collectors.toMap(FacetDef::getCode, Function.identity()));
 		// label = explicit title, or the types.yaml item name
 		assertThat(byCode.get("TEST~FACET").getLabel()).isEqualTo("Test facet");
@@ -235,6 +238,50 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(byCode.get("TITLE~MAIN").getType()).isEqualTo(FacetType.FULLTEXT);
 		assertThat(byCode.get("LANG~CODE").getType()).isEqualTo(FacetType.ENUM);
 		assertThat(byCode.get("UNIT~DATE").getType()).isEqualTo(FacetType.UNITDATE);
+	}
+
+	@Test
+	void aSectionsFacetsStayInThatSection() {
+		// the fixture's DEPENDENT~FACET carries the compound condition of the
+		// shipped register facets (a section plus a dependency on another facet's
+		// value). Reading only the simple form advertised such facets for every
+		// section, and INSTITUTION - which configures none of its own - got them
+		// as its whole list
+		var institution = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.INSTITUTION, "en");
+		assertThat(institution).extracting(FacetDef::getCode).containsExactly("TEST~FACET");
+
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, "en"))
+				.extracting(FacetDef::getCode).contains("DEPENDENT~FACET");
+
+		// and it is unknown to filter validation elsewhere, which is what keeps a
+		// home-page tile from linking into a search the server then rejects
+		var foreign = new ApuSearchRequest();
+		foreign.setApuType(ApuType.FUND);
+		foreign.setFilters(List.of(valuesFilter("DEPENDENT~FACET", "whatever")));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(foreign))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+	}
+
+	@Test
+	void theConfiguredBucketOrderLeads() {
+		// order: names the values an archive wants offered first; frequency alone
+		// would bury them (aaa-most is the commonest of the three)
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		request.setFilters(List.of(valuesFilter("LANG~CODE", "v1-cze")));
+		var facet = new SearchApi(v1ApiClient()).searchSearch(request).getFacets().stream()
+				.filter(f -> "ORDERED~CODE".equals(f.getCode())).findFirst().orElseThrow();
+
+		assertThat(facet).isInstanceOfSatisfying(EnumFacetResult.class,
+				enumResult -> assertThat(enumResult.getBuckets())
+						.extracting(FacetBucket::getValue, FacetBucket::getCount)
+						.containsExactly(
+								// the two named values, in the order the file gives them
+								tuple("zzz-last-by-name", 1L),
+								tuple("mmm-middle", 1L),
+								// then whatever the file does not mention, by count
+								tuple("aaa-most", 2L)));
 	}
 
 	@Test

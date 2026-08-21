@@ -3,13 +3,13 @@ package cz.aron.web.v1;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import cz.aron.api.v1.model.ApuType;
+import cz.aron.domain.facets.FacetCondition;
 import cz.aron.domain.facets.FacetsLoader;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.facets.dto.FacetType;
@@ -31,7 +31,16 @@ public class FacetScope {
 
 	private final FacetsLoader facetsLoader;
 
-	private List<FacetConfigDto> facets;
+	private List<Scoped> facets;
+
+	/**
+	 * One configured facet with its {@code when} condition parsed. Parsed once at
+	 * startup rather than per request, and parsed at all because the condition's
+	 * grammar has two forms - reading only the simpler one made a facet of one
+	 * section apply to every section.
+	 */
+	private record Scoped(FacetConfigDto facet, FacetCondition condition) {
+	}
 
 	@Autowired
 	FacetScope(FacetsLoader facetsLoader) {
@@ -41,7 +50,7 @@ public class FacetScope {
 	/** A fixed facet list - for unit tests, which have no configuration file. */
 	FacetScope(List<FacetConfigDto> facets) {
 		this.facetsLoader = null;
-		this.facets = List.copyOf(facets);
+		this.facets = scope(facets);
 	}
 
 	@PostConstruct
@@ -50,10 +59,17 @@ public class FacetScope {
 			return;
 		}
 		try {
-			facets = facetsLoader.loadFacets();
+			facets = scope(facetsLoader.loadFacets());
 		} catch (IOException e) {
 			throw new UncheckedIOException("Fail to load facet configuration", e);
 		}
+	}
+
+	/** Pairs every facet with its parsed condition; an unreadable one fails here. */
+	private static List<Scoped> scope(List<FacetConfigDto> facets) {
+		return facets.stream()
+				.map(facet -> new Scoped(facet, FacetCondition.parse(facet.getWhen(), facet.getSource())))
+				.toList();
 	}
 
 	/**
@@ -64,26 +80,15 @@ public class FacetScope {
 	 */
 	public List<FacetConfigDto> facetsFor(ApuType apuType) {
 		return facets.stream()
-				.filter(f -> f.getType() != FacetType.MULTI_REF_EXT)
-				.filter(f -> appliesTo(f, apuType))
+				.filter(scoped -> scoped.facet().getType() != FacetType.MULTI_REF_EXT)
+				.filter(scoped -> scoped.condition().appliesTo(apuType.getValue()))
+				.map(Scoped::facet)
 				.toList();
 	}
 
 	/** The section's facet of this code, or {@code null} when it has none. */
 	public FacetConfigDto facet(ApuType apuType, String code) {
 		return facetsFor(apuType).stream().filter(f -> Objects.equals(f.getSource(), code)).findFirst().orElse(null);
-	}
-
-	/** A facet without a when-condition applies to every APU type. */
-	private static boolean appliesTo(FacetConfigDto facet, ApuType apuType) {
-		if (facet.getWhen() == null) {
-			return true;
-		}
-		if (facet.getWhen() instanceof Map<?, ?> when) {
-			Object condition = when.get("apuType");
-			return condition == null || Objects.equals(String.valueOf(condition), apuType.getValue());
-		}
-		return true;
 	}
 
 }

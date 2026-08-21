@@ -31,3 +31,22 @@ facets:
       apuType: FUND
     type: ENUM
     source: REL_ENTITY
+  # the compound condition the shipped config uses for its register facets: a
+  # section plus a dependency on another facet's selection. Reading only the
+  # simple form advertised such facets for every section (FacetScopeTest).
+  - when:
+      all:
+        - apuType: ARCH_DESC
+        - filter: LANG_CODE
+          value: v1-cze
+    type: ENUM
+    source: DEPENDENT_FACET
+  # explicit bucket order: the values an archive wants offered first, which
+  # frequency would bury. Names a leading run only - the rest follows orderBy.
+  - when:
+      apuType: ARCH_DESC
+    type: ENUM
+    source: ORDERED_CODE
+    order:
+      - zzz-last-by-name
+      - mmm-middle
