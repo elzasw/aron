@@ -61,6 +61,25 @@ What is searched
    not find a record dated 1940–1950); searching inside date ranges is what
    the dating facet is for.
 
+Facets of the general search
+   Searching without choosing a section spans every record type, so the
+   section facets of ``searchConfig.yaml`` cannot apply — their item types
+   belong to a section. That search therefore offers three facets that need
+   **no configuration at all**: the record type, the record's dating and
+   "related to". They are part of the application, they appear in every
+   deployment, and they cannot be renamed or switched off.
+
+   The dating facet there covers the record's dating whatever item type
+   records it, so it also finds records dated only under, say
+   ``DATE_OF_CONTENT``. Because it uses the record's whole dating span, a
+   record dated in several periods matches whenever any of them does.
+
+   A record with no dating at all is **not** matched by a dating filter — it
+   is not in 1805–1852. Where such records are among the results, the filter
+   offers to include them and says how many there are; where every record is
+   dated, as in an archival description, nothing is shown. This needs no
+   configuration either.
+
 Result ordering
 ===============
 

@@ -417,3 +417,56 @@ connect to a given record (with counts) for a narrowing UI — the old portal's
 `incomingRelTypeGroups`. Both stay unimplemented; the `relation` DB table
 (source, relation, target) can answer the same question with plain SQL if that
 slice lands.
+
+## 10. Built-in facets of the general search (2026-08-21)
+
+A reader who searches without picking a section could not narrow the result at
+all: facets are section-scoped, so the controller offered none and answered 400
+for any filter. Yet "everything from 1805 to 1852" is exactly the question a
+cross-section search invites.
+
+Three reserved facets now answer it, registered in `BuiltInFacets` and served
+by `getFacets` when no `apuType` is given: `~TYPE` (record type), `~DATE` (the
+record's dating) and the older `~RELATED`. They are product features, not
+deployment configuration — a search spanning every record type has no section's
+item types to configure against — and their codes are tilde-prefixed, which a
+real item-type code cannot be, so both kinds of facet share one filter
+vocabulary and one validation path.
+
+Four decisions are worth keeping:
+
+- **The port learned one reserved field, not a second filter kind.**
+  `FieldFilter.ANY_DATING` means "the record's dating, whichever item type
+  carries it"; each adapter maps it to the `dateL`/`dateH` pair
+  `ApuDocumentBuilder.computeDateBounds` has always written and that the
+  `DATE_ASC`/`DATE_DESC` sorts already read. Both were indexed range-filterable
+  from the start, so there is **no new field, no reindex and no Lucene
+  layout-version bump**. Being a hull across every dating item type, it is the
+  record's widest dating: a record dated 1800–1810 and again in 1990 matches a
+  filter for 1900. That favours recall, which is the right direction for a facet
+  spanning record types whose datings live in different item types;
+  per-interval precision would need ES's `date_range` field, which the embedded
+  engine has no equivalent for, so it could not be engine-neutral. The facet's
+  `description` says so to the reader.
+- **`~TYPE` reuses the existing `type` field and bucket machinery.** Its filter
+  is an ordinary `Values` on `type` and its buckets an ordinary bucket request,
+  so multi-select comes free through the same `excludedField` mechanism. The
+  separate `typeCounts` aggregation — the chips that lead *into* a section — now
+  excludes a filter on `type` as well as the query's own `apuType`, for the same
+  reason: a reader who selected one type must still see the alternatives.
+- **A dating filter's exclusion of undated records is disclosed, not softened.**
+  `Bounds` grew `undatedCount`, counted over the same documents as the bounds
+  (own RANGE filter excluded) so it does not move with the slider. ES gets it
+  from the bounds filter aggregation's `doc_count` minus the existing
+  `value_count`, Lucene from two cheap counts. `FieldFilter.Range.includeUndated`
+  then ORs "no dating in this field" into the clause. Default off: the filter
+  means what it says.
+- **`~RELATED` has no buckets.** Its options are records found by name through
+  the ordinary search endpoint, because enumerating the targets of every
+  reference field at once is a union no engine answers cheaply — and the reader
+  is looking for one record, not for a distribution.
+
+`~TYPE` and `~DATE` are rejected in a section search (400). A section already is
+one record type, and its configured dating facets each name the item type they
+date; offering a second, wider slider beside them would make the two disagree
+for reasons no reader could reconstruct.

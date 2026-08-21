@@ -22,7 +22,10 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  * @param buckets      value-bucket count requests (see {@link BucketRequest})
  * @param boundsFields UNITDATE item codes to compute dating bounds for (min of
  *                     {@code field~L}, max of {@code field~H} over the matching
- *                     documents, the field's own Range filter excluded)
+ *                     documents, the field's own Range filter excluded), plus
+ *                     the number of those documents carrying no such dating;
+ *                     {@link FieldFilter#ANY_DATING} asks for the record's
+ *                     document-level dating instead of one item type's
  * @param from         zero-based offset of the first hit
  * @param size         page size (bounded by the caller)
  * @param sort         named sort mode

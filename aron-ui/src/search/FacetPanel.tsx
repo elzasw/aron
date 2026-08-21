@@ -15,8 +15,26 @@ import {
   type RefFacetResult,
   type SearchFilter,
 } from "../api/generated";
-import { rangeOf, serializeFilters, setRange, setText, textOf, toggleValue, valuesOf } from "./filters";
+import {
+  addRelated,
+  rangeOf,
+  RELATED_FACET,
+  relatedOf,
+  removeRelated,
+  serializeFilters,
+  setIncludeUndated,
+  setRange,
+  setText,
+  textOf,
+  toggleValue,
+  TYPE_FACET,
+  valuesOf,
+} from "./filters";
+import { RelatedChip } from "./RelatedChips";
 import { useDebouncedValue } from "./useDebouncedValue";
+
+/** Records offered per keystroke in the relation picker - a shortlist, not a page. */
+const RELATED_OPTIONS = 10;
 
 const useStyles = makeStyles({
   facet: {
@@ -31,6 +49,22 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase300,
     lineHeight: tokens.lineHeightBase300,
     fontWeight: tokens.fontWeightSemibold,
+  },
+  // one offered record of the relation picker: a full-width row, so the whole
+  // line is the target the way a bucket's checkbox label is
+  relatedOption: {
+    display: "block",
+    width: "100%",
+    textAlign: "left",
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+    padding: `${tokens.spacingVerticalXXS} 0`,
+    fontSize: tokens.fontSizeBase200,
+    color: tokens.colorNeutralForeground1,
+    ":hover": {
+      textDecorationLine: "underline",
+    },
   },
   // per-condition hit count next to the facet name (muted, like bucket counts)
   titleCount: {
@@ -134,8 +168,12 @@ interface Props {
   filters: SearchFilter[];
   /** This facet's slice of the search response (result kind follows the facet type). */
   result?: FacetResult;
-  /** Section of the search - facet options are section-scoped. */
-  apuType: ApuType;
+  /**
+   * Section of the search - facet options are section-scoped. Absent in the
+   * general search, whose built-in facets need none: the dating and type facets
+   * come with the search response, and the relation picker searches records.
+   */
+  apuType?: ApuType;
   /** Fulltext query of the current search (scopes the reference type-ahead). */
   query: string;
   /** Total of the current search - the per-condition count badge of active text/range facets. */
@@ -170,7 +208,14 @@ export default function FacetPanel({ def, filters, result, apuType, query, total
       {def.type === FacetType.Enum && (
         <EnumFacet def={def} filters={filters} result={result} onFilters={onFilters} />
       )}
-      {def.type === FacetType.Ref && (
+      {/* the built-in relation facet has no buckets to enumerate: the reader
+          picks a record by name instead (see BuiltInFacets on the server) */}
+      {def.type === FacetType.Ref && def.code === RELATED_FACET && (
+        <RelatedFacet def={def} filters={filters} onFilters={onFilters} />
+      )}
+      {/* a configured reference facet exists only inside a section, so its
+          section-scoped options always have one */}
+      {def.type === FacetType.Ref && def.code !== RELATED_FACET && apuType !== undefined && (
         <RefFacet
           def={def}
           filters={filters}
@@ -234,7 +279,14 @@ function EnumFacet({
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const selected = valuesOf(filters, def.code);
-  const buckets = result?.kind === FacetResultKind.Enum ? (result as EnumFacetResult).buckets : [];
+  const raw = result?.kind === FacetResultKind.Enum ? (result as EnumFacetResult).buckets : [];
+  // the built-in type facet's values are ApuType members, which the response
+  // cannot label (search takes no lang) and this UI already names - the same
+  // strings the section menu and the type-count chips use
+  const buckets: OptionRow[] =
+    def.code === TYPE_FACET
+      ? raw.map((bucket) => ({ ...bucket, label: t(`sections.${bucket.value}`) }))
+      : raw;
   const collapsedCount = def.displayedItems && def.displayedItems > 0 ? def.displayedItems : 10;
   const visible = expanded ? buckets : buckets.slice(0, collapsedCount);
 
@@ -263,7 +315,14 @@ function EnumFacet({
  * /facets/{code}/options contract). Without a typed query the search response's
  * own buckets serve as the top options, no extra request needed.
  */
-function RefFacet({ def, filters, result, apuType, query, onFilters }: Props) {
+function RefFacet({
+  def,
+  filters,
+  result,
+  apuType,
+  query,
+  onFilters,
+}: Omit<Props, "apuType" | "total"> & { apuType: ApuType }) {
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const debouncedQ = useDebouncedValue(q.trim(), 300);
@@ -379,10 +438,10 @@ function RangeFacet({
 }: Pick<Props, "def" | "filters" | "result" | "onFilters">) {
   const styles = useStyles();
   const { t } = useTranslation();
-  const bounds = result?.kind === FacetResultKind.Dating
-    ? (result as DatingFacetResult).bounds
-    : undefined;
+  const dating = result?.kind === FacetResultKind.Dating ? (result as DatingFacetResult) : undefined;
+  const bounds = dating?.bounds;
   const applied = rangeOf(filters, def.code);
+  const includeUndated = applied.includeUndated === true;
   const [from, setFrom] = useState(applied.from ?? "");
   const [to, setTo] = useState(applied.to ?? "");
   // follow the applied range (shared link, reset, our own clamped apply) during
@@ -419,7 +478,7 @@ function RangeFacet({
     if (nextFrom !== (applied.from ?? "") || nextTo !== (applied.to ?? "")) {
       // the fields follow the clamped values through the resync above once the
       // filter is applied, so the effect only has to publish it
-      onFilters(setRange(filters, def.code, nextFrom, nextTo));
+      onFilters(setRange(filters, def.code, nextFrom, nextTo, includeUndated));
     }
     // only a debounced edit may trigger this; the guard above absorbs the echo
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -436,6 +495,14 @@ function RangeFacet({
     : undefined;
   const percent = (value: number) =>
     slider ? ((value - slider.min) / (slider.max - slider.min)) * 100 : 0;
+  // how many records a dating filter would leave out for having no date at all,
+  // shown only while such a filter is on and there are any
+  const undatedOffer =
+    (applied.from !== undefined || applied.to !== undefined) &&
+    dating?.undatedCount !== undefined &&
+    dating.undatedCount > 0
+      ? Number(dating.undatedCount)
+      : undefined;
 
   return (
     <>
@@ -499,6 +566,92 @@ function RangeFacet({
           onChange={(_, data) => setTo(data.value)}
         />
       </div>
+      {/* Only where the choice exists: undated records are dropped by a dating
+          filter, so without one they are already in the results, and where every
+          record is dated there is nothing to add back. Whether it is worth
+          offering is a property of the data, which is why the count decides. */}
+      {undatedOffer !== undefined && (
+        <Checkbox
+          checked={includeUndated}
+          onChange={() => onFilters(setIncludeUndated(filters, def.code, !includeUndated))}
+          label={t("facets.includeUndated", { count: undatedOffer })}
+        />
+      )}
+    </>
+  );
+}
+
+/**
+ * Reference facet without buckets: the reader names the record a result must be
+ * related to. Its options come from an ordinary record search rather than from
+ * facet options, because this facet spans every reference item type - a union of
+ * their terms is not something an engine enumerates cheaply, and the reader is
+ * looking for one record anyway.
+ *
+ * The current search's own filters deliberately do not narrow the picker: the
+ * record to relate to need not be among the results being narrowed. The cost is
+ * that each (debounced) keystroke also computes the general search's facets,
+ * which this widget throws away - the search endpoint always answers with the
+ * facets of the scope it was asked about.
+ */
+function RelatedFacet({
+  def,
+  filters,
+  onFilters,
+}: Pick<Props, "def" | "filters" | "onFilters">) {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const [q, setQ] = useState("");
+  const debouncedQ = useDebouncedValue(q.trim(), 300);
+  const selected = relatedOf(filters).flatMap((filter) => filter.apus);
+
+  const options = useQuery({
+    queryKey: ["related-options", debouncedQ],
+    queryFn: () =>
+      searchApi.searchSearch({
+        apuSearchRequest: { query: debouncedQ, size: RELATED_OPTIONS },
+      }),
+    enabled: debouncedQ.length > 0,
+    placeholderData: (previous) => previous,
+  });
+  const hits = (options.data?.items ?? []).filter((hit) => !selected.includes(hit.uuid));
+
+  return (
+    <>
+      {selected.map((apu) => (
+        <RelatedChip
+          key={apu}
+          apu={apu}
+          onRemove={() => onFilters(removeRelated(filters, apu))}
+        />
+      ))}
+      <Input
+        size="small"
+        value={q}
+        aria-label={t("facets.relatedFor", { facet: def.label })}
+        placeholder={t("facets.relatedPlaceholder")}
+        onChange={(_, data) => setQ(data.value)}
+      />
+      {debouncedQ.length > 0 &&
+        (hits.length > 0 ? (
+          hits.map((hit) => (
+            <button
+              key={hit.uuid}
+              type="button"
+              className={styles.relatedOption}
+              onClick={() => onFilters(addRelated(filters, hit.uuid))}
+            >
+              <span className={styles.bucketLabel}>
+                <span>{hit.name}</span>
+                <Text size={200} className={styles.count}>
+                  {t(`sections.${hit.apuType}`)}
+                </Text>
+              </span>
+            </button>
+          ))
+        ) : (
+          <Text size={200}>{t(options.isPending ? "search.loading" : "facets.relatedNoMatch")}</Text>
+        ))}
     </>
   );
 }

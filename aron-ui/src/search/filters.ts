@@ -40,9 +40,18 @@ export function textOf(filters: SearchFilter[], facet: string): string {
   return filter ? (filter as TextFilter).q : "";
 }
 
-export function rangeOf(filters: SearchFilter[], facet: string): { from?: string; to?: string } {
+export function rangeOf(
+  filters: SearchFilter[],
+  facet: string,
+): { from?: string; to?: string; includeUndated?: boolean } {
   const filter = filters.find((f) => f.facet === facet && f.kind === FilterKind.Range);
-  return filter ? { from: (filter as RangeFilter).from, to: (filter as RangeFilter).to } : {};
+  return filter
+    ? {
+        from: (filter as RangeFilter).from,
+        to: (filter as RangeFilter).to,
+        includeUndated: (filter as RangeFilter).includeUndated,
+      }
+    : {};
 }
 
 /** Returns a new filter list with the facet's VALUES selection toggled. */
@@ -59,8 +68,18 @@ export function setText(filters: SearchFilter[], facet: string, q: string): Sear
   return q.trim() ? [...rest, { kind: FilterKind.Text, facet, q: q.trim() } as TextFilter] : rest;
 }
 
-/** Returns a new filter list with the facet's RANGE bounds replaced (both empty = removed). */
-export function setRange(filters: SearchFilter[], facet: string, from: string, to: string): SearchFilter[] {
+/**
+ * Returns a new filter list with the facet's RANGE bounds replaced (both empty =
+ * removed). The undated choice rides along, since moving the slider must not
+ * silently drop it.
+ */
+export function setRange(
+  filters: SearchFilter[],
+  facet: string,
+  from: string,
+  to: string,
+  includeUndated = false,
+): SearchFilter[] {
   const rest = filters.filter((f) => !(f.facet === facet && f.kind === FilterKind.Range));
   const bounds: RangeFilter = { kind: FilterKind.Range, facet };
   if (from.trim()) {
@@ -69,15 +88,42 @@ export function setRange(filters: SearchFilter[], facet: string, from: string, t
   if (to.trim()) {
     bounds.to = to.trim();
   }
+  if (includeUndated) {
+    bounds.includeUndated = true;
+  }
   return bounds.from || bounds.to ? [...rest, bounds] : rest;
 }
 
 /**
- * Reserved code of the built-in relation facet (SearchController.RELATED_FACET):
- * it spans every reference item type and needs no deployment configuration, so
- * "find related" works in the general search where no section facets exist.
+ * Returns a new filter list with the facet's undated choice set. A no-op without
+ * a dating filter to carry it - with no bounds the undated records are in the
+ * results anyway, so there is nothing to include.
+ */
+export function setIncludeUndated(
+  filters: SearchFilter[],
+  facet: string,
+  includeUndated: boolean,
+): SearchFilter[] {
+  const applied = rangeOf(filters, facet);
+  if (applied.from === undefined && applied.to === undefined) {
+    return filters;
+  }
+  return setRange(filters, facet, applied.from ?? "", applied.to ?? "", includeUndated);
+}
+
+/**
+ * The reserved codes of the built-in facets (BuiltInFacets on the server), which
+ * a real item-type code can never collide with. RELATED spans every reference
+ * item type and is accepted in every section as well as in the general search;
+ * DATE (the record's dating, whichever item type carries it) and TYPE are
+ * offered in the general search alone - a section already is one record type,
+ * and its configured dating facets each name the item type they date.
  */
 export const RELATED_FACET = "~RELATED";
+
+export const DATE_FACET = "~DATE";
+
+export const TYPE_FACET = "~TYPE";
 
 /** The relation filters in the list, in order - each one is its own condition (they AND). */
 export function relatedOf(filters: SearchFilter[]): RelatedFilter[] {

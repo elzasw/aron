@@ -368,8 +368,10 @@ model LinkTile extends HomeTile {
  * search page receives them as ordinary constraints the reader can see in the
  * sidebar and undo - a tile is a starting point, not a locked scope.
  *
- * `apuType` is required: filters are validated against the section's configured
- * facets, and the general search (no section) has none.
+ * `apuType` is required: a tile's filters are validated against the section's
+ * configured facets at startup, so a tile can never lead into a search the
+ * server then rejects. The general search's built-in facets are deliberately
+ * not offered here - a tile names a destination, and "everything" is not one.
  */
 model SearchTile extends HomeTile {
 	@invisible(Lifecycle)
@@ -393,10 +395,16 @@ namespace Search {
 	 * Typed facet definitions of one section, in the deployment-configured
 	 * order. Labels are server-localized (deployment configuration is the
 	 * label source).
+	 *
+	 * Without `apuType` these are the general search's **built-in** facets
+	 * (reserved codes, see `SearchFilter.facet`): they carry no deployment
+	 * configuration, because a search spanning every record type cannot be
+	 * scoped by a section's item types. Their labels are server-localized all
+	 * the same, so a client needs no vocabulary of its own.
 	 */
 	@get
 	@route("/api/v1/facets")
-	op getFacets(@query apuType: ApuType, ...LangParam): FacetDef[];
+	op getFacets(@query apuType?: ApuType, ...LangParam): FacetDef[];
 
 	/**
 	 * Searches APUs of one type. Facet results follow multi-select semantics:
@@ -520,7 +528,11 @@ model FacetDef {
 
 /** Search request over APUs. */
 model ApuSearchRequest {
-	/** Section restriction; unset = search across all types (general search, no facets). */
+	/**
+	 * Section restriction; unset = search across all types (the general
+	 * search), whose facets are the built-in ones - `getFacets` without an
+	 * `apuType` lists them.
+	 */
 	apuType?: ApuType;
 
 	/** Fulltext query over the APU name and description; unset = match all. */
@@ -620,7 +632,13 @@ model SearchFilter {
 	 */
 	kind: FilterKind;
 
-	/** Code of the facet the filter applies to. */
+	/**
+	 * Code of the facet the filter applies to - a deployment-configured facet of
+	 * the section, or one of the reserved built-in codes the general search
+	 * offers (`~DATE`, `~TYPE`, `~RELATED`). A leading tilde cannot occur in an
+	 * item-type code, so a reserved code can never collide with a configured
+	 * facet.
+	 */
 	facet: string;
 }
 
@@ -648,6 +666,18 @@ model RangeFilter extends SearchFilter {
 	kind: FilterKind.RANGE;
 	from?: string;
 	to?: string;
+
+	/**
+	 * Whether records carrying no dating in this facet's field match as well.
+	 * Off by default, so the filter means what it says - a record with no date
+	 * is not in 1805-1852. It exists because in a result set mixing dated and
+	 * undated records (the general search: access points and archives are often
+	 * undated) excluding them silently hides records the reader's query did
+	 * match, for a reason the reader cannot see. `DatingFacetResult.undatedCount`
+	 * is what makes that number visible, and this flag is how the reader acts
+	 * on it.
+	 */
+	includeUndated?: boolean = false;
 }
 
 /** Which end of the relation the APUs named by a `RelatedFilter` sit on. */
@@ -905,6 +935,20 @@ model DatingFacetResult extends FacetResult {
 
 	/** Absent when no matching document carries a dating. */
 	bounds?: DatingBounds;
+
+	/**
+	 * How many matching records carry no dating in this facet's field - the ones
+	 * a dating filter leaves out unless `RangeFilter.includeUndated` is set.
+	 * Counted like `bounds`, with the facet's own RANGE filter excluded, so the
+	 * number does not change when the reader moves the slider.
+	 *
+	 * Zero is the normal answer wherever every record is dated (an archival
+	 * description, a fond), which is why a client should offer the
+	 * include-undated choice only when this count is greater than zero:
+	 * whether the choice is meaningful is a property of the data, not of the
+	 * deployment's configuration.
+	 */
+	undatedCount?: int64;
 }
 
 /** One value bucket of an enumerated facet. */

@@ -219,17 +219,24 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		}
 		for (String field : query.boundsFields()) {
 			// the value_counts detect "no dating present": the min/max values alone
-			// cannot (the client maps their null to 0.0)
+			// cannot (the client maps their null to 0.0). The filter's own doc_count
+			// minus minCount is then the undated count, needing no aggregation of
+			// its own
 			builder.withAggregation(BOUNDS_AGG_PREFIX + field, Aggregation.of(a -> a
 					.filter(aggregationFilter(query, field, true))
-					.aggregations("min", Aggregation.of(sub -> sub.min(m -> m.field(field + "~L"))))
-					.aggregations("max", Aggregation.of(sub -> sub.max(m -> m.field(field + "~H"))))
-					.aggregations("minCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~L"))))
-					.aggregations("maxCount", Aggregation.of(sub -> sub.valueCount(v -> v.field(field + "~H"))))));
+					.aggregations("min", Aggregation.of(sub -> sub.min(m -> m.field(boundField(field, false)))))
+					.aggregations("max", Aggregation.of(sub -> sub.max(m -> m.field(boundField(field, true)))))
+					.aggregations("minCount",
+							Aggregation.of(sub -> sub.valueCount(v -> v.field(boundField(field, false)))))
+					.aggregations("maxCount",
+							Aggregation.of(sub -> sub.valueCount(v -> v.field(boundField(field, true)))))));
 		}
 		if (query.typeCounts()) {
+			// excluding the type field itself: the built-in type facet follows the
+			// same multi-select rule as every other facet, so a selected type never
+			// hides the alternatives to it
 			builder.withAggregation(TYPE_COUNTS_AGG, Aggregation.of(a -> a
-					.filter(aggregationFilter(query, null, false))
+					.filter(aggregationFilter(query, "type", false))
 					.aggregations("values", Aggregation.of(sub -> sub.terms(t -> t.field("type").size(20))))));
 		}
 		// full deterministic sort chains (uuid mirror field "id" is the final
@@ -465,20 +472,57 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 				bool.filter(Query.of(q -> q.bool(or.build())));
 				any = true;
 			} else if (filter instanceof FieldFilter.Range range && !range.field().equals(excludedField)) {
-				// interval intersection over the ~L/~H bound fields (engine-shared logic)
-				if (range.to() != null) {
-					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~L")
-							.lte(ISO_DATE_TIME.format(range.to()))))));
-					any = true;
-				}
-				if (range.from() != null) {
-					bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(range.field() + "~H")
-							.gte(ISO_DATE_TIME.format(range.from()))))));
+				Query intersection = intersectionQuery(range);
+				if (intersection != null) {
+					bool.filter(range.includeUndated() ? orUndated(range.field(), intersection) : intersection);
 					any = true;
 				}
 			}
 		}
 		return any ? Query.of(q -> q.bool(bool.build())) : null;
+	}
+
+	/**
+	 * Lower/upper bound field of a dating field: the document-level hull for
+	 * {@link FieldFilter#ANY_DATING}, the item type's own {@code ~L}/{@code ~H}
+	 * otherwise. The Lucene adapter maps the same two names, so a Range filter
+	 * and a bounds request mean the same thing on both engines.
+	 */
+	private static String boundField(String field, boolean upper) {
+		if (FieldFilter.ANY_DATING.equals(field)) {
+			return upper ? "dateH" : "dateL";
+		}
+		return field + (upper ? "~H" : "~L");
+	}
+
+	/**
+	 * Interval intersection over the field's bound fields (engine-shared logic);
+	 * {@code null} when both bounds are open.
+	 */
+	private static Query intersectionQuery(FieldFilter.Range range) {
+		var bool = new BoolQuery.Builder();
+		boolean any = false;
+		if (range.to() != null) {
+			bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(boundField(range.field(), false))
+					.lte(ISO_DATE_TIME.format(range.to()))))));
+			any = true;
+		}
+		if (range.from() != null) {
+			bool.filter(Query.of(q -> q.range(r -> r.term(t -> t.field(boundField(range.field(), true))
+					.gte(ISO_DATE_TIME.format(range.from()))))));
+			any = true;
+		}
+		return any ? Query.of(q -> q.bool(bool.build())) : null;
+	}
+
+	/**
+	 * The intersection, or a document carrying no dating in the field at all -
+	 * what {@code includeUndated} asks for.
+	 */
+	private static Query orUndated(String field, Query intersection) {
+		Query undated = Query.of(q -> q.bool(b -> b
+				.mustNot(Query.of(mn -> mn.exists(e -> e.field(boundField(field, false)))))));
+		return Query.of(q -> q.bool(b -> b.should(intersection).should(undated).minimumShouldMatch("1")));
 	}
 
 	private static List<ApuSearchResult.Bucket> extractTypeCounts(SearchHits<IndexedApu> hits, boolean requested) {
@@ -531,12 +575,14 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			if (aggregation == null) {
 				continue;
 			}
-			var subAggs = aggregation.aggregation().getAggregate().filter().aggregations();
+			var filterAgg = aggregation.aggregation().getAggregate().filter();
+			var subAggs = filterAgg.aggregations();
+			double datedCount = subAggs.get("minCount").valueCount().value();
 			// no matching document carries the dating - no entry then
-			if (subAggs.get("minCount").valueCount().value() > 0
-					&& subAggs.get("maxCount").valueCount().value() > 0) {
+			if (datedCount > 0 && subAggs.get("maxCount").valueCount().value() > 0) {
 				result.put(field, new ApuSearchResult.Bounds((long) subAggs.get("min").min().value(),
-						(long) subAggs.get("max").max().value()));
+						(long) subAggs.get("max").max().value(),
+						filterAgg.docCount() - (long) datedCount));
 			}
 		}
 		return result;

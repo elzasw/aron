@@ -83,6 +83,18 @@ public abstract class SearchIndexContractTest {
 		document.setType(type);
 		document.setApuSourceId(sourceId);
 		document.getValues().putAll(values);
+		// the document-level dating, as ApuDocumentBuilder.computeDateBounds derives
+		// it: the hull of every UNITDATE item, which is what FieldFilter.ANY_DATING
+		// filters and bounds
+		values.forEach((field, itemValues) -> itemValues.forEach(value -> {
+			String bound = String.valueOf(value);
+			if (field.endsWith("~L") && (document.getDateL() == null || bound.compareTo(document.getDateL()) < 0)) {
+				document.setDateL(bound);
+			}
+			if (field.endsWith("~H") && (document.getDateH() == null || bound.compareTo(document.getDateH()) > 0)) {
+				document.setDateH(bound);
+			}
+		}));
 		return document;
 	}
 
@@ -508,6 +520,85 @@ public abstract class SearchIndexContractTest {
 				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
 		// no matching document carries the dating - no bounds entry
 		assertThat(withOtherFilter.bounds()).doesNotContainKey("UNIT~DATE");
+	}
+
+	@Test
+	void datingBoundsCountTheUndatedDocuments() {
+		indexApus(List.of(
+				doc(uuid(43), "Kniha A", 1, Map.of(
+						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
+						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
+				doc(uuid(44), "Kniha B bez datace", 1, Map.of("LANG~CODE", List.of("cze"))),
+				doc(uuid(45), "Kniha C bez datace", 1, Map.of("LANG~CODE", List.of("cze")))));
+
+		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
+				Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE)).bounds().get("UNIT~DATE");
+		assertThat(bounds).isNotNull();
+		assertThat(bounds.undatedCount()).isEqualTo(2);
+
+		// counted over the same documents as the bounds, i.e. with the facet's own
+		// range filter excluded - the number must not move as the reader drags the
+		// slider
+		var withOwnRange = index.search(new ApuSearchQuery(null, null,
+				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1810-01-01T00:00:00"), null)),
+				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+		assertThat(withOwnRange.bounds().get("UNIT~DATE").undatedCount()).isEqualTo(2);
+
+		// another facet's filter does apply
+		var czechOnly = index.search(new ApuSearchQuery(null, null,
+				List.of(new FieldFilter.Values("LANG~CODE", List.of("cze"))),
+				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+		assertThat(czechOnly.bounds()).doesNotContainKey("UNIT~DATE");
+	}
+
+	@Test
+	void rangeFilterCanIncludeTheUndatedDocuments() {
+		indexApus(List.of(
+				doc(uuid(46), "Kniha 1800-1850", 1, Map.of(
+						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
+						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
+				doc(uuid(47), "Kniha 1900-1910", 1, Map.of(
+						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
+						"UNIT~DATE~H", List.of("1910-12-31T23:59:59"))),
+				doc(uuid(48), "Kniha bez datace", 1, Map.of())));
+
+		var from = LocalDateTime.parse("1805-01-01T00:00:00");
+		var to = LocalDateTime.parse("1852-12-31T23:59:59");
+
+		// strict by default: an undated record is not in 1805-1852
+		var strict = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE", from, to))));
+		assertThat(strict.hits()).extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(46));
+
+		// including the undated adds exactly those, not the ones out of range
+		var lenient = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE", from, to, true))));
+		assertThat(lenient.hits()).extracting(ApuSearchResult.Hit::uuid)
+				.containsExactlyInAnyOrder(uuid(46), uuid(48));
+	}
+
+	@Test
+	void anyDatingSpansEveryDatingItemType() {
+		indexApus(List.of(
+				doc(uuid(49), "Datovano jako UNIT~DATE", 1, Map.of(
+						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
+						"UNIT~DATE~H", List.of("1810-12-31T23:59:59"))),
+				doc(uuid(50), "Datovano jako DATE~OTHER", 1, Map.of(
+						"DATE~OTHER~L", List.of("1900-01-01T00:00:00"),
+						"DATE~OTHER~H", List.of("1910-12-31T23:59:59"))),
+				doc(uuid(51), "Bez datace", 1, Map.of())));
+
+		// one facet dates records whose datings live in different item types - which
+		// is what a search spanning every record type needs
+		var range = index.search(query(null, List.of(new FieldFilter.Range(FieldFilter.ANY_DATING,
+				LocalDateTime.parse("1905-01-01T00:00:00"), LocalDateTime.parse("1906-01-01T00:00:00")))));
+		assertThat(range.hits()).extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(50));
+
+		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
+				Set.of(FieldFilter.ANY_DATING), 0, 0, SortMode.RELEVANCE)).bounds()
+						.get(FieldFilter.ANY_DATING);
+		assertThat(bounds).isNotNull();
+		assertThat(atUtcYear(bounds.minMillis())).isEqualTo(1800);
+		assertThat(atUtcYear(bounds.maxMillis())).isEqualTo(1910);
+		assertThat(bounds.undatedCount()).isEqualTo(1);
 	}
 
 	private static int atUtcYear(long epochMillis) {

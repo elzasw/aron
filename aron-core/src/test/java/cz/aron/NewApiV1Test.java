@@ -3,7 +3,9 @@ package cz.aron;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
-import static cz.aron.web.v1.SearchController.RELATED_FACET;
+import static cz.aron.web.v1.BuiltInFacets.RELATED_FACET;
+import static cz.aron.web.v1.BuiltInFacets.DATE_FACET;
+import static cz.aron.web.v1.BuiltInFacets.TYPE_FACET;
 
 import java.util.List;
 import java.util.Map;
@@ -36,6 +38,7 @@ import cz.aron.test.api.v1.model.UnitDateItem;
 import cz.aron.test.api.v1.model.DetailPart;
 import cz.aron.test.api.v1.model.PartViewType;
 import cz.aron.test.api.v1.model.QueryMode;
+import cz.aron.test.api.v1.model.RangeFilter;
 import cz.aron.test.api.v1.model.TreeDirection;
 import cz.aron.test.api.v1.model.TreeNode;
 import cz.aron.test.api.v1.model.DatingFacetResult;
@@ -90,22 +93,22 @@ class NewApiV1Test extends AbstractTest {
 	 */
 	@BeforeEach
 	void seedSearchData() {
-		var record1 = doc(uuid(1), "V1 matrika Přerov", Map.of(
+		var record1 = doc(uuid(1), "V1S matrika Přerov", Map.of(
 				"LANG~CODE", List.of("v1-cze"),
 				"REL~ENTITY", List.of("ent-v1-a"),
 				"REL~ENTITY~LABEL", List.of("Karel Novák"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-a|Karel Novák"),
 				"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
 				"UNIT~DATE~H", List.of("1850-12-31T23:59:59")));
-		var record2 = doc(uuid(2), "V1 sbírka listin", Map.of(
+		var record2 = doc(uuid(2), "V1S sbírka listin", Map.of(
 				"LANG~CODE", List.of("v1-cze"),
 				"REL~ENTITY", List.of("ent-v1-b"),
 				"REL~ENTITY~LABEL", List.of("Jan Dvořák"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-b|Jan Dvořák"),
 				"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
 				"UNIT~DATE~H", List.of("1910-12-31T23:59:59")));
-		var record3 = doc(uuid(3), "V1 kronika", Map.of("LANG~CODE", List.of("v1-ger")));
-		var fund = doc(uuid(4), "V1 fond města", Map.of(
+		var record3 = doc(uuid(3), "V1S kronika", Map.of("LANG~CODE", List.of("v1-ger")));
+		var fund = doc(uuid(4), "V1S fond města", Map.of(
 				"REL~ENTITY", List.of("ent-v1-f"),
 				"REL~ENTITY~LABEL", List.of("Okresní archiv"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-f|Okresní archiv")));
@@ -236,7 +239,7 @@ class NewApiV1Test extends AbstractTest {
 
 	@Test
 	void searchFindsTheSeedApu() {
-		// general search (no apuType): hits the input-dir seed, returns no facets
+		// general search (no apuType): hits the input-dir seed
 		var request = new ApuSearchRequest();
 		request.setQuery("Testovací");
 		var response = new SearchApi(v1ApiClient()).searchSearch(request);
@@ -245,11 +248,119 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(response.getItems()).hasSize(1);
 		assertThat(response.getItems().get(0).getUuid()).isEqualTo("5e8c2b41-93a7-4d1e-8ccc-9ddd0eee1aaa");
 		assertThat(response.getItems().get(0).getApuType()).isEqualTo(ApuType.INSTITUTION);
-		assertThat(response.getFacets()).isEmpty();
+		// the general search has no section configuration to apply, so its facets
+		// are the built-in ones
+		assertThat(response.getFacets()).extracting(FacetResult::getCode)
+				.containsExactly(TYPE_FACET, DATE_FACET, RELATED_FACET);
 
 		// section restriction applies
 		request.setApuType(ApuType.FUND);
 		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getTotal()).isZero();
+	}
+
+	@Test
+	void builtInFacetsAreOfferedWhereNoSectionIsChosen() {
+		var facets = new SearchApi(v1ApiClient()).searchGetFacets(null, "en");
+
+		assertThat(facets).extracting(FacetDef::getCode, FacetDef::getType).containsExactly(
+				tuple(TYPE_FACET, FacetType.ENUM),
+				tuple(DATE_FACET, FacetType.UNITDATE),
+				tuple(RELATED_FACET, FacetType.REF));
+		// their text is the product's own, not a deployment's - and it is served,
+		// so an API consumer needs no vocabulary of its own
+		assertThat(facets).extracting(FacetDef::getLabel)
+				.containsExactly("Record type", "Dating", "Related to");
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacets(null, "cs"))
+				.extracting(FacetDef::getLabel)
+				.containsExactly("Typ záznamu", "Datace", "Souvisí s");
+
+		// a section keeps its configured facets, and the built-in ones stay out of
+		// it: a section already is one record type, and its own dating facets say
+		// which item type they date
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, "en"))
+				.extracting(FacetDef::getCode)
+				.doesNotContain(TYPE_FACET, DATE_FACET);
+	}
+
+	@Test
+	void builtInDatingSpansEveryRecordTypeAndDisclosesTheUndated() {
+		// a mixed set on purpose: two dated ARCH_DESC records, one undated, one
+		// undated FUND - what the general search normally looks like
+		var request = new ApuSearchRequest();
+		request.setQuery("V1S");
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(response.getTotal()).isEqualTo(4);
+
+		var dating = (DatingFacetResult) response.getFacets().stream()
+				.filter(f -> DATE_FACET.equals(f.getCode())).findFirst().orElseThrow();
+		// bounds are the hull of every dating item type, so one facet dates every
+		// record type
+		assertThat(dating.getBounds().getMinYear()).isEqualTo(1800);
+		assertThat(dating.getBounds().getMaxYear()).isEqualTo(1910);
+		// and the reader is told what a dating filter would cost them
+		assertThat(dating.getUndatedCount()).isEqualTo(2);
+
+		// the filter means what it says: only the record dated 1800-1850 overlaps
+		request.setFilters(List.of(rangeFilter(DATE_FACET, "1805", "1852", false)));
+		var strict = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(strict.getTotal()).isEqualTo(1);
+		assertThat(strict.getItems()).extracting(ApuSearchItem::getUuid).containsExactly(uuid(1));
+		// bounds ignore the facet's own range filter, so the slider can be widened
+		assertThat(((DatingFacetResult) strict.getFacets().stream()
+				.filter(f -> DATE_FACET.equals(f.getCode())).findFirst().orElseThrow())
+						.getBounds().getMaxYear()).isEqualTo(1910);
+
+		// ... and the reader can put the undated records back
+		request.setFilters(List.of(rangeFilter(DATE_FACET, "1805", "1852", true)));
+		assertThat(new SearchApi(v1ApiClient()).searchSearch(request).getItems())
+				.extracting(ApuSearchItem::getUuid)
+				.containsExactlyInAnyOrder(uuid(1), uuid(3), uuid(4));
+	}
+
+	@Test
+	void builtInTypeFacetNarrowsWithoutLeavingTheGeneralSearch() {
+		var request = new ApuSearchRequest();
+		request.setQuery("V1S");
+		var response = new SearchApi(v1ApiClient()).searchSearch(request);
+
+		assertThat(response.getFacets()).filteredOn(f -> TYPE_FACET.equals(f.getCode()))
+				.singleElement(org.assertj.core.api.InstanceOfAssertFactories.type(EnumFacetResult.class))
+				.satisfies(types -> assertThat(types.getBuckets())
+						.extracting(FacetBucket::getValue, FacetBucket::getCount)
+						.containsExactlyInAnyOrder(tuple("ARCH_DESC", 3L), tuple("FUND", 1L)));
+
+		// narrowing to one type keeps the reader in the general search
+		request.setFilters(List.of(valuesFilter(TYPE_FACET, "FUND")));
+		var narrowed = new SearchApi(v1ApiClient()).searchSearch(request);
+		assertThat(narrowed.getItems()).extracting(ApuSearchItem::getUuid).containsExactly(uuid(4));
+		// the facet's own buckets ignore it (multi-select), so the reader can widen
+		assertThat(narrowed.getFacets()).filteredOn(f -> TYPE_FACET.equals(f.getCode()))
+				.singleElement(org.assertj.core.api.InstanceOfAssertFactories.type(EnumFacetResult.class))
+				.satisfies(types -> assertThat(types.getBuckets())
+						.extracting(FacetBucket::getValue)
+						.containsExactlyInAnyOrder("ARCH_DESC", "FUND"));
+		// as do the type-count chips, which lead into a section rather than filter
+		assertThat(narrowed.getTypeCounts()).extracting(TypeCount::getApuType)
+				.contains(ApuType.ARCH_DESC, ApuType.FUND);
+	}
+
+	@Test
+	void builtInFacetsAreRejectedInASectionSearch() {
+		// a section's facets are its own; offering these there would put a second
+		// dating slider next to the ones the deployment configured
+		var dated = new ApuSearchRequest();
+		dated.setApuType(ApuType.ARCH_DESC);
+		dated.setFilters(List.of(rangeFilter(DATE_FACET, "1805", "1852", false)));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(dated))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+
+		var typed = new ApuSearchRequest();
+		typed.setApuType(ApuType.ARCH_DESC);
+		typed.setFilters(List.of(valuesFilter(TYPE_FACET, "FUND")));
+		assertThatThrownBy(() -> new SearchApi(v1ApiClient()).searchSearch(typed))
+				.isInstanceOfSatisfying(RestClientResponseException.class,
+						e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
 	}
 
 	@Test
@@ -320,6 +431,8 @@ class NewApiV1Test extends AbstractTest {
 			assertThat(dating.getBounds()).isNotNull();
 			assertThat(dating.getBounds().getMinYear()).isEqualTo(1800);
 			assertThat(dating.getBounds().getMaxYear()).isEqualTo(1910);
+			// both v1-cze records are dated, so there is nothing to offer including
+			assertThat(dating.getUndatedCount()).isZero();
 		});
 
 		// the ENUM facet's own buckets ignore its filter (multi-select)
@@ -789,6 +902,16 @@ class NewApiV1Test extends AbstractTest {
 		return filter;
 	}
 
+	/** RANGE filter on a dating facet; {@code includeUndated} adds the undated records. */
+	private static RangeFilter rangeFilter(String facet, String from, String to, boolean includeUndated) {
+		var filter = new RangeFilter();
+		filter.setFacet(facet);
+		filter.setFrom(from);
+		filter.setTo(to);
+		filter.setIncludeUndated(includeUndated);
+		return filter;
+	}
+
 	private static ValuesFilter valuesFilter(String facet, String value) {
 		var filter = new ValuesFilter();
 		filter.setFacet(facet);
@@ -804,6 +927,21 @@ class NewApiV1Test extends AbstractTest {
 		document.setType("ARCH_DESC");
 		document.setApuSourceId(999_200L);
 		document.getValues().putAll(values);
+		// the name also goes into the fulltext catch-all, as the builder puts it
+		// there - without it no query could reach these fixtures
+		document.getAllText().add(name);
+		// mirrors ApuDocumentBuilder.computeDateBounds: the document-level dating is
+		// the hull of every UNITDATE item, and it is what the built-in ~DATE facet
+		// reads - a fixture without it would look undated
+		values.forEach((field, itemValues) -> itemValues.forEach(value -> {
+			String bound = String.valueOf(value);
+			if (field.endsWith("~L") && (document.getDateL() == null || bound.compareTo(document.getDateL()) < 0)) {
+				document.setDateL(bound);
+			}
+			if (field.endsWith("~H") && (document.getDateH() == null || bound.compareTo(document.getDateH()) > 0)) {
+				document.setDateH(bound);
+			}
+		}));
 		return document;
 	}
 

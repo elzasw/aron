@@ -207,6 +207,14 @@ facet filters and the description tree.
   by keyboard has to be tried in a browser. The record page's splitter belongs
   to the same list: its keyboard resizing is pinned by tests, but the grip's
   contrast and its target size need the browser pass.
+- **Open, a heading-level decision**: on a search page the sidebar's facet
+  headings (``h2``) precede the page title (``h1``) in the DOM, and the result
+  cards are ``h3``, so the outline skips a level after the title. axe reports it
+  (``heading-order``); the Lighthouse run above did not, and no reader is
+  misinformed by it — but the outline is still wrong. Fixing it means deciding
+  what level a result card is, which changes the outline of every search page,
+  so it is tracked here rather than done in passing. The one test that renders a
+  whole search page (``SearchView.test.tsx``) disables that rule with this note.
 - **Open, and bigger than a browser pass**: the description tree keeps
   `role="tree"` while every node is its own tab stop. An ARIA tree is expected
   to be one tab stop walked with the arrow keys (roving focus), so tabbing

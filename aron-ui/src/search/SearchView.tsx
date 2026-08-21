@@ -21,7 +21,7 @@ import {
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import { SECTIONS } from "../sections";
 import FacetPanel from "./FacetPanel";
-import { facetIsOffered, parseFilters, serializeFilters } from "./filters";
+import { facetIsOffered, parseFilters, RELATED_FACET, serializeFilters } from "./filters";
 import Pagination from "./Pagination";
 import RelatedChips from "./RelatedChips";
 import ResultList from "./ResultList";
@@ -120,8 +120,10 @@ const SORT_OPTIONS = ["", "NAME", "NAME_DESC", "DATE_ASC", "DATE_DESC"] as const
 
 /**
  * The search experience of one portal section (apuType set) or of the general
- * search (/apu, no apuType - no facets by design). All state lives in the URL
- * (q, p, s, f), so result pages are shareable and survive reloads.
+ * search (/apu, no apuType), whose facets are the server's built-in ones -
+ * dating, record type and relation - since no section configuration applies
+ * across every record type. All state lives in the URL (q, p, s, f), so result
+ * pages are shareable and survive reloads.
  */
 export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; titleKey: string }) {
   const styles = useStyles();
@@ -145,10 +147,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     setQueryInput(query);
   }
 
+  // without an apuType the server answers with the general search's built-in
+  // facets, so this asks in both cases
   const facetDefs = useQuery({
     queryKey: ["facets", apuType, lang],
-    queryFn: () => searchApi.searchGetFacets({ apuType: apuType!, lang }),
-    enabled: apuType !== undefined,
+    queryFn: () => searchApi.searchGetFacets({ apuType, lang }),
     staleTime: Infinity,
   });
 
@@ -197,6 +200,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   // so its selection can be undone
   const hasData = (def: FacetDef) => {
     if (def.type === FacetType.Fulltext) {
+      return true;
+    }
+    // the relation facet is a picker over records, so it has nothing to be empty
+    // of - it carries no buckets by design
+    if (def.code === RELATED_FACET) {
       return true;
     }
     const result = resultOf(def.code);
@@ -259,20 +267,24 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             {t("search.button")}
           </Button>
         </div>
-        <RelatedChips filters={filters} onFilters={onFilters} />
-        {apuType !== undefined &&
-          visibleFacets.map((def) => (
-            <FacetPanel
-              key={def.code}
-              def={def}
-              filters={filters}
-              result={resultOf(def.code)}
-              apuType={apuType}
-              query={query}
-              total={search.data ? Number(search.data.total) : undefined}
-              onFilters={onFilters}
-            />
-          ))}
+        {/* a relation constraint is shown once: by the facet panel where that is
+            offered, by chips where it is not (a section search, or a constraint
+            an action elsewhere set before the definitions arrived) */}
+        {!visibleFacets.some((def) => def.code === RELATED_FACET) && (
+          <RelatedChips filters={filters} onFilters={onFilters} />
+        )}
+        {visibleFacets.map((def) => (
+          <FacetPanel
+            key={def.code}
+            def={def}
+            filters={filters}
+            result={resultOf(def.code)}
+            apuType={apuType}
+            query={query}
+            total={search.data ? Number(search.data.total) : undefined}
+            onFilters={onFilters}
+          />
+        ))}
       </div>
       <div className={styles.main}>
         <Title3 as="h1">{t(titleKey)}</Title3>

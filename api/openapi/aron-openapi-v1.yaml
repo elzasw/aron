@@ -151,10 +151,16 @@ paths:
         Typed facet definitions of one section, in the deployment-configured
         order. Labels are server-localized (deployment configuration is the
         label source).
+
+        Without `apuType` these are the general search's **built-in** facets
+        (reserved codes, see `SearchFilter.facet`): they carry no deployment
+        configuration, because a search spanning every record type cannot be
+        scoped by a section's item types. Their labels are server-localized all
+        the same, so a client needs no vocabulary of its own.
       parameters:
         - name: apuType
           in: query
-          required: true
+          required: false
           schema:
             $ref: '#/components/schemas/ApuType'
           explode: false
@@ -423,7 +429,10 @@ components:
         apuType:
           allOf:
             - $ref: '#/components/schemas/ApuType'
-          description: Section restriction; unset = search across all types (general search, no facets).
+          description: |-
+            Section restriction; unset = search across all types (the general
+            search), whose facets are the built-in ones - `getFacets` without an
+            `apuType` lists them.
         query:
           type: string
           description: Fulltext query over the APU name and description; unset = match all.
@@ -556,6 +565,20 @@ components:
           allOf:
             - $ref: '#/components/schemas/DatingBounds'
           description: Absent when no matching document carries a dating.
+        undatedCount:
+          type: integer
+          format: int64
+          description: |-
+            How many matching records carry no dating in this facet's field - the ones
+            a dating filter leaves out unless `RangeFilter.includeUndated` is set.
+            Counted like `bounds`, with the facet's own RANGE filter excluded, so the
+            number does not change when the reader moves the slider.
+
+            Zero is the normal answer wherever every record is dated (an archival
+            description, a fond), which is why a client should offer the
+            include-undated choice only when this count is greater than zero:
+            whether the choice is meaningful is a property of the data, not of the
+            deployment's configuration.
       allOf:
         - $ref: '#/components/schemas/FacetResult'
       description: Dating bounds of a UNITDATE facet.
@@ -1083,6 +1106,18 @@ components:
           type: string
         to:
           type: string
+        includeUndated:
+          type: boolean
+          description: |-
+            Whether records carrying no dating in this facet's field match as well.
+            Off by default, so the filter means what it says - a record with no date
+            is not in 1805-1852. It exists because in a result set mixing dated and
+            undated records (the general search: access points and archives are often
+            undated) excluding them silently hides records the reader's query did
+            match, for a reason the reader cannot see. `DatingFacetResult.undatedCount`
+            is what makes that number visible, and this flag is how the reader acts
+            on it.
+          default: false
       allOf:
         - $ref: '#/components/schemas/SearchFilter'
       description: |-
@@ -1273,7 +1308,12 @@ components:
             subtype share one type.
         facet:
           type: string
-          description: Code of the facet the filter applies to.
+          description: |-
+            Code of the facet the filter applies to - a deployment-configured facet of
+            the section, or one of the reserved built-in codes the general search
+            offers (`~DATE`, `~TYPE`, `~RELATED`). A leading tilde cannot occur in an
+            item-type code, so a reserved code can never collide with a configured
+            facet.
       discriminator:
         propertyName: kind
         mapping:
@@ -1310,8 +1350,10 @@ components:
         search page receives them as ordinary constraints the reader can see in the
         sidebar and undo - a tile is a starting point, not a locked scope.
 
-        `apuType` is required: filters are validated against the section's configured
-        facets, and the general search (no section) has none.
+        `apuType` is required: a tile's filters are validated against the section's
+        configured facets at startup, so a tile can never lead into a search the
+        server then rejects. The general search's built-in facets are deliberately
+        not offered here - a tile names a destination, and "everything" is not one.
     SortMode:
       type: string
       enum:

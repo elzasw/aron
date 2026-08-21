@@ -77,7 +77,7 @@ export default function RelatedChips({
  * than carried in the URL, so it is right even after a rename; the uuid stands
  * in until it arrives (and stays if the record is gone).
  */
-function RelatedChip({ apu, onRemove }: { apu: string; onRemove: () => void }) {
+export function RelatedChip({ apu, onRemove }: { apu: string; onRemove: () => void }) {
   const styles = useStyles();
   const { t } = useTranslation();
   const { data } = useApuDetail(apu);

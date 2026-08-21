@@ -396,7 +396,29 @@ public class LuceneSearchIndex implements SearchIndex {
 		return result;
 	}
 
-	/** Dating bounds per requested UNITDATE field: min of {@code ~L}, max of {@code ~H} (doc-values). */
+	/**
+	 * Lower/upper bound field of a dating field: the document-level hull for
+	 * {@link FieldFilter#ANY_DATING}, the item type's own {@code ~L}/{@code ~H}
+	 * otherwise. The ES adapter maps the same two names, so a Range filter and a
+	 * bounds request mean the same thing on both engines.
+	 */
+	private static String boundField(String field, boolean upper) {
+		if (FieldFilter.ANY_DATING.equals(field)) {
+			return upper ? "dateH" : "dateL";
+		}
+		return field + (upper ? "~H" : "~L");
+	}
+
+	/** Matches the documents carrying a dating in the field (its lower bound exists). */
+	private static Query datedQuery(String field) {
+		return LongPoint.newRangeQuery(boundField(field, false), Long.MIN_VALUE, Long.MAX_VALUE);
+	}
+
+	/**
+	 * Dating bounds per requested UNITDATE field: min of the lower bound, max of
+	 * the upper one (doc-values), plus how many of the same documents carry no
+	 * such dating - two more counts, cheap on an embedded index.
+	 */
 	private Map<String, ApuSearchResult.Bounds> computeBounds(IndexSearcher searcher, ApuSearchQuery query,
 			Query mainQuery) throws IOException {
 		if (query.boundsFields().isEmpty()) {
@@ -405,10 +427,14 @@ public class LuceneSearchIndex implements SearchIndex {
 		var result = new HashMap<String, ApuSearchResult.Bounds>();
 		for (String field : query.boundsFields()) {
 			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), field), query.apuType());
-			Long min = minMaxMillis(searcher, base, field + "~L", false);
-			Long max = minMaxMillis(searcher, base, field + "~H", true);
+			Long min = minMaxMillis(searcher, base, boundField(field, false), false);
+			Long max = minMaxMillis(searcher, base, boundField(field, true), true);
 			if (min != null && max != null) {
-				result.put(field, new ApuSearchResult.Bounds(min, max));
+				long undated = searcher.count(base) - searcher.count(new BooleanQuery.Builder()
+						.add(base, Occur.MUST)
+						.add(datedQuery(field), Occur.FILTER)
+						.build());
+				result.put(field, new ApuSearchResult.Bounds(min, max, undated));
 			}
 		}
 		return result;
@@ -503,16 +529,19 @@ public class LuceneSearchIndex implements SearchIndex {
 	}
 
 	/**
-	 * Matching documents per APU type - fulltext and all facet filters apply,
-	 * the query's own apuType restriction does not (the user can switch
-	 * sections). Ordered by count descending, ties by type.
+	 * Matching documents per APU type - fulltext and the other facet filters
+	 * apply; neither the query's own apuType restriction (the user can switch
+	 * sections) nor a filter on the type field itself does, so the built-in type
+	 * facet is offered under the same multi-select rule as every other facet:
+	 * a selected type never hides the alternatives to it.
+	 * Ordered by count descending, ties by type.
 	 */
 	private List<ApuSearchResult.Bucket> countTypes(IndexSearcher searcher, ApuSearchQuery query, Query mainQuery)
 			throws IOException {
 		if (!query.typeCounts()) {
 			return List.of();
 		}
-		Query base = withFacetFilters(mainQuery, query.filters(), null);
+		Query base = withFacetFilters(mainQuery, query.filters(), "type");
 		var counts = new ArrayList<ApuSearchResult.Bucket>();
 		Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), "type");
 		if (terms != null) {
@@ -588,7 +617,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	/**
 	 * Adds the facet filters (Values, Range) except those on the excluded field
 	 * (multi-select semantics); a Values filter is an OR over its values, a Range
-	 * filter an interval intersection over the {@code ~L}/{@code ~H} bound fields
+	 * filter an interval intersection over the field's bound fields
 	 * (engine-shared logic).
 	 */
 	private static Query withFacetFilters(Query base, List<FieldFilter> filters, String excludedField) {
@@ -602,19 +631,47 @@ public class LuceneSearchIndex implements SearchIndex {
 				root.add(or.build(), Occur.FILTER);
 				any = true;
 			} else if (filter instanceof FieldFilter.Range range && !range.field().equals(excludedField)) {
-				if (range.to() != null) {
-					root.add(LongPoint.newRangeQuery(range.field() + "~L", Long.MIN_VALUE, toEpochMillis(range.to())),
+				Query intersection = intersectionQuery(range);
+				if (intersection != null) {
+					root.add(range.includeUndated() ? orUndated(range.field(), intersection) : intersection,
 							Occur.FILTER);
-					any = true;
-				}
-				if (range.from() != null) {
-					root.add(LongPoint.newRangeQuery(range.field() + "~H", toEpochMillis(range.from()),
-							Long.MAX_VALUE), Occur.FILTER);
 					any = true;
 				}
 			}
 		}
 		return any ? root.build() : base;
+	}
+
+	/** Interval intersection of a Range filter; {@code null} when both bounds are open. */
+	private static Query intersectionQuery(FieldFilter.Range range) {
+		var bool = new BooleanQuery.Builder();
+		boolean any = false;
+		if (range.to() != null) {
+			bool.add(LongPoint.newRangeQuery(boundField(range.field(), false), Long.MIN_VALUE,
+					toEpochMillis(range.to())), Occur.FILTER);
+			any = true;
+		}
+		if (range.from() != null) {
+			bool.add(LongPoint.newRangeQuery(boundField(range.field(), true), toEpochMillis(range.from()),
+					Long.MAX_VALUE), Occur.FILTER);
+			any = true;
+		}
+		return any ? bool.add(new MatchAllDocsQuery(), Occur.MUST).build() : null;
+	}
+
+	/**
+	 * The intersection, or a document carrying no dating in the field at all -
+	 * what {@code includeUndated} asks for.
+	 */
+	private static Query orUndated(String field, Query intersection) {
+		return new BooleanQuery.Builder()
+				.add(intersection, Occur.SHOULD)
+				.add(new BooleanQuery.Builder()
+						.add(new MatchAllDocsQuery(), Occur.MUST)
+						.add(datedQuery(field), Occur.MUST_NOT)
+						.build(), Occur.SHOULD)
+				.setMinimumNumberShouldMatch(1)
+				.build();
 	}
 
 	/** Runs the folding analysis chain; shared with {@link LuceneOldApiSearch}. */

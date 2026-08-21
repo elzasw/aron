@@ -82,15 +82,9 @@ public class SearchController implements SearchApi {
 	/** Upper bound of buckets requested from the engine per facet (= the contract's max options size). */
 	private static final int BUCKET_LIMIT = 1000;
 
-	/**
-	 * Reserved code of the built-in relation facet: it spans EVERY reference item
-	 * type and exists for every section, so a "find related" action works without
-	 * a deployment configuring anything. A leading tilde cannot occur in an
-	 * item-type code, so the code can never collide with a configured facet.
-	 */
-	public static final String RELATED_FACET = "~RELATED";
-
 	private final FacetScope facetScope;
+
+	private final BuiltInFacets builtInFacets;
 
 	private final TypesHolder typesHolder;
 
@@ -127,7 +121,8 @@ public class SearchController implements SearchApi {
 	/** Every indexed reference item field - the built-in relation facet's scope. */
 	private List<String> referenceFields;
 
-	public SearchController(FacetScope facetScope, TypesHolder typesHolder, IndexingService indexingService,
+	public SearchController(FacetScope facetScope, BuiltInFacets builtInFacets, TypesHolder typesHolder,
+			IndexingService indexingService,
 			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
 			ApuEntityRepository apuEntityRepository, ResultLayoutLoader resultLayoutLoader, DeploymentImages deploymentImages,
 			@Value("${search.structured-results:AUTO}") String structuredResults,
@@ -135,6 +130,7 @@ public class SearchController implements SearchApi {
 			@Value("${search.track-total-hits-up-to:10000}") int totalUpToDefault,
 			@Value("${search.track-total-hits-max:100000}") int totalUpToMax) {
 		this.facetScope = facetScope;
+		this.builtInFacets = builtInFacets;
 		this.typesHolder = typesHolder;
 		this.presentationLocales = presentationLocales;
 		this.indexingService = indexingService;
@@ -171,14 +167,22 @@ public class SearchController implements SearchApi {
 	@Override
 	public ResponseEntity<List<FacetDef>> searchGetFacets(ApuType apuType, String lang) {
 		Locale locale = presentationLocales.resolve(lang);
-		return ResponseEntity.ok(facetScope.facetsFor(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
+		return ResponseEntity.ok(facetsInScope(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
+	}
+
+	/**
+	 * The facets a request may filter on: the section's configured ones, or - for
+	 * the general search, which spans every record type and so has no section
+	 * configuration to apply - the built-in ones. One list either way, so
+	 * validation, aggregation and result mapping need no second code path.
+	 */
+	private List<FacetConfigDto> facetsInScope(ApuType apuType) {
+		return apuType != null ? facetScope.facetsFor(apuType) : builtInFacets.facets();
 	}
 
 	@Override
 	public ResponseEntity<ApuSearchResponse> searchSearch(ApuSearchRequest request) {
-		List<FacetConfigDto> sectionFacets = request.getApuType() != null
-				? facetScope.facetsFor(request.getApuType())
-				: List.of();
+		List<FacetConfigDto> sectionFacets = facetsInScope(request.getApuType());
 		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
 				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
 
@@ -193,9 +197,16 @@ public class SearchController implements SearchApi {
 		var boundsFields = new LinkedHashSet<String>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
-				case ENUM, MULTI_REF -> bucketRequests.add(new ApuSearchQuery.BucketRequest(
-						bucketFieldOf(facet), facet.getSource(), BUCKET_LIMIT));
-				case UNITDATE -> boundsFields.add(facet.getSource());
+				case ENUM, MULTI_REF -> {
+					// the built-in relation facet is the one reference facet with no
+					// buckets: its options are records found by name, not a union of
+					// every reference field's terms
+					if (builtInFacets.isEnumerable(facet.getSource())) {
+						bucketRequests.add(new ApuSearchQuery.BucketRequest(
+								bucketFieldOf(facet), indexFieldOf(facet), BUCKET_LIMIT));
+					}
+				}
+				case UNITDATE -> boundsFields.add(indexFieldOf(facet));
 				default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
 			}
 		}
@@ -236,18 +247,32 @@ public class SearchController implements SearchApi {
 		var facetResults = new ArrayList<FacetResult>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
+				// the built-in type facet's buckets carry the ApuType member itself:
+				// this response has no language (search takes no lang - a hit's
+				// display text comes from the index), and a contract enum is the one
+				// value a client can label on its own
 				case ENUM -> facetResults.add(new EnumFacetResult(
 						orderFacetBuckets(toFacetBuckets(result.buckets().get(bucketFieldOf(facet)),
 								referenceValued(facet)), facet),
 						FacetResultKind.ENUM, facet.getSource()));
-				case MULTI_REF -> facetResults.add(new RefFacetResult(
-						orderFacetBuckets(toFacetBuckets(result.buckets().get(bucketFieldOf(facet)), true), facet),
-						FacetResultKind.REF, facet.getSource()));
+				case MULTI_REF -> {
+					if (builtInFacets.isEnumerable(facet.getSource())) {
+						facetResults.add(new RefFacetResult(
+								orderFacetBuckets(toFacetBuckets(result.buckets().get(bucketFieldOf(facet)), true),
+										facet),
+								FacetResultKind.REF, facet.getSource()));
+					} else {
+						// no buckets to send, but the facet is still in the response so a
+						// client renders it (and any active constraint on it)
+						facetResults.add(new RefFacetResult(List.of(), FacetResultKind.REF, facet.getSource()));
+					}
+				}
 				case UNITDATE -> {
 					var facetResult = new DatingFacetResult(FacetResultKind.DATING, facet.getSource());
-					var bounds = result.bounds().get(facet.getSource());
+					var bounds = result.bounds().get(indexFieldOf(facet));
 					if (bounds != null) {
 						facetResult.setBounds(new DatingBounds(yearOf(bounds.minMillis()), yearOf(bounds.maxMillis())));
+						facetResult.setUndatedCount(bounds.undatedCount());
 					}
 					facetResults.add(facetResult);
 				}
@@ -368,7 +393,7 @@ public class SearchController implements SearchApi {
 			if (values.getValues() == null || values.getValues().isEmpty()) {
 				throw badRequest("VALUES filter of facet '" + filter.getFacet() + "' has no values.");
 			}
-			return new FieldFilter.Values(facet.getSource(), values.getValues());
+			return new FieldFilter.Values(indexFieldOf(facet), values.getValues());
 		}
 		if (filter instanceof TextFilter text) {
 			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.FULLTEXT
@@ -378,7 +403,7 @@ public class SearchController implements SearchApi {
 			if (text.getQ() == null || text.getQ().isBlank()) {
 				throw badRequest("TEXT filter of facet '" + filter.getFacet() + "' has no query.");
 			}
-			return new FieldFilter.Text(facet.getSource(), text.getQ());
+			return new FieldFilter.Text(indexFieldOf(facet), text.getQ());
 		}
 		if (filter instanceof RangeFilter range) {
 			if (facet.getType() != cz.aron.domain.facets.dto.FacetType.UNITDATE) {
@@ -389,7 +414,8 @@ public class SearchController implements SearchApi {
 			if (fromBound == null && toBound == null) {
 				throw badRequest("RANGE filter of facet '" + filter.getFacet() + "' has no bounds.");
 			}
-			return new FieldFilter.Range(facet.getSource(), fromBound, toBound);
+			return new FieldFilter.Range(indexFieldOf(facet), fromBound, toBound,
+					Boolean.TRUE.equals(range.getIncludeUndated()));
 		}
 		throw badRequest("Unsupported filter kind.");
 	}
@@ -397,8 +423,8 @@ public class SearchController implements SearchApi {
 	/**
 	 * Resolves a relation filter into the port's field-level form. The facet
 	 * decides the scope - one reference field for a configured REF facet, every
-	 * one of them for the built-in {@link #RELATED_FACET} - and the direction
-	 * decides which ends of the relation count.
+	 * one of them for the built-in {@link BuiltInFacets#RELATED_FACET} - and the
+	 * direction decides which ends of the relation count.
 	 *
 	 * <p>OUTGOING is expanded here, above the port: the named APUs' own
 	 * reference items are read and the index-only ones (APUX {@code
@@ -415,7 +441,7 @@ public class SearchController implements SearchApi {
 		// following a record's own references outwards (null = any item type); a
 		// configured facet follows only its own field
 		Set<String> outgoingScope = null;
-		if (RELATED_FACET.equals(related.getFacet())) {
+		if (BuiltInFacets.RELATED_FACET.equals(related.getFacet())) {
 			scope = referenceFields;
 		} else {
 			FacetConfigDto facet = byCode.get(related.getFacet());
@@ -505,7 +531,10 @@ public class SearchController implements SearchApi {
 		var def = new FacetDef(facet.getSource(), toFacetType(facet.getType()), label(facet, locale),
 				facet.getDisplay() == DisplayType.DETAIL ? FacetDisplay.DETAIL : FacetDisplay.ALWAYS);
 		def.setTooltip(LocalizedText.pick(facet.getTooltipTranslations(), facet.getTooltip(), locale));
-		def.setDescription(LocalizedText.pick(facet.getDescriptionTranslations(), facet.getDescription(), locale));
+		String description = builtInFacets.description(facet.getSource(), locale);
+		def.setDescription(description != null
+				? description
+				: LocalizedText.pick(facet.getDescriptionTranslations(), facet.getDescription(), locale));
 		if (facet.getOrderBy() != null) {
 			def.setOrderBy("ASC".equalsIgnoreCase(facet.getOrderBy()) ? FacetOrder.ASC : FacetOrder.FREQ);
 		}
@@ -518,8 +547,15 @@ public class SearchController implements SearchApi {
 		return def;
 	}
 
-	/** Facet label: explicit title, otherwise the (localized) item-type name, otherwise the code. */
+	/**
+	 * Facet label: a built-in facet's own text, otherwise an explicit title, the
+	 * (localized) item-type name, or - failing all of those - the code.
+	 */
 	private String label(FacetConfigDto facet, Locale locale) {
+		String builtIn = builtInFacets.label(facet.getSource(), locale);
+		if (builtIn != null) {
+			return builtIn;
+		}
 		if (facet.getTitle() != null && !facet.getTitle().isBlank()) {
 			return LocalizedText.pick(facet.getTitleTranslations(), facet.getTitle(), locale);
 		}
@@ -559,8 +595,18 @@ public class SearchController implements SearchApi {
 		return false;
 	}
 
+	/**
+	 * The index field behind a facet code: its item-type code for a configured
+	 * facet, the built-in's own field for a reserved one (see
+	 * {@link BuiltInFacets}).
+	 */
+	private String indexFieldOf(FacetConfigDto facet) {
+		return builtInFacets.indexField(facet.getSource());
+	}
+
 	private String bucketFieldOf(FacetConfigDto facet) {
-		return referenceValued(facet) ? facet.getSource() + "~ID~LABEL" : facet.getSource();
+		String field = indexFieldOf(facet);
+		return referenceValued(facet) ? field + "~ID~LABEL" : field;
 	}
 
 	/**
