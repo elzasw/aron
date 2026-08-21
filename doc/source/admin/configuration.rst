@@ -51,9 +51,11 @@ application.yml
      - Optional layout of the structured search results
        (``resultLayout.yaml``, see below). Unset = the built-in defaults.
    * - ``webResources.resultImages``
-     - Optional directory of the images the structured results use (record and
-       field icons, thumbnails delivered by name). Only plain file names from
-       this directory are served.
+     - Optional directory of the images the portal serves by name: the record
+       and field icons of the structured results, the pictures of the home
+       page's tiles, and thumbnails delivered by name. Several directories may
+       be listed, separated by commas — a name is looked up in the order given,
+       the first hit wins. Only plain file names are served, never paths.
    * - ``search.structured-results``
      - ``AUTO`` (default) attaches the structured presentation to every record
        that has one; ``OFF`` disables the feature for the whole deployment.
@@ -251,6 +253,113 @@ Declaring a language covers the interface strings and the datings. The labels
 of the description items follow only if ``types_localization.yaml`` translates
 them; untranslated ones fall back to the ``types.yaml`` names.
 
+Home page
+=========
+
+The optional ``homepage:`` block of ``pageTemplate.yaml`` fills the portal's
+home page below the search box: groups of prepared entry points, and the
+deployment's own footer band. Without the block the home page is the search box
+alone, which is a legitimate configuration.
+
+Every value a reader sees can be written either as one string (the source
+language) or as a mapping of language to text.
+
+.. code-block:: yaml
+
+   homepage:
+     groups:
+       - label: { cs: Mohlo by vás zajímat, en: You might be interested in }
+         style: GRID            # GRID = picture tiles, LIST = rows of links (default)
+         tiles:
+           - label: { cs: Matriky, en: Parish registers }
+             note: { cs: církevní i civilní, en: church and civil }
+             image: { name: matriky.jpg, positionY: top }
+             columnSpan: 2      # 1 or 2 grid cells; GRID only
+             rowSpan: 2
+             apuType: ARCH_DESC
+             filters:
+               - facet: UNIT_TYPE
+                 values: [matrika]
+           - label: Porta fontium
+             url: https://www.portafontium.eu
+     footer:
+       columns:
+         - heading: { cs: Základní informace, en: About }
+           paragraphs:
+             - text:
+                 cs: "Portál je aplikace {archiv} a zpřístupňuje popis archiválií."
+                 en: "The portal is an application of the {archiv}."
+               links:
+                 archiv:
+                   label: { cs: Státního oblastního archivu, en: State Regional Archives }
+                   url: https://archiv.example
+         - heading: { cs: Kontakt, en: Contact }
+           links:
+             - label: badatelna@archiv.example
+               url: "mailto:badatelna@archiv.example"
+
+Tiles
+-----
+
+A tile leads **either** out of the portal or into one section's search, never
+both and never neither:
+
+- ``url`` — an absolute ``http``/``https``/``mailto`` address. In-app
+  destinations are the other kind; a bare path is refused.
+- ``apuType`` plus optional ``query`` and ``filters`` — the section's search
+  with those constraints already applied. The reader sees them in the search
+  sidebar and can remove them, so a tile is a starting point rather than a
+  locked scope.
+
+Filters are written with the same vocabulary as ``searchConfig.yaml``: ``facet``
+is the description item's code with underscores, exactly as written there. The
+kind of filter is **not** written — the facet's configured type decides it, so
+the two files cannot disagree:
+
+- ``ENUM`` / ``MULTI_REF`` facet — ``values: [...]``
+- ``FULLTEXT`` facet — ``q: text``
+- ``UNITDATE`` facet — ``from:`` and/or ``to:`` (a year, a date, or a full
+  timestamp)
+
+``image`` names a file of ``webResources.resultImages`` (see above);
+``positionX``/``positionY`` move the crop of a picture whose subject is not in
+the middle, and take a percentage or a CSS keyword. In a ``GRID`` group the
+picture fills the tile; in a ``LIST`` group it is a small mark beside the label.
+A ``GRID`` tile with no picture keeps the portal's primary colour.
+
+The **startup fails** on a mistake rather than serving a tile that cannot work:
+an unknown facet for that section, a filter whose shape does not fit the
+facet's type, ``apuType: COLLECTION`` (the one record type with no section of
+its own), a span outside 1–2, an image that is not a readable file, an unknown
+key. Filter *values* cannot be checked — they are data, so a tile may
+legitimately find nothing in a given deployment.
+
+Footer band
+-----------
+
+Columns of an optional ``heading``, prose ``paragraphs`` and a list of
+``links``; prose comes first. A link takes ``label`` (or a well-known ``code``,
+which the portal labels itself), ``url``, and an optional ``image`` — the small
+mark a reader recognises the link by, again a file of
+``webResources.resultImages``. Marks are files rather than names the portal
+knows, so a service that renames itself is a file the deployment swaps.
+
+Prose carries its links **inside** the sentence. The deployment writes a named
+``{placeholder}`` and defines it in that paragraph's ``links`` mapping; the
+portal resolves it into a real link. There is deliberately no way to put markup
+in configuration.
+
+Because a link's position in a sentence follows the target language's grammar,
+the placeholder travels with the text. Every placeholder must resolve **and**
+every defined link must be used **in each language variant** — a link the
+English sentence forgets is one the English reader never gets, so either
+mistake stops the startup. A stray brace does too; there is no escape for a
+literal one.
+
+The band belongs to the home page only. The links a deployment is required to
+publish (the accessibility statement above all) belong in ``footer.links``,
+which the portal shows on every page.
+
 Structured search results
 =========================
 
@@ -317,7 +426,8 @@ Notes on the individual keys:
 - **image** is a plain file name inside ``webResources.resultImages`` — no
   subdirectories, no paths. The portal serves those files at
   ``/api/v1/ui/result-images/<name>`` (``svg``, ``png``, ``jpeg``) and builds the
-  URLs itself, so nothing has to be hosted next to the application.
+  URLs itself, so nothing has to be hosted next to the application. When the
+  setting lists several directories, the name is looked up in each in turn.
 
 ``prefix`` and ``label`` are display text, so they are translated in the sibling
 ``resultLayout_localization.yaml``:

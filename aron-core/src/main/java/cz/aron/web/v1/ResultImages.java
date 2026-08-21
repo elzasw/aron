@@ -4,7 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +17,11 @@ import org.springframework.web.util.UriUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * The deployment's images of the structured search results
- * ({@code webResources.resultImages}): the record and field icons of
- * {@code resultLayout.yaml}, and the thumbnails that arrive in the data as a
- * bare file name rather than a URL.
+ * The deployment's served images ({@code webResources.resultImages}, one
+ * directory or a comma-separated list of them): the record and field icons of
+ * {@code resultLayout.yaml}, the pictures of the home page's tiles and links,
+ * and the thumbnails that arrive in the data as a bare file name rather than a
+ * URL.
  * <p>
  * Two directions, one place: {@link #url(String)} builds the URL clients
  * receive, {@link #resolve(String)} turns a served name back into a file for
@@ -46,19 +49,27 @@ public class ResultImages {
 
 	private final HttpServletRequest request;
 
-	/** The configured directory, absolute and normalized; {@code null} = unconfigured. */
-	private final Path directory;
+	/**
+	 * The configured directories, absolute and normalized, in the order a name is
+	 * looked up; empty = unconfigured. More than one because a deployment's own
+	 * pictures and the icons of a shared display model need not live together -
+	 * dev mode is exactly that case, keeping the shipped result icons while
+	 * adding pictures of its own. A name found in an earlier directory wins.
+	 */
+	private final List<Path> directories;
 
 	public ResultImages(HttpServletRequest request,
-			@Value("${webResources.resultImages:}") String directory) {
+			@Value("${webResources.resultImages:}") String directories) {
 		this.request = request;
-		this.directory = directory != null && !directory.isBlank()
-				? Paths.get(directory).toAbsolutePath().normalize()
-				: null;
+		this.directories = Stream.of((directories == null ? "" : directories).split(","))
+				.map(String::trim)
+				.filter(directory -> !directory.isEmpty())
+				.map(directory -> Paths.get(directory).toAbsolutePath().normalize())
+				.toList();
 	}
 
 	public boolean isConfigured() {
-		return directory != null;
+		return !directories.isEmpty();
 	}
 
 	/** URL of one deployment image, prefixed with this deployment's own context path. */
@@ -81,7 +92,7 @@ public class ResultImages {
 		if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("//")) {
 			return value;
 		}
-		if (directory == null) {
+		if (directories.isEmpty()) {
 			log.debug("Thumbnail '{}' is a deployment image name but webResources.resultImages is not configured.",
 					value);
 			return null;
@@ -95,17 +106,21 @@ public class ResultImages {
 
 	/**
 	 * The file of a served name, or {@code null} when the name is not a plain
-	 * file name, escapes the configured directory, or is not a readable file.
+	 * file name, escapes its directory, or is no readable file of any configured
+	 * one. The traversal guard applies per directory, which is the whole risk
+	 * surface of serving deployment files.
 	 */
 	public Path resolve(String name) {
-		if (directory == null || name == null || !NAME.matcher(name).matches()) {
+		if (name == null || !NAME.matcher(name).matches()) {
 			return null;
 		}
-		Path file = directory.resolve(name).normalize();
-		if (!file.startsWith(directory) || !Files.isRegularFile(file)) {
-			return null;
+		for (Path directory : directories) {
+			Path file = directory.resolve(name).normalize();
+			if (file.startsWith(directory) && Files.isRegularFile(file)) {
+				return file;
+			}
 		}
-		return file;
+		return null;
 	}
 
 }

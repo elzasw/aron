@@ -22,6 +22,10 @@ class ResultImagesTest {
 	@TempDir
 	Path directory;
 
+	/** A second configured directory: its own temp dir, not one made beside the first. */
+	@TempDir
+	Path ownDirectory;
+
 	private ResultImages images;
 
 	@BeforeEach
@@ -58,6 +62,23 @@ class ResultImagesTest {
 		assertThat(unconfigured.thumbnailUrl("record.svg")).isNull();
 		assertThat(unconfigured.thumbnailUrl("https://images.example.org/x.jp2"))
 				.isEqualTo("https://images.example.org/x.jp2");
+	}
+
+	@Test
+	void resolvesAcrossSeveralDirectoriesInOrder() throws IOException {
+		// a deployment's own pictures need not live with the icons of a shared
+		// display model - dev mode keeps the shipped result icons and adds its own
+		Files.writeString(ownDirectory.resolve("tile.svg"), "<svg/>");
+		// same name in both: the earlier directory wins
+		Files.writeString(ownDirectory.resolve("record.svg"), "<svg id='own'/>");
+		var both = new ResultImages(new MockHttpServletRequest(), directory + " , " + ownDirectory);
+
+		assertThat(both.isConfigured()).isTrue();
+		assertThat(both.resolve("tile.svg")).isEqualTo(ownDirectory.resolve("tile.svg"));
+		assertThat(both.resolve("record.svg")).isEqualTo(directory.resolve("record.svg"));
+		assertThat(both.resolve("neexistuje.svg")).isNull();
+		// the traversal guard holds for every one of them
+		assertThat(both.resolve("../outside.svg")).isNull();
 	}
 
 	@Test
