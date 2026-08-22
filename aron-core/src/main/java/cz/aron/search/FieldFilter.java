@@ -11,18 +11,14 @@ import java.util.List;
 public sealed interface FieldFilter {
 
 	/**
-	 * Reserved field of {@link Range} and of a bounds request meaning "the
-	 * record's dating, whichever item type carries it": the document-level hull
-	 * of every UNITDATE item, indexed by every adapter as {@code dateL}/
-	 * {@code dateH} (see {@code ApuDocument}). Named here rather than in an
-	 * adapter because both must agree on it - each maps it to its own bound
-	 * field names.
+	 * Reserved field of a bounds request meaning "the record's dating, whichever
+	 * item type carries it": the document-level hull of every UNITDATE item,
+	 * indexed by every adapter as {@code dateL}/{@code dateH} (see
+	 * {@code ApuDocument}). Named here rather than in an adapter because both
+	 * must agree on it - each maps it to its own bound field names.
 	 *
-	 * <p>Being a hull, it is the record's widest dating: a record dated 1800-1810
-	 * and again in 1990 spans 1800-1990 and so matches a filter for 1900. That
-	 * favours recall, which is the right direction for a facet spanning record
-	 * types whose datings are recorded in different item types; per-interval
-	 * precision would need a structured range field only one engine has.
+	 * <p>A hull is what a slider's ends want - the span the matching records
+	 * cover. It is deliberately NOT what {@link Range} matches on: see there.
 	 */
 	String ANY_DATING = "~DATE";
 
@@ -39,22 +35,37 @@ public sealed interface FieldFilter {
 	}
 
 	/**
-	 * Interval intersection on a UNITDATE field: matches documents whose
-	 * {@code [field~L, field~H]} interval intersects {@code [from, to]};
-	 * {@code null} = open bound. {@link #ANY_DATING} filters the record's
-	 * document-level dating instead of one item type's.
+	 * Dating intersection: matches a document one of whose datings in one of
+	 * {@code fields} overlaps {@code [from, to]}; {@code null} = open bound.
 	 *
-	 * <p>{@code includeUndated} adds the documents carrying no dating in that
-	 * field at all. They are out by default - an undated record is not in
-	 * 1805-1852 - but a result set mixing dated and undated records can hide
-	 * many of them for a reason the reader cannot see, so the choice has to be
-	 * expressible.
+	 * <p>Per interval, not per record. A record dated 1850-1860 and again in 1600
+	 * does not match 1700 - the two datings are separate facts about it, and
+	 * collapsing them into one 1600-1860 span invents a period the record was
+	 * never assigned. The engines therefore match the intervals themselves
+	 * (Elasticsearch a {@code date_range} field, Lucene a multi-valued
+	 * {@code LongRange}), which is also what the old portal has always done on
+	 * Elasticsearch.
+	 *
+	 * <p>Several {@code fields} mean "a dating of any of these item types", which
+	 * is how one facet dates records whose datings live in different item types.
+	 * The list is resolved above the port, from the display model.
+	 *
+	 * <p>{@code includeUndated} adds the documents carrying no such dating at
+	 * all. They are out by default - an undated record is not in 1805-1852 - but
+	 * a result set mixing dated and undated records can hide many of them for a
+	 * reason the reader cannot see, so the choice has to be expressible.
 	 */
-	record Range(String field, LocalDateTime from, LocalDateTime to, boolean includeUndated) implements FieldFilter {
+	record Range(List<String> fields, LocalDateTime from, LocalDateTime to, boolean includeUndated)
+			implements FieldFilter {
 
-		/** Strict intersection - undated documents do not match. */
+		/** One item type's datings, strictly (undated documents do not match). */
 		public Range(String field, LocalDateTime from, LocalDateTime to) {
-			this(field, from, to, false);
+			this(List.of(field), from, to, false);
+		}
+
+		/** One item type's datings. */
+		public Range(String field, LocalDateTime from, LocalDateTime to, boolean includeUndated) {
+			this(List.of(field), from, to, includeUndated);
 		}
 	}
 

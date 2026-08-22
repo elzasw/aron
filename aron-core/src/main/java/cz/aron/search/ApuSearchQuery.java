@@ -1,7 +1,6 @@
 package cz.aron.search;
 
 import java.util.List;
-import java.util.Set;
 
 import cz.aron.search.relevance.RelevanceConfig;
 import cz.aron.search.relevance.RelevancePlan;
@@ -20,12 +19,8 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  *                     {@code null} = match all
  * @param filters      field-level filters, all must match (see {@link FieldFilter})
  * @param buckets      value-bucket count requests (see {@link BucketRequest})
- * @param boundsFields UNITDATE item codes to compute dating bounds for (min of
- *                     {@code field~L}, max of {@code field~H} over the matching
- *                     documents, the field's own Range filter excluded), plus
- *                     the number of those documents carrying no such dating;
- *                     {@link FieldFilter#ANY_DATING} asks for the record's
- *                     document-level dating instead of one item type's
+ * @param bounds       dating bounds to compute, one per UNITDATE facet (see
+ *                     {@link BoundsRequest})
  * @param from         zero-based offset of the first hit
  * @param size         page size (bounded by the caller)
  * @param sort         named sort mode
@@ -39,20 +34,20 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  *                     switch sections)
  */
 public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
-		List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
+		List<BucketRequest> buckets, List<BoundsRequest> bounds, int from, int size, SortMode sort,
 		Integer totalUpTo, boolean typeCounts) {
 
 	/** Variant without type counts. */
 	public ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
-			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort,
+			List<BucketRequest> buckets, List<BoundsRequest> bounds, int from, int size, SortMode sort,
 			Integer totalUpTo) {
-		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, totalUpTo, false);
+		this(apuType, fulltext, filters, buckets, bounds, from, size, sort, totalUpTo, false);
 	}
 
 	/** Exact-total variant - the accuracy limit defaults to unlimited. */
 	public ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldFilter> filters,
-			List<BucketRequest> buckets, Set<String> boundsFields, int from, int size, SortMode sort) {
-		this(apuType, fulltext, filters, buckets, boundsFields, from, size, sort, null, false);
+			List<BucketRequest> buckets, List<BoundsRequest> bounds, int from, int size, SortMode sort) {
+		this(apuType, fulltext, filters, buckets, bounds, from, size, sort, null, false);
 	}
 
 	/**
@@ -87,14 +82,33 @@ public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldF
 		}
 	}
 
+	/**
+	 * Dating bounds of one facet: min of {@code boundsField~L} and max of
+	 * {@code boundsField~H} over the matching documents, plus how many of them
+	 * carry no such dating.
+	 *
+	 * <p>{@code filterFields} names the dating fields whose own Range filters the
+	 * bounds ignore (multi-select, so a selected range can always be widened) -
+	 * the same separation {@link BucketRequest} makes, and needed for the same
+	 * reason: a facet may bound on one field while filtering on others.
+	 * {@link FieldFilter#ANY_DATING} bounds on the record-level hull while
+	 * filtering on every dating item type.
+	 */
+	public record BoundsRequest(String boundsField, List<String> filterFields) {
+
+		public static BoundsRequest of(String field) {
+			return new BoundsRequest(field, List.of(field));
+		}
+	}
+
 	/** Fulltext planned with the built-in default weights (tests, simple callers). */
 	public static ApuSearchQuery fulltext(String fulltext) {
 		return new ApuSearchQuery(null, RelevanceQueryPlanner.plan(fulltext, RelevanceConfig.defaults()),
-				List.of(), List.of(), Set.of(), 0, 20, SortMode.RELEVANCE);
+				List.of(), List.of(), List.of(), 0, 20, SortMode.RELEVANCE);
 	}
 
 	public static ApuSearchQuery matchAll(int from, int size) {
-		return new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), from, size, SortMode.RELEVANCE);
+		return new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), from, size, SortMode.RELEVANCE);
 	}
 
 }

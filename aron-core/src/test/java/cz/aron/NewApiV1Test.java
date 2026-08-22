@@ -1013,18 +1013,7 @@ class NewApiV1Test extends AbstractTest {
 		// the name also goes into the fulltext catch-all, as the builder puts it
 		// there - without it no query could reach these fixtures
 		document.getAllText().add(name);
-		// mirrors ApuDocumentBuilder.computeDateBounds: the document-level dating is
-		// the hull of every UNITDATE item, and it is what the built-in ~DATE facet
-		// reads - a fixture without it would look undated
-		values.forEach((field, itemValues) -> itemValues.forEach(value -> {
-			String bound = String.valueOf(value);
-			if (field.endsWith("~L") && (document.getDateL() == null || bound.compareTo(document.getDateL()) < 0)) {
-				document.setDateL(bound);
-			}
-			if (field.endsWith("~H") && (document.getDateH() == null || bound.compareTo(document.getDateH()) > 0)) {
-				document.setDateH(bound);
-			}
-		}));
+		cz.aron.search.DocumentFixtures.addDatings(document);
 		return document;
 	}
 

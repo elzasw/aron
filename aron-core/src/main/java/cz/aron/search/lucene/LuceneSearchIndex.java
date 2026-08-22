@@ -26,6 +26,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.LongRange;
 import org.apache.lucene.document.SortedDocValuesField;
 import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.StringField;
@@ -107,7 +108,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "6";
+	private static final String LAYOUT_VERSION = "7";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -295,7 +296,7 @@ public class LuceneSearchIndex implements SearchIndex {
 				// mainQuery excludes the apuType restriction, so the typeCounts
 				// enumeration can ignore it; hits/buckets/bounds add it back
 				Query mainQuery = buildMainQuery(query);
-				Query fullQuery = withApuType(withFacetFilters(mainQuery, query.filters(), null), query.apuType());
+				Query fullQuery = withApuType(withFacetFilters(mainQuery, query.filters(), List.of()), query.apuType());
 				long exactTotal = searcher.count(fullQuery);
 				var hits = new ArrayList<ApuSearchResult.Hit>();
 				if (exactTotal > query.from() && query.size() > 0) {
@@ -369,7 +370,7 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 		var result = new HashMap<String, List<ApuSearchResult.Bucket>>();
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
-			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), bucket.filterField()),
+			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), List.of(bucket.filterField())),
 					query.apuType());
 			var buckets = new ArrayList<ApuSearchResult.Bucket>();
 			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), bucket.bucketField());
@@ -409,7 +410,11 @@ public class LuceneSearchIndex implements SearchIndex {
 		return field + (upper ? "~H" : "~L");
 	}
 
-	/** Matches the documents carrying a dating in the field (its lower bound exists). */
+	/**
+	 * Matches the documents carrying a dating of that item type. Asked of the
+	 * bound field rather than of the intervals, so that "undated" means the same
+	 * here as in the count the reader is shown beside the slider.
+	 */
 	private static Query datedQuery(String field) {
 		return LongPoint.newRangeQuery(boundField(field, false), Long.MIN_VALUE, Long.MAX_VALUE);
 	}
@@ -421,12 +426,14 @@ public class LuceneSearchIndex implements SearchIndex {
 	 */
 	private Map<String, ApuSearchResult.Bounds> computeBounds(IndexSearcher searcher, ApuSearchQuery query,
 			Query mainQuery) throws IOException {
-		if (query.boundsFields().isEmpty()) {
+		if (query.bounds().isEmpty()) {
 			return Map.of();
 		}
 		var result = new HashMap<String, ApuSearchResult.Bounds>();
-		for (String field : query.boundsFields()) {
-			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), field), query.apuType());
+		for (var request : query.bounds()) {
+			String field = request.boundsField();
+			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), request.filterFields()),
+					query.apuType());
 			Long min = minMaxMillis(searcher, base, boundField(field, false), false);
 			Long max = minMaxMillis(searcher, base, boundField(field, true), true);
 			if (min != null && max != null) {
@@ -541,7 +548,7 @@ public class LuceneSearchIndex implements SearchIndex {
 		if (!query.typeCounts()) {
 			return List.of();
 		}
-		Query base = withFacetFilters(mainQuery, query.filters(), "type");
+		Query base = withFacetFilters(mainQuery, query.filters(), List.of("type"));
 		var counts = new ArrayList<ApuSearchResult.Bucket>();
 		Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), "type");
 		if (terms != null) {
@@ -620,20 +627,21 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * filter an interval intersection over the field's bound fields
 	 * (engine-shared logic).
 	 */
-	private static Query withFacetFilters(Query base, List<FieldFilter> filters, String excludedField) {
+	private static Query withFacetFilters(Query base, List<FieldFilter> filters, List<String> excludedFields) {
 		var root = new BooleanQuery.Builder().add(base, Occur.MUST);
 		boolean any = false;
 		for (FieldFilter filter : filters) {
-			if (filter instanceof FieldFilter.Values values && !values.field().equals(excludedField)) {
+			if (filter instanceof FieldFilter.Values values && !excludedFields.contains(values.field())) {
 				var or = new BooleanQuery.Builder();
 				values.values().forEach(v -> or.add(new TermQuery(new Term(values.field(), v)), Occur.SHOULD));
 				or.setMinimumNumberShouldMatch(1);
 				root.add(or.build(), Occur.FILTER);
 				any = true;
-			} else if (filter instanceof FieldFilter.Range range && !range.field().equals(excludedField)) {
+			} else if (filter instanceof FieldFilter.Range range
+					&& excludedFields.stream().noneMatch(range.fields()::contains)) {
 				Query intersection = intersectionQuery(range);
 				if (intersection != null) {
-					root.add(range.includeUndated() ? orUndated(range.field(), intersection) : intersection,
+					root.add(range.includeUndated() ? orUndated(range.fields(), intersection) : intersection,
 							Occur.FILTER);
 					any = true;
 				}
@@ -642,36 +650,47 @@ public class LuceneSearchIndex implements SearchIndex {
 		return any ? root.build() : base;
 	}
 
-	/** Interval intersection of a Range filter; {@code null} when both bounds are open. */
+	/**
+	 * A dating of any of the fields overlapping the range; {@code null} when both
+	 * bounds are open and there is nothing to ask.
+	 */
 	private static Query intersectionQuery(FieldFilter.Range range) {
-		var bool = new BooleanQuery.Builder();
-		boolean any = false;
-		if (range.to() != null) {
-			bool.add(LongPoint.newRangeQuery(boundField(range.field(), false), Long.MIN_VALUE,
-					toEpochMillis(range.to())), Occur.FILTER);
-			any = true;
+		if (range.from() == null && range.to() == null) {
+			return null;
 		}
-		if (range.from() != null) {
-			bool.add(LongPoint.newRangeQuery(boundField(range.field(), true), toEpochMillis(range.from()),
-					Long.MAX_VALUE), Occur.FILTER);
-			any = true;
-		}
-		return any ? bool.add(new MatchAllDocsQuery(), Occur.MUST).build() : null;
+		long from = range.from() != null ? toEpochMillis(range.from()) : Long.MIN_VALUE;
+		long to = range.to() != null ? toEpochMillis(range.to()) : Long.MAX_VALUE;
+		return anyOf(range.fields(), field -> intervalQuery(field, from, to));
+	}
+
+	/** A dating of that item type overlapping [from, to] - see {@code addInterval}. */
+	static Query intervalQuery(String field, long from, long to) {
+		return LongRange.newIntersectsQuery(field, new long[] { from }, new long[] { to });
 	}
 
 	/**
-	 * The intersection, or a document carrying no dating in the field at all -
-	 * what {@code includeUndated} asks for.
+	 * The intersection, or a document carrying no such dating at all - what
+	 * {@code includeUndated} asks for.
 	 */
-	private static Query orUndated(String field, Query intersection) {
+	private static Query orUndated(List<String> fields, Query intersection) {
 		return new BooleanQuery.Builder()
 				.add(intersection, Occur.SHOULD)
 				.add(new BooleanQuery.Builder()
 						.add(new MatchAllDocsQuery(), Occur.MUST)
-						.add(datedQuery(field), Occur.MUST_NOT)
+						.add(anyOf(fields, LuceneSearchIndex::datedQuery), Occur.MUST_NOT)
 						.build(), Occur.SHOULD)
 				.setMinimumNumberShouldMatch(1)
 				.build();
+	}
+
+	/** OR over the fields, so one facet can span several dating item types. */
+	private static Query anyOf(List<String> fields, java.util.function.Function<String, Query> of) {
+		if (fields.size() == 1) {
+			return of.apply(fields.get(0));
+		}
+		var bool = new BooleanQuery.Builder().setMinimumNumberShouldMatch(1);
+		fields.forEach(field -> bool.add(of.apply(field), Occur.SHOULD));
+		return bool.build();
 	}
 
 	/** Runs the folding analysis chain; shared with {@link LuceneOldApiSearch}. */
@@ -745,8 +764,9 @@ public class LuceneSearchIndex implements SearchIndex {
 			for (Object value : entry.getValue()) {
 				if (value instanceof String || value instanceof Number) {
 					addValueField(doc, entry.getKey(), String.valueOf(value));
+				} else if (value instanceof Map<?, ?> interval) {
+					addInterval(doc, entry.getKey(), interval);
 				}
-				// UNITDATE range maps are represented by their ~L/~H bound entries
 			}
 		}
 		return doc;
@@ -778,6 +798,38 @@ public class LuceneSearchIndex implements SearchIndex {
 			doc.add(new TextField(field, value, Field.Store.NO));
 		} else {
 			doc.add(new StringField(field, value, Field.Store.NO));
+		}
+	}
+
+	/**
+	 * One dating of a UNITDATE item, as the interval it is. Several of them may
+	 * carry the same field name - a Lucene range field is multi-valued and
+	 * {@code newIntersectsQuery} matches when ANY of them overlaps, which is
+	 * exactly "one of this record's datings falls in the period".
+	 *
+	 * <p>An open bound reaches to the end of time in that direction: a dating
+	 * recorded as "from 1850" is not over.
+	 */
+	private static void addInterval(Document doc, String field, Map<?, ?> interval) {
+		Long from = boundMillis(interval.get("gte"), Long.MIN_VALUE);
+		Long to = boundMillis(interval.get("lte"), Long.MAX_VALUE);
+		if (from == null || to == null || from > to) {
+			// an unparseable or inverted dating is no interval; the ~L/~H bounds
+			// (and the fulltext years) keep whatever could be read of it
+			return;
+		}
+		doc.add(new LongRange(field, new long[] { from }, new long[] { to }));
+	}
+
+	/** A stored bound as epoch millis; {@code open} when the bound is absent. */
+	private static Long boundMillis(Object bound, long open) {
+		if (bound == null) {
+			return open;
+		}
+		try {
+			return toEpochMillis(LocalDateTime.parse(String.valueOf(bound)));
+		} catch (DateTimeParseException e) {
+			return null;
 		}
 	}
 

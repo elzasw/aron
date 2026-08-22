@@ -121,7 +121,7 @@ class ApuManagementTest extends AbstractTest {
 	}
 
 	private List<String> indexedUuids() {
-		ApuSearchResult result = searchIndex.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(),
+		ApuSearchResult result = searchIndex.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(),
 				0, 1000, ApuSearchQuery.SortMode.NAME));
 		return result.hits().stream().map(ApuSearchResult.Hit::uuid).toList();
 	}

@@ -437,17 +437,10 @@ Four decisions are worth keeping:
 
 - **The port learned one reserved field, not a second filter kind.**
   `FieldFilter.ANY_DATING` means "the record's dating, whichever item type
-  carries it"; each adapter maps it to the `dateL`/`dateH` pair
-  `ApuDocumentBuilder.computeDateBounds` has always written and that the
-  `DATE_ASC`/`DATE_DESC` sorts already read. Both were indexed range-filterable
-  from the start, so there is **no new field, no reindex and no Lucene
-  layout-version bump**. Being a hull across every dating item type, it is the
-  record's widest dating: a record dated 1800–1810 and again in 1990 matches a
-  filter for 1900. That favours recall, which is the right direction for a facet
-  spanning record types whose datings live in different item types;
-  per-interval precision would need ES's `date_range` field, which the embedded
-  engine has no equivalent for, so it could not be engine-neutral. The facet's
-  `description` says so to the reader.
+  carries it". It bounds a slider on the `dateL`/`dateH` pair
+  `ApuDocumentBuilder.computeDateBounds` has always written and the
+  `DATE_ASC`/`DATE_DESC` sorts already read; what it *filters* is every dating
+  item type, resolved above the port (see §11).
 - **`~TYPE` reuses the existing `type` field and bucket machinery.** Its filter
   is an ordinary `Values` on `type` and its buckets an ordinary bucket request,
   so multi-select comes free through the same `excludedField` mechanism. The
@@ -470,3 +463,53 @@ Four decisions are worth keeping:
 one record type, and its configured dating facets each name the item type they
 date; offering a second, wider slider beside them would make the two disagree
 for reasons no reader could reconstruct.
+
+## 11. Dating: the intervals, not their hull (2026-08-22)
+
+`~L`/`~H` are the **hull** of a record's datings — the earliest lower and the
+latest upper bound — and until now that was also what a dating filter matched
+on. A record dated 1850–1860 as a unit and 1600 for the original it copies has a
+hull of 1600–1860, so it answered a search for 1700: a period it was never
+assigned. The document-level `dateL`/`dateH` made this worse for the built-in
+`~DATE` facet, whose hull spans every dating item type at once.
+
+**The old portal never behaved that way.** It sends its dating filter as
+`{field: <item code>, operation: RANGE, gte, lte}` — the item field itself, not
+the bound fields, which it uses only for the slider's ends. On Elasticsearch that
+field is a multi-valued `date_range`, so a range query there has always matched
+per interval with the default `INTERSECTS`. Hull matching was ARON 2's own
+regression, and this closes it.
+
+What changed:
+
+- **`FieldFilter.Range` carries a list of fields and matches per interval.**
+  Elasticsearch queries the `date_range` field it already maps and populates —
+  no mapping change, **no reindex**. Lucene indexes each dating as a
+  multi-valued `LongRange` (`newIntersectsQuery` matches when any of them
+  overlaps) and the layout version is bumped, so persisted embedded indexes
+  rebuild themselves on startup.
+- **The field list is resolved above the port**, from the display model, exactly
+  as the relation facet's scope is: one field for a section's dating facet, every
+  indexed UNITDATE item type for `~DATE`. Adapters stay free of types.yaml, and
+  `ANY_DATING` never reaches them as a filter field.
+- **Bounds became a request, not a field name** (`ApuSearchQuery.BoundsRequest`).
+  Multi-select needs to know which filters belong to the facet whose bounds are
+  being computed, and once a facet spans several fields its identity is no longer
+  its field. `BucketRequest` already separated "the field I aggregate" from "the
+  field whose filter I ignore" for the same reason; bounds now do too — `~DATE`
+  bounds on the record-level hull while excluding filters on every dating field.
+- **"Undated" stays a question about the bound field**, not about the intervals,
+  so `includeUndated` and the `undatedCount` shown beside the slider cannot
+  disagree.
+- **The old API's Lucene path matches per interval too**, closing a divergence
+  that made the embedded engine answer the frozen API differently from
+  Elasticsearch. `LuceneOldApiSearch` no longer rewrites a UNITDATE range into a
+  hull intersection.
+
+Sorting is unaffected: a sort needs one key per document, and the hull's ends are
+the right ones (`dateL` ascending, `dateH` descending, undated last).
+
+The case that tells the two apart needs a record with **two** datings of one item
+type, which only the interval form of a fixture can express — hence
+`DocumentFixtures`, where the shapes `ApuDocumentBuilder` produces are written
+once for every test that builds a document by hand.

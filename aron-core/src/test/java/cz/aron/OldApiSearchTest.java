@@ -283,6 +283,7 @@ class OldApiSearchTest extends AbstractTest {
 		document.setType(type);
 		document.setApuSourceId(999_100L);
 		document.getValues().putAll(values);
+		cz.aron.search.DocumentFixtures.addDatings(document);
 		return document;
 	}
 

@@ -163,6 +163,24 @@ class LuceneOldApiSearchTest {
 	}
 
 	@Test
+	void unitdateRangeMatchesEachDatingSeparately() {
+		// the old UI sends a RANGE on the item field itself, which on Elasticsearch
+		// is a date_range carrying every dating of that item - so it has always
+		// matched per dating there. This engine used to answer the same query from
+		// the ~L/~H hull, which put a record in a period between two of its
+		// datings; both now agree
+		var twoDatings = doc(uuid(6), "Dva svazky", "FUND", Map.of("UNIT~DATE", List.of(
+				Map.of("gte", "1700-01-01T00:00:00", "lte", "1710-12-31T23:59:59"),
+				Map.of("gte", "1960-01-01T00:00:00", "lte", "1970-12-31T23:59:59"))));
+		index.indexApus(List.of(twoDatings));
+
+		assertThat(search.search(params(range("UNIT~DATE", "1800-01-01T00:00:00", "1850-12-31T23:59:59")))
+				.uuids()).doesNotContain(uuid(6));
+		assertThat(search.search(params(range("UNIT~DATE", "1705-01-01T00:00:00", "1705-12-31T23:59:59")))
+				.uuids()).containsExactly(uuid(6));
+	}
+
+	@Test
 	void rangeAcceptsTheOldUiZuluBounds() {
 		// the old UI's yearInISO sends bounds with millis and a Z zone designator
 		assertThat(search.search(params(range("UNIT~DATE", "1840-01-01T00:00:00.000Z", "1899-12-31T23:59:59.999Z")))
@@ -310,6 +328,7 @@ class LuceneOldApiSearchTest {
 		document.setType(type);
 		document.setApuSourceId(1);
 		document.getValues().putAll(values);
+		DocumentFixtures.addDatings(document);
 		return document;
 	}
 

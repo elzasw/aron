@@ -71,8 +71,10 @@ Facets of the general search
 
    The dating facet there covers the record's dating whatever item type
    records it, so it also finds records dated only under, say
-   ``DATE_OF_CONTENT``. Because it uses the record's whole dating span, a
-   record dated in several periods matches whenever any of them does.
+   ``DATE_OF_CONTENT``. A record with several datings matches when any one of
+   them falls in the selected period — and only then: a record dated
+   1850–1860 and again in 1600 is not offered for 1700, which lies between two
+   of its datings rather than within either.
 
    A record with no dating at all is **not** matched by a dating filter — it
    is not in 1805–1852. Where such records are among the results, the filter

@@ -125,6 +125,9 @@ public class SearchController implements SearchApi {
 	/** Every indexed reference item field - the built-in relation facet's scope. */
 	private List<String> referenceFields;
 
+	/** Every indexed dating item field - the built-in dating facet's scope. */
+	private List<String> datingFields;
+
 	public SearchController(FacetScope facetScope, BuiltInFacets builtInFacets, TypesHolder typesHolder,
 			IndexingService indexingService,
 			RelevanceService relevanceService, PresentationLocales presentationLocales, ApuService apuService,
@@ -164,6 +167,10 @@ public class SearchController implements SearchApi {
 		// add dead clauses to every relation query
 		referenceFields = typesHolder.getAllItemTypes().stream()
 				.filter(itemType -> DataType.APU_REF.equals(itemType.getType()) && itemType.isIndexed())
+				.map(ItemType::getCode)
+				.toList();
+		datingFields = typesHolder.getAllItemTypes().stream()
+				.filter(itemType -> DataType.UNITDATE.equals(itemType.getType()) && itemType.isIndexed())
 				.map(ItemType::getCode)
 				.toList();
 	}
@@ -207,7 +214,7 @@ public class SearchController implements SearchApi {
 		// facets enumerate their composite ~ID~LABEL field, see BucketRequest),
 		// dating bounds for every UNITDATE facet
 		var bucketRequests = new ArrayList<ApuSearchQuery.BucketRequest>();
-		var boundsFields = new LinkedHashSet<String>();
+		var boundsRequests = new ArrayList<ApuSearchQuery.BoundsRequest>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
 				case ENUM, MULTI_REF -> {
@@ -219,7 +226,8 @@ public class SearchController implements SearchApi {
 								bucketFieldOf(facet), indexFieldOf(facet), BUCKET_LIMIT));
 					}
 				}
-				case UNITDATE -> boundsFields.add(indexFieldOf(facet));
+				case UNITDATE -> boundsRequests.add(new ApuSearchQuery.BoundsRequest(
+						indexFieldOf(facet), datingFieldsOf(facet)));
 				default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
 			}
 		}
@@ -235,13 +243,13 @@ public class SearchController implements SearchApi {
 
 		QueryMode queryMode = QueryMode.STRICT;
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, plan, filters,
-				bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()), true));
+				bucketRequests, boundsRequests, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()), true));
 		// zero strict hits - one automatic any-word retry, visibly labeled (B7);
 		// facet filters and the section restriction are never relaxed
 		if (result.total() == 0 && plan != null && plan.relaxable()
 				&& relevanceService.config().relaxOnNoHits()) {
 			result = indexingService.search(new ApuSearchQuery(apuType, plan.relaxed(), filters,
-					bucketRequests, boundsFields, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()),
+					bucketRequests, boundsRequests, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()),
 					true));
 			if (result.total() > 0) {
 				queryMode = QueryMode.RELAXED;
@@ -380,7 +388,7 @@ public class SearchController implements SearchApi {
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(
 				request.getApuType().getValue(), relevanceService.plan(blankToNull(request.getQuery())), filters,
 				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT)),
-				Set.of(), 0, 0, ApuSearchQuery.SortMode.RELEVANCE));
+				List.of(), 0, 0, ApuSearchQuery.SortMode.RELEVANCE));
 
 		var options = toFacetBuckets(result.buckets().get(bucketField), reference).stream()
 				.filter(b -> q == null || labelMatches(b.getLabel() != null ? b.getLabel() : b.getValue(), q))
@@ -428,7 +436,7 @@ public class SearchController implements SearchApi {
 			if (fromBound == null && toBound == null) {
 				throw badRequest("RANGE filter of facet '" + filter.getFacet() + "' has no bounds.");
 			}
-			return new FieldFilter.Range(indexFieldOf(facet), fromBound, toBound,
+			return new FieldFilter.Range(datingFieldsOf(facet), fromBound, toBound,
 					Boolean.TRUE.equals(range.getIncludeUndated()));
 		}
 		throw badRequest("Unsupported filter kind.");
@@ -632,6 +640,18 @@ public class SearchController implements SearchApi {
 	 */
 	private String indexFieldOf(FacetConfigDto facet) {
 		return builtInFacets.indexField(facet.getSource());
+	}
+
+	/**
+	 * The dating item fields a facet matches on: its own, or - for the built-in
+	 * dating facet - every one of them, so that one facet dates records whose
+	 * datings live in different item types. Resolved here rather than in an
+	 * adapter for the same reason the relation facet's scope is: the display model
+	 * is not the engines' business.
+	 */
+	private List<String> datingFieldsOf(FacetConfigDto facet) {
+		String field = indexFieldOf(facet);
+		return FieldFilter.ANY_DATING.equals(field) ? datingFields : List.of(field);
 	}
 
 	private String bucketFieldOf(FacetConfigDto facet) {

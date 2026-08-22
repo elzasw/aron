@@ -239,11 +239,11 @@ public class LuceneOldApiSearch implements OldApiSearch {
 	}
 
 	/**
-	 * RANGE on a UNITDATE item is an interval intersection over its {@code ~L}/
-	 * {@code ~H} bound fields (the base field itself is not indexed here - the ES
-	 * date_range field is represented by the bounds, see the adapter layout).
-	 * RANGE directly on a bound field is a plain long range; anything else falls
-	 * back to a lexicographic term range.
+	 * RANGE on a UNITDATE item matches its datings themselves, one interval at a
+	 * time - the same INTERSECTS the Elasticsearch adapter gets from the
+	 * {@code date_range} field the old portal has always queried, so the two
+	 * engines answer this alike. RANGE directly on a bound field is a plain long
+	 * range; anything else falls back to a lexicographic term range.
 	 */
 	private Query rangeQuery(RangeFilter f) {
 		String field = f.getField();
@@ -252,17 +252,11 @@ public class LuceneOldApiSearch implements OldApiSearch {
 
 		var itemType = typesHolder.getItemTypeForCode(field);
 		if (itemType != null && DataType.UNITDATE.equals(itemType.getType())) {
-			var bool = new BooleanQuery.Builder();
 			Long lowerMillis = parseMillis(lower, f.getGt() != null ? 1 : 0);
 			Long upperMillis = parseMillis(upper, f.getLt() != null ? -1 : 0);
-			if (upperMillis != null) {
-				bool.add(LongPoint.newRangeQuery(field + "~L", Long.MIN_VALUE, upperMillis), Occur.FILTER);
-			}
-			if (lowerMillis != null) {
-				bool.add(LongPoint.newRangeQuery(field + "~H", lowerMillis, Long.MAX_VALUE), Occur.FILTER);
-			}
-			bool.add(new MatchAllDocsQuery(), Occur.MUST);
-			return bool.build();
+			return LuceneSearchIndex.intervalQuery(field,
+					lowerMillis != null ? lowerMillis : Long.MIN_VALUE,
+					upperMillis != null ? upperMillis : Long.MAX_VALUE);
 		}
 		if (field.endsWith("~L") || field.endsWith("~H")) {
 			Long lowerMillis = parseMillis(lower, f.getGt() != null ? 1 : 0);

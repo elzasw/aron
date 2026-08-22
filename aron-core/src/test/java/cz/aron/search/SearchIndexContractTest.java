@@ -83,18 +83,7 @@ public abstract class SearchIndexContractTest {
 		document.setType(type);
 		document.setApuSourceId(sourceId);
 		document.getValues().putAll(values);
-		// the document-level dating, as ApuDocumentBuilder.computeDateBounds derives
-		// it: the hull of every UNITDATE item, which is what FieldFilter.ANY_DATING
-		// filters and bounds
-		values.forEach((field, itemValues) -> itemValues.forEach(value -> {
-			String bound = String.valueOf(value);
-			if (field.endsWith("~L") && (document.getDateL() == null || bound.compareTo(document.getDateL()) < 0)) {
-				document.setDateL(bound);
-			}
-			if (field.endsWith("~H") && (document.getDateH() == null || bound.compareTo(document.getDateH()) > 0)) {
-				document.setDateH(bound);
-			}
-		}));
+		DocumentFixtures.addDatings(document);
 		return document;
 	}
 
@@ -316,7 +305,7 @@ public abstract class SearchIndexContractTest {
 
 		var strict = ApuSearchQuery.fulltext("kronika neexistujici");
 		assertThat(index.search(strict).total()).isZero();
-		var relaxed = new ApuSearchQuery(null, strict.fulltext().relaxed(), List.of(), List.of(), Set.of(),
+		var relaxed = new ApuSearchQuery(null, strict.fulltext().relaxed(), List.of(), List.of(), List.of(),
 				0, 10, SortMode.RELEVANCE);
 		assertThat(index.search(relaxed).total()).isEqualTo(1);
 	}
@@ -359,7 +348,7 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(7), "Popis B", "ARCH_DESC", 1, Map.of())));
 
 		var funds = index.search(
-				new ApuSearchQuery("FUND", null, List.of(), List.of(), Set.of(), 0, 10, SortMode.RELEVANCE));
+				new ApuSearchQuery("FUND", null, List.of(), List.of(), List.of(), 0, 10, SortMode.RELEVANCE));
 		assertThat(funds.total()).isEqualTo(1);
 		assertThat(funds.hits().get(0).uuid()).isEqualTo(uuid(6));
 	}
@@ -416,7 +405,7 @@ public abstract class SearchIndexContractTest {
 				List.of(new FieldFilter.Values("LANG~CODE", List.of("cze"))),
 				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10),
 						ApuSearchQuery.BucketRequest.of("REL~ENTITY", 10)),
-				Set.of(), 0, 10, SortMode.RELEVANCE));
+				List.of(), 0, 10, SortMode.RELEVANCE));
 
 		// hits and total respect the filter
 		assertThat(result.total()).isEqualTo(2);
@@ -438,13 +427,13 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(34), "Z5", 1, Map.of("LANG~CODE", List.of("lat")))));
 
 		var all = index.search(new ApuSearchQuery(null, null, List.of(),
-				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)), Set.of(), 0, 0, SortMode.RELEVANCE));
+				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)), List.of(), 0, 0, SortMode.RELEVANCE));
 		assertThat(all.buckets().get("LANG~CODE")).containsExactly(
 				new ApuSearchResult.Bucket("cze", 2), new ApuSearchResult.Bucket("ger", 2),
 				new ApuSearchResult.Bucket("lat", 1));
 
 		var capped = index.search(new ApuSearchQuery(null, null, List.of(),
-				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 2)), Set.of(), 0, 0, SortMode.RELEVANCE));
+				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 2)), List.of(), 0, 0, SortMode.RELEVANCE));
 		assertThat(capped.buckets().get("LANG~CODE")).containsExactly(
 				new ApuSearchResult.Bucket("cze", 2), new ApuSearchResult.Bucket("ger", 2));
 	}
@@ -462,7 +451,7 @@ public abstract class SearchIndexContractTest {
 		var result = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Values("REL~ENTITY", List.of("apu-a"))),
 				List.of(new ApuSearchQuery.BucketRequest("REL~ENTITY~ID~LABEL", "REL~ENTITY", 10)),
-				Set.of(), 0, 10, SortMode.RELEVANCE));
+				List.of(), 0, 10, SortMode.RELEVANCE));
 
 		// hits respect the filter, the facet's own buckets ignore it
 		assertThat(result.total()).isEqualTo(1);
@@ -484,7 +473,7 @@ public abstract class SearchIndexContractTest {
 
 		var result = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1890-01-01T00:00:00"), null)),
-				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)), Set.of(), 0, 10, SortMode.RELEVANCE));
+				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)), List.of(), 0, 10, SortMode.RELEVANCE));
 
 		// another facet's RANGE filter restricts both hits and buckets
 		assertThat(result.total()).isEqualTo(1);
@@ -508,7 +497,7 @@ public abstract class SearchIndexContractTest {
 		// the facet's own RANGE filter is excluded from its bounds (the slider can widen)
 		var withOwnRange = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1890-01-01T00:00:00"), null)),
-				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
 		var bounds = withOwnRange.bounds().get("UNIT~DATE");
 		assertThat(bounds).isNotNull();
 		assertThat(atUtcYear(bounds.minMillis())).isEqualTo(1800);
@@ -517,7 +506,7 @@ public abstract class SearchIndexContractTest {
 		// other facets' filters apply to the bounds
 		var withOtherFilter = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Values("LANG~CODE", List.of("ger"))),
-				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
 		// no matching document carries the dating - no bounds entry
 		assertThat(withOtherFilter.bounds()).doesNotContainKey("UNIT~DATE");
 	}
@@ -532,7 +521,7 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(45), "Kniha C bez datace", 1, Map.of("LANG~CODE", List.of("cze")))));
 
 		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
-				Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE)).bounds().get("UNIT~DATE");
+				List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE)).bounds().get("UNIT~DATE");
 		assertThat(bounds).isNotNull();
 		assertThat(bounds.undatedCount()).isEqualTo(2);
 
@@ -541,13 +530,13 @@ public abstract class SearchIndexContractTest {
 		// slider
 		var withOwnRange = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1810-01-01T00:00:00"), null)),
-				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
 		assertThat(withOwnRange.bounds().get("UNIT~DATE").undatedCount()).isEqualTo(2);
 
 		// another facet's filter does apply
 		var czechOnly = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Values("LANG~CODE", List.of("cze"))),
-				List.of(), Set.of("UNIT~DATE"), 0, 0, SortMode.RELEVANCE));
+				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
 		assertThat(czechOnly.bounds()).doesNotContainKey("UNIT~DATE");
 	}
 
@@ -576,6 +565,64 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void aRangeMatchesTheDatingsThemselvesNotTheirHull() {
+		// two datings of one item type, far apart. Written as intervals because
+		// that is the only way to say "two datings" - bounds can only say one
+		indexApus(List.of(
+				doc(uuid(52), "Kniha 1800-1810 a 1900-1910", 1, Map.of("UNIT~DATE", List.of(
+						Map.of("gte", "1800-01-01T00:00:00", "lte", "1810-12-31T23:59:59"),
+						Map.of("gte", "1900-01-01T00:00:00", "lte", "1910-12-31T23:59:59"))))));
+
+		// the gap between them is not a period this record was ever assigned;
+		// matching its 1800-1910 hull would invent one
+		assertThat(index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE",
+				LocalDateTime.parse("1850-01-01T00:00:00"), LocalDateTime.parse("1860-12-31T23:59:59")))))
+				.total()).isZero();
+
+		// either dating itself matches
+		for (String year : List.of("1805", "1905")) {
+			var hit = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE",
+					LocalDateTime.parse(year + "-01-01T00:00:00"),
+					LocalDateTime.parse(year + "-12-31T23:59:59")))));
+			assertThat(hit.hits()).as("dating covering %s", year)
+					.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(52));
+		}
+
+		// and the bounds a slider offers are still the hull - the span the
+		// matching records cover is what its two ends mean
+		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
+				List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE))
+						.bounds().get("UNIT~DATE");
+		assertThat(atUtcYear(bounds.minMillis())).isEqualTo(1800);
+		assertThat(atUtcYear(bounds.maxMillis())).isEqualTo(1910);
+	}
+
+	@Test
+	void aRangeSpanningItemTypesKeepsThemApart() {
+		// the built-in dating facet's case: one record dated 1850-1860 as a unit and
+		// 1600 for the original it copies. The record's own hull spans 1600-1860, so
+		// filtering on that would put this record in 1700; each item type's datings
+		// are matched on their own instead
+		indexApus(List.of(
+				doc(uuid(53), "Kniha s datací předlohy", 1, Map.of(
+						"UNIT~DATE", List.of(Map.of("gte", "1850-01-01T00:00:00", "lte", "1860-12-31T23:59:59")),
+						"DATE~OTHER", List.of(Map.of("gte", "1600-01-01T00:00:00", "lte", "1600-12-31T23:59:59"))))));
+
+		var everyDating = List.of("UNIT~DATE", "DATE~OTHER");
+		assertThat(index.search(query(null, List.of(new FieldFilter.Range(everyDating,
+				LocalDateTime.parse("1700-01-01T00:00:00"), LocalDateTime.parse("1700-12-31T23:59:59"), false))))
+				.total()).isZero();
+		// each of the two datings is found by the facet that spans both
+		for (String year : List.of("1600", "1855")) {
+			assertThat(index.search(query(null, List.of(new FieldFilter.Range(everyDating,
+					LocalDateTime.parse(year + "-01-01T00:00:00"),
+					LocalDateTime.parse(year + "-12-31T23:59:59"), false)))).hits())
+					.as("dating covering %s", year)
+					.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(53));
+		}
+	}
+
+	@Test
 	void anyDatingSpansEveryDatingItemType() {
 		indexApus(List.of(
 				doc(uuid(49), "Datovano jako UNIT~DATE", 1, Map.of(
@@ -587,13 +634,16 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(51), "Bez datace", 1, Map.of())));
 
 		// one facet dates records whose datings live in different item types - which
-		// is what a search spanning every record type needs
-		var range = index.search(query(null, List.of(new FieldFilter.Range(FieldFilter.ANY_DATING,
-				LocalDateTime.parse("1905-01-01T00:00:00"), LocalDateTime.parse("1906-01-01T00:00:00")))));
+		// is what a search spanning every record type needs. The fields are named
+		// here because they are resolved above the port, from the display model;
+		// ANY_DATING is the record-level hull and asks only for bounds
+		var range = index.search(query(null, List.of(new FieldFilter.Range(
+				List.of("UNIT~DATE", "DATE~OTHER"),
+				LocalDateTime.parse("1905-01-01T00:00:00"), LocalDateTime.parse("1906-01-01T00:00:00"), false))));
 		assertThat(range.hits()).extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(50));
 
 		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
-				Set.of(FieldFilter.ANY_DATING), 0, 0, SortMode.RELEVANCE)).bounds()
+				List.of(ApuSearchQuery.BoundsRequest.of(FieldFilter.ANY_DATING)), 0, 0, SortMode.RELEVANCE)).bounds()
 						.get(FieldFilter.ANY_DATING);
 		assertThat(bounds).isNotNull();
 		assertThat(atUtcYear(bounds.minMillis())).isEqualTo(1800);
@@ -622,10 +672,10 @@ public abstract class SearchIndexContractTest {
 				docWithDates(uuid(82), "Nová", "1900-01-01T00:00:00", "1950-12-31T23:59:59"),
 				doc(uuid(83), "Bez datace", 1, Map.of())));
 
-		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.DATE_ASC)).hits()).extracting(ApuSearchResult.Hit::uuid)
 				.containsExactly(uuid(81), uuid(80), uuid(82), uuid(83));
-		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.DATE_DESC)).hits()).extracting(ApuSearchResult.Hit::uuid)
 				.containsExactly(uuid(82), uuid(80), uuid(81), uuid(83));
 	}
@@ -637,7 +687,7 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(85), "Cibule", 1, Map.of()),
 				doc(uuid(86), "Hrad", 1, Map.of())));
 
-		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.NAME_DESC)).hits()).extracting(ApuSearchResult.Hit::name)
 				.containsExactly("Chalupa", "Hrad", "Cibule");
 	}
@@ -649,7 +699,7 @@ public abstract class SearchIndexContractTest {
 		indexApus(uuids.stream().map(u -> doc(u, "Stejné jméno", 1, Map.<String, List<Object>>of())).toList());
 		java.util.Collections.sort(uuids);
 
-		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.NAME)).hits()).extracting(ApuSearchResult.Hit::uuid)
 				.containsExactlyElementsOf(uuids);
 	}
@@ -662,7 +712,7 @@ public abstract class SearchIndexContractTest {
 				doc(uuid(17), "Hrad", 1, Map.of())));
 
 		var sorted = index
-				.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10, SortMode.NAME));
+				.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10, SortMode.NAME));
 
 		// the test deployment runs cs-CZ: c < h < ch
 		assertThat(sorted.hits()).extracting(ApuSearchResult.Hit::name)
@@ -678,7 +728,7 @@ public abstract class SearchIndexContractTest {
 
 		var result = index.search(new ApuSearchQuery("ARCH_DESC", null,
 				List.of(new FieldFilter.Values("LANG~CODE", List.of("tc-cze"))),
-				List.of(), Set.of(), 0, 10, SortMode.RELEVANCE, null, true));
+				List.of(), List.of(), 0, 10, SortMode.RELEVANCE, null, true));
 
 		// hits and total respect the type restriction
 		assertThat(result.total()).isEqualTo(1);
@@ -689,7 +739,7 @@ public abstract class SearchIndexContractTest {
 				new ApuSearchResult.Bucket("ARCH_DESC", 1), new ApuSearchResult.Bucket("FUND", 1));
 
 		// not requested = not computed
-		assertThat(index.search(new ApuSearchQuery("ARCH_DESC", null, List.of(), List.of(), Set.of(),
+		assertThat(index.search(new ApuSearchQuery("ARCH_DESC", null, List.of(), List.of(), List.of(),
 				0, 10, SortMode.RELEVANCE)).typeCounts()).isEmpty();
 	}
 
@@ -736,14 +786,14 @@ public abstract class SearchIndexContractTest {
 		assertThat(exact.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.EQ);
 
 		// limit above the hit count = still exact
-		var above = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		var above = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.RELEVANCE, 10));
 		assertThat(above.total()).isEqualTo(3);
 		assertThat(above.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.EQ);
 
 		// limit below the hit count = deterministically (limit, GTE) on every
 		// engine, even when the engine happens to know the exact count
-		var capped = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), Set.of(), 0, 10,
+		var capped = index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
 				SortMode.RELEVANCE, 2));
 		assertThat(capped.total()).isEqualTo(2);
 		assertThat(capped.totalRelation()).isEqualTo(ApuSearchResult.TotalRelation.GTE);
@@ -807,7 +857,7 @@ public abstract class SearchIndexContractTest {
 		var result = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(88)), List.of())),
 				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)),
-				Set.of(), 0, 10, SortMode.RELEVANCE));
+				List.of(), 0, 10, SortMode.RELEVANCE));
 
 		assertThat(result.total()).isEqualTo(2);
 		// a relation restriction is not a facet the reader can widen, so unlike a
@@ -819,7 +869,7 @@ public abstract class SearchIndexContractTest {
 	private static ApuSearchQuery query(String fulltext, List<FieldFilter> filters) {
 		return new ApuSearchQuery(null,
 				RelevanceQueryPlanner.plan(fulltext, RelevanceConfig.defaults()),
-				filters, List.of(), Set.of(), 0, 10, SortMode.RELEVANCE);
+				filters, List.of(), List.of(), 0, 10, SortMode.RELEVANCE);
 	}
 
 }
