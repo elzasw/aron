@@ -1,7 +1,7 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
@@ -21,7 +21,14 @@ import {
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import { SECTIONS } from "../sections";
 import FacetPanel from "./FacetPanel";
-import { facetIsOffered, parseFilters, RELATED_FACET, serializeFilters } from "./filters";
+import {
+  dropInapplicable,
+  facetIsApplicable,
+  facetIsOffered,
+  parseFilters,
+  RELATED_FACET,
+  serializeFilters,
+} from "./filters";
 import Pagination from "./Pagination";
 import RelatedChips from "./RelatedChips";
 import ResultList from "./ResultList";
@@ -216,6 +223,37 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
       : ((result as EnumFacetResult).buckets ?? []).length > 0;
   };
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
+  // the label a value is displayed under, for a condition that names an option by
+  // its label rather than its value; the buckets that carry labels come with the
+  // search response
+  const labelOf = (facetCode: string, value: string) => {
+    const result = resultOf(facetCode);
+    const buckets =
+      result?.kind === FacetResultKind.Enum || result?.kind === FacetResultKind.Ref
+        ? ((result as EnumFacetResult).buckets ?? [])
+        : [];
+    return buckets.find((bucket) => bucket.value === value)?.label;
+  };
+  const isApplicable = (def: FacetDef) => facetIsApplicable(def, filters, labelOf);
+
+  // A facet that waits for another facet's selection loses its own constraint
+  // when that selection goes: the reader removed what it stood on, so leaving it
+  // applied would narrow the result for a reason nothing on screen explains.
+  // Deferred until the search has answered, because the labels a condition may
+  // match on arrive with it - dropping a filter is not something to do on a
+  // guess.
+  useEffect(() => {
+    if (!facetDefs.data || !search.data) {
+      return;
+    }
+    const kept = dropInapplicable(facetDefs.data, filters, labelOf);
+    if (kept.length !== filters.length) {
+      update({ f: serializeFilters(kept), p: null });
+    }
+    // labelOf and update close over this render's data; the filter parameter and
+    // the two responses are what can change the outcome
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facetDefs.data, search.data, filterParam]);
 
   // what the live region below reports: the failure, the wait, or the outcome
   const statusText = search.isError
@@ -246,6 +284,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   // the reader has to be able to see and undo
   const visibleFacets = (facetDefs.data ?? []).filter(
     (def) =>
+      // a facet whose conditions do not hold is not offered at all, whether or
+      // not it carries a filter: the filter is on its way out (see the effect
+      // above), and showing the panel meanwhile would say the constraint still
+      // has ground under it
+      isApplicable(def) &&
       facetIsOffered(def.display, hasActiveFilter(def.code)) &&
       supportedTypes.includes(def.type) &&
       (hasActiveFilter(def.code) || hasData(def)),

@@ -160,12 +160,19 @@ reader is shown a facet belonging to another kind of record.
 ``FINDING_AID``, ``FUND``, ``INSTITUTION``. A facet with no ``when`` at all —
 or an ``all`` naming no ``apuType`` — belongs to every section.
 
-.. note::
+A ``filter``/``value`` condition makes the facet **wait for a selection**: the
+example above is offered once the reader has chosen that kind of register, so
+an archival description does not present all seven register facets at once.
+Several such conditions must all hold; the named facet may have other values
+selected as well, so long as one of them is the one named. The value may be
+written as the option's own value or as the label it is displayed under.
 
-   The new portal does not yet act on the ``filter``/``value`` half: such a
-   facet is offered throughout its section rather than only once that value
-   is selected. The old portal honours it. The condition is still checked, so
-   a mistake in it is reported at startup.
+If the reader then removes the selection the facet was waiting for, the
+constraint set in that facet is **dropped** — it depended on a choice that is
+no longer made, and leaving it applied would narrow the results for a reason
+nothing on the page explains. A home-page tile filtering such a facet must
+therefore select the value itself, or the startup fails: the tile would
+otherwise arrive at a search that discards its filter.
 
 Ordering a facet's values
 =========================
@@ -187,7 +194,40 @@ an archive wants offered first, whatever their frequency:
 
 The listed values lead, in the order given; everything else follows in
 ``orderBy`` order, so the list names a leading run rather than the whole
-facet. A listed value the data does not contain simply does not appear.
+facet. A listed value the data does not contain simply does not appear. An
+entry may name the option by its value or by the label it is displayed under,
+so a facet whose values are references can be ordered by the names an archivist
+thinks in.
+
+Explaining a facet's options
+============================
+
+Where an option's value does not say what it covers, ``tooltips`` says it. The
+text is shown when the reader hovers or moves the keyboard to the option, and
+is read out as the option's description:
+
+.. code-block:: yaml
+
+   - when:
+       apuType: ARCH_DESC
+     type: ENUM
+     source: UNIT_TYPE
+     tooltips:
+       - value: technický výkres
+         tooltip: technické výkresy staveb a výrobků
+
+Like ``order``, an entry names the option by its value or by its displayed
+label. Translations go in the sibling ``searchConfig_localization.yaml`` under
+an ``options`` mapping keyed by the same value — an option has no code of its
+own, so its value is the key:
+
+.. code-block:: yaml
+
+   facets:
+     en:
+       UNIT_TYPE:
+         options:
+           technický výkres: technical drawings of buildings and products
 
 Tuning the weights
 ==================

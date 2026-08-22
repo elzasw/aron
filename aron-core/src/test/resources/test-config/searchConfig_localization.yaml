@@ -6,3 +6,7 @@ facets:
       title: Test facet (en)
     TITLE_MAIN:
       tooltip: Enter part of the name
+    LANG_CODE:
+      # per-option explanations, keyed by the option value
+      options:
+        v1-cze: Czech, older forms included

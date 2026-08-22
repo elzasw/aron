@@ -31,15 +31,20 @@ public class FacetScope {
 
 	private final FacetsLoader facetsLoader;
 
-	private List<Scoped> facets;
+	private List<ScopedFacet> facets;
 
 	/**
 	 * One configured facet with its {@code when} condition parsed. Parsed once at
 	 * startup rather than per request, and parsed at all because the condition's
 	 * grammar has two forms - reading only the simpler one made a facet of one
 	 * section apply to every section.
+	 *
+	 * <p>The two travel together because everything that has to agree about a
+	 * facet needs both halves: the section decides where it is served, the value
+	 * conditions what else has to be true before it is offered - and a home-page
+	 * tile is validated against both.
 	 */
-	private record Scoped(FacetConfigDto facet, FacetCondition condition) {
+	public record ScopedFacet(FacetConfigDto facet, FacetCondition condition) {
 	}
 
 	@Autowired
@@ -66,9 +71,9 @@ public class FacetScope {
 	}
 
 	/** Pairs every facet with its parsed condition; an unreadable one fails here. */
-	private static List<Scoped> scope(List<FacetConfigDto> facets) {
+	private static List<ScopedFacet> scope(List<FacetConfigDto> facets) {
 		return facets.stream()
-				.map(facet -> new Scoped(facet, FacetCondition.parse(facet.getWhen(), facet.getSource())))
+				.map(facet -> new ScopedFacet(facet, FacetCondition.parse(facet.getWhen(), facet.getSource())))
 				.toList();
 	}
 
@@ -78,17 +83,18 @@ public class FacetScope {
 	 * keeps them out of filter validation: the new API behaves as if a facet it
 	 * cannot serve were not configured.
 	 */
-	public List<FacetConfigDto> facetsFor(ApuType apuType) {
+	public List<ScopedFacet> facetsFor(ApuType apuType) {
 		return facets.stream()
 				.filter(scoped -> scoped.facet().getType() != FacetType.MULTI_REF_EXT)
 				.filter(scoped -> scoped.condition().appliesTo(apuType.getValue()))
-				.map(Scoped::facet)
 				.toList();
 	}
 
 	/** The section's facet of this code, or {@code null} when it has none. */
-	public FacetConfigDto facet(ApuType apuType, String code) {
-		return facetsFor(apuType).stream().filter(f -> Objects.equals(f.getSource(), code)).findFirst().orElse(null);
+	public ScopedFacet facet(ApuType apuType, String code) {
+		return facetsFor(apuType).stream()
+				.filter(scoped -> Objects.equals(scoped.facet().getSource(), code))
+				.findFirst().orElse(null);
 	}
 
 }

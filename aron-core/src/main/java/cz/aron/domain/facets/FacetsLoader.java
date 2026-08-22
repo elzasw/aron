@@ -10,6 +10,7 @@ import org.yaml.snakeyaml.Yaml;
 import cz.aron.commons.LocalizationFile;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.facets.dto.FacetsConfigDto;
+import cz.aron.domain.facets.dto.TooltipSpec;
 import cz.aron.domain.types.dto.LocalizedItem;
 
 import java.io.IOException;
@@ -71,21 +72,48 @@ public class FacetsLoader {
         return facetsConfigDto;
     }
 
-    /** Adds the per-language display texts of one facet ({@code language -> {title, tooltip, description}}). */
+    /**
+     * Adds the per-language display texts of one facet
+     * ({@code language -> {title, tooltip, description, options}}), where
+     * {@code options} maps an option's value to its own explanation.
+     */
     private static void applyTranslations(FacetConfigDto facet, Map<String, Object> byLanguage) {
         if (byLanguage == null) {
             return;
         }
         byLanguage.forEach((language, texts) -> {
             if (!(texts instanceof Map<?, ?> fields)) {
-                log.warn("searchConfig translations: {}/{} is not a mapping of title/tooltip/description - ignored.",
-                        language, facet.getSource());
+                log.warn("searchConfig translations: {}/{} is not a mapping of title/tooltip/description/options"
+                        + " - ignored.", language, facet.getSource());
                 return;
             }
             add(facet.getTitleTranslations(), language, fields.get("title"));
             add(facet.getTooltipTranslations(), language, fields.get("tooltip"));
             add(facet.getDescriptionTranslations(), language, fields.get("description"));
+            applyOptionTranslations(facet, language, fields.get("options"));
         });
+    }
+
+    /**
+     * Translations of the per-option explanations, keyed by the option value the
+     * facet's own {@code tooltips} entry names - the only stable key there is,
+     * since an option has no code of its own.
+     */
+    private static void applyOptionTranslations(FacetConfigDto facet, String language, Object node) {
+        if (node == null || facet.getTooltips() == null) {
+            return;
+        }
+        if (!(node instanceof Map<?, ?> options)) {
+            log.warn("searchConfig translations: {}/{} 'options' is not a mapping of value -> text - ignored.",
+                    language, facet.getSource());
+            return;
+        }
+        for (TooltipSpec spec : facet.getTooltips()) {
+            Object text = options.get(spec.getValue());
+            if (text != null) {
+                add(spec.getTooltipTranslations(), language, text);
+            }
+        }
     }
 
     private static void add(List<LocalizedItem> translations, String language, Object text) {

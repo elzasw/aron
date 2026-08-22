@@ -36,7 +36,7 @@ class FacetScopeTest {
 	}
 
 	private static List<String> codesFor(FacetScope scope, ApuType apuType) {
-		return scope.facetsFor(apuType).stream().map(FacetConfigDto::getSource).toList();
+		return scope.facetsFor(apuType).stream().map(scoped -> scoped.facet().getSource()).toList();
 	}
 
 	@Test

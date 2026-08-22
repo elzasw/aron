@@ -25,11 +25,10 @@ public class FacetConfigDto {
     private List<LocalizedItem> titleTranslations = new ArrayList<>();
     private List<LocalizedItem> tooltipTranslations = new ArrayList<>();
     private List<LocalizedItem> descriptionTranslations = new ArrayList<>();
-    private List<Object> tooltips;
+    private List<TooltipSpec> tooltips;
     private String orderBy;
     private List<String> order = new ArrayList<>();
     private String group;
-    private List<IntervalSpec> intervals = new ArrayList<>();
     private List<InnerFacet> facets = new ArrayList<>();
 	public Object getWhen() {
 		return when;
@@ -103,10 +102,10 @@ public class FacetConfigDto {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public List<Object> getTooltips() {
+	public List<TooltipSpec> getTooltips() {
 		return tooltips;
 	}
-	public void setTooltips(List<Object> tooltips) {
+	public void setTooltips(List<TooltipSpec> tooltips) {
 		this.tooltips = tooltips;
 	}
 	public String getOrderBy() {
@@ -126,12 +125,6 @@ public class FacetConfigDto {
 	}
 	public void setGroup(String group) {
 		this.group = group;
-	}
-	public List<IntervalSpec> getIntervals() {
-		return intervals;
-	}
-	public void setIntervals(List<IntervalSpec> intervals) {
-		this.intervals = intervals;
 	}
 	public List<InnerFacet> getFacets() {
 		return facets;

@@ -1,5 +1,6 @@
 package cz.aron.domain.facets;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,13 +33,11 @@ import cz.aron.domain.ApuType;
  * facets of one section came to be advertised for every section, and nothing
  * ever said so.
  * <p>
- * <b>Only the apuType half is evaluated so far.</b> The value conditions are
- * validated - an unreadable one must not pass - and then dropped, because
- * offering a facet on the strength of another facet's selection is not
- * implemented yet: the definitions endpoint is asked per section, without the
- * active filters. Until it is, such a facet is offered throughout its section.
- * Anything added here must be evaluated, or it becomes another silently ignored
- * setting.
+ * The apuType half is settled here, because a section is a property of the
+ * request. The value conditions are handed to the client through
+ * {@code FacetDef.offeredWhen}: whether one holds depends on the filters the
+ * reader has set, which the per-section definitions endpoint does not see - the
+ * same split the old portal makes, where the sidebar evaluates them.
  */
 public final class FacetCondition {
 
@@ -51,7 +50,17 @@ public final class FacetCondition {
 	private static final Set<String> CONDITION_KEYS = Set.of(APU_TYPE, FILTER, VALUE);
 
 	/** No condition at all - the facet belongs to every section. */
-	private static final FacetCondition UNCONDITIONAL = new FacetCondition(null);
+	private static final FacetCondition UNCONDITIONAL = new FacetCondition(null, List.of());
+
+	/**
+	 * "That facet has this value selected". The facet is named by its code in the
+	 * tilde form the rest of the API uses, so a condition written
+	 * {@code filter: REGISTRY_TYPE} finds the facet whose source became
+	 * {@code REGISTRY~TYPE} - the file spells the two halves differently and
+	 * only the source is rewritten when it is loaded.
+	 */
+	public record ValueCondition(String facet, String value) {
+	}
 
 	/**
 	 * Name of the one APU type the facet belongs to, {@code null} = every type.
@@ -61,8 +70,16 @@ public final class FacetCondition {
 	 */
 	private final String apuType;
 
-	private FacetCondition(String apuType) {
+	private final List<ValueCondition> valueConditions;
+
+	private FacetCondition(String apuType, List<ValueCondition> valueConditions) {
 		this.apuType = apuType;
+		this.valueConditions = valueConditions;
+	}
+
+	/** No condition - what a facet the product itself provides carries. */
+	public static FacetCondition unconditional() {
+		return UNCONDITIONAL;
 	}
 
 	/**
@@ -88,7 +105,7 @@ public final class FacetCondition {
 			}
 			return parseAll(all, facet);
 		}
-		return new FacetCondition(apuTypeName(node.get(APU_TYPE), facet));
+		return new FacetCondition(apuTypeName(node.get(APU_TYPE), facet), List.of());
 	}
 
 	private static FacetCondition parseAll(Object all, String facet) {
@@ -96,6 +113,7 @@ public final class FacetCondition {
 			throw error(facet, "'when.all' must be a non-empty list of conditions");
 		}
 		String apuType = null;
+		var values = new ArrayList<ValueCondition>();
 		for (Object condition : conditions) {
 			if (!(condition instanceof Map<?, ?> mapping)) {
 				throw error(facet, "each condition of 'when.all' must be a mapping");
@@ -116,14 +134,29 @@ public final class FacetCondition {
 				// the value is what the condition compares against, so a filter
 				// without one says nothing at all
 				throw error(facet, "a 'filter' condition of 'when.all' needs both 'filter' and 'value'");
+			} else {
+				values.add(new ValueCondition(code(text(mapping.get(FILTER))), text(mapping.get(VALUE))));
 			}
 		}
-		return new FacetCondition(apuType);
+		return new FacetCondition(apuType, List.copyOf(values));
+	}
+
+	/** The facet code as the rest of the API spells it (indexing turns underscores into dots). */
+	private static String code(String filter) {
+		return filter.replace('_', '~');
 	}
 
 	/** Whether the facet is offered in this section. */
 	public boolean appliesTo(String apuTypeName) {
 		return apuType == null || apuType.equals(apuTypeName);
+	}
+
+	/**
+	 * The selections the facet additionally depends on, all of which must hold.
+	 * Empty for a facet that only names a section.
+	 */
+	public List<ValueCondition> valueConditions() {
+		return valueConditions;
 	}
 
 	private static String apuTypeName(Object node, String facet) {

@@ -45,6 +45,22 @@ class OldApiSurfaceTest extends AbstractTest {
 		assertThat(response.body()).contains("TEST~FACET");
 	}
 
+	/**
+	 * The published shape of one facet, not only the endpoint's existence: this
+	 * response is the searchConfig.yaml the old portal reads, so the DTO's fields
+	 * are external contract and dropping one is a deliberate act, not a
+	 * refactoring. {@code intervals} was dropped on purpose - a feature neither
+	 * portal ever implemented, so the key was an empty array in every facet.
+	 */
+	@Test
+	void facetsPublishTheConfigurationsOwnFields() throws Exception {
+		var body = get("/api/aron/facets").body();
+
+		assertThat(body).contains("\"source\":\"TEST~FACET\"", "\"type\":\"ENUM\"", "\"display\":\"ALWAYS\"",
+				"\"maxItems\":10", "\"displayedItems\":5", "\"maxDisplayedItems\":10");
+		assertThat(body).doesNotContain("\"intervals\"");
+	}
+
 	@Test
 	void pageTemplate() throws Exception {
 		var response = get("/api/aron/pageTemplate");

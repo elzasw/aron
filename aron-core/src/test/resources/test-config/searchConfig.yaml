@@ -17,6 +17,10 @@ facets:
     type: ENUM
     source: LANG_CODE
     orderBy: ASC
+    # what an option covers, where its own value does not say
+    tooltips:
+      - value: v1-cze
+        tooltip: čeština včetně starších forem
   - when:
       apuType: ARCH_DESC
     type: UNITDATE

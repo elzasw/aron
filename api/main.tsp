@@ -524,6 +524,61 @@ model FacetDef {
 
 	/** Bucket limit when expanded (ENUM facets); unset = no limit. */
 	maxDisplayedItems?: int32;
+
+	/**
+	 * Offered only while EVERY one of these conditions holds; absent = offered
+	 * whenever its `display` says so.
+	 *
+	 * A deployment writes such a facet for a narrowing that only makes sense
+	 * further in: an archival description offers the register facet of the
+	 * register kind the reader picked, not all seven at once. The client
+	 * evaluates it, because whether a condition holds depends on the filters the
+	 * client holds - the definitions of a section are the same for everyone and
+	 * stay cacheable.
+	 *
+	 * A filter on a facet whose conditions stop holding is **dropped**: the
+	 * reader removed the selection the constraint depended on, and a constraint
+	 * with no ground left is not one they could act on. The server keeps
+	 * accepting such a filter, so a shared link stays answerable while the
+	 * client settles it.
+	 */
+	offeredWhen?: FacetValueCondition[];
+
+	/**
+	 * Per-option explanations of an enumerated facet - what "technical drawing"
+	 * covers, where the value alone does not say. Server-localized like every
+	 * other display text here.
+	 *
+	 * Not on the buckets, where they would seem to belong: bucket counts come
+	 * from `search`, which takes no language. A client matches an entry to an
+	 * option the same way the conditions do, by value or by displayed label.
+	 */
+	optionTooltips?: FacetOptionTooltip[];
+}
+
+/**
+ * "That facet has this value selected" - one condition of `FacetDef.offeredWhen`.
+ *
+ * The named facet's own selection is a set, so the condition holds when ANY of
+ * its selected values matches (the reader may be looking at several kinds of
+ * register at once). `value` is matched against a selected value or against the
+ * label that value is displayed under, because a deployment naming a reference
+ * facet's option thinks of its name, not of its uuid.
+ */
+model FacetValueCondition {
+	/** Code of the facet whose selection is examined. */
+	facet: string;
+
+	/** The value that facet must have selected. */
+	value: string;
+}
+
+/** One option's explanation (see `FacetDef.optionTooltips`). */
+model FacetOptionTooltip {
+	/** The option this belongs to - its value, or the label it is shown under. */
+	value: string;
+
+	tooltip: string;
 }
 
 /** Search request over APUs. */

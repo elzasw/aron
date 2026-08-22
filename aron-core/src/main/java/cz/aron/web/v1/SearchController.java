@@ -36,10 +36,12 @@ import cz.aron.api.v1.model.FacetBucket;
 import cz.aron.api.v1.model.FacetDef;
 import cz.aron.api.v1.model.FacetDisplay;
 import cz.aron.api.v1.model.FacetOptionsRequest;
+import cz.aron.api.v1.model.FacetOptionTooltip;
 import cz.aron.api.v1.model.FacetOptionsResponse;
 import cz.aron.api.v1.model.FacetOrder;
 import cz.aron.api.v1.model.FacetResult;
 import cz.aron.api.v1.model.FacetResultKind;
+import cz.aron.api.v1.model.FacetValueCondition;
 import cz.aron.api.v1.model.QueryMode;
 import cz.aron.api.v1.model.RefFacetResult;
 import cz.aron.api.v1.model.RangeFilter;
@@ -53,6 +55,7 @@ import cz.aron.api.v1.model.TotalRelation;
 import cz.aron.api.v1.model.TypeCount;
 import cz.aron.api.v1.model.ValuesFilter;
 import cz.aron.domain.DataType;
+import cz.aron.domain.facets.FacetCondition;
 import cz.aron.domain.facets.dto.DisplayType;
 import cz.aron.domain.facets.dto.FacetConfigDto;
 import cz.aron.domain.types.LocalizedText;
@@ -66,6 +69,7 @@ import cz.aron.search.FieldFilter;
 import cz.aron.search.IndexingService;
 import cz.aron.search.relevance.RelevancePlan;
 import cz.aron.search.relevance.RelevanceService;
+import cz.aron.web.v1.FacetScope.ScopedFacet;
 import cz.aron.service.ApuService;
 import jakarta.annotation.PostConstruct;
 
@@ -167,7 +171,8 @@ public class SearchController implements SearchApi {
 	@Override
 	public ResponseEntity<List<FacetDef>> searchGetFacets(ApuType apuType, String lang) {
 		Locale locale = presentationLocales.resolve(lang);
-		return ResponseEntity.ok(facetsInScope(apuType).stream().map(facet -> toFacetDef(facet, locale)).toList());
+		return ResponseEntity.ok(facetsInScope(apuType).stream()
+				.map(scoped -> toFacetDef(scoped, locale)).toList());
 	}
 
 	/**
@@ -176,13 +181,21 @@ public class SearchController implements SearchApi {
 	 * configuration to apply - the built-in ones. One list either way, so
 	 * validation, aggregation and result mapping need no second code path.
 	 */
-	private List<FacetConfigDto> facetsInScope(ApuType apuType) {
-		return apuType != null ? facetScope.facetsFor(apuType) : builtInFacets.facets();
+	private List<ScopedFacet> facetsInScope(ApuType apuType) {
+		if (apuType != null) {
+			return facetScope.facetsFor(apuType);
+		}
+		// a built-in facet has no when-condition to parse: it is the product's, not
+		// a deployment's, and it is offered wherever the general search is
+		return builtInFacets.facets().stream()
+				.map(facet -> new ScopedFacet(facet, FacetCondition.unconditional()))
+				.toList();
 	}
 
 	@Override
 	public ResponseEntity<ApuSearchResponse> searchSearch(ApuSearchRequest request) {
-		List<FacetConfigDto> sectionFacets = facetsInScope(request.getApuType());
+		List<FacetConfigDto> sectionFacets = facetsInScope(request.getApuType()).stream()
+				.map(ScopedFacet::facet).toList();
 		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
 				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
 
@@ -340,7 +353,8 @@ public class SearchController implements SearchApi {
 	 */
 	@Override
 	public ResponseEntity<FacetOptionsResponse> searchGetFacetOptions(String code, FacetOptionsRequest request) {
-		List<FacetConfigDto> sectionFacets = facetScope.facetsFor(request.getApuType());
+		List<FacetConfigDto> sectionFacets = facetScope.facetsFor(request.getApuType()).stream()
+				.map(ScopedFacet::facet).toList();
 		Map<String, FacetConfigDto> byCode = sectionFacets.stream()
 				.collect(Collectors.toMap(FacetConfigDto::getSource, Function.identity(), (a, b) -> a));
 		FacetConfigDto facet = byCode.get(code);
@@ -527,9 +541,15 @@ public class SearchController implements SearchApi {
 		}
 	}
 
-	private FacetDef toFacetDef(FacetConfigDto facet, Locale locale) {
+	private FacetDef toFacetDef(ScopedFacet scoped, Locale locale) {
+		FacetConfigDto facet = scoped.facet();
 		var def = new FacetDef(facet.getSource(), toFacetType(facet.getType()), label(facet, locale),
 				facet.getDisplay() == DisplayType.DETAIL ? FacetDisplay.DETAIL : FacetDisplay.ALWAYS);
+		// the selections this facet additionally waits for; the client settles them,
+		// because whether one holds depends on the filters it is holding
+		def.setOfferedWhen(scoped.condition().valueConditions().stream()
+				.map(condition -> new FacetValueCondition(condition.facet(), condition.value()))
+				.toList());
 		def.setTooltip(LocalizedText.pick(facet.getTooltipTranslations(), facet.getTooltip(), locale));
 		String description = builtInFacets.description(facet.getSource(), locale);
 		def.setDescription(description != null
@@ -543,6 +563,16 @@ public class SearchController implements SearchApi {
 		}
 		if (facet.getMaxDisplayedItems() > 0) {
 			def.setMaxDisplayedItems(facet.getMaxDisplayedItems());
+		}
+		if (facet.getTooltips() != null) {
+			// per-option explanations belong here rather than on the buckets: the
+			// search response that carries buckets takes no language
+			def.setOptionTooltips(facet.getTooltips().stream()
+					.filter(spec -> spec.getValue() != null)
+					.map(spec -> new FacetOptionTooltip(spec.getValue(),
+							LocalizedText.pick(spec.getTooltipTranslations(), spec.getTooltip(), locale)))
+					.filter(tooltip -> tooltip.getTooltip() != null && !tooltip.getTooltip().isBlank())
+					.toList());
 		}
 		return def;
 	}
@@ -640,8 +670,9 @@ public class SearchController implements SearchApi {
 	 * frequency would bury. It names a leading run rather than the whole list
 	 * (the shipped UNIT_TYPE facet names ten values of a hundred and still sets
 	 * {@code orderBy: FREQ}), so whatever it does not mention follows, ordered as
-	 * it would have been anyway. Matching is on the bucket's value, which is what
-	 * the file lists.
+	 * it would have been anyway. An entry names an option by its value or by the
+	 * label it is displayed under, so a deployment ordering a reference facet can
+	 * write the names it thinks in rather than uuids.
 	 */
 	private static List<FacetBucket> orderFacetBuckets(List<FacetBucket> buckets, FacetConfigDto facet) {
 		Function<FacetBucket, String> label = b -> b.getLabel() != null ? b.getLabel() : b.getValue();
@@ -658,6 +689,9 @@ public class SearchController implements SearchApi {
 	/** Position of a bucket in the configured order; unnamed values sort after all of them. */
 	private static int rankOf(FacetBucket bucket, List<String> configured) {
 		int rank = configured.indexOf(bucket.getValue());
+		if (rank < 0 && bucket.getLabel() != null) {
+			rank = configured.indexOf(bucket.getLabel());
+		}
 		return rank >= 0 ? rank : configured.size();
 	}
 

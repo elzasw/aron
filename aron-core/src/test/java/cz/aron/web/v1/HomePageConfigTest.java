@@ -14,6 +14,7 @@ import cz.aron.api.v1.model.ApuType;
 import cz.aron.api.v1.model.HomePage;
 import cz.aron.api.v1.model.LinkTile;
 import cz.aron.api.v1.model.RangeFilter;
+import cz.aron.api.v1.model.SearchFilter;
 import cz.aron.api.v1.model.SearchTile;
 import cz.aron.api.v1.model.TextFilter;
 import cz.aron.api.v1.model.TileKind;
@@ -38,13 +39,24 @@ class HomePageConfigTest {
 			facet(FacetType.FULLTEXT, "TITLE", ApuType.ARCH_DESC),
 			facet(FacetType.UNITDATE, "UNIT~DATE", ApuType.ARCH_DESC),
 			facet(FacetType.MULTI_REF_EXT, "OLD~ONLY", ApuType.ARCH_DESC),
-			facet(FacetType.ENUM, "INST~REF", ApuType.FUND)));
+			facet(FacetType.ENUM, "INST~REF", ApuType.FUND),
+			dependentFacet(FacetType.ENUM, "RECORD~TYPE", ApuType.ARCH_DESC, "UNIT~TYPE", "matrika")));
 
 	private static FacetConfigDto facet(FacetType type, String source, ApuType apuType) {
 		var facet = new FacetConfigDto();
 		facet.setType(type);
 		facet.setSource(source);
 		facet.setWhen(Map.of("apuType", apuType.getValue()));
+		return facet;
+	}
+
+	/** A facet the search offers only once another facet has that value selected. */
+	private static FacetConfigDto dependentFacet(FacetType type, String source, ApuType apuType,
+			String onFacet, String onValue) {
+		var facet = facet(type, source, apuType);
+		facet.setWhen(Map.of("all", List.of(
+				Map.of("apuType", apuType.getValue()),
+				Map.of("filter", onFacet, "value", onValue))));
 		return facet;
 	}
 
@@ -300,6 +312,47 @@ class HomePageConfigTest {
 				"""))
 				.isInstanceOf(IllegalStateException.class)
 				.hasMessageContaining("absolute http(s) or mailto");
+	}
+
+	@Test
+	void aTileMustEarnAFacetThatWaitsForAnother() {
+		// RECORD~TYPE is offered only once UNIT~TYPE has "matrika" selected, so a
+		// tile filtering it without selecting that lands on a search which drops
+		// the filter again - a tile that boots fine and then does not do what it
+		// says, which is what this validation exists to catch
+		assertThatThrownBy(() -> parse("""
+				homepage:
+				  groups:
+				    - label: Skupina
+				      tiles:
+				        - label: Druhy záznamů
+				          apuType: ARCH_DESC
+				          filters:
+				            - facet: RECORD_TYPE
+				              values: [narozeni]
+				"""))
+				.isInstanceOf(IllegalStateException.class)
+				.hasMessageContaining("RECORD~TYPE")
+				.hasMessageContaining("UNIT~TYPE")
+				.hasMessageContaining("matrika");
+
+		// selecting it in the same tile is exactly what makes the tile work
+		var tiles = render("""
+				homepage:
+				  groups:
+				    - label: Skupina
+				      tiles:
+				        - label: Matriky narozených
+				          apuType: ARCH_DESC
+				          filters:
+				            - facet: UNIT_TYPE
+				              values: [matrika]
+				            - facet: RECORD_TYPE
+				              values: [narozeni]
+				""").getGroups().get(0).getTiles();
+		assertThat(tiles).singleElement().isInstanceOfSatisfying(SearchTile.class,
+				tile -> assertThat(tile.getFilters()).extracting(SearchFilter::getFacet)
+						.containsExactly("UNIT~TYPE", "RECORD~TYPE"));
 	}
 
 	@Test

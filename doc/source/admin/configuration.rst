@@ -137,7 +137,9 @@ exactly as before.
    * - ``types_localization.yaml``
      - Labels of part types and item types (``types.yaml``).
    * - ``searchConfig_localization.yaml``
-     - Facet ``title``, ``tooltip`` and ``description`` (``searchConfig.yaml``).
+     - Facet ``title``, ``tooltip`` and ``description``, and the per-option
+       explanations of ``tooltips`` (``searchConfig.yaml``, see
+       :doc:`search`).
    * - ``pageTemplate_localization.yaml``
      - Portal name (``pageTemplate.yaml``).
 

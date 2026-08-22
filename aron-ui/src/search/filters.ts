@@ -1,4 +1,5 @@
 import {
+  type FacetDef,
   FacetDisplay,
   FilterKind,
   RangeFilter,
@@ -175,4 +176,55 @@ export function relatedSearchUrl(apu: string): string {
  */
 export function facetIsOffered(display: FacetDisplay, hasActiveFilter: boolean): boolean {
   return display === FacetDisplay.Always || hasActiveFilter;
+}
+
+/**
+ * Whether a facet's conditions are satisfied by the active filters - all of
+ * them, since a facet waits for every selection it names.
+ *
+ * `labelOf` resolves the label a selected value is displayed under, because a
+ * condition may name an option by its label rather than by its value (a
+ * deployment ordering or gating a reference facet writes the names it thinks in,
+ * not uuids). Unknown labels simply do not match.
+ */
+export function facetIsApplicable(
+  def: FacetDef,
+  filters: SearchFilter[],
+  labelOf: (facet: string, value: string) => string | undefined,
+): boolean {
+  return (def.offeredWhen ?? []).every((condition) =>
+    valuesOf(filters, condition.facet).some(
+      (value) => value === condition.value || labelOf(condition.facet, value) === condition.value,
+    ),
+  );
+}
+
+/**
+ * The filters that still have ground to stand on: a filter whose facet waits for
+ * a selection the reader has since removed is dropped, because the constraint
+ * depended on it and is no longer one they could act on. Dropping one can
+ * unseat another that depended on it, so this settles rather than passing once.
+ */
+export function dropInapplicable(
+  defs: FacetDef[],
+  filters: SearchFilter[],
+  labelOf: (facet: string, value: string) => string | undefined,
+): SearchFilter[] {
+  const byCode = new Map(defs.map((def) => [def.code, def]));
+  let kept = filters;
+  // one round can only remove filters, so the list is a strictly decreasing
+  // bound on the number of rounds
+  for (let round = 0; round <= defs.length; round++) {
+    const next = kept.filter((filter) => {
+      const def = byCode.get(filter.facet);
+      // a facet we have no definition for is none of our business - the built-in
+      // relation facet in a section search, or a code from a future deployment
+      return def === undefined || facetIsApplicable(def, kept, labelOf);
+    });
+    if (next.length === kept.length) {
+      return kept;
+    }
+    kept = next;
+  }
+  return kept;
 }

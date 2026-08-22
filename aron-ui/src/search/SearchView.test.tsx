@@ -4,8 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  type ApuSearchRequest,
   type ApuSearchResponse,
   ApuType,
+  type FacetDef,
   type DatingFacetResult,
   type EnumFacetResult,
   FacetDisplay,
@@ -60,13 +62,21 @@ const RESPONSE: ApuSearchResponse = {
   ],
 };
 
-const searchGetFacets = vi.fn(() => Promise.resolve(BUILT_IN_FACETS));
-const searchSearch = vi.fn(() => Promise.resolve(RESPONSE));
+let facets: FacetDef[] = BUILT_IN_FACETS;
+let response: ApuSearchResponse = RESPONSE;
+
+// typed parameters, so an assertion on what the UI asked for is checked at build
+// time rather than only when it runs
+type FacetsCall = { apuType?: ApuType; lang?: string };
+type SearchCall = { apuSearchRequest: ApuSearchRequest };
+
+const searchGetFacets = vi.fn((_call: FacetsCall) => Promise.resolve(facets));
+const searchSearch = vi.fn((_call: SearchCall) => Promise.resolve(response));
 
 vi.mock("../api/client", () => ({
   searchApi: {
-    searchGetFacets: (...args: unknown[]) => searchGetFacets(...(args as [])),
-    searchSearch: (...args: unknown[]) => searchSearch(...(args as [])),
+    searchGetFacets: (call: FacetsCall) => searchGetFacets(call),
+    searchSearch: (call: SearchCall) => searchSearch(call),
   },
   apuApi: { apuGetDetail: vi.fn(() => Promise.resolve({ name: "Německo" })) },
 }));
@@ -85,6 +95,8 @@ function renderGeneralSearch(url = "/apu") {
 
 describe("SearchView, general search", () => {
   beforeEach(async () => {
+    facets = BUILT_IN_FACETS;
+    response = RESPONSE;
     await i18n.changeLanguage(DEFAULT_LANGUAGE);
   });
 
@@ -157,5 +169,115 @@ describe("SearchView, general search", () => {
     // page has always had and that the facet panels neither cause nor cure
     // (doc/accessibility.md §4)
     await expectNoA11yViolations(container, ["heading-order"]);
+  });
+});
+
+/**
+ * A section search whose deployment configures a dependent facet: RECORD~TYPE is
+ * offered only once UNIT~TYPE has "matrika" selected. That is what the compound
+ * when-condition of searchConfig.yaml means, and the old portal evaluates it in
+ * its sidebar for the same reason this does - whether it holds depends on the
+ * filters, which only the client holds.
+ */
+describe("SearchView, a facet that waits for another", () => {
+  const PARENT = "UNIT~TYPE";
+  const DEPENDENT = "RECORD~TYPE";
+
+  const SECTION_FACETS: FacetDef[] = [
+    { code: PARENT, type: FacetType.Enum, label: "Kind of material", display: FacetDisplay.Always },
+    {
+      code: DEPENDENT,
+      type: FacetType.Enum,
+      label: "Kind of record",
+      display: FacetDisplay.Always,
+      offeredWhen: [{ facet: PARENT, value: "matrika" }],
+    },
+  ];
+
+  const SECTION_RESPONSE: ApuSearchResponse = {
+    ...RESPONSE,
+    facets: [
+      {
+        kind: FacetResultKind.Enum,
+        code: PARENT,
+        buckets: [{ value: "matrika", count: 9 }],
+      } as EnumFacetResult,
+      {
+        kind: FacetResultKind.Enum,
+        code: DEPENDENT,
+        buckets: [{ value: "birth", count: 2 }],
+      } as EnumFacetResult,
+    ],
+    typeCounts: [],
+  };
+
+  function renderSection(url: string) {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[url]}>
+          <SearchView apuType={ApuType.ArchDesc} titleKey="nav.search" />
+        </MemoryRouter>
+      </QueryClientProvider>,
+    );
+  }
+
+  const f = (filters: unknown[]) => `/arch-desc?f=${encodeURIComponent(JSON.stringify(filters))}`;
+
+  beforeEach(async () => {
+    facets = SECTION_FACETS;
+    response = SECTION_RESPONSE;
+    await i18n.changeLanguage(DEFAULT_LANGUAGE);
+  });
+
+  it("is not offered until the selection it waits for is made", async () => {
+    renderSection("/arch-desc");
+
+    expect(await screen.findByRole("heading", { level: 2, name: "Kind of material" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Kind of record" })).not.toBeInTheDocument();
+  });
+
+  it("appears once that value is among the selected ones", async () => {
+    renderSection(f([{ kind: FilterKind.Values, facet: PARENT, values: ["kroniky", "matrika"] }]));
+
+    // the reader may be looking at several kinds at once, so any match counts
+    expect(await screen.findByRole("heading", { level: 2, name: "Kind of record" })).toBeInTheDocument();
+  });
+
+  it("drops its constraint when that selection is gone", async () => {
+    // a shared link whose parent selection is absent: the constraint has nothing
+    // left to stand on, so it goes rather than narrowing the result invisibly
+    renderSection(f([{ kind: FilterKind.Values, facet: DEPENDENT, values: ["birth"] }]));
+
+    await waitFor(() =>
+      expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({ filters: [] }),
+        }),
+      ),
+    );
+    expect(screen.queryByRole("heading", { name: "Kind of record" })).not.toBeInTheDocument();
+  });
+
+  it("keeps a constraint whose condition still holds", async () => {
+    renderSection(
+      f([
+        { kind: FilterKind.Values, facet: PARENT, values: ["matrika"] },
+        { kind: FilterKind.Values, facet: DEPENDENT, values: ["birth"] },
+      ]),
+    );
+
+    await screen.findByRole("heading", { level: 2, name: "Kind of record" });
+    // nothing was dropped: the last request still carries both
+    expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+      expect.objectContaining({
+        apuSearchRequest: expect.objectContaining({
+          filters: [
+            { kind: FilterKind.Values, facet: PARENT, values: ["matrika"] },
+            { kind: FilterKind.Values, facet: DEPENDENT, values: ["birth"] },
+          ],
+        }),
+      }),
+    );
   });
 });

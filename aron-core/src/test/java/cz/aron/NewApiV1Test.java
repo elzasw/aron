@@ -48,7 +48,9 @@ import cz.aron.test.api.v1.model.FooterColumn;
 import cz.aron.test.api.v1.model.FooterLink;
 import cz.aron.test.api.v1.model.FooterLinkCode;
 import cz.aron.test.api.v1.model.FacetDef;
+import cz.aron.test.api.v1.model.FacetOptionTooltip;
 import cz.aron.test.api.v1.model.FacetOptionsRequest;
+import cz.aron.test.api.v1.model.FacetValueCondition;
 import cz.aron.test.api.v1.model.FacetResult;
 import cz.aron.test.api.v1.model.FacetType;
 import cz.aron.test.api.v1.model.RefFacetResult;
@@ -238,6 +240,40 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(byCode.get("TITLE~MAIN").getType()).isEqualTo(FacetType.FULLTEXT);
 		assertThat(byCode.get("LANG~CODE").getType()).isEqualTo(FacetType.ENUM);
 		assertThat(byCode.get("UNIT~DATE").getType()).isEqualTo(FacetType.UNITDATE);
+	}
+
+	@Test
+	void aFacetSaysWhichSelectionItWaitsFor() {
+		// the compound condition's other half: whether it holds depends on the
+		// reader's filters, so the definition carries it and the client settles it
+		var facets = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, "en").stream()
+				.collect(Collectors.toMap(FacetDef::getCode, Function.identity()));
+
+		assertThat(facets.get("DEPENDENT~FACET").getOfferedWhen())
+				.extracting(FacetValueCondition::getFacet, FacetValueCondition::getValue)
+				// the condition names the facet the way the file does (LANG_CODE); the
+				// code a client filters on is the tilde form, so it is rewritten here
+				.containsExactly(tuple("LANG~CODE", "v1-cze"));
+		// a facet that only names a section waits for nothing
+		assertThat(facets.get("LANG~CODE").getOfferedWhen()).isEmpty();
+	}
+
+	@Test
+	void perOptionExplanationsAreServedAndTranslated() {
+		// they ride on the definitions, not on the buckets: the search response
+		// that carries buckets takes no language
+		var czech = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, "cs").stream()
+				.filter(f -> "LANG~CODE".equals(f.getCode())).findFirst().orElseThrow();
+		assertThat(czech.getOptionTooltips())
+				.extracting(FacetOptionTooltip::getValue, FacetOptionTooltip::getTooltip)
+				.containsExactly(tuple("v1-cze", "čeština včetně starších forem"));
+
+		// the sibling localization file translates them, keyed by the option value
+		var english = new SearchApi(v1ApiClient()).searchGetFacets(ApuType.ARCH_DESC, "en").stream()
+				.filter(f -> "LANG~CODE".equals(f.getCode())).findFirst().orElseThrow();
+		assertThat(english.getOptionTooltips())
+				.extracting(FacetOptionTooltip::getTooltip)
+				.containsExactly("Czech, older forms included");
 	}
 
 	@Test

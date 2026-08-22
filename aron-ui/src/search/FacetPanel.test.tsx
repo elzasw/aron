@@ -136,6 +136,32 @@ describe("FacetPanel", () => {
     ).toBeInTheDocument();
   });
 
+  it("explains an option to a screen reader, not only to a mouse", () => {
+    // the old portal put this on a hover-only div, which never reached a
+    // keyboard or a screen reader
+    const def: FacetDef = {
+      ...facet("UNIT~TYPE", FacetType.Enum, "Kind of material"),
+      optionTooltips: [
+        { value: "technický výkres", tooltip: "technical drawings of buildings and products" },
+      ],
+    };
+    const buckets: EnumFacetResult = {
+      kind: FacetResultKind.Enum,
+      code: "UNIT~TYPE",
+      buckets: [
+        { value: "technický výkres", count: 4 },
+        { value: "matrika", count: 9 },
+      ],
+    };
+    renderFacet(def, buckets);
+
+    expect(screen.getByRole("checkbox", { name: /technický výkres/ })).toHaveAccessibleDescription(
+      "technical drawings of buildings and products",
+    );
+    // an option the deployment says nothing about gets no description
+    expect(screen.getByRole("checkbox", { name: /matrika/ })).not.toHaveAccessibleDescription();
+  });
+
   it("names the record types of the built-in type facet", () => {
     // the search response carries the ApuType member; this UI already names those
     const buckets: EnumFacetResult = {

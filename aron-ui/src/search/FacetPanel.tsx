@@ -1,4 +1,14 @@
-import { Checkbox, Input, Link, makeStyles, Spinner, Text, tokens } from "@fluentui/react-components";
+import {
+  Checkbox,
+  Input,
+  Link,
+  makeStyles,
+  Spinner,
+  Text,
+  tokens,
+  Tooltip,
+  useId,
+} from "@fluentui/react-components";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -49,6 +59,19 @@ const useStyles = makeStyles({
     fontSize: tokens.fontSizeBase300,
     lineHeight: tokens.lineHeightBase300,
     fontWeight: tokens.fontWeightSemibold,
+  },
+  // read by a screen reader, out of the visual flow (the option's explanation,
+  // which is also shown as a tooltip on hover and focus)
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    margin: "-1px",
+    padding: 0,
+    overflow: "hidden",
+    clip: "rect(0 0 0 0)",
+    whiteSpace: "nowrap",
+    border: 0,
   },
   // one offered record of the relation picker: a full-width row, so the whole
   // line is the target the way a bucket's checkbox label is
@@ -242,20 +265,40 @@ interface OptionRow {
   count?: number;
 }
 
+/**
+ * The deployment's explanation of one option, where its value does not say what
+ * it covers. An entry names the option by its value or by its displayed label,
+ * so a deployment writing about a reference facet can use the name it thinks in.
+ */
+function tooltipFor(def: FacetDef, row: OptionRow): string | undefined {
+  return (def.optionTooltips ?? []).find(
+    (entry) => entry.value === row.value || entry.value === row.label,
+  )?.tooltip;
+}
+
+/**
+ * One option. Its explanation is both shown on hover/focus and attached as the
+ * checkbox's accessible description - the old portal put it on a hover-only
+ * div, which never reached a keyboard or a screen reader.
+ */
 function FacetCheckbox({
   row,
   checked,
+  tooltip,
   onToggle,
 }: {
   row: OptionRow;
   checked: boolean;
+  tooltip?: string;
   onToggle: () => void;
 }) {
   const styles = useStyles();
-  return (
+  const descriptionId = useId("facet-option-");
+  const checkbox = (
     <Checkbox
       checked={checked}
       onChange={onToggle}
+      input={tooltip ? { "aria-describedby": descriptionId } : undefined}
       label={
         <span className={styles.bucketLabel}>
           <span>{row.label ?? row.value}</span>
@@ -267,6 +310,21 @@ function FacetCheckbox({
         </span>
       }
     />
+  );
+  if (!tooltip) {
+    return checkbox;
+  }
+  return (
+    <>
+      <Tooltip content={tooltip} relationship="description" withArrow>
+        {checkbox}
+      </Tooltip>
+      {/* the description a screen reader reads: the tooltip's own text lives in
+          a portal that is only mounted while it is open */}
+      <span id={descriptionId} className={styles.srOnly}>
+        {tooltip}
+      </span>
+    </>
   );
 }
 
@@ -297,6 +355,7 @@ function EnumFacet({
           key={bucket.value}
           row={bucket}
           checked={selected.includes(bucket.value)}
+          tooltip={tooltipFor(def, bucket)}
           onToggle={() => onFilters(toggleValue(filters, def.code, bucket.value))}
         />
       ))}
@@ -362,6 +421,7 @@ function RefFacet({
           key={value}
           row={selectedRow(value)}
           checked
+          tooltip={tooltipFor(def, selectedRow(value))}
           onToggle={() => onFilters(toggleValue(filters, def.code, value))}
         />
       ))}
@@ -377,6 +437,7 @@ function RefFacet({
           key={bucket.value}
           row={bucket}
           checked={false}
+          tooltip={tooltipFor(def, bucket)}
           onToggle={() => onFilters(toggleValue(filters, def.code, bucket.value))}
         />
       ))}

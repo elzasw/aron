@@ -228,6 +228,7 @@ final class HomePageConfig {
 				parsed.add(filter(filter, apuType, facets, where));
 			}
 			filters = List.copyOf(parsed);
+			requireConditionsAreMet(filters, apuType, facets, where);
 		}
 
 		String image = null;
@@ -272,6 +273,41 @@ final class HomePageConfig {
 	}
 
 	/**
+	 * A tile may only filter on a facet the search would actually offer it: a
+	 * facet that waits for another facet's value needs the tile to select that
+	 * value too. Otherwise the tile arrives at a search that drops the filter
+	 * again, which is the failure the whole of this validation exists to prevent -
+	 * a tile that boots fine and then quietly does not do what it says.
+	 *
+	 * <p>Checked once the tile's filters are all known, because the value a
+	 * condition wants may well be set by a sibling filter of the same tile.
+	 */
+	private static void requireConditionsAreMet(List<SearchFilter> filters, ApuType apuType, FacetScope facets,
+			String where) {
+		for (SearchFilter filter : filters) {
+			var scoped = facets.facet(apuType, filter.getFacet());
+			if (scoped == null) {
+				continue;
+			}
+			for (var condition : scoped.condition().valueConditions()) {
+				if (!selects(filters, condition.facet(), condition.value())) {
+					throw new IllegalStateException(where + ", filter '" + filter.getFacet()
+							+ "': the facet is only offered while '" + condition.facet() + "' has '"
+							+ condition.value() + "' selected, which this tile does not do");
+				}
+			}
+		}
+	}
+
+	/** Whether the tile's own filters select that value of that facet. */
+	private static boolean selects(List<SearchFilter> filters, String facet, String value) {
+		return filters.stream()
+				.filter(ValuesFilter.class::isInstance)
+				.map(ValuesFilter.class::cast)
+				.anyMatch(values -> facet.equals(values.getFacet()) && values.getValues().contains(value));
+	}
+
+	/**
 	 * One filter of a tile. The facet decides the filter's kind - the deployment
 	 * already declared the type in searchConfig.yaml, so repeating it here would
 	 * only be a second chance to disagree with it.
@@ -283,11 +319,12 @@ final class HomePageConfig {
 			throw new IllegalStateException(where + ": a filter has no 'facet'");
 		}
 		String code = configured.replace('_', '~');
-		FacetConfigDto facet = facets.facet(apuType, code);
-		if (facet == null) {
+		var scoped = facets.facet(apuType, code);
+		if (scoped == null) {
 			throw new IllegalStateException(where + ": '" + configured + "' is not a facet of " + apuType.getValue()
 					+ " in searchConfig.yaml");
 		}
+		FacetConfigDto facet = scoped.facet();
 		String what = where + ", filter '" + configured + "'";
 		return switch (facet.getType()) {
 			case ENUM, MULTI_REF -> new ValuesFilter(values(entry.get("values"), what), FilterKind.VALUES, code);

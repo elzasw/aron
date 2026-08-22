@@ -733,6 +733,38 @@ components:
           type: integer
           format: int32
           description: Bucket limit when expanded (ENUM facets); unset = no limit.
+        offeredWhen:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacetValueCondition'
+          description: |-
+            Offered only while EVERY one of these conditions holds; absent = offered
+            whenever its `display` says so.
+
+            A deployment writes such a facet for a narrowing that only makes sense
+            further in: an archival description offers the register facet of the
+            register kind the reader picked, not all seven at once. The client
+            evaluates it, because whether a condition holds depends on the filters the
+            client holds - the definitions of a section are the same for everyone and
+            stay cacheable.
+
+            A filter on a facet whose conditions stop holding is **dropped**: the
+            reader removed the selection the constraint depended on, and a constraint
+            with no ground left is not one they could act on. The server keeps
+            accepting such a filter, so a shared link stays answerable while the
+            client settles it.
+        optionTooltips:
+          type: array
+          items:
+            $ref: '#/components/schemas/FacetOptionTooltip'
+          description: |-
+            Per-option explanations of an enumerated facet - what "technical drawing"
+            covers, where the value alone does not say. Server-localized like every
+            other display text here.
+
+            Not on the buckets, where they would seem to belong: bucket counts come
+            from `search`, which takes no language. A client matches an entry to an
+            option the same way the conditions do, by value or by displayed label.
       description: Definition of one search facet (deployment-configured).
     FacetDisplay:
       type: string
@@ -740,6 +772,18 @@ components:
         - ALWAYS
         - DETAIL
       description: When the facet is offered.
+    FacetOptionTooltip:
+      type: object
+      required:
+        - value
+        - tooltip
+      properties:
+        value:
+          type: string
+          description: The option this belongs to - its value, or the label it is shown under.
+        tooltip:
+          type: string
+      description: One option's explanation (see `FacetDef.optionTooltips`).
     FacetOptionsRequest:
       type: object
       required:
@@ -821,6 +865,26 @@ components:
         - REF
         - UNITDATE
       description: Facet kinds (mirrors the searchConfig.yaml model).
+    FacetValueCondition:
+      type: object
+      required:
+        - facet
+        - value
+      properties:
+        facet:
+          type: string
+          description: Code of the facet whose selection is examined.
+        value:
+          type: string
+          description: The value that facet must have selected.
+      description: |-
+        "That facet has this value selected" - one condition of `FacetDef.offeredWhen`.
+
+        The named facet's own selection is a set, so the condition holds when ANY of
+        its selected values matches (the reader may be looking at several kinds of
+        register at once). `value` is matched against a selected value or against the
+        label that value is displayed under, because a deployment naming a reference
+        facet's option thinks of its name, not of its uuid.
     FileInfo:
       type: object
       required:

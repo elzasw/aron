@@ -13,7 +13,7 @@
 # - FULLTEXT - jednoduchý filter na textovou hodnotu
 # - ENUM - výběr z 0..n výčtových hodnot, funguje jako OR
 # - MULTI_REF - odkaz na více archivních entit, výběr pomocí našeptávače, funguje jako OR
-# - UNITDATE - datace, výběr z připravených intervalů nebo ruční zadání
+# - UNITDATE - datace, ruční zadání rozmezí nebo posuvník
 # - MULTI_REF_EXT - odkaz na více archivních entit, výběr pomocí našeptávače, funguje jako OR, 
 #   kombinace s podřízenými podmínkami, musí platit ve stejném partu
 #   Obsluhuje pouze staré API, nový portál tuto fazetu nezobrazuje.
