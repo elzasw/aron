@@ -208,13 +208,13 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		// aggregation applies the OTHER facets' filters (and the apuType) itself
 		// (multi-select semantics); the typeCounts aggregation is the one that
 		// deliberately drops the apuType
-		Query postFilter = withApuType(buildFacetFilters(query.filters(), null), query.apuType());
+		Query postFilter = withApuType(buildFacetFilters(query.filters(), List.of()), query.apuType());
 		if (postFilter != null) {
 			builder.withFilter(postFilter);
 		}
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
 			builder.withAggregation(bucket.bucketField(), Aggregation.of(a -> a
-					.filter(aggregationFilter(query, bucket.filterField(), true))
+					.filter(aggregationFilter(query, List.of(bucket.filterField()), true))
 					.aggregations("values", Aggregation.of(sub -> sub
 							.terms(t -> t.field(bucket.bucketField()).size(bucket.size()))))));
 		}
@@ -238,7 +238,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			// same multi-select rule as every other facet, so a selected type never
 			// hides the alternatives to it
 			builder.withAggregation(TYPE_COUNTS_AGG, Aggregation.of(a -> a
-					.filter(aggregationFilter(query, "type", false))
+					.filter(aggregationFilter(query, List.of("type"), false))
 					.aggregations("values", Aggregation.of(sub -> sub.terms(t -> t.field("type").size(20))))));
 		}
 		// full deterministic sort chains (uuid mirror field "id" is the final
@@ -438,12 +438,6 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	 * Filter of one aggregation: the OTHER facets' filters (multi-select) plus -
 	 * except for typeCounts - the apuType restriction.
 	 */
-	private Query aggregationFilter(ApuSearchQuery query, String excludedField, boolean includeApuType) {
-		return aggregationFilter(query, excludedField == null ? List.<String>of() : List.of(excludedField),
-				includeApuType);
-	}
-
-	/** As above, excluding the filters of a facet that spans several fields. */
 	private Query aggregationFilter(ApuSearchQuery query, List<String> excludedFields, boolean includeApuType) {
 		Query filter = buildFacetFilters(query.filters(), excludedFields);
 		if (includeApuType) {

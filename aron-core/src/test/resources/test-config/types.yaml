@@ -14,6 +14,14 @@ itemTypes:
     name: Dating
     type: UNITDATE
     indexed: true
+  # a second dating item type, so a facet spanning several of them has more than
+  # one to span. Elasticsearch maps its fields from this model, so a fixture
+  # using an item type declared nowhere here indexes on the embedded engine
+  # (schemaless) and matches nothing on Elasticsearch
+  - code: DATE_OTHER
+    name: Other dating
+    type: UNITDATE
+    indexed: true
   # ENUM values arrive from Transfagent as display text (APUX ItemEnum is a plain
   # string, no code/label pair) - the terse values in these fixtures are just
   # short test data, not codes the portal would have to resolve.

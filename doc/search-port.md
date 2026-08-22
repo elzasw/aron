@@ -513,3 +513,16 @@ The case that tells the two apart needs a record with **two** datings of one ite
 type, which only the interval form of a fixture can express — hence
 `DocumentFixtures`, where the shapes `ApuDocumentBuilder` produces are written
 once for every test that builds a document by hand.
+
+**What the ES run caught, and why the default suite could not.** Two things, and
+both are worth knowing before the next adapter change. One was a plain bug on a
+path only Elasticsearch takes: the post_filter passed `null` where the exclusion
+list was expected, so every ES query failed — the Lucene adapter had the same
+latent slip and the default suite caught it there. The other is structural: the
+new fixtures dated a record under `DATE_OTHER`, an item type the test
+`types.yaml` never declared. Lucene is schemaless and indexed it; Elasticsearch
+maps its fields from the display model and had nowhere to put it, so the query
+matched nothing. `ApuDocumentBuilder` skips an unrecognized item type, so no real
+document can carry such a field — the fixture was the unrealistic part, and the
+model now declares the second dating type. Both say the same thing: the port's
+contract test is only as good as its last `-Pes-it` run.
