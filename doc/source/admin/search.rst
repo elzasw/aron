@@ -69,6 +69,13 @@ Facets of the general search
    "related to". They are part of the application, they appear in every
    deployment, and they cannot be renamed or switched off.
 
+   "Related to" lets the reader name the record a result must be related to —
+   an access point, an archive, an archival fonds or a finding aid, the things
+   a relation actually points at. Archival records and collections are not
+   offered: a relation to one particular record is not something readers look
+   for. A relation set from a record's own page is still honoured whatever the
+   record type, so a link from anywhere in the portal keeps working.
+
    The dating facet there covers the record's dating whatever item type
    records it, so it also finds records dated only under, say
    ``DATE_OF_CONTENT``. A record with several datings matches when any one of

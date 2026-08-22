@@ -35,7 +35,13 @@ const RESPONSE: ApuSearchResponse = {
   totalRelation: TotalRelation.Eq,
   queryMode: QueryMode.Strict,
   items: [
-    { uuid: "u-1", name: "Matrika Přerov", apuType: ApuType.ArchDesc, containsDigitalObjects: false },
+    {
+      uuid: "u-1",
+      name: "Pardubice",
+      description: "okresní město",
+      apuType: ApuType.Entity,
+      containsDigitalObjects: false,
+    },
   ],
   // the contract types `facets` as the base FacetResult, so each subtype says
   // which one it is - the same discrimination the UI does when reading them
@@ -159,6 +165,38 @@ describe("SearchView, general search", () => {
         }),
       ),
     );
+  });
+
+  it("offers only records a relation can point at, and says which is which", async () => {
+    renderGeneralSearch();
+    const picker = await screen.findByRole("textbox", { name: "Related to – find a record" });
+
+    await userEvent.type(picker, "par");
+
+    // one apuType per request would not do: a relation points at an access
+    // point, an archive, a fond or an aid, and never at an archival record - so
+    // the scope travels as a filter on the built-in type facet
+    await waitFor(() =>
+      expect(searchSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({
+            query: "par",
+            filters: [
+              {
+                kind: FilterKind.Values,
+                facet: TYPE_FACET,
+                values: ["ENTITY", "INSTITUTION", "FUND", "FINDING_AID"],
+              },
+            ],
+          }),
+        }),
+      ),
+    );
+
+    // two access points of one name are common, so the offer carries what tells
+    // them apart
+    const offered = await screen.findByRole("button", { name: /Pardubice/ });
+    expect(offered).toHaveTextContent("okresní město");
   });
 
   it("has no accessibility violations", async () => {

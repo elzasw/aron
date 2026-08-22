@@ -15,15 +15,17 @@ import { useTranslation } from "react-i18next";
 import { searchApi } from "../api/client";
 import { PRIMARY_MAIN } from "../layout/AppHeader";
 import {
-  type ApuType,
+  ApuType,
   type DatingFacetResult,
   type EnumFacetResult,
   type FacetDef,
   type FacetResult,
   FacetResultKind,
   FacetType,
+  FilterKind,
   type RefFacetResult,
   type SearchFilter,
+  type ValuesFilter,
 } from "../api/generated";
 import {
   addRelated,
@@ -45,6 +47,25 @@ import { useDebouncedValue } from "./useDebouncedValue";
 
 /** Records offered per keystroke in the relation picker - a shortlist, not a page. */
 const RELATED_OPTIONS = 10;
+
+/**
+ * The record types the relation picker offers. A relation points at an access
+ * point, an archive, a fond or a finding aid - the reference item types of the
+ * display model say so (INST_REF at archives, FUND_REF and FUND_AP_REF at fonds
+ * and aids, ORIGINATOR_REF and the register references at access points) - and
+ * never at an archival record or a collection. Offering those would fill the
+ * list with records nothing relates to: nobody looks for what relates to one
+ * particular marriage permit.
+ *
+ * Sent as a filter on the built-in type facet, which the general search already
+ * accepts, because a request carries one apuType and this needs four.
+ */
+const RELATION_TARGET_TYPES = [
+  ApuType.Entity,
+  ApuType.Institution,
+  ApuType.Fund,
+  ApuType.FindingAid,
+];
 
 const useStyles = makeStyles({
   facet: {
@@ -72,6 +93,15 @@ const useStyles = makeStyles({
     clip: "rect(0 0 0 0)",
     whiteSpace: "nowrap",
     border: 0,
+  },
+  // the line that tells two same-named records apart; clipped, because a
+  // description is a sentence and the sidebar is narrow
+  relatedNote: {
+    display: "block",
+    color: tokens.colorNeutralForeground3,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   // one offered record of the relation picker: a full-width row, so the whole
   // line is the target the way a bucket's checkbox label is
@@ -678,7 +708,17 @@ function RelatedFacet({
     queryKey: ["related-options", debouncedQ],
     queryFn: () =>
       searchApi.searchSearch({
-        apuSearchRequest: { query: debouncedQ, size: RELATED_OPTIONS },
+        apuSearchRequest: {
+          query: debouncedQ,
+          size: RELATED_OPTIONS,
+          filters: [
+            {
+              kind: FilterKind.Values,
+              facet: TYPE_FACET,
+              values: RELATION_TARGET_TYPES,
+            } as ValuesFilter,
+          ],
+        },
       }),
     enabled: debouncedQ.length > 0,
     placeholderData: (previous) => previous,
@@ -721,6 +761,13 @@ function RelatedFacet({
                   {t(`sections.${hit.apuType}`)}
                 </Text>
               </span>
+              {/* two access points of one name are common (a town and its
+                  district); the description is what tells them apart */}
+              {hit.description && (
+                <Text size={200} className={styles.relatedNote}>
+                  {hit.description}
+                </Text>
+              )}
             </button>
           ))
         ) : (
