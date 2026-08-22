@@ -165,10 +165,24 @@ describe("SearchView, general search", () => {
     const { container } = renderGeneralSearch();
     await screen.findByRole("heading", { level: 2, name: "Dating" });
 
-    // heading-order: the result cards are h3 under the page's h1, a gap this
-    // page has always had and that the facet panels neither cause nor cure
-    // (doc/accessibility.md §4)
-    await expectNoA11yViolations(container, ["heading-order"]);
+    await expectNoA11yViolations(container);
+  });
+
+  it("nests its headings, so the outline can be walked", async () => {
+    // the page title, then the results as a section of it, then one heading per
+    // record. Without the middle one the outline jumped from h1 to h3, which is
+    // what a screen-reader user navigates by
+    renderGeneralSearch();
+    await screen.findByRole("heading", { level: 2, name: "Search results" });
+
+    const levels = screen
+      .getAllByRole("heading")
+      .map((heading) => Number(heading.tagName.substring(1)));
+    for (let i = 1; i < levels.length; i++) {
+      expect(levels[i], `heading ${i} after level ${levels[i - 1]}`).toBeLessThanOrEqual(
+        levels[i - 1] + 1,
+      );
+    }
   });
 });
 

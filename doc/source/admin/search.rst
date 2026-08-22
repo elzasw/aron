@@ -180,8 +180,10 @@ Ordering a facet's values
 =========================
 
 ``orderBy`` sorts an enumerated facet's values by frequency (``FREQ``, the
-default) or alphabetically (``ASC``). ``order`` overrides that for the values
-an archive wants offered first, whatever their frequency:
+default) or alphabetically (``ASC``) — those two and nothing else, or the
+startup fails: any other word would silently mean ``FREQ``, the opposite of the
+alphabetical order somebody meant to ask for. ``order`` overrides it for the
+values an archive wants offered first, whatever their frequency:
 
 .. code-block:: yaml
 
@@ -219,7 +221,9 @@ is read out as the option's description:
          tooltip: technické výkresy staveb a výrobků
 
 Like ``order``, an entry names the option by its value or by its displayed
-label. Translations go in the sibling ``searchConfig_localization.yaml`` under
+label. Two entries for one option are not an error — the first is used — but a
+warning is logged at startup, since the second text would never be seen.
+Translations go in the sibling ``searchConfig_localization.yaml`` under
 an ``options`` mapping keyed by the same value — an option has no code of its
 own, so its value is the key:
 

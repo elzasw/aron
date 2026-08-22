@@ -183,10 +183,23 @@ describe("FacetPanel", () => {
     ["enum", facet("LANG~CODE", FacetType.Enum, "Language")],
     ["dating", facet("UNIT~DATE", FacetType.Unitdate, "Dating")],
     ["dating with the undated offer", facet(DATE_FACET, FacetType.Unitdate, "Dating")],
+    [
+      "enum with option explanations",
+      {
+        ...facet("UNIT~TYPE", FacetType.Enum, "Kind of material"),
+        optionTooltips: [{ value: "matrika", tooltip: "parish registers" }],
+      },
+    ],
   ])("has no structural accessibility violations (%s facet)", async (_kind, def) => {
     const { container } = renderFacet(
       def,
-      def.type === FacetType.Unitdate ? dating(def.code, 42) : undefined,
+      def.type === FacetType.Unitdate
+        ? dating(def.code, 42)
+        : {
+            kind: FacetResultKind.Enum,
+            code: def.code,
+            buckets: [{ value: "matrika", count: 9 }],
+          },
       def.code === DATE_FACET ? appliedRange(DATE_FACET) : [],
     );
 

@@ -1,4 +1,4 @@
-import { makeStyles, Text, tokens } from "@fluentui/react-components";
+import { makeStyles, Text, tokens, useId } from "@fluentui/react-components";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { ApuSearchItem } from "../api/generated";
@@ -6,6 +6,20 @@ import StructuredResultCard from "./StructuredResultCard";
 import { useResultLayout } from "./useResultLayout";
 
 const useStyles = makeStyles({
+  // the results are a section of the page and each card a subsection of it; the
+  // heading that says so is read, not seen - the count is already on screen in
+  // the status line above, and a second visible one would only repeat it
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    margin: "-1px",
+    padding: 0,
+    overflow: "hidden",
+    clip: "rect(0 0 0 0)",
+    whiteSpace: "nowrap",
+    border: 0,
+  },
   list: {
     display: "flex",
     flexDirection: "column",
@@ -62,6 +76,7 @@ export default function ResultList({ items }: { items: ApuSearchItem[] }) {
   const styles = useStyles();
   const { t } = useTranslation();
   const layout = useResultLayout();
+  const headingId = useId("search-results-");
 
   if (items.length === 0) {
     return (
@@ -71,28 +86,33 @@ export default function ResultList({ items }: { items: ApuSearchItem[] }) {
     );
   }
   return (
-    <ul className={styles.list}>
-      {items.map((item) => (
-        <li key={item.uuid} className={styles.card}>
-          {item.structured ? (
-            <StructuredResultCard
-              uuid={item.uuid}
-              name={item.name}
-              structured={item.structured}
-              layout={layout}
-            />
-          ) : (
-            <div className={styles.body}>
-              <h3 className={styles.heading}>
-                <Link to={`/apu/${item.uuid}`} className={styles.name}>
-                  {item.name}
-                </Link>
-              </h3>
-              {item.description && <Text size={300}>{item.description}</Text>}
-            </div>
-          )}
-        </li>
-      ))}
-    </ul>
+    <>
+      <h2 id={headingId} className={styles.srOnly}>
+        {t("search.resultsHeading")}
+      </h2>
+      <ul className={styles.list} aria-labelledby={headingId}>
+        {items.map((item) => (
+          <li key={item.uuid} className={styles.card}>
+            {item.structured ? (
+              <StructuredResultCard
+                uuid={item.uuid}
+                name={item.name}
+                structured={item.structured}
+                layout={layout}
+              />
+            ) : (
+              <div className={styles.body}>
+                <h3 className={styles.heading}>
+                  <Link to={`/apu/${item.uuid}`} className={styles.name}>
+                    {item.name}
+                  </Link>
+                </h3>
+                {item.description && <Text size={300}>{item.description}</Text>}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

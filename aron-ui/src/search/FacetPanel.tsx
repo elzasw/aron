@@ -382,6 +382,7 @@ function RefFacet({
   query,
   onFilters,
 }: Omit<Props, "apuType" | "total"> & { apuType: ApuType }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const [q, setQ] = useState("");
   const debouncedQ = useDebouncedValue(q.trim(), 300);
@@ -432,6 +433,13 @@ function RefFacet({
         onChange={(_, data) => setQ(data.value)}
         contentAfter={options.isFetching ? <Spinner size="extra-tiny" /> : undefined}
       />
+      {/* the list below rewrites itself as the reader types, which nothing would
+          otherwise say out loud - WCAG 4.1.3 */}
+      <span role="status" aria-live="polite" className={styles.srOnly}>
+        {debouncedQ.length > 0 && options.isSuccess
+          ? t("facets.optionsFound", { count: unselected.length })
+          : ""}
+      </span>
       {unselected.map((bucket) => (
         <FacetCheckbox
           key={bucket.value}
@@ -693,6 +701,11 @@ function RelatedFacet({
         placeholder={t("facets.relatedPlaceholder")}
         onChange={(_, data) => setQ(data.value)}
       />
+      <span role="status" aria-live="polite" className={styles.srOnly}>
+        {debouncedQ.length > 0 && options.isSuccess
+          ? t("facets.optionsFound", { count: hits.length })
+          : ""}
+      </span>
       {debouncedQ.length > 0 &&
         (hits.length > 0 ? (
           hits.map((hit) => (

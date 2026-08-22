@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 
 @Service
@@ -50,11 +51,9 @@ public class FacetsLoader {
         //we replace underscores with tildes because otherwise indexing would turn them to dots
         for (FacetConfigDto facet : facetsConfigDto.getFacets()) {
             applyTranslations(facet, translations.get(facet.getSource()));
-            // the when-condition is checked here, while the source still reads as
-            // the file spells it, so an error names something the operator can
-            // search for; an unreadable condition fails the startup rather than
-            // quietly widening the facet's scope (see FacetCondition)
-            FacetCondition.parse(facet.getWhen(), facet.getSource());
+            // checked here, while the source still reads as the file spells it, so
+            // an error names something the operator can search for
+            validate(facet);
             if (facet.getSource() != null) {
                 facet.setSource(facet.getSource().replace("_", "~"));
             }
@@ -70,6 +69,39 @@ public class FacetsLoader {
             }
         }
         return facetsConfigDto;
+    }
+
+    /**
+     * What a facet says beyond its type and source. A mistake here used to be
+     * either silent or an unhelpful SnakeYAML message; unknown keys the bean
+     * binding already rejects, so what is left is the fields whose values it
+     * cannot check.
+     */
+    private static void validate(FacetConfigDto facet) {
+        // an unreadable condition would otherwise widen the facet's scope to every
+        // section, which is invisible until a reader is offered somebody else's
+        // facet (see FacetCondition)
+        FacetCondition.parse(facet.getWhen(), facet.getSource());
+
+        String orderBy = facet.getOrderBy();
+        if (orderBy != null && !"ASC".equalsIgnoreCase(orderBy) && !"FREQ".equalsIgnoreCase(orderBy)) {
+            // anything but ASC counts as FREQ, so a typo means "by frequency" -
+            // silently the opposite of what an alphabetical order was asked for
+            throw new IllegalStateException("searchConfig facet '" + facet.getSource()
+                    + "': orderBy must be FREQ or ASC, not '" + orderBy + "'");
+        }
+
+        if (facet.getTooltips() != null) {
+            var seen = new HashSet<String>();
+            facet.getTooltips().stream()
+                    .map(TooltipSpec::getValue)
+                    .filter(value -> value != null && !seen.add(value))
+                    // harmless - the first entry wins - but it means one of the two
+                    // texts is never shown, which is rarely what was meant
+                    .forEach(value -> log.warn(
+                            "searchConfig facet {}: option '{}' has more than one tooltip; the first is used.",
+                            facet.getSource(), value));
+        }
     }
 
     /**

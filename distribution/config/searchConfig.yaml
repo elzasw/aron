@@ -132,8 +132,6 @@ facets:
         tooltip: technické výkresy staveb a výrobků
       - value: pohlednice
         tooltip: pohlednice vzniklé tiskovou technikou
-      - value: pohlednice
-        tooltip: pohlednice vzniklé tiskovou technikou
       - value: kinematografický záznam
         tooltip: kinematografická díla v analogové i digitální podobě
       - value: zvukový záznam

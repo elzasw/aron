@@ -197,6 +197,18 @@ facet filters and the description tree.
   - The language buttons showed `CS`/`EN` but were named "Čeština"/"English",
     which speech input cannot address (2.5.3 Label in Name) — the name now
     contains the visible code.
+- **Covered by construction, worth a browser look anyway** — the search
+  sidebar's newer controls: the built-in facets' panels, the "include records
+  without dating" checkbox (offered only where the count it names is not zero),
+  the per-option explanations, and the relation picker. Each ships with an
+  accessible name, real checkbox semantics rather than a clickable `div`, and —
+  where a list rewrites itself as the reader types — a polite live region
+  reporting how many options are offered (WCAG 4.1.3). The option explanations
+  are the case worth noting: the old portal put them in a hover-only tooltip on
+  a non-focusable element, so they reached neither keyboard nor screen reader;
+  here the text is the checkbox's accessible description as well as a tooltip
+  shown on hover **and** on focus. Contrast of the tooltip surface and the
+  slider grip still needs the browser pass.
 - **Still open**: reflow at 320 px / 400 % zoom, focus visibility through a real
   keyboard pass, the record detail page (the run covered a search page), and the
   home page's picture tiles and footer band — both put text on a deployment's
@@ -207,14 +219,16 @@ facet filters and the description tree.
   by keyboard has to be tried in a browser. The record page's splitter belongs
   to the same list: its keyboard resizing is pinned by tests, but the grip's
   contrast and its target size need the browser pass.
-- **Open, a heading-level decision**: on a search page the sidebar's facet
-  headings (``h2``) precede the page title (``h1``) in the DOM, and the result
-  cards are ``h3``, so the outline skips a level after the title. axe reports it
-  (``heading-order``); the Lighthouse run above did not, and no reader is
-  misinformed by it — but the outline is still wrong. Fixing it means deciding
-  what level a result card is, which changes the outline of every search page,
-  so it is tracked here rather than done in passing. The one test that renders a
-  whole search page (``SearchView.test.tsx``) disables that rule with this note.
+- **Closed** — the search page's heading outline. It used to skip from the page
+  title (`h1`) to a result card (`h3`), which axe reports as `heading-order`.
+  The missing level was a real one rather than a numbering problem: the results
+  are a section of the page and each card a subsection of *that*, and nothing
+  said so. `ResultList` now heads the list with an `h2` that names it ("Search
+  results") and labels the list itself with it; the heading is read, not seen,
+  because the count is already on screen in the status line above and a second
+  visible one would only repeat it. Result cards stay `h3`. `SearchView.test.tsx`
+  runs axe over the whole page with no rule disabled, and walks the headings to
+  assert no level is skipped.
 - **Open, and bigger than a browser pass**: the description tree keeps
   `role="tree"` while every node is its own tab stop. An ARIA tree is expected
   to be one tab stop walked with the arrow keys (roving focus), so tabbing
