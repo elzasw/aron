@@ -152,7 +152,9 @@ class OldApiSurfaceTest extends AbstractTest {
 	/** The lookup endpoints answer 404 for a name they do not know, never a 500 or a redirect. */
 	@ParameterizedTest
 	@ValueSource(strings = { "/api/aron/redirect/does-not-exist", "/api/aron/attachment/does-not-exist",
-			"/api/aron/redirectimage/does-not-exist" })
+			"/api/aron/redirectimage/does-not-exist",
+			"/api/aron/tile/00000000-0000-4000-8000-000000000000/image.dzi",
+			"/api/aron/tile/00000000-0000-4000-8000-000000000000/image_files/0/0_0.jpg" })
 	void unknownNameIs404(String path) throws Exception {
 		assertThat(get(path).statusCode()).isEqualTo(404);
 	}

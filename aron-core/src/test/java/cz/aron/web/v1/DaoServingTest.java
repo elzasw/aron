@@ -204,6 +204,24 @@ class DaoServingTest extends AbstractTest {
 	}
 
 	@Test
+	void oldApiServesTheSamePyramid() throws Exception {
+		// the old UI's viewer URL shape (frozen): /api/aron/tile/{fileUuid}/...
+		var descriptor = getBytes("/api/aron/tile/" + TILE_STORED + "/image.dzi");
+		assertThat(descriptor.statusCode()).isEqualTo(200);
+		assertThat(contentType(descriptor)).startsWith("text/xml");
+		assertThat(new String(descriptor.body(), StandardCharsets.UTF_8)).contains("TileSize");
+
+		var tile = getBytes("/api/aron/tile/" + TILE_STORED + "/image_files/0/0_0.jpg");
+		assertThat(tile.statusCode()).isEqualTo(200);
+		assertThat(contentType(tile)).startsWith("image/jpeg");
+
+		// the id names a directory under the tile store, so only a real uuid may pass
+		assertThat(getBytes("/api/aron/tile/not-a-uuid/image.dzi").statusCode()).isEqualTo(404);
+		assertThat(getBytes("/api/aron/tile/" + TILE_STORED + "/image_files/-1/0_0.jpg").statusCode())
+				.isEqualTo(404);
+	}
+
+	@Test
 	void redirectImageLeadsToTheViewerUrl() throws Exception {
 		var response = get("/api/aron/redirectimage" + FILE_PERMALINK);
 		assertThat(response.statusCode()).isEqualTo(302);
