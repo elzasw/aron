@@ -25,6 +25,7 @@ import {
 import ApuTree from "../apu/ApuTree";
 import { useApuDetail } from "../apu/useApuDetail";
 import DaoGallery from "../dao/DaoGallery";
+import DaoViewer from "../dao/DaoViewer";
 import Splitter from "../layout/Splitter";
 import { relatedSearchUrl } from "../search/filters";
 
@@ -131,6 +132,33 @@ const useStyles = makeStyles({
     "@media (max-width: 860px)": {
       overflowY: "visible",
       paddingRight: 0,
+    },
+  },
+  // a digitized record shows its scan immediately (the old portal's principle):
+  // the viewer is the page's centerpiece and absorbs the free width...
+  viewerPane: {
+    flexGrow: 1,
+    minWidth: 0,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalXS,
+    // stacked, the viewer needs a height of its own - the document scrolls
+    "@media (max-width: 860px)": {
+      height: "70vh",
+      flexGrow: 0,
+    },
+  },
+  viewerLicense: {
+    color: tokens.colorNeutralForeground3,
+  },
+  // ...and the description becomes the right-hand column, scrolling on its own
+  rootBesideViewer: {
+    flexGrow: 0,
+    flexShrink: 0,
+    width: "clamp(300px, 28vw, 460px)",
+    "@media (max-width: 860px)": {
+      width: "auto",
     },
   },
   link: {
@@ -378,6 +406,11 @@ export default function ApuPage() {
     .filter(isRef)
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
+  // the first digital object with content is embedded; any further ones stay
+  // reachable through the gallery links in the description column
+  const embeddedDao = data.digitalObjects.find((dao) => dao.files.length > 0);
+  const galleryDaos = data.digitalObjects.filter((dao) => dao !== embeddedDao);
+
   return (
     <div
       className={styles.layout}
@@ -399,10 +432,23 @@ export default function ApuPage() {
           />
         </>
       )}
+      {embeddedDao !== undefined && (
+        <div className={styles.viewerPane}>
+          <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
+          {embeddedDao.license !== undefined && (
+            <Text size={200} className={styles.viewerLicense}>
+              {t("dao.license", { code: embeddedDao.license })}
+            </Text>
+          )}
+        </div>
+      )}
       {/* keyed by the record: the description is its own scroll area, and a new
           element starts at its top - the reader never opens a record halfway
           down because the previous one was scrolled */}
-      <div className={styles.root} key={data.uuid}>
+      <div
+        className={`${styles.root} ${embeddedDao !== undefined ? styles.rootBesideViewer : ""}`}
+        key={data.uuid}
+      >
       <header className={styles.header}>
         <Title2 as="h1">{data.name}</Title2>
         {data.description && <Text size={400}>{data.description}</Text>}
@@ -447,10 +493,10 @@ export default function ApuPage() {
           </ul>
         </section>
       )}
-      {data.digitalObjects.length > 0 && (
+      {galleryDaos.length > 0 && (
         <section className={styles.part} aria-label={t("apu.digitalObjects")}>
           <Subtitle2 as="h2">{t("apu.digitalObjects")}</Subtitle2>
-          <DaoGallery apuUuid={data.uuid} objects={data.digitalObjects} />
+          <DaoGallery apuUuid={data.uuid} objects={galleryDaos} />
         </section>
       )}
       </div>

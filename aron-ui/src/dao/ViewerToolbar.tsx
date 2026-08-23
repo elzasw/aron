@@ -8,6 +8,7 @@ import {
 } from "@fluentui/react-components";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 const useStyles = makeStyles({
   bar: {
@@ -47,6 +48,8 @@ interface ViewerToolbarProps {
   downloadUrl?: string;
   downloadName?: string;
   onCopyLink: () => void;
+  /** In-app route of the fullscreen viewer; absent when the viewer already fills the frame. */
+  fullscreenUrl?: string;
 }
 
 /**
@@ -67,9 +70,11 @@ export default function ViewerToolbar({
   downloadUrl,
   downloadName,
   onCopyLink,
+  fullscreenUrl,
 }: ViewerToolbarProps) {
   const styles = useStyles();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const pageInputId = useId();
   // the draft exists only while the reader is typing; otherwise the input
   // simply shows the current page, so turns from anywhere refresh it
@@ -170,6 +175,15 @@ export default function ViewerToolbar({
         <Button appearance="subtle" onClick={onCopyLink}>
           {t("dao.copyLink")}
         </Button>
+        {fullscreenUrl !== undefined && (
+          <Button as="a" appearance="subtle" href={fullscreenUrl} onClick={(event) => {
+            // an in-app route: the router navigates, the browser must not reload
+            event.preventDefault();
+            navigate(fullscreenUrl);
+          }}>
+            {t("dao.fullscreen")}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -159,7 +159,11 @@ reader's finger; a polite live region announces "Page n of m", copy-link
 confirmation and load failures (4.1.3). The current thumbnail carries
 `aria-current`; thumbnails are decorative (`alt=""`) with the visible page
 number as the row's name. Gallery thumbnails on the record page are links named
-"Page n: object" (2.4.4).
+"Page n: object" (2.4.4). The record page embeds the same viewer beside the
+description when a record is digitized; page-turn keys are then scoped to the
+viewer itself (arrow keys must keep scrolling the description and walking the
+tree beside it), while the fullscreen page — whose whole surface is the
+viewer — handles them document-wide.
 
 **Home page entry points and footer band** (added with the feature, same
 criteria): each configured group is a `<section>` named by its own `<h2>`, so a
