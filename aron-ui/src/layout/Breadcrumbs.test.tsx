@@ -1,11 +1,10 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen, within } from "@testing-library/react";
+import { Route, Routes } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
 import { ApuType, type ApuDetail, type UiConfig } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import ApuPage from "../pages/ApuPage";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import AppLayout from "./AppLayout";
 
 const RECORD_NAME = "Vaclav Kucera reports on the sale of the estate";
@@ -44,28 +43,20 @@ vi.mock("../api/client", () => ({
 }));
 
 function renderAt(path: string) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[path]}>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="fund" element={<h1>Archival fonds</h1>} />
-            <Route path="apu/:uuid" element={<ApuPage />} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
+  return renderWithProviders(
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="fund" element={<h1>Archival fonds</h1>} />
+        <Route path="apu/:uuid" element={<ApuPage />} />
+      </Route>
+    </Routes>,
+    { initialEntries: [path] },
   );
 }
 
 const trail = () => screen.getByRole("navigation", { name: "Breadcrumb" });
 
 describe("Breadcrumbs", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("names the section the reader is in", () => {
     renderAt("/fund");
     expect(within(trail()).getByRole("link", { name: "Home" })).toBeInTheDocument();

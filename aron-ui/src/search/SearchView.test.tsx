@@ -1,7 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   type ApuSearchRequest,
@@ -18,8 +16,8 @@ import {
   type RefFacetResult,
   TotalRelation,
 } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import SearchView from "./SearchView";
 import { DATE_FACET, RELATED_FACET, TYPE_FACET } from "./filters";
 
@@ -89,21 +87,13 @@ vi.mock("../api/client", () => ({
 
 /** The general search - no apuType, which is the whole difference from a section. */
 function renderGeneralSearch(url = "/apu") {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[url]}>
-        <SearchView titleKey="nav.search" />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<SearchView titleKey="nav.search" />, { initialEntries: [url] });
 }
 
 describe("SearchView, general search", () => {
   beforeEach(async () => {
     facets = BUILT_IN_FACETS;
     response = RESPONSE;
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
   });
 
   it("asks for facets without a section and offers the built-in ones", async () => {
@@ -306,14 +296,9 @@ describe("SearchView, a facet that waits for another", () => {
   };
 
   function renderSection(url: string) {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[url]}>
-          <SearchView apuType={ApuType.ArchDesc} titleKey="nav.search" />
-        </MemoryRouter>
-      </QueryClientProvider>,
-    );
+    return renderWithProviders(<SearchView apuType={ApuType.ArchDesc} titleKey="nav.search" />, {
+      initialEntries: [url],
+    });
   }
 
   const f = (filters: unknown[]) => `/arch-desc?f=${encodeURIComponent(JSON.stringify(filters))}`;
@@ -321,7 +306,6 @@ describe("SearchView, a facet that waits for another", () => {
   beforeEach(async () => {
     facets = SECTION_FACETS;
     response = SECTION_RESPONSE;
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
   });
 
   it("is not offered until the selection it waits for is made", async () => {

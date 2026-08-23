@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   ApuType,
   type DatingFacetResult,
@@ -13,7 +13,7 @@ import {
   type RangeFilter,
   type SearchFilter,
 } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import i18n from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
 import FacetPanel from "./FacetPanel";
 import { DATE_FACET, TYPE_FACET } from "./filters";
@@ -62,10 +62,6 @@ function dating(code: string, undatedCount?: number): DatingFacetResult {
 }
 
 describe("FacetPanel", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("names a text filter by its facet, not by a placeholder alone", () => {
     renderFacet(facet("TITLE~MAIN", FacetType.Fulltext, "Fonds name"));
 

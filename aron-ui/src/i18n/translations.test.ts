@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import i18n, { BUNDLED_LANGUAGES, BUNDLES, DEFAULT_LANGUAGE } from "./index";
 
 /** i18next appends these to a key when the string depends on a count. */
@@ -56,10 +56,6 @@ describe("translation bundles", () => {
 });
 
 describe("counted strings", () => {
-  afterEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("agree with the number in Czech", async () => {
     await i18n.changeLanguage("cs");
 

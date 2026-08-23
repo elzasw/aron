@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TreeDirection, type TreeNode } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
 import ApuTree from "./ApuTree";
 
@@ -61,7 +60,6 @@ function renderTree() {
 
 describe("ApuTree", () => {
   beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
     serveFanOut();
   });
 

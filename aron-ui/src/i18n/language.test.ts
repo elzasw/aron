@@ -59,7 +59,6 @@ describe("initial language", () => {
 describe("switching", () => {
   beforeEach(async () => {
     window.localStorage.clear();
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
   });
 
   it("changes the language and remembers the choice", () => {

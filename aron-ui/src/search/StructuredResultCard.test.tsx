@@ -1,10 +1,9 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { ApuType, type ApuSearchItem, type ResultLayout } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import ResultList from "./ResultList";
 import StructuredResultCard from "./StructuredResultCard";
 import { lookup } from "./useResultLayout";
@@ -58,10 +57,6 @@ function renderCard(
 }
 
 describe("StructuredResultCard", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("makes the heading field the link into the record", () => {
     renderCard();
 
@@ -146,31 +141,26 @@ describe("StructuredResultCard", () => {
   });
 
   it("has no structural accessibility violations", async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    const { container } = render(
-      <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <ResultList
-          items={[
-            {
-              uuid: "apu-uuid",
-              name: "V1D Kronika obce Testov",
-              apuType: ApuType.ArchDesc,
-              containsDigitalObjects: false,
-              structured: STRUCTURED,
-            },
-            {
-              // the mixed list: a record without a structured presentation
-              uuid: "plain-uuid",
-              name: "V1D Kronika obce Bukov",
-              description: "Bez strukturovaného výsledku",
-              apuType: ApuType.ArchDesc,
-              containsDigitalObjects: false,
-            },
-          ]}
-        />
-      </MemoryRouter>
-      </QueryClientProvider>,
+    const { container } = renderWithProviders(
+      <ResultList
+        items={[
+          {
+            uuid: "apu-uuid",
+            name: "V1D Kronika obce Testov",
+            apuType: ApuType.ArchDesc,
+            containsDigitalObjects: false,
+            structured: STRUCTURED,
+          },
+          {
+            // the mixed list: a record without a structured presentation
+            uuid: "plain-uuid",
+            name: "V1D Kronika obce Bukov",
+            description: "Bez strukturovaného výsledku",
+            apuType: ApuType.ArchDesc,
+            containsDigitalObjects: false,
+          },
+        ]}
+      />,
     );
 
     // wait for the layout request the list issues itself, so the assertions see

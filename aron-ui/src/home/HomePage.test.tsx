@@ -1,7 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import {
   ApuType,
   FilterKind,
@@ -12,9 +10,9 @@ import {
   type UiConfig,
   type ValuesFilter,
 } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import HomePage from "../pages/HomePage";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 
 // named rather than inlined: a tile sits in an Array<HomeTile> and a filter in
 // an Array<SearchFilter>, and a fresh literal of a subtype in either place trips
@@ -108,21 +106,10 @@ vi.mock("../api/client", () => ({
 }));
 
 function renderHome() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <HomePage />
-      </MemoryRouter>
-    </QueryClientProvider>,
-  );
+  return renderWithProviders(<HomePage />);
 }
 
 describe("HomePage", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("names each configured group and offers its tiles as links", async () => {
     renderHome();
 

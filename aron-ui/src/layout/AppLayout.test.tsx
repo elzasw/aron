@@ -1,11 +1,10 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Link, MemoryRouter, Route, Routes } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Link, Route, Routes } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
 import { FooterLinkCode, type UiConfig } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import AppLayout from "./AppLayout";
 
 const footerColumns = {
@@ -53,35 +52,27 @@ vi.mock("../api/client", () => ({
 }));
 
 function renderLayout(initialPath = "/") {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={[initialPath]}>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route
-              index
-              element={
-                <>
-                  <h1>Úvod</h1>
-                  {/* an in-app navigation to drive the route-change behavior */}
-                  <Link to="/apu">Vyhledávání</Link>
-                </>
-              }
-            />
-            <Route path="apu" element={<h1>Vyhledávání</h1>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
+  return renderWithProviders(
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route
+          index
+          element={
+            <>
+              <h1>Úvod</h1>
+              {/* an in-app navigation to drive the route-change behavior */}
+              <Link to="/apu">Vyhledávání</Link>
+            </>
+          }
+        />
+        <Route path="apu" element={<h1>Vyhledávání</h1>} />
+      </Route>
+    </Routes>,
+    { initialEntries: [initialPath] },
   );
 }
 
 describe("AppLayout", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("lets a keyboard user skip the repeated header (WCAG 2.4.1)", async () => {
     const user = userEvent.setup();
     renderLayout();

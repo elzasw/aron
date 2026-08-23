@@ -1,8 +1,7 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { Route, Routes } from "react-router-dom";
+import { describe, expect, it, vi } from "vitest";
 import {
   ApuType,
   FacetDisplay,
@@ -11,8 +10,8 @@ import {
   RelationDirection,
   type SearchFilter,
 } from "../api/generated";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import {
   RELATED_FACET,
   addRelated,
@@ -41,22 +40,13 @@ vi.mock("../api/client", () => ({
 }));
 
 function renderChips(filters: SearchFilter[], onFilters = vi.fn()) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const rendered = render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <RelatedChips filters={filters} onFilters={onFilters} />
-      </MemoryRouter>
-    </QueryClientProvider>,
+  const rendered = renderWithProviders(
+    <RelatedChips filters={filters} onFilters={onFilters} />,
   );
   return { ...rendered, onFilters };
 }
 
 describe("relation filter", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("asks for both ends of the relation, across every section", () => {
     const url = relatedSearchUrl(RECORD.uuid);
     // the general search, not a section: a relation is not confined to one
@@ -99,15 +89,11 @@ describe("relation filter", () => {
 
 
   it("offers the action on the record page as a link into the search", async () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[`/apu/${RECORD.uuid}`]}>
-          <Routes>
-            <Route path="apu/:uuid" element={<ApuPage />} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>,
+    renderWithProviders(
+      <Routes>
+        <Route path="apu/:uuid" element={<ApuPage />} />
+      </Routes>,
+      { initialEntries: [`/apu/${RECORD.uuid}`] },
     );
 
     // a link, not a button: it navigates, so it must open in a new tab too

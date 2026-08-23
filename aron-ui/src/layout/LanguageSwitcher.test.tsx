@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import i18n from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
 import LanguageSwitcher from "./LanguageSwitcher";
 
@@ -14,7 +14,6 @@ async function openMenu(user: ReturnType<typeof userEvent.setup>) {
 describe("LanguageSwitcher", () => {
   beforeEach(async () => {
     window.localStorage.clear();
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
   });
 
   it("is not rendered when the deployment offers a single language", () => {

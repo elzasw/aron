@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import i18n, { DEFAULT_LANGUAGE } from "../i18n";
+import { describe, expect, it, vi } from "vitest";
 import { expectNoA11yViolations } from "../test/a11y";
 import Pagination from "./Pagination";
 
@@ -11,10 +10,6 @@ function renderPagination() {
 }
 
 describe("Pagination", () => {
-  beforeEach(async () => {
-    await i18n.changeLanguage(DEFAULT_LANGUAGE);
-  });
-
   it("names the page-size dropdown by its visible label", () => {
     renderPagination();
 
