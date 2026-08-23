@@ -14,6 +14,7 @@
   },
   "nav": {
     "home": "Home",
+    "breadcrumbsMore": "Show hidden levels",
     "search": "Search",
     "main": "Main menu",
     "skipToContent": "Skip to main content",

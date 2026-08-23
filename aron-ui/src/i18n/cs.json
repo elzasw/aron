@@ -14,6 +14,7 @@
   },
   "nav": {
     "home": "Úvod",
+    "breadcrumbsMore": "Zobrazit skryté úrovně",
     "search": "Vyhledávání",
     "main": "Hlavní nabídka",
     "skipToContent": "Přejít na hlavní obsah",

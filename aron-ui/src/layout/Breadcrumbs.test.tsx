@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { ApuType, type ApuDetail, type UiConfig } from "../api/generated";
@@ -64,19 +64,27 @@ describe("Breadcrumbs", () => {
   });
 
   // one location, one trail: the record's place in the archival description
-  // continues the strip instead of repeating it inside the page
-  it("continues into the record's place in the description", async () => {
+  // continues the strip instead of repeating it inside the page; only the last
+  // levels stay inline, the rest collapse into the "⋯" menu (the trail must
+  // hold one line however deep the description is)
+  it("continues into the record's place, collapsing the middle levels", async () => {
     renderAt("/apu/record");
     await screen.findByRole("heading", { level: 1, name: RECORD_NAME });
 
     expect(screen.getAllByRole("navigation", { name: "Breadcrumb" })).toHaveLength(1);
     expect(within(trail()).getAllByRole("link").map((link) => link.textContent)).toEqual([
       "Home",
-      "Archival records",
-      "Archive of the town of Pardubice",
       "III. Files",
     ]);
     expect(within(trail()).getByText(RECORD_NAME)).toHaveAttribute("aria-current", "page");
+
+    // the hidden levels stay one click away, in the trail's own menu
+    fireEvent.click(within(trail()).getByRole("button", { name: "Show hidden levels" }));
+    const menu = await screen.findByRole("menu");
+    expect(within(menu).getAllByRole("menuitem").map((item) => item.textContent)).toEqual([
+      "Archival records",
+      "Archive of the town of Pardubice",
+    ]);
   });
 
   it("has no accessibility violations", async () => {
