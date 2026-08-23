@@ -19,6 +19,10 @@ interface OsdViewportProps {
   describedBy?: string;
   /** The source could not be opened (missing tiles, unreachable server). */
   onOpenFailed?: () => void;
+  /** The overview minimap in the canvas corner. */
+  navigatorVisible?: boolean;
+  /** Keep zoom and position when a new page opens (comparing the same spot across pages). */
+  preserveViewport?: boolean;
 }
 
 /**
@@ -33,7 +37,7 @@ interface OsdViewportProps {
  * and reimplementing it would duplicate the library.
  */
 const OsdViewport = forwardRef<OsdViewportHandle, OsdViewportProps>(function OsdViewport(
-  { source, label, describedBy, onOpenFailed },
+  { source, label, describedBy, onOpenFailed, navigatorVisible = false, preserveViewport = false },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -42,6 +46,30 @@ const OsdViewport = forwardRef<OsdViewportHandle, OsdViewportProps>(function Osd
   const openRequestRef = useRef(0);
   const onOpenFailedRef = useRef(onOpenFailed);
   onOpenFailedRef.current = onOpenFailed;
+
+  // the navigator exists only when created with the viewer, so it is always
+  // created and merely shown or hidden; the lock is a live viewer property.
+  // The latest values live in a ref, because the viewer may only come into
+  // existence after the effect that would have applied them.
+  const viewSettingsRef = useRef({ navigatorVisible, preserveViewport });
+  const applyViewSettings = () => {
+    const viewer = viewerRef.current;
+    if (viewer === null) {
+      return;
+    }
+    // both are runtime viewer members the installed typings do not model
+    (viewer as unknown as { preserveViewport: boolean }).preserveViewport =
+      viewSettingsRef.current.preserveViewport;
+    const navigatorElement = (viewer as unknown as { navigator?: { element?: HTMLElement } })
+      .navigator?.element;
+    if (navigatorElement !== undefined) {
+      navigatorElement.style.display = viewSettingsRef.current.navigatorVisible ? "" : "none";
+    }
+  };
+  useEffect(() => {
+    viewSettingsRef.current = { navigatorVisible, preserveViewport };
+    applyViewSettings();
+  });
 
   useEffect(() => {
     const request = ++openRequestRef.current;
@@ -59,9 +87,13 @@ const OsdViewport = forwardRef<OsdViewportHandle, OsdViewportProps>(function Osd
         viewerRef.current = OpenSeadragon({
           element: containerRef.current,
           showNavigationControl: false,
+          // created with the viewer, then shown or hidden by applyViewSettings
+          showNavigator: true,
+          navigatorPosition: "TOP_LEFT",
           animationTime: reducedMotion ? 0 : undefined,
         });
         viewerRef.current.addHandler("open-failed", () => onOpenFailedRef.current?.());
+        applyViewSettings();
       }
       if (openRequestRef.current === request) {
         // a descriptor URL string and an inline image source are legal at

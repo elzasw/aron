@@ -5,7 +5,10 @@ import type { DigitalObjectInfo } from "../api/generated";
 import { serverContextPath } from "../serverContext";
 import OsdViewport, { type OsdViewportHandle, type OsdSource } from "./OsdViewport";
 import ThumbnailRail from "./ThumbnailRail";
-import ViewerToolbar from "./ViewerToolbar";
+import ViewerToolbar, {
+  NEUTRAL_ADJUSTMENTS,
+  type ImageAdjustments,
+} from "./ViewerToolbar";
 import { buildPages, initialPageIndex, pageFileId, type DaoPage } from "./pages";
 
 const useStyles = makeStyles({
@@ -128,6 +131,9 @@ export default function DaoViewer({
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
   const [status, setStatus] = useState("");
   const [openFailed, setOpenFailed] = useState(false);
+  const [navigatorShown, setNavigatorShown] = useState(false);
+  const [viewportLocked, setViewportLocked] = useState(false);
+  const [adjustments, setAdjustments] = useState<ImageAdjustments>(NEUTRAL_ADJUSTMENTS);
 
   // the deep link decides the starting page once the data is there
   const resolvedIndex = currentIndex ?? (pages.length > 0 ? initialPageIndex(pages, initialFileId) : 0);
@@ -226,18 +232,34 @@ export default function DaoViewer({
         downloadName={page.published?.name}
         onCopyLink={() => void copyLink()}
         fullscreenUrl={showFullscreenLink ? viewerUrl(apuUuid, dao.uuid, currentFileId) : undefined}
+        navigatorShown={navigatorShown}
+        onToggleNavigator={() => setNavigatorShown(!navigatorShown)}
+        viewportLocked={viewportLocked}
+        onToggleViewportLock={() => setViewportLocked(!viewportLocked)}
+        adjustments={adjustments}
+        onAdjust={setAdjustments}
       />
       <div className={styles.content}>
         <div className={styles.rail}>
           <ThumbnailRail pages={pages} currentIndex={page.index} onSelect={goTo} />
         </div>
-        <div className={styles.canvas}>
+        <div
+          className={styles.canvas}
+          // the reader's brightness/contrast, a plain CSS filter over the canvas
+          style={
+            adjustments === NEUTRAL_ADJUSTMENTS
+              ? undefined
+              : { filter: `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%)` }
+          }
+        >
           {source !== null ? (
             <OsdViewport
               ref={viewportRef}
               source={source}
               label={pageLabel}
               describedBy={hintId}
+              navigatorVisible={navigatorShown}
+              preserveViewport={viewportLocked}
               onOpenFailed={() => {
                 setOpenFailed(true);
                 setStatus(t("dao.loadError"));

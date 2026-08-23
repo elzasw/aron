@@ -163,6 +163,24 @@ describe("DaoViewerPage", () => {
     expect(thumbs[0].getAttribute("aria-current")).toBeNull();
   });
 
+  it("offers the old viewer's view controls: jumps, toggles and image settings", async () => {
+    renderViewer();
+    await screen.findByRole("heading", { level: 1, name: "Kronika obce" });
+    // the ten-page jump clamps at the document's end
+    fireEvent.click(screen.getByRole("button", { name: "Ten pages forward" }));
+    expect((screen.getByLabelText("Page") as HTMLInputElement).value).toBe("3");
+    // navigator and viewport lock are real toggles
+    const navigator = screen.getByRole("button", { name: "Overview map" });
+    fireEvent.click(navigator);
+    expect(navigator.getAttribute("aria-pressed")).toBe("true");
+    screen.getByRole("button", { name: "Keep the view between pages" });
+    // the settings panel carries labelled sliders
+    fireEvent.click(screen.getByRole("button", { name: "Image settings" }));
+    await screen.findByRole("slider", { name: "Brightness" });
+    screen.getByRole("slider", { name: "Contrast" });
+    screen.getByRole("button", { name: "Reset" });
+  });
+
   it("says so when the digital object does not exist", async () => {
     renderViewer("/apu/rec/dao/unknown");
     expect(await screen.findByText("The digital object was not found.")).toBeTruthy();
