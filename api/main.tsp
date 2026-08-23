@@ -1123,6 +1123,83 @@ namespace Apu {
 	};
 }
 
+/**
+ * Content of digital-object and attachment files. Which URL to call never
+ * comes from here alone: every file in a detail response carries its
+ * ready-to-use `url`/`dziUrl` (which may point at an external image server) -
+ * these endpoints are where portal-served ones lead.
+ */
+@tag("dao")
+@route("/api/v1/daofile")
+namespace DaoFile {
+	/**
+	 * Content of one file, streamed with its real MIME type. Serves stored
+	 * files and referenced files the deployment allows (`files.referenced-dirs`);
+	 * externally hosted files are never proxied - their `url` points at the
+	 * external server directly. Supports conditional and range requests.
+	 */
+	@get
+	@route("/{id}")
+	op getContent(
+		/** The file's `FileInfo.id`. */
+		@path id: string,
+
+		/** True = download disposition (attachment); default is inline. */
+		@query download?: boolean,
+
+		@header("If-None-Match") ifNoneMatch?: string,
+
+		@header("If-Modified-Since") ifModifiedSince?: string,
+	): {
+		@statusCode statusCode: 200;
+
+		@header("ETag") eTag?: string;
+
+		@header("Last-Modified") lastModified?: string;
+
+		/** Placeholder - the response carries the file's real MIME type. */
+		@header contentType: "application/octet-stream";
+
+		@body body: bytes;
+	} | {
+		/** Not modified - the client's cached representation is still valid. */
+		@statusCode statusCode: 304;
+	};
+
+	/**
+	 * Deep Zoom descriptor of a TILE file. Tile images resolve relative to
+	 * this URL (`image_files/...`), which is how deep-zoom viewers fetch them.
+	 */
+	@get
+	@route("/{id}/tiles/image.dzi")
+	op getDziDescriptor(
+		/** The TILE file's `FileInfo.id`. */
+		@path id: string,
+	): {
+		@header contentType: "application/xml";
+
+		@body body: bytes;
+	};
+
+	/** One tile image of a TILE file's Deep Zoom pyramid. */
+	@get
+	@route("/{id}/tiles/image_files/{level}/{tile}")
+	op getTileImage(
+		/** The TILE file's `FileInfo.id`. */
+		@path id: string,
+
+		/** Pyramid level. */
+		@path level: int32,
+
+		/** Tile file name: `{column}_{row}.{format}`. */
+		@path tile: string,
+	): {
+		@header contentType: "image/jpeg" | "image/png";
+
+		@body body: bytes;
+	};
+}
+
 /** Directions of the incremental tree navigation. */
 enum TreeDirection {
 	/** Siblings preceding the APU, in tree order. */
@@ -1182,10 +1259,10 @@ model ApuDetail {
 	/** Display-ready parts in display order; parts with no visible items are omitted. */
 	parts: DetailPart[];
 
-	/** Attachments (metadata only; binary serving arrives with a later slice). */
+	/** Attachments, with ready-to-use file URLs. */
 	attachments: AttachmentInfo[];
 
-	/** Digital objects (metadata only; file/tile serving arrives with a later slice). */
+	/** Digital objects, with ready-to-use file/tile URLs. */
 	digitalObjects: DigitalObjectInfo[];
 }
 
@@ -1346,7 +1423,7 @@ enum DetailItemKind {
 }
 
 
-/** Attachment of an APU (metadata; binary serving arrives with a later slice). */
+/** Attachment of an APU. */
 model AttachmentInfo {
 	/** Display name. */
 	name: string;
@@ -1363,13 +1440,20 @@ model DigitalObjectInfo {
 
 	permalink?: string;
 
+	/**
+	 * License code of the object, as delivered by the source system. Codes are
+	 * the source system's vocabulary; presenting them is deployment
+	 * configuration (a later slice).
+	 */
+	license?: string;
+
 	/** Files of the object in display order. */
 	files: FileInfo[];
 }
 
 /** One file of a digital object or attachment. */
 model FileInfo {
-	/** File id for the (future) file-serving endpoints. */
+	/** File id - the key of the `DaoFile` endpoints. */
 	id: string;
 
 	/** Role of the file within its digital object. */
@@ -1385,6 +1469,27 @@ model FileInfo {
 
 	/** The file a viewer should open first. */
 	selected?: boolean;
+
+	/**
+	 * 1-based page position within the digital object. Files of different
+	 * roles sharing a position are renditions of the same page; clients match
+	 * them by this value, never by list order.
+	 */
+	position?: int32;
+
+	/**
+	 * Ready-to-use content URL - portal-served or external, the server
+	 * decides; clients never assemble file URLs. Absent when the content is
+	 * not servable (e.g. a tile pyramid, which is reached via `dziUrl`, or a
+	 * referenced file outside the deployment's allowed directories).
+	 */
+	url?: string;
+
+	/**
+	 * Deep Zoom descriptor URL of a TILE file - portal-served or an external
+	 * image server's, the server decides. Tile images resolve relative to it.
+	 */
+	dziUrl?: string;
 }
 
 /** Roles of digital-object files. */

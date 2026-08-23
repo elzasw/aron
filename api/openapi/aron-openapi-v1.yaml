@@ -19,6 +19,7 @@ tags:
   - name: ui
   - name: search
   - name: apu
+  - name: dao
 paths:
   /api/v1/apu/search:
     post:
@@ -144,6 +145,120 @@ paths:
           description: The client has made a conditional request and the resource has not been modified.
       tags:
         - apu
+  /api/v1/daofile/{id}:
+    get:
+      operationId: DaoFile_getContent
+      description: |-
+        Content of one file, streamed with its real MIME type. Serves stored
+        files and referenced files the deployment allows (`files.referenced-dirs`);
+        externally hosted files are never proxied - their `url` points at the
+        external server directly. Supports conditional and range requests.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The file's `FileInfo.id`.
+          schema:
+            type: string
+        - name: download
+          in: query
+          required: false
+          description: True = download disposition (attachment); default is inline.
+          schema:
+            type: boolean
+          explode: false
+        - name: If-None-Match
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: If-Modified-Since
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            ETag:
+              required: false
+              schema:
+                type: string
+            Last-Modified:
+              required: false
+              schema:
+                type: string
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '304':
+          description: The client has made a conditional request and the resource has not been modified.
+      tags:
+        - dao
+  /api/v1/daofile/{id}/tiles/image.dzi:
+    get:
+      operationId: DaoFile_getDziDescriptor
+      description: |-
+        Deep Zoom descriptor of a TILE file. Tile images resolve relative to
+        this URL (`image_files/...`), which is how deep-zoom viewers fetch them.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The TILE file's `FileInfo.id`.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/xml:
+              schema:
+                type: string
+                format: binary
+      tags:
+        - dao
+  /api/v1/daofile/{id}/tiles/image_files/{level}/{tile}:
+    get:
+      operationId: DaoFile_getTileImage
+      description: One tile image of a TILE file's Deep Zoom pyramid.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The TILE file's `FileInfo.id`.
+          schema:
+            type: string
+        - name: level
+          in: path
+          required: true
+          description: Pyramid level.
+          schema:
+            type: integer
+            format: int32
+        - name: tile
+          in: path
+          required: true
+          description: 'Tile file name: `{column}_{row}.{format}`.'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+      tags:
+        - dao
   /api/v1/facets:
     get:
       operationId: Search_getFacets
@@ -373,12 +488,12 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AttachmentInfo'
-          description: Attachments (metadata only; binary serving arrives with a later slice).
+          description: Attachments, with ready-to-use file URLs.
         digitalObjects:
           type: array
           items:
             $ref: '#/components/schemas/DigitalObjectInfo'
-          description: Digital objects (metadata only; file/tile serving arrives with a later slice).
+          description: Digital objects, with ready-to-use file/tile URLs.
       description: Display-ready detail of one APU (the render model).
     ApuLink:
       type: object
@@ -541,7 +656,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/FileInfo'
           description: The attachment's file.
-      description: Attachment of an APU (metadata; binary serving arrives with a later slice).
+      description: Attachment of an APU.
     DatingBounds:
       type: object
       required:
@@ -665,6 +780,12 @@ components:
           type: string
         permalink:
           type: string
+        license:
+          type: string
+          description: |-
+            License code of the object, as delivered by the source system. Codes are
+            the source system's vocabulary; presenting them is deployment
+            configuration (a later slice).
         files:
           type: array
           items:
@@ -892,7 +1013,7 @@ components:
       properties:
         id:
           type: string
-          description: File id for the (future) file-serving endpoints.
+          description: File id - the key of the `DaoFile` endpoints.
         fileType:
           allOf:
             - $ref: '#/components/schemas/FileType'
@@ -909,6 +1030,25 @@ components:
         selected:
           type: boolean
           description: The file a viewer should open first.
+        position:
+          type: integer
+          format: int32
+          description: |-
+            1-based page position within the digital object. Files of different
+            roles sharing a position are renditions of the same page; clients match
+            them by this value, never by list order.
+        url:
+          type: string
+          description: |-
+            Ready-to-use content URL - portal-served or external, the server
+            decides; clients never assemble file URLs. Absent when the content is
+            not servable (e.g. a tile pyramid, which is reached via `dziUrl`, or a
+            referenced file outside the deployment's allowed directories).
+        dziUrl:
+          type: string
+          description: |-
+            Deep Zoom descriptor URL of a TILE file - portal-served or an external
+            image server's, the server decides. Tile images resolve relative to it.
       description: One file of a digital object or attachment.
     FileType:
       type: string

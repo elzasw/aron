@@ -68,10 +68,13 @@ public abstract class AbstractTest {
 		return client.send(request, HttpResponse.BodyHandlers.ofString());
 	}
 
-	/** GET returning raw bytes (binary endpoints). */
-	protected HttpResponse<byte[]> getBytes(String path) throws Exception {
-		HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build();
-		return client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+	/** GET returning raw bytes (binary endpoints); header name/value pairs optional. */
+	protected HttpResponse<byte[]> getBytes(String path, String... headers) throws Exception {
+		HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET();
+		for (int i = 0; i < headers.length; i += 2) {
+			builder.header(headers[i], headers[i + 1]);
+		}
+		return client.send(builder.build(), HttpResponse.BodyHandlers.ofByteArray());
 	}
 
 	protected static String contentType(HttpResponse<?> response) {

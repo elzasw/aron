@@ -79,6 +79,7 @@ public class ApuEntityMapper {
         dto.setName(src.getName());
         dto.setPermalink(src.getPermalink());
         dto.setOrder(src.getOrder());
+        dto.setLicenseCode(src.getLicense());
 
         List<DigitalObjectFile> files = new ArrayList<>(src.getFiles().size());
         for (cz.aron.domain.DigitalObjectFile f : src.getFiles()) {

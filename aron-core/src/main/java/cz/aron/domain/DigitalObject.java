@@ -27,6 +27,10 @@ public class DigitalObject extends PersistableBase {
     @Column(name = "\"order\"")
     private int order;
 
+    /** License code of the object, the source system's vocabulary. */
+    @Column(name = "license_code")
+    private String license;
+
     private LocalDateTime published;
 
     @OneToMany(mappedBy = "digitalObject", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -82,6 +86,14 @@ public class DigitalObject extends PersistableBase {
 
 	public void setUuid(UUID uuid) {
 		this.uuid = uuid;
+	}
+
+	public String getLicense() {
+		return license;
+	}
+
+	public void setLicense(String license) {
+		this.license = license;
 	}
 
 	public LocalDateTime getPublished() {

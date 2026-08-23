@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -110,10 +109,12 @@ public class FileInputProcessor {
         } else {
              digitalObjectFile.setSize(null);
         }
-        //TODO transfer filename from transformagent
         String name = attributes.get(ATTR_NAME);
         if (name==null&&digitalObjectFile.getReferencedFile()!=null) {
-            name = Paths.get(digitalObjectFile.getReferencedFile()).getFileName().toString();
+            // the reference may be a URL, which is no filesystem path - take the last segment textually
+            String reference = digitalObjectFile.getReferencedFile();
+            int lastSeparator = Math.max(reference.lastIndexOf('/'), reference.lastIndexOf('\\'));
+            name = lastSeparator >= 0 ? reference.substring(lastSeparator + 1) : reference;
         }
         digitalObjectFile.setName(name);
     }

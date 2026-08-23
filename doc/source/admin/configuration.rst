@@ -72,7 +72,18 @@ application.yml
      - File storage of attachments and the working directory of the SOAP
        file transfer.
    * - ``tile.folder``, ``tile.format``
-     - Deep-zoom tile cache for large images.
+     - Deep-zoom tile storage for large images: Transfagent generates the tile
+       pyramids, the portal unpacks them here on import and serves them at
+       ``/api/v1/daofile/{id}/tiles/…``. The format must match what Transfagent
+       delivers (``jpg`` by default on both sides).
+   * - ``files.referenced-dirs``
+     - Directories the portal may serve *referenced* digital-object files from
+       (files delivered as a path on a local/shared disk instead of being
+       transferred). One directory or a comma-separated list; a referenced file
+       outside them gets no URL and is never served. Unset (default) = local
+       referenced files are not served at all. Externally hosted files (URL
+       references) are unaffected — their URLs pass through to the client and
+       the portal never touches the bytes.
    * - ``transformation-agent-url``
      - SOAP endpoint of the external Transform agent (file/format
        transformations).

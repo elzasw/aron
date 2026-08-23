@@ -793,7 +793,7 @@ class NewApiV1Test extends AbstractTest {
 		assertThat(((LinkItem) body.getItems().get(4)).getCaption()).isEqualTo("Zdroj digitalizace");
 		assertThat(((LinkItem) body.getItems().get(4)).getHref()).isEqualTo("https://example.org/kronika");
 
-		// metadata-only sections of this fixture are empty (binaries arrive with the tiles slice)
+		// this fixture carries no attachments or digital objects (DaoServingTest covers those)
 		assertThat(detail.getAttachments()).isEmpty();
 		assertThat(detail.getDigitalObjects()).isEmpty();
 	}

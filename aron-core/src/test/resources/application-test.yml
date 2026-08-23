@@ -42,6 +42,9 @@ files:
   storage: ./target/test-data/fileStorage
   transfer:
     path: ./target/test-data/aronFileTransfer
+  # referenced DAO files are served only from here; DaoServingTest also proves
+  # a path outside this root is refused
+  referenced-dirs: ./target/test-data/referencedFiles
 
 tile:
   folder: ./target/test-data/tiles

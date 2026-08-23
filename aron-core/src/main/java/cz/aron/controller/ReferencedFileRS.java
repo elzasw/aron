@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 import org.springframework.core.io.InputStreamResource;
@@ -25,6 +24,7 @@ import com.google.common.net.UrlEscapers;
 
 import cz.aron.domain.DigitalObjectFile;
 import cz.aron.repository.DaoFileRepository;
+import cz.aron.service.ReferencedFileResolver;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -39,9 +39,12 @@ public class ReferencedFileRS {
     
     private final DaoFileRepository daoFileRepository;
 
-    public ReferencedFileRS(DaoFileRepository daoFileRepository) {
+    private final ReferencedFileResolver referencedFileResolver;
+
+    public ReferencedFileRS(DaoFileRepository daoFileRepository, ReferencedFileResolver referencedFileResolver) {
 		super();
 		this.daoFileRepository = daoFileRepository;
+		this.referencedFileResolver = referencedFileResolver;
 	}
 
 	/**
@@ -64,9 +67,14 @@ public class ReferencedFileRS {
         if (digitalObjectFile == null || digitalObjectFile.getReferencedFile() ==null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such object.");
         }
-        Path path = Paths.get(digitalObjectFile.getReferencedFile());
-        
-        
+        // the reference is source-system data: only files under the allowed directories
+        // (files.referenced-dirs) are served, and URL references have no local content at all
+        Path path = referencedFileResolver.resolveLocal(digitalObjectFile.getReferencedFile());
+        if (path == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such object.");
+        }
+
+
         try {
         InputStream stream = newInputStream(path, StandardOpenOption.READ);
         long size = size(path);

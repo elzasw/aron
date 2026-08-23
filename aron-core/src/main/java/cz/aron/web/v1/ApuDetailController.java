@@ -38,9 +38,9 @@ import cz.aron.service.ApuService;
 /**
  * Implements the /api/v1 APU detail: the render model of D-9 - display-ready
  * parts assembled server-side ({@link ApuDetailBuilder}), breadcrumbs from the
- * ancestor chain, attachment/digital-object metadata (binaries arrive with the
- * tiles slice). Conditional requests follow the old API's mechanism (the tree
- * UX depends on client caching).
+ * ancestor chain, attachments and digital objects with ready-to-use file URLs
+ * ({@link DaoFileUrls}). Conditional requests follow the old API's mechanism
+ * (the tree UX depends on client caching).
  */
 @RestController
 public class ApuDetailController implements ApuApi {
@@ -55,12 +55,15 @@ public class ApuDetailController implements ApuApi {
 
 	private final PresentationLocales presentationLocales;
 
+	private final DaoFileUrls daoFileUrls;
+
 	public ApuDetailController(ApuEntityRepository apuEntityRepository, ApuService apuService,
-			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales) {
+			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales, DaoFileUrls daoFileUrls) {
 		this.presentationLocales = presentationLocales;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.detailBuilder = detailBuilder;
+		this.daoFileUrls = daoFileUrls;
 	}
 
 	@Override
@@ -171,7 +174,7 @@ public class ApuDetailController implements ApuApi {
 		return path;
 	}
 
-	private static List<AttachmentInfo> attachments(ApuEntity apu) {
+	private List<AttachmentInfo> attachments(ApuEntity apu) {
 		return apu.getAttachments().stream()
 				.sorted(Comparator.comparingInt(ApuAttachment::getOrder))
 				.map(attachment -> {
@@ -183,22 +186,23 @@ public class ApuDetailController implements ApuApi {
 				}).toList();
 	}
 
-	private static List<DigitalObjectInfo> digitalObjects(ApuEntity apu) {
+	private List<DigitalObjectInfo> digitalObjects(ApuEntity apu) {
 		return apu.getDigitalObjects().stream()
 				.sorted(Comparator.comparingInt(DigitalObject::getOrder))
 				.map(digitalObject -> {
 					var files = digitalObject.getFiles().stream()
 							.sorted(Comparator.comparingInt(DigitalObjectFile::getOrder))
-							.map(ApuDetailController::fileInfo)
+							.map(this::fileInfo)
 							.toList();
 					var info = new DigitalObjectInfo(digitalObject.getUuid().toString(), files);
 					info.setName(digitalObject.getName());
 					info.setPermalink(digitalObject.getPermalink());
+					info.setLicense(digitalObject.getLicense());
 					return info;
 				}).toList();
 	}
 
-	private static FileInfo fileInfo(DigitalObjectFile file) {
+	private FileInfo fileInfo(DigitalObjectFile file) {
 		var info = new FileInfo(file.getUuid().toString());
 		if (file.getType() != null) {
 			info.setFileType(FileType.fromValue(file.getType().toString()));
@@ -209,6 +213,11 @@ public class ApuDetailController implements ApuApi {
 		if (file.isSelected()) {
 			info.setSelected(Boolean.TRUE);
 		}
+		if (file.getOrder() > 0) {
+			info.setPosition(file.getOrder());
+		}
+		info.setUrl(daoFileUrls.contentUrl(file));
+		info.setDziUrl(daoFileUrls.dziUrl(file));
 		return info;
 	}
 

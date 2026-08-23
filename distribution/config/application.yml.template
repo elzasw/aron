@@ -22,6 +22,11 @@ files:
   storage: ./data/fileStorage
   transfer:
     path: ./data/fileTransfer
+  # Adresare, ze kterych se smi servirovat referencovane soubory digitalizatu
+  # (soubory predane odkazem na cestu na lokalnim/sdilenem disku misto prenosu
+  # dat). Jeden adresar nebo seznam oddeleny carkami; odkaz mimo tyto adresare
+  # se neserviruje. Nenastaveno = referencovane lokalni soubory se neserviruji.
+  #referenced-dirs: /opt/aron/sharedDaoFiles
 
 tile:
   folder: ./data/tiles

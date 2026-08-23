@@ -54,6 +54,7 @@ public class DaoInputProcessor {
         digitalObject.setUuid(UUID.fromString(dao.getUuid()));
         digitalObject.setName(dao.getName());
         digitalObject.setPermalink(dao.getPrmLnk());
+        digitalObject.setLicense(dao.getLicense());
         var usedUuids = new HashSet<String>();
         for (DaoBundle daoBundle : dao.getBndl()) {
             DigitalObjectType digitalObjectType = DigitalObjectType.fromXmlType(daoBundle.getType());

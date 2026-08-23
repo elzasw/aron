@@ -93,7 +93,9 @@ public class RedirectApi {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity not found");
 		}
 		DaoFileRedirectDto id = ids.get(0);
-		String redirectUrl = request.getContextPath() + "/apu/" + id.apuId() + "/dao/" + id.daoId() + "/file/"
+		// the canonical viewer URL: the current file is a query parameter, so the SPA
+		// route stays /apu/{uuid}/dao/{daoUuid} (see IndexController's /apu/** mapping)
+		String redirectUrl = request.getContextPath() + "/apu/" + id.apuId() + "/dao/" + id.daoId() + "?file="
 				+ id.fileId();
 		log.info("Redirecting from /redirectimage{} to {}", permalink, redirectUrl);
 		return redirectTo(redirectUrl);
