@@ -143,6 +143,24 @@ Still the deployment's own responsibility: the **contrast** of the colours it
 configures in `resultLayout.yaml` (1.4.3), which is Phase C territory, and
 giving every styled field either a `prefix` or a `label`.
 
+**Digital object viewer** (added with the feature): scans are content images
+whose accessible name is the page's label — the pixel content itself is
+inherently visual, and the download of the original is the equivalent-access
+path (1.1.1 scoped honestly; the portal cannot transcribe archival scans).
+Every control is a real button or link with a name — the viewer uses none of
+OpenSeadragon's chrome (its tooltips are English-only and its buttons unnamed
+images). Panning and zooming have keyboard equivalents (2.1.1): OpenSeadragon's
+own arrow/plus/minus keys while the canvas region has focus, and page turns on
+the rest of the page (arrows, PageUp/Down, Home/End) — a visually hidden
+paragraph tied to the canvas by `aria-describedby` explains the split. Page
+turns keep the pathname (the current file is a `?file=` search parameter), so
+the route-change focus move never steals focus from the button under the
+reader's finger; a polite live region announces "Page n of m", copy-link
+confirmation and load failures (4.1.3). The current thumbnail carries
+`aria-current`; thumbnails are decorative (`alt=""`) with the visible page
+number as the row's name. Gallery thumbnails on the record page are links named
+"Page n: object" (2.4.4).
+
 **Home page entry points and footer band** (added with the feature, same
 criteria): each configured group is a `<section>` named by its own `<h2>`, so a
 reader is told what a set of links is for (1.3.1, 2.4.6). A tile *is* one link
@@ -218,7 +236,11 @@ facet filters and the description tree.
   unit tests stop at "opens from the keyboard" — walking and choosing an option
   by keyboard has to be tried in a browser. The record page's splitter belongs
   to the same list: its keyboard resizing is pinned by tests, but the grip's
-  contrast and its target size need the browser pass.
+  contrast and its target size need the browser pass. The digital-object viewer
+  too: jsdom has no canvas and the suite mocks OpenSeadragon, so the canvas's
+  real keyboard behavior (arrows pan, +/- zoom), the toolbar's contrast over
+  the image background, and zooming/rotating with a screen magnifier are
+  browser-pass items.
 - **Closed** — the search page's heading outline. It used to skip from the page
   title (`h1`) to a result card (`h3`), which axe reports as `heading-order`.
   The missing level was a real one rather than a numbering problem: the results

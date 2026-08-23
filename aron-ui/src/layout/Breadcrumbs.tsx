@@ -59,7 +59,10 @@ export default function Breadcrumbs() {
   const styles = useStyles();
   const { t } = useTranslation();
   const { pathname } = useLocation();
-  const recordUuid = /^\/apu\/([^/]+)$/.exec(pathname)?.[1];
+  // a record, or a digital object opened in its viewer under the record's route
+  const recordMatch = /^\/apu\/([^/]+)(?:\/dao\/([^/]+))?$/.exec(pathname);
+  const recordUuid = recordMatch?.[1];
+  const daoUuid = recordMatch?.[2];
   const { data: record } = useApuDetail(recordUuid);
 
   if (pathname === "/") {
@@ -77,7 +80,14 @@ export default function Breadcrumbs() {
     for (const ancestor of record.treePath.slice(0, -1)) {
       crumbs.push({ label: ancestor.name, to: `/apu/${ancestor.uuid}` });
     }
-    crumbs.push({ label: record.name });
+    if (daoUuid !== undefined) {
+      // in the viewer the record becomes a link and the digital object the terminal crumb
+      crumbs.push({ label: record.name, to: `/apu/${record.uuid}` });
+      const dao = record.digitalObjects.find((candidate) => candidate.uuid === daoUuid);
+      crumbs.push({ label: dao?.name ?? t("apu.digitalObjects") });
+    } else {
+      crumbs.push({ label: record.name });
+    }
   } else if (recordUuid === undefined) {
     // a section or search page: the route names itself
     const firstSegment = "/" + pathname.split("/")[1];

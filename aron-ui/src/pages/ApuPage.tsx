@@ -24,6 +24,7 @@ import {
 } from "../api/generated";
 import ApuTree from "../apu/ApuTree";
 import { useApuDetail } from "../apu/useApuDetail";
+import DaoGallery from "../dao/DaoGallery";
 import Splitter from "../layout/Splitter";
 import { relatedSearchUrl } from "../search/filters";
 
@@ -429,27 +430,27 @@ export default function ApuPage() {
           <ul className={styles.fileList}>
             {data.attachments.map((attachment, index) => (
               <li key={index}>
-                <Text>{attachment.name}</Text>
+                {/* the server built the URL (or withheld it); ?download=true asks for attachment disposition */}
+                {attachment.file?.url !== undefined ? (
+                  <a
+                    href={`${attachment.file.url}?download=true`}
+                    download={attachment.name}
+                    className={styles.link}
+                  >
+                    {attachment.name}
+                  </a>
+                ) : (
+                  <Text>{attachment.name}</Text>
+                )}
               </li>
             ))}
           </ul>
-          <Text size={200}>{t("apu.binariesLater")}</Text>
         </section>
       )}
       {data.digitalObjects.length > 0 && (
         <section className={styles.part} aria-label={t("apu.digitalObjects")}>
           <Subtitle2 as="h2">{t("apu.digitalObjects")}</Subtitle2>
-          <ul className={styles.fileList}>
-            {data.digitalObjects.map((digitalObject) => (
-              <li key={digitalObject.uuid}>
-                <Text>
-                  {digitalObject.name ?? digitalObject.uuid}{" "}
-                  ({t("apu.digitalObjectFiles", { count: digitalObject.files.length })})
-                </Text>
-              </li>
-            ))}
-          </ul>
-          <Text size={200}>{t("apu.binariesLater")}</Text>
+          <DaoGallery apuUuid={data.uuid} objects={data.digitalObjects} />
         </section>
       )}
       </div>
