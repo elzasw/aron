@@ -21,10 +21,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 const useStyles = makeStyles({
-  // the Overflow wrapper needs a width to measure against
-  overflow: {
-    overflow: "hidden",
-  },
+  // the Overflow contract: the container itself clips and may shrink, or the
+  // bar would spill over the splitter instead of collapsing into the menu
   bar: {
     display: "flex",
     flexWrap: "nowrap",
@@ -32,6 +30,15 @@ const useStyles = makeStyles({
     columnGap: "2px",
     padding: `${tokens.spacingVerticalXXS} 0`,
     whiteSpace: "nowrap",
+    overflow: "hidden",
+    minWidth: 0,
+  },
+  // a glyph needs a square button, not Fluent's 64px text-button minimum
+  iconButton: {
+    minWidth: "28px",
+    maxWidth: "28px",
+    paddingLeft: 0,
+    paddingRight: 0,
   },
   pageInput: {
     width: "56px",
@@ -83,12 +90,14 @@ interface ViewerToolbarProps {
 }
 
 function CommandButton({ command }: { command: Command }) {
+  const styles = useStyles();
   const button =
     command.href !== undefined ? (
       <Button
         as="a"
         appearance="subtle"
         size="small"
+        className={styles.iconButton}
         href={command.href}
         download={command.download}
         onClick={
@@ -104,7 +113,13 @@ function CommandButton({ command }: { command: Command }) {
         {command.glyph}
       </Button>
     ) : (
-      <Button appearance="subtle" size="small" disabled={command.disabled} onClick={command.action}>
+      <Button
+        appearance="subtle"
+        size="small"
+        className={styles.iconButton}
+        disabled={command.disabled}
+        onClick={command.action}
+      >
         {command.glyph}
       </Button>
     );
@@ -133,6 +148,7 @@ function OverflowedCommand({ command }: { command: Command }) {
 }
 
 function OverflowMenu({ commands }: { commands: Command[] }) {
+  const styles = useStyles();
   const { t } = useTranslation();
   const { ref, isOverflowing } = useOverflowMenu<HTMLButtonElement>();
   if (!isOverflowing) {
@@ -141,7 +157,13 @@ function OverflowMenu({ commands }: { commands: Command[] }) {
   return (
     <Menu>
       <MenuTrigger disableButtonEnhancement>
-        <Button ref={ref} appearance="subtle" size="small" aria-label={t("dao.moreControls")}>
+        <Button
+          ref={ref}
+          appearance="subtle"
+          size="small"
+          className={styles.iconButton}
+          aria-label={t("dao.moreControls")}
+        >
           ⋯
         </Button>
       </MenuTrigger>
