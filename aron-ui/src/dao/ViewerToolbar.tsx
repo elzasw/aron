@@ -70,6 +70,11 @@ const useStyles = makeStyles({
     paddingLeft: 0,
     paddingRight: 0,
   },
+  pageGroup: {
+    display: "inline-flex",
+    alignItems: "center",
+    columnGap: "2px",
+  },
   pageInput: {
     width: "56px",
   },
@@ -412,43 +417,62 @@ export default function ViewerToolbar({
     });
   }
 
+  // every child the overflow manager should count must be a registered item:
+  // unregistered content is invisible to its math, which then never overflows
+  // and the clipped commands lose their menu. The page input and the settings
+  // panel are pinned - measured, never hidden.
   const groupEnds = ["last", "rotate-right", "lock"];
-  return (
-    <Overflow padding={8}>
-      <div role="toolbar" aria-label={t("dao.viewerControls")} className={styles.bar}>
-        {commands.slice(0, 3).map((command) => (
-          <CommandButton key={command.id} command={command} />
-        ))}
-        <Input
-          aria-label={t("dao.goToPage")}
-          className={styles.pageInput}
-          size="small"
-          type="number"
-          min={1}
-          max={pageCount}
-          value={pageValue}
-          onChange={(_, data) => setPageDraft(data.value)}
-          onBlur={commitDraft}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              commitDraft();
-            }
-          }}
-        />
-        <Text size={200} className={styles.pageTotal}>
-          {t("dao.pageOf", { total: pageCount })}
-        </Text>
-        {commands.slice(3).map((command) => (
-          <span key={command.id} style={{ display: "contents" }}>
-            <CommandButton command={command} />
-            {groupEnds.includes(command.id) && (
-              <OverflowDivider groupId={command.group}>
-                <div className={styles.divider} aria-hidden="true" />
-              </OverflowDivider>
-            )}
+  const children: ReactElement[] = [];
+  for (const command of commands) {
+    children.push(<CommandButton key={command.id} command={command} />);
+    if (command.id === "prev") {
+      children.push(
+        <OverflowItem key="page" id="page" pinned>
+          <span className={styles.pageGroup}>
+            <Input
+              aria-label={t("dao.goToPage")}
+              className={styles.pageInput}
+              size="small"
+              type="number"
+              min={1}
+              max={pageCount}
+              value={pageValue}
+              onChange={(_, data) => setPageDraft(data.value)}
+              onBlur={commitDraft}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  commitDraft();
+                }
+              }}
+            />
+            <Text size={200} className={styles.pageTotal}>
+              {t("dao.pageOf", { total: pageCount })}
+            </Text>
           </span>
-        ))}
+        </OverflowItem>,
+      );
+    }
+    if (groupEnds.includes(command.id)) {
+      children.push(
+        <OverflowDivider key={`divider-${command.group}`} groupId={command.group}>
+          <div className={styles.divider} aria-hidden="true" />
+        </OverflowDivider>,
+      );
+    }
+  }
+  children.push(
+    <OverflowItem key="settings" id="settings" pinned>
+      <span>
         <ImageSettings adjustments={adjustments} onAdjust={onAdjust} />
+      </span>
+    </OverflowItem>,
+  );
+
+  return (
+    // the padding covers what the manager cannot measure: the column gaps
+    <Overflow padding={56}>
+      <div role="toolbar" aria-label={t("dao.viewerControls")} className={styles.bar}>
+        {children}
         <OverflowMenu commands={commands} />
       </div>
     </Overflow>
