@@ -4,20 +4,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestClientResponseException;
 
 import cz.aron.AbstractTest;
 import cz.aron.apux._2020.UuidList;
-import cz.aron.ft.handling.TransferType;
+import cz.aron.integration.ApuxTransfers;
 import cz.aron.integration.ImportDataProcessingService;
 import cz.aron.management.v1.ApuManagementPort;
 import cz.aron.management.v1.AronManagementService;
@@ -26,6 +24,7 @@ import cz.aron.repository.ApuSourceRepository;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.SearchIndex;
+import cz.aron.test.api.v1.ApuApi;
 import jakarta.xml.ws.BindingProvider;
 import jakarta.xml.ws.WebServiceException;
 
@@ -49,19 +48,42 @@ class ApuManagementTest extends AbstractTest {
 	@Autowired
 	private SearchIndex searchIndex;
 
+	/**
+	 * The whole life of a record, in the order a deployment lives it: Transfagent
+	 * delivers it, the portal serves and finds it, a corrected delivery replaces
+	 * it, and a withdrawal removes it again.
+	 *
+	 * <p>One scenario rather than three, because the interesting assertions are
+	 * about the steps agreeing with each other - a re-import that updates the
+	 * database but leaves the old document in the index, or a delete that empties
+	 * the database while the search keeps offering a record whose page is gone,
+	 * are exactly the failures no single-step test can see.
+	 */
 	@Test
-	void deletedApuSourceDisappearsFromDatabaseAndIndex(@TempDir Path transfer) throws IOException {
+	void aDeliveredRecordIsServedAndFoundUntilItIsWithdrawn(@TempDir Path transfer) throws IOException {
 		var apuSourceUuid = UUID.randomUUID();
 		var apuUuid = UUID.randomUUID();
-		importTransfer(transfer, apuSourceUuid, apuUuid);
+
+		// delivered
+		importTransfer(transfer, apuSourceUuid, apuUuid, "Lifecycle instituce");
 		assertThat(apuSourceRepository.findByUuid(apuSourceUuid)).isNotNull();
-		assertThat(indexedUuids()).contains(apuUuid.toString());
+		assertThat(apuEntityRepository.findByUuid(apuUuid)).isNotNull();
+		assertThat(indexedName(apuUuid)).isEqualTo("Lifecycle instituce");
+		assertThat(detail(apuUuid).getName()).isEqualTo("Lifecycle instituce");
 
+		// corrected: the same source delivered again replaces what it carried, in
+		// the index as well as in the database
+		importTransfer(transfer, apuSourceUuid, apuUuid, "Prejmenovana instituce");
+		assertThat(indexedName(apuUuid)).isEqualTo("Prejmenovana instituce");
+		assertThat(detail(apuUuid).getName()).isEqualTo("Prejmenovana instituce");
+
+		// withdrawn
 		management().deleteApuSources(uuidList(apuSourceUuid.toString()));
-
 		assertThat(apuSourceRepository.findByUuid(apuSourceUuid)).isNull();
 		assertThat(apuEntityRepository.findByUuid(apuUuid)).isNull();
-		assertThat(indexedUuids()).doesNotContain(apuUuid.toString());
+		assertThat(indexedName(apuUuid)).isNull();
+		assertThatThrownBy(() -> detail(apuUuid)).isInstanceOfSatisfying(RestClientResponseException.class,
+				e -> assertThat(e.getStatusCode().value()).isEqualTo(404));
 	}
 
 	@Test
@@ -73,7 +95,7 @@ class ApuManagementTest extends AbstractTest {
 	@Test
 	void malformedUuidRejectsTheWholeRequest(@TempDir Path transfer) throws IOException {
 		var apuSourceUuid = UUID.randomUUID();
-		importTransfer(transfer, apuSourceUuid, UUID.randomUUID());
+		importTransfer(transfer, apuSourceUuid, UUID.randomUUID(), "Instituce k zachovani");
 
 		assertThatThrownBy(() -> management().deleteApuSources(uuidList(apuSourceUuid.toString(), "not-a-uuid")))
 				.isInstanceOf(WebServiceException.class);
@@ -104,26 +126,24 @@ class ApuManagementTest extends AbstractTest {
 		return list;
 	}
 
-	/** Imports one minimal APUSRC transfer through the internal import mechanism. */
-	private void importTransfer(Path transfer, UUID apuSourceUuid, UUID apuUuid) throws IOException {
-		var xml = """
-				<?xml version="1.0"?>
-				<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="%s">
-				 <apus>
-				  <apu type="Institution" uuid="%s">
-				   <name>Instituce ke smazani</name>
-				  </apu>
-				 </apus>
-				</apusrc>
-				""".formatted(apuSourceUuid, apuUuid);
-		Files.writeString(transfer.resolve("apusrc-management.xml"), xml, StandardCharsets.UTF_8);
-		importDataProcessingService.processData(transfer, TransferType.APUSRC);
+	private void importTransfer(Path transfer, UUID apuSourceUuid, UUID apuUuid, String name) throws IOException {
+		ApuxTransfers.writeAndImport(importDataProcessingService, transfer, apuSourceUuid, apuUuid, name);
 	}
 
-	private List<String> indexedUuids() {
+	/** What the search index holds for that APU, or null when it holds nothing. */
+	private String indexedName(UUID apuUuid) {
 		ApuSearchResult result = searchIndex.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(),
 				0, 1000, ApuSearchQuery.SortMode.NAME));
-		return result.hits().stream().map(ApuSearchResult.Hit::uuid).toList();
+		return result.hits().stream()
+				.filter(hit -> hit.uuid().equals(apuUuid.toString()))
+				.map(ApuSearchResult.Hit::name)
+				.findFirst()
+				.orElse(null);
+	}
+
+	/** The record as the portal's own API serves it. */
+	private cz.aron.test.api.v1.model.ApuDetail detail(UUID apuUuid) {
+		return new ApuApi(v1ApiClient()).apuGetDetail(apuUuid.toString(), null, null, null);
 	}
 
 }

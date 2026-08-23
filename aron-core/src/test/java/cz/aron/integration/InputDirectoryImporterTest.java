@@ -3,8 +3,6 @@ package cz.aron.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -58,19 +56,25 @@ class InputDirectoryImporterTest extends AbstractTest {
 		assertThat(after.getContentHash()).isEqualTo(before.getContentHash());
 	}
 
+	/**
+	 * The journal half of a re-import: a changed transfer is scanned again and
+	 * lands on the source it already created. That the re-imported content also
+	 * replaces what the database and the index hold is the import mechanism's own
+	 * promise, covered end to end by ApuManagementTest.
+	 */
 	@Test
 	void changedTransferIsReimported(@TempDir Path tempDir) throws IOException {
-		var transfer = Files.createDirectories(tempDir.resolve("temp-transfer"));
 		var apusrcUuid = UUID.randomUUID();
 		var apuUuid = UUID.randomUUID();
-		writeApusrc(transfer, apusrcUuid, apuUuid, "První jméno");
+		var transfer = tempDir.resolve("temp-transfer");
+		ApuxTransfers.write(transfer, apusrcUuid, apuUuid, "První jméno");
 		var tempImporter = new InputDirectoryImporter(importDataProcessingService, importJournalRepository,
 				tempDir.toString());
 
 		tempImporter.scan();
 		var first = importJournalRepository.findByFolder("temp-transfer").orElseThrow();
 
-		writeApusrc(transfer, apusrcUuid, apuUuid, "Změněné jméno");
+		ApuxTransfers.write(transfer, apusrcUuid, apuUuid, "Změněné jméno");
 		tempImporter.scan();
 
 		var second = importJournalRepository.findByFolder("temp-transfer").orElseThrow();
@@ -82,10 +86,8 @@ class InputDirectoryImporterTest extends AbstractTest {
 	@Test
 	void transfersAreImportedInLexicographicFolderOrder(@TempDir Path tempDir) throws IOException {
 		// deliberately created in reverse order - the scan must sort by name
-		writeApusrc(Files.createDirectories(tempDir.resolve("z2-second")), UUID.randomUUID(), UUID.randomUUID(),
-				"Druhý");
-		writeApusrc(Files.createDirectories(tempDir.resolve("a1-first")), UUID.randomUUID(), UUID.randomUUID(),
-				"První");
+		ApuxTransfers.write(tempDir.resolve("z2-second"), UUID.randomUUID(), UUID.randomUUID(), "Druhý");
+		ApuxTransfers.write(tempDir.resolve("a1-first"), UUID.randomUUID(), UUID.randomUUID(), "První");
 		var tempImporter = new InputDirectoryImporter(importDataProcessingService, importJournalRepository,
 				tempDir.toString());
 
@@ -95,20 +97,6 @@ class InputDirectoryImporterTest extends AbstractTest {
 		var first = importJournalRepository.findByFolder("a1-first").orElseThrow();
 		var second = importJournalRepository.findByFolder("z2-second").orElseThrow();
 		assertThat(first.getId()).isLessThan(second.getId());
-	}
-
-	private static void writeApusrc(Path transfer, UUID apusrcUuid, UUID apuUuid, String name) throws IOException {
-		var xml = """
-				<?xml version="1.0"?>
-				<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="%s">
-				 <apus>
-				  <apu type="Institution" uuid="%s">
-				   <name>%s</name>
-				  </apu>
-				 </apus>
-				</apusrc>
-				""".formatted(apusrcUuid, apuUuid, name);
-		Files.writeString(transfer.resolve("apusrc-temp.xml"), xml, StandardCharsets.UTF_8);
 	}
 
 }
