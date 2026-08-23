@@ -82,6 +82,8 @@ describe("ApuPage with digital objects", () => {
     expect(fullscreen.getAttribute("href")).toBe("/apu/rec/dao/dao1?file=z1");
     // the license is stated beside the viewer
     screen.getByText("Licence: CC-BY-4.0");
+    // the description column's width is the reader's, like the tree's
+    screen.getByRole("separator", { name: "Width of the archival description column" });
     await expectNoA11yViolations(container);
   });
 

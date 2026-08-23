@@ -1,12 +1,12 @@
 import {
   Button,
   Input,
-  Label,
   Text,
+  Tooltip,
   makeStyles,
   tokens,
 } from "@fluentui/react-components";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -15,16 +15,22 @@ const useStyles = makeStyles({
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
-    gap: tokens.spacingHorizontalXS,
-    padding: `${tokens.spacingVerticalXS} 0`,
+    columnGap: "2px",
+    rowGap: tokens.spacingVerticalXXS,
+    padding: `${tokens.spacingVerticalXXS} 0`,
   },
   group: {
     display: "flex",
     alignItems: "center",
-    gap: tokens.spacingHorizontalXS,
+    columnGap: "2px",
   },
   pageInput: {
-    width: "64px",
+    width: "56px",
+  },
+  pageTotal: {
+    whiteSpace: "nowrap",
+    paddingRight: tokens.spacingHorizontalXS,
+    paddingLeft: tokens.spacingHorizontalXXS,
   },
   divider: {
     width: "1px",
@@ -52,11 +58,32 @@ interface ViewerToolbarProps {
   fullscreenUrl?: string;
 }
 
+/** One compact control: an icon glyph whose accessible name is its tooltip. */
+function IconButton({
+  label,
+  glyph,
+  onClick,
+  disabled,
+}: {
+  label: string;
+  glyph: string;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Tooltip content={label} relationship="label">
+      <Button appearance="subtle" size="small" disabled={disabled} onClick={onClick}>
+        {glyph}
+      </Button>
+    </Tooltip>
+  );
+}
+
 /**
- * The viewer's own controls - real buttons with accessible names, no library
- * chrome. Zoom and rotation drive the canvas through the page's handle; page
- * turns go through the URL state so a deep link always names what is on
- * screen.
+ * The viewer's own controls, one compact line - real buttons whose accessible
+ * names double as tooltips, no library chrome. Zoom and rotation drive the
+ * canvas through the page's handle; page turns go through the host, which may
+ * keep them in its URL.
  */
 export default function ViewerToolbar({
   pageCount,
@@ -75,7 +102,6 @@ export default function ViewerToolbar({
   const styles = useStyles();
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const pageInputId = useId();
   // the draft exists only while the reader is typing; otherwise the input
   // simply shows the current page, so turns from anywhere refresh it
   const [pageDraft, setPageDraft] = useState<string | null>(null);
@@ -92,26 +118,22 @@ export default function ViewerToolbar({
   return (
     <div role="toolbar" aria-label={t("dao.viewerControls")} className={styles.bar}>
       <div className={styles.group}>
-        <Button
-          appearance="subtle"
+        <IconButton
+          label={t("dao.firstPage")}
+          glyph="⇤"
           disabled={currentIndex === 0}
           onClick={() => onGoTo(0)}
-          aria-label={t("dao.firstPage")}
-        >
-          ⇤
-        </Button>
-        <Button
-          appearance="subtle"
+        />
+        <IconButton
+          label={t("dao.prevPage")}
+          glyph="←"
           disabled={currentIndex === 0}
           onClick={() => onGoTo(currentIndex - 1)}
-          aria-label={t("dao.prevPage")}
-        >
-          ←
-        </Button>
-        <Label htmlFor={pageInputId}>{t("dao.goToPage")}</Label>
+        />
         <Input
-          id={pageInputId}
+          aria-label={t("dao.goToPage")}
           className={styles.pageInput}
+          size="small"
           type="number"
           min={1}
           max={pageCount}
@@ -124,65 +146,56 @@ export default function ViewerToolbar({
             }
           }}
         />
-        <Text>{t("dao.pageOf", { total: pageCount })}</Text>
-        <Button
-          appearance="subtle"
+        <Text size={200} className={styles.pageTotal}>
+          {t("dao.pageOf", { total: pageCount })}
+        </Text>
+        <IconButton
+          label={t("dao.nextPage")}
+          glyph="→"
           disabled={currentIndex >= pageCount - 1}
           onClick={() => onGoTo(currentIndex + 1)}
-          aria-label={t("dao.nextPage")}
-        >
-          →
-        </Button>
-        <Button
-          appearance="subtle"
+        />
+        <IconButton
+          label={t("dao.lastPage")}
+          glyph="⇥"
           disabled={currentIndex >= pageCount - 1}
           onClick={() => onGoTo(pageCount - 1)}
-          aria-label={t("dao.lastPage")}
-        >
-          ⇥
-        </Button>
+        />
       </div>
       <div className={styles.divider} aria-hidden="true" />
       <div className={styles.group}>
-        <Button appearance="subtle" onClick={onZoomIn} aria-label={t("dao.zoomIn")}>
-          ＋
-        </Button>
-        <Button appearance="subtle" onClick={onZoomOut} aria-label={t("dao.zoomOut")}>
-          −
-        </Button>
-        <Button appearance="subtle" onClick={onZoomFit} aria-label={t("dao.zoomFit")}>
-          ▣
-        </Button>
-        <Button appearance="subtle" onClick={onRotateLeft} aria-label={t("dao.rotateLeft")}>
-          ⟲
-        </Button>
-        <Button appearance="subtle" onClick={onRotateRight} aria-label={t("dao.rotateRight")}>
-          ⟳
-        </Button>
+        <IconButton label={t("dao.zoomIn")} glyph="＋" onClick={onZoomIn} />
+        <IconButton label={t("dao.zoomOut")} glyph="−" onClick={onZoomOut} />
+        <IconButton label={t("dao.zoomFit")} glyph="▣" onClick={onZoomFit} />
+        <IconButton label={t("dao.rotateLeft")} glyph="⟲" onClick={onRotateLeft} />
+        <IconButton label={t("dao.rotateRight")} glyph="⟳" onClick={onRotateRight} />
       </div>
       <div className={styles.divider} aria-hidden="true" />
       <div className={styles.group}>
         {downloadUrl !== undefined && (
-          <Button
-            as="a"
-            appearance="subtle"
-            href={downloadUrl}
-            download={downloadName}
-          >
-            {t("dao.download")}
-          </Button>
+          <Tooltip content={t("dao.download")} relationship="label">
+            <Button as="a" appearance="subtle" size="small" href={downloadUrl} download={downloadName}>
+              ⤓
+            </Button>
+          </Tooltip>
         )}
-        <Button appearance="subtle" onClick={onCopyLink}>
-          {t("dao.copyLink")}
-        </Button>
+        <IconButton label={t("dao.copyLink")} glyph="⧉" onClick={onCopyLink} />
         {fullscreenUrl !== undefined && (
-          <Button as="a" appearance="subtle" href={fullscreenUrl} onClick={(event) => {
-            // an in-app route: the router navigates, the browser must not reload
-            event.preventDefault();
-            navigate(fullscreenUrl);
-          }}>
-            {t("dao.fullscreen")}
-          </Button>
+          <Tooltip content={t("dao.fullscreen")} relationship="label">
+            <Button
+              as="a"
+              appearance="subtle"
+              size="small"
+              href={fullscreenUrl}
+              onClick={(event) => {
+                // an in-app route: the router navigates, the browser must not reload
+                event.preventDefault();
+                navigate(fullscreenUrl);
+              }}
+            >
+              ⛶
+            </Button>
+          </Tooltip>
         )}
       </div>
     </div>

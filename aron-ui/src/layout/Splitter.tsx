@@ -66,20 +66,27 @@ interface SplitterProps {
   onChange: (value: number) => void;
   /** The value the reader settled on - a released drag or one key press. */
   onCommit?: (value: number) => void;
+  /**
+   * The sized pane sits to the RIGHT of the separator: moving the separator
+   * left then grows the value instead of shrinking it, for drag and arrow keys
+   * alike - the keys keep moving the separator, not the number.
+   */
+  reverse?: boolean;
   className?: string;
 }
 
 /** Value an arrow/Home/End key leads to, or undefined for any other key. */
-function moved(key: string, value: number, min: number, max: number): number | undefined {
+function moved(key: string, value: number, min: number, max: number, reverse: boolean): number | undefined {
+  const step = reverse ? -STEP : STEP;
   switch (key) {
     case "ArrowLeft":
-      return value - STEP;
+      return value - step;
     case "ArrowRight":
-      return value + STEP;
+      return value + step;
     case "Home":
-      return min;
+      return reverse ? max : min;
     case "End":
-      return max;
+      return reverse ? min : max;
     default:
       return undefined;
   }
@@ -92,6 +99,7 @@ export default function Splitter({
   max,
   onChange,
   onCommit,
+  reverse = false,
   className,
 }: SplitterProps) {
   const styles = useStyles();
@@ -99,7 +107,7 @@ export default function Splitter({
 
   const clamp = (next: number) => Math.min(max, Math.max(min, Math.round(next)));
   const dragged = (clientX: number) =>
-    clamp(drag.current!.startValue + clientX - drag.current!.startX);
+    clamp(drag.current!.startValue + (reverse ? -1 : 1) * (clientX - drag.current!.startX));
 
   return (
     // ARIA makes a separator a widget as soon as it is focusable - that is the
@@ -143,7 +151,7 @@ export default function Splitter({
         drag.current = undefined;
       }}
       onKeyDown={(event) => {
-        const next = moved(event.key, value, min, max);
+        const next = moved(event.key, value, min, max, reverse);
         if (next === undefined) {
           return;
         }

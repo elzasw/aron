@@ -104,6 +104,7 @@
   "apu": {
     "tree": "Strom archivního popisu",
     "treeWidth": "Šířka stromu archivního popisu",
+    "descriptionWidth": "Šířka sloupce s archivním popisem",
     "treeExpand": "Rozbalit {{name}}",
     "treeCollapse": "Sbalit {{name}}",
     "treeMoreBefore": "Načíst předchozí",

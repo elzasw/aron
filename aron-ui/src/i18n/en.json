@@ -100,6 +100,7 @@
   "apu": {
     "tree": "Archival description tree",
     "treeWidth": "Width of the archival description tree",
+    "descriptionWidth": "Width of the archival description column",
     "treeExpand": "Expand {{name}}",
     "treeCollapse": "Collapse {{name}}",
     "treeMoreBefore": "Load previous",

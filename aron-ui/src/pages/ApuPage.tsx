@@ -1,5 +1,6 @@
 import {
   makeStyles,
+  mergeClasses,
   Spinner,
   Subtitle2,
   Text,
@@ -48,19 +49,26 @@ const MIN_TREE_WIDTH = 200;
 const MAX_TREE_WIDTH = 640;
 const TREE_WIDTH_KEY = "aron.treeWidth";
 
-function storedTreeWidth(): number {
+/** Width of the description column beside an embedded viewer - the reader's, like the tree's. */
+const DESCRIPTION_WIDTH_VAR = "--aron-description-width";
+const DEFAULT_DESCRIPTION_WIDTH = 420;
+const MIN_DESCRIPTION_WIDTH = 280;
+const MAX_DESCRIPTION_WIDTH = 760;
+const DESCRIPTION_WIDTH_KEY = "aron.descriptionWidth";
+
+function storedWidth(key: string, min: number, max: number, fallback: number): number {
   try {
-    const stored = Number(window.localStorage.getItem(TREE_WIDTH_KEY));
-    return stored >= MIN_TREE_WIDTH && stored <= MAX_TREE_WIDTH ? stored : DEFAULT_TREE_WIDTH;
+    const stored = Number(window.localStorage.getItem(key));
+    return stored >= min && stored <= max ? stored : fallback;
   } catch {
     // storage can be unavailable (private mode, blocked cookies) - not fatal
-    return DEFAULT_TREE_WIDTH;
+    return fallback;
   }
 }
 
-function rememberTreeWidth(width: number): void {
+function rememberWidth(key: string, width: number): void {
   try {
-    window.localStorage.setItem(TREE_WIDTH_KEY, String(width));
+    window.localStorage.setItem(key, String(width));
   } catch {
     // a reader without storage simply starts from the default width again
   }
@@ -152,11 +160,12 @@ const useStyles = makeStyles({
   viewerLicense: {
     color: tokens.colorNeutralForeground3,
   },
-  // ...and the description becomes the right-hand column, scrolling on its own
+  // ...and the description becomes the right-hand column, scrolling on its own,
+  // as wide as the reader drags its splitter (a custom property, like the tree)
   rootBesideViewer: {
     flexGrow: 0,
     flexShrink: 0,
-    width: "clamp(300px, 28vw, 460px)",
+    width: `var(${DESCRIPTION_WIDTH_VAR}, ${DEFAULT_DESCRIPTION_WIDTH}px)`,
     "@media (max-width: 860px)": {
       width: "auto",
     },
@@ -208,6 +217,12 @@ const useStyles = makeStyles({
       rowGap: tokens.spacingVerticalXXS,
     },
   },
+  // in the narrow column beside a viewer the label sits above its value -
+  // two columns would squeeze the values into a sliver
+  itemsNarrow: {
+    gridTemplateColumns: "1fr",
+    rowGap: tokens.spacingVerticalXXS,
+  },
   // collapsed GROUPED part: one line of part label + item-value summary,
   // aligned with the item grid so labels form one column
   groupedHeader: {
@@ -224,6 +239,9 @@ const useStyles = makeStyles({
     "@media (max-width: 640px)": {
       gridTemplateColumns: "1fr",
     },
+  },
+  groupedHeaderNarrow: {
+    gridTemplateColumns: "1fr",
   },
   groupedSummary: {
     fontWeight: tokens.fontWeightSemibold,
@@ -311,10 +329,10 @@ function ItemValue({ item }: { item: DetailItem }) {
   return <>{itemText(item)}</>;
 }
 
-function ItemRows({ items }: { items: DetailItem[] }) {
+function ItemRows({ items, narrow }: { items: DetailItem[]; narrow: boolean }) {
   const styles = useStyles();
   return (
-    <dl className={styles.items}>
+    <dl className={mergeClasses(styles.items, narrow && styles.itemsNarrow)}>
       {items.map((item, index) => (
         <Fragment key={`${item.code}-${index}`}>
           <dt className={styles.itemLabel}>{item.label}</dt>
@@ -335,7 +353,7 @@ function ItemRows({ items }: { items: DetailItem[] }) {
  * part with a single item collapses to one label/value row without the part
  * header.
  */
-function Part({ part }: { part: DetailPart }) {
+function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
   const styles = useStyles();
   const [open, setOpen] = useState(false);
   const items = part.items.filter((item) => item.code !== ARCHDESC_ROOT_REF);
@@ -352,7 +370,7 @@ function Part({ part }: { part: DetailPart }) {
       <section className={styles.part} aria-label={part.label}>
         <button
           type="button"
-          className={styles.groupedHeader}
+          className={mergeClasses(styles.groupedHeader, narrow && styles.groupedHeaderNarrow)}
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >
@@ -364,7 +382,7 @@ function Part({ part }: { part: DetailPart }) {
             </span>
           </span>
         </button>
-        {open && <ItemRows items={items} />}
+        {open && <ItemRows items={items} narrow={narrow} />}
       </section>
     );
   }
@@ -373,7 +391,7 @@ function Part({ part }: { part: DetailPart }) {
   return (
     <section className={styles.part} aria-label={single ? items[0].label : part.label}>
       {!single && <Subtitle2 as="h2">{part.label}</Subtitle2>}
-      <ItemRows items={items} />
+      <ItemRows items={items} narrow={narrow} />
     </section>
   );
 }
@@ -383,7 +401,13 @@ export default function ApuPage() {
   const styles = useStyles();
   const { t } = useTranslation();
   const { uuid } = useParams<{ uuid: string }>();
-  const [treeWidth, setTreeWidth] = useState(storedTreeWidth);
+  const [treeWidth, setTreeWidth] = useState(() =>
+    storedWidth(TREE_WIDTH_KEY, MIN_TREE_WIDTH, MAX_TREE_WIDTH, DEFAULT_TREE_WIDTH),
+  );
+  const [descriptionWidth, setDescriptionWidth] = useState(() =>
+    storedWidth(DESCRIPTION_WIDTH_KEY, MIN_DESCRIPTION_WIDTH, MAX_DESCRIPTION_WIDTH,
+      DEFAULT_DESCRIPTION_WIDTH),
+  );
   // the same query the breadcrumb strip reads - one request, one truth
   const detail = useApuDetail(uuid);
 
@@ -414,7 +438,12 @@ export default function ApuPage() {
   return (
     <div
       className={styles.layout}
-      style={{ [TREE_WIDTH_VAR]: `${treeWidth}px` } as CSSProperties}
+      style={
+        {
+          [TREE_WIDTH_VAR]: `${treeWidth}px`,
+          [DESCRIPTION_WIDTH_VAR]: `${descriptionWidth}px`,
+        } as CSSProperties
+      }
     >
       {data.apuType === ApuType.ArchDesc && (
         <>
@@ -427,26 +456,39 @@ export default function ApuPage() {
             min={MIN_TREE_WIDTH}
             max={MAX_TREE_WIDTH}
             onChange={setTreeWidth}
-            onCommit={rememberTreeWidth}
+            onCommit={(width) => rememberWidth(TREE_WIDTH_KEY, width)}
             className={styles.splitter}
           />
         </>
       )}
       {embeddedDao !== undefined && (
-        <div className={styles.viewerPane}>
-          <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
-          {embeddedDao.license !== undefined && (
-            <Text size={200} className={styles.viewerLicense}>
-              {t("dao.license", { code: embeddedDao.license })}
-            </Text>
-          )}
-        </div>
+        <>
+          <div className={styles.viewerPane}>
+            <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
+            {embeddedDao.license !== undefined && (
+              <Text size={200} className={styles.viewerLicense}>
+                {t("dao.license", { code: embeddedDao.license })}
+              </Text>
+            )}
+          </div>
+          {/* the description sits right of this separator, so the value grows leftwards */}
+          <Splitter
+            reverse
+            label={t("apu.descriptionWidth")}
+            value={descriptionWidth}
+            min={MIN_DESCRIPTION_WIDTH}
+            max={MAX_DESCRIPTION_WIDTH}
+            onChange={setDescriptionWidth}
+            onCommit={(width) => rememberWidth(DESCRIPTION_WIDTH_KEY, width)}
+            className={styles.splitter}
+          />
+        </>
       )}
       {/* keyed by the record: the description is its own scroll area, and a new
           element starts at its top - the reader never opens a record halfway
           down because the previous one was scrolled */}
       <div
-        className={`${styles.root} ${embeddedDao !== undefined ? styles.rootBesideViewer : ""}`}
+        className={mergeClasses(styles.root, embeddedDao !== undefined && styles.rootBesideViewer)}
         key={data.uuid}
       >
       <header className={styles.header}>
@@ -468,7 +510,7 @@ export default function ApuPage() {
         )}
       </header>
       {data.parts.map((part, index) => (
-        <Part key={`${part.code}-${index}`} part={part} />
+        <Part key={`${part.code}-${index}`} part={part} narrow={embeddedDao !== undefined} />
       ))}
       {data.attachments.length > 0 && (
         <section className={styles.part} aria-label={t("apu.attachments")}>
