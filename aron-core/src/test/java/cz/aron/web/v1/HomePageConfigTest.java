@@ -8,6 +8,9 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.Yaml;
 
 import cz.aron.api.v1.model.ApuType;
@@ -207,136 +210,9 @@ class HomePageConfigTest {
 	}
 
 	@Test
-	void aFilterOnAFacetTheSectionDoesNotHaveFailsTheStartup() {
-		// the search endpoint answers 400 for such a filter, so the reader would
-		// follow the tile straight into an error page
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          apuType: FUND
-				          filters:
-				            - facet: UNIT_TYPE
-				              values: [matrika]
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("UNIT_TYPE")
-				.hasMessageContaining("FUND");
-	}
-
-	@Test
-	void aFacetTheNewApiDoesNotServeCountsAsAbsent() {
-		// MULTI_REF_EXT is served by the old API only - a tile cannot use it
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Staré
-				          apuType: ARCH_DESC
-				          filters:
-				            - facet: OLD_ONLY
-				              values: [x]
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("OLD_ONLY");
-	}
-
-	@Test
-	void aFilterShapeThatDoesNotFitTheFacetTypeFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          apuType: ARCH_DESC
-				          filters:
-				            - facet: UNIT_TYPE
-				              q: matrika
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("'values' list");
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Datace
-				          apuType: ARCH_DESC
-				          filters:
-				            - facet: UNIT_DATE
-				              values: [1800]
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("'from' or a 'to'");
-	}
-
-	@Test
-	void aTileMustLeadEitherOutOfThePortalOrIntoASection() {
-		String both = """
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				          apuType: ARCH_DESC
-				""";
-		String neither = """
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				""";
-		assertThatThrownBy(() -> parse(both)).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("not both");
-		assertThatThrownBy(() -> parse(neither)).isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("not both");
-	}
-
-	@Test
-	void anInAppOrSchemelessUrlFailsTheStartup() {
-		// the old portal guessed in-app vs. external from the string; here an
-		// in-portal destination is a SEARCH tile and a link always carries a scheme
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Archivalie
-				          url: /arch-desc?f=[]
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("absolute http(s) or mailto");
-	}
-
-	@Test
-	void aTileMustEarnAFacetThatWaitsForAnother() {
-		// RECORD~TYPE is offered only once UNIT~TYPE has "matrika" selected, so a
-		// tile filtering it without selecting that lands on a search which drops
-		// the filter again - a tile that boots fine and then does not do what it
-		// says, which is what this validation exists to catch
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Druhy záznamů
-				          apuType: ARCH_DESC
-				          filters:
-				            - facet: RECORD_TYPE
-				              values: [narozeni]
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("RECORD~TYPE")
-				.hasMessageContaining("UNIT~TYPE")
-				.hasMessageContaining("matrika");
-
-		// selecting it in the same tile is exactly what makes the tile work
+	void aTileEarnsAWaitingFacetBySelectingWhatItWaitsFor() {
+		// RECORD~TYPE is offered only once UNIT~TYPE has "matrika" selected;
+		// selecting it in the same tile is what makes such a tile work
 		var tiles = render("""
 				homepage:
 				  groups:
@@ -350,104 +226,136 @@ class HomePageConfigTest {
 				            - facet: RECORD_TYPE
 				              values: [narozeni]
 				""").getGroups().get(0).getTiles();
+
 		assertThat(tiles).singleElement().isInstanceOfSatisfying(SearchTile.class,
 				tile -> assertThat(tile.getFilters()).extracting(SearchFilter::getFacet)
 						.containsExactly("UNIT~TYPE", "RECORD~TYPE"));
 	}
 
-	@Test
-	void collectionHasNoSectionToSearchIn() {
-		assertThatThrownBy(() -> parse("""
+	/** The group boilerplate around one tile, so a case shows only the tile it is about. */
+	private static String oneTile(String tile) {
+		return """
 				homepage:
 				  groups:
 				    - label: Skupina
 				      tiles:
-				        - label: Sbírky
-				          apuType: COLLECTION
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("COLLECTION");
+				%s""".formatted(tile.indent(8));
 	}
 
-	@Test
-	void unservableImageSpanOrPositionFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				          image: { name: ../secrets.txt }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("webResources.images");
-		// a wider tile would break the responsive grid
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				          columnSpan: 6
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("columnSpan");
-		// the value ends up in the page's style, so anything else stops the startup
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				          image: { name: matriky.jpg, positionX: "50%; background: url(evil)" }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("CSS position keyword");
+	/**
+	 * Everything a deployment can write that must stop the startup instead of
+	 * reaching a reader. The whole point of validating here is that the search
+	 * endpoint answers 400 for a filter a section has not configured, so an
+	 * unvalidated tile would lead the reader straight into an error page - which
+	 * is why every rejection is worth one row of its own.
+	 */
+	static List<Arguments> rejectedConfigurations() {
+		return List.of(
+				Arguments.of("filter on a facet the section does not have", oneTile("""
+						- label: Matriky
+						  apuType: FUND
+						  filters:
+						    - facet: UNIT_TYPE
+						      values: [matrika]
+						"""), List.of("UNIT_TYPE", "FUND")),
+				// MULTI_REF_EXT is served by the old API only - a tile cannot use it
+				Arguments.of("facet the new API does not serve", oneTile("""
+						- label: Staré
+						  apuType: ARCH_DESC
+						  filters:
+						    - facet: OLD_ONLY
+						      values: [x]
+						"""), List.of("OLD_ONLY")),
+				Arguments.of("text filter on an enum facet", oneTile("""
+						- label: Matriky
+						  apuType: ARCH_DESC
+						  filters:
+						    - facet: UNIT_TYPE
+						      q: matrika
+						"""), List.of("'values' list")),
+				Arguments.of("values filter on a dating facet", oneTile("""
+						- label: Datace
+						  apuType: ARCH_DESC
+						  filters:
+						    - facet: UNIT_DATE
+						      values: [1800]
+						"""), List.of("'from' or a 'to'")),
+				Arguments.of("both a url and a section", oneTile("""
+						- label: Matriky
+						  url: https://example.org
+						  apuType: ARCH_DESC
+						"""), List.of("not both")),
+				Arguments.of("neither a url nor a section", oneTile("""
+						- label: Matriky
+						"""), List.of("not both")),
+				// the old portal guessed in-app vs. external from the string; here an
+				// in-portal destination is a SEARCH tile and a link carries a scheme
+				Arguments.of("in-app or schemeless url", oneTile("""
+						- label: Archivalie
+						  url: /arch-desc?f=[]
+						"""), List.of("absolute http(s) or mailto")),
+				// a tile filtering a waiting facet without selecting what it waits for
+				// lands on a search that drops the filter again - a tile that boots
+				// fine and then does not do what it says
+				Arguments.of("waiting facet the tile does not earn", oneTile("""
+						- label: Druhy záznamů
+						  apuType: ARCH_DESC
+						  filters:
+						    - facet: RECORD_TYPE
+						      values: [narozeni]
+						"""), List.of("RECORD~TYPE", "UNIT~TYPE", "matrika")),
+				Arguments.of("a section COLLECTION does not have", oneTile("""
+						- label: Sbírky
+						  apuType: COLLECTION
+						"""), List.of("COLLECTION")),
+				Arguments.of("image outside the configured directory", oneTile("""
+						- label: Matriky
+						  url: https://example.org
+						  image: { name: ../secrets.txt }
+						"""), List.of("webResources.images")),
+				// a wider tile would break the responsive grid
+				Arguments.of("span outside 1-2", oneTile("""
+						- label: Matriky
+						  url: https://example.org
+						  columnSpan: 6
+						"""), List.of("columnSpan")),
+				// the value ends up in the page's style, so anything else is refused
+				Arguments.of("position that is not a CSS keyword", oneTile("""
+						- label: Matriky
+						  url: https://example.org
+						  image: { name: matriky.jpg, positionX: "50%; background: url(evil)" }
+						"""), List.of("CSS position keyword")),
+				Arguments.of("typo in a tile key", oneTile("""
+						- label: Matriky
+						  adress: https://example.org
+						"""), List.of("adress")),
+				Arguments.of("group without a label", """
+						homepage:
+						  groups:
+						    - style: LIST
+						      tiles:
+						        - label: Matriky
+						          url: https://example.org
+						""", List.of("label")),
+				Arguments.of("group without tiles", "homepage:\n  groups:\n    - label: Skupina\n",
+						List.of("no tiles")),
+				Arguments.of("unknown group style", """
+						homepage:
+						  groups:
+						    - label: Skupina
+						      style: FILLED
+						      tiles:
+						        - label: Matriky
+						          url: https://example.org
+						""", List.of("FILLED")));
 	}
 
-	@Test
-	void aTypoInAKeyOrAMissingLabelFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      tiles:
-				        - label: Matriky
-				          adress: https://example.org
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("adress");
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - style: LIST
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("label");
-		assertThatThrownBy(() -> parse("homepage:\n  groups:\n    - label: Skupina\n"))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("no tiles");
-	}
-
-	@Test
-	void unknownStyleFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				homepage:
-				  groups:
-				    - label: Skupina
-				      style: FILLED
-				      tiles:
-				        - label: Matriky
-				          url: https://example.org
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("FILLED");
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("rejectedConfigurations")
+	void anUnusableTileFailsTheStartup(String name, String yaml, List<String> messageParts) {
+		var thrown = assertThatThrownBy(() -> parse(yaml)).isInstanceOf(IllegalStateException.class);
+		// the message has to name what the operator must fix, not only that something is wrong
+		messageParts.forEach(thrown::hasMessageContaining);
 	}
 
 }

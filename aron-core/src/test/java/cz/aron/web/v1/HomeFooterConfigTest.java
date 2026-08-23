@@ -5,10 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.Yaml;
 
 import cz.aron.api.v1.model.FooterLink;
@@ -156,110 +160,86 @@ class HomeFooterConfigTest {
 						tuple(null, null, FooterLinkCode.ACCESSIBILITY));
 	}
 
-	@Test
-	void anUnservableMarkFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - links:
-				        - label: Facebook
-				          url: https://facebook.com/archiv
-				          image: { name: ../secrets.txt }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("webResources.images");
+	/**
+	 * Everything a deployment can write in the band that must stop the startup.
+	 * Prose carrying its own links is the part with real rules - a placeholder
+	 * that resolves to nothing, or a link one language's sentence forgets, would
+	 * otherwise reach exactly the readers of that language and nobody else.
+	 */
+	static List<Arguments> rejectedFooters() {
+		return List.of(
+				Arguments.of("mark outside the configured directory", """
+						footer:
+						  columns:
+						    - links:
+						        - label: Facebook
+						          url: https://facebook.com/archiv
+						          image: { name: ../secrets.txt }
+						""", "webResources.images"),
+				Arguments.of("placeholder without a link", """
+						footer:
+						  columns:
+						    - paragraphs:
+						        - text: "Aplikace {archiv} zpřístupňuje popis archiválií."
+						""", "{archiv}"),
+				// the reader's language decides which sentence is rendered, so a link
+				// the English text never uses is a mistake even when Czech is right
+				Arguments.of("placeholder missing from one language", """
+						footer:
+						  columns:
+						    - paragraphs:
+						        - text:
+						            cs: "Aplikace {archiv} zpřístupňuje popis archiválií."
+						            en: "The portal presents archival descriptions."
+						          links:
+						            archiv: { label: Archivu, url: https://archiv.example }
+						""", "not used in every language"),
+				Arguments.of("stray brace", """
+						footer:
+						  columns:
+						    - paragraphs:
+						        - text: "Aplikace {archiv zpřístupňuje popis."
+						          links:
+						            archiv: { label: Archivu, url: https://archiv.example }
+						""", "stray brace"),
+				Arguments.of("inline link without a url", """
+						footer:
+						  columns:
+						    - paragraphs:
+						        - text: "Aplikace {archiv} zpřístupňuje popis."
+						          links:
+						            archiv: { label: Archivu }
+						""", "'label' and a 'url'"),
+				Arguments.of("column with nothing in it", "footer:\n  columns:\n    - heading: Kontakt\n",
+						"neither paragraphs nor links"),
+				Arguments.of("typo in a column key", """
+						footer:
+						  columns:
+						    - headline: Kontakt
+						      links:
+						        - label: X
+						          url: https://x.example
+						""", "headline"),
+				Arguments.of("typo in a link key", """
+						footer:
+						  columns:
+						    - links:
+						        - label: Facebook
+						          url: https://facebook.com/archiv
+						          icon: FACEBOOK
+						""", "icon"),
+				Arguments.of("link with neither a code nor a label",
+						"footer:\n  columns:\n    - links:\n        - url: https://x.example\n",
+						"https://x.example"));
 	}
 
-	@Test
-	void aPlaceholderWithoutALinkFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - paragraphs:
-				        - text: "Aplikace {archiv} zpřístupňuje popis archiválií."
-				"""))
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("rejectedFooters")
+	void anUnusableFooterFailsTheStartup(String name, String yaml, String messagePart) {
+		assertThatThrownBy(() -> parse(yaml))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("{archiv}");
-	}
-
-	@Test
-	void aPlaceholderMissingFromOneLanguageFailsTheStartup() {
-		// the reader's language decides which sentence is rendered, so a link the
-		// English text never uses is a mistake even when the Czech one is right
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - paragraphs:
-				        - text:
-				            cs: "Aplikace {archiv} zpřístupňuje popis archiválií."
-				            en: "The portal presents archival descriptions."
-				          links:
-				            archiv: { label: Archivu, url: https://archiv.example }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("not used in every language");
-	}
-
-	@Test
-	void aStrayBraceFailsTheStartup() {
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - paragraphs:
-				        - text: "Aplikace {archiv zpřístupňuje popis."
-				          links:
-				            archiv: { label: Archivu, url: https://archiv.example }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("stray brace");
-	}
-
-	@Test
-	void anInlineLinkNeedsBothALabelAndAUrl() {
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - paragraphs:
-				        - text: "Aplikace {archiv} zpřístupňuje popis."
-				          links:
-				            archiv: { label: Archivu }
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("'label' and a 'url'");
-	}
-
-	@Test
-	void anEmptyColumnOrTypoFailsTheStartup() {
-		assertThatThrownBy(() -> parse("footer:\n  columns:\n    - heading: Kontakt\n"))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("neither paragraphs nor links");
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - headline: Kontakt
-				      links:
-				        - label: X
-				          url: https://x.example
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("headline");
-		assertThatThrownBy(() -> parse("""
-				footer:
-				  columns:
-				    - links:
-				        - label: Facebook
-				          url: https://facebook.com/archiv
-				          icon: FACEBOOK
-				"""))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("icon");
-	}
-
-	@Test
-	void aLinkStillNeedsACodeOrALabel() {
-		assertThatThrownBy(() -> parse("footer:\n  columns:\n    - links:\n        - url: https://x.example\n"))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("https://x.example");
+				// the message has to name what the operator must fix
+				.hasMessageContaining(messagePart);
 	}
 
 	@Test

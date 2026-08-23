@@ -20,8 +20,9 @@ import cz.aron.test.api.v1.invoker.ApiClient;
  * {@code @ActiveProfiles}/{@code @TestPropertySource} combinations - each unique
  * configuration forks another context, which is the main cost driver of a Spring
  * suite. A subclass may re-declare {@code @SpringBootTest} to get a deliberately
- * different context (currently only SubpathServingTest); justify any new one in
- * its javadoc.
+ * different context - currently SubpathServingTest and SoapPortServingTest, both
+ * because the setting under test is fixed when the server starts and cannot be
+ * varied per request; justify any new one in its javadoc.
  * <p>
  * Keep this base THIN: transport helpers only. Feature-specific fixtures belong
  * to the feature's test class.

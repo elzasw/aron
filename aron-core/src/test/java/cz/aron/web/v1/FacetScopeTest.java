@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.Yaml;
 
 import cz.aron.api.v1.model.ApuType;
@@ -101,39 +104,42 @@ class FacetScopeTest {
 		assertThat(codesFor(new FacetScope(List.of(extended)), ApuType.ARCH_DESC)).isEmpty();
 	}
 
+	/** Every form the grammar does not describe, one case per row. */
+	static List<Arguments> unreadableConditions() {
+		return List.of(
+				Arguments.of("unknown operator", "any:\n  - apuType: FUND", "unknown key 'any'"),
+				Arguments.of("unknown apuType", "apuType: FONDS", "unknown apuType 'FONDS'"),
+				Arguments.of("apuType with no value", "apuType:", "'apuType' has no value"),
+				Arguments.of("apuType beside all", "apuType: FUND\nall:\n  - apuType: FUND",
+						"combines 'apuType' with 'all'"),
+				Arguments.of("all is a mapping", "all:\n  apuType: FUND", "must be a non-empty list"),
+				Arguments.of("empty all", "all: []", "must be a non-empty list"),
+				Arguments.of("unknown key in a condition", "all:\n  - apuTypes: FUND", "unknown key 'apuTypes'"),
+				Arguments.of("filter without value", "all:\n  - filter: UNIT_TYPE",
+						"needs both 'filter' and 'value'"),
+				Arguments.of("value without filter", "all:\n  - value: matrika",
+						"needs both 'filter' and 'value'"),
+				Arguments.of("two apuTypes", "all:\n  - apuType: FUND\n  - apuType: ENTITY",
+						"more than one apuType"),
+				Arguments.of("condition is not a mapping", "all:\n  - FUND", "must be a mapping"));
+	}
+
 	/**
 	 * A condition the grammar does not describe stops the startup. It used to mean
 	 * "applies to every section", which is invisible until a reader is offered a
 	 * facet of somebody else's section - or is not offered one at all.
+	 *
+	 * <p>One case per row rather than a loop, so a parser regression reports every
+	 * form it breaks instead of stopping at the first.
 	 */
-	@Test
-	void anUnreadableConditionStopsTheStartup() {
-		record Case(String name, String when, String message) {
-		}
-		var cases = List.of(
-				new Case("unknown operator", "any:\n  - apuType: FUND", "unknown key 'any'"),
-				new Case("unknown apuType", "apuType: FONDS", "unknown apuType 'FONDS'"),
-				new Case("apuType with no value", "apuType:", "'apuType' has no value"),
-				new Case("apuType beside all", "apuType: FUND\nall:\n  - apuType: FUND",
-						"combines 'apuType' with 'all'"),
-				new Case("all is a mapping", "all:\n  apuType: FUND", "must be a non-empty list"),
-				new Case("empty all", "all: []", "must be a non-empty list"),
-				new Case("unknown key in a condition", "all:\n  - apuTypes: FUND", "unknown key 'apuTypes'"),
-				new Case("filter without value", "all:\n  - filter: UNIT_TYPE", "needs both 'filter' and 'value'"),
-				new Case("value without filter", "all:\n  - value: matrika", "needs both 'filter' and 'value'"),
-				new Case("two apuTypes", "all:\n  - apuType: FUND\n  - apuType: ENTITY",
-						"more than one apuType"),
-				new Case("condition is not a mapping", "all:\n  - FUND", "must be a mapping"));
-
-		for (Case testCase : cases) {
-			assertThatThrownBy(() -> new FacetScope(List.of(facet("BROKEN", testCase.when())))
-					.facetsFor(ApuType.FUND))
-					.as("%s", testCase.name())
-					.isInstanceOf(IllegalStateException.class)
-					// the message names the facet, so an operator knows which entry to fix
-					.hasMessageContaining("BROKEN")
-					.hasMessageContaining(testCase.message());
-		}
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("unreadableConditions")
+	void anUnreadableConditionStopsTheStartup(String name, String when, String message) {
+		assertThatThrownBy(() -> new FacetScope(List.of(facet("BROKEN", when))).facetsFor(ApuType.FUND))
+				.isInstanceOf(IllegalStateException.class)
+				// the message names the facet, so an operator knows which entry to fix
+				.hasMessageContaining("BROKEN")
+				.hasMessageContaining(message);
 	}
 
 	@Test

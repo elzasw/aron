@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import cz.aron.domain.ApuEntity;
@@ -30,11 +32,6 @@ class OldApiSurfaceTest extends AbstractTest {
 
 	@Autowired
 	private jakarta.persistence.EntityManager entityManager;
-
-	@Test
-	void contextLoadsWithoutElasticsearchAndPostgres() {
-		// @SpringBootTest booting the full server is the assertion
-	}
 
 	@Test
 	void facets() throws Exception {
@@ -125,18 +122,21 @@ class OldApiSurfaceTest extends AbstractTest {
 		assertThat(response.body()).contains("TITLE~MAIN").contains("UNIT~DATE");
 	}
 
-	@Test
-	void searchEndpointsAnswerOnTheEmbeddedEngine() throws Exception {
-		// the four frozen search endpoints of the old API; in the default suite
-		// they run on the embedded Lucene engine (OldApiSearch seam), so they are
-		// part of the pinned, callable surface without Elasticsearch
-		for (String endpoint : new String[] { "/api/aron/apu/listview", "/api/aron/apu/list",
-				"/api/aron/apu/listsimple", "/api/aron/apu/listresults" }) {
-			var response = post(endpoint + "?listType=SURFACE-TEST", "{\"size\":1}");
-			assertThat(response.statusCode()).as(endpoint).isEqualTo(200);
-			assertThat(contentType(response)).as(endpoint).startsWith("application/json");
-			assertThat(response.body()).as(endpoint).contains("\"count\"");
-		}
+	/**
+	 * The four frozen search endpoints of the old API; in the default suite they
+	 * run on the embedded Lucene engine (OldApiSearch seam), so they are part of
+	 * the pinned, callable surface without Elasticsearch. One case per endpoint,
+	 * so a broken one does not hide the state of the other three.
+	 */
+	@ParameterizedTest
+	@ValueSource(strings = { "/api/aron/apu/listview", "/api/aron/apu/list", "/api/aron/apu/listsimple",
+			"/api/aron/apu/listresults" })
+	void searchEndpointAnswersOnTheEmbeddedEngine(String endpoint) throws Exception {
+		var response = post(endpoint + "?listType=SURFACE-TEST", "{\"size\":1}");
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		assertThat(contentType(response)).startsWith("application/json");
+		assertThat(response.body()).contains("\"count\"");
 	}
 
 	@Test
@@ -149,22 +149,12 @@ class OldApiSurfaceTest extends AbstractTest {
 		assertThat(get("/api/aron/cxf/ft?wsdl").statusCode()).isEqualTo(404);
 	}
 
-	@Test
-	void redirectUnknownPermalinkIs404() throws Exception {
-		var response = get("/api/aron/redirect/does-not-exist");
-		assertThat(response.statusCode()).isEqualTo(404);
-	}
-
-	@Test
-	void attachmentUnknownNameIs404() throws Exception {
-		var response = get("/api/aron/attachment/does-not-exist");
-		assertThat(response.statusCode()).isEqualTo(404);
-	}
-
-	@Test
-	void redirectImageUnknownPermalinkIs404() throws Exception {
-		var response = get("/api/aron/redirectimage/does-not-exist");
-		assertThat(response.statusCode()).isEqualTo(404);
+	/** The lookup endpoints answer 404 for a name they do not know, never a 500 or a redirect. */
+	@ParameterizedTest
+	@ValueSource(strings = { "/api/aron/redirect/does-not-exist", "/api/aron/attachment/does-not-exist",
+			"/api/aron/redirectimage/does-not-exist" })
+	void unknownNameIs404(String path) throws Exception {
+		assertThat(get(path).statusCode()).isEqualTo(404);
 	}
 
 	@Test

@@ -13,6 +13,9 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import cz.aron.api.v1.model.FooterLink;
@@ -131,19 +134,33 @@ class UiConfigLoaderTest {
 				.containsExactly(null, "Contact", "Provozovatel");
 	}
 
-	@Test
-	void footerLinkWithoutCodeOrLabelFailsTheStartup() {
-		assertThatThrownBy(() -> loader("footer:\n  links:\n    - url: https://archiv.example/x\n", HELP_URL))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("https://archiv.example/x");
+	/** Everything a deployment can write in pageTemplate.yaml that must stop the startup. */
+	static List<Arguments> rejectedTemplates() {
+		return List.of(
+				Arguments.of("footer link with neither a code nor a label",
+						"footer:\n  links:\n    - url: https://archiv.example/x\n", "https://archiv.example/x"),
+				Arguments.of("unknown footer link code",
+						"footer:\n  links:\n    - code: TYPO\n      url: https://archiv.example/x\n", "TYPO"),
+				Arguments.of("unknown menu code", "menu:\n  - code: TYPO\n", "TYPO"),
+				// one shade alone would put the deployment's own header above tiles in
+				// the portal's colour
+				Arguments.of("half-configured primary colour", "primaryColor:\n  dark: black\n", "main"),
+				// the value ends up in the page's stylesheet, so anything that is not
+				// a colour stops the startup instead of being written there
+				Arguments.of("primary colour that is not a colour", """
+						primaryColor:
+						  dark: "red; } body { display: none"
+						  main: red
+						""", "is not a CSS color"));
 	}
 
-	@Test
-	void unknownFooterLinkCodeFailsTheStartup() {
-		assertThatThrownBy(() -> loader(
-				"footer:\n  links:\n    - code: TYPO\n      url: https://archiv.example/x\n", HELP_URL))
+	@ParameterizedTest(name = "{0}")
+	@MethodSource("rejectedTemplates")
+	void anUnusableTemplateFailsTheStartup(String name, String yaml, String messagePart) {
+		assertThatThrownBy(() -> loader(yaml, HELP_URL))
 				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("TYPO");
+				// the message has to name what the operator must fix
+				.hasMessageContaining(messagePart);
 	}
 
 	@Test
@@ -161,32 +178,5 @@ class UiConfigLoaderTest {
 		assertThat(color.main()).isEqualTo("#5b4a63");
 	}
 
-	@Test
-	void halfConfiguredOrUnusablePrimaryColorFailsTheStartup() {
-		// one shade alone would put the deployment's own header above tiles in the
-		// portal's colour
-		assertThatThrownBy(() -> loader("""
-				primaryColor:
-				  dark: black
-				""", HELP_URL))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("main");
-		// the value ends up in the page's stylesheet, so anything that is not a
-		// colour stops the startup instead of being written there
-		assertThatThrownBy(() -> loader("""
-				primaryColor:
-				  dark: "red; } body { display: none"
-				  main: red
-				""", HELP_URL))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("is not a CSS color");
-	}
-
-	@Test
-	void unknownMenuCodeFailsTheStartup() {
-		assertThatThrownBy(() -> loader("menu:\n  - code: TYPO\n", HELP_URL))
-				.isInstanceOf(IllegalStateException.class)
-				.hasMessageContaining("TYPO");
-	}
 
 }
