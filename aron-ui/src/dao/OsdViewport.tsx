@@ -54,12 +54,12 @@ const OsdViewport = forwardRef<OsdViewportHandle, OsdViewportProps>(function Osd
       }
       if (viewerRef.current === null) {
         const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true;
+        // no preserveImageSizeOnResize: the panes around the viewer are resizable,
+        // and the image must refit the canvas instead of keeping its old scale
         viewerRef.current = OpenSeadragon({
           element: containerRef.current,
           showNavigationControl: false,
           animationTime: reducedMotion ? 0 : undefined,
-          // the pyramid arrives tile by tile; a flash of white between pages is worse
-          preserveImageSizeOnResize: true,
         });
         viewerRef.current.addHandler("open-failed", () => onOpenFailedRef.current?.());
       }

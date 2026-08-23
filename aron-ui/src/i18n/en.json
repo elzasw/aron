@@ -139,6 +139,7 @@
     "downloadNamed": "Download {{name}}",
     "copyLink": "Copy link",
     "fullscreen": "Full screen",
+    "moreControls": "More viewer controls",
     "linkCopied": "Link copied to clipboard.",
     "linkCopyFailed": "Copying the link failed.",
     "viewerControls": "Viewer controls",

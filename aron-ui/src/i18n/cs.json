@@ -145,6 +145,7 @@
     "downloadNamed": "Stáhnout {{name}}",
     "copyLink": "Kopírovat odkaz",
     "fullscreen": "Celá obrazovka",
+    "moreControls": "Další ovládání prohlížeče",
     "linkCopied": "Odkaz zkopírován do schránky.",
     "linkCopyFailed": "Kopírování odkazu se nezdařilo.",
     "viewerControls": "Ovládání prohlížeče",

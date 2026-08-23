@@ -217,11 +217,31 @@ const useStyles = makeStyles({
       rowGap: tokens.spacingVerticalXXS,
     },
   },
-  // in the narrow column beside a viewer the label sits above its value -
-  // two columns would squeeze the values into a sliver
+  // in the narrow column beside a viewer, rows flow instead of aligning into
+  // grid columns: a short value stays on its label's line, a long one wraps
+  // below it and takes the full width - two rigid columns would squeeze the
+  // values into a sliver
   itemsNarrow: {
-    gridTemplateColumns: "1fr",
+    display: "flex",
+    flexDirection: "column",
+    rowGap: tokens.spacingVerticalXS,
+    margin: 0,
+  },
+  itemRowNarrow: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    columnGap: tokens.spacingHorizontalL,
     rowGap: tokens.spacingVerticalXXS,
+  },
+  // the basis decides when a value deserves the label's line: shorter than
+  // this fits beside it, anything needing more wraps under it full-width
+  itemValueNarrow: {
+    margin: 0,
+    flexGrow: 1,
+    flexBasis: "14rem",
+    minWidth: 0,
+    overflowWrap: "anywhere",
   },
   // collapsed GROUPED part: one line of part label + item-value summary,
   // aligned with the item grid so labels form one column
@@ -331,8 +351,22 @@ function ItemValue({ item }: { item: DetailItem }) {
 
 function ItemRows({ items, narrow }: { items: DetailItem[]; narrow: boolean }) {
   const styles = useStyles();
+  if (narrow) {
+    return (
+      <dl className={styles.itemsNarrow}>
+        {items.map((item, index) => (
+          <div key={`${item.code}-${index}`} className={styles.itemRowNarrow}>
+            <dt className={styles.itemLabel}>{item.label}</dt>
+            <dd className={styles.itemValueNarrow}>
+              <ItemValue item={item} />
+            </dd>
+          </div>
+        ))}
+      </dl>
+    );
+  }
   return (
-    <dl className={mergeClasses(styles.items, narrow && styles.itemsNarrow)}>
+    <dl className={styles.items}>
       {items.map((item, index) => (
         <Fragment key={`${item.code}-${index}`}>
           <dt className={styles.itemLabel}>{item.label}</dt>
