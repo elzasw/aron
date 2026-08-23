@@ -12,7 +12,53 @@ import java.util.Map;
  */
 public final class DocumentFixtures {
 
+	/** The test deployment's search locale, which decides the name sort key. */
+	public static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
+
 	private DocumentFixtures() {
+	}
+
+	/**
+	 * One indexable APU as {@link ApuDocumentBuilder} would build it: the name in
+	 * its sortable, exact and folded-exact forms and in the fulltext catch-all,
+	 * plus whatever item values the caller names, with the datings completed.
+	 *
+	 * <p>Every hand-built fixture in the suite comes from here. Four test classes
+	 * used to carry a copy of this, each mirroring a different part of the builder
+	 * and none saying which part it left out - so a document that production can
+	 * never produce was one omission away, and the difference between the copies
+	 * was invisible until an engine that reads the missing field ran the test.
+	 */
+	public static ApuDocument apu(String uuid, String name, String type, long apuSourceId,
+			Map<String, List<Object>> values) {
+		var document = new ApuDocument();
+		document.setUuid(uuid);
+		document.setName(name);
+		document.setNameSort(CONTENT_LOCALE.sortKey(name));
+		document.setNameExact(ApuDocumentBuilder.normalize(name));
+		document.setNameExactFolded(ApuDocumentBuilder.normalizeFolded(name));
+		if (name != null) {
+			document.getAllText().add(name);
+		}
+		document.setType(type);
+		document.setApuSourceId(apuSourceId);
+		document.getValues().putAll(values);
+		addDatings(document);
+		return document;
+	}
+
+	/**
+	 * Adds variant name forms - what the builder computes for items marked
+	 * {@code nameVariant}: the analyzed field, its normalized exact companions,
+	 * and the regular allText participation.
+	 */
+	public static void addNameVariants(ApuDocument document, String... variants) {
+		for (String variant : variants) {
+			document.getNameVariants().add(variant);
+			document.getNameVariantsExact().add(ApuDocumentBuilder.normalize(variant));
+			document.getNameVariantsExactFolded().add(ApuDocumentBuilder.normalizeFolded(variant));
+			document.getAllText().add(variant);
+		}
 	}
 
 	/**

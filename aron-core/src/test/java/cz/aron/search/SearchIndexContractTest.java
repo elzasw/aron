@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -26,8 +25,8 @@ import cz.aron.search.relevance.RelevanceQueryPlanner;
  */
 public abstract class SearchIndexContractTest {
 
-	/** The fixtures mirror ApuDocumentBuilder; the test deployment runs the default search locale. */
-	protected static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
+	/** The test deployment's search locale (fixtures come from {@link DocumentFixtures}). */
+	protected static final ContentLocale CONTENT_LOCALE = DocumentFixtures.CONTENT_LOCALE;
 
 	protected SearchIndex index;
 
@@ -70,21 +69,7 @@ public abstract class SearchIndexContractTest {
 
 	protected static ApuDocument doc(String uuid, String name, String type, long sourceId,
 			Map<String, List<Object>> values) {
-		var document = new ApuDocument();
-		document.setUuid(uuid);
-		document.setName(name);
-		document.setNameSort(CONTENT_LOCALE.sortKey(name));
-		// the fixture mirrors what ApuDocumentBuilder computes for real APUs
-		document.setNameExact(ApuDocumentBuilder.normalize(name));
-		document.setNameExactFolded(ApuDocumentBuilder.normalizeFolded(name));
-		if (name != null) {
-			document.getAllText().add(name);
-		}
-		document.setType(type);
-		document.setApuSourceId(sourceId);
-		document.getValues().putAll(values);
-		DocumentFixtures.addDatings(document);
-		return document;
+		return DocumentFixtures.apu(uuid, name, type, sourceId, values);
 	}
 
 	/** Fixture with explicit allText entries (description-like searchable values). */
@@ -94,22 +79,20 @@ public abstract class SearchIndexContractTest {
 		return document;
 	}
 
-	/**
-	 * Fixture with variant name forms - mirrors what ApuDocumentBuilder computes
-	 * for items marked {@code nameVariant} (analyzed field, normalized exact
-	 * companions, plus the regular allText participation).
-	 */
+	/** Fixture with variant name forms - what the builder computes for {@code nameVariant} items. */
 	protected static ApuDocument docWithNameVariants(String uuid, String name, String... variants) {
 		var document = doc(uuid, name, 1, Map.of());
-		for (String variant : variants) {
-			document.getNameVariants().add(variant);
-			document.getNameVariantsExact().add(ApuDocumentBuilder.normalize(variant));
-			document.getNameVariantsExactFolded().add(ApuDocumentBuilder.normalizeFolded(variant));
-			document.getAllText().add(variant);
-		}
+		DocumentFixtures.addNameVariants(document, variants);
 		return document;
 	}
 
+	/**
+	 * A test's fixture ids. A number belongs to one test, or to one shared corpus
+	 * (the datings use 100-102) - never to two tests by accident. The index is
+	 * fresh per test, so reuse costs nothing today and is invisible; it is what
+	 * stops two tests from ever sharing an index, which on Elasticsearch is a
+	 * schema drop and create apiece.
+	 */
 	private static String uuid(int n) {
 		return UUID.nameUUIDFromBytes(("contract-" + n).getBytes()).toString();
 	}
@@ -367,23 +350,37 @@ public abstract class SearchIndexContractTest {
 				.isZero();
 	}
 
-	@Test
-	void rangeFilterMatchesIntersectingIntervals() {
+	/**
+	 * The corpus every dating rule is told apart on: two records dated far apart,
+	 * one undated, and a language on each so another facet's filter has something
+	 * to act with. One corpus rather than five near-copies - the rules differ in
+	 * what they ask of it, not in the data, and on Elasticsearch each fixture
+	 * costs a schema of its own.
+	 */
+	private void indexDatingCorpus() {
 		indexApus(List.of(
-				doc(uuid(10), "Kniha 1800-1850", 1, Map.of(
+				doc(uuid(100), "Kniha 1800-1850", 1, Map.of(
+						"LANG~CODE", List.of("cze"),
 						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
 						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
-				doc(uuid(11), "Kniha 1900-1910", 1, Map.of(
+				doc(uuid(101), "Kniha 1900-1910", 1, Map.of(
+						"LANG~CODE", List.of("cze"),
 						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1910-12-31T23:59:59")))));
+						"UNIT~DATE~H", List.of("1910-12-31T23:59:59"))),
+				doc(uuid(102), "Kniha bez datace", 1, Map.of("LANG~CODE", List.of("ger")))));
+	}
+
+	@Test
+	void rangeFilterMatchesIntersectingIntervals() {
+		indexDatingCorpus();
 
 		// [1840, 1899] intersects only the first interval
 		var range = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE",
 				LocalDateTime.parse("1840-01-01T00:00:00"), LocalDateTime.parse("1899-12-31T23:59:59")))));
 		assertThat(range.total()).isEqualTo(1);
-		assertThat(range.hits().get(0).uuid()).isEqualTo(uuid(10));
+		assertThat(range.hits().get(0).uuid()).isEqualTo(uuid(100));
 
-		// open lower bound
+		// open lower bound - the undated record is still not in a dated range
 		var upTo1905 = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE", null,
 				LocalDateTime.parse("1905-01-01T00:00:00")))));
 		assertThat(upTo1905.total()).isEqualTo(2);
@@ -482,19 +479,12 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void datingBoundsFollowMultiSelectSemantics() {
-		indexApus(List.of(
-				doc(uuid(40), "Kniha A", 1, Map.of(
-						"LANG~CODE", List.of("cze"),
-						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
-				doc(uuid(41), "Kniha B", 1, Map.of(
-						"LANG~CODE", List.of("cze"),
-						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1910-12-31T23:59:59"))),
-				doc(uuid(42), "Kniha C bez datace", 1, Map.of("LANG~CODE", List.of("ger")))));
+	void datingBoundsFollowMultiSelectSemanticsAndCountTheUndated() {
+		indexDatingCorpus();
 
-		// the facet's own RANGE filter is excluded from its bounds (the slider can widen)
+		// the facet's own RANGE filter is excluded from its bounds (the slider can
+		// widen), and so is it from the undated count - neither may move as the
+		// reader drags the slider
 		var withOwnRange = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1890-01-01T00:00:00"), null)),
 				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
@@ -502,66 +492,38 @@ public abstract class SearchIndexContractTest {
 		assertThat(bounds).isNotNull();
 		assertThat(atUtcYear(bounds.minMillis())).isEqualTo(1800);
 		assertThat(atUtcYear(bounds.maxMillis())).isEqualTo(1910);
+		assertThat(bounds.undatedCount()).isEqualTo(1);
 
-		// other facets' filters apply to the bounds
+		// unfiltered says the same, which is what "excluded" means
+		var unfiltered = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
+				List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE))
+						.bounds().get("UNIT~DATE");
+		assertThat(atUtcYear(unfiltered.minMillis())).isEqualTo(1800);
+		assertThat(unfiltered.undatedCount()).isEqualTo(1);
+
+		// other facets' filters do apply: the only German record is the undated
+		// one, so nothing matching carries the dating and there are no bounds
 		var withOtherFilter = index.search(new ApuSearchQuery(null, null,
 				List.of(new FieldFilter.Values("LANG~CODE", List.of("ger"))),
 				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
-		// no matching document carries the dating - no bounds entry
 		assertThat(withOtherFilter.bounds()).doesNotContainKey("UNIT~DATE");
 	}
 
 	@Test
-	void datingBoundsCountTheUndatedDocuments() {
-		indexApus(List.of(
-				doc(uuid(43), "Kniha A", 1, Map.of(
-						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
-				doc(uuid(44), "Kniha B bez datace", 1, Map.of("LANG~CODE", List.of("cze"))),
-				doc(uuid(45), "Kniha C bez datace", 1, Map.of("LANG~CODE", List.of("cze")))));
-
-		var bounds = index.search(new ApuSearchQuery(null, null, List.of(), List.of(),
-				List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE)).bounds().get("UNIT~DATE");
-		assertThat(bounds).isNotNull();
-		assertThat(bounds.undatedCount()).isEqualTo(2);
-
-		// counted over the same documents as the bounds, i.e. with the facet's own
-		// range filter excluded - the number must not move as the reader drags the
-		// slider
-		var withOwnRange = index.search(new ApuSearchQuery(null, null,
-				List.of(new FieldFilter.Range("UNIT~DATE", LocalDateTime.parse("1810-01-01T00:00:00"), null)),
-				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
-		assertThat(withOwnRange.bounds().get("UNIT~DATE").undatedCount()).isEqualTo(2);
-
-		// another facet's filter does apply
-		var czechOnly = index.search(new ApuSearchQuery(null, null,
-				List.of(new FieldFilter.Values("LANG~CODE", List.of("cze"))),
-				List.of(), List.of(ApuSearchQuery.BoundsRequest.of("UNIT~DATE")), 0, 0, SortMode.RELEVANCE));
-		assertThat(czechOnly.bounds()).doesNotContainKey("UNIT~DATE");
-	}
-
-	@Test
 	void rangeFilterCanIncludeTheUndatedDocuments() {
-		indexApus(List.of(
-				doc(uuid(46), "Kniha 1800-1850", 1, Map.of(
-						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
-				doc(uuid(47), "Kniha 1900-1910", 1, Map.of(
-						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1910-12-31T23:59:59"))),
-				doc(uuid(48), "Kniha bez datace", 1, Map.of())));
+		indexDatingCorpus();
 
 		var from = LocalDateTime.parse("1805-01-01T00:00:00");
 		var to = LocalDateTime.parse("1852-12-31T23:59:59");
 
 		// strict by default: an undated record is not in 1805-1852
 		var strict = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE", from, to))));
-		assertThat(strict.hits()).extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(46));
+		assertThat(strict.hits()).extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(100));
 
 		// including the undated adds exactly those, not the ones out of range
 		var lenient = index.search(query(null, List.of(new FieldFilter.Range("UNIT~DATE", from, to, true))));
 		assertThat(lenient.hits()).extracting(ApuSearchResult.Hit::uuid)
-				.containsExactlyInAnyOrder(uuid(46), uuid(48));
+				.containsExactlyInAnyOrder(uuid(100), uuid(102));
 	}
 
 	@Test
@@ -697,18 +659,6 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void nameDescReversesTheCzechOrder() {
-		indexApus(List.of(
-				doc(uuid(84), "Chalupa", 1, Map.of()),
-				doc(uuid(85), "Cibule", 1, Map.of()),
-				doc(uuid(86), "Hrad", 1, Map.of())));
-
-		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
-				SortMode.NAME_DESC)).hits()).extracting(ApuSearchResult.Hit::name)
-				.containsExactly("Chalupa", "Hrad", "Cibule");
-	}
-
-	@Test
 	void equalSortValuesOrderStablyByUuid() {
 		// B10 (stability): identical names page deterministically - the uuid tie-break
 		var uuids = new java.util.ArrayList<>(List.of(uuid(87), uuid(88), uuid(89)));
@@ -721,18 +671,20 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void nameSortFollowsContentLocaleAlphabet() {
+	void nameSortFollowsContentLocaleAlphabetInBothDirections() {
 		indexApus(List.of(
 				doc(uuid(15), "Chalupa", 1, Map.of()),
 				doc(uuid(16), "Cibule", 1, Map.of()),
 				doc(uuid(17), "Hrad", 1, Map.of())));
 
-		var sorted = index
-				.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10, SortMode.NAME));
-
 		// the test deployment runs cs-CZ: c < h < ch
-		assertThat(sorted.hits()).extracting(ApuSearchResult.Hit::name)
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
+				SortMode.NAME)).hits()).extracting(ApuSearchResult.Hit::name)
 				.containsExactly("Cibule", "Hrad", "Chalupa");
+		// descending is that same alphabet read backwards, not a byte-order reversal
+		assertThat(index.search(new ApuSearchQuery(null, null, List.of(), List.of(), List.of(), 0, 10,
+				SortMode.NAME_DESC)).hits()).extracting(ApuSearchResult.Hit::name)
+				.containsExactly("Chalupa", "Hrad", "Cibule");
 	}
 
 	@Test
@@ -792,9 +744,9 @@ public abstract class SearchIndexContractTest {
 	@Test
 	void totalsAreExactUpToTheAccuracyLimitAndCappedAboveIt() {
 		indexApus(List.of(
-				doc(uuid(50), "Total one", 1, Map.of()),
-				doc(uuid(51), "Total two", 1, Map.of()),
-				doc(uuid(52), "Total three", 1, Map.of())));
+				doc(uuid(120), "Total one", 1, Map.of()),
+				doc(uuid(121), "Total two", 1, Map.of()),
+				doc(uuid(122), "Total three", 1, Map.of())));
 
 		// no limit = exact
 		var exact = index.search(ApuSearchQuery.matchAll(0, 10));
@@ -818,42 +770,39 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
-	void relationsAreAcceptedForIndexing() {
-		// the rels index is write-only within the application (see design Q3)
-		assertThatCode(() -> indexRelations(List.of(
-				new RelationDocument(uuid(1), "REL~DIRECT", uuid(2)))))
-				.doesNotThrowAnyException();
-	}
-
-
-	@Test
 	void relatedFilterMatchesEitherEndOfTheRelation() {
 		indexApus(List.of(
-				doc(uuid(80), "Referencing A", 1, Map.of("REL~ENTITY", List.of(uuid(82)))),
-				doc(uuid(81), "Referencing B", 1, Map.of("REL~ENTITY", List.of(uuid(82)))),
-				doc(uuid(82), "The entity", 1, Map.of("REL~ENTITY", List.of(uuid(84)))),
-				doc(uuid(83), "Points elsewhere", 1, Map.of("REL~ENTITY", List.of(uuid(84)))),
-				doc(uuid(84), "What the entity points at", 1, Map.of())));
+				doc(uuid(110), "Referencing A", 1, Map.of("REL~ENTITY", List.of(uuid(112)))),
+				doc(uuid(111), "Referencing B", 1, Map.of("REL~ENTITY", List.of(uuid(112)))),
+				doc(uuid(112), "The entity", 1, Map.of("REL~ENTITY", List.of(uuid(114)))),
+				doc(uuid(113), "Points elsewhere", 1, Map.of("REL~ENTITY", List.of(uuid(114)))),
+				doc(uuid(114), "What the entity points at", 1, Map.of())));
+
+		// the rels index is write-only within the application (see design Q3), so
+		// accepting the write is the whole of its contract
+		assertThatCode(() -> indexRelations(List.of(
+				new RelationDocument(uuid(110), "REL~DIRECT", uuid(112)))))
+				.doesNotThrowAnyException();
 
 		// incoming: whoever references the entity through a field in scope
 		assertThat(index.search(query(null, List.of(
-				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(82)), List.of())))).hits())
-				.extracting(ApuSearchResult.Hit::uuid).containsExactlyInAnyOrder(uuid(80), uuid(81));
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(112)), List.of())))).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactlyInAnyOrder(uuid(110), uuid(111));
 
 		// outgoing: the pre-resolved targets, matched on the document's own uuid
 		assertThat(index.search(query(null, List.of(
-				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(), List.of(uuid(84)))))).hits())
-				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(84));
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(), List.of(uuid(114)))))).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(114));
 
 		// both halves at once - one relation, either end of it
 		assertThat(index.search(query(null, List.of(
-				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(82)), List.of(uuid(84)))))).hits())
+				new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(112)), List.of(uuid(114)))))).hits())
 				.extracting(ApuSearchResult.Hit::uuid)
-				.containsExactlyInAnyOrder(uuid(80), uuid(81), uuid(84));
+				.containsExactlyInAnyOrder(uuid(110), uuid(111), uuid(114));
 
 		// a field outside the scope does not relate
 		assertThat(index.search(query(null, List.of(
-				new FieldFilter.Related(List.of("LANG~CODE"), List.of(uuid(82)), List.of()))))
+				new FieldFilter.Related(List.of("LANG~CODE"), List.of(uuid(112)), List.of()))))
 				.total()).isZero();
 
 		// nothing to relate to matches nothing (never everything)
@@ -864,14 +813,14 @@ public abstract class SearchIndexContractTest {
 	@Test
 	void relatedFilterNarrowsFacetBucketsToo() {
 		indexApus(List.of(
-				doc(uuid(85), "Czech, related", 1,
-						Map.of("LANG~CODE", List.of("cze"), "REL~ENTITY", List.of(uuid(88)))),
-				doc(uuid(86), "German, related", 1,
-						Map.of("LANG~CODE", List.of("ger"), "REL~ENTITY", List.of(uuid(88)))),
-				doc(uuid(87), "Latin, unrelated", 1, Map.of("LANG~CODE", List.of("lat")))));
+				doc(uuid(115), "Czech, related", 1,
+						Map.of("LANG~CODE", List.of("cze"), "REL~ENTITY", List.of(uuid(118)))),
+				doc(uuid(116), "German, related", 1,
+						Map.of("LANG~CODE", List.of("ger"), "REL~ENTITY", List.of(uuid(118)))),
+				doc(uuid(117), "Latin, unrelated", 1, Map.of("LANG~CODE", List.of("lat")))));
 
 		var result = index.search(new ApuSearchQuery(null, null,
-				List.of(new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(88)), List.of())),
+				List.of(new FieldFilter.Related(List.of("REL~ENTITY"), List.of(uuid(118)), List.of())),
 				List.of(ApuSearchQuery.BucketRequest.of("LANG~CODE", 10)),
 				List.of(), 0, 10, SortMode.RELEVANCE));
 

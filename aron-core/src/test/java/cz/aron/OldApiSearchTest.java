@@ -20,8 +20,8 @@ import cz.aron.domain.ApuEntity;
 import cz.aron.mapper.StructuredResultSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.search.ApuDocument;
+import cz.aron.search.DocumentFixtures;
 import cz.aron.search.SearchIndex;
-import cz.aron.search.ContentLocale;
 
 /**
  * Old-API search endpoints ({@code /api/aron/apu/list*}) end to end on the
@@ -34,9 +34,6 @@ import cz.aron.search.ContentLocale;
  * cannot interfere with the assertions of other tests sharing the context.
  */
 class OldApiSearchTest extends AbstractTest {
-
-	/** The fixtures mirror ApuDocumentBuilder; the test deployment runs the default search locale. */
-	private static final ContentLocale CONTENT_LOCALE = new ContentLocale("cs-CZ");
 
 	private static final String APU_TYPE = "OLDAPI~KIND";
 
@@ -276,15 +273,7 @@ class OldApiSearchTest extends AbstractTest {
 	}
 
 	private static ApuDocument doc(String uuid, String name, String type, Map<String, List<Object>> values) {
-		var document = new ApuDocument();
-		document.setUuid(uuid);
-		document.setName(name);
-		document.setNameSort(CONTENT_LOCALE.sortKey(name));
-		document.setType(type);
-		document.setApuSourceId(999_100L);
-		document.getValues().putAll(values);
-		cz.aron.search.DocumentFixtures.addDatings(document);
-		return document;
+		return DocumentFixtures.apu(uuid, name, type, 999_100L, values);
 	}
 
 }
