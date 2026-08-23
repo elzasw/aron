@@ -565,6 +565,22 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void aShortNameIsFoundByItself() {
+		// a fragment shorter than relevance.partialMinLength matches a whole word
+		// only, which is what lets a two-letter place name be searched for at all -
+		// Aš is a town, and there is nothing longer to type
+		indexApus(List.of(
+				doc(uuid(54), "Aš", 1, Map.of()),
+				doc(uuid(55), "Ašmakov", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("Aš")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(54));
+		// and does not leak into every longer word containing it
+		assertThat(index.search(ApuSearchQuery.fulltext("aš")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(54));
+	}
+
+	@Test
 	void aRangeMatchesTheDatingsThemselvesNotTheirHull() {
 		// two datings of one item type, far apart. Written as intervals because
 		// that is the only way to say "two datings" - bounds can only say one

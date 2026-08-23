@@ -60,6 +60,16 @@ const RELATED_OPTIONS = 10;
  * Sent as a filter on the built-in type facet, which the general search already
  * accepts, because a request carries one apuType and this needs four.
  */
+/**
+ * Below this many characters a query can only match a whole word, never part of
+ * one: the server's `relevance.partialMinLength` governs that and cannot be
+ * configured lower than 3. Finding nothing is then the normal state of someone
+ * halfway through a word, so this widget stays quiet about it rather than
+ * reporting that nothing matches. The search still runs - a short name matches
+ * itself exactly, which is how "Aš" is found.
+ */
+const PARTIAL_MIN_LENGTH = 3;
+
 const RELATION_TARGET_TYPES = [
   ApuType.Entity,
   ApuType.Institution,
@@ -724,6 +734,15 @@ function RelatedFacet({
     placeholderData: (previous) => previous,
   });
   const hits = (options.data?.items ?? []).filter((hit) => !selected.includes(hit.uuid));
+  // whether an empty answer is worth reporting: below the partial-match length
+  // it says only that the reader has not finished typing
+  const answered = debouncedQ.length >= PARTIAL_MIN_LENGTH;
+
+  /** One condition added; the box empties so the next one can be typed. */
+  const add = (apu: string) => {
+    setQ("");
+    onFilters(addRelated(filters, apu));
+  };
 
   return (
     <>
@@ -742,7 +761,7 @@ function RelatedFacet({
         onChange={(_, data) => setQ(data.value)}
       />
       <span role="status" aria-live="polite" className={styles.srOnly}>
-        {debouncedQ.length > 0 && options.isSuccess
+        {(hits.length > 0 || answered) && options.isSuccess
           ? t("facets.optionsFound", { count: hits.length })
           : ""}
       </span>
@@ -753,7 +772,7 @@ function RelatedFacet({
               key={hit.uuid}
               type="button"
               className={styles.relatedOption}
-              onClick={() => onFilters(addRelated(filters, hit.uuid))}
+              onClick={() => add(hit.uuid)}
             >
               <span className={styles.bucketLabel}>
                 <span>{hit.name}</span>
@@ -770,8 +789,10 @@ function RelatedFacet({
               )}
             </button>
           ))
+        ) : options.isPending ? (
+          <Text size={200}>{t("search.loading")}</Text>
         ) : (
-          <Text size={200}>{t(options.isPending ? "search.loading" : "facets.relatedNoMatch")}</Text>
+          answered && <Text size={200}>{t("facets.relatedNoMatch")}</Text>
         ))}
     </>
   );

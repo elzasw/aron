@@ -199,6 +199,48 @@ describe("SearchView, general search", () => {
     expect(offered).toHaveTextContent("okresní město");
   });
 
+  it("empties the box once a condition is added, so the next one can be typed", async () => {
+    renderGeneralSearch();
+    const picker = await screen.findByRole("textbox", { name: "Related to – find a record" });
+    await userEvent.type(picker, "par");
+
+    await userEvent.click(await screen.findByRole("button", { name: /Pardubice/ }));
+
+    expect(picker).toHaveValue("");
+    await waitFor(() =>
+      expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({
+            filters: [expect.objectContaining({ kind: FilterKind.Related, apus: ["u-1"] })],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("reports an empty result only once the query could be one", async () => {
+    response = { ...RESPONSE, items: [] };
+    renderGeneralSearch();
+    const picker = await screen.findByRole("textbox", { name: "Related to – find a record" });
+
+    // three characters is long enough for the server to match part of a word, so
+    // an empty answer is a real one
+    await userEvent.type(picker, "čes");
+    expect(await screen.findByText("No matching records")).toBeInTheDocument();
+
+    // back below that, the same emptiness says only that a word is unfinished -
+    // the search still runs, because a short name matches itself exactly
+    await userEvent.type(picker, "{backspace}{backspace}");
+    await waitFor(() =>
+      expect(screen.queryByText("No matching records")).not.toBeInTheDocument(),
+    );
+    await waitFor(() =>
+      expect(searchSearch).toHaveBeenCalledWith(
+        expect.objectContaining({ apuSearchRequest: expect.objectContaining({ query: "č" }) }),
+      ),
+    );
+  });
+
   it("has no accessibility violations", async () => {
     const { container } = renderGeneralSearch();
     await screen.findByRole("heading", { level: 2, name: "Dating" });

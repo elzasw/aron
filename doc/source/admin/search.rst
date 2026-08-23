@@ -76,6 +76,13 @@ Facets of the general search
    for. A relation set from a record's own page is still honoured whatever the
    record type, so a link from anywhere in the portal keeps working.
 
+   It searches records the way the search box does, so the rule under
+   **Partial words** applies: a fragment of three letters or more matches
+   inside a word, a shorter one has to match a whole word. A two-letter place
+   name is therefore found by typing it out ("Aš" finds Aš), but no shorter
+   fragment will narrow towards it — which is why the list simply stays empty
+   below three characters instead of announcing that nothing matches.
+
    The dating facet there covers the record's dating whatever item type
    records it, so it also finds records dated only under, say
    ``DATE_OF_CONTENT``. A record with several datings matches when any one of
