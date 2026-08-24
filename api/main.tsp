@@ -1174,7 +1174,9 @@ namespace Apu {
 	 * can do nothing about it. When no form renders, the response is a 422 and
 	 * which piece was missing is logged on the server: that is a data error,
 	 * diagnosis for whoever looks into the data, while the reader gets the UI's
-	 * own localized message.
+	 * own localized message. The reason travels in the response body only where
+	 * a deployment asks for it (`server.error.include-message`), which a public
+	 * portal does not - the same body would then carry exception text on a 500.
 	 */
 	@get
 	@route("/api/v1/apu/{uuid}/citations")

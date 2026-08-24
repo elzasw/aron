@@ -66,6 +66,11 @@ application.yml
      - ``false`` (default) keeps the running version out of the footer and out
        of ``/api/v1/system/info`` — a reader can do nothing with it. ``true``
        publishes it, which is what a test server or a support case wants.
+   * - ``server.error.include-message``
+     - ``never`` (Spring's default) keeps the reason of a failed request out
+       of the response body; the portal writes it to the log. ``always``
+       sends it as ``message`` — the wanted behaviour on a test server, not
+       on a public portal (see :doc:`operations`).
    * - ``help-url``
      - External help link shown in the default menu.
    * - ``import.input-dir``

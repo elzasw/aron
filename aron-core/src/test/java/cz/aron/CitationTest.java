@@ -70,11 +70,16 @@ class CitationTest extends AbstractTest {
 	@Test
 	void aRecordThatCannotBeCitedAnswersWithTheDiagnosis() {
 		// an archival description always belongs to a fund, so a missing one is a
-		// data error: 422. Which piece was missing goes to the server log, not to
-		// the client - Spring keeps the exception reason out of the error body
+		// data error: 422, and the reason names the piece that was missing. It
+		// reaches the body only because this profile sets
+		// server.error.include-message - a public deployment leaves it off and
+		// reads the reason in the log, so what is pinned here is the diagnosis
+		// itself, not that every deployment sends it
 		assertThatThrownBy(() -> new ApuApi(v1ApiClient()).apuGetCitations(ARCH_DESC_WITHOUT_FUND, null))
-				.isInstanceOfSatisfying(RestClientResponseException.class,
-						e -> assertThat(e.getStatusCode().value()).isEqualTo(422));
+				.isInstanceOfSatisfying(RestClientResponseException.class, e -> {
+					assertThat(e.getStatusCode().value()).isEqualTo(422);
+					assertThat(e.getResponseBodyAsString()).contains("Fund part not exist");
+				});
 
 		// a record type no form covers is the same answer - the UI never offers the
 		// action there, so this is for whoever calls the API directly

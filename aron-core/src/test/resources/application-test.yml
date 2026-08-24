@@ -54,6 +54,12 @@ tile:
 system:
   expose-version: true
 
+# the suite asserts the diagnosis a failing request carries, which a deployment
+# only sees once it opts in (CitationTest); production leaves this off
+server:
+  error:
+    include-message: always
+
 webResources:
   pageTemplate: ./src/test/resources/test-config/pageTemplate.yaml
   news: ./src/test/resources/test-config/news.yaml

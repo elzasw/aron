@@ -79,6 +79,41 @@ namespace):
 - further endpoints (metrics, info) according to the actuator configuration
   in ``application.yml``.
 
+Why a request failed
+====================
+
+When a request fails, the portal answers with a status and, in the log, the
+reason: which record was not found, which filter the section does not have,
+which piece of a description a citation could not be built from. The reason is
+**not** in the response body by default: Spring's
+``server.error.include-message`` is ``never``, so a client sees only
+
+.. code-block:: json
+
+   {"timestamp":"…","status":422,"error":"Unprocessable Entity","path":"/api/v1/apu/…/citations"}
+
+That is deliberate. Setting ``server.error.include-message: always`` adds the
+reason to **every** error response. For the errors the portal reports on
+purpose that is exactly what someone debugging needs ("No such APU.", the
+missing part of a citation). For an unexpected error — status 500 — the same
+field carries the exception's own message, which in this stack can name a
+database column, a file path on the server or an internal component. Stack
+traces are a separate setting and stay off either way.
+
+Hence the recommendation:
+
+- **public portal** — leave it off and read the reason in the log. The reader
+  is shown the portal's own message anyway; the portal's reasons are
+  English diagnostics written for whoever debugs, not text a reader could act
+  on.
+- **test or evaluation server** — turn it on. It is the same reasoning as
+  ``system.expose-version``: such a server exists to be inspected, and having
+  the reason in the response saves a trip to the log. The commented block is
+  in ``application.yml.template``.
+
+Failed requests are never silent in the UI either: they appear in a visible
+error bar, with the server's message when the deployment sends one.
+
 .. todo::
 
    Describe the recommended logging configuration and log locations once the

@@ -59,6 +59,12 @@ tile:
 system:
   expose-version: true
 
+# and so is the reason a request failed: dev shows it in the response body, which
+# a public deployment does not (it would carry exception text on a 500)
+server:
+  error:
+    include-message: always
+
 webResources:
   pageTemplate: ./dev-data/config/pageTemplate.yaml
   news: ./dev-data/config/news.yaml

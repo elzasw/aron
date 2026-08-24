@@ -63,6 +63,16 @@ webResources:
 #system:
 #  expose-version: true
 
+# Posilat klientovi i duvod chyby. Vypnuto: telo chybove odpovedi nese jen stav
+# (napr. 422) a duvod zustava v logu serveru. Zapnuta volba prida do odpovedi klic
+# message - u chyb, ktere portal hlasi zamerne ("No such APU.", proc nelze vytvorit
+# citaci) je to presne to, co hledajici potrebuje; u neocekavane chyby (stav 500)
+# je to ale text vyjimky, tedy kus vnitrni struktury aplikace. Proto se hodi na
+# testovaci server, ne na verejny portal - tam se duvod cte z logu.
+#server:
+#  error:
+#    include-message: always
+
 # Cil polozky HELP v nabidce portalu. Klic je povinny (cte ho stare API);
 # nasazeni sem patri vlastni stranku napovedy.
 help-url: https://example.org/aron/help
