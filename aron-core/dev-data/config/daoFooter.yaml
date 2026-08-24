@@ -1,0 +1,24 @@
+# Attribution of digital objects, dev-flavoured: a dedication line and license
+# statements matched by the object's license code ('default' is the fallback).
+# Prose is a sentence with {placeholders} over a link map - the home footer's
+# rule; the portal renders the anchors, configured markup never reaches a page.
+dedication:
+  text:
+    cs: "Digitalizace probehla s podporou programu {donor}."
+    en: "Digitized with the support of the {donor} programme."
+  links:
+    donor:
+      label: DEV-NAKI
+      url: "https://example.org/naki"
+licenses:
+  - code: default
+    text:
+      cs: "Licence: {owner} | {terms}"
+      en: "License: {owner} | {terms}"
+    links:
+      owner:
+        label: { cs: "Vyvojovy archiv", en: "Development Archives" }
+        url: "https://example.org/archiv"
+      terms:
+        label: { cs: "Smluvni podminky", en: "Terms of use" }
+        url: "https://example.org/podminky"

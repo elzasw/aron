@@ -161,7 +161,12 @@ reader's finger; a polite live region announces "Page n of m", copy-link
 confirmation and load failures (4.1.3). The current thumbnail carries
 `aria-current`; thumbnails are decorative (`alt=""`) with the visible page
 number as the row's name. Gallery thumbnails on the record page are links named
-"Page n: object" (2.4.4). The record page embeds the same viewer beside the
+"Page n: object" (2.4.4). The canvas corners carry two translucent overlays
+whose own dark ground keeps their contrast independent of the scan beneath
+(1.4.3): the page-number chip is `aria-hidden` — it repeats what the toolbar's
+input already exposes — while the attribution (dedication + license) is real
+content whose links are ordinary anchors in the tab order. The record page
+embeds the same viewer beside the
 description when a record is digitized; page-turn keys are then scoped to the
 viewer itself (arrow keys must keep scrolling the description and walking the
 tree beside it), while the fullscreen page — whose whole surface is the

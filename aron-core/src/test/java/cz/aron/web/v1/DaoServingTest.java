@@ -204,6 +204,27 @@ class DaoServingTest extends AbstractTest {
 	}
 
 	@Test
+	void detailCarriesTheResolvedAttribution() {
+		// the daoFooter configuration resolves per record and per language; the
+		// client renders anchors and never matches license codes itself
+		var czech = new ApuApi(v1ApiClient()).apuGetDetail(APU, "cs", null, null)
+				.getDigitalObjects().get(0).getFooter();
+		assertThat(czech.getDedication()).extracting(f -> f.getText())
+				.containsExactly("Digitalizace probehla s podporou ", "NAKI II", ".");
+		// the fixture's CC-BY-4.0 matches its own entry, image URL server-built
+		assertThat(czech.getLicense()).singleElement().satisfies(run -> {
+			assertThat(run.getText()).isEqualTo("CC BY 4.0");
+			assertThat(run.getUrl()).isEqualTo("https://creativecommons.org/licenses/by/4.0/");
+		});
+		assertThat(czech.getLicenseImage()).isEqualTo("/api/v1/ui/images/record.svg");
+
+		var english = new ApuApi(v1ApiClient()).apuGetDetail(APU, "en", null, null)
+				.getDigitalObjects().get(0).getFooter();
+		assertThat(english.getDedication()).extracting(f -> f.getText())
+				.containsExactly("Digitized with the support of ", "NAKI II", ".");
+	}
+
+	@Test
 	void oldApiServesTheSamePyramid() throws Exception {
 		// the old UI's viewer URL shape (frozen): /api/aron/tile/{fileUuid}/...
 		var descriptor = getBytes("/api/aron/tile/" + TILE_STORED + "/image.dzi");

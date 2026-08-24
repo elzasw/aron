@@ -1501,14 +1501,39 @@ model DigitalObjectInfo {
 	permalink?: string;
 
 	/**
-	 * License code of the object, as delivered by the source system. Codes are
-	 * the source system's vocabulary; presenting them is deployment
-	 * configuration (a later slice).
+	 * License code of the object, as delivered by the source system - the
+	 * machine-readable form. What a reader sees of it is `footer`.
 	 */
 	license?: string;
 
+	/**
+	 * The deployment's attribution statement for this object - shown with the
+	 * object wherever it is viewed. Server-resolved from the deployment's
+	 * daoFooter configuration in the requested language; absent when the
+	 * deployment configures none.
+	 */
+	footer?: DaoFooter;
+
 	/** Files of the object in display order. */
 	files: FileInfo[];
+}
+
+/**
+ * Attribution shown with a digital object: a dedication (the deployment's
+ * standing credit line) and the license statement matched to the object's
+ * license code (with a `default` entry as the fallback). Prose is text runs -
+ * links travel inside the sentence and the client renders anchors, never
+ * configured markup (the home-page footer's rule).
+ */
+model DaoFooter {
+	/** The deployment's standing credit line, when configured. */
+	dedication?: TextRun[];
+
+	/** The license statement matched to the object's license code. */
+	license?: TextRun[];
+
+	/** Ready-to-use URL of the license mark image, when the entry names one. */
+	licenseImage?: string;
 }
 
 /** One file of a digital object or attachment. */

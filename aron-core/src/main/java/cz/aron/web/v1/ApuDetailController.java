@@ -59,17 +59,23 @@ public class ApuDetailController implements ApuApi {
 
 	private final DaoFileUrls daoFileUrls;
 
+	private final DaoFooterConfig daoFooterConfig;
+
+	private final DeploymentImages images;
+
 	private final CitationService citationService;
 
 	public ApuDetailController(ApuEntityRepository apuEntityRepository, ApuService apuService,
 			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales, DaoFileUrls daoFileUrls,
-			CitationService citationService) {
+			CitationService citationService, DaoFooterConfig daoFooterConfig, DeploymentImages images) {
 		this.presentationLocales = presentationLocales;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.detailBuilder = detailBuilder;
 		this.daoFileUrls = daoFileUrls;
 		this.citationService = citationService;
+		this.daoFooterConfig = daoFooterConfig;
+		this.images = images;
 	}
 
 	@Override
@@ -96,7 +102,7 @@ public class ApuDetailController implements ApuApi {
 
 		var detail = new ApuDetail(uuid, apu.getName(), ApuType.fromValue(apu.getType().toString()),
 				apu.getChildCnt(), treePath(apu), detailBuilder.buildParts(parts, refLabels, locale),
-				attachments(apu), digitalObjects(apu));
+				attachments(apu), digitalObjects(apu, locale));
 		detail.setDescription(apu.getDescription());
 		detail.setPermalink(apu.getPermalink());
 
@@ -226,7 +232,7 @@ public class ApuDetailController implements ApuApi {
 				}).toList();
 	}
 
-	private List<DigitalObjectInfo> digitalObjects(ApuEntity apu) {
+	private List<DigitalObjectInfo> digitalObjects(ApuEntity apu, Locale locale) {
 		return apu.getDigitalObjects().stream()
 				.sorted(Comparator.comparingInt(DigitalObject::getOrder))
 				.map(digitalObject -> {
@@ -238,6 +244,8 @@ public class ApuDetailController implements ApuApi {
 					info.setName(digitalObject.getName());
 					info.setPermalink(digitalObject.getPermalink());
 					info.setLicense(digitalObject.getLicense());
+					// the deployment's attribution, resolved here so the client never matches codes
+					info.setFooter(daoFooterConfig.footerFor(digitalObject.getLicense(), locale, images::url));
 					return info;
 				}).toList();
 	}

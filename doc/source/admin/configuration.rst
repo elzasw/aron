@@ -84,6 +84,16 @@ application.yml
        pyramids, the portal unpacks them here on import and serves them at
        ``/api/v1/daofile/{id}/tiles/…``. The format must match what Transfagent
        delivers (``jpg`` by default on both sides).
+   * - ``webResources.daoFooter``
+     - Optional attribution of digital objects, shown as an overlay in the
+       viewer: a standing dedication line and license statements matched by the
+       object's license code (``default`` is the fallback). Sentences are
+       written with ``{placeholders}`` over a link map, exactly like the home
+       page's footer band — the portal renders the anchors, configured markup
+       never reaches a page — and every text may carry per-language variants.
+       A license entry may name an ``image`` (a file of
+       ``webResources.images``) shown as its mark. Everything the file can get
+       wrong fails the startup. Without the key no attribution is shown.
    * - ``files.referenced-dirs``
      - Directories the portal may serve *referenced* digital-object files from
        (files delivered as a path on a local/shared disk instead of being

@@ -54,6 +54,12 @@ webResources:
   # Skripty, ktere citaci sestavuji, se hledaji vedle uvedeneho souboru;
   # prekladatelne nazvy forem patri do citation_localization.yaml vedle nej.
   citation: ./config/citation.yaml
+  # Atribuce digitalizatu - volitelne: venovani (stala podekovaci veta) a
+  # licencni vety parovane podle licencniho kodu digitalizatu (kod 'default'
+  # je zachytny). Texty se pisi jako veta s {odkazy} nad mapou odkazu, stejne
+  # jako paticka uvodni strany; pripadny obrazek licence je soubor z images.
+  # Bez tohoto klice se u digitalizatu zadna atribuce nezobrazuje.
+  #daoFooter: ./config/daoFooter.yaml
   images: ./config/images
 
 # Zobrazovat v paticce verzi bezici aplikace. Vypnuto: ctenar portalu s ni nic

@@ -747,6 +747,28 @@ components:
         identifiers appear, in which order, with which abbreviations - is agreed
         between the deployment and its archivists per citation norm, so this contract
         carries only a form's identity, its name and where it applies.
+    DaoFooter:
+      type: object
+      properties:
+        dedication:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextRun'
+          description: The deployment's standing credit line, when configured.
+        license:
+          type: array
+          items:
+            $ref: '#/components/schemas/TextRun'
+          description: The license statement matched to the object's license code.
+        licenseImage:
+          type: string
+          description: Ready-to-use URL of the license mark image, when the entry names one.
+      description: |-
+        Attribution shown with a digital object: a dedication (the deployment's
+        standing credit line) and the license statement matched to the object's
+        license code (with a `default` entry as the fallback). Prose is text runs -
+        links travel inside the sentence and the client renders anchors, never
+        configured markup (the home-page footer's rule).
     DatingBounds:
       type: object
       required:
@@ -873,9 +895,16 @@ components:
         license:
           type: string
           description: |-
-            License code of the object, as delivered by the source system. Codes are
-            the source system's vocabulary; presenting them is deployment
-            configuration (a later slice).
+            License code of the object, as delivered by the source system - the
+            machine-readable form. What a reader sees of it is `footer`.
+        footer:
+          allOf:
+            - $ref: '#/components/schemas/DaoFooter'
+          description: |-
+            The deployment's attribution statement for this object - shown with the
+            object wherever it is viewed. Server-resolved from the deployment's
+            daoFooter configuration in the requested language; absent when the
+            deployment configures none.
         files:
           type: array
           items:

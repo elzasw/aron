@@ -1,0 +1,26 @@
+# Attribution of digital objects (DaoServingTest): a standing dedication and
+# license statements matched by the object's license code, `default` fallback.
+dedication:
+  text:
+    cs: "Digitalizace probehla s podporou {donor}."
+    en: "Digitized with the support of {donor}."
+  links:
+    donor:
+      label: NAKI II
+      url: "https://example.org/naki"
+licenses:
+  - code: default
+    text:
+      cs: "Licence: {owner}"
+      en: "License: {owner}"
+    links:
+      owner:
+        label: { cs: "Testovaci archiv", en: "Test Archives" }
+        url: "https://example.org/archiv"
+  - code: CC-BY-4.0
+    text: "{license}"
+    image: record.svg
+    links:
+      license:
+        label: CC BY 4.0
+        url: "https://creativecommons.org/licenses/by/4.0/"
