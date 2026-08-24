@@ -49,6 +49,15 @@ public class ApuDetailController implements ApuApi {
 
 	private static final long CACHE_MAX_AGE_SECONDS = 1800;
 
+	/**
+	 * Startup instant, part of the ETag: everything configured (the display
+	 * model, the daoFooter, localizations) is read at startup, so a restart is
+	 * exactly the moment a cached body may have gone stale for reasons the
+	 * record's publish timestamp cannot see.
+	 */
+	private static final String CONFIG_EPOCH =
+			Long.toString(java.lang.management.ManagementFactory.getRuntimeMXBean().getStartTime(), 36);
+
 	private final ApuEntityRepository apuEntityRepository;
 
 	private final ApuService apuService;
@@ -84,9 +93,12 @@ public class ApuDetailController implements ApuApi {
 		ApuEntity apu = require(uuid);
 
 		Locale locale = presentationLocales.resolve(lang);
-		// the rendered labels and datings depend on the language, so it discriminates the ETag
+		// the rendered labels, datings and the daoFooter depend on the language AND on
+		// configuration read at startup, so both discriminate the ETag - without the
+		// startup epoch a configuration change leaves cached bodies revalidating to
+		// 304 forever, the data's timestamp never having moved
 		var expireStatus = HttpUtils.computeExpired(publishedOf(apu), ifNoneMatch, ifModifiedSince,
-				locale.toLanguageTag());
+				locale.toLanguageTag() + "-" + CONFIG_EPOCH);
 		var cacheControl = CacheControl.maxAge(CACHE_MAX_AGE_SECONDS, TimeUnit.SECONDS).cachePrivate()
 				.mustRevalidate();
 		if (!expireStatus.expired()) {
