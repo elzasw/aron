@@ -15,7 +15,6 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
  * @param minimumShouldMatchPercent minimum share of query tokens a document
  *                                  must match (100 = all, the default)
  * @param relaxOnNoHits             retry any-word when the strict query has no hits
- * @param refLabelFields            physical {@code ~LABEL} fields of APU_REF item types
  * @param promotedFields            item fields promoted above the allText baseline
  * @param analyzers                 token chains of the described material's language
  */
@@ -31,7 +30,6 @@ public record RelevanceConfig(
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
 		float allTextTerms,
-		List<String> refLabelFields,
 		List<PromotedField> promotedFields,
 		QueryAnalyzers analyzers) {
 
@@ -39,17 +37,17 @@ public record RelevanceConfig(
 	public record PromotedField(String field, float phrase, float terms) {
 	}
 
-	/** Built-in defaults with no reference-label or promoted fields (tests, simple callers). */
+	/** Built-in defaults with no promoted fields (tests, simple callers). */
 	public static RelevanceConfig defaults() {
-		return withSettings(null, List.of(), List.of(), QueryAnalyzers.DEFAULT);
+		return withSettings(null, List.of(), QueryAnalyzers.DEFAULT);
 	}
 
 	/**
 	 * Built-in defaults overlaid with the deployment settings ({@code null} =
-	 * pure defaults). {@code refLabelFields} and {@code promotedFields} come
-	 * resolved from the caller (item-type codes are a types.yaml concern).
+	 * pure defaults). {@code promotedFields} come resolved from the caller
+	 * (item-type codes are a types.yaml concern).
 	 */
-	public static RelevanceConfig withSettings(RelevanceSettingsDto settings, List<String> refLabelFields,
+	public static RelevanceConfig withSettings(RelevanceSettingsDto settings,
 			List<PromotedField> promotedFields, QueryAnalyzers analyzers) {
 		RelevanceFieldWeightsDto name = settings != null ? settings.getName() : null;
 		RelevanceFieldWeightsDto nameVariants = settings != null ? settings.getNameVariants() : null;
@@ -82,7 +80,6 @@ public record RelevanceConfig(
 				weight(description != null ? description.getPhrase() : null, 8),
 				weight(description != null ? description.getTerms() : null, 2),
 				weight(allText != null ? allText.getTerms() : null, 1),
-				List.copyOf(refLabelFields),
 				List.copyOf(promotedFields),
 				analyzers);
 	}

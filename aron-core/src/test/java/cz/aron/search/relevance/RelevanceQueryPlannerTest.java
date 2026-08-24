@@ -3,6 +3,7 @@ package cz.aron.search.relevance;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 
@@ -99,7 +100,7 @@ class RelevanceQueryPlannerTest {
 
 	@Test
 	void tokensBeyondTheCapAreIgnored() {
-		// B12: at most 32 tokens
+		// B12: at most 32 tokens - in the gate AND in the scoring tiers' text
 		var words = new StringBuilder();
 		for (int i = 0; i < 40; i++) {
 			words.append("slovo").append(i).append(' ');
@@ -107,13 +108,81 @@ class RelevanceQueryPlannerTest {
 		var plan = plan(words.toString());
 		assertThat(plan.gate()).hasSize(32);
 		assertThat(plan.minimumShouldMatch()).isEqualTo(32);
+		var baseline = plan.scoring().stream()
+				.filter(clause -> clause.field().equals("allText")).findFirst().orElseThrow();
+		assertThat(baseline.text().split(" ")).hasSize(32);
+	}
+
+	@Test
+	void aPastedSentenceGatesOnWholeWords() {
+		// R-16/B6: partial matching is a typing pattern - above six tokens the
+		// query is pasted text of complete words, gated whole-word so the clause
+		// count cannot grow with word length; the per-token partial tiers stay
+		// out for the same reason (a near-miss paste is caught by relaxation)
+		var plan = plan("Král Vladislav povoluje na žádost Viléma z Pernštejna vklad");
+		assertThat(plan.gate()).extracting(Clause::field).containsOnly("allText");
+		assertThat(plan.gate()).extracting(Clause::kind).containsOnly(MatchKind.TERM);
+		assertThat(plan.gate()).extracting(Clause::text)
+				.containsExactly("kral", "vladislav", "povoluje", "zadost", "vilema", "pernstejna", "vklad");
+		assertThat(plan.scoring()).extracting(Clause::field)
+				.doesNotContain("nameGrams", "nameVariantsGrams");
+	}
+
+	@Test
+	void partialMatchingStillCoversSixTokens() {
+		// the same citation one word shorter sits at the threshold: still the
+		// type-ahead handling, trigram gates and partial tiers included
+		var plan = plan("Král Vladislav povoluje na žádost Viléma z Pernštejna");
+		assertThat(plan.gate()).extracting(Clause::field).containsOnly("allTextGrams");
+		assertThat(plan.scoring()).extracting(Clause::field).contains("nameGrams");
+	}
+
+	@Test
+	void aVeryLongTokenContributesBoundedTrigrams() {
+		// R-16: only the first 20 characters decompose - 18 trigrams at most,
+		// however long the pasted token is
+		assertThat(RelevanceQueryPlanner.trigrams("abcdefghijklmnopqrstuvwxyz"))
+				.isEqualTo("abc bcd cde def efg fgh ghi hij ijk jkl klm lmn mno nop opq pqr qrs rst");
+	}
+
+	@Test
+	void theClauseBudgetIsBoundedForAnyInput() {
+		// R-16: engines cap a query's nested clauses (Lucene's IndexSearcher
+		// default: 1024) and a pasted citation is an ordinary query, so the plan
+		// must stay under the cap for ANY input. Leaves are counted
+		// pessimistically: analyzed kinds one per word, TERM/PREFIX one each.
+		var config = RelevanceConfig.withSettings(null, List.of(
+				new RelevanceConfig.PromotedField("TITLE~MAIN", 60, 30),
+				new RelevanceConfig.PromotedField("UNIT~CONTENT", 20, 10),
+				new RelevanceConfig.PromotedField("REL~ENTITY~LABEL", 15, 12)), QueryAnalyzers.DEFAULT);
+
+		// many long words - the worst pasted-text shape
+		var pasted = new StringBuilder();
+		for (int i = 0; i < 60; i++) {
+			pasted.append("nejneobhospodarovavatelnejsi").append(i).append(' ');
+		}
+		// few very long words - the worst type-ahead shape (trigram fan-out)
+		var fragments = "abcdefghijklmnopqrstuvwxyz1 abcdefghijklmnopqrstuvwxyz2 abcdefghijklmnopqrstuvwxyz3"
+				+ " abcdefghijklmnopqrstuvwxyz4 abcdefghijklmnopqrstuvwxyz5 abcdefghijklmnopqrstuvwxyz6";
+
+		assertThat(leafClauses(RelevanceQueryPlanner.plan(pasted.toString(), config))).isLessThan(1024);
+		assertThat(leafClauses(RelevanceQueryPlanner.plan(fragments, config))).isLessThan(1024);
+	}
+
+	private static int leafClauses(RelevancePlan plan) {
+		return Stream.concat(plan.gate().stream(), plan.scoring().stream())
+				.mapToInt(clause -> switch (clause.kind()) {
+					case TERM, PREFIX -> 1;
+					case PHRASE, ALL_TERMS, ANY_TERM -> clause.text().split(" ").length;
+				})
+				.sum();
 	}
 
 	@Test
 	void minimumShouldMatchFollowsTheConfiguredPercent() {
 		var settings = new RelevanceSettingsDto();
 		settings.setMinimumShouldMatch("50%");
-		var config = RelevanceConfig.withSettings(settings, List.of(), List.of(), QueryAnalyzers.DEFAULT);
+		var config = RelevanceConfig.withSettings(settings, List.of(), QueryAnalyzers.DEFAULT);
 
 		var plan = RelevanceQueryPlanner.plan("jedna dva tri ctyri", config);
 		assertThat(plan.minimumShouldMatch()).isEqualTo(2);
@@ -143,6 +212,10 @@ class RelevanceQueryPlannerTest {
 				new Clause("nameGrams", MatchKind.ALL_TERMS, "reh eho hor", 15),
 				new Clause("nameVariants", MatchKind.PREFIX, "rehor", 8),
 				new Clause("nameVariantsGrams", MatchKind.ALL_TERMS, "reh eho hor", 4),
+				// the combined reference-labels field - never a clause pair per
+				// ~LABEL field (R-16)
+				new Clause("refLabels", MatchKind.PHRASE, "Řehoř", 12),
+				new Clause("refLabels", MatchKind.ANY_TERM, "Řehoř", 10),
 				new Clause("description", MatchKind.PHRASE, "Řehoř", 8),
 				new Clause("description", MatchKind.ANY_TERM, "Řehoř", 2),
 				new Clause("allText", MatchKind.ANY_TERM, "Řehoř", 1));
@@ -155,14 +228,14 @@ class RelevanceQueryPlannerTest {
 		name.setExact(500f);
 		name.setTerms(0f); // zero disables the tier
 		settings.setName(name);
-		var config = RelevanceConfig.withSettings(settings, List.of("REL~ENTITY~LABEL"),
+		var config = RelevanceConfig.withSettings(settings,
 				List.of(new RelevanceConfig.PromotedField("TITLE~MAIN", 60, 30)), QueryAnalyzers.DEFAULT);
 
 		var plan = RelevanceQueryPlanner.plan("kronika", config);
 		assertThat(plan.scoring()).contains(
 				new Clause("nameExact", MatchKind.TERM, "kronika", 500),
-				new Clause("REL~ENTITY~LABEL", MatchKind.PHRASE, "kronika", 12),
-				new Clause("REL~ENTITY~LABEL", MatchKind.ANY_TERM, "kronika", 10),
+				new Clause("refLabels", MatchKind.PHRASE, "kronika", 12),
+				new Clause("refLabels", MatchKind.ANY_TERM, "kronika", 10),
 				new Clause("TITLE~MAIN", MatchKind.PHRASE, "kronika", 60),
 				new Clause("TITLE~MAIN", MatchKind.ANY_TERM, "kronika", 30));
 		assertThat(plan.scoring()).extracting(Clause::field, Clause::kind)
@@ -172,9 +245,9 @@ class RelevanceQueryPlannerTest {
 	@Test
 	void stopWordsFollowTheLanguageOfTheDescribedMaterial() {
 		// the gate drops the language's own stop words: Czech "v", German "und"
-		var czech = RelevanceConfig.withSettings(null, List.of(), List.of(),
+		var czech = RelevanceConfig.withSettings(null, List.of(),
 				QueryAnalyzers.of(java.util.Locale.of("cs", "CZ")));
-		var german = RelevanceConfig.withSettings(null, List.of(), List.of(),
+		var german = RelevanceConfig.withSettings(null, List.of(),
 				QueryAnalyzers.of(java.util.Locale.GERMAN));
 
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", czech)))
@@ -188,7 +261,7 @@ class RelevanceQueryPlannerTest {
 
 	@Test
 	void aLanguageWithoutAListKeepsEveryWord() {
-		var slovak = RelevanceConfig.withSettings(null, List.of(), List.of(),
+		var slovak = RelevanceConfig.withSettings(null, List.of(),
 				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
 
 		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostol v prahe", slovak)))

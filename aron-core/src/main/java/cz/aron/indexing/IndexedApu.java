@@ -58,6 +58,15 @@ public class IndexedApu {
     private List<String> nameVariantsExactFolded = new ArrayList<>();
 
     /**
+     * Display labels of every resolved APU_REF item - the combined
+     * reference-labels scoring tier (doc/search-relevance.md §4.2): one field
+     * however many reference item types the display model declares, so the tier
+     * costs two clauses instead of a pair per {@code ~LABEL} field.
+     */
+    @Field(type = FieldType.Text, analyzer = IndexConfig.FOLDING_AND_TOKENIZING)
+    private List<String> refLabels = new ArrayList<>();
+
+    /**
      * Trigram companions of allText / name / nameVariants - substring matching
      * ("ardub" finds Pardubice, doc/search-relevance.md R-15). The same source
      * values, the ngram analyzer on the INDEX side only: the query planner
@@ -154,6 +163,14 @@ public class IndexedApu {
 
 	public void setNameVariantsExactFolded(List<String> nameVariantsExactFolded) {
 		this.nameVariantsExactFolded = nameVariantsExactFolded;
+	}
+
+	public List<String> getRefLabels() {
+		return refLabels;
+	}
+
+	public void setRefLabels(List<String> refLabels) {
+		this.refLabels = refLabels;
 	}
 
 	public List<String> getAllTextGrams() {

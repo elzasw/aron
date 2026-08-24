@@ -54,6 +54,13 @@ public class ApuDocument {
 	private final List<String> nameVariants = new ArrayList<>();
 	private final List<String> nameVariantsExact = new ArrayList<>();
 	private final List<String> nameVariantsExactFolded = new ArrayList<>();
+	/**
+	 * Display labels of every resolved APU_REF item - the combined
+	 * reference-labels scoring field (doc/search-relevance.md §4.2). ONE field
+	 * however many reference item types the display model declares, so the tier
+	 * costs two clauses instead of a pair per {@code ~LABEL} field.
+	 */
+	private final List<String> refLabels = new ArrayList<>();
 	private final Map<String, List<Object>> values = new HashMap<>();
 
 	/** Outgoing reference to another APU, resolved with its display label. */
@@ -162,6 +169,10 @@ public class ApuDocument {
 
 	public List<String> getNameVariantsExactFolded() {
 		return nameVariantsExactFolded;
+	}
+
+	public List<String> getRefLabels() {
+		return refLabels;
 	}
 
 	public List<Rel> getRels() {

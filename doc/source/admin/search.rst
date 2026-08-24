@@ -33,17 +33,22 @@ Phrases
    description items. An unbalanced quote has no special meaning.
 
 Partial words
-   Partially typed words match automatically: a fragment of at least three
-   letters (``relevance.partialMinLength``) matches *anywhere inside* a
-   word — "pardub" and "ardub" both find Pardubice, "univ bratisl" finds
-   both "Univerzita Bratislava" and "Bratislavská univerzita". Shorter
-   fragments must match a whole word, and fragments never span word
-   boundaries. Ranking is unaffected by the extra recall: records matching
-   the words exactly rank above word-start matches, which rank above
-   mid-word matches. There are no query operators besides quotes — an
-   asterisk is a literal character with no meaning. (Substring matching is
-   served by trigram companion fields; it costs index size, not query
-   time.)
+   In queries of up to six words, partially typed words match automatically:
+   a fragment of at least three letters (``relevance.partialMinLength``)
+   matches *anywhere inside* a word — "pardub" and "ardub" both find
+   Pardubice, "univ bratisl" finds both "Univerzita Bratislava" and
+   "Bratislavská univerzita". Shorter fragments must match a whole word, and
+   fragments never span word boundaries. Ranking is unaffected by the extra
+   recall: records matching the words exactly rank above word-start matches,
+   which rank above mid-word matches. There are no query operators besides
+   quotes — an asterisk is a literal character with no meaning. (Substring
+   matching is served by trigram companion fields; it costs index size, not
+   query time.)
+
+   A longer query is treated as pasted text — a citation, a copied sentence —
+   whose words are complete and match whole; if a word or two miss (an
+   inflected form), the automatic any-word retry (see *Multiple words* above)
+   still finds the record.
 
 Stop words
    Common stop words of the described material's language ("v", "a", "na", …

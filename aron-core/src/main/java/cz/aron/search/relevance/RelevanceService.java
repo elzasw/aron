@@ -53,15 +53,8 @@ public class RelevanceService {
 			throw new UncheckedIOException("Fail to load search configuration", e);
 		}
 
-		// every APU_REF item type contributes its ~LABEL field to the
-		// reference-labels tier
-		var refLabelFields = new ArrayList<String>();
-		for (ItemType itemType : typesHolder.getAllItemTypes()) {
-			if (itemType.isIndexed() && itemType.getType() == DataType.APU_REF) {
-				refLabelFields.add(itemType.getCode() + "~LABEL");
-			}
-		}
-
+		// the reference-labels tier scores the combined refLabels field, so no
+		// per-~LABEL fan-out is resolved here (doc/search-relevance.md §4.2)
 		var promotedFields = new ArrayList<RelevanceConfig.PromotedField>();
 		if (settings != null) {
 			for (RelevanceItemWeightsDto item : settings.getItems()) {
@@ -80,12 +73,10 @@ public class RelevanceService {
 			}
 		}
 
-		config = RelevanceConfig.withSettings(settings, refLabelFields, promotedFields,
+		config = RelevanceConfig.withSettings(settings, promotedFields,
 				QueryAnalyzers.of(contentLocale.getLocale()));
-		log.info("Relevance configuration loaded: minimumShouldMatch={}%, relaxOnNoHits={}, "
-				+ "refLabelFields={}, promotedFields={}.",
-				config.minimumShouldMatchPercent(), config.relaxOnNoHits(),
-				refLabelFields.size(), promotedFields.size());
+		log.info("Relevance configuration loaded: minimumShouldMatch={}%, relaxOnNoHits={}, promotedFields={}.",
+				config.minimumShouldMatchPercent(), config.relaxOnNoHits(), promotedFields.size());
 	}
 
 	/** Plans one fulltext query; {@code null} = nothing searchable (match all). */

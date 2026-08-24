@@ -62,6 +62,22 @@ public final class DocumentFixtures {
 	}
 
 	/**
+	 * Adds one resolved APU_REF item - what the builder produces when the
+	 * target's label is known: the target uuid on the item field, the label on
+	 * the {@code ~LABEL} and {@code ~ID~LABEL} companions and on the combined
+	 * refLabels field, the outgoing rel, and the regular allText participation.
+	 */
+	public static void addRefLabel(ApuDocument document, String code, String targetUuid, String label) {
+		var values = document.getValues();
+		values.computeIfAbsent(code, k -> new ArrayList<>()).add(targetUuid);
+		values.computeIfAbsent(code + "~LABEL", k -> new ArrayList<>()).add(label);
+		values.computeIfAbsent(code + "~ID~LABEL", k -> new ArrayList<>()).add(targetUuid + "|" + label);
+		document.getRels().add(new ApuDocument.Rel(targetUuid, code, List.of(), label, targetUuid + "|" + label));
+		document.getRefLabels().add(label);
+		document.getAllText().add(label);
+	}
+
+	/**
 	 * Completes a fixture's datings: every dating as an interval on the item's own
 	 * field - which is what the engines match a range filter against - the hull of
 	 * one item type's datings in {@code ~L}/{@code ~H}, and the hull across all of

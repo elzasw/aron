@@ -108,7 +108,7 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "7";
+	private static final String LAYOUT_VERSION = "8";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
 
@@ -741,6 +741,10 @@ public class LuceneSearchIndex implements SearchIndex {
 		// variant name forms with their normalized exact companions (§4.2)
 		for (String variant : apuDocument.getNameVariants()) {
 			doc.add(new TextField("nameVariants", variant, Field.Store.NO));
+		}
+		// combined reference-labels scoring field: one field for every ~LABEL value
+		for (String label : apuDocument.getRefLabels()) {
+			doc.add(new TextField("refLabels", label, Field.Store.NO));
 		}
 		// substring-match companions: same sources, the trigram analyzer (R-15)
 		for (String text : apuDocument.getAllText()) {

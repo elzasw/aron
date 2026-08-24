@@ -152,8 +152,10 @@ public class ApuDocumentBuilder {
 								.add(indexedLabel);
 						values.computeIfAbsent(itemType.getCode() + "~ID~LABEL", k -> new java.util.ArrayList<>())
 								.add(data + "|" + targetLabel);
-						// references are text-searchable by their display label
+						// references are text-searchable by their display label...
 						addAllText(document, fulltext, indexedLabel);
+						// ...and score on the combined reference-labels field
+						document.getRefLabels().add(indexedLabel);
 					}
 				}
 			}

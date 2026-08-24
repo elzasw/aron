@@ -81,7 +81,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	 * startup bootstrap rebuilds and reindexes it - the analog of the Lucene
 	 * adapter's commit-user-data version.
 	 */
-	private static final String LAYOUT_VERSION = "4";
+	private static final String LAYOUT_VERSION = "5";
 
 	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
 	private static final String BOUNDS_AGG_PREFIX = "bounds~";
@@ -646,6 +646,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		indexedApu.setNameVariants(apuDocument.getNameVariants());
 		indexedApu.setNameVariantsExact(apuDocument.getNameVariantsExact());
 		indexedApu.setNameVariantsExactFolded(apuDocument.getNameVariantsExactFolded());
+		indexedApu.setRefLabels(apuDocument.getRefLabels());
 		// substring-match companions: same sources, the trigram analyzer (R-15)
 		indexedApu.setAllTextGrams(apuDocument.getAllText());
 		indexedApu.setNameGrams(apuDocument.getName());

@@ -33,6 +33,14 @@ import cz.aron.search.relevance.RelevancePlan.MatchKind;
  * scoring field can drop a token the gate requires); a query whose tokens are
  * all stop words falls back to the non-stop chain, so it stays answerable
  * against allText, which keeps stop words (B5).
+ *
+ * <p>The plan's clause count is bounded for ANY input (R-16): both engines cap
+ * a query's nested clauses (Lucene's {@code IndexSearcher} default: 1024) and a
+ * pasted citation is an ordinary query - so the scoring tiers read the same
+ * token-capped text as the gate, partial matching stops at
+ * {@link #PARTIAL_MAX_TOKENS} tokens, and a token contributes at most the
+ * trigrams of its first {@link #TRIGRAM_MAX_CHARS} characters. Pinned by the
+ * budget test in {@code RelevanceQueryPlannerTest}.
  */
 public final class RelevanceQueryPlanner {
 
@@ -42,8 +50,24 @@ public final class RelevanceQueryPlanner {
 	/** Trigram companion of allText - the substring gate field (R-15). */
 	public static final String ALL_TEXT_GRAMS = "allTextGrams";
 
+	/** Combined reference-labels field: the display labels of every resolved APU_REF item. */
+	public static final String REF_LABELS = "refLabels";
+
 	/** At most this many query tokens are used; extra tokens are ignored (B12). */
 	private static final int MAX_TOKENS = 32;
+
+	/**
+	 * Partial matching (trigram gates, per-token partial tiers) applies only to
+	 * queries of at most this many tokens (B6): a fragment is a typing pattern,
+	 * and a longer query is pasted text made of complete words - matched
+	 * whole-word exactly, and the one query shape whose per-character trigram
+	 * fan-out could otherwise grow without bound. A near-miss paste (an
+	 * inflected word or two) is still caught by the zero-hit relaxation.
+	 */
+	private static final int PARTIAL_MAX_TOKENS = 6;
+
+	/** Longest token prefix decomposed into trigrams - bounds the clauses one token can cost. */
+	private static final int TRIGRAM_MAX_CHARS = 20;
 
 	private static final Pattern PHRASE = Pattern.compile("\"([^\"]*)\"");
 
@@ -85,6 +109,9 @@ public final class RelevanceQueryPlanner {
 			tokens = tokens.subList(0, MAX_TOKENS);
 		}
 
+		// partial matching applies to short queries only (see PARTIAL_MAX_TOKENS)
+		boolean partial = tokens.size() <= PARTIAL_MAX_TOKENS;
+
 		var gate = new ArrayList<Clause>();
 		for (String token : tokens) {
 			// automatic partial matching (R-15): a long-enough token matches
@@ -95,7 +122,7 @@ public final class RelevanceQueryPlanner {
 			// decomposes the trigrams ITSELF: the engines' ngram analyzers emit
 			// grams at one position, which ES's match query treats as synonyms
 			// (OR) - pre-split grams keep the all-of-them semantics on both.
-			gate.add(token.length() >= config.partialMinLength()
+			gate.add(partial && token.length() >= config.partialMinLength()
 					? new Clause(ALL_TEXT_GRAMS, MatchKind.ALL_TERMS, trigrams(token), 0)
 					: new Clause(ALL_TEXT, MatchKind.TERM, token, 0));
 		}
@@ -112,14 +139,16 @@ public final class RelevanceQueryPlanner {
 		int minimumShouldMatch = Math.clamp(
 				Math.round(gate.size() * config.minimumShouldMatchPercent() / 100.0f), 1, gate.size());
 
-		return new RelevancePlan(gate, minimumShouldMatch, scoring(query, phrases, tokens, config));
+		return new RelevancePlan(gate, minimumShouldMatch, scoring(query, phrases, tokens, partial, config));
 	}
 
 	/** The weighted tiers of §4.2; a non-positive weight disables its tier. */
 	private static List<Clause> scoring(String query, List<String> phrases, List<String> tokens,
-			RelevanceConfig config) {
-		// operators stripped: the plain text of the query for the analyzed tiers
-		String plain = (query.replace("\"", " ").replace("*", " ")).trim().replaceAll("\\s+", " ");
+			boolean partial, RelevanceConfig config) {
+		// operators stripped: the plain text of the query for the analyzed tiers,
+		// capped at the gate's token budget so the tier cost is bounded too (R-16)
+		String plain = capWords((query.replace("\"", " ").replace("*", " ")).trim().replaceAll("\\s+", " "),
+				MAX_TOKENS);
 		String normalized = ApuDocumentBuilder.normalize(plain);
 		String normalizedFolded = ApuDocumentBuilder.normalizeFolded(plain);
 
@@ -141,19 +170,21 @@ public final class RelevanceQueryPlanner {
 		// full-word tiers, so an exact match always outranks a partial one, and
 		// a word-start match (PREFIX on the analyzed terms) above a mid-word one
 		// (all-trigrams on the *Grams companion); a full word satisfies both, so
-		// fully matching documents never fall behind
-		for (String token : tokens) {
-			if (token.length() >= config.partialMinLength()) {
-				add(scoring, "name", MatchKind.PREFIX, token, config.nameWordPrefix());
-				add(scoring, "nameGrams", MatchKind.ALL_TERMS, trigrams(token), config.nameContains());
-				add(scoring, "nameVariants", MatchKind.PREFIX, token, config.nameVariantsWordPrefix());
-				add(scoring, "nameVariantsGrams", MatchKind.ALL_TERMS, trigrams(token), config.nameVariantsContains());
+		// fully matching documents never fall behind. Short queries only - the
+		// same rule as the gate (see PARTIAL_MAX_TOKENS)
+		if (partial) {
+			for (String token : tokens) {
+				if (token.length() >= config.partialMinLength()) {
+					add(scoring, "name", MatchKind.PREFIX, token, config.nameWordPrefix());
+					add(scoring, "nameGrams", MatchKind.ALL_TERMS, trigrams(token), config.nameContains());
+					add(scoring, "nameVariants", MatchKind.PREFIX, token, config.nameVariantsWordPrefix());
+					add(scoring, "nameVariantsGrams", MatchKind.ALL_TERMS, trigrams(token),
+							config.nameVariantsContains());
+				}
 			}
 		}
-		for (String refLabelField : config.refLabelFields()) {
-			add(scoring, refLabelField, MatchKind.PHRASE, plain, config.refLabelsPhrase());
-			add(scoring, refLabelField, MatchKind.ANY_TERM, plain, config.refLabelsTerms());
-		}
+		add(scoring, REF_LABELS, MatchKind.PHRASE, plain, config.refLabelsPhrase());
+		add(scoring, REF_LABELS, MatchKind.ANY_TERM, plain, config.refLabelsTerms());
 		add(scoring, "description", MatchKind.PHRASE, plain, config.descriptionPhrase());
 		add(scoring, "description", MatchKind.ANY_TERM, plain, config.descriptionTerms());
 		add(scoring, ALL_TEXT, MatchKind.ANY_TERM, plain, config.allTextTerms());
@@ -172,9 +203,15 @@ public final class RelevanceQueryPlanner {
 	/**
 	 * The token's overlapping trigrams, space-separated ("pardub" - "par ard
 	 * rdu dub"): what the {@code *Grams} fields hold per word, matched with
-	 * all-of-them semantics. Callers guarantee length >= 3.
+	 * all-of-them semantics. Callers guarantee length >= 3. A very long token
+	 * contributes only its first {@link #TRIGRAM_MAX_CHARS} characters - a
+	 * prefix-substring match, slightly wider recall for a bounded clause count
+	 * (R-16); the gate is non-scoring, so ranking is unaffected.
 	 */
 	static String trigrams(String token) {
+		if (token.length() > TRIGRAM_MAX_CHARS) {
+			token = token.substring(0, TRIGRAM_MAX_CHARS);
+		}
 		if (token.length() <= 3) {
 			return token;
 		}
@@ -186,6 +223,17 @@ public final class RelevanceQueryPlanner {
 			grams.append(token, i, i + 3);
 		}
 		return grams.toString();
+	}
+
+	/** First {@code limit} words of a whitespace-collapsed text (R-16). */
+	private static String capWords(String text, int limit) {
+		int spaces = 0;
+		for (int i = 0; i < text.length(); i++) {
+			if (text.charAt(i) == ' ' && ++spaces == limit) {
+				return text.substring(0, i);
+			}
+		}
+		return text;
 	}
 
 	private static void add(List<Clause> scoring, String field, MatchKind kind, String text, float weight) {

@@ -282,6 +282,37 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void pastedTextMatchesWholeWordsOnly() {
+		// B6/R-16: above six words the query is pasted text - a fragment no
+		// longer matches inside a word, and complete words keep matching
+		indexApus(List.of(doc(uuid(133), "Pardubice kostel kronika mesto zamek hrad vez", 1, Map.of())));
+
+		// six words: "pardub" still matches inside "Pardubice"
+		assertThat(index.search(ApuSearchQuery.fulltext("pardub kostel kronika mesto zamek hrad"))
+				.total()).isEqualTo(1);
+		// seven words: the fragment must match a whole word - it does not
+		assertThat(index.search(ApuSearchQuery.fulltext("pardub kostel kronika mesto zamek hrad vez"))
+				.total()).isZero();
+		// ...while the same seven complete words do
+		assertThat(index.search(ApuSearchQuery.fulltext("pardubice kostel kronika mesto zamek hrad vez"))
+				.total()).isEqualTo(1);
+	}
+
+	@Test
+	void referenceLabelMatchesRankAboveContentMentions() {
+		// B8: a query matching a referenced record's name ranks above one merely
+		// mentioning the words - the combined refLabels field, one however many
+		// reference item types the display model declares (R-16)
+		var referring = doc(uuid(130), "Listina o prodeji", 1, Map.of());
+		DocumentFixtures.addRefLabel(referring, "REL~ENTITY", uuid(131), "Karel Novák");
+		indexApus(List.of(referring,
+				docWithAllText(uuid(132), "Zápisy města", "sepsal jistý Karel Novák")));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("Karel Novák")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(130), uuid(132));
+	}
+
+	@Test
 	void relaxedPlanMatchesAnyWord() {
 		// B7 (the port half; the automatic retry itself lives in the API layer)
 		indexApus(List.of(doc(uuid(72), "Kronika obce", 1, Map.of())));

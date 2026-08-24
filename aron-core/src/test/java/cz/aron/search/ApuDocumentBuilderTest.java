@@ -125,6 +125,8 @@ class ApuDocumentBuilderTest {
 		assertThat(doc.getValues().get("REL~ENTITY")).containsExactly(target);
 		assertThat(doc.getValues().get("REL~ENTITY~LABEL")).containsExactly("Entita Zelezny");
 		assertThat(doc.getValues().get("REL~ENTITY~ID~LABEL")).containsExactly(target + "|Entita Železný");
+		// the combined reference-labels scoring field carries the same label
+		assertThat(doc.getRefLabels()).containsExactly("Entita Zelezny");
 		assertThat(doc.getRels()).hasSize(1);
 		var rel = doc.getRels().get(0);
 		assertThat(rel.targetId()).isEqualTo(target);
@@ -142,6 +144,7 @@ class ApuDocumentBuilderTest {
 		assertThat(doc.getValues().get("REL~ENTITY")).containsExactly(target);
 		assertThat(doc.getValues()).doesNotContainKey("REL~ENTITY~LABEL");
 		assertThat(doc.getRels()).isEmpty();
+		assertThat(doc.getRefLabels()).isEmpty();
 	}
 
 	@Test

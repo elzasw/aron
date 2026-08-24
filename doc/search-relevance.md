@@ -115,6 +115,7 @@ construction.
 | `nameExact` | name: lowercased, whitespace-collapsed, **diacritics preserved**; keyword, truncated to 200 chars | true exact-name tier |
 | `nameExactFolded` | same, **diacritics folded** | folded exact + prefix tiers |
 | `nameVariants` (+ `~Exact`, `~ExactFolded`) | values of item types marked **`nameVariant: true`** in types.yaml (the other name forms of an access point — Praha/Prague), analyzed multi-valued + the same normalized exact companions as the primary name | variant-name tiers (§4.2) |
+| `refLabels` | display labels of every resolved APU_REF item, analyzed multi-valued — the same values the per-item `~LABEL` fields hold | the combined reference-labels tier (§4.2): one field however many reference item types the display model declares (R-16) |
 | `allTextGrams`, `nameGrams`, `nameVariantsGrams` | trigram companions of allText/name/nameVariants (same source values, the `folding_and_ngram` chain on both index and query side) | substring matching (R-15): a fragment decomposes into its trigrams, all must be present |
 | `dateL` / `dateH` | min of all `~L`, max of all `~H` (epoch millis, numeric doc-values) | dating sort with no configuration (§4.4) |
 | `uuid` doc-values | sortable uuid (Lucene: `SortedDocValuesField`; ES: the existing keyword id) | the final tie-break every sort mode needs (§4.4) |
@@ -123,7 +124,13 @@ construction.
 token out over ~200 fields; clause count is tokens × fields × tiers. With it the
 *gate* is a single field — `allText` answers "does this token occur anywhere in
 the APU" — and every other clause is scoring only. Per-field weights are
-reserved for the fields a deployment actually cares about.
+reserved for the fields a deployment actually cares about. **`refLabels` exists
+for the same reason** (R-16): the reference-labels tier used to emit a clause
+pair per `~LABEL` field — the shipped display model declares ~190 reference
+item types, so an eight-word query alone crossed Lucene's nested-clause cap —
+and since every field shared the one `refLabels` weight pair anyway, a combined
+field loses nothing configurable. The per-item `~LABEL` fields stay for facets,
+pickers, `FTXF` filters and per-field promotion (`relevance.items`).
 
 **Multi-valued, never concatenated.** Each source value is a separate entry, so
 a position gap separates them and a quoted phrase can never match across two
@@ -162,11 +169,14 @@ has no equivalent of the Lucene commit-user-data version today.
 **User-visible syntax** — deliberately minimal, fully specified in §5:
 
 - plain words — every word must occur (AND); word order does not affect
-  matching, only ranking. A fragment of at least `partialMinLength` letters
-  (default 3) matches **anywhere inside a word** automatically — "pardub" and
-  "ardub" both find Pardubice, "univ bratisl" finds both "Univerzita
-  Bratislava" and "Bratislavská univerzita" (R-14/R-15). Shorter fragments
-  must match a whole word; fragments never span word boundaries;
+  matching, only ranking. In queries of up to **six words**, a fragment of at
+  least `partialMinLength` letters (default 3) matches **anywhere inside a
+  word** automatically — "pardub" and "ardub" both find Pardubice, "univ
+  bratisl" finds both "Univerzita Bratislava" and "Bratislavská univerzita"
+  (R-14/R-15). Shorter fragments must match a whole word; fragments never span
+  word boundaries. A longer query is pasted text, not typing — its words match
+  whole (R-16), and a near-miss paste is still caught by the zero-hit
+  relaxation;
 - `"…"` — exact phrase, exact words (never across item boundaries);
 - everything else is literal: `*` anywhere, unbalanced quotes, and all other
   punctuation carry no operator meaning. (The first frnk testing round showed
@@ -184,7 +194,8 @@ analyzer. At most **32 tokens** are used; extra tokens are ignored (B12).
 
 **Gate — strict AND, non-scoring.** One clause per token — an **all-trigrams
 substring** match on `allTextGrams` for tokens of at least `partialMinLength`
-letters, an exact term match on `allText` for shorter ones, a phrase match for
+letters (in queries of at most six tokens, R-16), an exact term match on
+`allText` otherwise, a phrase match for
 quoted phrases — combined with
 `minimumShouldMatch` (default: all), executed in **filter context**: ES
 `bool.filter`, Lucene `Occur.FILTER`. The gate contributes **no score**; if it
@@ -203,6 +214,19 @@ with `*value*` wildcard queries whose leading wildcard scans the whole term
 dictionary on every query — the trigram companions trade index size (the
 `allTextGrams` postings) for term-lookup queries that stay fast and
 filter-cacheable at portal scale.
+
+**Clause budget — bounded for any input** (R-16). Both engines cap a query's
+nested clauses (Lucene's `IndexSearcher` default: 1024, which Elasticsearch
+merely raises), and a pasted citation is an ordinary query — the trigger was a
+real one, a reader pasting a citation back into the search box and getting a
+500. The plan is therefore bounded regardless of input: the scoring tiers read
+the same 32-token-capped text as the gate; the partial machinery (trigram
+gates, per-token partial tiers) applies only to queries of at most **six
+tokens** — a fragment is a typing pattern, a longer query is pasted text made
+of complete words, matched whole-word and ranked by the phrase/terms tiers —
+and a token contributes at most the trigrams of its first 20 characters. The
+reference-labels tier is the one combined `refLabels` field (§4.1). Pinned by
+the planner's budget test.
 
 Rationale for AND over OR, and over a graded `minimum_should_match`: this portal
 is facet-driven *and* offers user-selected ordering. Ranking is what makes loose
@@ -242,7 +266,8 @@ the latter takes an int the planner computes from the token count).
 | variant-name contains (per token) | `match(nameVariantsGrams, token, AND)` | 4 |
 | name phrase | `match_phrase(name, Q)` | 100 |
 | name all terms | `match(name, Q, AND)` | 50 |
-| reference labels | `match(<CODE>~LABEL, Q)` | 10 |
+| reference-labels phrase | `match_phrase(refLabels, Q)` | 12 |
+| reference-labels terms | `match(refLabels, Q)` | 10 |
 | description phrase | `match_phrase(description, Q)` | 8 |
 | description terms | `match(description, Q)` | 2 |
 | `allText` baseline | `match(allText, Q)` | 1 |
@@ -446,7 +471,7 @@ this table so they cannot diverge from what is tested.
 | B3 | Diacritics-insensitive matching: "rehor" finds "Řehoř"; when diacritics are typed, the exact-diacritics name ranks above the folded match | contract test |
 | B4 | `"…"` is an exact phrase; a phrase never matches across values of two different items; an unbalanced quote is treated as a literal character | planner unit + contract test |
 | B5 | Stop words ("v", "a", "na") never cause empty results; a query consisting only of stop words still searches them | planner unit + contract test |
-| B6 | Partial matching is automatic: a fragment of at least 3 letters (`partialMinLength`) matches ANYWHERE inside a word ("pardub" and "ardub" both find Pardubice); shorter fragments and quoted phrases match whole words only; fragments never span word boundaries; ranking keeps exact > word-start > mid-word; `*` has no meaning anywhere | planner unit + contract test |
+| B6 | Partial matching is automatic in queries of at most 6 words: a fragment of at least 3 letters (`partialMinLength`) matches ANYWHERE inside a word ("pardub" and "ardub" both find Pardubice); shorter fragments and quoted phrases match whole words only; fragments never span word boundaries; ranking keeps exact > word-start > mid-word; `*` has no meaning anywhere. A longer query (pasted text) matches whole words, with the zero-hit relaxation (B7) as the near-miss net | planner unit + contract test |
 | B7 | Zero strict hits → one automatic relaxed retry (any-word), reported as `queryMode: RELAXED`; facet filters and the section restriction are never relaxed | API test |
 | B8 | Relevance order (ordering guarantee only, never absolute scores): exact name → name begins-with → phrase in name → all words in name → reference labels → description → anything else | contract test |
 | B9 | Alphabetical order follows the Czech alphabet (č after c, ch after h); items without a name sort last | contract test |
@@ -545,6 +570,12 @@ Third round (2026-08-19):
 | R-13 | **Variant name forms** (the CAM/Elza preferred-vs-variant scheme, e.g. an access point's other names Praha/Prague): item types marked `nameVariant: true` in types.yaml feed dedicated index fields (`nameVariants` + normalized exact companions, same normalizer as the primary name, CRC-tracked) and a tier ladder one level below the primary name — defaults follow the measured rule *preferred ≈ 5 × variant* (exact 200/160, prefix 40, phrase 20, terms 10), overridable via `relevance.nameVariants`. Marking is per item type, not per item group |
 | R-14 | **Automatic partial matching, no `*` operator** (first frnk user-testing round): every token of at least `prefixMinLength` letters (default 3) gates as a word prefix — "pardub" finds Pardubice, "univ bratisl" finds both word orders and both name forms; the former `word*` operator is dropped ("not intuitive anymore"). Exact matches keep outranking partial ones by construction: the gate is non-scoring and full-word tiers stay reserved for complete matches; per-token word-prefix tiers (name 30, variants 8) rank partial name bearers above content mentions. Word beginnings only — CAM/Elza's `*value*` substring matching (their partial-match precedent) includes a leading wildcard the port deliberately does not replicate; index-side n-grams are the upgrade path if mid-word matching is ever needed. **Superseded by R-15 on the mid-word half** |
 | R-15 | **Full substring matching** (second frnk finding: "ardub" must find Pardubice, matching CAM/Elza behavior): trigram companion fields (`allTextGrams`, `nameGrams`, `nameVariantsGrams` - `folding_and_ngram` analyzer on both engines) turn a fragment into an all-trigrams match; the gate uses `allTextGrams`, per-token `contains` scoring tiers (name 15, variants 4) sit below the word-prefix tiers, so the ladder is exact > word-start > contains > content-only. `prefixMinLength` renamed to `partialMinLength` (floor 3 = the trigram size; the old key stays accepted). Index-side n-grams, never leading wildcards - the index grows, queries stay term lookups |
+
+Fourth round (2026-08-24):
+
+| # | Decision |
+|---|---|
+| R-16 | **The plan's clause count is bounded for any input** (a citation pasted into the search box blew Lucene's 1024 nested-clause cap and answered 500): the reference-labels tier scores one combined `refLabels` index field instead of a clause pair per `~LABEL` field (~190 in the shipped display model — the same fan-out `allText` exists to avoid; recall never depended on them, the labels are in `allText`, and the per-field form had one shared weight pair, so nothing configurable is lost); partial matching applies to queries of at most 6 tokens (a fragment is a typing pattern — pasted text is complete words, and the zero-hit relaxation still catches a near-miss paste); a token contributes at most the trigrams of its first 20 characters; the scoring tiers read the same 32-token-capped text as the gate. Document-layout bump on both engines (`refLabels`); the `~LABEL` fields stay for facets, pickers and promotion |
 
 ## 9. Deliberately not done
 
