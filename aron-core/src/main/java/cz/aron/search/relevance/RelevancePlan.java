@@ -7,16 +7,30 @@ import java.util.List;
  * {@link RelevanceQueryPlanner} and translated mechanically by every search
  * adapter (doc/search-relevance.md §4.7).
  *
- * <p>The {@code gate} decides WHAT matches: its clauses (one per query token or
- * quoted phrase, all against the allText catch-all) run in filter context -
- * non-scoring - combined with {@code minimumShouldMatch}. The {@code scoring}
- * clauses decide the ORDER: weighted should-clauses that never affect recall.
+ * <p>The {@code gate} decides WHAT matches: one slot per query token or quoted
+ * phrase, run in filter context - non-scoring - combined with
+ * {@code minimumShouldMatch}. The {@code scoring} clauses decide the ORDER:
+ * weighted should-clauses that never affect recall.
  *
- * @param gate               non-scoring match clauses (weight is meaningless here)
- * @param minimumShouldMatch how many gate clauses must match (1..gate.size())
+ * @param gate               non-scoring match slots (weights are meaningless here)
+ * @param minimumShouldMatch how many gate slots must match (1..gate.size())
  * @param scoring            weighted ranking clauses
  */
-public record RelevancePlan(List<Clause> gate, int minimumShouldMatch, List<Clause> scoring) {
+public record RelevancePlan(List<GateClause> gate, int minimumShouldMatch, List<Clause> scoring) {
+
+	/**
+	 * One gate slot - a query token or quoted phrase. It matches when ANY of
+	 * its alternatives does (a token may match as a substring or as a
+	 * stem-equal word, R-17); {@code minimumShouldMatch} counts slots, never
+	 * alternatives, so adapters wrap a multi-alternative slot in its own
+	 * any-of query.
+	 */
+	public record GateClause(List<Clause> anyOf) {
+
+		public static GateClause of(Clause... alternatives) {
+			return new GateClause(List.of(alternatives));
+		}
+	}
 
 	/** How a clause matches its field. */
 	public enum MatchKind {

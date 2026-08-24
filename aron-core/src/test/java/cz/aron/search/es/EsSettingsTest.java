@@ -15,7 +15,6 @@ import org.springframework.core.io.ClassPathResource;
 
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import cz.aron.search.StopWords;
 
 /**
  * Validates es_settings.json against the Elasticsearch client's own schema
@@ -28,11 +27,13 @@ import cz.aron.search.StopWords;
  */
 class EsSettingsTest {
 
-	private static String settings(String stopWords) {
+	private static String settings(Locale locale) {
 		try {
-			return new ClassPathResource("elasticsearch/es_settings.json")
-					.getContentAsString(StandardCharsets.UTF_8)
-					.replace("__STOP_WORDS__", stopWords);
+			// the adapter's own substitution, so the test validates what it sends
+			return ElasticsearchSearchIndex.renderSettings(
+					new ClassPathResource("elasticsearch/es_settings.json")
+							.getContentAsString(StandardCharsets.UTF_8),
+					locale);
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}
@@ -48,21 +49,20 @@ class EsSettingsTest {
 	@Test
 	void theShippedSettingsAreWhatElasticsearchAccepts() {
 		// the file nests everything under "index", which the client keeps nested too
-		var analysis = parse(settings("_czech_")).index().analysis();
+		var analysis = parse(settings(Locale.of("cs", "CZ"))).index().analysis();
 
 		assertThat(analysis).isNotNull();
 		assertThat(analysis.analyzer()).containsKeys("folding_and_tokenizing",
-				"folding_and_tokenizing_stop", "folding", "text_long_keyword");
-		assertThat(analysis.filter()).containsKey("stop_filter");
+				"folding_and_tokenizing_stop", "folding_stop_and_stem", "folding", "text_long_keyword");
+		assertThat(analysis.filter()).containsKeys("stop_filter", "content_stem");
 	}
 
 	@ParameterizedTest
 	@ValueSource(strings = { "cs", "de", "en", "ru", "sk" })
 	void everyContentLocaleProducesSettingsThatParse(String language) {
-		// including a language with no list, whose substitution is _none_
-		String stopWords = StopWords.elasticsearchList(Locale.forLanguageTag(language));
-
-		assertThatCode(() -> parse(settings(stopWords))).doesNotThrowAnyException();
+		// including a language with no stop list and no stemmer (sk), whose
+		// substitutions are _none_ and the valid-but-unused placeholder
+		assertThatCode(() -> parse(settings(Locale.forLanguageTag(language)))).doesNotThrowAnyException();
 	}
 
 	@Test
@@ -72,7 +72,7 @@ class EsSettingsTest {
 		// real server, since parsing the file offline tolerates the extra key
 		var names = new java.util.ArrayList<String>();
 		collectFieldNames(new com.fasterxml.jackson.databind.ObjectMapper()
-				.readTree(settings("_czech_")), names);
+				.readTree(settings(Locale.of("cs", "CZ"))), names);
 
 		assertThat(names).allSatisfy(name -> assertThat(name)
 				.as("es_settings.json may carry no explanatory keys - put the note in the Java code")
@@ -88,10 +88,10 @@ class EsSettingsTest {
 	}
 
 	@Test
-	void thePlaceholderIsAlwaysSubstituted() {
-		// an unsubstituted token would reach Elasticsearch as a stop-word list name
-		assertThat(settings(StopWords.elasticsearchList(Locale.of("cs", "CZ"))))
-				.doesNotContain("__STOP_WORDS__");
+	void thePlaceholdersAreAlwaysSubstituted() {
+		// an unsubstituted token would reach Elasticsearch as a literal name
+		assertThat(settings(Locale.of("cs", "CZ"))).doesNotContain("__STOP_WORDS__", "__STEMMER_LANGUAGE__");
+		assertThat(settings(Locale.forLanguageTag("sk"))).doesNotContain("__STOP_WORDS__", "__STEMMER_LANGUAGE__");
 	}
 
 }

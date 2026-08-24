@@ -299,6 +299,31 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void inflectedFormsMatchAndTheNameBearerRanksFirst() {
+		// B15 (R-17): with a Czech content locale, a word matches its inflected
+		// forms in both directions - "hradu" finds "hrad" (which contains none
+		// of the query's trigrams) as well as "hrady"; the name bearer first
+		indexApus(List.of(
+				doc(uuid(134), "Hrad Pernštejn", 1, Map.of()),
+				docWithAllText(uuid(135), "Listina", "prodej a hrady roku 1588")));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("hradu")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(134), uuid(135));
+	}
+
+	@Test
+	void exactFormRanksAboveInflectedMatch() {
+		// B15 half two: stemming adds recall, never reorders - the record
+		// carrying the query's exact form outranks the stem-equal one
+		indexApus(List.of(
+				doc(uuid(136), "Hradu kronika", 1, Map.of()),
+				doc(uuid(137), "Hrad kronika", 1, Map.of())));
+
+		assertThat(index.search(ApuSearchQuery.fulltext("hradu kronika")).hits())
+				.extracting(ApuSearchResult.Hit::uuid).containsExactly(uuid(136), uuid(137));
+	}
+
+	@Test
 	void referenceLabelMatchesRankAboveContentMentions() {
 		// B8: a query matching a referenced record's name ranks above one merely
 		// mentioning the words - the combined refLabels field, one however many

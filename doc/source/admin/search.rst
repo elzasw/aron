@@ -46,9 +46,21 @@ Partial words
    query time.)
 
    A longer query is treated as pasted text — a citation, a copied sentence —
-   whose words are complete and match whole; if a word or two miss (an
-   inflected form), the automatic any-word retry (see *Multiple words* above)
-   still finds the record.
+   whose words are complete and match whole; if a word or two miss, the
+   automatic any-word retry (see *Multiple words* above) still finds the
+   record.
+
+Inflected words
+   Where the language of the described material (``search.content-locale``)
+   has a stemmer — Czech does — a word matches its inflected forms in both
+   directions: ``hrad`` finds records saying ``hradu`` or ``hradem``, and
+   ``hradu`` finds ``hrad``. Quoted phrases are exempt: they require the
+   exact words. Like partial matching, this only widens what is found —
+   records carrying the exact typed form always rank above those matching an
+   inflected form only. A light stemmer handles regular declension; forms
+   that change inside the word (``dům``/``domu``) remain distinct words. It
+   can be switched off with ``relevance.stemming: false`` (query-side only,
+   no reindex needed).
 
 Stop words
    Common stop words of the described material's language ("v", "a", "na", …
@@ -272,13 +284,16 @@ reindex needed**.
 
      # Minimum fragment length for automatic partial (substring) matching.
      partialMinLength: 3
+     # Inflection-aware matching where the content locale has a stemmer
+     # (default: on). Query-side only - toggling needs no reindex.
+     stemming: true
 
      # Built-in fields with their default weights.
-     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30, contains: 15 }
-     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8, contains: 4 }
+     name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, stemmed: 40, wordPrefix: 30, contains: 15 }
+     nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, stemmed: 8, wordPrefix: 8, contains: 4 }
      refLabels:    { phrase: 12, terms: 10 }
      description: { phrase: 8, terms: 2 }
-     allText:     { terms: 1 }
+     allText:     { terms: 1, stemmed: 1 }
 
      # Item types promoted above the general-fulltext baseline.
      items:

@@ -15,6 +15,9 @@ public final class IndexConfig {
 
 	public static final String FOLDING_AND_TOKENIZING_STOP = "folding_and_tokenizing_stop";
 
+	/** Stemming chain of the inflection-aware companions (doc/search-relevance.md R-17). */
+	public static final String FOLDING_STOP_AND_STEM = "folding_stop_and_stem";
+
 	public static final String TEXT_LONG_KEYWORD = "text_long_keyword";
 
 	public static final String TEXT_LONG_KEYWORD_CI = "text_long_keyword_ci";

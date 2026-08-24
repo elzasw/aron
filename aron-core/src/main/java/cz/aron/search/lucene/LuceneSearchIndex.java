@@ -67,6 +67,8 @@ import cz.aron.domain.DataType;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
 import cz.aron.search.ApuDocument;
+import cz.aron.search.ContentLocale;
+import cz.aron.search.Stemmers;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
@@ -108,9 +110,12 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * committed under a different version reports no stored CRC, so the startup
 	 * bootstrap rebuilds and reindexes it.
 	 */
-	private static final String LAYOUT_VERSION = "8";
+	private static final String LAYOUT_VERSION = "9";
 
 	private final Analyzer foldingAnalyzer = new FoldingAnalyzer();
+
+	/** Stemming chain of the content locale ({@code Stemmers.analyzer}); {@code null} = no stemmer. */
+	private final Analyzer stemmingAnalyzer;
 
 	private final TypesHolder typesHolder;
 
@@ -163,14 +168,24 @@ public class LuceneSearchIndex implements SearchIndex {
 		}
 	}
 
-	/** Per-field routing: the gram fields run the trigram chain, everything else the folding chain. */
-	private final Analyzer fieldAnalyzer = new PerFieldAnalyzerWrapper(foldingAnalyzer, Map.of(
-			"allTextGrams", new GramAnalyzer(),
-			"nameGrams", new GramAnalyzer(),
-			"nameVariantsGrams", new GramAnalyzer()));
+	/** Fields of the stemming chain - the inflection-aware companions (R-17). */
+	private static final Set<String> STEMMED_FIELDS = Set.of("allTextStemmed", "nameStemmed", "nameVariantsStemmed");
 
-	public LuceneSearchIndex(TypesHolder typesHolder, @Value("${search.lucene.path:}") String path) {
+	/** Per-field routing: gram fields run the trigram chain, stemmed fields the stemming one, the rest folding. */
+	private final Analyzer fieldAnalyzer;
+
+	public LuceneSearchIndex(TypesHolder typesHolder, ContentLocale contentLocale,
+			@Value("${search.lucene.path:}") String path) {
 		this.typesHolder = typesHolder;
+		this.stemmingAnalyzer = Stemmers.analyzer(contentLocale.getLocale());
+		var perField = new HashMap<String, Analyzer>(Map.of(
+				"allTextGrams", new GramAnalyzer(),
+				"nameGrams", new GramAnalyzer(),
+				"nameVariantsGrams", new GramAnalyzer()));
+		if (stemmingAnalyzer != null) {
+			STEMMED_FIELDS.forEach(field -> perField.put(field, stemmingAnalyzer));
+		}
+		this.fieldAnalyzer = new PerFieldAnalyzerWrapper(foldingAnalyzer, perField);
 		try {
 			if (path == null || path.isBlank()) {
 				apuDirectory = new ByteBuffersDirectory();
@@ -474,8 +489,8 @@ public class LuceneSearchIndex implements SearchIndex {
 			// the gate decides WHAT matches - filter context, no score pollution;
 			// scores come exclusively from the weighted tiers (R-9)
 			var gate = new BooleanQuery.Builder();
-			for (RelevancePlan.Clause clause : plan.gate()) {
-				gate.add(clauseQuery(clause, false), Occur.SHOULD);
+			for (RelevancePlan.GateClause slot : plan.gate()) {
+				gate.add(gateSlotQuery(slot), Occur.SHOULD);
 			}
 			gate.setMinimumNumberShouldMatch(plan.minimumShouldMatch());
 			root.add(gate.build(), Occur.FILTER);
@@ -570,6 +585,19 @@ public class LuceneSearchIndex implements SearchIndex {
 		return counts;
 	}
 
+	/** One gate slot: its only alternative directly, several as an any-of query. */
+	private Query gateSlotQuery(RelevancePlan.GateClause slot) throws IOException {
+		if (slot.anyOf().size() == 1) {
+			return clauseQuery(slot.anyOf().get(0), false);
+		}
+		var any = new BooleanQuery.Builder();
+		for (RelevancePlan.Clause clause : slot.anyOf()) {
+			any.add(clauseQuery(clause, false), Occur.SHOULD);
+		}
+		any.setMinimumNumberShouldMatch(1);
+		return any.build();
+	}
+
 	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */
 	private Query clauseQuery(RelevancePlan.Clause clause, boolean boosted) throws IOException {
 		Query query = switch (clause.kind()) {
@@ -585,17 +613,18 @@ public class LuceneSearchIndex implements SearchIndex {
 	/** Consecutive analyzed tokens; the analyzer matches the indexed chain. */
 	private Query phraseQuery(String field, String text) throws IOException {
 		var builder = new PhraseQuery.Builder();
-		for (String token : analyze(text)) {
+		for (String token : analyze(field, text)) {
 			builder.add(new Term(field, token));
 		}
 		return builder.build();
 	}
 
 	// gram-field clauses arrive PRE-SPLIT into trigrams from the planner, so the
-	// plain folding chain is right for the query side of every field
+	// plain folding chain is right for their query side; stemmed fields analyze
+	// with their own chain (the ES analog: the field's search analyzer)
 	private Query termsQuery(String field, String text, Occur occur) throws IOException {
 		var bool = new BooleanQuery.Builder();
-		for (String token : analyze(text)) {
+		for (String token : analyze(field, text)) {
 			bool.add(new TermQuery(new Term(field, token)), occur);
 		}
 		return bool.build();
@@ -695,8 +724,20 @@ public class LuceneSearchIndex implements SearchIndex {
 
 	/** Runs the folding analysis chain; shared with {@link LuceneOldApiSearch}. */
 	List<String> analyze(String text) throws IOException {
+		return analyze(foldingAnalyzer, "name", text);
+	}
+
+	/** Query-side analysis for one field: stemmed fields run their own chain. */
+	private List<String> analyze(String field, String text) throws IOException {
+		Analyzer analyzer = stemmingAnalyzer != null && STEMMED_FIELDS.contains(field)
+				? stemmingAnalyzer
+				: foldingAnalyzer;
+		return analyze(analyzer, field, text);
+	}
+
+	private static List<String> analyze(Analyzer analyzer, String field, String text) throws IOException {
 		var tokens = new ArrayList<String>();
-		try (TokenStream stream = foldingAnalyzer.tokenStream("name", text)) {
+		try (TokenStream stream = analyzer.tokenStream(field, text)) {
 			var term = stream.addAttribute(CharTermAttribute.class);
 			stream.reset();
 			while (stream.incrementToken()) {
@@ -745,6 +786,18 @@ public class LuceneSearchIndex implements SearchIndex {
 		// combined reference-labels scoring field: one field for every ~LABEL value
 		for (String label : apuDocument.getRefLabels()) {
 			doc.add(new TextField("refLabels", label, Field.Store.NO));
+		}
+		// inflection-aware companions (R-17): same sources, the stemming chain
+		if (stemmingAnalyzer != null) {
+			for (String text : apuDocument.getAllText()) {
+				doc.add(new TextField("allTextStemmed", text, Field.Store.NO));
+			}
+			if (apuDocument.getName() != null) {
+				doc.add(new TextField("nameStemmed", apuDocument.getName(), Field.Store.NO));
+			}
+			for (String variant : apuDocument.getNameVariants()) {
+				doc.add(new TextField("nameVariantsStemmed", variant, Field.Store.NO));
+			}
 		}
 		// substring-match companions: same sources, the trigram analyzer (R-15)
 		for (String text : apuDocument.getAllText()) {

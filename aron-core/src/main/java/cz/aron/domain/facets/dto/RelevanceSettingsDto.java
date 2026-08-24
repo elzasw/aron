@@ -19,6 +19,13 @@ public class RelevanceSettingsDto {
 	private Boolean relaxOnNoHits;
 
 	/**
+	 * Inflection-aware matching where the content locale has a stemmer (R-17;
+	 * Czech shipped). Default on; {@code false} disables the stemmed gate and
+	 * tiers - query-side only, so toggling needs no reindex.
+	 */
+	private Boolean stemming;
+
+	/**
 	 * Minimum token length for automatic partial (substring) matching; shorter
 	 * tokens must match a whole word. Default 3 (also the floor - the trigram
 	 * size of the substring companions).
@@ -53,6 +60,14 @@ public class RelevanceSettingsDto {
 
 	public void setRelaxOnNoHits(Boolean relaxOnNoHits) {
 		this.relaxOnNoHits = relaxOnNoHits;
+	}
+
+	public Boolean getStemming() {
+		return stemming;
+	}
+
+	public void setStemming(Boolean stemming) {
+		this.stemming = stemming;
 	}
 
 	public Integer getPartialMinLength() {

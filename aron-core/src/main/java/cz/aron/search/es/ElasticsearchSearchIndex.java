@@ -51,6 +51,7 @@ import cz.aron.search.ContentLocale;
 import cz.aron.search.ApuSearchQuery;
 import cz.aron.search.ApuSearchResult;
 import cz.aron.search.FieldFilter;
+import cz.aron.search.Stemmers;
 import cz.aron.search.StopWords;
 import cz.aron.search.RelationDocument;
 import cz.aron.search.SearchIndex;
@@ -70,6 +71,9 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	/** Placeholder of the content locale's stop-word list in es_settings.json. */
 	private static final String STOP_WORDS_TOKEN = "__STOP_WORDS__";
 
+	/** Placeholder of the content locale's stemmer language in es_settings.json. */
+	private static final String STEMMER_LANGUAGE_TOKEN = "__STEMMER_LANGUAGE__";
+
 	private static final String SCHEMA_CRC_META_KEY = "schemaCrc";
 
 	private static final String LAYOUT_VERSION_META_KEY = "layoutVersion";
@@ -81,7 +85,7 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	 * startup bootstrap rebuilds and reindexes it - the analog of the Lucene
 	 * adapter's commit-user-data version.
 	 */
-	private static final String LAYOUT_VERSION = "5";
+	private static final String LAYOUT_VERSION = "6";
 
 	/** Name prefix of dating-bounds aggregations (avoids clashes with bucket aggregations). */
 	private static final String BOUNDS_AGG_PREFIX = "bounds~";
@@ -368,8 +372,8 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			// the gate decides WHAT matches - filter context, no score pollution;
 			// scores come exclusively from the weighted tiers (R-9)
 			var gate = new BoolQuery.Builder();
-			for (RelevancePlan.Clause clause : plan.gate()) {
-				gate.should(clauseQuery(clause, false));
+			for (RelevancePlan.GateClause slot : plan.gate()) {
+				gate.should(gateSlotQuery(slot));
 			}
 			gate.minimumShouldMatch(String.valueOf(plan.minimumShouldMatch()));
 			bool.filter(Query.of(q -> q.bool(gate.build())));
@@ -444,6 +448,19 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 			filter = withApuType(filter, query.apuType());
 		}
 		return filter != null ? filter : Query.of(q -> q.matchAll(m -> m));
+	}
+
+	/** One gate slot: its only alternative directly, several as an any-of query. */
+	private static Query gateSlotQuery(RelevancePlan.GateClause slot) {
+		if (slot.anyOf().size() == 1) {
+			return clauseQuery(slot.anyOf().get(0), false);
+		}
+		var any = new BoolQuery.Builder();
+		for (RelevancePlan.Clause clause : slot.anyOf()) {
+			any.should(clauseQuery(clause, false));
+		}
+		any.minimumShouldMatch("1");
+		return Query.of(q -> q.bool(any.build()));
 	}
 
 	/** Mechanical translation of one planned clause (doc/search-relevance.md §4.7). */
@@ -615,14 +632,24 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 
 	private Settings loadSettings() {
 		try {
-			// the stop-word list follows the described material's language; the same
-			// list the query planner uses, so both sides drop the same words
-			String settings = settingsResource.getContentAsString(StandardCharsets.UTF_8)
-					.replace(STOP_WORDS_TOKEN, StopWords.elasticsearchList(contentLocale.getLocale()));
-			return Settings.parse(settings);
+			return Settings.parse(renderSettings(
+					settingsResource.getContentAsString(StandardCharsets.UTF_8), contentLocale.getLocale()));
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}
+	}
+
+	/**
+	 * Substitutes the content-locale placeholders of es_settings.json: the
+	 * stop-word list and the stemmer language follow the described material's
+	 * language - the same lists the query planner uses, so both sides analyze
+	 * identically. Shared with {@code EsSettingsTest}, which validates the
+	 * rendered settings against the client's own schema.
+	 */
+	static String renderSettings(String template, java.util.Locale locale) {
+		return template
+				.replace(STOP_WORDS_TOKEN, StopWords.elasticsearchList(locale))
+				.replace(STEMMER_LANGUAGE_TOKEN, Stemmers.elasticsearchLanguage(locale));
 	}
 
 	/**
@@ -668,6 +695,16 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		if (apuDocument.getDateH() != null) {
 			doc.put("dateH", List.of(apuDocument.getDateH()));
 		}
+		// inflection-aware companions (R-17): same sources, the stemming chain;
+		// only where the content locale has a stemmer - the fields are unmapped
+		// otherwise (see createCustomMapping)
+		if (Stemmers.isSupported(contentLocale.getLocale())) {
+			doc.put("allTextStemmed", apuDocument.getAllText());
+			if (apuDocument.getName() != null) {
+				doc.put("nameStemmed", List.of(apuDocument.getName()));
+			}
+			doc.put("nameVariantsStemmed", apuDocument.getNameVariants());
+		}
 		return doc;
 	}
 
@@ -676,6 +713,15 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		// derived global dating bounds (min ~L / max ~H per document) - dating sort
 		customMapping.put("dateL", Map.of("type", "date"));
 		customMapping.put("dateH", Map.of("type", "date"));
+		// inflection-aware companions (R-17), only where the content locale has a
+		// stemmer: an unsupported locale gets no stemmed fields at all, the same
+		// documents the embedded engine produces
+		if (Stemmers.isSupported(contentLocale.getLocale())) {
+			Map<String, Object> stemmed = Map.of("type", "text", "analyzer", IndexConfig.FOLDING_STOP_AND_STEM);
+			customMapping.put("allTextStemmed", stemmed);
+			customMapping.put("nameStemmed", stemmed);
+			customMapping.put("nameVariantsStemmed", stemmed);
+		}
 		for (ItemType allItemType : typesHolder.getAllItemTypes()) {
 			if (!allItemType.isIndexed()) {
 				continue;

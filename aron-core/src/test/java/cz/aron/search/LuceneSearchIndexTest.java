@@ -33,7 +33,7 @@ class LuceneSearchIndexTest extends SearchIndexContractTest {
 		var typesLoader = new TypesLoader(null, "src/test/resources/test-config/types.yaml");
 		var typesHolder = new TypesHolder(typesLoader);
 		ReflectionTestUtils.invokeMethod(typesHolder, "loadData");
-		return new LuceneSearchIndex(typesHolder, path);
+		return new LuceneSearchIndex(typesHolder, DocumentFixtures.CONTENT_LOCALE, path);
 	}
 
 	/**

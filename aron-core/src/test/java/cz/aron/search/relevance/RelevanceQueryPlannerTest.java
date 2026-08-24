@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import cz.aron.domain.facets.dto.RelevanceFieldWeightsDto;
 import cz.aron.domain.facets.dto.RelevanceSettingsDto;
 import cz.aron.search.relevance.RelevancePlan.Clause;
+import cz.aron.search.relevance.RelevancePlan.GateClause;
 import cz.aron.search.relevance.RelevancePlan.MatchKind;
 
 /**
@@ -26,6 +27,15 @@ class RelevanceQueryPlannerTest {
 		return RelevanceQueryPlanner.plan(query, DEFAULTS);
 	}
 
+	/** First alternative of every gate slot - the trigram/term half of each token. */
+	private static List<Clause> gateFirst(RelevancePlan plan) {
+		return plan.gate().stream().map(slot -> slot.anyOf().get(0)).toList();
+	}
+
+	private static List<String> gateTexts(RelevancePlan plan) {
+		return gateFirst(plan).stream().map(Clause::text).toList();
+	}
+
 	@Test
 	void nothingSearchableMeansNoPlan() {
 		assertThat(plan(null)).isNull();
@@ -35,13 +45,19 @@ class RelevanceQueryPlannerTest {
 	@Test
 	void tokensAreFoldedAndGateAsSubstrings() {
 		// R-15: long-enough tokens gate as all-trigrams substring matches on the
-		// allTextGrams companion ("ardub" - Pardubice)
+		// allTextGrams companion ("ardub" - Pardubice); with the Czech stemmer
+		// each token alternatively matches as a stem-equal whole word (R-17)
 		var plan = plan("Václav NOVÁK");
 
 		// pre-split trigrams: what the *Grams fields hold, all-of-them semantics
-		assertThat(plan.gate()).containsExactly(
+		assertThat(gateFirst(plan)).containsExactly(
 				new Clause("allTextGrams", MatchKind.ALL_TERMS, "vac acl cla lav", 0),
 				new Clause("allTextGrams", MatchKind.ALL_TERMS, "nov ova vak", 0));
+		assertThat(plan.gate()).allSatisfy(slot -> {
+			assertThat(slot.anyOf()).hasSize(2);
+			assertThat(slot.anyOf().get(1).field()).isEqualTo("allTextStemmed");
+			assertThat(slot.anyOf().get(1).kind()).isEqualTo(MatchKind.TERM);
+		});
 		// strict default: every token must match
 		assertThat(plan.minimumShouldMatch()).isEqualTo(2);
 	}
@@ -51,39 +67,74 @@ class RelevanceQueryPlannerTest {
 		// below relevance.partialMinLength (default 3) a token stays exact - a
 		// two-letter fragment must not match inside every longer word
 		var plan = plan("sv Praze");
-		assertThat(plan.gate()).containsExactly(
-				new Clause("allText", MatchKind.TERM, "sv", 0),
-				new Clause("allTextGrams", MatchKind.ALL_TERMS, "pra raz aze", 0));
+		assertThat(plan.gate().get(0).anyOf())
+				.containsExactly(new Clause("allText", MatchKind.TERM, "sv", 0));
+		assertThat(plan.gate().get(1).anyOf().get(0))
+				.isEqualTo(new Clause("allTextGrams", MatchKind.ALL_TERMS, "pra raz aze", 0));
+	}
+
+	@Test
+	void tokensAlternativelyMatchStemEqualWords() {
+		// R-17: "hradu" must find "hrad", which contains none of its trigrams -
+		// the token's second gate alternative is its stemmed form as a whole word
+		var plan = plan("hradu");
+		assertThat(plan.gate().get(0).anyOf()).containsExactly(
+				new Clause("allTextGrams", MatchKind.ALL_TERMS, "hra rad adu", 0),
+				new Clause("allTextStemmed", MatchKind.TERM, "hrad", 0));
+		// the inflection-aware scoring tiers, engine-analyzed with the stemmed chain
+		assertThat(plan.scoring()).contains(
+				new Clause("nameStemmed", MatchKind.ALL_TERMS, "hradu", 40),
+				new Clause("nameVariantsStemmed", MatchKind.ALL_TERMS, "hradu", 8),
+				new Clause("allTextStemmed", MatchKind.ANY_TERM, "hradu", 1));
+	}
+
+	@Test
+	void stemmingCanBeDisabledAndNeedsAStemmer() {
+		// query-side off-switch: no stemmed alternatives, no stemmed tiers
+		var settings = new RelevanceSettingsDto();
+		settings.setStemming(false);
+		var disabled = RelevanceConfig.withSettings(settings, List.of(), QueryAnalyzers.DEFAULT);
+		var plan = RelevanceQueryPlanner.plan("hradu", disabled);
+		assertThat(plan.gate().get(0).anyOf()).hasSize(1);
+		assertThat(plan.scoring()).extracting(Clause::field)
+				.doesNotContain("allTextStemmed", "nameStemmed", "nameVariantsStemmed");
+
+		// a language without a stemmer (Slovak) never emits stemmed clauses
+		var slovak = RelevanceConfig.withSettings(null, List.of(),
+				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
+		assertThat(RelevanceQueryPlanner.plan("hradu", slovak).gate().get(0).anyOf()).hasSize(1);
 	}
 
 	@Test
 	void stopWordsAreDroppedButNeverCauseEmptyGates() {
 		// B5: "v" disappears from a mixed query, the required count follows
 		var mixed = plan("kostel v Praze");
-		assertThat(mixed.gate()).extracting(Clause::text)
-				.containsExactly("kos ost ste tel", "pra raz aze");
+		assertThat(gateTexts(mixed)).containsExactly("kos ost ste tel", "pra raz aze");
 		assertThat(mixed.minimumShouldMatch()).isEqualTo(2);
 
 		// a stop-word-only query falls back to the non-stop chain; single
-		// letters match whole words, never as prefixes
+		// letters match whole words, never as prefixes - and fallback tokens
+		// are stop words the stemmed field drops, so they gate unstemmed
 		var stopOnly = plan("v");
-		assertThat(stopOnly.gate()).containsExactly(new Clause("allText", MatchKind.TERM, "v", 0));
+		assertThat(stopOnly.gate())
+				.containsExactly(GateClause.of(new Clause("allText", MatchKind.TERM, "v", 0)));
 	}
 
 	@Test
 	void quotedPhrasesBecomePhraseClauses() {
-		// B4: balanced quotes = phrase (exact words); the words around it stay tokens
+		// B4: balanced quotes = phrase (exact words, never stemmed); the words
+		// around it stay tokens
 		var plan = plan("zápis \"kronika města\"");
-		assertThat(plan.gate()).containsExactly(
-				new Clause("allTextGrams", MatchKind.ALL_TERMS, "zap api pis", 0),
-				new Clause("allText", MatchKind.PHRASE, "kronika města", 0));
+		assertThat(plan.gate().get(0).anyOf().get(0))
+				.isEqualTo(new Clause("allTextGrams", MatchKind.ALL_TERMS, "zap api pis", 0));
+		assertThat(plan.gate().get(1).anyOf())
+				.containsExactly(new Clause("allText", MatchKind.PHRASE, "kronika města", 0));
 
 		// an unbalanced quote is literal (the analyzers drop it)
 		var unbalanced = plan("kronika \"města");
-		assertThat(unbalanced.gate()).extracting(Clause::kind)
+		assertThat(gateFirst(unbalanced)).extracting(Clause::kind)
 				.containsOnly(MatchKind.ALL_TERMS);
-		assertThat(unbalanced.gate()).extracting(Clause::text)
-				.containsExactly("kro ron oni nik ika", "mes est sta");
+		assertThat(gateTexts(unbalanced)).containsExactly("kro ron oni nik ika", "mes est sta");
 	}
 
 	@Test
@@ -91,7 +142,7 @@ class RelevanceQueryPlannerTest {
 		// B6 (R-14/R-15): the former word* operator is gone - partial matching
 		// is automatic; stars anywhere are dropped by the analyzers
 		var plan = plan("kron* *ika ko*stel");
-		assertThat(plan.gate()).containsExactly(
+		assertThat(gateFirst(plan)).containsExactly(
 				new Clause("allTextGrams", MatchKind.ALL_TERMS, "kro ron", 0),
 				new Clause("allTextGrams", MatchKind.ALL_TERMS, "ika", 0),
 				new Clause("allText", MatchKind.TERM, "ko", 0),
@@ -118,14 +169,27 @@ class RelevanceQueryPlannerTest {
 		// R-16/B6: partial matching is a typing pattern - above six tokens the
 		// query is pasted text of complete words, gated whole-word so the clause
 		// count cannot grow with word length; the per-token partial tiers stay
-		// out for the same reason (a near-miss paste is caught by relaxation)
+		// out for the same reason. With a stemmer, whole-word means any
+		// inflected form (R-17): the gate carries the stemmed terms
 		var plan = plan("Král Vladislav povoluje na žádost Viléma z Pernštejna vklad");
-		assertThat(plan.gate()).extracting(Clause::field).containsOnly("allText");
-		assertThat(plan.gate()).extracting(Clause::kind).containsOnly(MatchKind.TERM);
-		assertThat(plan.gate()).extracting(Clause::text)
-				.containsExactly("kral", "vladislav", "povoluje", "zadost", "vilema", "pernstejna", "vklad");
+		assertThat(plan.gate()).allSatisfy(slot -> assertThat(slot.anyOf()).hasSize(1));
+		assertThat(gateFirst(plan)).extracting(Clause::field).containsOnly("allTextStemmed");
+		assertThat(gateFirst(plan)).extracting(Clause::kind).containsOnly(MatchKind.TERM);
+		assertThat(gateTexts(plan))
+				.containsExactly("kral", "vladislav", "povoluj", "zadost", "vilem", "pernstejn", "vklad");
 		assertThat(plan.scoring()).extracting(Clause::field)
 				.doesNotContain("nameGrams", "nameVariantsGrams");
+	}
+
+	@Test
+	void aPastedSentenceGatesOnExactWordsWithoutAStemmer() {
+		// the same paste under a locale with no stemmer: plain whole-word terms
+		var slovak = RelevanceConfig.withSettings(null, List.of(),
+				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
+		var plan = RelevanceQueryPlanner.plan(
+				"Král Vladislav povoluje na žádost Viléma z Pernštejna vklad", slovak);
+		assertThat(gateFirst(plan)).extracting(Clause::field).containsOnly("allText");
+		assertThat(gateTexts(plan)).contains("kral", "vladislav", "povoluje", "pernstejna");
 	}
 
 	@Test
@@ -133,7 +197,7 @@ class RelevanceQueryPlannerTest {
 		// the same citation one word shorter sits at the threshold: still the
 		// type-ahead handling, trigram gates and partial tiers included
 		var plan = plan("Král Vladislav povoluje na žádost Viléma z Pernštejna");
-		assertThat(plan.gate()).extracting(Clause::field).containsOnly("allTextGrams");
+		assertThat(gateFirst(plan)).extracting(Clause::field).containsOnly("allTextGrams");
 		assertThat(plan.scoring()).extracting(Clause::field).contains("nameGrams");
 	}
 
@@ -170,7 +234,8 @@ class RelevanceQueryPlannerTest {
 	}
 
 	private static int leafClauses(RelevancePlan plan) {
-		return Stream.concat(plan.gate().stream(), plan.scoring().stream())
+		return Stream.concat(plan.gate().stream().flatMap(slot -> slot.anyOf().stream()),
+						plan.scoring().stream())
 				.mapToInt(clause -> switch (clause.kind()) {
 					case TERM, PREFIX -> 1;
 					case PHRASE, ALL_TERMS, ANY_TERM -> clause.text().split(" ").length;
@@ -212,6 +277,10 @@ class RelevanceQueryPlannerTest {
 				new Clause("nameGrams", MatchKind.ALL_TERMS, "reh eho hor", 15),
 				new Clause("nameVariants", MatchKind.PREFIX, "rehor", 8),
 				new Clause("nameVariantsGrams", MatchKind.ALL_TERMS, "reh eho hor", 4),
+				// inflection-aware tiers (R-17): between full-form and partial
+				new Clause("nameStemmed", MatchKind.ALL_TERMS, "Řehoř", 40),
+				new Clause("nameVariantsStemmed", MatchKind.ALL_TERMS, "Řehoř", 8),
+				new Clause("allTextStemmed", MatchKind.ANY_TERM, "Řehoř", 1),
 				// the combined reference-labels field - never a clause pair per
 				// ~LABEL field (R-16)
 				new Clause("refLabels", MatchKind.PHRASE, "Řehoř", 12),
@@ -250,12 +319,12 @@ class RelevanceQueryPlannerTest {
 		var german = RelevanceConfig.withSettings(null, List.of(),
 				QueryAnalyzers.of(java.util.Locale.GERMAN));
 
-		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", czech)))
+		assertThat(gateTexts(RelevanceQueryPlanner.plan("kostel v praze", czech)))
 				.containsExactly("kos ost ste tel", "pra raz aze");
 		// a German corpus keeps "v" (not a German stop word) and drops "und" instead
-		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostel v praze", german)))
+		assertThat(gateTexts(RelevanceQueryPlanner.plan("kostel v praze", german)))
 				.containsExactly("kos ost ste tel", "v", "pra raz aze");
-		assertThat(gateTerms(RelevanceQueryPlanner.plan("kirche und turm", german)))
+		assertThat(gateTexts(RelevanceQueryPlanner.plan("kirche und turm", german)))
 				.containsExactly("kir irc rch che", "tur urm");
 	}
 
@@ -264,11 +333,8 @@ class RelevanceQueryPlannerTest {
 		var slovak = RelevanceConfig.withSettings(null, List.of(),
 				QueryAnalyzers.of(java.util.Locale.forLanguageTag("sk")));
 
-		assertThat(gateTerms(RelevanceQueryPlanner.plan("kostol v prahe", slovak)))
+		assertThat(gateTexts(RelevanceQueryPlanner.plan("kostol v prahe", slovak)))
 				.containsExactly("kos ost sto tol", "v", "pra rah ahe");
 	}
 
-	private static List<String> gateTerms(RelevancePlan plan) {
-		return plan.gate().stream().map(Clause::text).toList();
-	}
 }

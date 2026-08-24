@@ -75,8 +75,10 @@ public class RelevanceService {
 
 		config = RelevanceConfig.withSettings(settings, promotedFields,
 				QueryAnalyzers.of(contentLocale.getLocale()));
-		log.info("Relevance configuration loaded: minimumShouldMatch={}%, relaxOnNoHits={}, promotedFields={}.",
-				config.minimumShouldMatchPercent(), config.relaxOnNoHits(), promotedFields.size());
+		log.info("Relevance configuration loaded: minimumShouldMatch={}%, relaxOnNoHits={}, stemming={}, "
+				+ "promotedFields={}.",
+				config.minimumShouldMatchPercent(), config.relaxOnNoHits(), config.stemming(),
+				promotedFields.size());
 	}
 
 	/** Plans one fulltext query; {@code null} = nothing searchable (match all). */

@@ -36,6 +36,11 @@
           "type": "custom",
           "tokenizer": "standard",
           "filter": ["lowercase", "stop_filter", "asciifolding"]
+        },
+        "folding_stop_and_stem": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "stop_filter", "content_stem", "asciifolding"]
         }
       },
       "filter": {
@@ -47,6 +52,10 @@
         "stop_filter": {
           "type": "stop",
           "stopwords": ["__STOP_WORDS__"]
+        },
+        "content_stem": {
+          "type": "stemmer",
+          "language": "__STEMMER_LANGUAGE__"
         },
         "200_char_trunc": {
           "type": "truncate",

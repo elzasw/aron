@@ -54,7 +54,7 @@ class LuceneOldApiSearchTest {
 		var typesLoader = new TypesLoader(null, "src/test/resources/test-config/types.yaml");
 		var typesHolder = new TypesHolder(typesLoader);
 		ReflectionTestUtils.invokeMethod(typesHolder, "loadData");
-		index = new LuceneSearchIndex(typesHolder, "");
+		index = new LuceneSearchIndex(typesHolder, DocumentFixtures.CONTENT_LOCALE, "");
 		index.createSchema();
 		search = new LuceneOldApiSearch(index, typesHolder);
 		indexFixture();

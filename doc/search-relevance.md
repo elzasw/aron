@@ -117,6 +117,7 @@ construction.
 | `nameVariants` (+ `~Exact`, `~ExactFolded`) | values of item types marked **`nameVariant: true`** in types.yaml (the other name forms of an access point — Praha/Prague), analyzed multi-valued + the same normalized exact companions as the primary name | variant-name tiers (§4.2) |
 | `refLabels` | display labels of every resolved APU_REF item, analyzed multi-valued — the same values the per-item `~LABEL` fields hold | the combined reference-labels tier (§4.2): one field however many reference item types the display model declares (R-16) |
 | `allTextGrams`, `nameGrams`, `nameVariantsGrams` | trigram companions of allText/name/nameVariants (same source values, the `folding_and_ngram` chain on both index and query side) | substring matching (R-15): a fragment decomposes into its trigrams, all must be present |
+| `allTextStemmed`, `nameStemmed`, `nameVariantsStemmed` | stemmed companions (same source values, the `folding_stop_and_stem` chain — stop, **stem, then fold**); indexed only where the content locale has a stemmer (`Stemmers`, Czech shipped) | inflection-aware matching (R-17): "hradu" finds "hrad" and vice versa |
 | `dateL` / `dateH` | min of all `~L`, max of all `~H` (epoch millis, numeric doc-values) | dating sort with no configuration (§4.4) |
 | `uuid` doc-values | sortable uuid (Lucene: `SortedDocValuesField`; ES: the existing keyword id) | the final tie-break every sort mode needs (§4.4) |
 
@@ -176,7 +177,9 @@ has no equivalent of the Lucene commit-user-data version today.
   (R-14/R-15). Shorter fragments must match a whole word; fragments never span
   word boundaries. A longer query is pasted text, not typing — its words match
   whole (R-16), and a near-miss paste is still caught by the zero-hit
-  relaxation;
+  relaxation. Where the content locale has a stemmer (Czech shipped), a whole
+  word also matches its inflected forms — "hrad" finds "hradu" and vice versa
+  (R-17);
 - `"…"` — exact phrase, exact words (never across item boundaries);
 - everything else is literal: `*` anywhere, unbalanced quotes, and all other
   punctuation carry no operator meaning. (The first frnk testing round showed
@@ -192,11 +195,11 @@ back to the non-stop analyzer and the gate still runs against `allText`, which
 keeps stop words (§4.1). Per-field scoring clauses use each field's own
 analyzer. At most **32 tokens** are used; extra tokens are ignored (B12).
 
-**Gate — strict AND, non-scoring.** One clause per token — an **all-trigrams
+**Gate — strict AND, non-scoring.** One slot per token — an **all-trigrams
 substring** match on `allTextGrams` for tokens of at least `partialMinLength`
-letters (in queries of at most six tokens, R-16), an exact term match on
-`allText` otherwise, a phrase match for
-quoted phrases — combined with
+letters (in queries of at most six tokens, R-16), a whole-word term match
+otherwise, a phrase match for quoted phrases (exact words, never stemmed) —
+combined with
 `minimumShouldMatch` (default: all), executed in **filter context**: ES
 `bool.filter`, Lucene `Occur.FILTER`. The gate contributes **no score**; if it
 did, every document would receive an unweighted BM25 contribution on top of the
@@ -214,6 +217,24 @@ with `*value*` wildcard queries whose leading wildcard scans the whole term
 dictionary on every query — the trigram companions trade index size (the
 `allTextGrams` postings) for term-lookup queries that stay fast and
 filter-cacheable at portal scale.
+
+**Inflection-aware matching where the content locale has a stemmer** (R-17;
+Czech shipped). Archival description inflects — a record says "prodej hradu"
+while the reader types "hrad" — and trigrams only cover the
+query-inside-the-word direction. Where `Stemmers` has the content locale's
+language, every whole-word gate term runs stemmed against `allTextStemmed`,
+and a partial-eligible token gets the stemmed term as a **second alternative
+in its gate slot** ("hradu" matches as a substring *or* as a stem-equal word —
+`minimumShouldMatch` counts slots, not alternatives). Stemming is
+recall-only, like partial matching: the stemmed tiers (name 40, variants 8,
+allText baseline 1) sit below the full-form tiers, so the exact form always
+outranks a stem-only match. The pairing lives in `Stemmers` — the `StopWords`
+pattern: one line names the Lucene filter *and* the language under which ES's
+built-in `stemmer` filter instantiates the same class, so a language cannot be
+added to one engine only (and adding one **requires a document-layout bump**
+in both adapters, since the schema fingerprint does not see the table). A
+deployment can switch it off with `relevance.stemming: false` — query-side
+only, the fields stay indexed, so toggling needs no reindex.
 
 **Clause budget — bounded for any input** (R-16). Both engines cap a query's
 nested clauses (Lucene's `IndexSearcher` default: 1024, which Elasticsearch
@@ -264,6 +285,9 @@ the latter takes an int the planner computes from the token count).
 | name contains (per token) | `match(nameGrams, token, AND)` | 15 |
 | variant-name word prefix (per token) | `prefix(nameVariants, token)` | 8 |
 | variant-name contains (per token) | `match(nameVariantsGrams, token, AND)` | 4 |
+| name stemmed | `match(nameStemmed, Q, AND)` | 40 |
+| variant-name stemmed | `match(nameVariantsStemmed, Q, AND)` | 8 |
+| `allText` stemmed baseline | `match(allTextStemmed, Q)` | 1 |
 | name phrase | `match_phrase(name, Q)` | 100 |
 | name all terms | `match(name, Q, AND)` | 50 |
 | reference-labels phrase | `match_phrase(refLabels, Q)` | 12 |
@@ -308,15 +332,18 @@ relevance:
   # Fragments at least this long match inside words automatically (R-15);
   # shorter ones must match a whole word. Floor 3 (the trigram size).
   partialMinLength: 3
+  # Inflection-aware matching where the content locale has a stemmer (R-17;
+  # Czech shipped). Query-side only - toggling needs no reindex.
+  stemming: true
 
   # Built-in fields (all optional, defaults shown).
-  name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, wordPrefix: 30, contains: 15 }
+  name:         { exact: 1000, exactFolded: 800, prefix: 200, phrase: 100, terms: 50, stemmed: 40, wordPrefix: 30, contains: 15 }
   # variant name forms (item types marked nameVariant in types.yaml);
   # the defaults follow the CAM/Elza rule "preferred ~ 5x a variant" (§2)
-  nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, wordPrefix: 8, contains: 4 }
+  nameVariants: { exact: 200, exactFolded: 160, prefix: 40, phrase: 20, terms: 10, stemmed: 8, wordPrefix: 8, contains: 4 }
   refLabels:    { phrase: 12, terms: 10 }
   description: { phrase: 8, terms: 2 }
-  allText:     { terms: 1 }
+  allText:     { terms: 1, stemmed: 1 }
 
   # Item types promoted above the allText baseline; unlisted types stay
   # searchable at the allText weight.
@@ -480,6 +507,7 @@ this table so they cannot diverge from what is tested.
 | B12 | At most 32 query words are used; extra words are ignored | planner unit test |
 | B13 | Only the boundary years of a dating are text-searchable ("1945" does not match an APU dated 1940–1950); searching inside date ranges is the dating facet's job | documented limitation, contract test |
 | B14 | A record is findable by its variant name forms (item types marked `nameVariant`); a variant match ranks above content matches and below a primary-name match of the same kind, and the diacritics rule (B3) applies to variants too | contract test |
+| B15 | Where the content locale has a stemmer (Czech shipped), a word matches its inflected forms in both directions ("hradu" finds "hrad" and "hrady"); quoted phrases stay exact; stemming adds recall only — the exact form always ranks above a stem-only match; `relevance.stemming: false` restores exact-form matching | planner unit + contract test |
 
 "Contract test" = `SearchIndexContractTest` (both engines must pass identically);
 "planner unit" = `RelevanceQueryPlannerTest` (no Spring, no engine);
@@ -576,6 +604,7 @@ Fourth round (2026-08-24):
 | # | Decision |
 |---|---|
 | R-16 | **The plan's clause count is bounded for any input** (a citation pasted into the search box blew Lucene's 1024 nested-clause cap and answered 500): the reference-labels tier scores one combined `refLabels` index field instead of a clause pair per `~LABEL` field (~190 in the shipped display model — the same fan-out `allText` exists to avoid; recall never depended on them, the labels are in `allText`, and the per-field form had one shared weight pair, so nothing configurable is lost); partial matching applies to queries of at most 6 tokens (a fragment is a typing pattern — pasted text is complete words, and the zero-hit relaxation still catches a near-miss paste); a token contributes at most the trigrams of its first 20 characters; the scoring tiers read the same 32-token-capped text as the gate. Document-layout bump on both engines (`refLabels`); the `~LABEL` fields stay for facets, pickers and promotion |
+| R-17 | **Inflection-aware matching by a light stemmer, locale-driven** (most described material is Czech, and "hrad"/"hradu" must find each other — trigrams cover only the fragment-inside-word direction): stemmed companion fields (`allTextStemmed`, `nameStemmed`, `nameVariantsStemmed`; the `folding_stop_and_stem` chain — stop, **stem, then fold**, since the stemmer works on the language's own letters) are indexed where `Stemmers` knows the content locale's language. The pairing follows the `StopWords` pattern: one line names the Lucene filter and the ES built-in `stemmer` language that instantiates the same class (Czech = `CzechStemFilter`/`czech`; a new entry needs a layout bump — the fingerprint does not see the table). Whole-word gate terms run stemmed; a partial-eligible token gets the stemmed term as a second **gate-slot alternative** (`GateClause`, msm counts slots); quoted phrases stay exact (B4). Recall-only: stemmed tiers (40/8/1) sit below the full-form tiers. True lemmatization was considered and rejected: hunspell needs server-side dictionaries, MorphoDiTa is JNI and MorfFlex is CC BY-NC-SA. `relevance.stemming: false` switches it off query-side, no reindex |
 
 ## 9. Deliberately not done
 

@@ -13,6 +13,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import cz.aron.search.ApuDocumentBuilder;
 import cz.aron.search.relevance.RelevancePlan.Clause;
+import cz.aron.search.relevance.RelevancePlan.GateClause;
 import cz.aron.search.relevance.RelevancePlan.MatchKind;
 
 /**
@@ -23,7 +24,10 @@ import cz.aron.search.relevance.RelevancePlan.MatchKind;
  * as substrings of a word ("ardub" finds Pardubice, R-15) - expressed as an
  * all-trigrams match on the {@code *Grams} companion fields, which both
  * engines' ngram analyzers decompose identically; shorter tokens must match a
- * whole word. Pure logic - unit-tested without an engine or Spring.
+ * whole word. Where the content locale has a stemmer (R-17), a token
+ * alternatively matches as a stem-equal whole word ("hradu" finds "hrad") on
+ * the {@code *Stemmed} companions. Pure logic - unit-tested without an engine
+ * or Spring.
  *
  * <p>Tokenization deliberately uses the Lucene analysis library (standard
  * tokenizer + lowercase + ASCII folding + the {@code _czech_} stop set): it is
@@ -49,6 +53,9 @@ public final class RelevanceQueryPlanner {
 
 	/** Trigram companion of allText - the substring gate field (R-15). */
 	public static final String ALL_TEXT_GRAMS = "allTextGrams";
+
+	/** Stemmed companion of allText - the inflection-aware gate field (R-17). */
+	public static final String ALL_TEXT_STEMMED = "allTextStemmed";
 
 	/** Combined reference-labels field: the display labels of every resolved APU_REF item. */
 	public static final String REF_LABELS = "refLabels";
@@ -102,8 +109,10 @@ public final class RelevanceQueryPlanner {
 
 		// canonical tokens; stop-word-only queries fall back to the non-stop chain (B5)
 		List<String> tokens = analyze(config.analyzers().canonical(), remainder.toString());
+		boolean canonicalTokens = true;
 		if (tokens.isEmpty() && phrases.isEmpty()) {
 			tokens = analyze(config.analyzers().nonStop(), remainder.toString());
+			canonicalTokens = false;
 		}
 		if (tokens.size() > MAX_TOKENS) {
 			tokens = tokens.subList(0, MAX_TOKENS);
@@ -112,25 +121,53 @@ public final class RelevanceQueryPlanner {
 		// partial matching applies to short queries only (see PARTIAL_MAX_TOKENS)
 		boolean partial = tokens.size() <= PARTIAL_MAX_TOKENS;
 
-		var gate = new ArrayList<Clause>();
-		for (String token : tokens) {
-			// automatic partial matching (R-15): a long-enough token matches
-			// ANYWHERE inside a word ("ardub" finds Pardubice) - all of its
-			// trigrams must be present; short tokens must match whole, so
-			// stop-word-length fragments stay precise. The gate is non-scoring -
-			// full-word tiers keep exact matches ranked first. The planner
-			// decomposes the trigrams ITSELF: the engines' ngram analyzers emit
-			// grams at one position, which ES's match query treats as synonyms
-			// (OR) - pre-split grams keep the all-of-them semantics on both.
-			gate.add(partial && token.length() >= config.partialMinLength()
-					? new Clause(ALL_TEXT_GRAMS, MatchKind.ALL_TERMS, trigrams(token), 0)
-					: new Clause(ALL_TEXT, MatchKind.TERM, token, 0));
+		// stemmed forms of the canonical tokens (R-17): the stemming chain shares
+		// the canonical chain's tokenizer and stop set, so the two lists stay
+		// positionally parallel. Fallback tokens are stop words, which the
+		// stemmed field drops at index time - they gate on allText instead.
+		boolean stem = canonicalTokens && config.stemming();
+		List<String> stems = stem ? analyze(config.analyzers().stemming(), remainder.toString()) : List.of();
+		if (stems.size() < tokens.size()) {
+			stem = false;
+		} else if (stems.size() > tokens.size()) {
+			stems = stems.subList(0, tokens.size());
+		}
+
+		var gate = new ArrayList<GateClause>();
+		for (int i = 0; i < tokens.size(); i++) {
+			String token = tokens.get(i);
+			if (token.length() < config.partialMinLength()) {
+				// short tokens must match whole, so stop-word-length fragments
+				// stay precise (and survive in allText, which keeps stop words)
+				gate.add(GateClause.of(new Clause(ALL_TEXT, MatchKind.TERM, token, 0)));
+			} else if (partial) {
+				// automatic partial matching (R-15): the token matches ANYWHERE
+				// inside a word ("ardub" finds Pardubice) - all of its trigrams
+				// must be present. The planner decomposes the trigrams ITSELF:
+				// the engines' ngram analyzers emit grams at one position, which
+				// ES's match query treats as synonyms (OR) - pre-split grams keep
+				// the all-of-them semantics on both. With a stemmer the token
+				// alternatively matches as a stem-equal whole word ("hradu" finds
+				// "hrad", which contains none of its trigrams). The gate is
+				// non-scoring - full-form tiers keep exact matches ranked first.
+				Clause grams = new Clause(ALL_TEXT_GRAMS, MatchKind.ALL_TERMS, trigrams(token), 0);
+				gate.add(stem
+						? GateClause.of(grams, new Clause(ALL_TEXT_STEMMED, MatchKind.TERM, stems.get(i), 0))
+						: GateClause.of(grams));
+			} else {
+				// pasted text (R-16): complete words match whole - with a stemmer,
+				// in any inflected form
+				gate.add(GateClause.of(stem
+						? new Clause(ALL_TEXT_STEMMED, MatchKind.TERM, stems.get(i), 0)
+						: new Clause(ALL_TEXT, MatchKind.TERM, token, 0)));
+			}
 		}
 		for (String phrase : phrases) {
 			if (gate.size() >= MAX_TOKENS) {
 				break;
 			}
-			gate.add(new Clause(ALL_TEXT, MatchKind.PHRASE, phrase, 0));
+			// a quoted phrase means the exact words (B4) - never stemmed
+			gate.add(GateClause.of(new Clause(ALL_TEXT, MatchKind.PHRASE, phrase, 0)));
 		}
 		if (gate.isEmpty()) {
 			return null;
@@ -182,6 +219,15 @@ public final class RelevanceQueryPlanner {
 							config.nameVariantsContains());
 				}
 			}
+		}
+		// inflection-aware tiers (R-17): the engines analyze the text with the
+		// stemmed fields' own chain, so both sides stem identically. Below the
+		// full-form tiers - the exact form always outranks a stem-only match,
+		// the B3 diacritics idea again
+		if (config.stemming()) {
+			add(scoring, "nameStemmed", MatchKind.ALL_TERMS, plain, config.nameStemmed());
+			add(scoring, "nameVariantsStemmed", MatchKind.ALL_TERMS, plain, config.nameVariantsStemmed());
+			add(scoring, ALL_TEXT_STEMMED, MatchKind.ANY_TERM, plain, config.allTextStemmed());
 		}
 		add(scoring, REF_LABELS, MatchKind.PHRASE, plain, config.refLabelsPhrase());
 		add(scoring, REF_LABELS, MatchKind.ANY_TERM, plain, config.refLabelsTerms());

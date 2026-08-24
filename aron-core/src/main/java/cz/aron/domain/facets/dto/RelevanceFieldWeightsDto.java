@@ -19,6 +19,9 @@ public class RelevanceFieldWeightsDto {
 	/** Per-token substring tier - a mid-word match (doc/search-relevance.md R-15). */
 	private Float contains;
 
+	/** All-stemmed-words tier - inflection-aware matching (doc/search-relevance.md R-17). */
+	private Float stemmed;
+
 	public Float getExact() {
 		return exact;
 	}
@@ -73,6 +76,14 @@ public class RelevanceFieldWeightsDto {
 
 	public void setContains(Float contains) {
 		this.contains = contains;
+	}
+
+	public Float getStemmed() {
+		return stemmed;
+	}
+
+	public void setStemmed(Float stemmed) {
+		this.stemmed = stemmed;
 	}
 
 }

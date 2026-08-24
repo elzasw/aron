@@ -15,6 +15,9 @@ import cz.aron.domain.facets.dto.RelevanceSettingsDto;
  * @param minimumShouldMatchPercent minimum share of query tokens a document
  *                                  must match (100 = all, the default)
  * @param relaxOnNoHits             retry any-word when the strict query has no hits
+ * @param stemming                  inflection-aware matching (R-17): on when the
+ *                                  content locale has a stemmer and the deployment
+ *                                  has not switched it off
  * @param promotedFields            item fields promoted above the allText baseline
  * @param analyzers                 token chains of the described material's language
  */
@@ -22,14 +25,15 @@ public record RelevanceConfig(
 		int minimumShouldMatchPercent,
 		boolean relaxOnNoHits,
 		int partialMinLength,
+		boolean stemming,
 		float nameExact, float nameExactFolded, float namePrefix, float namePhrase, float nameTerms,
-		float nameWordPrefix, float nameContains,
+		float nameWordPrefix, float nameContains, float nameStemmed,
 		float nameVariantsExact, float nameVariantsExactFolded, float nameVariantsPrefix,
 		float nameVariantsPhrase, float nameVariantsTerms,
-		float nameVariantsWordPrefix, float nameVariantsContains,
+		float nameVariantsWordPrefix, float nameVariantsContains, float nameVariantsStemmed,
 		float refLabelsPhrase, float refLabelsTerms,
 		float descriptionPhrase, float descriptionTerms,
-		float allTextTerms,
+		float allTextTerms, float allTextStemmed,
 		List<PromotedField> promotedFields,
 		QueryAnalyzers analyzers) {
 
@@ -58,15 +62,22 @@ public record RelevanceConfig(
 				parseMinimumShouldMatch(settings != null ? settings.getMinimumShouldMatch() : null),
 				settings == null || !Boolean.FALSE.equals(settings.getRelaxOnNoHits()),
 				parsePartialMinLength(settings != null ? settings.getPartialMinLength() : null),
+				// on by default where the locale HAS a stemmer; off is query-side
+				// only (the stemmed fields stay indexed), so toggling needs no reindex
+				(settings == null || !Boolean.FALSE.equals(settings.getStemming()))
+						&& analyzers.stemming() != null,
 				weight(name != null ? name.getExact() : null, 1000),
 				weight(name != null ? name.getExactFolded() : null, 800),
 				weight(name != null ? name.getPrefix() : null, 200),
 				weight(name != null ? name.getPhrase() : null, 100),
 				weight(name != null ? name.getTerms() : null, 50),
 				// partial words rank below every full-word tier (exact beats
-				// partial), a word-start match above a mid-word one
+				// partial), a word-start match above a mid-word one; a stemmed
+				// match sits between them - a whole inflected word beats a
+				// fragment, the exact form beats both (R-17)
 				weight(name != null ? name.getWordPrefix() : null, 30),
 				weight(name != null ? name.getContains() : null, 15),
+				weight(name != null ? name.getStemmed() : null, 40),
 				// preferred name ~ 5x a variant form (the CAM/Elza rule, see §2)
 				weight(nameVariants != null ? nameVariants.getExact() : null, 200),
 				weight(nameVariants != null ? nameVariants.getExactFolded() : null, 160),
@@ -75,11 +86,13 @@ public record RelevanceConfig(
 				weight(nameVariants != null ? nameVariants.getTerms() : null, 10),
 				weight(nameVariants != null ? nameVariants.getWordPrefix() : null, 8),
 				weight(nameVariants != null ? nameVariants.getContains() : null, 4),
+				weight(nameVariants != null ? nameVariants.getStemmed() : null, 8),
 				weight(refLabels != null ? refLabels.getPhrase() : null, 12),
 				weight(refLabels != null ? refLabels.getTerms() : null, 10),
 				weight(description != null ? description.getPhrase() : null, 8),
 				weight(description != null ? description.getTerms() : null, 2),
 				weight(allText != null ? allText.getTerms() : null, 1),
+				weight(allText != null ? allText.getStemmed() : null, 1),
 				List.copyOf(promotedFields),
 				analyzers);
 	}
