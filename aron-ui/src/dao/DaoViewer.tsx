@@ -1,7 +1,7 @@
 import { Text, makeStyles, tokens } from "@fluentui/react-components";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { DigitalObjectInfo } from "../api/generated";
+import type { DigitalObjectInfo, TextRun } from "../api/generated";
 import { serverContextPath } from "../serverContext";
 import OsdViewport, { type OsdViewportHandle, type OsdSource } from "./OsdViewport";
 import ThumbnailRail from "./ThumbnailRail";
@@ -45,6 +45,45 @@ const useStyles = makeStyles({
     backgroundColor: tokens.colorNeutralBackground3,
     borderRadius: tokens.borderRadiusMedium,
   },
+  // the corner chips (the old portal's manner): a fixed translucent-dark ground,
+  // so their contrast never depends on the scan underneath, and no row of the
+  // working area is spent on them
+  overlay: {
+    position: "absolute",
+    zIndex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.65)",
+    color: "#ffffff",
+    padding: `${tokens.spacingVerticalXXS} ${tokens.spacingHorizontalS}`,
+    borderRadius: tokens.borderRadiusSmall,
+    fontSize: tokens.fontSizeBase200,
+    lineHeight: tokens.lineHeightBase200,
+    maxWidth: "70%",
+  },
+  // repeats what the toolbar already says, so it is decoration for the eye
+  pageOverlay: {
+    top: tokens.spacingVerticalS,
+    right: tokens.spacingHorizontalS,
+    pointerEvents: "none",
+  },
+  footerOverlay: {
+    bottom: tokens.spacingVerticalS,
+    right: tokens.spacingHorizontalS,
+    display: "flex",
+    alignItems: "center",
+    columnGap: tokens.spacingHorizontalS,
+  },
+  footerLink: {
+    color: "#ffffff",
+    textDecorationLine: "underline",
+  },
+  footerImage: {
+    height: "20px",
+    display: "block",
+  },
+  footerSeparator: {
+    paddingLeft: tokens.spacingHorizontalXS,
+    paddingRight: tokens.spacingHorizontalXS,
+  },
   // the slot of a page with nothing to render: named download instead of a canvas
   downloadCard: {
     height: "100%",
@@ -73,6 +112,23 @@ const useStyles = makeStyles({
     border: 0,
   },
 });
+
+/** One configured sentence: links travel inside it, so runs render as anchors. */
+function Runs({ runs, linkClassName }: { runs: TextRun[]; linkClassName: string }) {
+  return (
+    <span>
+      {runs.map((run, index) =>
+        run.url !== undefined ? (
+          <a key={index} href={run.url} className={linkClassName}>
+            {run.text}
+          </a>
+        ) : (
+          <span key={index}>{run.text}</span>
+        ),
+      )}
+    </span>
+  );
+}
 
 /** The current page's OpenSeadragon source, or null when there is nothing to render. */
 function pageSource(page: DaoPage): OsdSource | null {
@@ -252,6 +308,32 @@ export default function DaoViewer({
               : { filter: `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%)` }
           }
         >
+          {/* repeats the toolbar's position for the eye over the image */}
+          <div aria-hidden="true" className={`${styles.overlay} ${styles.pageOverlay}`}>
+            {page.index + 1}/{pages.length}
+            {page.published?.name !== undefined ? ` – ${page.published.name}` : ""}
+          </div>
+          {dao.footer !== undefined && (
+            <div className={`${styles.overlay} ${styles.footerOverlay}`}>
+              {dao.footer.licenseImage !== undefined && (
+                // decoration: the license statement beside it is the content
+                <img src={dao.footer.licenseImage} alt="" className={styles.footerImage} />
+              )}
+              <span>
+                {dao.footer.dedication !== undefined && (
+                  <Runs runs={dao.footer.dedication} linkClassName={styles.footerLink} />
+                )}
+                {dao.footer.dedication !== undefined && dao.footer.license !== undefined && (
+                  <span aria-hidden="true" className={styles.footerSeparator}>
+                    |
+                  </span>
+                )}
+                {dao.footer.license !== undefined && (
+                  <Runs runs={dao.footer.license} linkClassName={styles.footerLink} />
+                )}
+              </span>
+            </div>
+          )}
           {source !== null ? (
             <OsdViewport
               ref={viewportRef}

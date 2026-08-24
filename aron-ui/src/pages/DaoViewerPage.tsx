@@ -32,9 +32,6 @@ const useStyles = makeStyles({
     columnGap: tokens.spacingHorizontalL,
     rowGap: tokens.spacingVerticalXXS,
   },
-  license: {
-    color: tokens.colorNeutralForeground3,
-  },
   link: {
     color: tokens.colorBrandForegroundLink,
     textDecorationLine: "none",
@@ -92,11 +89,6 @@ export default function DaoViewerPage() {
         <Link to={`/apu/${uuid}`} className={styles.link}>
           {t("dao.backToRecord")}
         </Link>
-        {dao.license !== undefined && (
-          <Text size={200} className={styles.license}>
-            {t("dao.license", { code: dao.license })}
-          </Text>
-        )}
       </header>
       <div className={styles.viewer}>
         <DaoViewer

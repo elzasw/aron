@@ -19,9 +19,6 @@ const useStyles = makeStyles({
     alignItems: "baseline",
     columnGap: tokens.spacingHorizontalM,
   },
-  license: {
-    color: tokens.colorNeutralForeground3,
-  },
   link: {
     color: tokens.colorBrandForegroundLink,
     textDecorationLine: "none",
@@ -78,11 +75,6 @@ export default function DaoGallery({
                 {t("dao.openViewerNamed", { name: dao.name ?? t("apu.digitalObjects") })}
               </Link>
               <Text size={200}>{t("dao.pages", { count: pages.length })}</Text>
-              {dao.license !== undefined && (
-                <Text size={200} className={styles.license}>
-                  {t("dao.license", { code: dao.license })}
-                </Text>
-              )}
             </div>
             {thumbnails.length > 0 && (
               <ul className={styles.strip}>

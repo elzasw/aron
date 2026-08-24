@@ -46,6 +46,16 @@ const DETAIL: ApuDetail = {
       uuid: "dao1",
       name: "Kronika obce",
       license: "CC-BY-4.0",
+      // resolved server-side from the deployment's daoFooter configuration
+      footer: {
+        dedication: [
+          { text: "Digitized with the support of " },
+          { text: "NAKI II", url: "https://example.org/naki" },
+          { text: "." },
+        ],
+        license: [{ text: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" }],
+        licenseImage: "/api/v1/ui/images/record.svg",
+      },
       files: [
         {
           id: "z1",
@@ -105,8 +115,12 @@ describe("DaoViewerPage", () => {
   it("shows the digital object and opens its selected page in the viewer", async () => {
     const { container } = renderViewer();
     expect(await screen.findByRole("heading", { level: 1, name: "Kronika obce" })).toBeTruthy();
-    // the license is stated, the page position announced through the input
-    screen.getByText("Licence: CC-BY-4.0");
+    // the attribution overlay: server-resolved runs render as anchors
+    screen.getByText("Digitized with the support of", { exact: false });
+    const licenseLink = screen.getByRole("link", { name: "CC BY 4.0" });
+    expect(licenseLink.getAttribute("href")).toBe("https://creativecommons.org/licenses/by/4.0/");
+    // the page-number overlay repeats the toolbar's position for the eye
+    screen.getByText("1/3", { exact: false });
     expect((screen.getByLabelText("Page") as HTMLInputElement).value).toBe("1");
     // the deep-zoom source of page 1 reaches OpenSeadragon
     await waitFor(() => {

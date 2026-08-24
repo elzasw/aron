@@ -33,6 +33,9 @@ const DIGITIZED: ApuDetail = {
     {
       uuid: "dao1",
       license: "CC-BY-4.0",
+      footer: {
+        license: [{ text: "CC BY 4.0", url: "https://creativecommons.org/licenses/by/4.0/" }],
+      },
       files: [
         {
           id: "z1",
@@ -82,8 +85,8 @@ describe("ApuPage with digital objects", () => {
     // the fullscreen surface stays a link into the routed viewer
     const fullscreen = screen.getByRole("link", { name: "Full screen" });
     expect(fullscreen.getAttribute("href")).toBe("/apu/rec/dao/dao1?file=z1");
-    // the license is stated beside the viewer
-    screen.getByText("Licence: CC-BY-4.0");
+    // the attribution overlay carries the server-resolved license statement
+    screen.getByRole("link", { name: "CC BY 4.0" });
     // the description column's width is the reader's, like the tree's
     screen.getByRole("separator", { name: "Width of the archival description column" });
     await expectNoA11yViolations(container);

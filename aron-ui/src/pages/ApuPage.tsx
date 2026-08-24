@@ -160,9 +160,6 @@ const useStyles = makeStyles({
       flexGrow: 0,
     },
   },
-  viewerLicense: {
-    color: tokens.colorNeutralForeground3,
-  },
   // ...and the description becomes the right-hand column, scrolling on its own,
   // as wide as the reader drags its splitter (a custom property, like the tree)
   rootBesideViewer: {
@@ -512,11 +509,6 @@ export default function ApuPage() {
         <>
           <div className={styles.viewerPane}>
             <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
-            {embeddedDao.license !== undefined && (
-              <Text size={200} className={styles.viewerLicense}>
-                {t("dao.license", { code: embeddedDao.license })}
-              </Text>
-            )}
           </div>
           {/* the description sits right of this separator, so the value grows leftwards */}
           <Splitter

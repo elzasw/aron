@@ -124,7 +124,6 @@
     "openViewerNamed": "Otevřít prohlížeč: {{name}}",
     "backToRecord": "Zpět na záznam",
     "notFound": "Digitalizát nebyl nalezen.",
-    "license": "Licence: {{code}}",
     "pages_one": "{{count}} strana",
     "pages_few": "{{count}} strany",
     "pages_other": "{{count}} stran",
