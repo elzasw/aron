@@ -87,9 +87,10 @@ const OsdViewport = forwardRef<OsdViewportHandle, OsdViewportProps>(function Osd
         viewerRef.current = OpenSeadragon({
           element: containerRef.current,
           showNavigationControl: false,
-          // created with the viewer, then shown or hidden by applyViewSettings
+          // created with the viewer, then shown or hidden by applyViewSettings;
+          // bottom-left is where the old portal's readers know it
           showNavigator: true,
-          navigatorPosition: "TOP_LEFT",
+          navigatorPosition: "BOTTOM_LEFT",
           animationTime: reducedMotion ? 0 : undefined,
         });
         viewerRef.current.addHandler("open-failed", () => onOpenFailedRef.current?.());

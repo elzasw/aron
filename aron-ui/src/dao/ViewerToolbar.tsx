@@ -57,6 +57,8 @@ const useStyles = makeStyles({
     display: "flex",
     flexWrap: "nowrap",
     alignItems: "center",
+    // centered over the canvas, the old portal's arrangement
+    justifyContent: "center",
     columnGap: "2px",
     padding: `${tokens.spacingVerticalXXS} 0`,
     whiteSpace: "nowrap",

@@ -1,29 +1,42 @@
-import { makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { Button, Tooltip, makeStyles, mergeClasses, tokens } from "@fluentui/react-components";
+import { ChevronLeft16Regular, ChevronRight16Regular } from "@fluentui/react-icons";
 import { useRef } from "react";
 
 /**
  * Vertical pane separator: drag it with the pointer or move it with the arrow
  * keys. It keeps no width of its own - the owning page holds the value, which is
- * what lets the page decide where the width is remembered.
+ * what lets the page decide where the width is remembered. With a collapse
+ * handler it also carries the old portal's fold-away triangles: a chevron
+ * button at the separator's middle that hides the sized pane entirely and
+ * brings it back.
  *
  * Accessibility (doc/accessibility.md): a real `separator` with a value and a
  * name, focusable and keyboard-operable, so resizing never depends on a drag
- * gesture (WCAG 2.1.1, 2.5.7).
+ * gesture (WCAG 2.1.1, 2.5.7); the fold-away control is its own button, never
+ * nested inside the separator widget.
  */
 
 /** Pixels one arrow key moves the separator; Home/End jump to the bounds. */
 const STEP = 24;
 
 const useStyles = makeStyles({
-  root: {
-    // spans the whole content row, so the rule reads as the pane's border
+  // the strip hosting the separator and, when the pane can fold, its chevron
+  strip: {
     alignSelf: "stretch",
     position: "relative",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     flexShrink: 0,
-    width: "12px",
+    width: "16px",
+  },
+  root: {
+    // spans the whole content row, so the rule reads as the pane's border
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 0,
     border: "none",
     backgroundColor: "transparent",
@@ -54,6 +67,18 @@ const useStyles = makeStyles({
     borderRadius: tokens.borderRadiusCircular,
     backgroundColor: tokens.colorNeutralStroke1,
   },
+  // the fold-away triangle sits over the grip's place, mid-height like the old
+  // portal's, and stays when the separator itself has nothing left to size
+  collapseButton: {
+    position: "relative",
+    zIndex: 1,
+    minWidth: "16px",
+    maxWidth: "16px",
+    paddingLeft: 0,
+    paddingRight: 0,
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+  },
 });
 
 interface SplitterProps {
@@ -72,6 +97,12 @@ interface SplitterProps {
    * alike - the keys keep moving the separator, not the number.
    */
   reverse?: boolean;
+  /** The fold-away control: present only when a handler is given. */
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  /** Accessible names of the fold-away control's two states. */
+  collapseLabel?: string;
+  expandLabel?: string;
   className?: string;
 }
 
@@ -100,6 +131,10 @@ export default function Splitter({
   onChange,
   onCommit,
   reverse = false,
+  collapsed = false,
+  onCollapsedChange,
+  collapseLabel,
+  expandLabel,
   className,
 }: SplitterProps) {
   const styles = useStyles();
@@ -109,7 +144,11 @@ export default function Splitter({
   const dragged = (clientX: number) =>
     clamp(drag.current!.startValue + (reverse ? -1 : 1) * (clientX - drag.current!.startX));
 
-  return (
+  // the chevron points where the pane would go: a left pane folds leftwards
+  const collapseGlyph = reverse ? <ChevronRight16Regular /> : <ChevronLeft16Regular />;
+  const expandGlyph = reverse ? <ChevronLeft16Regular /> : <ChevronRight16Regular />;
+
+  const separator = (
     // ARIA makes a separator a widget as soon as it is focusable - that is the
     // window-splitter pattern, and it is why this one takes a tab stop, a value
     // and key handling. The plugin's role table knows only the structural
@@ -124,7 +163,7 @@ export default function Splitter({
       aria-valuemax={max}
       // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
-      className={mergeClasses(styles.root, className)}
+      className={styles.root}
       onPointerDown={(event) => {
         // capture keeps the drag alive when the pointer outruns the 12px strip
         event.currentTarget.setPointerCapture(event.pointerId);
@@ -163,6 +202,24 @@ export default function Splitter({
       }}
     >
       <span aria-hidden="true" className={styles.grip} />
+    </div>
+  );
+
+  return (
+    <div className={mergeClasses(styles.strip, className)}>
+      {/* a collapsed pane has no width to adjust, so the separator rests */}
+      {!collapsed && separator}
+      {onCollapsedChange !== undefined && (
+        <Tooltip content={(collapsed ? expandLabel : collapseLabel) ?? label} relationship="label">
+          <Button
+            appearance="subtle"
+            size="small"
+            className={styles.collapseButton}
+            icon={collapsed ? expandGlyph : collapseGlyph}
+            onClick={() => onCollapsedChange(!collapsed)}
+          />
+        </Tooltip>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { ApuType, FileType, type ApuDetail } from "../api/generated";
@@ -88,6 +88,19 @@ describe("ApuPage with digital objects", () => {
     // the attribution overlay carries the server-resolved license statement
     screen.getByRole("link", { name: "CC BY 4.0" });
     // the description column's width is the reader's, like the tree's
+    screen.getByRole("separator", { name: "Width of the archival description column" });
+    await expectNoA11yViolations(container);
+  });
+
+  it("folds the description column away and brings it back", async () => {
+    const { container } = renderRecord("rec");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    fireEvent.click(screen.getByRole("button", { name: "Hide the archival description column" }));
+    // folded: the pane is gone, the separator rests, only the expand chevron remains
+    expect(screen.queryByRole("separator", { name: "Width of the archival description column" }))
+      .toBeNull();
+    const expand = screen.getByRole("button", { name: "Show the archival description column" });
+    fireEvent.click(expand);
     screen.getByRole("separator", { name: "Width of the archival description column" });
     await expectNoA11yViolations(container);
   });

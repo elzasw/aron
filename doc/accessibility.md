@@ -170,7 +170,11 @@ embeds the same viewer beside the
 description when a record is digitized; page-turn keys are then scoped to the
 viewer itself (arrow keys must keep scrolling the description and walking the
 tree beside it), while the fullscreen page — whose whole surface is the
-viewer — handles them document-wide.
+viewer — handles them document-wide. The splitters carry the old portal's
+fold-away triangles as real, separately focusable buttons (never nested inside
+the separator widget); a folded pane leaves its expand chevron in place, and
+the stacked narrow layout — where the splitters do not exist — always shows
+every pane, so nothing can be folded beyond reach.
 
 **Home page entry points and footer band** (added with the feature, same
 criteria): each configured group is a `<section>` named by its own `<h2>`, so a

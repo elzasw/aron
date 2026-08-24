@@ -77,6 +77,26 @@ function rememberWidth(key: string, width: number): void {
   }
 }
 
+/** Whether a pane is folded away (the old portal's triangles) - remembered like its width. */
+const TREE_COLLAPSED_KEY = "aron.treeCollapsed";
+const DESCRIPTION_COLLAPSED_KEY = "aron.descriptionCollapsed";
+
+function storedCollapsed(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function rememberCollapsed(key: string, collapsed: boolean): void {
+  try {
+    window.localStorage.setItem(key, String(collapsed));
+  } catch {
+    // a reader without storage simply starts expanded again
+  }
+}
+
 const useStyles = makeStyles({
   // Two panes filling the frame, each scrolling on its own (the old portal's
   // arrangement): the tree keeps its place while the description is read, and
@@ -125,6 +145,13 @@ const useStyles = makeStyles({
   // stacked, the panes sit above each other and there is no width to drag
   splitter: {
     "@media (max-width: 860px)": {
+      display: "none",
+    },
+  },
+  // a folded pane - only where the fold-away chevron exists to bring it back;
+  // the stacked layout hides the splitters, so it always shows every pane
+  collapsedPane: {
+    "@media (min-width: 861px)": {
       display: "none",
     },
   },
@@ -449,6 +476,18 @@ export default function ApuPage() {
     storedWidth(DESCRIPTION_WIDTH_KEY, MIN_DESCRIPTION_WIDTH, MAX_DESCRIPTION_WIDTH,
       DEFAULT_DESCRIPTION_WIDTH),
   );
+  const [treeCollapsed, setTreeCollapsed] = useState(() => storedCollapsed(TREE_COLLAPSED_KEY));
+  const [descriptionCollapsed, setDescriptionCollapsed] = useState(() =>
+    storedCollapsed(DESCRIPTION_COLLAPSED_KEY),
+  );
+  const collapseTree = (collapsed: boolean) => {
+    setTreeCollapsed(collapsed);
+    rememberCollapsed(TREE_COLLAPSED_KEY, collapsed);
+  };
+  const collapseDescription = (collapsed: boolean) => {
+    setDescriptionCollapsed(collapsed);
+    rememberCollapsed(DESCRIPTION_COLLAPSED_KEY, collapsed);
+  };
   const [citationOpen, setCitationOpen] = useState(false);
   // the same query the breadcrumb strip reads - one request, one truth
   const detail = useApuDetail(uuid);
@@ -491,7 +530,9 @@ export default function ApuPage() {
     >
       {data.apuType === ApuType.ArchDesc && (
         <>
-          <aside className={styles.tree}>
+          <aside
+            className={mergeClasses(styles.tree, treeCollapsed && styles.collapsedPane)}
+          >
             <ApuTree treePath={data.treePath} currentUuid={data.uuid} />
           </aside>
           <Splitter
@@ -501,6 +542,10 @@ export default function ApuPage() {
             max={MAX_TREE_WIDTH}
             onChange={setTreeWidth}
             onCommit={(width) => rememberWidth(TREE_WIDTH_KEY, width)}
+            collapsed={treeCollapsed}
+            onCollapsedChange={collapseTree}
+            collapseLabel={t("apu.collapseTree")}
+            expandLabel={t("apu.expandTree")}
             className={styles.splitter}
           />
         </>
@@ -519,6 +564,10 @@ export default function ApuPage() {
             max={MAX_DESCRIPTION_WIDTH}
             onChange={setDescriptionWidth}
             onCommit={(width) => rememberWidth(DESCRIPTION_WIDTH_KEY, width)}
+            collapsed={descriptionCollapsed}
+            onCollapsedChange={collapseDescription}
+            collapseLabel={t("apu.collapseDescription")}
+            expandLabel={t("apu.expandDescription")}
             className={styles.splitter}
           />
         </>
@@ -527,7 +576,11 @@ export default function ApuPage() {
           element starts at its top - the reader never opens a record halfway
           down because the previous one was scrolled */}
       <div
-        className={mergeClasses(styles.root, embeddedDao !== undefined && styles.rootBesideViewer)}
+        className={mergeClasses(
+          styles.root,
+          embeddedDao !== undefined && styles.rootBesideViewer,
+          embeddedDao !== undefined && descriptionCollapsed && styles.collapsedPane,
+        )}
         key={data.uuid}
       >
       <header className={styles.header}>
