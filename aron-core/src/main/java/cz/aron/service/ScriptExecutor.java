@@ -40,12 +40,18 @@ public class ScriptExecutor {
      */
     public ResponseEntity<Resource> executeScript(ScriptType type, String code, boolean cache,
             Map<String, Object> configuration, Object input) {
+        return toResponse(evaluate(type, code, cache, configuration, input));
+    }
 
-        ScriptEngine engine = scriptEngineManager.getEngineByName(type.getEngineName());
-        if (engine == null) {
-            throw new IllegalStateException("No script engine available for " + type
-                    + " (engine '" + type.getEngineName() + "' is not on the classpath)");
-        }
+    /**
+     * Evaluates {@code code} and returns the script's own result - for callers that consume it
+     * in-process rather than send it to a client (arguments as in
+     * {@link #executeScript(ScriptType, String, boolean, Map, Object)}).
+     */
+    public Object evaluate(ScriptType type, String code, boolean cache,
+            Map<String, Object> configuration, Object input) {
+
+        ScriptEngine engine = engine(type);
 
         Bindings bindings = engine.createBindings();
         if (configuration != null) {
@@ -63,10 +69,30 @@ public class ScriptExecutor {
             } else {
                 result = engine.eval(code, bindings);
             }
-            return toResponse(result);
+            return result;
         } catch (ScriptException e) {
             throw new RuntimeException("Failed to execute " + type + " script", e);
         }
+    }
+
+    /**
+     * Compiles {@code code} into the cache without running it, so a script configured by a
+     * deployment fails the startup rather than the first request that needs it. A no-op for an
+     * engine that cannot compile ahead of evaluation.
+     */
+    public void precompile(ScriptType type, String code) {
+        if (engine(type) instanceof Compilable compilable) {
+            compiledCache.computeIfAbsent(cacheKey(type, code), key -> compile(compilable, code));
+        }
+    }
+
+    private ScriptEngine engine(ScriptType type) {
+        ScriptEngine engine = scriptEngineManager.getEngineByName(type.getEngineName());
+        if (engine == null) {
+            throw new IllegalStateException("No script engine available for " + type
+                    + " (engine '" + type.getEngineName() + "' is not on the classpath)");
+        }
+        return engine;
     }
 
     private CompiledScript compile(Compilable compilable, String code) {

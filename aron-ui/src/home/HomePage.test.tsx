@@ -53,6 +53,7 @@ const config: UiConfig = {
   name: "Testovací portál",
   localizations: ["en"],
   menuItems: [],
+  citations: [],
   footerLinks: [],
   homePage: {
     groups: [

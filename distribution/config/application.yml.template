@@ -50,6 +50,10 @@ webResources:
   # oddelenych carkou - jmeno se hleda po sobe, plati prvni nalez; nasazeni si
   # tak muze drzet vlastni obrazky mimo adresar dodavany s balikem.
   resultLayout: ./config/resultLayout.yaml
+  # Formy citace zaznamu - volitelne. Bez tohoto klice portal citace nenabizi.
+  # Skripty, ktere citaci sestavuji, se hledaji vedle uvedeneho souboru;
+  # prekladatelne nazvy forem patri do citation_localization.yaml vedle nej.
+  citation: ./config/citation.yaml
   images: ./config/images
 
 # Zobrazovat v paticce verzi bezici aplikace. Vypnuto: ctenar portalu s ni nic

@@ -16,7 +16,12 @@
      <itms>
       <str type="TITLE">Farní úřad Všestary</str>
       <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1950-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -29,7 +34,12 @@
      <itms>
       <str type="TITLE">Úřední knihy</str>
       <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1900-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -43,8 +53,14 @@
     <part type="PT_ARCH_DESC">
      <itms>
       <str type="TITLE">Kronika fary</str>
+      <str type="UNIT_ID">I/1</str>
       <drng type="UNIT_DATE" f="1820-01-01T00:00:00" to="1850-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -58,8 +74,14 @@
     <part type="PT_ARCH_DESC">
      <itms>
       <str type="TITLE">Kniha zápisů farní rady</str>
+      <str type="UNIT_ID">I/2</str>
       <drng type="UNIT_DATE" f="1851-01-01T00:00:00" to="1875-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -73,8 +95,15 @@
     <part type="PT_ARCH_DESC">
      <itms>
       <str type="TITLE">Matrika biřmovaných</str>
+      <str type="UNIT_ID">I/3</str>
+      <str type="OTHERID_SIG">M 12</str>
       <drng type="UNIT_DATE" f="1876-01-01T00:00:00" to="1900-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -87,7 +116,12 @@
      <itms>
       <str type="TITLE">Spisový materiál</str>
       <drng type="UNIT_DATE" f="1830-01-01T00:00:00" to="1940-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -101,7 +135,12 @@
      <itms>
       <str type="TITLE">Korespondence s konzistoří</str>
       <drng type="UNIT_DATE" f="1830-01-01T00:00:00" to="1880-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -115,7 +154,12 @@
      <itms>
       <str type="TITLE">Stavba nové fary — spisy</str>
       <drng type="UNIT_DATE" f="1881-01-01T00:00:00" to="1895-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -128,7 +172,12 @@
      <itms>
       <str type="TITLE">Účetní knihy</str>
       <drng type="UNIT_DATE" f="1850-01-01T00:00:00" to="1950-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>
@@ -142,7 +191,12 @@
      <itms>
       <str type="TITLE">Kniha příjmů a výdajů</str>
       <drng type="UNIT_DATE" f="1850-01-01T00:00:00" to="1910-12-31T23:59:59" fmt="Y-Y"/>
+     </itms>
+    </part>
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
       <ref type="FUND_REF">f8e57e89-ab4c-4215-a4b5-39fcaf5ce859</ref>
+      <ref type="FUND_INST_REF">3051c1f6-3828-44b9-8987-0ffac0ca5188</ref>
      </itms>
     </part>
    </prts>

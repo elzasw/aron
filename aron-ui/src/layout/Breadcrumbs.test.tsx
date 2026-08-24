@@ -30,6 +30,7 @@ const config: UiConfig = {
   localizations: ["en"],
   menuItems: [],
   footerLinks: [],
+  citations: [],
 };
 
 vi.mock("../api/client", () => ({

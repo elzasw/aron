@@ -21,6 +21,7 @@ import cz.aron.api.v1.ApuApi;
 import cz.aron.api.v1.model.ApuDetail;
 import cz.aron.api.v1.model.ApuType;
 import cz.aron.api.v1.model.AttachmentInfo;
+import cz.aron.api.v1.model.Citation;
 import cz.aron.api.v1.model.DigitalObjectInfo;
 import cz.aron.api.v1.model.FileInfo;
 import cz.aron.api.v1.model.FileType;
@@ -34,6 +35,7 @@ import cz.aron.domain.DigitalObjectFile;
 import cz.aron.mapper.ApuSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.service.ApuService;
+import cz.aron.service.CitationService;
 
 /**
  * Implements the /api/v1 APU detail: the render model of D-9 - display-ready
@@ -57,28 +59,23 @@ public class ApuDetailController implements ApuApi {
 
 	private final DaoFileUrls daoFileUrls;
 
+	private final CitationService citationService;
+
 	public ApuDetailController(ApuEntityRepository apuEntityRepository, ApuService apuService,
-			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales, DaoFileUrls daoFileUrls) {
+			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales, DaoFileUrls daoFileUrls,
+			CitationService citationService) {
 		this.presentationLocales = presentationLocales;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
 		this.detailBuilder = detailBuilder;
 		this.daoFileUrls = daoFileUrls;
+		this.citationService = citationService;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ApuDetail> apuGetDetail(String uuid, String lang, String ifNoneMatch, String ifModifiedSince) {
-		UUID apuUuid;
-		try {
-			apuUuid = UUID.fromString(uuid);
-		} catch (IllegalArgumentException e) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
-		}
-		ApuEntity apu = apuEntityRepository.findByUuid(apuUuid);
-		if (apu == null) {
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
-		}
+		ApuEntity apu = require(uuid);
 
 		Locale locale = presentationLocales.resolve(lang);
 		// the rendered labels and datings depend on the language, so it discriminates the ETag
@@ -108,6 +105,34 @@ public class ApuDetailController implements ApuApi {
 				.eTag(expireStatus.eTag())
 				.lastModified(expireStatus.lastModified())
 				.body(detail);
+	}
+
+	/**
+	 * Citations of one record, rendered by the deployment's citation scripts
+	 * ({@link CitationService}). Not cached: the text follows the deployment's
+	 * citation configuration rather than the record alone.
+	 * <p>
+	 * A record no form can cite answers 422; which piece of the description was
+	 * missing is logged by the service. The reader was never offered a citation
+	 * here ({@code UiConfig.citations} says where one exists), so that is
+	 * diagnosis for whoever looks into the data - the reason travels with the
+	 * exception and reaches a client only where a deployment turns Spring's
+	 * error message on.
+	 */
+	@Override
+	public ResponseEntity<List<Citation>> apuGetCitations(String uuid, String lang) {
+		ApuEntity apu = require(uuid);
+		var citations = citationService.citations(apu, presentationLocales.resolve(lang));
+		if (citations.items().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, citations.diagnostic() != null
+					? "The record cannot be cited: " + citations.diagnostic()
+					: "No citation form covers " + apu.getType() + ".");
+		}
+		return ResponseEntity.ok()
+				.cacheControl(CacheControl.noStore())
+				.body(citations.items().stream()
+						.map(item -> new Citation(item.code(), item.label(), item.text()))
+						.toList());
 	}
 
 	@Override
@@ -140,6 +165,21 @@ public class ApuDetailController implements ApuApi {
 				.eTag(data.eTag())
 				.lastModified(data.lastModified())
 				.body(data.value().stream().map(ApuDetailController::treeNode).toList());
+	}
+
+	/** The record, or 404 - an unparsable uuid names no record either. */
+	private ApuEntity require(String uuid) {
+		UUID apuUuid;
+		try {
+			apuUuid = UUID.fromString(uuid);
+		} catch (IllegalArgumentException e) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
+		}
+		ApuEntity apu = apuEntityRepository.findByUuid(apuUuid);
+		if (apu == null) {
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No such APU.");
+		}
+		return apu;
 	}
 
 	private static TreeNode treeNode(ApuEntityTreeViewDto dto) {

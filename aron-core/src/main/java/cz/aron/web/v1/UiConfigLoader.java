@@ -18,6 +18,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.yaml.snakeyaml.Yaml;
 
+import cz.aron.api.v1.model.ApuType;
+import cz.aron.api.v1.model.CitationForm;
 import cz.aron.api.v1.model.HomePage;
 import cz.aron.commons.LocalizationFile;
 import cz.aron.api.v1.model.MenuItem;
@@ -25,6 +27,7 @@ import cz.aron.api.v1.model.MenuItemCode;
 import cz.aron.api.v1.model.UiConfig;
 import cz.aron.domain.types.LocalizedText;
 import cz.aron.domain.types.dto.LocalizedItem;
+import cz.aron.service.CitationService;
 import jakarta.annotation.PostConstruct;
 
 /**
@@ -89,6 +92,8 @@ public class UiConfigLoader {
 
 	private final DeploymentImages images;
 
+	private final CitationService citations;
+
 	private String name;
 
 	private List<LocalizedItem> nameTranslations;
@@ -121,11 +126,13 @@ public class UiConfigLoader {
 			.compile("[a-zA-Z]{3,20}|#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\\([a-zA-Z0-9.%,/ +-]{3,60}\\)");
 
 	public UiConfigLoader(@Value("${webResources.pageTemplate}") String pageTemplateFile,
-			@Value("${help-url:}") String helpUrl, FacetScope facetScope, DeploymentImages images) {
+			@Value("${help-url:}") String helpUrl, FacetScope facetScope, DeploymentImages images,
+			CitationService citations) {
 		this.pageTemplateFile = pageTemplateFile;
 		this.helpUrl = helpUrl;
 		this.facetScope = facetScope;
 		this.images = images;
+		this.citations = citations;
 	}
 
 	@PostConstruct
@@ -161,7 +168,13 @@ public class UiConfigLoader {
 	/** Typed configuration for one reader's language. */
 	public UiConfig getConfig(Locale locale) {
 		var links = footerLinks.stream().map(link -> link.render(locale, images::url)).toList();
-		var config = new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links);
+		// which record types can be cited - the record page offers the action only there
+		var citationForms = citations.getForms().stream()
+				.map(form -> new CitationForm(form.code(), CitationService.label(form, locale),
+						form.apuTypes().stream().map(type -> ApuType.fromValue(type.toString())).toList()))
+				.toList();
+		var config = new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links,
+				citationForms);
 		if (homePage != null) {
 			// image URLs carry this request's context path, so they are built here
 			// rather than at startup (see DeploymentImages)

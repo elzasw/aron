@@ -31,6 +31,7 @@ const config: UiConfig = {
   // assertions below read as the strings the code ships
   localizations: ["en", "cs_CZ"],
   menuItems: [],
+  citations: [],
   footerLinks: [
     { code: FooterLinkCode.Accessibility, url: "https://archiv.example/pristupnost" },
     { label: "Kontakt", url: "https://archiv.example/kontakt" },

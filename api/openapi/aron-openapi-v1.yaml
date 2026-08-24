@@ -92,6 +92,48 @@ paths:
           description: The client has made a conditional request and the resource has not been modified.
       tags:
         - apu
+  /api/v1/apu/{uuid}/citations:
+    get:
+      operationId: Apu_getCitations
+      description: |-
+        Citations of one APU - one entry per configured citation form covering the
+        record's type, in configured order (`UiConfig.citations` says which those
+        are, so a client knows before asking whether to offer the action).
+
+        The text is rendered server-side because an archival citation is archival
+        grammar, not string formatting: it is composed from the record, the fund
+        it belongs to and that fund's institution, its wording is agreed with the
+        archives, and it may draw on description items no detail response carries
+        (a source system can prepare a value for citation without displaying it).
+        A client copies it verbatim; it never re-composes or reformats one.
+
+        Responses carry no `ETag`: the text follows deployment configuration
+        rather than the record alone, and a citation norm may date the access.
+
+        A form that cannot render this record - an archival description whose
+        fund is missing, say - is left out rather than reported, since a reader
+        can do nothing about it. When no form renders, the response is a 422 and
+        which piece was missing is logged on the server: that is a data error,
+        diagnosis for whoever looks into the data, while the reader gets the UI's
+        own localized message.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/LangParam'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Citation'
+      tags:
+        - apu
   /api/v1/apu/{uuid}/tree:
     get:
       operationId: Apu_getTreeNodes
@@ -657,6 +699,52 @@ components:
             - $ref: '#/components/schemas/FileInfo'
           description: The attachment's file.
       description: Attachment of an APU.
+    Citation:
+      type: object
+      required:
+        - code
+        - label
+        - text
+      properties:
+        code:
+          type: string
+          description: Code of the form this text follows (`CitationForm.code`).
+        label:
+          type: string
+          description: Server-localized display name of the form.
+        text:
+          type: string
+          description: |-
+            The citation itself, ready to be copied verbatim into a bibliography.
+            Plain text, in the deployment's own citation language - the wording is
+            the archives' agreement, not product UI, so it does not follow `lang`
+            unless the configured form itself distinguishes languages.
+      description: One rendered citation of a record, in one citation form.
+    CitationForm:
+      type: object
+      required:
+        - code
+        - label
+        - apuTypes
+      properties:
+        code:
+          type: string
+          description: Stable code of the form as configured (e.g. `DEFAULT`, `CSN_ISO_690`).
+        label:
+          type: string
+          description: Server-localized display name of the form.
+        apuTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApuType'
+          description: |-
+            Record types the form covers. A record of any other type has no citation
+            of this form.
+      description: |-
+        One citation form the deployment offers. What a citation *says* - which
+        identifiers appear, in which order, with which abbreviations - is agreed
+        between the deployment and its archivists per citation norm, so this contract
+        carries only a form's identity, its name and where it applies.
     DatingBounds:
       type: object
       required:
@@ -1742,6 +1830,7 @@ components:
         - localizations
         - menuItems
         - footerLinks
+        - citations
       properties:
         name:
           type: string
@@ -1777,6 +1866,19 @@ components:
             What the deployment publishes on its own home page: groups of curated
             entry points. Absent when it configures none - the home page is then the
             search box alone.
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CitationForm'
+          description: |-
+            Citation forms this deployment offers, in display order, and the record
+            types each of them covers - the record page offers a citation only where
+            a form covers the record's type, so a reader is never offered one that
+            cannot be produced.
+
+            A list because archival practice knows several citation norms: adding a
+            second one is deployment configuration, not a contract change. Empty when
+            the deployment configures none, which turns the feature off.
       description: UI configuration of the deployment.
     UnitDateItem:
       type: object

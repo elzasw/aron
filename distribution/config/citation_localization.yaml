@@ -1,0 +1,9 @@
+# Nazvy citacnich forem z citation.yaml po jazycich. Cestina zustava
+# v citation.yaml jako zdrojovy jazyk a soucasne jako zaloha, takze pridani
+# jazyka nevyzaduje zasah do konfiguracniho souboru.
+#
+# Prekladame nazev formy, ne citaci samotnou: text citace je obsah v jazyce
+# archivu (viz komentar v citation.yaml).
+forms:
+  en:
+    DEFAULT: Citation

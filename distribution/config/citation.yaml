@@ -1,0 +1,23 @@
+# Formy citace, ktere portal nabizi. Bez tohoto souboru (resp. bez klice
+# webResources.citation) portal citace nenabizi vubec.
+#
+# Kazda forma ma:
+#   code      - stabilni identifikator formy, pouziva se v API
+#   label     - nazev formy ve zdrojovem jazyce; preklady patri do
+#               citation_localization.yaml vedle tohoto souboru
+#   script    - skript, ktery citaci sestavi; hleda se vedle tohoto souboru
+#   apuTypes  - typy zaznamu, pro ktere forma plati. Prave podle nich portal
+#               nabizi (nebo nenabizi) tlacitko citace, takze typ, ktery zde
+#               neni uveden, citaci nema.
+#
+# Znenie citace - ktere identifikatory se uvadeji, v jakem poradi a s jakymi
+# zkratkami - je dohoda archivu s archivari, ne nastaveni portalu. Zmena patri
+# do skriptu, a jen se souhlasem archivaru.
+#
+# Dalsi citacni norma se pridava jako dalsi polozka tohoto seznamu s vlastnim
+# skriptem; API i UI ji unesou bez zmeny.
+forms:
+  - code: DEFAULT
+    label: Citace
+    script: citation.groovy
+    apuTypes: [ARCH_DESC, FUND]

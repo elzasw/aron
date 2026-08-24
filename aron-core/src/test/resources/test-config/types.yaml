@@ -5,6 +5,17 @@ partTypes:
   - code: PT_BODY
     name: Body
     viewType: GROUPED
+  # the parts a citation is composed from (see the citation fixture): the
+  # description itself, the fund it belongs to and that fund's information
+  - code: PT_ARCH_DESC
+    name: Archival description
+    viewType: STANDALONE
+  - code: PT_ARCH_DESC_FUND
+    name: Archival fonds
+    viewType: STANDALONE
+  - code: PT_FUND_INFO
+    name: Fonds information
+    viewType: STANDALONE
 itemTypes:
   - code: TITLE_MAIN
     name: Main title
@@ -59,6 +70,48 @@ itemTypes:
     type: STRING
     indexed: true
     fulltext: false
+  # description items a citation is composed from. Their values are content the
+  # source system delivers; the citation script names each code explicitly.
+  - code: TITLE
+    name: Title
+    type: STRING
+    indexed: true
+  - code: UNIT_ID
+    name: Reference code
+    type: STRING
+    indexed: true
+  - code: INV_CISLO
+    name: Inventory number
+    type: STRING
+    indexed: true
+  - code: OTHERID_SIG
+    name: Signature
+    type: STRING
+    indexed: true
+  - code: OTHERID_CJ
+    name: File number
+    type: STRING
+    indexed: true
+  - code: STORAGE_ID
+    name: Storage unit
+    type: STRING
+    indexed: true
+  - code: CISLO_NAD
+    name: Fonds number
+    type: STRING
+    indexed: true
+  - code: INST_REF
+    name: Institution
+    type: APU_REF
+    indexed: true
+  - code: FUND_REF
+    name: Archival fonds
+    type: APU_REF
+    indexed: true
+  - code: FUND_INST_REF
+    name: Institution of the fonds
+    type: APU_REF
+    indexed: true
 metaDataTypes:
   - code: MD_ORDER
     name: Order

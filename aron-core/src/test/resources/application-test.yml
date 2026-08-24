@@ -62,6 +62,9 @@ webResources:
   logo: ./src/test/resources/test-config/logo.svg
   topImage: ./src/test/resources/test-config/book.png
   resultLayout: ./src/test/resources/test-config/resultLayout.yaml
+  # the SHIPPED citation configuration and script: their agreed wording is what
+  # CitationTest pins, so the suite guards the deployment artifact itself
+  citation: ../distribution/config/citation.yaml
   images: ./src/test/resources/test-config/images
 
 help-url: http://help.test.example

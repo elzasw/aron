@@ -23,6 +23,7 @@ import cz.aron.api.v1.model.FooterLinkCode;
 import cz.aron.api.v1.model.MenuItem;
 import cz.aron.api.v1.model.MenuItemCode;
 import cz.aron.api.v1.model.UiConfig;
+import cz.aron.service.CitationService;
 
 /**
  * Plain unit test of the pageTemplate.yaml → UiConfig conversion (no Spring). The
@@ -42,7 +43,7 @@ class UiConfigLoaderTest {
 		Path file = tempDir.resolve("pageTemplate.yaml");
 		Files.writeString(file, yaml, StandardCharsets.UTF_8);
 		var loader = new UiConfigLoader(file.toString(), helpUrl, new FacetScope(List.of()),
-				new DeploymentImages(new MockHttpServletRequest(), ""));
+				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null));
 		loader.load();
 		return loader;
 	}

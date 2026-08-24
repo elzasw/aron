@@ -142,6 +142,18 @@ model UiConfig {
 	 * search box alone.
 	 */
 	homePage?: HomePage;
+
+	/**
+	 * Citation forms this deployment offers, in display order, and the record
+	 * types each of them covers - the record page offers a citation only where
+	 * a form covers the record's type, so a reader is never offered one that
+	 * cannot be produced.
+	 *
+	 * A list because archival practice knows several citation norms: adding a
+	 * second one is deployment configuration, not a contract change. Empty when
+	 * the deployment configures none, which turns the feature off.
+	 */
+	citations: CitationForm[];
 }
 
 /**
@@ -220,6 +232,26 @@ enum MenuItemCode {
 	ORIGINATOR,
 	NEWS,
 	HELP,
+}
+
+/**
+ * One citation form the deployment offers. What a citation *says* - which
+ * identifiers appear, in which order, with which abbreviations - is agreed
+ * between the deployment and its archivists per citation norm, so this contract
+ * carries only a form's identity, its name and where it applies.
+ */
+model CitationForm {
+	/** Stable code of the form as configured (e.g. `DEFAULT`, `CSN_ISO_690`). */
+	code: string;
+
+	/** Server-localized display name of the form. */
+	label: string;
+
+	/**
+	 * Record types the form covers. A record of any other type has no citation
+	 * of this form.
+	 */
+	apuTypes: ApuType[];
 }
 
 /**
@@ -1121,6 +1153,32 @@ namespace Apu {
 		/** Not modified - the client's cached representation is still valid. */
 		@statusCode statusCode: 304;
 	};
+
+	/**
+	 * Citations of one APU - one entry per configured citation form covering the
+	 * record's type, in configured order (`UiConfig.citations` says which those
+	 * are, so a client knows before asking whether to offer the action).
+	 *
+	 * The text is rendered server-side because an archival citation is archival
+	 * grammar, not string formatting: it is composed from the record, the fund
+	 * it belongs to and that fund's institution, its wording is agreed with the
+	 * archives, and it may draw on description items no detail response carries
+	 * (a source system can prepare a value for citation without displaying it).
+	 * A client copies it verbatim; it never re-composes or reformats one.
+	 *
+	 * Responses carry no `ETag`: the text follows deployment configuration
+	 * rather than the record alone, and a citation norm may date the access.
+	 *
+	 * A form that cannot render this record - an archival description whose
+	 * fund is missing, say - is left out rather than reported, since a reader
+	 * can do nothing about it. When no form renders, the response is a 422 and
+	 * which piece was missing is logged on the server: that is a data error,
+	 * diagnosis for whoever looks into the data, while the reader gets the UI's
+	 * own localized message.
+	 */
+	@get
+	@route("/api/v1/apu/{uuid}/citations")
+	op getCitations(@path uuid: string, ...LangParam): Citation[];
 }
 
 /**
@@ -1502,4 +1560,21 @@ enum FileType {
 
 	/** Deep-zoom tile source. */
 	TILE,
+}
+
+/** One rendered citation of a record, in one citation form. */
+model Citation {
+	/** Code of the form this text follows (`CitationForm.code`). */
+	code: string;
+
+	/** Server-localized display name of the form. */
+	label: string;
+
+	/**
+	 * The citation itself, ready to be copied verbatim into a bibliography.
+	 * Plain text, in the deployment's own citation language - the wording is
+	 * the archives' agreement, not product UI, so it does not follow `lang`
+	 * unless the configured form itself distinguishes languages.
+	 */
+	text: string;
 }

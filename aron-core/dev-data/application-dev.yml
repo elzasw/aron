@@ -68,6 +68,8 @@ webResources:
   topImage: ./dev-data/config/photo.png
   # structured search results: the three books of arch-desc-1820 carry a <result>
   resultLayout: ../distribution/config/resultLayout.yaml
+  # citations run the shipped script over the shipped configuration, as a deployment does
+  citation: ../distribution/config/citation.yaml
   # Two directories, as a real deployment does it: the SHARED Czech configuration
   # carries the result icons and the placeholder home-page pictures, and dev adds
   # one of its own for assets that must not ship (demo-mark.svg). A name is looked

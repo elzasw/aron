@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Citation fixture: what the shipped citation.groovy composes a citation from.
+     Two funds and two archival descriptions on purpose - the institution can be
+     named by the record or only by its fund, and a fund may carry no title part
+     and no number at all; both must still produce a citation. -->
+<apusrc xmlns="http://www.aron.cz/apux/2020" uuid="c17a0000-1111-4222-9333-add000000001">
+ <apus>
+  <apu type="Institution" uuid="c17a0000-0000-4000-8000-c00000000001">
+   <name>CIT Státní okresní archiv Testov</name>
+  </apu>
+  <!-- fund with everything a citation can use: its own title and its NAD number -->
+  <apu type="Fund" uuid="c17a0000-0000-4000-8000-c00000000002">
+   <name>CIT Farní úřad Testov (jméno APU)</name>
+   <prts>
+    <part type="PT_TITLE">
+     <itms>
+      <str type="TITLE">Farní úřad Testov</str>
+     </itms>
+    </part>
+    <part type="PT_FUND_INFO">
+     <itms>
+      <ref type="INST_REF">c17a0000-0000-4000-8000-c00000000001</ref>
+      <str type="CISLO_NAD">4711</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <!-- fund with neither a title part nor fund information: its own name stands in
+       and the citation carries no number - not a reason to refuse one -->
+  <apu type="Fund" uuid="c17a0000-0000-4000-8000-c00000000006">
+   <name>CIT Sbírka bez názvové části</name>
+  </apu>
+  <apu type="ArchDesc" uuid="c17a0000-0000-4000-8000-c00000000003">
+   <name>CIT Kronika obce (jméno APU)</name>
+   <desc>Kronika obce Testov 1850–1900</desc>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Kronika obce Testov</str>
+      <str type="UNIT_ID">I/7</str>
+      <str type="INV_CISLO">3</str>
+      <!-- index-only value: not shown on the record's page, but prepared for the
+           citation - the one place invisible description items are read -->
+      <str type="OTHERID_CJ" visible="false">42/1850</str>
+      <!-- the same identifier twice: each value keeps its own prefix -->
+      <str type="OTHERID_SIG">A 12</str>
+      <str type="OTHERID_SIG">A 12b</str>
+      <str type="STORAGE_ID">kart. 5</str>
+     </itms>
+    </part>
+    <!-- names only the fund; the institution comes from that fund -->
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
+      <ref type="FUND_REF">c17a0000-0000-4000-8000-c00000000002</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <apu type="ArchDesc" uuid="c17a0000-0000-4000-8000-c00000000004">
+   <name>CIT Zlomek spisu</name>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Zlomek spisu</str>
+     </itms>
+    </part>
+    <!-- names both, as an archival description usually does -->
+    <part type="PT_ARCH_DESC_FUND">
+     <itms>
+      <ref type="FUND_REF">c17a0000-0000-4000-8000-c00000000006</ref>
+      <ref type="FUND_INST_REF">c17a0000-0000-4000-8000-c00000000001</ref>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <!-- belongs to no fund: a data error, so it cannot be cited -->
+  <apu type="ArchDesc" uuid="c17a0000-0000-4000-8000-c00000000005">
+   <name>CIT Popis bez archivního souboru</name>
+   <prts>
+    <part type="PT_ARCH_DESC">
+     <itms>
+      <str type="TITLE">Popis bez archivního souboru</str>
+     </itms>
+    </part>
+   </prts>
+  </apu>
+  <!-- no configured form covers an access point -->
+  <apu type="Entity" uuid="c17a0000-0000-4000-8000-c00000000007">
+   <name>CIT Osoba Jan Testovský</name>
+  </apu>
+ </apus>
+</apusrc>

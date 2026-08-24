@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import cz.aron.service.CitationService;
+
 /**
  * Unit tests of the presentation-language negotiation (no Spring): a request's
  * lang is matched against the deployment's configured localizations, and
@@ -19,7 +21,7 @@ class PresentationLocalesTest {
 
 	private static PresentationLocales locales(String... localizations) {
 		var loader = new UiConfigLoader("unused", "", new FacetScope(List.of()),
-				new DeploymentImages(new MockHttpServletRequest(), ""));
+				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null));
 		// only the configured localizations matter here - the rest of the page
 		// template is not read (no file behind this loader)
 		ReflectionTestUtils.setField(loader, "localizations", List.of(localizations));
