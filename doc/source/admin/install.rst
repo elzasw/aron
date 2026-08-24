@@ -37,6 +37,7 @@ backend **and** the web UI, plus an external configuration directory:
        types.yaml             # display / indexing model of description items
        searchConfig.yaml      # facet (and search relevance) configuration
        pageTemplate.yaml      # portal name, localization, menu
+       citation.yaml          # citation forms; citation.groovy beside it
        news.yaml
        favoriteQueries.yaml
        images/                # logo, top image

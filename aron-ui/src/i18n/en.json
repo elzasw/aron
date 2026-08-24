@@ -158,6 +158,17 @@
     "noPreview": "This page has no preview.",
     "loadError": "The page image could not be loaded."
   },
+  "citation": {
+    "create": "Create citation",
+    "createFor": "Create a citation of {{name}}",
+    "title": "Citation",
+    "loading": "Composing the citation",
+    "copy": "Copy text",
+    "copied": "Text copied to the clipboard.",
+    "copyFailed": "The text could not be copied.",
+    "close": "Close",
+    "error": "A citation of this record could not be created."
+  },
   "notFound": {
     "heading": "Page not found",
     "home": "Back to home"

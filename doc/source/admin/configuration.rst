@@ -50,6 +50,9 @@ application.yml
    * - ``webResources.resultLayout``
      - Optional layout of the structured search results
        (``resultLayout.yaml``, see below). Unset = the built-in defaults.
+   * - ``webResources.citation``
+     - Optional citation forms and their scripts (``citation.yaml``, see
+       below). Unset = the portal offers no citations.
    * - ``webResources.images``
      - Optional directory of the images the portal serves by name: the record
        and field icons of the structured results, the pictures of the home
@@ -378,6 +381,106 @@ page: every row of footer takes height from the content above it, and the record
 detail — one screen tall, with its own scrolling panes — cannot spare it. The
 links a deployment is required to publish (the accessibility statement above
 all) belong in ``footer.links``; they sit in the same footer on every page.
+
+Citations
+=========
+
+A reader who wants to quote a record needs a citation: the archive, the
+fonds it belongs to, the reference codes the description carries. What such a
+citation says - which identifiers appear, in which order, with which
+abbreviations - is the archive's own agreement with its archivists and differs
+per citation norm, so the portal does not compose one. It runs the
+deployment's **citation script** and publishes what that produced.
+
+``citation.yaml`` (``webResources.citation``) lists the citation forms the
+portal offers:
+
+.. code-block:: yaml
+
+   forms:
+     - code: DEFAULT              # stable identity of the form, used by the API
+       label: Citace              # its name; translations in the sibling file
+       script: citation.groovy    # resolved next to this file
+       apuTypes: [ARCH_DESC, FUND]
+
+``apuTypes`` decides where a citation is **offered**: the portal shows the
+action only for those record types, so a reader is never offered a citation
+that cannot be produced. Without the ``webResources.citation`` key the portal
+offers none at all.
+
+A second citation norm is another entry in the list, with a script of its own;
+the API and the UI carry several forms without any change. The old portal's UI
+shows one citation and gets the first form whose script is the file it asks
+for (``citation.groovy``).
+
+The shipped ``citation.groovy`` is the default Czech citation and is what most
+deployments should start from - copy it and adjust the wording with your
+archivists rather than writing one from scratch.
+
+Everything the portal can check, it checks at **startup**: an unknown key, a
+duplicate ``code``, an unknown record type, a missing script, a script that
+does not compile. A citation is reached by a reader's click, so a mistake
+found then would be found by the reader.
+
+What a script receives
+----------------------
+
+A script is Groovy and is given four variables:
+
+.. list-table::
+   :widths: 25 75
+   :header-rows: 1
+
+   * - Variable
+     - Meaning
+   * - ``id``
+     - ``UUID`` of the record to cite.
+   * - ``apuRepository``
+     - Read access to the records: ``findByUuid(uuid)`` returns one, which is
+       how a script reaches the fonds and its institution.
+   * - ``objectMapper``
+     - Jackson mapper, used to write the result.
+   * - ``lang``
+     - The reader's language tag, for a deployment whose citation differs
+       per language. The shipped script ignores it: a citation is written in
+       the language of the archive.
+
+The script returns JSON with either ``citation`` (the text) or ``error`` (a
+diagnostic naming the piece of description that was missing):
+
+.. code-block:: groovy
+
+   objectMapper.writeValueAsString([citation: text])
+   objectMapper.writeValueAsString([error: "Fund part not exist"])
+
+Scripts are compiled once at startup and cached, so a citation costs one run.
+
+.. note::
+
+   A script may read description items marked invisible - invisible means
+   "not displayed on the record's page", and a source system may prepare a
+   value for the citation without showing it. A script only ever reads the
+   item types it names, so nothing reaches a citation by accident. Keep
+   genuinely non-public data out of the description instead.
+
+.. important::
+
+   A record the script cannot cite answers HTTP 422 and the reason is written
+   to the log. In the shipped script that happens when an archival
+   description names no fonds, which is a data error: every archival
+   description belongs to one.
+
+Coming from the old portal
+--------------------------
+
+The old portal ran the same kind of script, but the endpoint read
+``citation.groovy`` from the application's working directory and the old UI
+was told where to offer the action with ``showCitationFor`` in
+``configuration.js``. The script now belongs beside ``citation.yaml`` and the
+record types come from ``apuTypes`` there, so both halves are one piece of
+configuration; a script name that no form declares is refused. An existing
+script keeps working: it is given the same variables and returns the same
+JSON.
 
 Structured search results
 =========================

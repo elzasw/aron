@@ -58,6 +58,8 @@ vi.mock("../api/client", () => ({
     ),
     apuGetTreeNodes: vi.fn(() => Promise.resolve([])),
   },
+  // the page asks which record types this deployment can cite
+  uiApi: { uiGetConfig: vi.fn(() => Promise.resolve({ citations: [] })) },
 }));
 
 function renderRecord(uuid: string) {

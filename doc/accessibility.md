@@ -105,7 +105,9 @@ Architectural properties that carry most of the accessibility weight:
   which end of the range they set).
 - **Asynchronous outcomes are announced** — filters and paging apply without a
   navigation, so the search page keeps one polite live region reporting the
-  result count, the wait and any failure (WCAG 4.1.3).
+  result count, the wait and any failure (WCAG 4.1.3). The same holds for an
+  action whose result is invisible: copying a citation, or a viewer link,
+  reports itself in a live region rather than only changing a colour.
 - **Footer links are deployment configuration, not code** — the accessibility
   statement, privacy information or contacts a deployment publishes come typed
   from `/api/v1/ui/config` (see §6).

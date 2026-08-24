@@ -164,6 +164,17 @@
     "noPreview": "Tato strana nemá náhled.",
     "loadError": "Obraz strany se nepodařilo načíst."
   },
+  "citation": {
+    "create": "Vytvořit citaci",
+    "createFor": "Vytvořit citaci záznamu {{name}}",
+    "title": "Citace",
+    "loading": "Vytvářím citaci",
+    "copy": "Zkopírovat text",
+    "copied": "Text zkopírován do schránky.",
+    "copyFailed": "Text se nepodařilo zkopírovat.",
+    "close": "Zavřít",
+    "error": "Citaci tohoto záznamu se nepodařilo vytvořit."
+  },
   "notFound": {
     "heading": "Stránka nenalezena",
     "home": "Zpět na úvod"

@@ -37,6 +37,8 @@ const RECORD: ApuDetail = {
 
 vi.mock("../api/client", () => ({
   apuApi: { apuGetDetail: vi.fn(() => Promise.resolve(RECORD)) },
+  // the record page also asks which types this deployment can cite
+  uiApi: { uiGetConfig: vi.fn(() => Promise.resolve({ citations: [] })) },
 }));
 
 function renderChips(filters: SearchFilter[], onFilters = vi.fn()) {

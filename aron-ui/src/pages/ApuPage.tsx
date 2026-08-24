@@ -23,7 +23,10 @@ import {
   PartViewType,
   ResponseError,
 } from "../api/generated";
+import { useUiConfig } from "../api/useUiConfig";
 import ApuTree from "../apu/ApuTree";
+import CitationDialog from "../apu/CitationDialog";
+import { citationIsOffered } from "../apu/citations";
 import { useApuDetail } from "../apu/useApuDetail";
 import DaoGallery from "../dao/DaoGallery";
 import DaoViewer from "../dao/DaoViewer";
@@ -198,6 +201,13 @@ const useStyles = makeStyles({
       backgroundColor: tokens.colorNeutralBackground1Hover,
       textDecorationLine: "underline",
     },
+  },
+  // the same surface for the action that opens a dialog: a real button, with
+  // the browser's own button styling reset away
+  actionButton: {
+    backgroundColor: "transparent",
+    fontFamily: "inherit",
+    cursor: "pointer",
   },
   part: {
     display: "flex",
@@ -442,8 +452,11 @@ export default function ApuPage() {
     storedWidth(DESCRIPTION_WIDTH_KEY, MIN_DESCRIPTION_WIDTH, MAX_DESCRIPTION_WIDTH,
       DEFAULT_DESCRIPTION_WIDTH),
   );
+  const [citationOpen, setCitationOpen] = useState(false);
   // the same query the breadcrumb strip reads - one request, one truth
   const detail = useApuDetail(uuid);
+  // which record types this deployment can cite (cached with the rest of the config)
+  const { data: uiConfig } = useUiConfig();
 
   if (detail.isPending) {
     return <Spinner className={styles.layout} />;
@@ -536,7 +549,23 @@ export default function ApuPage() {
           >
             {t("apu.findRelated")}
           </Link>
+          {/* offered only where the deployment has a citation form for this
+              record type, so the reader is never offered one that cannot be
+              produced; it opens a dialog, so a button rather than a link */}
+          {citationIsOffered(uiConfig?.citations, data.apuType) && (
+            <button
+              type="button"
+              className={mergeClasses(styles.action, styles.actionButton)}
+              aria-label={t("citation.createFor", { name: data.name })}
+              onClick={() => setCitationOpen(true)}
+            >
+              {t("citation.create")}
+            </button>
+          )}
         </div>
+        {citationOpen && (
+          <CitationDialog uuid={data.uuid} onClose={() => setCitationOpen(false)} />
+        )}
         {archdescRoot && (
           <Link to={`/apu/${archdescRoot.ref.uuid}`} className={styles.link}>
             {archdescRoot.label}
