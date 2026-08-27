@@ -195,6 +195,19 @@ describe("DaoViewerPage", () => {
     screen.getByRole("button", { name: "Reset" });
   });
 
+  it("explains every control in one place - a finger gets no tooltip", async () => {
+    renderViewer();
+    await screen.findByRole("heading", { level: 1, name: "Kronika obce" });
+    fireEvent.click(screen.getByRole("button", { name: "What the controls do" }));
+    const help = await screen.findByRole("dialog", { name: "What the controls do" });
+    const names = Array.from(help.querySelectorAll("li")).map((item) => item.textContent);
+    expect(names).toContain("Next page");
+    expect(names).toContain("Keep the view between pages");
+    expect(names).toContain("Download this page");
+    expect(names).toContain("Image settings");
+    expect(help.textContent).toContain("Left and right arrows turn pages");
+  });
+
   it("offers no browser fullscreen where the browser has none (jsdom, iPhone Safari)", async () => {
     renderViewer();
     await screen.findByRole("heading", { level: 1, name: "Kronika obce" });

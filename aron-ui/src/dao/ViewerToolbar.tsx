@@ -40,6 +40,7 @@ import {
   MoreHorizontal20Regular,
   Open20Regular,
   Options20Regular,
+  QuestionCircle20Regular,
   Share20Regular,
   ZoomFit20Regular,
   ZoomIn20Regular,
@@ -103,6 +104,33 @@ const useStyles = makeStyles({
   settingRow: {
     display: "flex",
     flexDirection: "column",
+  },
+  help: {
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalS,
+    maxWidth: "320px",
+    // a phone held sideways: the list scrolls rather than the popover growing past the screen
+    maxHeight: "70vh",
+    overflowY: "auto",
+  },
+  helpList: {
+    listStyleType: "none",
+    margin: 0,
+    padding: 0,
+    display: "flex",
+    flexDirection: "column",
+    gap: tokens.spacingVerticalXXS,
+  },
+  helpItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: tokens.spacingHorizontalS,
+  },
+  helpIcon: {
+    display: "inline-flex",
+    flexShrink: 0,
+    color: tokens.colorNeutralForeground2,
   },
 });
 
@@ -328,12 +356,63 @@ function ImageSettings({
 }
 
 /**
+ * What every control does, in one place: the buttons' names are tooltips, but
+ * a tooltip needs a hover or a keyboard focus, and a finger has neither - a tap
+ * runs the command. So the list is a control of its own, pinned like the
+ * settings so it never disappears into the "⋯" menu where it is needed most.
+ */
+function ControlsHelp({ commands }: { commands: Command[] }) {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const headingId = useId();
+  return (
+    // a dialog, not a hint: focus moves into it and Escape brings it back
+    <Popover trapFocus>
+      <PopoverTrigger disableButtonEnhancement>
+        <Tooltip content={t("dao.controlsHelp")} relationship="label">
+          <Button
+            appearance="subtle"
+            size="small"
+            className={styles.iconButton}
+            icon={<QuestionCircle20Regular />}
+          />
+        </Tooltip>
+      </PopoverTrigger>
+      <PopoverSurface aria-labelledby={headingId}>
+        <div className={styles.help}>
+          <Text id={headingId} weight="semibold">
+            {t("dao.controlsHelp")}
+          </Text>
+          <ul className={styles.helpList}>
+            {commands.map((command) => (
+              <li key={command.id} className={styles.helpItem}>
+                <span aria-hidden="true" className={styles.helpIcon}>
+                  {command.icon}
+                </span>
+                <Text size={200}>{command.label}</Text>
+              </li>
+            ))}
+            <li className={styles.helpItem}>
+              <span aria-hidden="true" className={styles.helpIcon}>
+                <Options20Regular />
+              </span>
+              <Text size={200}>{t("dao.imageSettings")}</Text>
+            </li>
+          </ul>
+          <Text size={200}>{t("dao.keyboardHint")}</Text>
+        </div>
+      </PopoverSurface>
+    </Popover>
+  );
+}
+
+/**
  * The viewer's own controls, one line always - real buttons whose accessible
  * names double as tooltips, no library chrome. When the hosting pane is too
  * narrow, the less essential commands collapse into a "⋯" menu (the mobile
  * navigation pattern) instead of wrapping the bar into a second row; the page
- * input, the settings panel and the menu itself never collapse, so the reader
- * always knows where they are.
+ * input, the settings panel, the controls help and the menu itself never
+ * collapse, so the reader always knows where they are.
  */
 export default function ViewerToolbar({
   pageCount,
@@ -486,6 +565,11 @@ export default function ViewerToolbar({
     <OverflowItem key="settings" id="settings" pinned>
       <span>
         <ImageSettings adjustments={adjustments} onAdjust={onAdjust} />
+      </span>
+    </OverflowItem>,
+    <OverflowItem key="help" id="help" pinned>
+      <span>
+        <ControlsHelp commands={commands} />
       </span>
     </OverflowItem>,
   );

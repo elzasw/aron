@@ -153,6 +153,7 @@
     "fullscreen": "Full screen",
     "exitFullscreen": "Exit full screen",
     "moreControls": "More viewer controls",
+    "controlsHelp": "What the controls do",
     "linkCopied": "Link copied to clipboard.",
     "linkCopyFailed": "Copying the link failed.",
     "viewerControls": "Viewer controls",

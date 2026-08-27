@@ -157,7 +157,11 @@ inherently visual, and the download of the original is the equivalent-access
 path (1.1.1 scoped honestly; the portal cannot transcribe archival scans).
 Every control is a real button or link with a name — the viewer uses none of
 OpenSeadragon's chrome (its tooltips are English-only and its buttons unnamed
-images). Panning and zooming have keyboard equivalents (2.1.1): OpenSeadragon's
+images). The names double as tooltips, but a tooltip needs a hover or a keyboard
+focus and a finger has neither, so the toolbar also carries a pinned "What the
+controls do" button opening a popover that lists every command with its icon
+and name plus the keyboard hint — the explanation is on every device, not only
+where a pointer hovers (3.3.2 / 2.5.x in spirit). Panning and zooming have keyboard equivalents (2.1.1): OpenSeadragon's
 own arrow/plus/minus keys while the canvas region has focus, and page turns on
 the rest of the page (arrows, PageUp/Down, Home/End) — a visually hidden
 paragraph tied to the canvas by `aria-describedby` explains the split. Page
