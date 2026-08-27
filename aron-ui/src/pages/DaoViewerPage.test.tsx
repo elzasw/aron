@@ -195,6 +195,63 @@ describe("DaoViewerPage", () => {
     screen.getByRole("button", { name: "Reset" });
   });
 
+  it("offers no browser fullscreen where the browser has none (jsdom, iPhone Safari)", async () => {
+    renderViewer();
+    await screen.findByRole("heading", { level: 1, name: "Kronika obce" });
+    expect(screen.queryByRole("button", { name: "Full screen" })).toBeNull();
+    // its own page is what the viewer is, so no link to it either
+    expect(screen.queryByRole("link", { name: "Open on its own page" })).toBeNull();
+  });
+
+  it("takes the whole viewer into the browser's fullscreen and back", async () => {
+    // jsdom has no Fullscreen API: a recording one, removed again afterwards
+    let fullscreenElement: Element | null = null;
+    const requestFullscreen = vi.fn(function (this: Element) {
+      // the fake must remember which element asked, exactly as the browser does
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      fullscreenElement = this;
+      document.dispatchEvent(new Event("fullscreenchange"));
+      return Promise.resolve();
+    });
+    const exitFullscreen = vi.fn(() => {
+      fullscreenElement = null;
+      document.dispatchEvent(new Event("fullscreenchange"));
+      return Promise.resolve();
+    });
+    Object.defineProperty(document, "fullscreenEnabled", { configurable: true, value: true });
+    Object.defineProperty(document, "fullscreenElement", {
+      configurable: true,
+      get: () => fullscreenElement,
+    });
+    Object.defineProperty(Element.prototype, "requestFullscreen", {
+      configurable: true,
+      value: requestFullscreen,
+    });
+    Object.defineProperty(document, "exitFullscreen", { configurable: true, value: exitFullscreen });
+    try {
+      renderViewer();
+      await screen.findByRole("heading", { level: 1, name: "Kronika obce" });
+      const toggle = screen.getByRole("button", { name: "Full screen" });
+      expect(toggle.getAttribute("aria-pressed")).toBe("false");
+      fireEvent.click(toggle);
+      // the element that went fullscreen holds the whole viewer, not only the canvas
+      expect(requestFullscreen).toHaveBeenCalledTimes(1);
+      expect(fullscreenElement).not.toBeNull();
+      expect(fullscreenElement!.contains(screen.getByRole("toolbar"))).toBe(true);
+      expect(fullscreenElement!.contains(screen.getByRole("application"))).toBe(true);
+      const exit = await screen.findByRole("button", { name: "Exit full screen" });
+      expect(exit.getAttribute("aria-pressed")).toBe("true");
+      fireEvent.click(exit);
+      expect(exitFullscreen).toHaveBeenCalledTimes(1);
+      await screen.findByRole("button", { name: "Full screen" });
+    } finally {
+      delete (document as { fullscreenEnabled?: boolean }).fullscreenEnabled;
+      delete (document as { fullscreenElement?: Element | null }).fullscreenElement;
+      delete (document as { exitFullscreen?: () => Promise<void> }).exitFullscreen;
+      delete (Element.prototype as { requestFullscreen?: () => Promise<void> }).requestFullscreen;
+    }
+  });
+
   it("says so when the digital object does not exist", async () => {
     renderViewer("/apu/rec/dao/unknown");
     expect(await screen.findByText("The digital object was not found.")).toBeTruthy();

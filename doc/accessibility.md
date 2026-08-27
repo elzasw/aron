@@ -182,8 +182,15 @@ taking a whole viewport on a short one so that a phone held sideways shows the
 scan on every row once the header is scrolled away — the fullscreen viewer
 page does the same there. Page-turn keys are scoped to the
 viewer itself when embedded (arrow keys must keep scrolling the description and
-walking the tree beside it), while the fullscreen page — whose whole surface is
-the viewer — handles them document-wide. The splitters carry the old portal's
+walking the tree beside it), while the viewer's own page — whose whole surface
+is the viewer — handles them document-wide. Where the browser has a Fullscreen
+API the toolbar also offers a real fullscreen toggle (`aria-pressed`, its name
+changing to "Exit full screen"; Escape leaves it, which the browser announces
+itself) that takes the whole viewer — toolbar, rail and canvas — so the scan
+gets the screen and the controls stay reachable; iPhone Safari has no such
+API, so no control appears there and the short-viewport layout above is what
+serves that reader. The two commands are named apart: "Open on its own page"
+routes to the viewer page, "Full screen" is the browser's. The splitters carry the old portal's
 fold-away triangles as real, separately focusable buttons (never nested inside
 the separator widget); a folded pane leaves its expand chevron in place, and
 the stacked narrow layout — where the splitters do not exist — always shows

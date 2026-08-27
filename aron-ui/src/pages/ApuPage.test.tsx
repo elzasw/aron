@@ -80,16 +80,16 @@ describe("ApuPage with digital objects", () => {
   // the medium band, where the description has no column of its own
   beforeEach(() => setViewport(1440, 900));
 
-  it("embeds the viewer as the page's centerpiece, with a fullscreen link", async () => {
+  it("embeds the viewer as the page's centerpiece, with a link to its own page", async () => {
     const { container } = renderRecord("rec");
     await screen.findByRole("heading", { level: 1, name: "Privilegia" });
     // the viewer is on the page immediately - toolbar, rail, canvas region
     screen.getByRole("toolbar", { name: "Viewer controls" });
     screen.getByRole("list", { name: "Page thumbnails" });
     expect(screen.getByRole("application").getAttribute("aria-label")).toContain("Page 1");
-    // the fullscreen surface stays a link into the routed viewer
-    const fullscreen = screen.getByRole("link", { name: "Full screen" });
-    expect(fullscreen.getAttribute("href")).toBe("/apu/rec/dao/dao1?file=z1");
+    // the viewer's own page stays a link into the routed viewer
+    const ownPage = screen.getByRole("link", { name: "Open on its own page" });
+    expect(ownPage.getAttribute("href")).toBe("/apu/rec/dao/dao1?file=z1");
     // the attribution overlay carries the server-resolved license statement
     screen.getByRole("link", { name: "CC BY 4.0" });
     // the description column's width is the reader's, like the tree's

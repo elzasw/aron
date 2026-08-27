@@ -34,9 +34,11 @@ import {
   ChevronRight20Regular,
   CompassNorthwest20Regular,
   FullScreenMaximize20Regular,
+  FullScreenMinimize20Regular,
   LockClosed20Regular,
   LockOpen20Regular,
   MoreHorizontal20Regular,
+  Open20Regular,
   Options20Regular,
   Share20Regular,
   ZoomFit20Regular,
@@ -116,7 +118,7 @@ interface Command {
   /** Higher survives longer when space runs out. */
   priority: number;
   group: string;
-  /** Inline anchor semantics (download/fullscreen) instead of a plain button. */
+  /** Inline anchor semantics (download, the viewer's own page) instead of a plain button. */
   href?: string;
   download?: string;
 }
@@ -142,8 +144,14 @@ interface ViewerToolbarProps {
   downloadUrl?: string;
   downloadName?: string;
   onCopyLink: () => void;
-  /** In-app route of the fullscreen viewer; absent when the viewer already fills the frame. */
-  fullscreenUrl?: string;
+  /** In-app route of the viewer's own page; absent when the viewer already is that page. */
+  ownPageUrl?: string;
+  /**
+   * Whether the viewer is the browser's fullscreen element; absent where the
+   * browser offers no Fullscreen API, and then no control is shown.
+   */
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   navigatorShown: boolean;
   onToggleNavigator: () => void;
   viewportLocked: boolean;
@@ -339,7 +347,9 @@ export default function ViewerToolbar({
   downloadUrl,
   downloadName,
   onCopyLink,
-  fullscreenUrl,
+  ownPageUrl,
+  fullscreen,
+  onToggleFullscreen,
   navigatorShown,
   onToggleNavigator,
   viewportLocked,
@@ -412,10 +422,20 @@ export default function ViewerToolbar({
     id: "copy-link", group: "actions", priority: 30, label: t("dao.copyLink"),
     icon: <Share20Regular />, action: onCopyLink,
   });
-  if (fullscreenUrl !== undefined) {
+  if (ownPageUrl !== undefined) {
     commands.push({
-      id: "fullscreen", group: "actions", priority: 55, label: t("dao.fullscreen"),
-      icon: <FullScreenMaximize20Regular />, href: fullscreenUrl, action: () => navigate(fullscreenUrl),
+      id: "own-page", group: "actions", priority: 55, label: t("dao.openOwnPage"),
+      icon: <Open20Regular />, href: ownPageUrl, action: () => navigate(ownPageUrl),
+    });
+  }
+  if (fullscreen !== undefined && onToggleFullscreen !== undefined) {
+    // the browser's own fullscreen - the whole viewer, chrome and all, so the
+    // scan gets the screen; Escape leaves it, as the browser announces
+    commands.push({
+      id: "fullscreen", group: "actions", priority: 55,
+      label: t(fullscreen ? "dao.exitFullscreen" : "dao.fullscreen"),
+      icon: fullscreen ? <FullScreenMinimize20Regular /> : <FullScreenMaximize20Regular />,
+      active: fullscreen, action: onToggleFullscreen,
     });
   }
 

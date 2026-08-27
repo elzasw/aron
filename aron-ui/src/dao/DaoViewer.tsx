@@ -10,10 +10,11 @@ import ViewerToolbar, {
   type ImageAdjustments,
 } from "./ViewerToolbar";
 import { buildPages, initialPageIndex, pageFileId, type DaoPage } from "./pages";
+import useFullscreen from "./useFullscreen";
 
 const useStyles = makeStyles({
   // fills whatever pane hosts it - the record page's middle column or the
-  // fullscreen page's frame; the host owns the height
+  // viewer page's frame; the host owns the height
   root: {
     height: "100%",
     display: "flex",
@@ -21,6 +22,12 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalXS,
     minHeight: 0,
     minWidth: 0,
+    // as the browser's fullscreen element it has no host: its own ground
+    // (the backdrop is black) and a little room around the controls
+    ":fullscreen": {
+      backgroundColor: tokens.colorNeutralBackground1,
+      padding: tokens.spacingHorizontalS,
+    },
   },
   content: {
     display: "flex",
@@ -141,7 +148,7 @@ function pageSource(page: DaoPage): OsdSource | null {
   return null;
 }
 
-/** The routed (fullscreen) viewer URL of one page, relative to the router. */
+/** The routed viewer page's URL of one page, relative to the router. */
 export function viewerUrl(apuUuid: string, daoUuid: string, fileId: string | undefined): string {
   return `/apu/${apuUuid}/dao/${daoUuid}` + (fileId !== undefined ? `?file=${fileId}` : "");
 }
@@ -153,10 +160,10 @@ interface DaoViewerProps {
   initialFileId?: string | null;
   /** Page turns report the current file, so a routed host can keep its URL truthful. */
   onPageChange?: (fileId: string | undefined) => void;
-  /** Embedded hosts link into the fullscreen (routed) viewer; the routed page itself does not. */
-  showFullscreenLink?: boolean;
+  /** Embedded hosts link into the viewer's own (routed) page; that page itself does not. */
+  showOwnPageLink?: boolean;
   /**
-   * Page-turn keys work document-wide - for the fullscreen page, whose whole
+   * Page-turn keys work document-wide - for the viewer page, whose whole
    * surface is the viewer. Embedded viewers keep them scoped to themselves, so
    * arrows still scroll the description or walk the tree beside them.
    */
@@ -168,19 +175,23 @@ interface DaoViewerProps {
  * keyboard model and the polite live region - independent of where it is
  * hosted: embedded as the record page's centerpiece (the old portal's
  * principle: a digitized record shows its scan immediately), or filling the
- * routed fullscreen page. It fills its host's height; the host owns the frame.
+ * routed viewer page. It fills its host's height; the host owns the frame.
+ * Either way it can also become the browser's fullscreen element, where the
+ * browser offers that - the one way a phone gives the scan the whole screen.
  */
 export default function DaoViewer({
   apuUuid,
   dao,
   initialFileId = null,
   onPageChange,
-  showFullscreenLink = false,
+  showOwnPageLink = false,
   globalKeyboard = false,
 }: DaoViewerProps) {
   const styles = useStyles();
   const { t } = useTranslation();
   const viewportRef = useRef<OsdViewportHandle>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const browserFullscreen = useFullscreen(rootRef);
   const hintId = useId();
 
   const pages = buildPages(dao.files);
@@ -253,7 +264,7 @@ export default function DaoViewer({
 
   const copyLink = async () => {
     try {
-      // the fullscreen viewer URL names the page exactly, wherever the viewer is hosted
+      // the viewer page's URL names the page exactly, wherever the viewer is hosted
       const url = window.location.origin + serverContextPath + viewerUrl(apuUuid, dao.uuid, currentFileId);
       await navigator.clipboard.writeText(url);
       setStatus(t("dao.linkCopied"));
@@ -274,7 +285,7 @@ export default function DaoViewer({
   return (
     // the handler only reacts to page-turn keys bubbling from the controls below
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div className={styles.root} onKeyDown={onKeyDown}>
+    <div ref={rootRef} className={styles.root} onKeyDown={onKeyDown}>
       <ViewerToolbar
         pageCount={pages.length}
         currentIndex={page.index}
@@ -287,7 +298,9 @@ export default function DaoViewer({
         downloadUrl={downloadUrl}
         downloadName={page.published?.name}
         onCopyLink={() => void copyLink()}
-        fullscreenUrl={showFullscreenLink ? viewerUrl(apuUuid, dao.uuid, currentFileId) : undefined}
+        ownPageUrl={showOwnPageLink ? viewerUrl(apuUuid, dao.uuid, currentFileId) : undefined}
+        fullscreen={browserFullscreen.enabled ? browserFullscreen.active : undefined}
+        onToggleFullscreen={browserFullscreen.toggle}
         navigatorShown={navigatorShown}
         onToggleNavigator={() => setNavigatorShown(!navigatorShown)}
         viewportLocked={viewportLocked}

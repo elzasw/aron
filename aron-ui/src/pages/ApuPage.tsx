@@ -607,7 +607,7 @@ export default function ApuPage() {
       <div className={styles.rightColumn}>
       {embeddedDao !== undefined && (
         <div className={styles.viewerPane}>
-          <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
+          <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showOwnPageLink />
         </div>
       )}
       {/* the description sits right of this separator, so the value grows
