@@ -1,9 +1,10 @@
-import { fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApuType, FileType, type ApuDetail } from "../api/generated";
 import { expectNoA11yViolations } from "../test/a11y";
 import { renderWithProviders } from "../test/render";
+import { setViewportWidth } from "../test/viewport";
 import ApuPage from "./ApuPage";
 
 vi.mock("openseadragon", () => ({
@@ -75,6 +76,10 @@ function renderRecord(uuid: string) {
 }
 
 describe("ApuPage with digital objects", () => {
+  // wide enough for all three panes; jsdom's default 1024px sits in the
+  // medium band, where the viewer is deliberately not embedded
+  beforeEach(() => setViewportWidth(1440));
+
   it("embeds the viewer as the page's centerpiece, with a fullscreen link", async () => {
     const { container } = renderRecord("rec");
     await screen.findByRole("heading", { level: 1, name: "Privilegia" });
@@ -110,5 +115,31 @@ describe("ApuPage with digital objects", () => {
     await screen.findByRole("heading", { level: 1, name: "Privilegia" });
     expect(screen.queryByRole("toolbar")).toBeNull();
     expect(screen.queryByRole("application")).toBeNull();
+  });
+
+  it("offers the scan through its gallery card where three panes cannot fit", async () => {
+    // the medium band: side-by-side panes, but no room for a third one
+    setViewportWidth(1024);
+    const { container } = renderRecord("rec");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    // no embedded viewer and no splitter for its description column
+    expect(screen.queryByRole("toolbar")).toBeNull();
+    expect(
+      screen.queryByRole("separator", { name: "Width of the archival description column" }),
+    ).toBeNull();
+    // the scan is one click away on the routed fullscreen viewer
+    const link = screen.getByRole("link", { name: "Open viewer: Digitised objects" });
+    expect(link.getAttribute("href")).toBe("/apu/rec/dao/dao1");
+    await expectNoA11yViolations(container);
+  });
+
+  it("embeds the viewer once the viewport grows enough for three panes", async () => {
+    setViewportWidth(1024);
+    renderRecord("rec");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    expect(screen.queryByRole("toolbar")).toBeNull();
+    act(() => setViewportWidth(1440));
+    await screen.findByRole("toolbar", { name: "Viewer controls" });
+    expect(screen.queryByRole("link", { name: "Open viewer: Digitised objects" })).toBeNull();
   });
 });

@@ -18,6 +18,57 @@ if (globalThis.localStorage === undefined) {
   }
 }
 
+// jsdom parses media queries but never evaluates one, so every matchMedia list
+// stays unmatched forever - and the record page decides from a width query
+// whether to embed the digital-object viewer. Evaluate the min/max-width forms
+// against window.innerWidth so a test can pick a viewport
+// (src/test/viewport.ts) and components react like in a browser; a query with
+// no width form (reduced motion, ...) keeps jsdom's answer: no match.
+function mediaQueryMatches(query: string): boolean {
+  return query.split(",").some((part) => {
+    const max = /\(max-width:\s*([\d.]+)px\)/.exec(part);
+    const min = /\(min-width:\s*([\d.]+)px\)/.exec(part);
+    return (
+      (max !== null || min !== null) &&
+      (max === null || window.innerWidth <= Number(max[1])) &&
+      (min === null || window.innerWidth >= Number(min[1]))
+    );
+  });
+}
+
+window.matchMedia = (query: string): MediaQueryList => {
+  const listeners = new Set<(event: MediaQueryListEvent) => void>();
+  let last = mediaQueryMatches(query);
+  window.addEventListener("resize", () => {
+    const next = mediaQueryMatches(query);
+    if (next !== last) {
+      last = next;
+      const event = Object.assign(new Event("change"), { matches: next, media: query });
+      listeners.forEach((listener) => listener(event as MediaQueryListEvent));
+    }
+  });
+  return {
+    media: query,
+    get matches() {
+      return mediaQueryMatches(query);
+    },
+    addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+      listeners.add(listener);
+    },
+    removeEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+      listeners.delete(listener);
+    },
+    addListener: (listener: (event: MediaQueryListEvent) => void) => {
+      listeners.add(listener);
+    },
+    removeListener: (listener: (event: MediaQueryListEvent) => void) => {
+      listeners.delete(listener);
+    },
+    onchange: null,
+    dispatchEvent: () => true,
+  } as MediaQueryList;
+};
+
 // i18next is a module-level singleton, so a test that switches language leaves
 // the next one in it. Every test starts in the source language; a test about
 // switching says so by switching itself.

@@ -31,6 +31,7 @@ import { useApuDetail } from "../apu/useApuDetail";
 import DaoGallery from "../dao/DaoGallery";
 import DaoViewer from "../dao/DaoViewer";
 import Splitter from "../layout/Splitter";
+import useMediaQuery from "../layout/useMediaQuery";
 import { relatedSearchUrl } from "../search/filters";
 
 /**
@@ -76,6 +77,18 @@ function rememberWidth(key: string, width: number): void {
     // a reader without storage simply starts from the default width again
   }
 }
+
+/**
+ * Where the embedded viewer fits: the stacked narrow layout (each pane gets a
+ * height of its own, the document scrolls) or a frame wide enough for all
+ * three panes side by side - the old portal's lg breakpoint. Between the two,
+ * tree and description alone fill the width and a third pane would squeeze
+ * the viewer into a sliver, so the record keeps the two-pane layout and the
+ * scan is reached through its gallery card instead - the old portal's answer
+ * to a viewport too small for the embedded view. The 860px side must match
+ * the stacking breakpoint in the styles below.
+ */
+const EMBED_VIEWER_QUERY = "(max-width: 860px), (min-width: 1280px)";
 
 /** Whether a pane is folded away (the old portal's triangles) - remembered like its width. */
 const TREE_COLLAPSED_KEY = "aron.treeCollapsed";
@@ -489,6 +502,9 @@ export default function ApuPage() {
     rememberCollapsed(DESCRIPTION_COLLAPSED_KEY, collapsed);
   };
   const [citationOpen, setCitationOpen] = useState(false);
+  // whether this viewport has room for an embedded viewer - a JS decision,
+  // because the fallback changes what is rendered, not how it is laid out
+  const embeddedViewerFits = useMediaQuery(EMBED_VIEWER_QUERY);
   // the same query the breadcrumb strip reads - one request, one truth
   const detail = useApuDetail(uuid);
   // which record types this deployment can cite (cached with the rest of the config)
@@ -513,9 +529,12 @@ export default function ApuPage() {
     .filter(isRef)
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
-  // the first digital object with content is embedded; any further ones stay
-  // reachable through the gallery links in the description column
-  const embeddedDao = data.digitalObjects.find((dao) => dao.files.length > 0);
+  // the first digital object with content is embedded - where the viewport
+  // has room for a viewer pane; elsewhere it stays reachable like any further
+  // object, through its gallery card in the description
+  const embeddedDao = embeddedViewerFits
+    ? data.digitalObjects.find((dao) => dao.files.length > 0)
+    : undefined;
   const galleryDaos = data.digitalObjects.filter((dao) => dao !== embeddedDao);
 
   return (
