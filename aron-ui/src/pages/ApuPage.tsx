@@ -79,16 +79,16 @@ function rememberWidth(key: string, width: number): void {
 }
 
 /**
- * Where the embedded viewer fits: the stacked narrow layout (each pane gets a
- * height of its own, the document scrolls) or a frame wide enough for all
- * three panes side by side - the old portal's lg breakpoint. Between the two,
- * tree and description alone fill the width and a third pane would squeeze
- * the viewer into a sliver, so the record keeps the two-pane layout and the
- * scan is reached through its gallery card instead - the old portal's answer
- * to a viewport too small for the embedded view. The 860px side must match
- * the stacking breakpoint in the styles below.
+ * A digitized record's three arrangements, by width (the old portal's, on its
+ * md/lg breakpoints): stacked below 861px; from 1280px tree | viewer |
+ * description side by side; between the two, tree beside one right column
+ * with the viewer above the description - three panes across would squeeze
+ * the viewer into a sliver, and a link instead of the scan would break the
+ * rule that a digitized record shows its scan immediately. Only the wide
+ * arrangement has a description column of its own, so this is the one query
+ * the component needs; the other breakpoint lives in the styles alone.
  */
-const EMBED_VIEWER_QUERY = "(max-width: 860px), (min-width: 1280px)";
+const THREE_PANE_QUERY = "(min-width: 1280px)";
 
 /** Whether a pane is folded away (the old portal's triangles) - remembered like its width. */
 const TREE_COLLAPSED_KEY = "aron.treeCollapsed";
@@ -199,6 +199,28 @@ const useStyles = makeStyles({
       height: "70vh",
       flexGrow: 0,
     },
+    // in the middle arrangement it heads the right column, which scrolls as a
+    // whole: the scan is on screen at once and the description starts below it
+    "@media (min-width: 861px) and (max-width: 1279px)": {
+      height: "70%",
+      flexGrow: 0,
+      flexShrink: 0,
+    },
+  },
+  // viewer and description together: a flat part of the pane row (the three
+  // panes and the stacked layout need no grouping), one scrolling column only
+  // in the middle arrangement, where the viewer sits above the description
+  rightColumn: {
+    display: "contents",
+    "@media (min-width: 861px) and (max-width: 1279px)": {
+      display: "flex",
+      flexDirection: "column",
+      gap: tokens.spacingVerticalL,
+      flexGrow: 1,
+      minWidth: 0,
+      minHeight: 0,
+      overflowY: "auto",
+    },
   },
   // ...and the description becomes the right-hand column, scrolling on its own,
   // as wide as the reader drags its splitter (a custom property, like the tree)
@@ -206,9 +228,13 @@ const useStyles = makeStyles({
     flexGrow: 0,
     flexShrink: 0,
     width: `var(${DESCRIPTION_WIDTH_VAR}, ${DEFAULT_DESCRIPTION_WIDTH}px)`,
-    "@media (max-width: 860px)": {
-      width: "auto",
-    },
+  },
+  // below the viewer, the description is part of the column's scroll, not a
+  // scroller of its own
+  rootBelowViewer: {
+    flexShrink: 0,
+    overflowY: "visible",
+    paddingRight: 0,
   },
   link: {
     color: tokens.colorBrandForegroundLink,
@@ -502,9 +528,10 @@ export default function ApuPage() {
     rememberCollapsed(DESCRIPTION_COLLAPSED_KEY, collapsed);
   };
   const [citationOpen, setCitationOpen] = useState(false);
-  // whether this viewport has room for an embedded viewer - a JS decision,
-  // because the fallback changes what is rendered, not how it is laid out
-  const embeddedViewerFits = useMediaQuery(EMBED_VIEWER_QUERY);
+  // whether the description is a column of its own beside the viewer - a JS
+  // decision, because it changes what is rendered (its splitter, the row
+  // layout of its items), not only how it is laid out
+  const threePanes = useMediaQuery(THREE_PANE_QUERY);
   // the same query the breadcrumb strip reads - one request, one truth
   const detail = useApuDetail(uuid);
   // which record types this deployment can cite (cached with the rest of the config)
@@ -529,13 +556,12 @@ export default function ApuPage() {
     .filter(isRef)
     .find((item) => item.code === ARCHDESC_ROOT_REF);
 
-  // the first digital object with content is embedded - where the viewport
-  // has room for a viewer pane; elsewhere it stays reachable like any further
-  // object, through its gallery card in the description
-  const embeddedDao = embeddedViewerFits
-    ? data.digitalObjects.find((dao) => dao.files.length > 0)
-    : undefined;
+  // the first digital object with content is embedded; any further ones stay
+  // reachable through the gallery links in the description
+  const embeddedDao = data.digitalObjects.find((dao) => dao.files.length > 0);
   const galleryDaos = data.digitalObjects.filter((dao) => dao !== embeddedDao);
+  // the description is a column of its own only in the wide arrangement
+  const descriptionColumn = embeddedDao !== undefined && threePanes;
 
   return (
     <div
@@ -569,27 +595,29 @@ export default function ApuPage() {
           />
         </>
       )}
+      <div className={styles.rightColumn}>
       {embeddedDao !== undefined && (
-        <>
-          <div className={styles.viewerPane}>
-            <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
-          </div>
-          {/* the description sits right of this separator, so the value grows leftwards */}
-          <Splitter
-            reverse
-            label={t("apu.descriptionWidth")}
-            value={descriptionWidth}
-            min={MIN_DESCRIPTION_WIDTH}
-            max={MAX_DESCRIPTION_WIDTH}
-            onChange={setDescriptionWidth}
-            onCommit={(width) => rememberWidth(DESCRIPTION_WIDTH_KEY, width)}
-            collapsed={descriptionCollapsed}
-            onCollapsedChange={collapseDescription}
-            collapseLabel={t("apu.collapseDescription")}
-            expandLabel={t("apu.expandDescription")}
-            className={styles.splitter}
-          />
-        </>
+        <div className={styles.viewerPane}>
+          <DaoViewer apuUuid={data.uuid} dao={embeddedDao} showFullscreenLink />
+        </div>
+      )}
+      {/* the description sits right of this separator, so the value grows
+          leftwards; only a column of its own has a width to drag or a fold */}
+      {descriptionColumn && (
+        <Splitter
+          reverse
+          label={t("apu.descriptionWidth")}
+          value={descriptionWidth}
+          min={MIN_DESCRIPTION_WIDTH}
+          max={MAX_DESCRIPTION_WIDTH}
+          onChange={setDescriptionWidth}
+          onCommit={(width) => rememberWidth(DESCRIPTION_WIDTH_KEY, width)}
+          collapsed={descriptionCollapsed}
+          onCollapsedChange={collapseDescription}
+          collapseLabel={t("apu.collapseDescription")}
+          expandLabel={t("apu.expandDescription")}
+          className={styles.splitter}
+        />
       )}
       {/* keyed by the record: the description is its own scroll area, and a new
           element starts at its top - the reader never opens a record halfway
@@ -597,8 +625,9 @@ export default function ApuPage() {
       <div
         className={mergeClasses(
           styles.root,
-          embeddedDao !== undefined && styles.rootBesideViewer,
-          embeddedDao !== undefined && descriptionCollapsed && styles.collapsedPane,
+          descriptionColumn && styles.rootBesideViewer,
+          descriptionColumn && descriptionCollapsed && styles.collapsedPane,
+          embeddedDao !== undefined && !threePanes && styles.rootBelowViewer,
         )}
         key={data.uuid}
       >
@@ -637,7 +666,7 @@ export default function ApuPage() {
         )}
       </header>
       {data.parts.map((part, index) => (
-        <Part key={`${part.code}-${index}`} part={part} narrow={embeddedDao !== undefined} />
+        <Part key={`${part.code}-${index}`} part={part} narrow={descriptionColumn} />
       ))}
       {data.attachments.length > 0 && (
         <section className={styles.part} aria-label={t("apu.attachments")}>
@@ -668,6 +697,7 @@ export default function ApuPage() {
           <DaoGallery apuUuid={data.uuid} objects={galleryDaos} />
         </section>
       )}
+      </div>
       </div>
     </div>
   );

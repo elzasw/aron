@@ -117,29 +117,33 @@ describe("ApuPage with digital objects", () => {
     expect(screen.queryByRole("application")).toBeNull();
   });
 
-  it("offers the scan through its gallery card where three panes cannot fit", async () => {
-    // the medium band: side-by-side panes, but no room for a third one
+  it("keeps the scan on screen where three panes cannot fit: viewer above the description", async () => {
+    // the medium band: the tree beside one right column, no third pane
     setViewportWidth(1024);
     const { container } = renderRecord("rec");
     await screen.findByRole("heading", { level: 1, name: "Privilegia" });
-    // no embedded viewer and no splitter for its description column
-    expect(screen.queryByRole("toolbar")).toBeNull();
+    // the viewer is still embedded...
+    screen.getByRole("toolbar", { name: "Viewer controls" });
+    // ...but the description is no column of its own: nothing to drag or fold
     expect(
       screen.queryByRole("separator", { name: "Width of the archival description column" }),
     ).toBeNull();
-    // the scan is one click away on the routed fullscreen viewer
-    const link = screen.getByRole("link", { name: "Open viewer: Digitised objects" });
-    expect(link.getAttribute("href")).toBe("/apu/rec/dao/dao1");
+    expect(
+      screen.queryByRole("button", { name: "Hide the archival description column" }),
+    ).toBeNull();
+    // the embedded object is not offered a second time as a gallery link
+    expect(screen.queryByRole("link", { name: "Open viewer: Digitised objects" })).toBeNull();
     await expectNoA11yViolations(container);
   });
 
-  it("embeds the viewer once the viewport grows enough for three panes", async () => {
+  it("gives the description its own column once the viewport grows enough", async () => {
     setViewportWidth(1024);
     renderRecord("rec");
     await screen.findByRole("heading", { level: 1, name: "Privilegia" });
-    expect(screen.queryByRole("toolbar")).toBeNull();
+    expect(
+      screen.queryByRole("separator", { name: "Width of the archival description column" }),
+    ).toBeNull();
     act(() => setViewportWidth(1440));
-    await screen.findByRole("toolbar", { name: "Viewer controls" });
-    expect(screen.queryByRole("link", { name: "Open viewer: Digitised objects" })).toBeNull();
+    await screen.findByRole("separator", { name: "Width of the archival description column" });
   });
 });
