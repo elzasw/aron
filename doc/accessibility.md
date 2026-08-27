@@ -84,8 +84,11 @@ Architectural properties that carry most of the accessibility weight:
 - **No CAPTCHA, no session timeout, no auto-playing media** in the public
   portal, so the whole family of criteria around those does not arise.
 - **Responsive layout** — below 860 px the search page stacks its sidebar above
-  the results and the header wraps (WCAG 1.4.10 reflow; verification pending,
-  see §4). The record page's two panes each scroll on their own so the page
+  the results and the header folds its section tabs into one menu button (a
+  named button opening a menu of links, still inside the main-navigation
+  landmark, the current section marked `aria-current`) so that a row of
+  wrapped tabs does not take a phone screen's height from the content (WCAG
+  1.4.10 reflow; verification pending, see §4). The record page's two panes each scroll on their own so the page
   itself does not, but **only on wide viewports**: below 860 px it stacks and
   the document scrolls again, because a viewport-tall frame at 400 % zoom (or on
   a phone) leaves the content almost no room. The frame never becomes one big
