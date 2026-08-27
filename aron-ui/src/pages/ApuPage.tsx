@@ -30,6 +30,7 @@ import { citationIsOffered } from "../apu/citations";
 import { useApuDetail } from "../apu/useApuDetail";
 import DaoGallery from "../dao/DaoGallery";
 import DaoViewer from "../dao/DaoViewer";
+import { MEDIUM, NARROW_TALL, SHORT, SIDE_BY_SIDE, STACKED, THREE_PANES, media } from "../layout/breakpoints";
 import Splitter from "../layout/Splitter";
 import useMediaQuery from "../layout/useMediaQuery";
 import { relatedSearchUrl } from "../search/filters";
@@ -79,16 +80,16 @@ function rememberWidth(key: string, width: number): void {
 }
 
 /**
- * A digitized record's three arrangements, by width (the old portal's, on its
- * md/lg breakpoints): stacked below 861px; from 1280px tree | viewer |
- * description side by side; between the two, tree beside one right column
- * with the viewer above the description - three panes across would squeeze
- * the viewer into a sliver, and a link instead of the scan would break the
- * rule that a digitized record shows its scan immediately. Only the wide
- * arrangement has a description column of its own, so this is the one query
- * the component needs; the other breakpoint lives in the styles alone.
+ * A digitized record's three arrangements (the old portal's, on its md/lg
+ * breakpoints; see layout/breakpoints.ts): stacked on a small screen; three
+ * panes tree | viewer | description where they fit; between the two, tree
+ * beside one right column with the viewer above the description - three panes
+ * across would squeeze the viewer into a sliver, and a link instead of the scan
+ * would break the rule that a digitized record shows its scan immediately.
+ * Only the wide arrangement has a description column of its own, so this is
+ * the one query the component needs; the others live in the styles alone.
  */
-const THREE_PANE_QUERY = "(min-width: 1280px)";
+const THREE_PANE_QUERY = THREE_PANES;
 
 /** Whether a pane is folded away (the old portal's triangles) - remembered like its width. */
 const TREE_COLLAPSED_KEY = "aron.treeCollapsed";
@@ -130,10 +131,11 @@ const useStyles = makeStyles({
     // the gutter is split by the separator, so each half stays modest
     gap: tokens.spacingHorizontalL,
     padding: `${tokens.spacingVerticalXL} ${tokens.spacingHorizontalXXL}`,
-    // narrow viewports stack the tree above the description and the document
-    // scrolls again: two nested scroll areas on a phone are worse than one long
-    // page, and a frame-tall pane leaves nothing for the text
-    "@media (max-width: 860px)": {
+    // small screens - narrow, or short as a phone held sideways - stack the
+    // tree above the description and the document scrolls again: two nested
+    // scroll areas on a phone are worse than one long page, and a frame-tall
+    // pane leaves nothing for the text once header and footer have their rows
+    [media(STACKED)]: {
       position: "static",
       flexDirection: "column",
       gap: tokens.spacingVerticalXL,
@@ -150,21 +152,21 @@ const useStyles = makeStyles({
     flexDirection: "column",
     // stretched to the pane row; the tree scrolls inside it
     minHeight: 0,
-    "@media (max-width: 860px)": {
+    [media(STACKED)]: {
       width: "100%",
       maxHeight: "60vh",
     },
   },
   // stacked, the panes sit above each other and there is no width to drag
   splitter: {
-    "@media (max-width: 860px)": {
+    [media(STACKED)]: {
       display: "none",
     },
   },
   // a folded pane - only where the fold-away chevron exists to bring it back;
   // the stacked layout hides the splitters, so it always shows every pane
   collapsedPane: {
-    "@media (min-width: 861px)": {
+    [media(SIDE_BY_SIDE)]: {
       display: "none",
     },
   },
@@ -180,7 +182,7 @@ const useStyles = makeStyles({
     overflowY: "auto",
     // room for the scrollbar so it does not sit on the text
     paddingRight: tokens.spacingHorizontalM,
-    "@media (max-width: 860px)": {
+    [media(STACKED)]: {
       overflowY: "visible",
       paddingRight: 0,
     },
@@ -194,14 +196,21 @@ const useStyles = makeStyles({
     display: "flex",
     flexDirection: "column",
     gap: tokens.spacingVerticalXS,
-    // stacked, the viewer needs a height of its own - the document scrolls
-    "@media (max-width: 860px)": {
+    // stacked, the viewer needs a height of its own - the document scrolls.
+    // Upright, most of the screen with the description's start still in view;
+    // sideways, the whole of it: scrolling the header away then gives the scan
+    // every row there is, and the description follows below
+    [media(NARROW_TALL)]: {
       height: "70vh",
+      flexGrow: 0,
+    },
+    [media(SHORT)]: {
+      height: "100vh",
       flexGrow: 0,
     },
     // in the middle arrangement it heads the right column, which scrolls as a
     // whole: the scan is on screen at once and the description starts below it
-    "@media (min-width: 861px) and (max-width: 1279px)": {
+    [media(MEDIUM)]: {
       height: "70%",
       flexGrow: 0,
       flexShrink: 0,
@@ -212,7 +221,7 @@ const useStyles = makeStyles({
   // in the middle arrangement, where the viewer sits above the description
   rightColumn: {
     display: "contents",
-    "@media (min-width: 861px) and (max-width: 1279px)": {
+    [media(MEDIUM)]: {
       display: "flex",
       flexDirection: "column",
       gap: tokens.spacingVerticalL,

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MenuItemCode, type UiConfig } from "../api/generated";
 import { expectNoA11yViolations } from "../test/a11y";
 import { renderWithProviders } from "../test/render";
-import { setViewportWidth } from "../test/viewport";
+import { setViewport, setViewportWidth } from "../test/viewport";
 import AppHeader from "./AppHeader";
 
 const config: UiConfig = {
@@ -39,9 +39,8 @@ function renderHeader(initialPath = "/") {
 }
 
 describe("AppHeader", () => {
-  // jsdom's default 1024px is a desktop for the header; the compact tests
-  // narrow it themselves
-  beforeEach(() => setViewportWidth(1024));
+  // a desktop for the header; the compact tests shrink it themselves
+  beforeEach(() => setViewport(1024, 768));
 
   it("shows the configured sections as tabs on a wide viewport", async () => {
     const { container } = renderHeader();
@@ -97,6 +96,13 @@ describe("AppHeader", () => {
     await user.click(await screen.findByRole("menuitem", { name: "Archival fonds" }));
     screen.getByRole("heading", { level: 1, name: "Fonds" });
     expect(screen.queryByRole("menuitem")).toBeNull();
+  });
+
+  it("folds the sections on a short viewport too - a wrapped tab row would cost a third of it", async () => {
+    setViewport(1024, 400);
+    renderHeader();
+    await screen.findByRole("button", { name: "Main menu" });
+    expect(screen.queryByRole("link", { name: "Archival fonds" })).toBeNull();
   });
 
   it("switches between tabs and the menu button as the viewport changes", async () => {

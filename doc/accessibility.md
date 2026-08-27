@@ -83,16 +83,19 @@ Architectural properties that carry most of the accessibility weight:
   route change has already parked focus on the main region.
 - **No CAPTCHA, no session timeout, no auto-playing media** in the public
   portal, so the whole family of criteria around those does not arise.
-- **Responsive layout** — below 860 px the search page stacks its sidebar above
-  the results and the header folds its section tabs into one menu button (a
-  named button opening a menu of links, still inside the main-navigation
-  landmark, the current section marked `aria-current`) so that a row of
-  wrapped tabs does not take a phone screen's height from the content (WCAG
-  1.4.10 reflow; verification pending, see §4). The record page's two panes each scroll on their own so the page
-  itself does not, but **only on wide viewports**: below 860 px it stacks and
-  the document scrolls again, because a viewport-tall frame at 400 % zoom (or on
-  a phone) leaves the content almost no room. The frame never becomes one big
-  inner scroller for that reason.
+- **Responsive layout** — on a small screen (narrower than 861 px **or shorter
+  than 601 px** — a phone held sideways; `src/layout/breakpoints.ts` is the
+  single definition) the search page stacks its sidebar above the results and
+  the header folds its section tabs into one menu button (a named button
+  opening a menu of links, still inside the main-navigation landmark, the
+  current section marked `aria-current`) so that a row of wrapped tabs does not
+  take a phone screen's height from the content (WCAG 1.4.10 reflow;
+  verification pending, see §4). The record page's two panes each scroll on
+  their own so the page itself does not, but **only on large screens**: on a
+  small one it stacks and the document scrolls again, because a viewport-tall
+  frame at 400 % zoom (or on a phone, in either orientation) leaves the content
+  almost no room. The frame never becomes one big inner scroller for that
+  reason.
 - **Errors are surfaced, never swallowed** — failed API requests appear in a
   visible error bar with the server's message, and a render crash produces a
   readable error page instead of a blank one. The error bar is a live region
@@ -173,8 +176,11 @@ embeds the same viewer beside the
 description when a record is digitized — beside it from 1280 px up, and on
 medium viewports (861–1279 px) above it in one scrolling right column, since
 three side-by-side panes would squeeze the viewer into an unusable sliver
-with overlapping controls (1.4.10 reflow); below 861 px everything stacks and
-the document scrolls. Page-turn keys are scoped to the
+with overlapping controls (1.4.10 reflow); on a small screen (narrow, or
+shorter than 601 px) everything stacks and the document scrolls, the viewer
+taking a whole viewport on a short one so that a phone held sideways shows the
+scan on every row once the header is scrolled away — the fullscreen viewer
+page does the same there. Page-turn keys are scoped to the
 viewer itself when embedded (arrow keys must keep scrolling the description and
 walking the tree beside it), while the fullscreen page — whose whole surface is
 the viewer — handles them document-wide. The splitters carry the old portal's

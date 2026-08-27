@@ -10,10 +10,15 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ResponseError } from "../api/generated";
 import { useApuDetail } from "../apu/useApuDetail";
 import DaoViewer from "../dao/DaoViewer";
+import { SHORT, media } from "../layout/breakpoints";
 
 const useStyles = makeStyles({
   // fills the frame the ApuPage way: the page contributes no height, the
-  // document never scrolls, canvas and rail scroll (or zoom) on their own
+  // document never scrolls, canvas and rail scroll (or zoom) on their own.
+  // A phone held upright keeps that (its frame is tall); held sideways, the
+  // frame's leftover would be a strip, so the page flows instead and the
+  // viewer takes one whole viewport: scrolling the header away shows the scan
+  // on every row there is
   layout: {
     position: "absolute",
     inset: 0,
@@ -23,6 +28,9 @@ const useStyles = makeStyles({
     padding: `${tokens.spacingVerticalM} ${tokens.spacingHorizontalXXL}`,
     "@media (max-width: 860px)": {
       padding: `${tokens.spacingVerticalS} ${tokens.spacingHorizontalM}`,
+    },
+    [media(SHORT)]: {
+      position: "static",
     },
   },
   header: {
@@ -40,6 +48,10 @@ const useStyles = makeStyles({
   viewer: {
     flexGrow: 1,
     minHeight: 0,
+    [media(SHORT)]: {
+      height: "100vh",
+      flexGrow: 0,
+    },
   },
 });
 

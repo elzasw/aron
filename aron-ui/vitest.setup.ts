@@ -19,19 +19,21 @@ if (globalThis.localStorage === undefined) {
 }
 
 // jsdom parses media queries but never evaluates one, so every matchMedia list
-// stays unmatched forever - and the record page decides from a width query
-// whether to embed the digital-object viewer. Evaluate the min/max-width forms
-// against window.innerWidth so a test can pick a viewport
+// stays unmatched forever - and the pages decide their arrangement from size
+// queries (src/layout/breakpoints.ts). Evaluate the min/max-width and -height
+// features against window.innerWidth/innerHeight - every `and`-joined feature
+// of a comma-separated alternative must hold - so a test can pick a viewport
 // (src/test/viewport.ts) and components react like in a browser; a query with
-// no width form (reduced motion, ...) keeps jsdom's answer: no match.
+// no size feature (reduced motion, ...) keeps jsdom's answer: no match.
 function mediaQueryMatches(query: string): boolean {
   return query.split(",").some((part) => {
-    const max = /\(max-width:\s*([\d.]+)px\)/.exec(part);
-    const min = /\(min-width:\s*([\d.]+)px\)/.exec(part);
+    const features = [...part.matchAll(/\((min|max)-(width|height):\s*([\d.]+)px\)/g)];
     return (
-      (max !== null || min !== null) &&
-      (max === null || window.innerWidth <= Number(max[1])) &&
-      (min === null || window.innerWidth >= Number(min[1]))
+      features.length > 0 &&
+      features.every(([, bound, axis, value]) => {
+        const actual = axis === "width" ? window.innerWidth : window.innerHeight;
+        return bound === "min" ? actual >= Number(value) : actual <= Number(value);
+      })
     );
   });
 }

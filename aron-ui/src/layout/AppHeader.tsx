@@ -17,6 +17,7 @@ import { logoUrl } from "../api/client";
 import { useUiConfig } from "../api/useUiConfig";
 import { MenuItem } from "../api/generated";
 import { SECTIONS } from "../sections";
+import { STACKED } from "./breakpoints";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "./palette";
 import useMediaQuery from "./useMediaQuery";
@@ -24,12 +25,13 @@ import useMediaQuery from "./useMediaQuery";
 export { PRIMARY_DARK, PRIMARY_MAIN } from "./palette";
 
 /**
- * Below this the section tabs give way to one menu button (the old portal's
- * hamburger): a row of tabs wrapped into two or three lines would take a phone
- * screen's height from the content. Matches the stacking breakpoint used by
- * the pages. A JS decision, because it changes what is rendered.
+ * On a small screen the section tabs give way to one menu button (the old
+ * portal's hamburger): a row of tabs wrapped into two or three lines would take
+ * a phone screen's height from the content - held sideways, the wrap alone
+ * costs a third of it. The same bands as the pages stack on. A JS decision,
+ * because it changes what is rendered.
  */
-const COMPACT_QUERY = "(max-width: 860px)";
+const COMPACT_QUERY = STACKED;
 
 const useStyles = makeStyles({
   header: {

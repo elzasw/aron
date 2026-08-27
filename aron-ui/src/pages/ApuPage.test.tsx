@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApuType, FileType, type ApuDetail } from "../api/generated";
 import { expectNoA11yViolations } from "../test/a11y";
 import { renderWithProviders } from "../test/render";
-import { setViewportWidth } from "../test/viewport";
+import { setViewport, setViewportWidth } from "../test/viewport";
 import ApuPage from "./ApuPage";
 
 vi.mock("openseadragon", () => ({
@@ -76,9 +76,9 @@ function renderRecord(uuid: string) {
 }
 
 describe("ApuPage with digital objects", () => {
-  // wide enough for all three panes; jsdom's default 1024px sits in the
-  // medium band, where the viewer is deliberately not embedded
-  beforeEach(() => setViewportWidth(1440));
+  // wide and tall enough for all three panes; jsdom's default 1024px sits in
+  // the medium band, where the description has no column of its own
+  beforeEach(() => setViewport(1440, 900));
 
   it("embeds the viewer as the page's centerpiece, with a fullscreen link", async () => {
     const { container } = renderRecord("rec");
@@ -134,6 +134,21 @@ describe("ApuPage with digital objects", () => {
     // the embedded object is not offered a second time as a gallery link
     expect(screen.queryByRole("link", { name: "Open viewer: Digitised objects" })).toBeNull();
     await expectNoA11yViolations(container);
+  });
+
+  it("stacks on a short viewport however wide it is - a phone held sideways", async () => {
+    setViewport(1440, 400);
+    const { container } = renderRecord("rec");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    // the scan stays embedded, but there is no column beside it to drag or fold
+    screen.getByRole("toolbar", { name: "Viewer controls" });
+    expect(
+      screen.queryByRole("separator", { name: "Width of the archival description column" }),
+    ).toBeNull();
+    await expectNoA11yViolations(container);
+    // turned upright again (tall enough), the three panes are back
+    act(() => setViewport(1440, 900));
+    await screen.findByRole("separator", { name: "Width of the archival description column" });
   });
 
   it("gives the description its own column once the viewport grows enough", async () => {
