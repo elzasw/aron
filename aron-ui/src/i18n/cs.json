@@ -53,6 +53,19 @@
     "relatedTo": "Souvisí s",
     "relatedRemove": "Odebrat filtr souvisejících",
     "activeFilters": "Aktivní filtry",
+    "advanced": {
+      "open": "Všechny filtry",
+      "title": "Všechny filtry",
+      "intro": "Zkombinujte níže uvedené podmínky; výsledky se změní až po jejich použití.",
+      "cancel": "Zrušit",
+      "applyPending": "Zobrazit výsledky",
+      "apply_one": "Zobrazit {{count}} záznam",
+      "apply_few": "Zobrazit {{count}} záznamy",
+      "apply_other": "Zobrazit {{count}} záznamů",
+      "applyMore_one": "Zobrazit více než {{count}} záznam",
+      "applyMore_few": "Zobrazit více než {{count}} záznamy",
+      "applyMore_other": "Zobrazit více než {{count}} záznamů"
+    },
     "sort": {
       "RELEVANCE": "Nejlépe odpovídající",
       "NAME": "Název A–Z",

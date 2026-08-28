@@ -151,6 +151,16 @@ Still the deployment's own responsibility: the **contrast** of the colours it
 configures in `resultLayout.yaml` (1.4.3), which is Phase C territory, and
 giving every styled field either a `prefix` or a `label`.
 
+**Advanced search** (added with the feature): the "All filters" dialog is a
+real modal (Fluent `Dialog`: focus trapped, Escape closes, focus returns to the
+opening button), titled, with every facet a labelled `group` under its own
+heading and the deployment's description as visible text rather than a
+tooltip (3.3.2). Its draft is searched as it changes and the outcome - count,
+wait, failure - is announced in a polite live region inside the dialog, where
+the reader is (4.1.3); the Apply button names the count too, so the outcome of
+the action is in its name. The test renders the view without the frame, so it
+checks the whole document with axe's page-landmark rule off.
+
 **Digital object viewer** (added with the feature): scans are content images
 whose accessible name is the page's label — the pixel content itself is
 inherently visual, and the download of the original is the equivalent-access

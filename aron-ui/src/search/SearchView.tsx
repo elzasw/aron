@@ -1,4 +1,5 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
+import { Filter20Regular } from "@fluentui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
 import { useEffect, useMemo, useState } from "react";
@@ -7,11 +8,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
 import {
   ApuType,
-  type DatingFacetResult,
-  type EnumFacetResult,
   type FacetDef,
-  FacetResultKind,
-  FacetType,
+  FacetDisplay,
   type MenuItemCode,
   QueryMode,
   type SearchFilter,
@@ -20,14 +18,18 @@ import {
 } from "../api/generated";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import { SECTIONS } from "../sections";
+import AdvancedSearchDialog from "./AdvancedSearchDialog";
 import FacetPanel from "./FacetPanel";
 import {
+  bucketLabel,
   dropInapplicable,
+  facetHasData,
   facetIsApplicable,
   facetIsOffered,
   parseFilters,
   RELATED_FACET,
   serializeFilters,
+  SUPPORTED_FACET_TYPES,
 } from "./filters";
 import Pagination from "./Pagination";
 import RelatedChips from "./RelatedChips";
@@ -146,6 +148,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const sortParam = params.get("sort") ?? "";
   const lang = useApiLanguage();
   const [queryInput, setQueryInput] = useState(query);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   // the box follows the query in the URL (back/forward, shared link); adjusting
   // state during render costs one pass instead of an effect's cascade
   const [lastQuery, setLastQuery] = useState(query);
@@ -194,46 +197,11 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const submitQuery = () => update({ q: queryInput.trim() || null, p: null });
 
   const resultOf = (code: string) => search.data?.facets.find((f) => f.code === code);
-  // every facet type in the contract has a widget below; the list is the seam for
-  // the next one - an unsupported type is hidden rather than rendered empty
-  const supportedTypes: FacetType[] = [
-    FacetType.Enum,
-    FacetType.Ref,
-    FacetType.Fulltext,
-    FacetType.Unitdate,
-  ];
-  // a facet with no values in the current scope is hidden (the old-portal
-  // rule); text inputs always show, an actively filtered facet stays visible
-  // so its selection can be undone
-  const hasData = (def: FacetDef) => {
-    if (def.type === FacetType.Fulltext) {
-      return true;
-    }
-    // the relation facet is a picker over records, so it has nothing to be empty
-    // of - it carries no buckets by design
-    if (def.code === RELATED_FACET) {
-      return true;
-    }
-    const result = resultOf(def.code);
-    if (result === undefined) {
-      return false;
-    }
-    return result.kind === FacetResultKind.Dating
-      ? (result as DatingFacetResult).bounds !== undefined
-      : ((result as EnumFacetResult).buckets ?? []).length > 0;
-  };
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
   // the label a value is displayed under, for a condition that names an option by
   // its label rather than its value; the buckets that carry labels come with the
   // search response
-  const labelOf = (facetCode: string, value: string) => {
-    const result = resultOf(facetCode);
-    const buckets =
-      result?.kind === FacetResultKind.Enum || result?.kind === FacetResultKind.Ref
-        ? ((result as EnumFacetResult).buckets ?? [])
-        : [];
-    return buckets.find((bucket) => bucket.value === value)?.label;
-  };
+  const labelOf = (facetCode: string, value: string) => bucketLabel(resultOf(facetCode), value);
   const isApplicable = (def: FacetDef) => facetIsApplicable(def, filters, labelOf);
 
   // A facet that waits for another facet's selection loses its own constraint
@@ -290,8 +258,14 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
       // has ground under it
       isApplicable(def) &&
       facetIsOffered(def.display, hasActiveFilter(def.code)) &&
-      supportedTypes.includes(def.type) &&
-      (hasActiveFilter(def.code) || hasData(def)),
+      SUPPORTED_FACET_TYPES.includes(def.type) &&
+      (hasActiveFilter(def.code) || facetHasData(def, resultOf(def.code))),
+  );
+  // the advanced search is offered where it adds something: a facet the sidebar
+  // does not show by itself. A section with none has everything in the sidebar
+  // already, and so has the general search with its built-in facets.
+  const hasDetailFacets = (facetDefs.data ?? []).some(
+    (def) => def.display === FacetDisplay.Detail && SUPPORTED_FACET_TYPES.includes(def.type),
   );
 
   return (
@@ -328,6 +302,24 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             onFilters={onFilters}
           />
         ))}
+        {hasDetailFacets && (
+          <Button icon={<Filter20Regular />} onClick={() => setAdvancedOpen(true)}>
+            {t("search.advanced.open")}
+          </Button>
+        )}
+        {advancedOpen && facetDefs.data && (
+          <AdvancedSearchDialog
+            defs={facetDefs.data}
+            filters={filters}
+            apuType={apuType}
+            query={query}
+            onApply={(next) => {
+              onFilters(next);
+              setAdvancedOpen(false);
+            }}
+            onClose={() => setAdvancedOpen(false)}
+          />
+        )}
       </div>
       <div className={styles.main}>
         <Title3 as="h1">{t(titleKey)}</Title3>

@@ -1,5 +1,10 @@
 import {
+  type DatingFacetResult,
+  type EnumFacetResult,
   type FacetDef,
+  type FacetResult,
+  FacetResultKind,
+  FacetType,
   FacetDisplay,
   FilterKind,
   RangeFilter,
@@ -227,4 +232,42 @@ export function dropInapplicable(
     kept = next;
   }
   return kept;
+}
+
+/** The facet types this UI has a widget for; an unsupported type is hidden rather than rendered empty. */
+export const SUPPORTED_FACET_TYPES: FacetType[] = [
+  FacetType.Enum,
+  FacetType.Ref,
+  FacetType.Fulltext,
+  FacetType.Unitdate,
+];
+
+/**
+ * Whether a facet has anything to offer in the scope its search response
+ * describes - the old-portal rule that an empty facet is hidden. A text input
+ * always has (its values are typed, not enumerated), and so has the built-in
+ * relation facet, a picker over records that carries no buckets by design.
+ */
+export function facetHasData(def: FacetDef, result: FacetResult | undefined): boolean {
+  if (def.type === FacetType.Fulltext || def.code === RELATED_FACET) {
+    return true;
+  }
+  if (result === undefined) {
+    return false;
+  }
+  return result.kind === FacetResultKind.Dating
+    ? (result as DatingFacetResult).bounds !== undefined
+    : ((result as EnumFacetResult).buckets ?? []).length > 0;
+}
+
+/**
+ * The label a value is displayed under, from the buckets that came with a
+ * search response - what a condition naming an option by its label matches on.
+ */
+export function bucketLabel(result: FacetResult | undefined, value: string): string | undefined {
+  const buckets =
+    result?.kind === FacetResultKind.Enum || result?.kind === FacetResultKind.Ref
+      ? ((result as EnumFacetResult).buckets ?? [])
+      : [];
+  return buckets.find((bucket) => bucket.value === value)?.label;
 }

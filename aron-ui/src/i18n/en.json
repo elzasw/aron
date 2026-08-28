@@ -53,6 +53,17 @@
     "relatedTo": "Related to",
     "relatedRemove": "Remove the relation filter",
     "activeFilters": "Active filters",
+    "advanced": {
+      "open": "All filters",
+      "title": "All filters",
+      "intro": "Combine the conditions below; the results change once you apply them.",
+      "cancel": "Cancel",
+      "applyPending": "Show results",
+      "apply_one": "Show {{count}} record",
+      "apply_other": "Show {{count}} records",
+      "applyMore_one": "Show more than {{count}} record",
+      "applyMore_other": "Show more than {{count}} records"
+    },
     "sort": {
       "RELEVANCE": "Best match",
       "NAME": "Name A–Z",

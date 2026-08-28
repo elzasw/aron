@@ -85,6 +85,9 @@ const useStyles = makeStyles({
     paddingBottom: tokens.spacingVerticalM,
     borderBottom: `1px solid ${tokens.colorNeutralStroke2}`,
   },
+  description: {
+    color: tokens.colorNeutralForeground3,
+  },
   title: {
     margin: "0",
     fontSize: tokens.fontSizeBase300,
@@ -242,13 +245,29 @@ interface Props {
   /** Total of the current search - the per-condition count badge of active text/range facets. */
   total?: number;
   onFilters: (filters: SearchFilter[]) => void;
+  /**
+   * Show the deployment's description of what the facet filters, under its
+   * heading. The sidebar leaves it out - it is narrow and the reader knows the
+   * facets there - the advanced-search dialog shows it, being where a facet is
+   * met for the first time.
+   */
+  withDescription?: boolean;
 }
 
 /**
  * One facet of the sidebar; the widget follows the facet type. Bucket counts
  * and dating bounds come server-computed with multi-select semantics.
  */
-export default function FacetPanel({ def, filters, result, apuType, query, total, onFilters }: Props) {
+export default function FacetPanel({
+  def,
+  filters,
+  result,
+  apuType,
+  query,
+  total,
+  onFilters,
+  withDescription = false,
+}: Props) {
   const styles = useStyles();
 
   // the old portal highlights how many records satisfy an entered condition;
@@ -268,6 +287,11 @@ export default function FacetPanel({ def, filters, result, apuType, query, total
           <span className={styles.titleCount}>({total})</span>
         )}
       </h2>
+      {withDescription && def.description && (
+        <Text size={200} className={styles.description}>
+          {def.description}
+        </Text>
+      )}
       {def.type === FacetType.Enum && (
         <EnumFacet def={def} filters={filters} result={result} onFilters={onFilters} />
       )}
