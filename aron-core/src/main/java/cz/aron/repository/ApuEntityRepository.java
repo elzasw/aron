@@ -72,9 +72,11 @@ public interface ApuEntityRepository extends JpaRepository<ApuEntity, Long> {
 	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name, ae.indexedName) FROM ApuEntity ae WHERE ae.uuid IN (:uuids)")
 	List<IdLabelDto> listByUuids(@Param("uuids") Collection<UUID> uuids);
 
-	@Modifying
-	@Query("UPDATE ApuEntity ae SET ae.reindex=true WHERE ae.uuid IN (:uuids) AND ae.reindex=false")
-	int markForReindexByUuids(@Param("uuids") Collection<UUID> uuids);
+	// --- index synchronization (IndexSynchronizer) ---------------------------------------------
+
+	/** Labels of every APU of the source - the snapshot a re-import compares its result with. */
+	@Query("SELECT new cz.aron.domain.dto.IdLabelDto(ae.id, ae.uuid, ae.name, ae.indexedName) FROM ApuEntity ae WHERE ae.source.id=:apuSourceId")
+	List<IdLabelDto> listLabelsByApuSourceId(@Param("apuSourceId") long apuSourceId);
 
 	@Query("SELECT new cz.aron.api.rest.model.ApuEntityTreeViewDto(cast(ae.uuid as string), ae.name, ae.description, ae.depth, ae.pos, ae.childCnt) FROM ApuEntity ae WHERE ae.parent.id=:parentId AND ae.pos>:pos ORDER BY ae.pos asc LIMIT :maxItems ")
 	List<ApuEntityTreeViewDto> listEntitiesAfter(@Param("parentId") long parentId, @Param("pos") int pos, @Param("maxItems") int maxItems);

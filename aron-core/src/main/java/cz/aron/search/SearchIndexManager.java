@@ -1,26 +1,20 @@
 package cz.aron.search;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.zip.CRC32;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.google.common.collect.Iterables;
 
 import cz.aron.domain.types.TypesHolder;
-import cz.aron.mapper.KryoSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.repository.RelationRepository;
-import cz.aron.service.ApuService;
 import cz.aron.service.IdService;
 
 /**
@@ -45,27 +39,21 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 
 	private final RelationRepository relationRepository;
 
-	private final ApuService apuService;
-
 	private final TypesHolder typesHolder;
 
 	private final IdService idService;
 
 	private final ContentLocale contentLocale;
 
-	// self-reference through the Spring proxy so @Transactional on batch methods is honored
-	// (calling them directly from reindexAll would be self-invocation and bypass the proxy)
-	@Lazy
-	@Autowired
-	private SearchIndexManager self;
+	private final IndexSynchronizer indexSynchronizer;
 
 	public SearchIndexManager(IndexingService indexingService, ApuEntityRepository apuEntityRepository,
-			ApuService apuService, TypesHolder typesHolder, RelationRepository relationRepository,
-			IdService idService, ContentLocale contentLocale) {
+			TypesHolder typesHolder, RelationRepository relationRepository,
+			IdService idService, ContentLocale contentLocale, IndexSynchronizer indexSynchronizer) {
 		this.contentLocale = contentLocale;
+		this.indexSynchronizer = indexSynchronizer;
 		this.indexingService = indexingService;
 		this.apuEntityRepository = apuEntityRepository;
-		this.apuService = apuService;
 		this.typesHolder = typesHolder;
 		this.relationRepository = relationRepository;
 		this.idService = idService;
@@ -95,6 +83,12 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 		} else {
 			indexingService.createSchema();
 		}
+		// what an import committed but did not finish writing to the index (IndexSynchronizer) - after
+		// a rebuild every document is fresh already, and the same call then only clears the marks
+		if (indexSynchronizer.hasPendingWork()) {
+			log.info("Search index has pending synchronization work from an interrupted import.");
+		}
+		indexSynchronizer.synchronize();
 		log.info("Search index bootstrap completed.");
 	}
 
@@ -123,7 +117,7 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 			if (ids.isEmpty()) {
 				reindexed = true;
 			} else {
-				Iterables.partition(ids, 1000).forEach(partition -> self.reindexApuBatch(partition));
+				Iterables.partition(ids, 1000).forEach(indexSynchronizer::reindexBatch);
 				after = ids.getLast();
 			}
 		} while (!reindexed);
@@ -145,24 +139,6 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 				after = ids.getLast();
 			}
 		} while (!reindexed);
-	}
-
-	/**
-	 * Loads, label-fills and indexes one batch of APUs inside a read-only transaction so that
-	 * lazy associations (e.g. {@code digitalObjects}) can be initialized during
-	 * {@link ApuDocumentBuilder#build} — the startup reindex path has no open session otherwise
-	 * ({@code spring.jpa.open-in-view=false}). Must be invoked through the Spring proxy ({@link #self}).
-	 */
-	@Transactional(readOnly = true)
-	public void reindexApuBatch(List<Long> ids) {
-		var entities = apuEntityRepository.findAllByIdIn(ids);
-		if (!entities.isEmpty()) {
-			var apuRefLabels = apuService.resolveApuRefLabels(entities);
-			KryoSerializer.doWithKryo(kryo -> {
-				indexingService.indexApus(kryo, entities, apuRefLabels);
-				return null;
-			});
-		}
 	}
 
 }

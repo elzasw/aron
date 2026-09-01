@@ -292,9 +292,12 @@ public class LuceneSearchIndex implements SearchIndex {
 	}
 
 	@Override
-	public void deleteApusBySource(long apuSourceId) {
+	public void deleteApus(Collection<String> uuids) {
+		if (uuids.isEmpty()) {
+			return;
+		}
 		try {
-			apuWriter.deleteDocuments(LongPoint.newExactQuery("apuSourceId", apuSourceId));
+			apuWriter.deleteDocuments(uuids.stream().map(uuid -> new Term("uuid", uuid)).toArray(Term[]::new));
 		} catch (IOException e) {
 			throw new UncheckedIOException(e);
 		}

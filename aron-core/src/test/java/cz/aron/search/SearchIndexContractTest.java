@@ -58,8 +58,8 @@ public abstract class SearchIndexContractTest {
 		refreshAfterWrite();
 	}
 
-	protected void deleteApusBySource(long apuSourceId) {
-		index.deleteApusBySource(apuSourceId);
+	protected void deleteApus(String... uuids) {
+		index.deleteApus(List.of(uuids));
 		refreshAfterWrite();
 	}
 
@@ -767,17 +767,17 @@ public abstract class SearchIndexContractTest {
 				0, 10, SortMode.RELEVANCE)).typeCounts()).isEmpty();
 	}
 
+	/** Documents go by their ids; an unknown id is a no-op, other documents stay. */
 	@Test
-	void deleteBySourceRemovesOnlyThatSource() {
+	void deleteByUuidRemovesExactlyTheNamedDocuments() {
 		indexApus(List.of(
-				doc(uuid(18), "From source one", 1, Map.of()),
-				doc(uuid(19), "From source two", 2, Map.of())));
+				doc(uuid(940), "To be removed", 9, Map.of()),
+				doc(uuid(941), "To be kept", 9, Map.of())));
 
-		deleteApusBySource(1);
+		deleteApus(uuid(940), uuid(999));
 
 		var all = index.search(ApuSearchQuery.matchAll(0, 10));
-		assertThat(all.total()).isEqualTo(1);
-		assertThat(all.hits().get(0).uuid()).isEqualTo(uuid(19));
+		assertThat(all.hits()).extracting(ApuSearchResult.Hit::uuid).contains(uuid(941)).doesNotContain(uuid(940));
 	}
 
 	@Test

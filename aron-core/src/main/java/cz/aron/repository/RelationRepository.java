@@ -14,9 +14,6 @@ import cz.aron.domain.Relation;
 
 @Repository
 public interface RelationRepository  extends JpaRepository<Relation, Long>  {
-	
-	@Query("SELECT r.id FROM Relation r WHERE r.target IN (:target)")
-	List<Long> findIdsByTarget(@Param("target") Collection<UUID> target);
 
 	/**
 	 * Set reference to ApuEntity to NULL for all relations related to given ApuSource.

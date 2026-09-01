@@ -227,4 +227,27 @@
         </createTable>
     </changeSet>
 
+    <!-- Index synchronization (doc/search-port.md section 12): the import writes the
+         search index after its commit, from the database. index_dirty is the set of
+         documents whose index state must be re-derived: a row means "make the index
+         reflect the database for this record" - index it if its row exists, delete its
+         document if not. Rows may repeat (no unique key), so every producer is a plain
+         INSERT ... SELECT; the consumer reads DISTINCT and deletes what it processed. -->
+    <changeSet id="3" author="petr.pytelka@lightcomp.cz">
+        <createTable tableName="index_dirty">
+            <column name="apu_uuid" type="${uuid}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="requested_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex indexName="idx_index_dirty_apu_uuid" tableName="index_dirty" unique="false">
+            <column name="apu_uuid" />
+        </createIndex>
+        <!-- dead since the first release: written false once, read by nothing; the dirty set above
+             is the reindex mechanism -->
+        <dropColumn tableName="apu" columnName="reindex"/>
+    </changeSet>
+
 </databaseChangeLog>

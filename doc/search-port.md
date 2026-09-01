@@ -78,7 +78,7 @@ public interface SearchIndex {
     // write side (used by import + bootstrap reindex)
     void indexApus(Collection<ApuDocument> docs);      // upsert by uuid
     void indexRelations(Collection<RelationDocument> rels);
-    void deleteApusBySource(long apuSourceId);
+    void deleteApus(Collection<String> uuids);   // document ids = APU uuids (see section 12)
 
     // read side - deliberately MINIMAL now; grows with the Phase 7 slices (D-9)
     ApuSearchResult search(ApuSearchQuery query);
@@ -526,3 +526,65 @@ matched nothing. `ApuDocumentBuilder` skips an unrecognized item type, so no rea
 document can carry such a field — the fixture was the unrealistic part, and the
 model now declares the second dating type. Both say the same thing: the port's
 contract test is only as good as its last `-Pes-it` run.
+
+## 12. Import ↔ index synchronization (2026-09-01)
+
+The import used to write the index from inside its own database transaction:
+`deleteApusBySource` before the first row was touched, `indexApus` three times per
+100-record batch, Lucene hard-committing on every call. Three defects followed
+from that one shape. A failed import rolled the database back and left documents
+of records that do not exist (a search hit whose page is a 404), or left a source's
+documents deleted while its rows came back. A re-delivered source was unsearchable
+for the whole import. And the pass meant to refresh the documents of *referring*
+records fed relation ids into an APU-id lookup, so a fund's rename never reached
+the descriptions that carry its label — while `apu.reindex`, the column evidently
+meant for exactly this, had no reader (it is dropped now).
+
+**Rule.** The import transaction writes the database and fills the **dirty set**
+(`index_dirty`): the uuids of every document whose index state must be re-derived.
+After the commit — under the same lock as the import, and at startup for whatever a
+crash left behind — `IndexSynchronizer` consumes the set with one rule per batch of
+distinct uuids: **index the records that exist** (and are flagged `indexed`),
+**delete the documents of those that do not**. The rows of a processed batch are
+removed in the transaction of its successful index write, so a crash leaves exactly
+the unfinished batches.
+
+Who produces dirty rows, all inside the import's transaction, all as plain
+`INSERT … SELECT` over rows the transaction can see (never from application
+memory — which is also why duplicates are allowed and no upsert is needed; the
+consumer reads `DISTINCT`):
+
+- a re-import marks the source's records **before** the old rows go (whichever of
+  them the new delivery does not rewrite has no row afterwards, so its document is
+  deleted) and again after the new rows are written;
+- a withdrawal marks the source's records and every referrer of them before the
+  deletes;
+- the referrers of records whose **label** this import changed — new, renamed or
+  gone (`LabelChanges`, computed from a snapshot of the previous delivery's
+  labels) — are marked through the `relation` table: their documents carry the
+  target's label (`~LABEL`, `~ID~LABEL`, nested `rels`, fulltext), and this is what
+  keeps a fund's rename visible in every description without re-delivering them. A
+  fund re-delivered under an unchanged name marks none of its referrers.
+
+A **set**, not an event log, deliberately: with events (INDEX x, DELETE x, …) the
+consumer must respect per-uuid order and the producer must know the outcome at
+write time. The set coalesces by construction — the truth is read from the
+database at consume time — so ordering, duplicates and "written then omitted in
+one import" all vanish, and each document is consistent on its own at every
+moment: a re-delivered source stays searchable throughout. The port needs only
+`deleteApus(uuids)` (document ids = APU uuids, as the index has always keyed
+them); no generation stamps, no delete-by-source, no purge step.
+
+Why not a transaction-synchronization `afterCommit` hook: it would replay
+in-memory documents built during the import — state the database may not have if
+the commit failed after all — and it cannot reach the referrers, whose rows belong
+to other sources and are known only through the relation table.
+
+Producers are serialized by the import lock; today one consumer drains the set.
+Should indexing throughput ever demand it, several consumers can take batches with
+`SELECT … FOR UPDATE SKIP LOCKED` (PostgreSQL and H2 both support it) without
+changing the model.
+
+`ApuManagementTest` carries the lifecycles (reference delivered before its target,
+rename, withdrawal, failed import, omitted record, interrupted synchronization);
+`SearchIndexContractTest` pins uuid-keyed deletion in both adapters.
