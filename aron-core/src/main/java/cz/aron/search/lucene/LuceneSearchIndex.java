@@ -848,14 +848,27 @@ public class LuceneSearchIndex implements SearchIndex {
 				// not a date bound - fall through to the exact term
 			}
 		}
-		ItemType itemType = typesHolder.getItemTypeForCode(field);
-		boolean analyzed = (itemType != null && itemType.getType() == DataType.STRING)
-				|| (field.endsWith("~LABEL") && !field.endsWith("~ID~LABEL"));
-		if (analyzed) {
+		if (isAnalyzedField(field)) {
 			doc.add(new TextField(field, value, Field.Store.NO));
 		} else {
 			doc.add(new StringField(field, value, Field.Store.NO));
 		}
+	}
+
+	/**
+	 * Whether a field holds analyzed text - STRING item fields, the APU_REF
+	 * {@code ~LABEL} companions and the fixed textual fields - rather than one
+	 * exact term. A query whose meaning depends on it (the old API's CONTAINS
+	 * pattern, which is matched against terms) reads it here, so the index and
+	 * the query side cannot disagree about what a term is.
+	 */
+	boolean isAnalyzedField(String field) {
+		if ("name".equals(field) || "description".equals(field)) {
+			return true;
+		}
+		ItemType itemType = typesHolder.getItemTypeForCode(field);
+		return (itemType != null && itemType.getType() == DataType.STRING)
+				|| (field.endsWith("~LABEL") && !field.endsWith("~ID~LABEL"));
 	}
 
 	/**

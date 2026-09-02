@@ -22,6 +22,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.RegexpQuery;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
@@ -29,6 +30,8 @@ import org.apache.lucene.search.TermRangeQuery;
 import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.automaton.Operations;
+import org.apache.lucene.util.automaton.RegExp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -72,8 +75,9 @@ import cz.aron.indexing.OldApiSearchResult;
  * <li>FTX searches name, description and the analyzed item fields instead of
  * ES {@code query_string} over all fields, without operator syntax;</li>
  * <li>relevance ranking and bucket tie order are engine-specific;</li>
- * <li>CONTAINS matches within single analyzed tokens (mirrors ES wildcard
- * behavior on analyzed fields; multi-word values match on neither engine);</li>
+ * <li>CONTAINS on an analyzed field matches within single tokens and folds the
+ * value (mirrors the ES wildcard on analyzed fields, which does not fold;
+ * multi-word values match on neither engine);</li>
  * <li>the nested {@code rels} aggregations are answered from the flat document
  * (see {@link #relScope}) rather than from nested documents, which costs two
  * things: the label a condition matches is the target's displayed label, where
@@ -304,16 +308,39 @@ public class LuceneOldApiSearch implements OldApiSearch {
 	}
 
 	/**
-	 * CONTAINS as a wildcard over analyzed tokens: the value is folded by the same
-	 * analysis chain, so matching is diacritics- and case-insensitive like the ES
-	 * {@code case_insensitive} wildcard. Values analyzing into several tokens can
-	 * never match a single indexed token - the same holds for the ES wildcard on
-	 * an analyzed field.
+	 * CONTAINS matches a field's terms, as the ES {@code case_insensitive}
+	 * wildcard does, so what a term is decides how the value is treated. On an
+	 * analyzed field the terms are its tokens: the value runs through the same
+	 * analysis chain, which also makes matching diacritics-insensitive (a value
+	 * analyzing into several tokens can never match a single token - the same
+	 * holds on ES). On an exact field the term is the whole value, so the value
+	 * must NOT be analyzed - the old UI's reference filter is a CONTAINS on a
+	 * uuid, which the analyzer would split on its hyphens into tokens no term can
+	 * match.
 	 */
 	private Query containsQuery(ContainsFilter f) throws IOException {
+		if (!index.isAnalyzedField(f.getField())) {
+			return new RegexpQuery(new Term(f.getField(), ".*" + quoteRegexp(f.getValue()) + ".*"),
+					RegExp.NONE, RegExp.CASE_INSENSITIVE, Operations.DEFAULT_DETERMINIZE_WORK_LIMIT);
+		}
 		List<String> tokens = index.analyze(f.getValue());
 		String needle = tokens.size() == 1 ? tokens.get(0) : String.join(" ", tokens);
 		return new WildcardQuery(new Term(f.getField(), "*" + needle + "*"));
+	}
+
+	/**
+	 * The value as a regexp literal: it is data, and a uuid alone already carries
+	 * characters the parser would read as syntax.
+	 */
+	private static String quoteRegexp(String value) {
+		var quoted = new StringBuilder(2 * value.length());
+		value.codePoints().forEach(codePoint -> {
+			if (!Character.isLetterOrDigit(codePoint)) {
+				quoted.append('\\');
+			}
+			quoted.appendCodePoint(codePoint);
+		});
+		return quoted.toString();
 	}
 
 	// -------------------------------------------------------------------------

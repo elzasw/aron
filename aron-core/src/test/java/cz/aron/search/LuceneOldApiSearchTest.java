@@ -319,6 +319,22 @@ class LuceneOldApiSearchTest {
 	}
 
 	@Test
+	void containsOnAnExactFieldMatchesTheWholeTerm() {
+		// the old UI's reference filter (MULTI_REF): a CONTAINS carrying the
+		// selected target's uuid, whose hyphens must not be analyzed away
+		var contains = new ContainsFilter();
+		contains.setField("FUND~REF");
+		contains.setValue("fund-a");
+		assertThat(search.search(params(contains)).uuids()).containsExactlyInAnyOrder(uuid(3), uuid(4));
+
+		// case-insensitive as the ES wildcard is, and no substring of another value
+		contains.setValue("FUND-A");
+		assertThat(search.search(params(contains)).total()).isEqualTo(2);
+		contains.setValue("fund-c");
+		assertThat(search.search(params(contains)).total()).isZero();
+	}
+
+	@Test
 	void anyKeywordFieldMatchesReferenceFields() {
 		var akf = new AnyKeywordFieldFilter();
 		akf.setValue("ent-2");

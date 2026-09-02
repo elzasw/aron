@@ -231,6 +231,23 @@ class OldApiSearchTest extends AbstractTest {
 	}
 
 	@Test
+	void referenceFilterOfTheOldUiSelectsTheReferencingRecords() throws Exception {
+		// what the old UI sends once an option of a reference facet is selected
+		// (MULTI_REF): an OR of CONTAINS filters carrying the target's uuid
+		var response = post("/api/aron/apu/list?listType=TEST", """
+				{"size":10,
+				 "filters":[{"field":"type","operation":"EQ","value":"%s"},
+				            {"operation":"OR","filters":[
+				              {"field":"FUND~REF","operation":"CONTAINS","value":"oldapi-fund-1"}]}]}
+				""".formatted(APU_TYPE));
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		JsonNode body = objectMapper.readTree(response.body());
+		assertThat(body.get("count").asLong()).isEqualTo(1);
+		assertThat(body.get("items").get(0).get("id").asText()).isEqualTo(uuid(1));
+	}
+
+	@Test
 	void getEntityRelationshipsRequestCountsTheRelationTypes() throws Exception {
 		// captured from the old UI's entity detail: a document-scope filter around
 		// the nested relations of one target

@@ -581,3 +581,18 @@ Testing: `LuceneOldApiSearchTest` covers the translator (both shapes, the
 two-funds record that tells a per-relation condition from a per-record one, the
 group gate, the empty query) and `OldApiSearchTest` runs the old UI's literal
 request JSON end to end.
+
+**The filter the options feed is a CONTAINS, and it must not be analyzed.**
+Selecting an option makes the old UI send its `MULTI_REF` filter - an `OR` of
+`CONTAINS` filters carrying the target's uuid on the reference field itself
+(`createApiFilters`). A CONTAINS matches a field's **terms**, which is what the
+ES `case_insensitive` wildcard does, so what a term is decides how the value
+must be treated: on an analyzed field the terms are its tokens and the value
+goes through the same analysis chain, but on an exact field the term is the
+whole value - and the folding/tokenizing chain splits a uuid on its hyphens
+into five tokens no term can ever match, which is why the selected fund
+returned nothing. `LuceneSearchIndex.isAnalyzedField` is now the one place that
+answers "is this field analyzed", read by the indexing side that decides the
+field's type and by the query side that must agree with it; the exact-field
+CONTAINS is a case-insensitive regexp over the whole term, with the value
+escaped because it is data.
