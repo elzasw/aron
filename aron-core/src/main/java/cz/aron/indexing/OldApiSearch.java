@@ -12,7 +12,7 @@ import cz.aron.api.rest.model.Params;
  * <li>{@code cz.aron.search.lucene.LuceneOldApiSearch} - dev/test-grade support
  * on the embedded engine, so ES-less deployments, dev mode and the default test
  * suite can serve the old UI (approximate relevance/fulltext semantics;
- * nested-rels aggregations and {@code searchAfter} not supported yet).</li>
+ * {@code searchAfter} not supported yet).</li>
  * </ul>
  * Deliberately separate from the engine-neutral search port
  * ({@code cz.aron.search.SearchIndex}): the port's query model stays minimal and

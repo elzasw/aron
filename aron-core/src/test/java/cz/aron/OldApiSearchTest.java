@@ -62,11 +62,17 @@ class OldApiSearchTest extends AbstractTest {
 				doc(uuid(1), "OldApi pořadač", Map.of(
 						"LANG~CODE", List.of("oldapi-cze"),
 						"UNIT~DATE~L", List.of("1800-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"))),
+						"UNIT~DATE~H", List.of("1850-12-31T23:59:59"),
+						"FUND~REF", List.of("oldapi-fund-1"),
+						"FUND~REF~LABEL", List.of("OldApi Sbírka matrik"),
+						"FUND~REF~ID~LABEL", List.of("oldapi-fund-1|OldApi Sbírka matrik"))),
 				doc(uuid(2), "OldApi deník", Map.of(
 						"LANG~CODE", List.of("oldapi-ger"),
 						"UNIT~DATE~L", List.of("1900-01-01T00:00:00"),
-						"UNIT~DATE~H", List.of("1910-12-31T23:59:59")))));
+						"UNIT~DATE~H", List.of("1910-12-31T23:59:59"),
+						"FUND~REF", List.of("oldapi-fund-2"),
+						"FUND~REF~LABEL", List.of("OldApi Archiv města"),
+						"FUND~REF~ID~LABEL", List.of("oldapi-fund-2|OldApi Archiv města")))));
 		searchIndex.indexApus(List.of(doc(uuid(3), "OldApi mapa", APU_TYPE_STRUCTURED, Map.of())));
 	}
 
@@ -197,27 +203,58 @@ class OldApiSearchTest extends AbstractTest {
 	}
 
 	@Test
-	void getOptionsRelRequestAnswersWithTheExpectedShape() throws Exception {
-		// captured from the old UI's autocomplete filter: the nested rels
-		// aggregation is not computed yet, but the response must carry the full
-		// recursive shape - the old client navigates it without guards
-		var response = post("/api/aron/apu/list?listType=GET-OPTIONSREL-BY_SOURCE_X", """
+	void getOptionsRelRequestOffersTheMatchingReferences() throws Exception {
+		// captured from the old UI's autocomplete filter of a reference facet: the
+		// options are the relations whose own label matches what the reader typed
+		var response = post("/api/aron/apu/list?listType=GET-OPTIONSREL-BY_SOURCE_FUND~REF", """
 				{"size":0,
 				 "aggregations":[{"name":"items","family":"BUCKET","aggregator":"NESTED","path":"rels",
 				   "aggregations":[{"family":"BUCKET","aggregator":"FILTER","name":"relsFilterAgg",
 				     "filter":{"operation":"AND","filters":[
-				       {"field":"rels.type","operation":"EQ","value":"X","nestedQueryEnabled":false}]},
+				       {"field":"rels.type","operation":"EQ","value":"FUND~REF","nestedQueryEnabled":false},
+				       {"operation":"FTXF","field":"rels.label","value":"Sbí","nestedQueryEnabled":false}]},
 				     "aggregations":[{"family":"BUCKET","aggregator":"TERMS","name":"idLabel","field":"rels.idLabel"}]}]}],
-				 "filters":[]}
-				""");
+				 "filters":[{"field":"type","operation":"EQ","value":"%s"},
+				            {"field":"FUND~REF~LABEL","operation":"FTXF","value":"Sbí"}],
+				 "source":"get-options-by-source"}
+				""".formatted(APU_TYPE));
 
 		assertThat(response.statusCode()).isEqualTo(200);
 		JsonNode body = objectMapper.readTree(response.body());
 		JsonNode idLabel = body.get("aggregations").get("items").get(0)
 				.get("aggregations").get("relsFilterAgg").get(0)
 				.get("aggregations").get("idLabel");
-		assertThat(idLabel.isArray()).isTrue();
-		assertThat(idLabel).isEmpty();
+		assertThat(idLabel).hasSize(1);
+		// the key is what the old UI splits into the option's id and its name
+		assertThat(idLabel.get(0).get("key").asText()).isEqualTo("oldapi-fund-1|OldApi Sbírka matrik");
+		assertThat(idLabel.get(0).get("value").asText()).isEqualTo("1");
+	}
+
+	@Test
+	void getEntityRelationshipsRequestCountsTheRelationTypes() throws Exception {
+		// captured from the old UI's entity detail: a document-scope filter around
+		// the nested relations of one target
+		var response = post("/api/aron/apu/list?listType=GET-ENTITY-RELATIONSHIPS_GRP", """
+				{"size":0,
+				 "aggregations":[{"family":"BUCKET","aggregator":"FILTER","name":"apuFilterAgg",
+				   "filter":{"operation":"OR","filters":[{"field":"type","operation":"EQ","value":"%s"}]},
+				   "aggregations":[{"name":"nestedAgg","family":"BUCKET","aggregator":"NESTED","path":"rels",
+				     "aggregations":[{"family":"BUCKET","aggregator":"FILTER","name":"relsFilterAgg",
+				       "filter":{"field":"rels.targetId","operation":"EQ","value":"oldapi-fund-1",
+				                 "nestedQueryEnabled":false},
+				       "aggregations":[{"family":"BUCKET","aggregator":"TERMS","name":"relsTypeAgg",
+				                        "field":"rels.type"}]}]}]}]}
+				""".formatted(APU_TYPE));
+
+		assertThat(response.statusCode()).isEqualTo(200);
+		JsonNode body = objectMapper.readTree(response.body());
+		JsonNode relsType = body.get("aggregations").get("apuFilterAgg").get(0)
+				.get("aggregations").get("nestedAgg").get(0)
+				.get("aggregations").get("relsFilterAgg").get(0)
+				.get("aggregations").get("relsTypeAgg");
+		assertThat(relsType).hasSize(1);
+		assertThat(relsType.get(0).get("key").asText()).isEqualTo("FUND~REF");
+		assertThat(relsType.get(0).get("value").asText()).isEqualTo("1");
 	}
 
 	@Test

@@ -21,10 +21,12 @@ import cz.aron.api.rest.model.ContainsFilter;
 import cz.aron.api.rest.model.EqFilter;
 import cz.aron.api.rest.model.FieldSort;
 import cz.aron.api.rest.model.Filter;
+import cz.aron.api.rest.model.FilterAggregation;
 import cz.aron.api.rest.model.FullTextFieldFilter;
 import cz.aron.api.rest.model.FullTextFilter;
 import cz.aron.api.rest.model.MaxAggregation;
 import cz.aron.api.rest.model.MinAggregation;
+import cz.aron.api.rest.model.NestedAggregation;
 import cz.aron.api.rest.model.NotFilter;
 import cz.aron.api.rest.model.OrFilter;
 import cz.aron.api.rest.model.Params;
@@ -39,7 +41,8 @@ import cz.aron.search.lucene.LuceneSearchIndex;
  * Old-API query translation on the embedded Lucene engine (plain unit test, no
  * Spring; in-memory index). Covers the request surface the old UI actually
  * sends: boolean filter trees, EQ/FTXF/FTX/RANGE/CONTAINS/AKF, offset paging,
- * name/score sort, and the TERMS/MAX/MIN aggregations. The production ES
+ * name/score sort, the TERMS/MAX/MIN aggregations and the nested {@code rels}
+ * shapes of the reference autocomplete and the entity detail. The production ES
  * behavior of the same requests is pinned by the frozen EsOldApiSearch path -
  * engine-shared parity beyond this dev/test grade is not claimed.
  */
@@ -62,7 +65,9 @@ class LuceneOldApiSearchTest {
 
 	/**
 	 * Fixture: two FUND records with dating, refs and languages, three ARCH_DESC
-	 * records for sorting/paging (Czech collation: Cibule < Hrad < Chalupa).
+	 * records for sorting/paging (Czech collation: Cibule < Hrad < Chalupa). Two
+	 * of those carry fund references - the first one two of them, which is what
+	 * tells a per-relation condition from a per-record one.
 	 */
 	private void indexFixture() {
 		var fund1 = doc(uuid(1), "Matriční kniha Přerov", "FUND", Map.of(
@@ -82,8 +87,19 @@ class LuceneOldApiSearchTest {
 				"REL~ENTITY~LABEL", List.of("Jan Dvořák"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-2|Jan Dvořák")));
 		index.indexApus(List.of(fund1, fund2,
-				doc(uuid(3), "Cibule", "ARCH_DESC", Map.of("LANG~CODE", List.of("lat"))),
-				doc(uuid(4), "Hrad", "ARCH_DESC", Map.of("LANG~CODE", List.of("ger"))),
+				doc(uuid(3), "Cibule", "ARCH_DESC", Map.of(
+						"LANG~CODE", List.of("lat"),
+						"REL~ENTITY", List.of("ent-3"),
+						"REL~ENTITY~LABEL", List.of("Marie Krátká"),
+						"REL~ENTITY~ID~LABEL", List.of("ent-3|Marie Krátká"),
+						"FUND~REF", List.of("fund-a", "fund-b"),
+						"FUND~REF~LABEL", List.of("Sbírka matrik", "Archiv města"),
+						"FUND~REF~ID~LABEL", List.of("fund-a|Sbírka matrik", "fund-b|Archiv města"))),
+				doc(uuid(4), "Hrad", "ARCH_DESC", Map.of(
+						"LANG~CODE", List.of("ger"),
+						"FUND~REF", List.of("fund-a"),
+						"FUND~REF~LABEL", List.of("Sbírka matrik"),
+						"FUND~REF~ID~LABEL", List.of("fund-a|Sbírka matrik"))),
 				doc(uuid(5), "Chalupa", "ARCH_DESC", Map.of("LANG~CODE", List.of("ger")))));
 	}
 
@@ -186,22 +202,105 @@ class LuceneOldApiSearchTest {
 				.total()).isEqualTo(2);
 	}
 
+	/**
+	 * The reference-facet autocomplete (GET-OPTIONSREL-BY_SOURCE): NESTED(items) >
+	 * FILTER(relsFilterAgg) > TERMS(idLabel). The label condition selects
+	 * relations, not records - Cibule references a matching fund and a
+	 * non-matching one, and only the matching one may become an option.
+	 */
 	@Test
-	void unsupportedAggregationsAnswerWithAnEmptyShape() {
-		// GET-OPTIONSREL-BY_SOURCE shape: NESTED(items) > FILTER(relsFilterAgg) > TERMS(idLabel);
-		// the old UI navigates the structure without guards - the shape must exist
-		var idLabel = terms("idLabel", "rels.idLabel", null);
-		var relsFilter = new cz.aron.api.rest.model.FilterAggregation();
-		relsFilter.setName("relsFilterAgg");
-		relsFilter.setAggregations(List.of(idLabel));
-		var nested = new cz.aron.api.rest.model.NestedAggregation();
-		nested.setName("items");
-		nested.setPath("rels");
-		nested.setAggregations(List.of(relsFilter));
+	void referenceOptionsComeFromTheRelationsThemselves() {
+		var params = params(eq("type", "ARCH_DESC"));
+		params.setSize(0);
+		params.setAggregations(List.of(nested("items", "rels",
+				filterAgg("relsFilterAgg", and(eq("rels.type", "FUND~REF"), ftxf("rels.label", "sbi")),
+						terms("idLabel", "rels.idLabel", null)))));
 
+		var items = search.search(params).aggregations().get("items");
+		assertThat(items).hasSize(1);
+		var relsFilter = items.get(0).getAggregations().get("relsFilterAgg");
+		assertThat(relsFilter).hasSize(1);
+		// two records carry that one relation - the count ES reports for the bucket
+		assertThat(relsFilter.get(0).getValue()).isEqualTo("2");
+		assertThat(relsFilter.get(0).getAggregations().get("idLabel"))
+				.extracting(AggregationResult::getKey, AggregationResult::getValue)
+				.containsExactly(tuple("fund-a|Sbírka matrik", "2"));
+	}
+
+	@Test
+	void referenceOptionsWithoutAQueryAreEmpty() {
+		// the old UI sends the aggregation with an empty query before the reader
+		// types; an empty match_phrase_prefix matches nothing on ES either
+		var params = params(eq("type", "ARCH_DESC"));
+		params.setSize(0);
+		params.setAggregations(List.of(nested("items", "rels",
+				filterAgg("relsFilterAgg", and(eq("rels.type", "FUND~REF"), ftxf("rels.label", "")),
+						terms("idLabel", "rels.idLabel", null)))));
+
+		assertThat(search.search(params).aggregations().get("items").get(0).getAggregations()
+				.get("relsFilterAgg").get(0).getAggregations().get("idLabel")).isEmpty();
+	}
+
+	/**
+	 * The entity detail's relationship list (GET-ENTITY-RELATIONSHIPS):
+	 * FILTER(apuFilterAgg) > NESTED(nestedAgg) > FILTER(relsFilterAgg) >
+	 * TERMS(relsTypeAgg). The document-scope filter narrows what the relations are
+	 * counted over - the fund referencing the same entity must stay out.
+	 */
+	@Test
+	void entityRelationshipTypesOfOneTarget() {
 		var params = new Params();
 		params.setSize(0);
-		params.setAggregations(List.of(nested));
+		params.setAggregations(List.of(filterAgg("apuFilterAgg", or(eq("type", "ARCH_DESC")),
+				nested("nestedAgg", "rels",
+						filterAgg("relsFilterAgg", eq("rels.targetId", "ent-3"),
+								terms("relsTypeAgg", "rels.type", null))))));
+
+		var apuFilter = search.search(params).aggregations().get("apuFilterAgg");
+		assertThat(apuFilter).hasSize(1);
+		assertThat(apuFilter.get(0).getValue()).isEqualTo("3"); // the ARCH_DESC records
+		assertThat(apuFilter.get(0).getAggregations().get("nestedAgg").get(0).getAggregations()
+				.get("relsFilterAgg").get(0).getAggregations().get("relsTypeAgg"))
+				.extracting(AggregationResult::getKey, AggregationResult::getValue)
+				.containsExactly(tuple("REL~ENTITY", "1"));
+	}
+
+	@Test
+	void relationGroupsSelectTheItemTypesTheyContain() {
+		// GRP~RELS holds REL~ENTITY only, so the fund references are out
+		var params = params(eq("type", "ARCH_DESC"));
+		params.setSize(0);
+		params.setAggregations(List.of(nested("items", "rels",
+				filterAgg("relsFilterAgg", eq("rels.groups", "GRP~RELS"),
+						terms("types", "rels.type", null)))));
+
+		assertThat(search.search(params).aggregations().get("items").get(0).getAggregations()
+				.get("relsFilterAgg").get(0).getAggregations().get("types"))
+				.extracting(AggregationResult::getKey)
+				.containsExactly("REL~ENTITY");
+	}
+
+	@Test
+	void relationTermsOnAFieldThatIsNotTheRelationsAggregateToNoBuckets() {
+		var params = params(eq("type", "ARCH_DESC"));
+		params.setSize(0);
+		params.setAggregations(List.of(nested("items", "rels",
+				filterAgg("relsFilterAgg", eq("rels.type", "FUND~REF"),
+						terms("names", "rels.name", null)))));
+
+		assertThat(search.search(params).aggregations().get("items").get(0).getAggregations()
+				.get("relsFilterAgg").get(0).getAggregations().get("names")).isEmpty();
+	}
+
+	@Test
+	void unsupportedAggregationsAnswerWithAnEmptyShape() {
+		// only `rels` is nested; the old UI navigates the structure without
+		// guards, so an aggregation the engine cannot answer must still shape it
+		var params = new Params();
+		params.setSize(0);
+		params.setAggregations(List.of(nested("items", "somethingElse",
+				filterAgg("relsFilterAgg", eq("rels.type", "FUND~REF"),
+						terms("idLabel", "rels.idLabel", null)))));
 
 		var items = search.search(params).aggregations().get("items");
 		assertThat(items).hasSize(1);
@@ -346,6 +445,45 @@ class LuceneOldApiSearchTest {
 		var sort = new FieldSort();
 		sort.setField(field);
 		return sort;
+	}
+
+	private static FullTextFieldFilter ftxf(String field, String value) {
+		var filter = new FullTextFieldFilter();
+		filter.setField(field);
+		filter.setValue(value);
+		return filter;
+	}
+
+	private static AndFilter and(Filter... filters) {
+		var filter = new AndFilter();
+		filter.setFilters(List.of(filters));
+		return filter;
+	}
+
+	private static OrFilter or(Filter... filters) {
+		var filter = new OrFilter();
+		filter.setFilters(List.of(filters));
+		return filter;
+	}
+
+	private static NestedAggregation nested(String name, String path,
+			cz.aron.api.rest.model.Aggregation... aggregations) {
+		var aggregation = new NestedAggregation();
+		aggregation.setAggregator(BucketAggregator.NESTED);
+		aggregation.setName(name);
+		aggregation.setPath(path);
+		aggregation.setAggregations(List.of(aggregations));
+		return aggregation;
+	}
+
+	private static FilterAggregation filterAgg(String name, Filter filter,
+			cz.aron.api.rest.model.Aggregation... aggregations) {
+		var aggregation = new FilterAggregation();
+		aggregation.setAggregator(BucketAggregator.FILTER);
+		aggregation.setName(name);
+		aggregation.setFilter(filter);
+		aggregation.setAggregations(List.of(aggregations));
+		return aggregation;
 	}
 
 	private static TermsAggregation terms(String name, String field, Integer size) {

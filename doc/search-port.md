@@ -325,11 +325,11 @@ behind a dedicated internal seam, `cz.aron.indexing.OldApiSearch`, selected by
   `ApuDocumentBuilder` makes the index content identical across engines; the
   class is pure query translation. Covers the request shapes the old UI sends:
   boolean filter trees (EQ/FTXF/FTX/RANGE/CONTAINS/AKF), offset paging,
-  name/score sort, TERMS (with `size`) and MAX/MIN aggregations. Not covered
-  yet: the nested-rels aggregation shapes of detail pages (planned as a join
-  over the `rels` index) and `searchAfter` (the old UI pages by offset).
-  Divergences (FTX approximation, relevance ranking, bucket tie order) are
-  acceptable for dev/test and must not be used to reason about old-API parity.
+  name/score sort, TERMS (with `size`) and MAX/MIN aggregations, and the nested
+  `rels` aggregations (§13). Not covered: `searchAfter` (the old UI pages by
+  offset). Divergences (FTX approximation, relevance ranking, bucket tie order)
+  are acceptable for dev/test and must not be used to reason about old-API
+  parity.
 
 The port's own model (`ApuSearchQuery`) deliberately did NOT grow for this —
 the "abstraction must not carry the whole old API" argument from §6 applies to
@@ -526,3 +526,58 @@ matched nothing. `ApuDocumentBuilder` skips an unrecognized item type, so no rea
 document can carry such a field — the fixture was the unrealistic part, and the
 model now declares the second dating type. Both say the same thing: the port's
 contract test is only as good as its last `-Pes-it` run.
+
+## 13. The nested `rels` aggregations on the embedded engine (2026-09-02)
+
+The old UI has two request shapes the Lucene path answered with an empty result
+of the right structure (§7): the autocomplete of every **reference facet**
+(`NESTED(rels) > FILTER(rels.type, rels.label) > TERMS(rels.idLabel)`) and the
+entity detail's **relationship-type list** (`FILTER(apu) > NESTED(rels) >
+FILTER(rels.targetId, rels.groups) > TERMS(rels.type)`). On an ES-less
+deployment that left the old UI - the side-by-side reference for the new
+frontend - without its reference facets, which is exactly what the seam exists
+to avoid.
+
+§7 planned a join over the `rels` index. It is not needed: **the flat document
+already carries every relation**, because `ApuDocumentBuilder` writes, per
+APU_REF item type, the target's uuid (`<code>`), its indexed label
+(`<code>~LABEL`) and the pair (`<code>~ID~LABEL` = `uuid|label`). A relation is
+therefore reconstructible from one `~ID~LABEL` term: the item type is its type
+and carries its groups, and the term's two halves are the target and its label.
+`LuceneOldApiSearch.relScope` enumerates those terms for the item types the
+filter admits and counts each against the current query - the mechanism the
+document-scope TERMS aggregation already used. No join, no new index field, no
+reindex.
+
+Why the conditions are evaluated on the reconstructed relation instead of being
+translated into a query: a `rels.*` filter selects **relations**, while a
+document clause selects records. A description referencing two funds, one of
+them matching what the reader typed, matches the document clause through the
+first and would then contribute the second as an option too - the bug the
+nested query exists to prevent. So the filter becomes a `RelCondition` with two
+halves: which item types can possibly match (`rels.type`/`rels.groups` are
+decided by the type alone, so a type-scoped filter enumerates one field instead
+of all of them) and whether a concrete relation matches. Because a relation's
+count depends on its value alone, a further condition narrows an
+already-enumerated scope in place.
+
+Two things this cannot reproduce, both stated in the class javadoc:
+
+- the label a condition matches is the target's **displayed** label (the
+  `~ID~LABEL` half), where ES matches the **indexed** one (`<code>~LABEL`).
+  They differ only where the target carries an `INT~NAME~INDEX` override, and
+  the flat form is the one the reader sees in the dropdown;
+- a NESTED bucket's own count is the **records** in scope, not their relations.
+  Counting those means enumerating every relation value in the index, and the
+  old UI reads only the buckets below it. A rel-scope FILTER bucket does report
+  relations, which is what ES reports there.
+
+An empty `FTXF` value keeps matching nothing, as an empty
+`match_phrase_prefix` does on Elasticsearch - which is why a reference facet's
+autocomplete offers its options only once the reader types. That is v1
+behaviour, not an omission.
+
+Testing: `LuceneOldApiSearchTest` covers the translator (both shapes, the
+two-funds record that tells a per-relation condition from a per-record one, the
+group gate, the empty query) and `OldApiSearchTest` runs the old UI's literal
+request JSON end to end.
