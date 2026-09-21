@@ -3,6 +3,7 @@ package cz.aron.integration;
 import org.springframework.stereotype.Service;
 
 import cz.aron.ft.handling.TransferType;
+import cz.aron.search.IndexSynchronizer;
 import cz.aron.service.IdService;
 
 import java.io.IOException;
@@ -26,11 +27,14 @@ public class ImportDataProcessingService {
     private final ApuProcessor apuProcessor;
     private final DaoInputProcessor daoInputProcessor;
     private final IdService idService;
+    private final IndexSynchronizer indexSynchronizer;
     
-    public ImportDataProcessingService(ApuProcessor apuProcessor, DaoInputProcessor daoInputProcessor, IdService idService) {
+    public ImportDataProcessingService(ApuProcessor apuProcessor, DaoInputProcessor daoInputProcessor, IdService idService,
+            IndexSynchronizer indexSynchronizer) {
     	this.apuProcessor = apuProcessor;
     	this.daoInputProcessor = daoInputProcessor;
 		this.idService = idService;
+		this.indexSynchronizer = indexSynchronizer;
     }
 
     public void processData(Path path, TransferType transferType) {
@@ -42,8 +46,10 @@ public class ImportDataProcessingService {
                     throw new RuntimeException("Concurrent apu upload is running");
                 }
                 idService.initMetadataIds();
-                try {                    
-                    apuProcessor.processApuAndFiles(apuFilePath, filesMap);    
+                try {
+                    apuProcessor.processApuAndFiles(apuFilePath, filesMap);
+                    // the import committed on the line above; the index follows it, under the same lock
+                    indexSynchronizer.synchronize();
                 } finally {
                     apuLock.unlock();
                 }                
@@ -88,6 +94,9 @@ public class ImportDataProcessingService {
                 if (apuProcessor.deleteApuSource(uuid)) {
                     deleted++;
                 }
+            }
+            if (deleted > 0) {
+                indexSynchronizer.synchronize();
             }
             return deleted;
         } finally {

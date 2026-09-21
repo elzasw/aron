@@ -118,7 +118,6 @@ public class ApuEntity extends PersistableBase {
     private int pos;
     private int childCnt;
     private boolean indexed;
-    private boolean reindex;
 
     @Column(name = "has_attachments")
     private boolean hasAttachments;
@@ -320,14 +319,6 @@ public class ApuEntity extends PersistableBase {
 
 	public void setIncomingRelTypes(List<String> incomingRelTypes) {
 		this.incomingRelTypes = incomingRelTypes;
-	}
-
-	public boolean isReindex() {
-		return reindex;
-	}
-
-	public void setReindex(boolean reindex) {
-		this.reindex = reindex;
 	}
 
 	public boolean isHasAttachments() {

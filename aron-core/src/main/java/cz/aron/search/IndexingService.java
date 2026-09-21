@@ -62,8 +62,8 @@ public class IndexingService {
 		}
 	}
 
-	public void deleteApus(long apuSourceId) {
-		searchIndex.deleteApusBySource(apuSourceId);
+	public void deleteApus(Collection<String> uuids) {
+		searchIndex.deleteApus(uuids);
 	}
 
 	/** Read side of the port - the only search entry point of the new API. */

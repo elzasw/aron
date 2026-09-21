@@ -29,14 +29,13 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery.OpType;
 import org.springframework.stereotype.Component;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import com.google.common.collect.Iterables;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeRelation;
@@ -197,11 +196,15 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	}
 
 	@Override
-	public void deleteApusBySource(long apuSourceId) {
-		var criteria = new Criteria("apuSourceId").is(apuSourceId);
-		var query = new CriteriaQuery(criteria);
-		DeleteQuery deleteQuery = DeleteQuery.builder(query).build();
-		operations.delete(deleteQuery, IndexedApu.class);
+	public void deleteApus(Collection<String> uuids) {
+		// the ids query is a terms lookup on _id, capped by index.max_terms_count (65 536 by
+		// default) - chunking below keeps any caller safe, whatever batch size it chooses
+		for (var chunk : Iterables.partition(uuids, 10_000)) {
+			var deleteQuery = DeleteQuery
+					.builder(NativeQuery.builder().withQuery(Query.of(q -> q.ids(i -> i.values(chunk)))).build())
+					.build();
+			operations.delete(deleteQuery, IndexedApu.class);
+		}
 	}
 
 	@Override

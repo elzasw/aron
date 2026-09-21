@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.esotericsoftware.kryo.Kryo;
+import com.google.common.collect.Iterables;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -45,7 +46,7 @@ import cz.aron.domain.Relation;
 import cz.aron.domain.UniversalDate;
 import cz.aron.domain.types.TypesHolder;
 import cz.aron.domain.types.dto.ItemType;
-import cz.aron.search.IndexingService;
+import cz.aron.repository.IndexDirtyRepository;
 import cz.aron.mapper.ApuSerializer;
 import cz.aron.mapper.KryoSerializer;
 import cz.aron.mapper.StructuredResultSerializer;
@@ -56,7 +57,6 @@ import cz.aron.repository.DaoFileRepository;
 import cz.aron.repository.DaoRepository;
 import cz.aron.repository.RelationRepository;
 import cz.aron.service.ApuRequestQueue;
-import cz.aron.service.ApuService;
 import cz.aron.service.IdService;
 import jakarta.persistence.EntityManager;
 
@@ -76,8 +76,7 @@ public class ApuProcessor {
 	private final FileInputProcessor fileInputProcessor;
 	private final ObjectMapper objectMapper;
 	private final EntityManager entityManager;
-	private final IndexingService indexingService;
-	private final ApuService apuService;
+	private final IndexDirtyRepository indexDirtyRepository;
 	private final IdService idService;
 
 	// Kryo is not thread-safe; this instance is confined to the single import run that
@@ -87,7 +86,9 @@ public class ApuProcessor {
 	private Map<String, ApuEntity> saveCache = new LinkedHashMap<>(); // maintain order so that parent always comes
 																		// before child
 	private Set<RelationKey> relationsAddCache = new HashSet<>();	// set of relations to be added to database
-	private Set<UUID> apusToHaveIncomingRelsUpdated = new HashSet<>();
+	// labels of the source before and after this import - the referrers of what differs go dirty
+	private Map<UUID, LabelChanges.Label> previousLabels = new HashMap<>();
+	private Map<UUID, LabelChanges.Label> writtenLabels = new HashMap<>();
 	private Map<String, LevelStats> apuIdsStates = new HashMap<>();
 	private Map<String, DigitalObject> existingDaos = new HashMap<>();
 
@@ -101,8 +102,8 @@ public class ApuProcessor {
 			ApuAttachmentRepository apuAttachmentRepository, DaoRepository daoRepository,
 			DaoFileRepository daoFileRepository, RelationRepository relationRepository,
 			ApuRequestQueue apuRequestQueue, TypesHolder typesHolder, FileInputProcessor fileInputProcessor,
-			ObjectMapper objectMapper, EntityManager entityManager, IndexingService indexingService,
-			ApuService apuService, IdService idService) {
+			ObjectMapper objectMapper, EntityManager entityManager, IndexDirtyRepository indexDirtyRepository,
+			IdService idService) {
 		this.apuSourceRepository = apuSourceRepository;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuAttachmentRepository = apuAttachmentRepository;
@@ -114,8 +115,7 @@ public class ApuProcessor {
 		this.fileInputProcessor = fileInputProcessor;
 		this.objectMapper = objectMapper;
 		this.entityManager = entityManager;
-		this.indexingService = indexingService;
-		this.apuService = apuService;
+		this.indexDirtyRepository = indexDirtyRepository;
 		this.idService = idService;
 		this.kryo = KryoSerializer.getKryo();
 	}
@@ -133,9 +133,13 @@ public class ApuProcessor {
 				ourApuSource.setId(idService.getNextApuSourceId());
 				ourApuSource.setUuid(UUID.fromString(reader.getUuid()));
 			} else {
+				previousLabels = labelsOf(ourApuSource.getId());
+				// the index is written after the commit (IndexSynchronizer): the previous delivery's
+				// records enter the dirty set while their rows still exist - whichever of them the new
+				// delivery does not rewrite has no row afterwards, and its document is deleted
+				indexDirtyRepository.markDirtyBySource(ourApuSource.getId());
 				removeExistingApusAndRelations(ourApuSource.getId(), reader.getUuid());
 			}
-			// ourApuSource.setData(metadata);
 			ourApuSource.setPublished(LocalDateTime.now());
 			ourApuSource = apuSourceRepository.save(ourApuSource);
 
@@ -152,6 +156,8 @@ public class ApuProcessor {
 				log.debug("Processing apu source {}, process chunk of size {}", reader.getUuid(), apus.size());
 			}, CACHE_SIZE);
 			removeNotUsedRelations(apuSourceRef);
+			indexDirtyRepository.markDirtyBySource(apuSourceRef.getId());
+			markReferrersOfChangedLabels();
 		} catch (Exception e) {
 			log.error("Fail to import apusource ", e);
 			throw new RuntimeException(e);
@@ -161,10 +167,6 @@ public class ApuProcessor {
 	}
 
 	private void removeExistingApusAndRelations(long apuSourceId, String uuid) {
-		
-		// remove from index
-		indexingService.deleteApus(apuSourceId);
-
 		// remove relations from Dao to ApuEntity
 		var numDisconnected = daoRepository.disconnectDaosByApuSourceId(apuSourceId);
 
@@ -188,15 +190,16 @@ public class ApuProcessor {
 
 	/**
 	 * Deletes the given ApuSource with everything derived from it: its APUs (with
-	 * their attachments and attachment file records), its relations and its
-	 * documents in the search index. Digital objects are only disconnected, exactly
-	 * as on a reimport - they arrive in their own transfers and are reattached when
-	 * the source is imported again; the binary files of the deleted attachments stay
-	 * in the file storage, again as on a reimport.
+	 * their attachments and attachment file records) and its relations; its search
+	 * documents follow after the commit ({@code IndexSynchronizer}). Digital objects
+	 * are only disconnected, exactly as on a reimport - they arrive in their own
+	 * transfers and are reattached when the source is imported again; the binary
+	 * files of the deleted attachments stay in the file storage, again as on a
+	 * reimport.
 	 * <p>
 	 * Relations of OTHER sources pointing to the deleted APUs survive - they are
-	 * plain uuid references - and those sources keep the labels they were indexed
-	 * with until they are reimported.
+	 * plain uuid references; the records holding them are flagged, so their search
+	 * documents stop carrying the deleted records' labels.
 	 *
 	 * @return {@code false} when no such ApuSource exists; deleting data that is
 	 *         already gone is not an error, so a repeated request is harmless
@@ -209,6 +212,8 @@ public class ApuProcessor {
 			return false;
 		}
 		long apuSourceId = apuSource.getId();
+		indexDirtyRepository.markDirtyBySource(apuSourceId);
+		indexDirtyRepository.markDirtyReferrersOfSource(apuSourceId);
 		removeExistingApusAndRelations(apuSourceId, uuid.toString());
 		// unlike a reimport, nothing recreates the relations marked to be removed
 		relationRepository.deleteAllByApuSourceId(apuSourceId);
@@ -280,7 +285,8 @@ public class ApuProcessor {
 	private void clearInternalState() {
 		saveCache.clear();
 		relationsAddCache.clear();
-		apusToHaveIncomingRelsUpdated.clear();
+		previousLabels.clear();
+		writtenLabels.clear();
 		apuIdsStates.clear();
 		existingDaos.clear();
 	}
@@ -317,7 +323,6 @@ public class ApuProcessor {
         apuEntity.setPos(levelState.pos);
         apuEntity.setDepth(levelState.depth);
         apuEntity.setIndexed(apu.isIndexed()==null||Boolean.TRUE.equals(apu.isIndexed())); // defaultni hodnota je true
-        apuEntity.setReindex(false);
 		
 		if (apu.getPrnt() != null) {
 			ApuEntity parentApu = saveCache.get(apu.getPrnt());
@@ -352,7 +357,7 @@ public class ApuProcessor {
 		apuEntity.setHasAttachments(!apuEntity.getAttachments().isEmpty());
 		levelState.processed = true;
 		saveCache.put(apu.getUuid(), apuEntity);
-		apusToHaveIncomingRelsUpdated.add(apuEntity.getUuid());
+		writtenLabels.put(apuEntity.getUuid(), new LabelChanges.Label(apuEntity.getName(), apuEntity.getIndexedName()));
 		recordRelations(apuEntity, parts);
 		//apuRequestQueue.removeForApuId(apuEntity.getUuid());
 	}
@@ -496,8 +501,6 @@ public class ApuProcessor {
 				// remove "remove mark" for existing relation
 				existingRelation.setRemove(false);				
 			}
-			// reindex target
-			apusToHaveIncomingRelsUpdated.add(existingRelation.getTarget());
 		}
 		// remaining relations are new
 		var relationToAdd = relationsAddCache.stream().map(r -> {
@@ -511,29 +514,41 @@ public class ApuProcessor {
 			return rel;
 		}).collect(Collectors.toList());
 		relationRepository.saveAll(relationToAdd);
+		// the clear below discards pending inserts, so the relations must reach the database first
+		relationRepository.flush();
 		relationsAddCache.clear();
 
-		// Now to reindex all apus that reference these apus, to update labels in them
-		List<UUID> updatedApusIds = saveCache.values().stream().map(ApuEntity::getUuid).collect(Collectors.toList());
-		List<Long> apuIdsTargetingUpdatedIds = relationRepository.findIdsByTarget(updatedApusIds);
-		// apuRepository.massIndex(apuIdsTargetingUpdatedIds);
-		// clear for next batch
-		indexingService.indexApus(kryo,saveCache.values(), apuService.resolveApuRefLabels(saveCache.values()));
 		saveCache.clear();
-
-		var relatedIncomingEntities = apuEntityRepository.findAllByIdIn(apuIdsTargetingUpdatedIds);
-		indexingService.indexApus(kryo,relatedIncomingEntities, apuService.resolveApuRefLabels(relatedIncomingEntities));
-
-		var relatedEntities = apuEntityRepository.findAllByUuidIn(apusToHaveIncomingRelsUpdated);
-		indexingService.indexApus(kryo,relatedEntities, apuService.resolveApuRefLabels(relatedEntities));
-		
-		apusToHaveIncomingRelsUpdated.clear();
 		entityManager.clear();
 	}
 
 	private void removeNotUsedRelations(cz.aron.domain.ApuSource apuSource) {
 		relationRepository.deleteAllByApuSourceIdAndRemoveTrue(apuSource.getId());
-		// TODO reindex referenced apus referenced from deleted
+	}
+
+	private Map<UUID, LabelChanges.Label> labelsOf(long apuSourceId) {
+		var labels = new HashMap<UUID, LabelChanges.Label>();
+		for (var label : apuEntityRepository.listLabelsByApuSourceId(apuSourceId)) {
+			labels.put(label.uuid(), new LabelChanges.Label(label.name(), label.indexedName()));
+		}
+		return labels;
+	}
+
+	/**
+	 * Marks the records whose search documents carry a label this import changed: they
+	 * reference a record that is new, renamed or gone (see {@link LabelChanges}). The
+	 * source's own records are in the dirty set already, so the overlap costs nothing.
+	 */
+	private void markReferrersOfChangedLabels() {
+		var changed = LabelChanges.of(previousLabels, writtenLabels);
+		if (changed.isEmpty()) {
+			return;
+		}
+		int flagged = 0;
+		for (var targets : Iterables.partition(changed, 1000)) {
+			flagged += indexDirtyRepository.markDirtyReferrers(targets);
+		}
+		log.debug("{} records changed their label, {} referrers marked dirty", changed.size(), flagged);
 	}
 
 	private void fillDaoCache(List<String> daoIds) {

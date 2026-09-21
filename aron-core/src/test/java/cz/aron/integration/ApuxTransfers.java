@@ -207,4 +207,69 @@ public final class ApuxTransfers {
 
 	}
 
+	/**
+	 * A transfer of several APUs with the shapes the one-APU writers cannot express:
+	 * a parent ({@code <prnt>}) and reference items ({@code <ref>}), so the tests of
+	 * the import's relation handling can say who points at whom. Item types are the
+	 * test display model's ({@code REL_ENTITY}, {@code FUND_REF}, ...); a reference may
+	 * name a record that does not exist - that is data, and exactly what some of
+	 * those tests are about.
+	 */
+	public static final class Transfer {
+
+		private record ApuSpec(UUID uuid, String type, String name, UUID parent, java.util.List<String[]> refs) {
+		}
+
+		private final UUID apuSourceUuid;
+
+		private final java.util.List<ApuSpec> apus = new java.util.ArrayList<>();
+
+		public Transfer(UUID apuSourceUuid) {
+			this.apuSourceUuid = apuSourceUuid;
+		}
+
+		/** Adds an APU; {@code parent} may be null. Its references follow through {@link #ref}. */
+		public Transfer apu(UUID uuid, String type, String name, UUID parent) {
+			apus.add(new ApuSpec(uuid, type, name, parent, new java.util.ArrayList<>()));
+			return this;
+		}
+
+		/** A reference item of the most recently added APU. */
+		public Transfer ref(String itemType, String targetUuid) {
+			apus.get(apus.size() - 1).refs().add(new String[] { itemType, targetUuid });
+			return this;
+		}
+
+		public Path write(Path folder) throws IOException {
+			Files.createDirectories(folder);
+			var xml = new StringBuilder();
+			xml.append("<?xml version=\"1.0\"?>\n");
+			xml.append("<apusrc xmlns=\"http://www.aron.cz/apux/2020\" uuid=\"").append(apuSourceUuid)
+					.append("\">\n <apus>\n");
+			for (var apu : apus) {
+				xml.append("  <apu type=\"").append(apu.type()).append("\" uuid=\"").append(apu.uuid()).append("\">\n");
+				xml.append("   <name>").append(apu.name()).append("</name>\n");
+				if (apu.parent() != null) {
+					xml.append("   <prnt>").append(apu.parent()).append("</prnt>\n");
+				}
+				if (!apu.refs().isEmpty()) {
+					xml.append("   <prts>\n    <part type=\"PT_BODY\">\n     <itms>\n");
+					for (var ref : apu.refs()) {
+						xml.append("      <ref type=\"").append(ref[0]).append("\">").append(ref[1]).append("</ref>\n");
+					}
+					xml.append("     </itms>\n    </part>\n   </prts>\n");
+				}
+				xml.append("  </apu>\n");
+			}
+			xml.append(" </apus>\n</apusrc>\n");
+			Files.writeString(folder.resolve("apusrc-transfer.xml"), xml.toString(), StandardCharsets.UTF_8);
+			return folder;
+		}
+
+		public void importInto(ImportDataProcessingService importService, Path folder) throws IOException {
+			importService.processData(write(folder), TransferType.APUSRC);
+		}
+
+	}
+
 }

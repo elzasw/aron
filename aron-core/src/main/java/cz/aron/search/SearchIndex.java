@@ -42,8 +42,13 @@ public interface SearchIndex {
 
 	void indexRelations(Collection<RelationDocument> relations);
 
-	/** Removes all APU documents belonging to the given source (reimport). */
-	void deleteApusBySource(long apuSourceId);
+	/**
+	 * Removes the documents with the given ids (APU uuids); an unknown id is a
+	 * no-op. Any collection size is accepted - an adapter whose engine caps a
+	 * request's id list (Elasticsearch: {@code index.max_terms_count}) chunks
+	 * internally.
+	 */
+	void deleteApus(Collection<String> uuids);
 
 	// --- read side (minimal; grows with the Phase 7 slices) ----------------
 

@@ -15,9 +15,32 @@ version) with the values stored in the index's own metadata:
 - changed → the schema is dropped, recreated and **all APUs are reindexed
   automatically**.
 
-No manual reindex procedure exists or is needed; to force a rebuild of a
-persisted embedded-Lucene index, delete its directory
+No manual full-reindex procedure exists or is needed (selected records can be
+re-indexed through the dirty set, see below); to force a rebuild of a persisted
+embedded-Lucene index, delete its directory
 (``search.lucene.path``) and restart.
+
+Index synchronization after an import
+-------------------------------------
+
+An import writes the database first and the search index afterwards, from the
+database, so a failed import leaves the index as it was. Inside its transaction
+the import fills the **dirty set** (table ``index_dirty``) with the identifiers
+of every record whose document must be re-derived; right after the import — and,
+should the application stop in between, at the next start — the set is worked
+off: a record that exists is (re)indexed, a record that is gone has its document
+deleted. A log line ``Search index synchronized: …`` reports each run.
+
+Because the start works off the whole set, inserting rows by hand is the
+supported way to re-index selected records without a full rebuild — for
+example after correcting data directly in the database::
+
+   INSERT INTO index_dirty(apu_uuid, requested_at)
+   SELECT uuid, now() FROM apu WHERE apu_source_id = 42;
+
+The records are written to the index at the next start (or the next import).
+An orphaned search document — one no database record backs — is removed the
+same way: insert its uuid.
 
 Data ingest
 ===========
