@@ -30,8 +30,10 @@ at example.org. The display model and the facets match the Czech national
 description standard and can usually stay as they are - but they must match what
 the source system actually delivers, so review them against your data.
 
-The administrator documentation is not part of this bundle; it is published
-separately alongside the release.
+The administrator documentation is not part of this bundle. It is published at
+https://docs.lightcomp.cz/aron/<version line>/ - for a 2.0.x release that is
+https://docs.lightcomp.cz/aron/2.0/ - with the release notes of every build and
+the upgrade procedure.
 
 
 Requirements
@@ -122,6 +124,9 @@ an internal network interface.
 Upgrading
 ---------
 
-Replace aron.jar and restart. Configuration and data are kept outside the jar,
-the database schema is upgraded on startup, and the search index is rebuilt
-automatically when the indexed-field configuration changed.
+Read the release notes of the new version first: the changelog marks the
+changes that need an administrator's step (a configuration key, a rebuilt
+search index, an upgrade action). Back up the database, then replace aron.jar
+and restart. Configuration and data are kept outside the jar, the database
+schema is upgraded on startup, and the search index is rebuilt automatically
+when the indexed-field configuration changed.

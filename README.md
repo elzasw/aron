@@ -285,7 +285,15 @@ build pipeline rather than locally. A release publishes exactly one artifact: th
 bundle `aron-<version>.zip` (executable jar, configuration template,
 installation readme). The module jars are internal to the build and are not
 published — the fat jar reaches a deployment inside the bundle. The Sphinx
-administrator documentation is not in the bundle; it is published separately.
+administrator documentation is not in the bundle: the pipeline builds it from
+the same branch (`build-doc`), so a release line's documentation is its branch's
+`doc/`, and publishes it at `https://docs.lightcomp.cz/aron/<edition>/` — the
+version line for a release branch (`2.0`), `main` for the development state.
+Every change an administrator or an
+integrator can notice adds an entry to the changelog
+(`doc/source/release-notes/changelog.rst`) in the same commit, under
+*Unreleased*; cutting a release renames that heading to the version and its
+date (CLAUDE.md, "Documentation").
 The pipeline supplies the Git URL (`-Daron.scm.url`, which is why
 `<scm>` reads that property and is empty here) and the target repository
 (`-DaltDeploymentRepository`, which is why there is no `distributionManagement`)

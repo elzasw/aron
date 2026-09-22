@@ -89,8 +89,9 @@ Database
 ========
 
 PostgreSQL is the primary store and the only component that requires backup.
-Schema changes are applied automatically at startup via Liquibase — no manual
-migration steps between releases.
+Schema changes are applied automatically at startup via Liquibase; the upgrade
+procedure — what to back up, what to compare, what the first start does — is in
+:doc:`upgrading`.
 
 Monitoring
 ==========
