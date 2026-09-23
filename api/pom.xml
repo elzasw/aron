@@ -9,7 +9,7 @@
 	</parent>
 	<artifactId>aron-api</artifactId>
 	<packaging>pom</packaging>
-	<name>ARON 2 API spec</name>
+	<name>ARON API spec</name>
 	<description>TypeSpec contract of the new portal API (/api/v1); regenerates the
 		committed openapi/aron-openapi-v1.yaml on every build. Produces no jar -
 		consumers (aron-core, later aron-ui) generate their own code from the YAML.

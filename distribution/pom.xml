@@ -8,7 +8,7 @@
 		<version>2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>aron-distribution</artifactId>
-	<name>ARON 2 Distribution</name>
+	<name>ARON Distribution</name>
 	<description>Assembles the deployable artifact: one executable Spring Boot fat jar
 		(target/aron.jar) via spring-boot:repackage. Integrates the outputs of the
 		backend (aron-core) and UI (aron-ui) modules. This module exists so packaging

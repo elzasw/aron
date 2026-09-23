@@ -9,7 +9,7 @@
 	</parent>
 	<artifactId>aron-core</artifactId>
 	<name>aron-core</name>
-	<description>ARON 2 backend (library jar; the executable jar is built by the distribution module)</description>
+	<description>ARON backend (library jar; the executable jar is built by the distribution module)</description>
 
 	<dependencies>
 		<dependency>

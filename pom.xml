@@ -18,7 +18,7 @@
 	-->
 	<version>2.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>ARON 2</name>
+	<name>ARON</name>
 	<description>Archiv online, new generation - connected records presentation</description>
 
 	<!--

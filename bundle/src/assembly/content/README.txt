@@ -1,7 +1,7 @@
-ARON 2 - Archiv online
-======================
+ARON - Archiv online
+====================
 
-Binary distribution of the ARON 2 public portal for a standalone installation.
+Binary distribution of the ARON public portal for a standalone installation.
 The portal presents archival records; data is delivered into it by the separate
 Transfagent application.
 

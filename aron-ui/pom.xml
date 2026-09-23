@@ -11,7 +11,7 @@
 	<!-- jar (not pom): the built SPA is packaged as a resource jar so the
 	     distribution module can put it on the classpath. -->
 	<packaging>jar</packaging>
-	<name>ARON 2 UI</name>
+	<name>ARON UI</name>
 	<description>New portal UI: React + Vite + TypeScript + Fluent UI v9. Generates its
 		TypeScript client from the committed api/openapi/aron-openapi-v1.yaml and builds
 		with Vite. Dev loop: `npm run dev` (proxies /api to :8080, ideally the aron-core

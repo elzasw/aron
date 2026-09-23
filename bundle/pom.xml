@@ -9,7 +9,7 @@
 	</parent>
 	<artifactId>aron-bundle</artifactId>
 	<packaging>pom</packaging>
-	<name>ARON 2 Bundle</name>
+	<name>ARON Bundle</name>
 	<description>Assembles target/aron-&lt;version&gt;.zip - the executable jar, the
 		default configuration and an installation readme. The only artifact a release
 		publishes; packaging is pom so the zip is the module's own artifact (Elza/CAM
