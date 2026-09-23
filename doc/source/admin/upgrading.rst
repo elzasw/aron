@@ -122,7 +122,7 @@ successor. What they configured moves into server-side files:
    :header-rows: 1
 
    * - Old portal
-     - ARON 2
+     - ARON 2.0
    * - menu, footer, home page (``configuration.js``, ``homepage.*``)
      - ``pageTemplate.yaml`` — typed ``menu:``, ``footer:`` and ``homepage:``
        sections; see :doc:`configuration`

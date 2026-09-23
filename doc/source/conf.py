@@ -7,7 +7,7 @@ import os
 
 # -- Project information -----------------------------------------------------
 
-project = 'ARON 2'
+project = 'ARON'
 copyright = '2026, LightComp v.o.s.'
 author = 'LightComp v.o.s.'
 

@@ -2,7 +2,7 @@
 Overview
 ========
 
-ARON 2 (*Archiv online*, new generation) is a public portal that presents
+ARON (*Archiv online*) is a public portal that presents
 archival records: fonds, archival descriptions, finding aids, institutions and
 the access points that connect them, together with the digitized material
 attached to them. It is developed by LightComp and published under the
