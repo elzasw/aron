@@ -16,5 +16,9 @@ export default defineConfig({
     deps: { optimizer: { web: { enabled: true, include: ["@fluentui/react-components"] } } },
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
     restoreMocks: true,
+    // The page-level tests (Fluent UI + axe in jsdom) take ~1s alone but several
+    // times that when every worker runs at once - the 5s default made the build
+    // fail at random under load.
+    testTimeout: 30_000,
   },
 });

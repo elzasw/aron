@@ -33,6 +33,13 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 
 	private static final Logger log = LoggerFactory.getLogger(SearchIndexManager.class);
 
+	/**
+	 * Version of the document-building code. Bump it when a code change alters
+	 * indexed values for unchanged configuration - the next startup reindexes.
+	 * 2: nameSort computed from a capped name prefix.
+	 */
+	static final int DOCUMENT_VERSION = 2;
+
 	private final IndexingService indexingService;
 
 	private final ApuEntityRepository apuEntityRepository;
@@ -100,11 +107,12 @@ public class SearchIndexManager implements ApplicationListener<ApplicationReadyE
 	 * Fingerprint of everything that decides the content of an indexed document:
 	 * the types.yaml indexed fields and the search locale, whose collation key is
 	 * baked into {@code nameSort}. A change of either invalidates the indexed
-	 * data, so both have to be part of one marker.
+	 * data, so both have to be part of one marker. {@link #DOCUMENT_VERSION}
+	 * covers code changes to how a document is built.
 	 */
 	static long schemaCrc(long indexedFieldsCrc, String languageTag) {
 		var crc = new CRC32();
-		crc.update((indexedFieldsCrc + "|" + languageTag).getBytes(StandardCharsets.UTF_8));
+		crc.update((indexedFieldsCrc + "|" + languageTag + "|" + DOCUMENT_VERSION).getBytes(StandardCharsets.UTF_8));
 		return crc.getValue();
 	}
 

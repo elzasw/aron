@@ -34,6 +34,13 @@ public class ContentLocale {
 
 	private static final Logger log = LoggerFactory.getLogger(ContentLocale.class);
 
+	/**
+	 * Name prefix the sort key is computed from. The hex key runs to ~12-16
+	 * characters per name character, and a keyword term / sorted doc value is
+	 * limited to 32766 bytes - an uncapped long name would fail the whole bulk.
+	 */
+	static final int SORT_KEY_MAX_LENGTH = 200;
+
 	private final Locale locale;
 
 	// Collator is not thread-safe, hence one instance per thread
@@ -58,12 +65,17 @@ public class ContentLocale {
 	 * alphabetical order in any engine (Czech {@code c < h < ch < i} included).
 	 * Computed at index time, which keeps sorting engine-neutral (the Elza
 	 * pattern - ElzaLocale).
+	 * <p>
+	 * Only the first {@link #SORT_KEY_MAX_LENGTH} characters count. The name is
+	 * cut, not the key: a cut key would drop the secondary/tertiary levels
+	 * unevenly and break the ordering.
 	 */
 	public String sortKey(String name) {
 		if (name == null) {
 			return null;
 		}
-		byte[] key = collator.get().getCollationKey(name).toByteArray();
+		String head = name.length() > SORT_KEY_MAX_LENGTH ? name.substring(0, SORT_KEY_MAX_LENGTH) : name;
+		byte[] key = collator.get().getCollationKey(head).toByteArray();
 		return HexFormat.of().formatHex(key);
 	}
 

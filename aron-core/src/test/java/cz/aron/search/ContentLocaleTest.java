@@ -38,6 +38,19 @@ class ContentLocaleTest {
 	}
 
 	@Test
+	void longNameSortKeyStaysWithinTheTermLimit() {
+		var czech = new ContentLocale("cs-CZ");
+		String longName = "Příliš žluťoučký kůň úpěl ďábelské ódy. ".repeat(150);
+		String key = czech.sortKey(longName);
+		// Lucene rejects a keyword term / sorted doc value over 32766 bytes
+		assertThat(key.getBytes(java.nio.charset.StandardCharsets.UTF_8).length).isLessThan(32766);
+		// only the prefix counts, so the name is cut, not the key
+		assertThat(key).isEqualTo(czech.sortKey(longName.substring(0, ContentLocale.SORT_KEY_MAX_LENGTH)));
+		// and long names still order by their prefix
+		assertThat(czech.sortKey("A" + longName)).isLessThan(czech.sortKey("B" + longName));
+	}
+
+	@Test
 	void invalidLanguageTagFailsFast() {
 		assertThatThrownBy(() -> new ContentLocale("!!!"))
 				.isInstanceOf(IllegalStateException.class)
