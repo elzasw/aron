@@ -487,6 +487,39 @@ class NewApiV1Test extends AbstractTest {
 	}
 
 	@Test
+	void hitsOnlyRequestLeavesTheFacetsOut() throws Exception {
+		// a client paging within an unchanged search keeps the facets it has and
+		// asks for the hits alone. Raw JSON, because the point is absence: the
+		// typed client reads a missing list and an empty one the same way
+		var response = post("/api/v1/apu/search",
+				"{\"apuType\":\"ARCH_DESC\",\"from\":1,\"size\":1,\"facets\":false}");
+		assertThat(response.statusCode()).isEqualTo(200);
+		assertThat(response.body())
+				.contains("\"total\"").contains("\"items\"")
+				.doesNotContain("\"facets\"").doesNotContain("\"typeCounts\"");
+	}
+
+	@Test
+	void everyPageOfOneSearchCarriesTheSameFacets() {
+		// what a client that turns pages with the hits alone builds on: the facets
+		// and the type counts describe the whole matching set, not the page
+		var request = new ApuSearchRequest();
+		request.setApuType(ApuType.ARCH_DESC);
+		request.setFilters(List.of(valuesFilter("LANG~CODE", "v1-cze")));
+		request.setSize(1);
+		var first = new SearchApi(v1ApiClient()).searchSearch(request);
+		request.setFrom(1);
+		var second = new SearchApi(v1ApiClient()).searchSearch(request);
+
+		assertThat(first.getTotal()).isEqualTo(2);
+		assertThat(second.getItems()).hasSize(1);
+		assertThat(second.getItems()).isNotEqualTo(first.getItems());
+		assertThat(first.getFacets()).isNotEmpty();
+		assertThat(second.getFacets()).isEqualTo(first.getFacets());
+		assertThat(second.getTypeCounts()).isEqualTo(first.getTypeCounts());
+	}
+
+	@Test
 	void searchReturnsRefBucketsAndDatingBounds() {
 		// the LANG~CODE filter scopes every OTHER facet's result to the fixture
 		var request = new ApuSearchRequest();

@@ -1,6 +1,7 @@
 // DOM matchers (toHaveAttribute, toHaveFocus, toHaveAccessibleName, ...) so the
 // assertions read as accessibility statements rather than attribute lookups.
 import "@testing-library/jest-dom/vitest";
+import { configure } from "@testing-library/dom";
 import { JSDOM } from "jsdom";
 import { beforeEach } from "vitest";
 import i18n, { DEFAULT_LANGUAGE } from "./src/i18n";
@@ -17,6 +18,13 @@ if (globalThis.localStorage === undefined) {
     Object.defineProperty(globalThis, name, { configurable: true, value: window[name] });
   }
 }
+
+// findBy*/waitFor give up after 1 s by default. A page's first render (Fluent
+// UI, a config round trip) takes a fraction of that alone but several seconds
+// when every worker runs at once, so the build failed at random on whichever
+// test reached its first findBy under load. The test timeout (vitest.config.ts)
+// is the real ceiling; this one only has to stay under it.
+configure({ asyncUtilTimeout: 10_000 });
 
 // jsdom parses media queries but never evaluates one, so every matchMedia list
 // stays unmatched forever - and the pages decide their arrangement from size

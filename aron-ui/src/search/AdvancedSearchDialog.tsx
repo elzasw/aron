@@ -92,7 +92,7 @@ export default function AdvancedSearchDialog({
     placeholderData: (previous) => previous,
   });
 
-  const resultOf = (code: string) => preview.data?.facets.find((f) => f.code === code);
+  const resultOf = (code: string) => preview.data?.facets?.find((f) => f.code === code);
   const labelOf = (facet: string, value: string) => bucketLabel(resultOf(facet), value);
 
   // a facet that waited for a selection the reader just undid loses its own

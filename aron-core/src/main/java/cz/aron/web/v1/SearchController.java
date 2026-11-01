@@ -210,25 +210,31 @@ public class SearchController implements SearchApi {
 		for (SearchFilter filter : request.getFilters() != null ? request.getFilters() : List.<SearchFilter>of()) {
 			filters.add(toFieldFilter(filter, byCode));
 		}
+		// the facets and the type counts describe the whole matching set, not the
+		// page: a client paging within an unchanged search keeps the ones it has
+		// and asks for hits only, which spares every aggregation
+		boolean withFacets = !Boolean.FALSE.equals(request.getFacets());
 		// buckets for every enumerable facet of the section (reference-valued
 		// facets enumerate their composite ~ID~LABEL field, see BucketRequest),
 		// dating bounds for every UNITDATE facet
 		var bucketRequests = new ArrayList<ApuSearchQuery.BucketRequest>();
 		var boundsRequests = new ArrayList<ApuSearchQuery.BoundsRequest>();
-		for (FacetConfigDto facet : sectionFacets) {
-			switch (facet.getType()) {
-				case ENUM, MULTI_REF -> {
-					// the built-in relation facet is the one reference facet with no
-					// buckets: its options are records found by name, not a union of
-					// every reference field's terms
-					if (builtInFacets.isEnumerable(facet.getSource())) {
-						bucketRequests.add(new ApuSearchQuery.BucketRequest(
-								bucketFieldOf(facet), indexFieldOf(facet), BUCKET_LIMIT));
+		if (withFacets) {
+			for (FacetConfigDto facet : sectionFacets) {
+				switch (facet.getType()) {
+					case ENUM, MULTI_REF -> {
+						// the built-in relation facet is the one reference facet with no
+						// buckets: its options are records found by name, not a union of
+						// every reference field's terms
+						if (builtInFacets.isEnumerable(facet.getSource())) {
+							bucketRequests.add(new ApuSearchQuery.BucketRequest(
+									bucketFieldOf(facet), indexFieldOf(facet), BUCKET_LIMIT));
+						}
 					}
+					case UNITDATE -> boundsRequests.add(new ApuSearchQuery.BoundsRequest(
+							indexFieldOf(facet), datingFieldsOf(facet)));
+					default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
 				}
-				case UNITDATE -> boundsRequests.add(new ApuSearchQuery.BoundsRequest(
-						indexFieldOf(facet), datingFieldsOf(facet)));
-				default -> { /* FULLTEXT and the not-yet-served reference variants have no facet result */ }
 			}
 		}
 
@@ -243,14 +249,15 @@ public class SearchController implements SearchApi {
 
 		QueryMode queryMode = QueryMode.STRICT;
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(apuType, plan, filters,
-				bucketRequests, boundsRequests, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()), true));
+				bucketRequests, boundsRequests, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()),
+				withFacets));
 		// zero strict hits - one automatic any-word retry, visibly labeled (B7);
 		// facet filters and the section restriction are never relaxed
 		if (result.total() == 0 && plan != null && plan.relaxable()
 				&& relevanceService.config().relaxOnNoHits()) {
 			result = indexingService.search(new ApuSearchQuery(apuType, plan.relaxed(), filters,
 					bucketRequests, boundsRequests, from, size, sort, effectiveTotalUpTo(request.getTotalUpTo()),
-					true));
+					withFacets));
 			if (result.total() > 0) {
 				queryMode = QueryMode.RELAXED;
 			}
@@ -265,6 +272,17 @@ public class SearchController implements SearchApi {
 				})
 				.toList();
 		attachStructuredResults(items);
+		var response = new ApuSearchResponse(result.total(),
+				result.totalRelation() == ApuSearchResult.TotalRelation.EQ
+						? TotalRelation.EQ
+						: TotalRelation.GTE,
+				queryMode, items);
+		if (!withFacets) {
+			// absent, not empty: the client told us it keeps its own
+			response.setFacets(null);
+			response.setTypeCounts(null);
+			return ResponseEntity.ok(response);
+		}
 		var facetResults = new ArrayList<FacetResult>();
 		for (FacetConfigDto facet : sectionFacets) {
 			switch (facet.getType()) {
@@ -303,11 +321,9 @@ public class SearchController implements SearchApi {
 		var typeCounts = result.typeCounts().stream()
 				.map(bucket -> new TypeCount(ApuType.fromValue(bucket.value()), bucket.count()))
 				.toList();
-		return ResponseEntity.ok(new ApuSearchResponse(result.total(),
-				result.totalRelation() == ApuSearchResult.TotalRelation.EQ
-						? TotalRelation.EQ
-						: TotalRelation.GTE,
-				queryMode, items, facetResults, typeCounts));
+		response.setFacets(facetResults);
+		response.setTypeCounts(typeCounts);
+		return ResponseEntity.ok(response);
 	}
 
 	/**

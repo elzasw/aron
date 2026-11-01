@@ -650,6 +650,15 @@ model ApuSearchRequest {
 	 */
 	@minValue(1)
 	totalUpTo?: int32;
+
+	/**
+	 * Whether to compute and return the facets (`facets`) and the per-type
+	 * counts (`typeCounts`). Both describe the whole matching set, not the
+	 * page, so a client that keeps them from an earlier answer turns this off
+	 * when it only pages within an unchanged search: the server then skips
+	 * every aggregation and the response carries neither field.
+	 */
+	facets?: boolean = true;
 }
 
 /**
@@ -832,15 +841,17 @@ model ApuSearchResponse {
 	 * Per-facet results of the section (multi-select semantics), each shaped by
 	 * its facet kind - see the `FacetResult` specializations. A facet's full
 	 * option list (beyond the bucket limit) comes from `getFacetOptions`.
+	 * Absent when the request asked for `facets: false`.
 	 */
-	facets: FacetResult[];
+	facets?: FacetResult[];
 
 	/**
 	 * Matching APUs per type, count descending. The query and all filters
 	 * apply; the request's own `apuType` restriction does NOT - a user browsing
 	 * one section still sees the other sections' counts and can switch there.
+	 * Absent when the request asked for `facets: false`.
 	 */
-	typeCounts: TypeCount[];
+	typeCounts?: TypeCount[];
 }
 
 /** Number of matching APUs of one type. */

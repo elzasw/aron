@@ -71,11 +71,6 @@ vi.mock("../api/client", () => ({
   apuApi: { apuGetDetail: vi.fn(() => Promise.resolve({ name: "x" })) },
 }));
 
-/** Waits wide enough for a full-suite run under load; the flows here chain several round trips. */
-const WAIT = { timeout: 4000 };
-/** The long flows chain several round trips; under a full-suite run they need more than vitest's 5 s. */
-const LONG = 20000;
-
 /**
  * Opens the dialog and makes sure tabster knows it is the active modal. In jsdom
  * the dialog can be focused by Fluent before tabster's mutation observer has
@@ -87,14 +82,14 @@ const LONG = 20000;
  */
 async function openAdvanced(user: ReturnType<typeof userEvent.setup>): Promise<HTMLElement> {
   await user.click(await screen.findByRole("button", { name: "All filters" }));
-  const dialog = await screen.findByRole("dialog", { name: "All filters" }, WAIT);
+  const dialog = await screen.findByRole("dialog", { name: "All filters" });
   await waitFor(() => {
     dialog.querySelector<HTMLElement>("input, button")?.focus();
     // the observable sign that tabster holds this dialog as the active modal:
     // the page behind it has left the accessibility tree
     expect(screen.queryByRole("button", { name: "All filters" })).toBeNull();
     expect(dialog).not.toHaveAttribute("aria-hidden", "true");
-  }, WAIT);
+  });
   return dialog;
 }
 
@@ -136,16 +131,16 @@ describe("advanced search", () => {
       "Language",
     ]);
     expect(within(dialog).getByText("The language the material is written in.")).toBeInTheDocument();
-    expect(await within(dialog).findByRole("button", { name: "Show 7 records" }, WAIT)).toBeInTheDocument();
+    expect(await within(dialog).findByRole("button", { name: "Show 7 records" })).toBeInTheDocument();
 
-    await user.click(await within(dialog).findByRole("checkbox", { name: /German/ }, WAIT));
+    await user.click(await within(dialog).findByRole("checkbox", { name: /German/ }));
     // the page behind has not moved: no search with the draft filter went out
     // as the page's own query, and the sidebar still shows no Language facet
-    expect(await within(dialog).findByRole("button", { name: "Show 2 records" }, WAIT)).toBeInTheDocument();
-    expect(await screen.findAllByRole("heading", { level: 2, name: "Language" }, WAIT)).toHaveLength(1);
+    expect(await within(dialog).findByRole("button", { name: "Show 2 records" })).toBeInTheDocument();
+    expect(await screen.findAllByRole("heading", { level: 2, name: "Language" })).toHaveLength(1);
 
-    await user.click(await within(dialog).findByRole("button", { name: "Show 2 records" }, WAIT));
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(), WAIT);
+    await user.click(await within(dialog).findByRole("button", { name: "Show 2 records" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     // applied: the page searches with the filter, and the facet that carries
     // it is now in the sidebar, where it can be undone
     await waitFor(() =>
@@ -156,18 +151,18 @@ describe("advanced search", () => {
         }),
       }),
     );
-    expect(await screen.findByRole("heading", { level: 2, name: "Language" }, WAIT)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 2, name: "Language" })).toBeInTheDocument();
     expect(screen.getByRole("checkbox", { name: /German/ })).toBeChecked();
-  }, LONG);
+  });
 
   it("throws the draft away on cancel", async () => {
     const user = userEvent.setup();
     renderSection();
     const dialog = await openAdvanced(user);
-    await user.click(await within(dialog).findByRole("checkbox", { name: /German/ }, WAIT));
-    await user.click(await within(dialog).findByRole("button", { name: "Cancel" }, WAIT));
+    await user.click(await within(dialog).findByRole("checkbox", { name: /German/ }));
+    await user.click(await within(dialog).findByRole("button", { name: "Cancel" }));
 
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument(), WAIT);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.queryByRole("heading", { level: 2, name: "Language" })).not.toBeInTheDocument();
     for (const call of searchSearch.mock.calls) {
       // the page's own searches (a whole page each) never carried the draft
@@ -175,7 +170,7 @@ describe("advanced search", () => {
         expect(call[0].apuSearchRequest.filters ?? []).toEqual([]);
       }
     }
-  }, LONG);
+  });
 
   it("has no accessibility violations while open", async () => {
     const user = userEvent.setup();
@@ -186,5 +181,5 @@ describe("advanced search", () => {
     // checked; the page-level landmark rule is off because the test renders no
     // frame around the view (AppLayout owns the landmarks)
     await expectNoA11yViolations(container.ownerDocument.body, ["region"]);
-  }, LONG);
+  });
 });

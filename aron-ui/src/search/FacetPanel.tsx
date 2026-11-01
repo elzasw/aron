@@ -722,10 +722,9 @@ function RangeFacet({
  * looking for one record anyway.
  *
  * The current search's own filters deliberately do not narrow the picker: the
- * record to relate to need not be among the results being narrowed. The cost is
- * that each (debounced) keystroke also computes the general search's facets,
- * which this widget throws away - the search endpoint always answers with the
- * facets of the scope it was asked about.
+ * record to relate to need not be among the results being narrowed. The hits
+ * are all it wants, so it asks the search for them alone - the facets of that
+ * scope would only be thrown away.
  */
 function RelatedFacet({
   def,
@@ -752,6 +751,7 @@ function RelatedFacet({
               values: RELATION_TARGET_TYPES,
             } as ValuesFilter,
           ],
+          facets: false,
         },
       }),
     enabled: debouncedQ.length > 0,

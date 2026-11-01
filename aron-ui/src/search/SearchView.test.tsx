@@ -75,7 +75,14 @@ type FacetsCall = { apuType?: ApuType; lang?: string };
 type SearchCall = { apuSearchRequest: ApuSearchRequest };
 
 const searchGetFacets = vi.fn((_call: FacetsCall) => Promise.resolve(facets));
-const searchSearch = vi.fn((_call: SearchCall) => Promise.resolve(response));
+// as the server does, an answer to a hits-only request leaves the facets out
+const searchSearch = vi.fn((call: SearchCall) =>
+  Promise.resolve(
+    call.apuSearchRequest.facets === false
+      ? { ...response, facets: undefined, typeCounts: undefined }
+      : response,
+  ),
+);
 
 vi.mock("../api/client", () => ({
   searchApi: {
@@ -151,6 +158,63 @@ describe("SearchView, general search", () => {
           apuSearchRequest: expect.objectContaining({
             apuType: undefined,
             filters: [{ kind: FilterKind.Values, facet: TYPE_FACET, values: ["FUND"] }],
+          }),
+        }),
+      ),
+    );
+  });
+
+  it("turns a page with the hits alone and keeps the facets it has", async () => {
+    response = { ...RESPONSE, total: 25 };
+    renderGeneralSearch();
+    // nothing was in hand, so the first answer had to bring the facets
+    await waitFor(() =>
+      expect(searchSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({ from: 0, facets: true }),
+        }),
+      ),
+    );
+    await screen.findByRole("checkbox", { name: /Archival records/ });
+
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+
+    // the facets describe the whole result, which a page turn leaves as it is:
+    // every aggregation behind them is spared
+    await waitFor(() =>
+      expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({ from: 10, facets: false }),
+        }),
+      ),
+    );
+    // and the answer without them leaves the sidebar and the chips as they were
+    expect(screen.getByRole("checkbox", { name: /Archival records/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Archival records (3)" })).toBeInTheDocument();
+  });
+
+  it("asks for the facets again once the search itself changes", async () => {
+    response = { ...RESPONSE, total: 25 };
+    // a shared link into a later page: no facets in hand, so they come along
+    renderGeneralSearch("/apu?p=2");
+    await waitFor(() =>
+      expect(searchSearch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({ from: 10, facets: true }),
+        }),
+      ),
+    );
+
+    await userEvent.click(await screen.findByRole("checkbox", { name: /Archival fonds/ }));
+
+    // a narrowed search is another matching set, with facets of its own
+    await waitFor(() =>
+      expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({
+            from: 0,
+            filters: [{ kind: FilterKind.Values, facet: TYPE_FACET, values: ["FUND"] }],
+            facets: true,
           }),
         }),
       ),

@@ -1,6 +1,6 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
 import { Filter20Regular } from "@fluentui/react-icons";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,11 +10,13 @@ import {
   ApuType,
   type FacetDef,
   FacetDisplay,
+  type FacetResult,
   type MenuItemCode,
   QueryMode,
   type SearchFilter,
   SortMode,
   TotalRelation,
+  type TypeCount,
 } from "../api/generated";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 import { SECTIONS } from "../sections";
@@ -128,6 +130,20 @@ const useStyles = makeStyles({
 const SORT_OPTIONS = ["", "NAME", "NAME_DESC", "DATE_ASC", "DATE_DESC"] as const;
 
 /**
+ * The part of a search answer that describes the whole matching set rather
+ * than the page: the same for every page of one search, so it is kept apart
+ * from the pages and asked for once.
+ */
+type SearchFacets = { facets: FacetResult[]; typeCounts: TypeCount[] };
+
+/**
+ * How long the facets of a search serve its further pages before a page turn
+ * asks for them again. Every aggregation the server runs is behind them, so a
+ * page turn within that time costs the hits alone.
+ */
+const FACETS_STALE_MS = 5 * 60 * 1000;
+
+/**
  * The search experience of one portal section (apuType set) or of the general
  * search (/apu, no apuType), whose facets are the server's built-in ones -
  * dating, record type and relation - since no section configuration applies
@@ -165,10 +181,30 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     staleTime: Infinity,
   });
 
+  // the facets and the type counts of the search: keyed by what defines the
+  // matching set - not by the page, the page size or the sort, none of which
+  // changes them. Never fetched on its own: the page request below brings them
+  // along when this has none fresh enough and seeds this entry from its
+  // answer, so a changed search costs one combined request, never two
+  const queryClient = useQueryClient();
+  const facetsKey = ["apu-facets", apuType, query, filterParam];
+  const facets = useQuery<SearchFacets>({
+    queryKey: facetsKey,
+    queryFn: skipToken,
+    staleTime: FACETS_STALE_MS,
+    // the old search's facets stay on screen until the new one answers
+    placeholderData: (previous) => previous,
+  });
+
   const search = useQuery({
     queryKey: ["apu-search", apuType, query, filterParam, page, size, sortParam],
-    queryFn: () =>
-      searchApi.searchSearch({
+    queryFn: async () => {
+      const kept = queryClient.getQueryState<SearchFacets>(facetsKey);
+      const fresh =
+        kept?.data !== undefined &&
+        !kept.isInvalidated &&
+        Date.now() - kept.dataUpdatedAt < FACETS_STALE_MS;
+      const response = await searchApi.searchSearch({
         apuSearchRequest: {
           apuType,
           query: query || undefined,
@@ -176,8 +212,19 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
           from: (page - 1) * size,
           size,
           sort: sortParam ? (sortParam as SortMode) : undefined,
+          // a page turn within a search the facets of which are in hand asks
+          // for the hits alone
+          facets: !fresh,
         },
-      }),
+      });
+      if (response.facets !== undefined && response.typeCounts !== undefined) {
+        queryClient.setQueryData<SearchFacets>(facetsKey, {
+          facets: response.facets,
+          typeCounts: response.typeCounts,
+        });
+      }
+      return response;
+    },
     placeholderData: (previous) => previous,
   });
 
@@ -196,7 +243,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     update({ f: serializeFilters(next), p: null });
   const submitQuery = () => update({ q: queryInput.trim() || null, p: null });
 
-  const resultOf = (code: string) => search.data?.facets.find((f) => f.code === code);
+  const resultOf = (code: string) => facets.data?.facets.find((f) => f.code === code);
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
   // the label a value is displayed under, for a condition that names an option by
   // its label rather than its value; the buckets that carry labels come with the
@@ -211,7 +258,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   // match on arrive with it - dropping a filter is not something to do on a
   // guess.
   useEffect(() => {
-    if (!facetDefs.data || !search.data) {
+    if (!facetDefs.data || !facets.data) {
       return;
     }
     const kept = dropInapplicable(facetDefs.data, filters, labelOf);
@@ -221,7 +268,7 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
     // labelOf and update close over this render's data; the filter parameter and
     // the two responses are what can change the outcome
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [facetDefs.data, search.data, filterParam]);
+  }, [facetDefs.data, facets.data, filterParam]);
 
   // what the live region below reports: the failure, the wait, or the outcome
   const statusText = search.isError
@@ -325,9 +372,9 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
         <Title3 as="h1">{t(titleKey)}</Title3>
         {search.data && (
           <>
-            {apuType === undefined && search.data.typeCounts.length > 0 && (
+            {apuType === undefined && facets.data && facets.data.typeCounts.length > 0 && (
               <nav aria-label={t("search.typeCountsLabel")} className={styles.typeChips}>
-                {search.data.typeCounts.map((typeCount) => {
+                {facets.data.typeCounts.map((typeCount) => {
                   const section = SECTIONS[typeCount.apuType as unknown as MenuItemCode];
                   const label = `${t(`sections.${typeCount.apuType}`)} (${typeCount.count})`;
                   return section?.route ? (

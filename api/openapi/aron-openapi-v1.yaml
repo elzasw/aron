@@ -628,6 +628,15 @@ components:
             Requested accuracy of `total`: matching APUs are counted exactly up to
             this value (see `totalRelation`). Unset = the server default (10 000);
             the server clamps the value to its configured maximum.
+        facets:
+          type: boolean
+          description: |-
+            Whether to compute and return the facets (`facets`) and the per-type
+            counts (`typeCounts`). Both describe the whole matching set, not the
+            page, so a client that keeps them from an earlier answer turns this off
+            when it only pages within an unchanged search: the server then skips
+            every aggregation and the response carries neither field.
+          default: true
       description: Search request over APUs.
     ApuSearchResponse:
       type: object
@@ -636,8 +645,6 @@ components:
         - totalRelation
         - queryMode
         - items
-        - facets
-        - typeCounts
       properties:
         total:
           type: integer
@@ -669,6 +676,7 @@ components:
             Per-facet results of the section (multi-select semantics), each shaped by
             its facet kind - see the `FacetResult` specializations. A facet's full
             option list (beyond the bucket limit) comes from `getFacetOptions`.
+            Absent when the request asked for `facets: false`.
         typeCounts:
           type: array
           items:
@@ -677,6 +685,7 @@ components:
             Matching APUs per type, count descending. The query and all filters
             apply; the request's own `apuType` restriction does NOT - a user browsing
             one section still sees the other sections' counts and can switch there.
+            Absent when the request asked for `facets: false`.
       description: Search response.
     ApuType:
       type: string

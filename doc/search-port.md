@@ -658,3 +658,45 @@ answers "is this field analyzed", read by the indexing side that decides the
 field's type and by the query side that must agree with it; the exact-field
 CONTAINS is a case-insensitive regexp over the whole term, with the value
 escaped because it is data.
+
+## 14. Hits-only paging: the `facets` flag (2026-10-30)
+
+A page turn used to cost a full search: the UI re-sent the request with only
+`from` changed, and the controller built a bucket request for every enumerable
+facet of the section (up to 1000 buckets each, 14 facets in `ARCH_DESC`), the
+dating bounds and the type counts - every time, for 10 to 100 hits. The facets
+describe the matching set, not the page, so nothing in that part of the answer
+could differ from the previous page's. On the embedded engine this was the
+per-term `searcher.count` walk of every bucket field per page turn; on ES one
+filter + terms aggregation per facet.
+
+The contract gains `ApuSearchRequest.facets` (boolean, default `true`); the
+response's `facets` and `typeCounts` are optional and **absent** when it is
+`false` (Jackson's `non_null` inclusion, the controller nulls them). A flag
+rather than a hits-only endpoint: one request model, one controller path, one
+generated client, and the same switch serves the relation picker (hits only)
+and, if ever needed, a facets-only preview. The port needs nothing new: the
+controller passes empty bucket and bounds lists and `typeCounts=false`, which
+both adapters already treat as "no aggregation" (`countBuckets`,
+`computeBounds` and `countTypes` return early on the embedded engine; the ES
+builder adds no aggregation for an empty list). The zero-hit relaxed retry
+keeps the flag: it is about hits.
+
+The UI keeps the facets in a React Query entry of their own, keyed by what
+defines the matching set (section, query, filters) and never fetched on its own
+(`queryFn: skipToken`). The page query decides per call: facets fresh in that
+entry (younger than five minutes, not invalidated) → `facets: false`; otherwise
+a combined request whose answer seeds the entry. So a changed search costs one
+request, a page turn (or a sort or page-size change) one hits-only request, a
+deep link into page N one combined request, and facets older than the stale
+time are refreshed by the next page turn. The seeded entry's
+`placeholderData: previous` keeps the old facets on screen while a changed
+search is in flight. Nothing on the UI side reads `facets` or `typeCounts` off
+the page response any more; the dependent-facet pruning effect follows the
+facets entry.
+
+Testing: `NewApiV1Test.hitsOnlyRequestLeavesTheFacetsOut` asserts on the raw
+JSON (the typed client reads a missing list and an empty one the same way);
+`everyPageOfOneSearchCarriesTheSameFacets` guards what the UI builds on;
+`SearchView.test.tsx` covers the page turn (`from: 10, facets: false`, sidebar
+and chips unchanged) and the re-request on a changed search.
