@@ -8,6 +8,11 @@ implementation started.
 > by an embedded **Lucene** adapter (`search.engine=lucene`) and the engine
 > decision D-1 is settled — see §6. The port, builder, contract suite and ES
 > adapter are unchanged.
+>
+> §7 onwards is the decision log of what followed, newest last: the old-API
+> seam, the read side's growth, the import ↔ index synchronization, the schema
+> fingerprint and the client-side handling of facet values. Ranking and result
+> ordering are owned by the companion `doc/search-relevance.md`.
 
 ## 1. Goals
 
@@ -700,3 +705,103 @@ JSON (the typed client reads a missing list and an empty one the same way);
 `everyPageOfOneSearchCarriesTheSameFacets` guards what the UI builds on;
 `SearchView.test.tsx` covers the page turn (`from: 10, facets: false`, sidebar
 and chips unchanged) and the re-request on a changed search.
+
+## 15. The sort key is bounded, and code changes are part of the fingerprint (2026-10-30)
+
+`nameSort` is the hex-encoded `java.text.Collator` key of the record's name
+(§3.7). That key runs to roughly 12 to 16 hex characters per name character,
+and both engines cap a keyword term and a sorted doc value at 32766 bytes - a
+Lucene limit, not a configuration. One description with a page-long name was
+therefore enough to fail the whole bulk it travelled in, and with it the
+import's synchronization batch.
+
+`ContentLocale.sortKey` now computes the key from the first 200 characters of
+the name (`SORT_KEY_MAX_LENGTH`). **The name is cut, not the key.** A collation
+key is level-ordered - every character's primary weight first, then the
+secondary weights, then the tertiary - so cutting it at a byte position keeps
+the primary level of the whole name but the lower levels of only its beginning,
+and two names could order differently from how the collator orders them. A cut
+name is simply a shorter name, ordered exactly by its prefix. Names longer than
+the cap sort among themselves by their first 200 characters, which no reader
+can tell apart from full ordering.
+
+The change altered the indexed value of existing documents without any change
+of configuration, which the schema fingerprint of §3.4 could not see: it
+covered the `types.yaml` indexed fields and the content locale, both deployment
+settings. `SearchIndexManager.schemaCrc` therefore gained a third input,
+`DOCUMENT_VERSION` - the version of the document-building code, bumped when a
+code change alters what `ApuDocumentBuilder` or its helpers write for unchanged
+configuration. The next startup then rebuilds and reindexes, on both engines,
+through the mechanism that already exists.
+
+Three things can now make an index stale, each owned by the layer that knows
+about it:
+
+| What changed | Marker | Lives in |
+|---|---|---|
+| deployment configuration (`types.yaml` indexed fields, `search.content-locale`) | the CRC's inputs | `SearchIndexManager` |
+| the neutral document's content for the same configuration (this section) | `DOCUMENT_VERSION`, folded into the same CRC | `SearchIndexManager` |
+| an adapter's physical layout (field types, doc values, mapping) | `LAYOUT_VERSION` per adapter; a mismatch reports no stored CRC | `ElasticsearchSearchIndex`, `LuceneSearchIndex` |
+
+The first two are engine-neutral by construction - one bump, both adapters
+follow. The third stays per adapter because a Lucene doc-values change does not
+concern an Elasticsearch mapping and vice versa. `ContentLocaleTest` pins the
+cap (the key of a long name stays under the limit, equals the key of its prefix,
+and long names still order by their first character).
+
+## 16. The name of a selected reference lives on the client (2026-11-02)
+
+A reference facet's filter carries uuids only - the `f` parameter holds
+`{VALUES, facet, [uuid…]}` - and the UI named a selected value from whichever
+option list it was showing: the type-ahead result while the field has text, the
+search response's buckets otherwise, on the assumption that the buckets *always
+include the selected values*. They do not. The buckets are the scope's most
+frequent terms (§8: ordered by count, capped by the request - 1000 in the
+controller), and the multi-select rule only guarantees a selected value a
+count above zero, not a place among the top thousand. In `ARCH_DESC`, with
+eight reference facets over persons, places, corporations and the like, a
+record referenced by a handful of descriptions is routinely outside them. So a
+reader who typed a name, ticked the record and cleared the field saw the
+pinned selection turn into a uuid; a shared link showed the uuid from the first
+render; and an `offeredWhen` condition naming a reference option by its label
+silently stopped holding, which let the dependent-facet pruning drop a filter.
+
+The fix is on the client, and the URL stays as it is. A name in the URL would
+go stale on a rename and bloat every shared link - the reasons the `~RELATED`
+facet already resolves its chip from the record rather than carrying the name.
+Instead the name is a React Query entry of its own, `["apu-name", uuid]`
+(`src/apu/apuName.ts`):
+
+- **written at the moment of choice**: picking an option that has a label
+  stores it before the filter is toggled, so the name survives the list it
+  came from;
+- **asked of the record itself otherwise**: for a value selected elsewhere (a
+  shared link, the browser's history, a widened search whose new top-1000 no
+  longer has it) the entry's query function reads the record's detail and
+  keeps its name. Never refetched (a name does not change within a session),
+  404 not retried (a missing record is an answer), one request per unknown
+  value, once;
+- **bounded by time, not by count**: the entry is observed while the value is
+  selected and leaves the cache by the client's ordinary garbage collection
+  once nothing shows it. Seeding the cache from every labelled row that arrives
+  (up to a thousand per facet per search) was deliberately not done - churn for
+  no gain.
+
+A pinned row is the listed row when some list names it, else the remembered
+name; its count stays absent when it is not among the buckets, as the row
+contract always allowed. The search page's label lookup for facet conditions
+falls back to the same entry, so a label-based `offeredWhen` keeps holding after
+the value leaves the buckets.
+
+Why not a server-side guarantee that selected values are always among the
+buckets: it would need both adapters changed (an `include` of the selected
+terms or a second aggregation on Elasticsearch, a forced inclusion in the
+embedded term walk) and it still could not name a value with no match in the
+current scope, which is exactly when the reader most needs to see what they
+had selected in order to remove it. The contract, the controller and the port
+are untouched.
+
+Testing: `FacetPanel.test.tsx` ("reference facet") types a name, ticks the
+suggested record and clears the field - the pinned record stays named and no
+detail request is made; and names a value applied from outside (a shared link)
+from the record itself, once.

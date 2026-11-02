@@ -7,7 +7,7 @@ import {
   Title2,
   tokens,
 } from "@fluentui/react-components";
-import { type CSSProperties, Fragment, useState } from "react";
+import { type CSSProperties, Fragment, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -41,6 +41,15 @@ import { relatedSearchUrl } from "../search/filters";
  * portal's behavior; the render model keeps type codes exactly for such cases).
  */
 const ARCHDESC_ROOT_REF = "ARCHDESC~ROOT~REF";
+
+/**
+ * How many values of one item code a part shows before the rest sits behind a
+ * "show all" toggle. A fund's originators or an entity's relations can run to
+ * hundreds; the old portal capped the visible list at ten and fetched the
+ * rest on demand. The names now arrive with the detail, so only the display
+ * is windowed - expanding costs no request.
+ */
+const INITIAL_ITEM_LIMIT = 10;
 
 /**
  * Width of the tree pane: the reader drags the splitter, and the value travels
@@ -361,6 +370,29 @@ const useStyles = makeStyles({
     margin: 0,
     overflowWrap: "anywhere",
   },
+  // several values of one code: a list under one label rather than the label
+  // repeated per value
+  valueList: {
+    listStyleType: "none",
+    margin: 0,
+    padding: 0,
+    display: "flex",
+    flexDirection: "column",
+    rowGap: tokens.spacingVerticalXXS,
+  },
+  // the "show all" toggle reads as a link in the value column, but it changes
+  // what is on the page rather than where the reader is - so a button
+  showAll: {
+    background: "none",
+    border: "none",
+    padding: 0,
+    marginTop: tokens.spacingVerticalXXS,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    fontSize: tokens.fontSizeBase300,
+    color: tokens.colorBrandForegroundLink,
+    ":hover": { textDecorationLine: "underline" },
+  },
   json: {
     margin: 0,
     padding: tokens.spacingVerticalS,
@@ -431,16 +463,82 @@ function ItemValue({ item }: { item: DetailItem }) {
   return <>{itemText(item)}</>;
 }
 
-function ItemRows({ items, narrow }: { items: DetailItem[]; narrow: boolean }) {
+/** The items of one code within a part, in the order the first of them appeared. */
+interface ItemGroup {
+  code: string;
+  label: string;
+  items: DetailItem[];
+}
+
+/**
+ * Items of one code become one row - the old portal grouped by code too. The
+ * server keeps items of a code together in practice (same view order), but
+ * grouping here does not rely on it.
+ */
+function groupByCode(items: DetailItem[]): ItemGroup[] {
+  const groups: ItemGroup[] = [];
+  const byCode = new Map<string, ItemGroup>();
+  for (const item of items) {
+    let group = byCode.get(item.code);
+    if (!group) {
+      group = { code: item.code, label: item.label, items: [] };
+      byCode.set(item.code, group);
+      groups.push(group);
+    }
+    group.items.push(item);
+  }
+  return groups;
+}
+
+/**
+ * The value cell of one group: a single value plain, several as a list, and
+ * past the limit the rest behind a toggle - "show all (N)" / "hide", as the old
+ * portal worded it. The toggle is a disclosure over the list it extends.
+ */
+function GroupValues({ group }: { group: ItemGroup }) {
+  const styles = useStyles();
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const listId = useId();
+  if (group.items.length === 1) {
+    return <ItemValue item={group.items[0]} />;
+  }
+  const windowed = group.items.length > INITIAL_ITEM_LIMIT;
+  const visible = open || !windowed ? group.items : group.items.slice(0, INITIAL_ITEM_LIMIT);
+  return (
+    <>
+      <ul id={listId} className={styles.valueList}>
+        {visible.map((item, index) => (
+          <li key={index}>
+            <ItemValue item={item} />
+          </li>
+        ))}
+      </ul>
+      {windowed && (
+        <button
+          type="button"
+          className={styles.showAll}
+          aria-expanded={open}
+          aria-controls={listId}
+          onClick={() => setOpen(!open)}
+        >
+          {open ? t("apu.hide") : t("apu.showAll", { count: group.items.length })}
+        </button>
+      )}
+    </>
+  );
+}
+
+function ItemRows({ groups, narrow }: { groups: ItemGroup[]; narrow: boolean }) {
   const styles = useStyles();
   if (narrow) {
     return (
       <dl className={styles.itemsNarrow}>
-        {items.map((item, index) => (
-          <div key={`${item.code}-${index}`} className={styles.itemRowNarrow}>
-            <dt className={styles.itemLabel}>{item.label}</dt>
+        {groups.map((group) => (
+          <div key={group.code} className={styles.itemRowNarrow}>
+            <dt className={styles.itemLabel}>{group.label}</dt>
             <dd className={styles.itemValueNarrow}>
-              <ItemValue item={item} />
+              <GroupValues group={group} />
             </dd>
           </div>
         ))}
@@ -449,11 +547,11 @@ function ItemRows({ items, narrow }: { items: DetailItem[]; narrow: boolean }) {
   }
   return (
     <dl className={styles.items}>
-      {items.map((item, index) => (
-        <Fragment key={`${item.code}-${index}`}>
-          <dt className={styles.itemLabel}>{item.label}</dt>
+      {groups.map((group) => (
+        <Fragment key={group.code}>
+          <dt className={styles.itemLabel}>{group.label}</dt>
           <dd className={styles.itemValue}>
-            <ItemValue item={item} />
+            <GroupValues group={group} />
           </dd>
         </Fragment>
       ))}
@@ -463,11 +561,11 @@ function ItemRows({ items, narrow }: { items: DetailItem[]; narrow: boolean }) {
 
 /**
  * One part of the detail. Follows the old portal's display rules: the part's
- * own textual value is never rendered (it only duplicates the items); a
- * GROUPED part collapses to one line - part label plus a summary of its item
- * values (references excluded) - expandable to the full rows; a STANDALONE
- * part with a single item collapses to one label/value row without the part
- * header.
+ * own textual value is never rendered (it only duplicates the items); items
+ * of one code form one row; a GROUPED part collapses to one line - part label
+ * plus a summary of its item values (references excluded) - expandable to the
+ * full rows; a STANDALONE part with a single row collapses to that label/value
+ * row without the part header.
  */
 function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
   const styles = useStyles();
@@ -476,6 +574,7 @@ function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
   if (items.length === 0) {
     return null;
   }
+  const groups = groupByCode(items);
 
   if (part.viewType === PartViewType.Grouped) {
     const summary = items
@@ -498,16 +597,16 @@ function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
             </span>
           </span>
         </button>
-        {open && <ItemRows items={items} narrow={narrow} />}
+        {open && <ItemRows groups={groups} narrow={narrow} />}
       </section>
     );
   }
 
-  const single = items.length === 1;
+  const single = groups.length === 1;
   return (
-    <section className={styles.part} aria-label={single ? items[0].label : part.label}>
+    <section className={styles.part} aria-label={single ? groups[0].label : part.label}>
       {!single && <Subtitle2 as="h2">{part.label}</Subtitle2>}
-      <ItemRows items={items} narrow={narrow} />
+      <ItemRows groups={groups} narrow={narrow} />
     </section>
   );
 }

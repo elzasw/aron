@@ -127,6 +127,8 @@
     "treeCollapse": "Sbalit {{name}}",
     "treeMoreBefore": "Načíst předchozí",
     "treeMoreAfter": "Načíst další",
+    "showAll": "Zobrazit všechny ({{count}})",
+    "hide": "Skrýt",
     "findRelated": "Najít související",
     "findRelatedFor": "Najít záznamy související se {{name}}",
     "notFound": "Záznam nebyl nalezen.",

@@ -121,6 +121,8 @@
     "treeCollapse": "Collapse {{name}}",
     "treeMoreBefore": "Load previous",
     "treeMoreAfter": "Load more",
+    "showAll": "Show all ({{count}})",
+    "hide": "Hide",
     "findRelated": "Find related",
     "findRelatedFor": "Find records related to {{name}}",
     "notFound": "The record was not found.",

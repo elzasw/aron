@@ -1,7 +1,15 @@
 import { act, fireEvent, screen } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApuType, FileType, type ApuDetail } from "../api/generated";
+import {
+  ApuType,
+  DetailItemKind,
+  FileType,
+  PartViewType,
+  type ApuDetail,
+  type RefItem,
+  type TextItem,
+} from "../api/generated";
 import { expectNoA11yViolations } from "../test/a11y";
 import { renderWithProviders } from "../test/render";
 import { setViewport, setViewportWidth } from "../test/viewport";
@@ -50,9 +58,49 @@ const DIGITIZED: ApuDetail = {
   ],
 };
 
+const originator = (n: number): RefItem => ({
+  code: "ORIGINATOR~REF",
+  label: "Originator",
+  kind: DetailItemKind.Ref,
+  ref: { uuid: `orig-${n}`, name: `Originator ${n}` },
+});
+
+const text = (code: string, label: string, value: string): TextItem => ({
+  code,
+  label,
+  kind: DetailItemKind.Text,
+  value,
+});
+
+/** A fund with more originators than the description shows at first. */
+const MANY_ORIGINATORS: ApuDetail = {
+  ...DIGITIZED,
+  uuid: "many",
+  digitalObjects: [],
+  parts: [
+    {
+      code: "PT_ORIGINATORS",
+      label: "Originators",
+      viewType: PartViewType.Standalone,
+      items: Array.from({ length: 12 }, (_, i) => originator(i + 1)),
+    },
+    {
+      code: "PT_TITLE",
+      label: "Title",
+      viewType: PartViewType.Grouped,
+      items: [
+        text("TITLE", "Title", "Town archive"),
+        text("NOTE", "Note", "fragment"),
+        originator(99),
+      ],
+    },
+  ],
+};
+
 const detailByUuid: Record<string, ApuDetail> = {
   rec: DIGITIZED,
   plain: { ...DIGITIZED, uuid: "plain", digitalObjects: [] },
+  many: MANY_ORIGINATORS,
 };
 
 vi.mock("../api/client", () => ({
@@ -149,6 +197,34 @@ describe("ApuPage with digital objects", () => {
     // turned upright again (tall enough), the three panes are back
     act(() => setViewport(1440, 900));
     await screen.findByRole("separator", { name: "Width of the archival description column" });
+  });
+
+  it("shows ten values of one item code and the rest behind a toggle", async () => {
+    const { container } = renderRecord("many");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    // one row for the whole code: the label once, not twelve times
+    expect(screen.getAllByText("Originator")).toHaveLength(1);
+    expect(screen.getAllByRole("link", { name: /^Originator \d+$/ })).toHaveLength(10);
+    const showAll = screen.getByRole("button", { name: "Show all (12)" });
+    expect(showAll.getAttribute("aria-expanded")).toBe("false");
+    await expectNoA11yViolations(container);
+    fireEvent.click(showAll);
+    expect(screen.getAllByRole("link", { name: /^Originator \d+$/ })).toHaveLength(12);
+    screen.getByRole("link", { name: "Originator 12" });
+    const hide = screen.getByRole("button", { name: "Hide" });
+    expect(hide.getAttribute("aria-expanded")).toBe("true");
+    fireEvent.click(hide);
+    expect(screen.getAllByRole("link", { name: /^Originator \d+$/ })).toHaveLength(10);
+  });
+
+  it("keeps references out of a grouped part's summary and shows them expanded", async () => {
+    renderRecord("many");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    const summary = screen.getByRole("button", { name: /Town archive fragment/ });
+    expect(summary.textContent).not.toContain("Originator 99");
+    expect(screen.queryByRole("link", { name: "Originator 99" })).toBeNull();
+    fireEvent.click(summary);
+    screen.getByRole("link", { name: "Originator 99" });
   });
 
   it("gives the description its own column once the viewport grows enough", async () => {
