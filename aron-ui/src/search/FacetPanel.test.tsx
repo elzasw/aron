@@ -1,6 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
+import { apuApi, searchApi } from "../api/client";
 import {
   ApuType,
   type DatingFacetResult,
@@ -11,12 +13,20 @@ import {
   FacetType,
   FilterKind,
   type RangeFilter,
+  type RefFacetResult,
   type SearchFilter,
+  type ValuesFilter,
 } from "../api/generated";
 import i18n from "../i18n";
 import { expectNoA11yViolations } from "../test/a11y";
+import { renderWithProviders } from "../test/render";
 import FacetPanel from "./FacetPanel";
 import { DATE_FACET, TYPE_FACET } from "./filters";
+
+vi.mock("../api/client", () => ({
+  searchApi: { searchGetFacetOptions: vi.fn() },
+  apuApi: { apuGetDetail: vi.fn() },
+}));
 
 function facet(code: string, type: FacetType, label: string): FacetDef {
   return { code, type, label, display: FacetDisplay.Always };
@@ -201,5 +211,65 @@ describe("FacetPanel", () => {
 
     // "region" only makes sense for a whole page, not for one rendered facet
     await expectNoA11yViolations(container, ["region"]);
+  });
+});
+
+describe("reference facet", () => {
+  const PLACE = facet("ORIG_PLACES_REF", FacetType.Ref, "Place of origin");
+  /** The scope's most frequent places - the selected one is not among them. */
+  const topPlaces: RefFacetResult = {
+    kind: FacetResultKind.Ref,
+    code: PLACE.code,
+    buckets: [
+      { value: "uuid-prague", label: "Praha", count: 120 },
+      { value: "uuid-brno", label: "Brno", count: 80 },
+    ],
+  };
+
+  /** The facet as the search page holds it: the filters it emits come back as its props. */
+  function Stateful({ initial = [] }: { initial?: SearchFilter[] }) {
+    const [filters, setFilters] = useState(initial);
+    return (
+      <FacetPanel
+        def={PLACE}
+        filters={filters}
+        result={topPlaces}
+        apuType={ApuType.Fund}
+        query=""
+        onFilters={setFilters}
+      />
+    );
+  }
+
+  it("keeps the name of a selected record once the type-ahead is cleared", async () => {
+    vi.mocked(searchApi.searchGetFacetOptions).mockResolvedValue({
+      options: [{ value: "uuid-telc", label: "Telč", count: 2 }],
+    });
+    const user = userEvent.setup();
+    const { container } = renderWithProviders(<Stateful />);
+
+    await user.type(screen.getByRole("textbox", { name: "Place of origin – find a value" }), "Tel");
+    await user.click(await screen.findByRole("checkbox", { name: /Telč/ }));
+    await user.clear(screen.getByRole("textbox", { name: "Place of origin – find a value" }));
+
+    // the top buckets are back below the field, and the pinned selection is still
+    // named - the buckets never had it, and nothing had to be asked of the server
+    expect(await screen.findByRole("checkbox", { name: /Praha/ })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: /Telč/ })).toBeChecked();
+    expect(screen.queryByText("uuid-telc")).not.toBeInTheDocument();
+    expect(apuApi.apuGetDetail).not.toHaveBeenCalled();
+    await expectNoA11yViolations(container, ["region"]);
+  });
+
+  it("names a record selected elsewhere from the record itself", async () => {
+    // a shared link: the uuid arrives with the URL, no list on this page has it
+    vi.mocked(apuApi.apuGetDetail).mockResolvedValue({ name: "Jihlava" } as never);
+    const applied: ValuesFilter = { kind: FilterKind.Values, facet: PLACE.code, values: ["uuid-jihlava"] };
+    renderWithProviders(<Stateful initial={[applied]} />);
+
+    expect(await screen.findByRole("checkbox", { name: /Jihlava/ })).toBeChecked();
+    expect(apuApi.apuGetDetail).toHaveBeenCalledWith({ uuid: "uuid-jihlava" });
+    // a record the buckets do name is not asked for
+    expect(apuApi.apuGetDetail).toHaveBeenCalledTimes(1);
   });
 });

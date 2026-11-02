@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
+import { apuNameQuery } from "../apu/apuName";
 import {
   ApuType,
   type FacetDef,
@@ -246,9 +247,13 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const resultOf = (code: string) => facets.data?.facets.find((f) => f.code === code);
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
   // the label a value is displayed under, for a condition that names an option by
-  // its label rather than its value; the buckets that carry labels come with the
-  // search response
-  const labelOf = (facetCode: string, value: string) => bucketLabel(resultOf(facetCode), value);
+  // its label rather than its value: from the buckets that came with the search
+  // response, else the name remembered when the reader picked the value (the
+  // buckets hold the scope's most frequent values, which a selected one need not
+  // be among - see apuName)
+  const labelOf = (facetCode: string, value: string) =>
+    bucketLabel(resultOf(facetCode), value) ??
+    queryClient.getQueryData(apuNameQuery(value).queryKey);
   const isApplicable = (def: FacetDef) => facetIsApplicable(def, filters, labelOf);
 
   // A facet that waits for another facet's selection loses its own constraint

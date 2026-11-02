@@ -9,10 +9,11 @@ import {
   Tooltip,
   useId,
 } from "@fluentui/react-components";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { searchApi } from "../api/client";
+import { apuNameQuery, rememberApuName } from "../apu/apuName";
 import { PRIMARY_MAIN } from "../layout/AppHeader";
 import {
   ApuType,
@@ -470,26 +471,51 @@ function RefFacet({
     placeholderData: (previous) => previous,
   });
 
+  const queryClient = useQueryClient();
   const shown = debouncedQ ? (options.data?.options ?? []) : buckets;
   const collapsedCount = def.displayedItems && def.displayedItems > 0 ? def.displayedItems : 10;
   const unselected = shown.filter((b) => !selected.includes(b.value)).slice(0, collapsedCount);
-  // selected values resolve their label from the multi-select buckets (which
-  // always include them); a value beyond the bucket limit falls back to itself
-  const selectedRow = (value: string): OptionRow =>
-    buckets.find((b) => b.value === value) ??
-    shown.find((b) => b.value === value) ?? { value };
+  // a selected value is named by the list that has it: the response's buckets or
+  // the type-ahead result. Neither is guaranteed to - the buckets are the scope's
+  // most frequent values, not "the selected ones plus the most frequent", so a
+  // rarely referenced record drops out of them as soon as the type-ahead list is
+  // gone. Its name is therefore remembered when it is picked (see apuName) and,
+  // for a value selected elsewhere (a shared link, the browser's history), asked
+  // of the record itself.
+  const listed = (value: string): OptionRow | undefined =>
+    buckets.find((b) => b.value === value) ?? shown.find((b) => b.value === value);
+  const names = useQueries({
+    queries: selected.map((value) => ({
+      ...apuNameQuery(value),
+      // no request while a list names the value; a remembered name is in the cache
+      enabled: listed(value)?.label === undefined,
+    })),
+  });
+  const selectedRow = (value: string, index: number): OptionRow => {
+    const row = listed(value);
+    return row?.label !== undefined ? row : { ...row, value, label: names[index].data };
+  };
+  const select = (row: OptionRow) => {
+    if (row.label !== undefined) {
+      rememberApuName(queryClient, row.value, row.label);
+    }
+    onFilters(toggleValue(filters, def.code, row.value));
+  };
 
   return (
     <>
-      {selected.map((value) => (
-        <FacetCheckbox
-          key={value}
-          row={selectedRow(value)}
-          checked
-          tooltip={tooltipFor(def, selectedRow(value))}
-          onToggle={() => onFilters(toggleValue(filters, def.code, value))}
-        />
-      ))}
+      {selected.map((value, index) => {
+        const row = selectedRow(value, index);
+        return (
+          <FacetCheckbox
+            key={value}
+            row={row}
+            checked
+            tooltip={tooltipFor(def, row)}
+            onToggle={() => onFilters(toggleValue(filters, def.code, value))}
+          />
+        );
+      })}
       <Input
         value={q}
         aria-label={t("facets.optionsFor", { facet: def.label })}
@@ -510,7 +536,7 @@ function RefFacet({
           row={bucket}
           checked={false}
           tooltip={tooltipFor(def, bucket)}
-          onToggle={() => onFilters(toggleValue(filters, def.code, bucket.value))}
+          onToggle={() => select(bucket)}
         />
       ))}
       {debouncedQ.length > 0 && options.isSuccess && unselected.length === 0 && (
