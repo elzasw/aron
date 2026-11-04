@@ -3,11 +3,17 @@ import {
   mergeClasses,
   Spinner,
   Subtitle2,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
   Text,
   Title2,
   tokens,
 } from "@fluentui/react-components";
-import { type CSSProperties, Fragment, useId, useState } from "react";
+import { type CSSProperties, Fragment, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -400,6 +406,17 @@ const useStyles = makeStyles({
     overflowX: "auto",
     fontSize: tokens.fontSizeBase200,
   },
+  // a structured value's table is wider than the value column on a phone or
+  // beside a viewer; it scrolls inside its cell rather than widening the grid
+  tableScroll: {
+    maxWidth: "100%",
+    overflowX: "auto",
+  },
+  tableCell: {
+    verticalAlign: "top",
+    // the producer separates a unit's name from its note with a line break
+    whiteSpace: "pre-line",
+  },
   fileList: {
     margin: 0,
     paddingLeft: tokens.spacingHorizontalXL,
@@ -429,7 +446,90 @@ function itemText(item: DetailItem): string {
   if (isRef(item)) {
     return item.ref.name;
   }
-  return isJson(item) ? item.json : "";
+  // a structured (JSON) value has no one-line form; a summary leaves it out
+  return "";
+}
+
+/**
+ * The structured value the transfagent emits for a JSON item - its
+ * "jsoncomponent": `{"type":"table","data":{"columns":[{"name":...}],
+ * "rows":[["..."],...]}}`, cells matched to columns by position. It is the
+ * only shape ever produced (EVIDENCE_UNIT in a fund's info part) and is
+ * defined by the producer and the old portal alone; the API contract carries
+ * the string raw. The check is a strict guard, not a cast, because the
+ * producer lives outside this repository.
+ */
+interface JsonTable {
+  columns: { name: string }[];
+  rows: string[][];
+}
+
+function jsonTableOf(json: string): JsonTable | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    return null;
+  }
+  const { type, data } = parsed as { type?: unknown; data?: unknown };
+  if (type !== "table" || typeof data !== "object" || data === null) {
+    return null;
+  }
+  const { columns, rows } = data as { columns?: unknown; rows?: unknown };
+  const isColumn = (column: unknown): column is { name: string } =>
+    typeof column === "object" &&
+    column !== null &&
+    typeof (column as { name?: unknown }).name === "string";
+  const isRow = (row: unknown): row is string[] =>
+    Array.isArray(row) && row.every((cell) => typeof cell === "string");
+  if (!Array.isArray(columns) || !columns.every(isColumn)) {
+    return null;
+  }
+  if (!Array.isArray(rows) || !rows.every(isRow)) {
+    return null;
+  }
+  return { columns, rows };
+}
+
+/**
+ * A JSON item: the producer's table when the value is one, otherwise the raw
+ * string - the fallback the old portal had for anything it did not recognise.
+ * The item label names the table (the row's term already shows it) so a
+ * screen reader's table navigation has something to announce.
+ */
+function JsonValue({ item }: { item: JsonItem }) {
+  const styles = useStyles();
+  const table = useMemo(() => jsonTableOf(item.json), [item.json]);
+  if (!table) {
+    return <pre className={styles.json}>{item.json}</pre>;
+  }
+  return (
+    <div className={styles.tableScroll}>
+      <Table size="small" aria-label={item.label}>
+        <TableHeader>
+          <TableRow>
+            {table.columns.map((column, index) => (
+              <TableHeaderCell key={index}>{column.name}</TableHeaderCell>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {table.rows.map((row, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {table.columns.map((_, columnIndex) => (
+                <TableCell key={columnIndex} className={styles.tableCell}>
+                  {row[columnIndex] ?? ""}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }
 
 function ItemValue({ item }: { item: DetailItem }) {
@@ -449,7 +549,7 @@ function ItemValue({ item }: { item: DetailItem }) {
     );
   }
   if (isJson(item)) {
-    return <pre className={styles.json}>{item.json}</pre>;
+    return <JsonValue item={item} />;
   }
   if (isUnitDate(item)) {
     // a single-valued dating carries its machine-readable form into the markup;
@@ -563,9 +663,9 @@ function ItemRows({ groups, narrow }: { groups: ItemGroup[]; narrow: boolean }) 
  * One part of the detail. Follows the old portal's display rules: the part's
  * own textual value is never rendered (it only duplicates the items); items
  * of one code form one row; a GROUPED part collapses to one line - part label
- * plus a summary of its item values (references excluded) - expandable to the
- * full rows; a STANDALONE part with a single row collapses to that label/value
- * row without the part header.
+ * plus a summary of its item values (references and structured values
+ * excluded) - expandable to the full rows; a STANDALONE part with a single row
+ * collapses to that label/value row without the part header.
  */
 function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
   const styles = useStyles();
@@ -578,7 +678,7 @@ function Part({ part, narrow }: { part: DetailPart; narrow: boolean }) {
 
   if (part.viewType === PartViewType.Grouped) {
     const summary = items
-      .filter((item) => item.kind !== DetailItemKind.Ref)
+      .filter((item) => item.kind !== DetailItemKind.Ref && item.kind !== DetailItemKind.Json)
       .map(itemText)
       .join(" ");
     return (

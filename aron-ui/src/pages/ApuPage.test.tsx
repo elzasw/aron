@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from "@testing-library/react";
+import { act, fireEvent, screen, within } from "@testing-library/react";
 import { Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -7,6 +7,7 @@ import {
   FileType,
   PartViewType,
   type ApuDetail,
+  type JsonItem,
   type RefItem,
   type TextItem,
 } from "../api/generated";
@@ -97,10 +98,74 @@ const MANY_ORIGINATORS: ApuDetail = {
   ],
 };
 
+const jsonItem = (json: string): JsonItem => ({
+  code: "EVIDENCE_UNIT",
+  label: "Evidence unit",
+  kind: DetailItemKind.Json,
+  json,
+});
+
+/** The transfagent's "jsoncomponent" for a fund's evidence units, as it comes over the wire. */
+const EVIDENCE_COLUMNS = [
+  "Název",
+  "Nezpracováno",
+  "Zpracováno",
+  "Inventarizováno",
+  "Poškozeno",
+  "Časový rozsah",
+];
+const EVIDENCE_TABLE = JSON.stringify({
+  type: "table",
+  data: {
+    columns: EVIDENCE_COLUMNS.map((name) => ({ name })),
+    rows: [
+      ["kartony\r\nčást poškozena", "0", "12/3", "0", "2", "1900-1950"],
+      ["fotografie", "5", "0", "0", "0", ""],
+    ],
+  },
+});
+
+/** A fund whose info part carries a structured value, once visible and once behind a summary. */
+const FUND_INFO: ApuDetail = {
+  ...DIGITIZED,
+  uuid: "fund",
+  digitalObjects: [],
+  parts: [
+    {
+      code: "PT_FUND_INFO",
+      label: "Fund info",
+      viewType: PartViewType.Standalone,
+      items: [text("FUND_LENGTH", "Length", "12 bm"), jsonItem(EVIDENCE_TABLE)],
+    },
+    {
+      code: "PT_NOTE",
+      label: "Note",
+      viewType: PartViewType.Grouped,
+      items: [text("NOTE", "Note", "fragment"), jsonItem(EVIDENCE_TABLE)],
+    },
+  ],
+};
+
+const UNKNOWN_JSON = '{"type":"chart","data":[]}';
+
 const detailByUuid: Record<string, ApuDetail> = {
   rec: DIGITIZED,
   plain: { ...DIGITIZED, uuid: "plain", digitalObjects: [] },
   many: MANY_ORIGINATORS,
+  fund: FUND_INFO,
+  unknown: {
+    ...DIGITIZED,
+    uuid: "unknown",
+    digitalObjects: [],
+    parts: [
+      {
+        code: "PT_FUND_INFO",
+        label: "Fund info",
+        viewType: PartViewType.Standalone,
+        items: [jsonItem(UNKNOWN_JSON)],
+      },
+    ],
+  },
 };
 
 vi.mock("../api/client", () => ({
@@ -225,6 +290,32 @@ describe("ApuPage with digital objects", () => {
     expect(screen.queryByRole("link", { name: "Originator 99" })).toBeNull();
     fireEvent.click(summary);
     screen.getByRole("link", { name: "Originator 99" });
+  });
+
+  it("lays a structured value out as a table and keeps it out of a summary", async () => {
+    const { container } = renderRecord("fund");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    const table = screen.getByRole("table", { name: "Evidence unit" });
+    expect(
+      within(table)
+        .getAllByRole("columnheader")
+        .map((cell) => cell.textContent),
+    ).toEqual(EVIDENCE_COLUMNS);
+    // header row plus one row per evidence unit
+    expect(within(table).getAllByRole("row")).toHaveLength(3);
+    within(table).getByRole("cell", { name: "12/3" });
+    within(table).getByRole("cell", { name: "1900-1950" });
+    // the grouped part's one-line summary leaves the table out, like references
+    const summary = screen.getByRole("button", { name: /fragment/ });
+    expect(summary.textContent).not.toContain("table");
+    await expectNoA11yViolations(container);
+  });
+
+  it("shows a structured value it cannot lay out as the raw text", async () => {
+    renderRecord("unknown");
+    await screen.findByRole("heading", { level: 1, name: "Privilegia" });
+    expect(screen.queryByRole("table")).toBeNull();
+    screen.getByText(UNKNOWN_JSON);
   });
 
   it("gives the description its own column once the viewport grows enough", async () => {
