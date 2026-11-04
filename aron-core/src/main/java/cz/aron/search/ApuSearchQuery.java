@@ -74,11 +74,25 @@ public record ApuSearchQuery(String apuType, RelevancePlan fulltext, List<FieldF
 	 * itself; reference facets enumerate the composite {@code <code>~ID~LABEL}
 	 * field while their Values filter sits on {@code <code>}. {@code size} caps
 	 * the buckets (ordered by count descending, ties by value ascending).
+	 *
+	 * <p>{@code labelQuery} is the type-ahead condition of a reference facet: a
+	 * relation is counted only when its target's label matches every analyzed
+	 * word of the text, the last one as a prefix (the engines' phrase-prefix
+	 * semantics, folded). The condition selects <em>relations</em>, not records:
+	 * a record referencing two entities of the facet's type, one of them
+	 * matching, contributes that one only - and it is applied before the size
+	 * cap, so a matching option is never cut by non-matching siblings. It tests
+	 * the label half of a {@code uuid|label} value; a value without a separator
+	 * has no label and never matches. {@code null} = no condition.
 	 */
-	public record BucketRequest(String bucketField, String filterField, int size) {
+	public record BucketRequest(String bucketField, String filterField, int size, String labelQuery) {
+
+		public BucketRequest(String bucketField, String filterField, int size) {
+			this(bucketField, filterField, size, null);
+		}
 
 		public static BucketRequest of(String field, int size) {
-			return new BucketRequest(field, field, size);
+			return new BucketRequest(field, field, size, null);
 		}
 	}
 

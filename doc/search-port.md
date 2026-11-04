@@ -365,7 +365,8 @@ the new API. The port grew accordingly - still new-API-shaped:
 - `POST /api/v1/facets/{code}/options` is a **controller composition** over
   `search()` (one BucketRequest + a document-level label Text filter), with an
   engine-neutral label post-filter in `SearchController` (folded all-words-
-  last-prefix match) - no dedicated port operation.
+  last-prefix match) - no dedicated port operation. (The post-filter matched
+  records, not relations; §17 moved the condition into the BucketRequest.)
 
 The Lucene min/max brick added for the old API's MIN/MAX metrics
 (`LuceneSearchIndex.minMaxMillis`) now serves both the old-API aggregations and
@@ -805,3 +806,54 @@ Testing: `FacetPanel.test.tsx` ("reference facet") types a name, ticks the
 suggested record and clears the field - the pinned record stays named and no
 detail request is made; and names a value applied from outside (a shared link)
 from the record itself, once.
+
+## 17. The type-ahead matches relations, in the engine (2026-11-04)
+
+`POST /api/v1/facets/{code}/options` of a reference facet was the controller
+composition of §8: a document-level `<code>~LABEL` Text filter, the flat
+`<code>~ID~LABEL` terms enumeration capped at 1000, and a folded label match
+in Java on what came back. That matched **records** and filtered **options**:
+a description referencing fifty places, one of them matching what the reader
+typed, passed the document filter and pushed all fifty into the buckets; the
+Java match hid the forty-nine, but they had already taken slots of the 1000,
+so a matching place referenced by few records could fall off and never be
+offered. On the embedded engine every distinct value of the field was also
+counted on every keystroke before almost all of them were discarded. The old
+UI never had this: its autocomplete asked the nested relations
+(`NESTED(rels) > FILTER(rels.type, rels.label) > TERMS(rels.idLabel)`, §13).
+
+The condition now travels with the request: `BucketRequest` carries an
+optional `labelQuery`, and each engine applies it **per relation and before
+its cap**:
+
+- Lucene (`LuceneSearchIndex.countBuckets`) tests the label half of every
+  `uuid|label` term with the analyzed all-words-last-prefix match - the test
+  `LuceneOldApiSearch` already ran on a reconstructed relation, now owned by
+  the index - and counts only the terms that pass. Same layout, no reindex.
+- Elasticsearch replaces the flat terms aggregation of such a request by the
+  old UI's shape, `filter(other facets + apuType) > nested(rels) >
+  filter(rels.type = filterField AND rels.label match_phrase_prefix) >
+  terms(rels.idLabel)`, with a `reverse_nested` under each bucket so the count
+  is records, as everywhere else. The mapping was nested already; no reindex.
+
+The controller passes the typed text as the label condition of a
+reference-valued facet and keeps the document-level `~LABEL` filter, which
+narrows the candidate records cheaply on both engines (the old UI sent both
+too). The Java match stays only for ENUM facets over plain values, which have
+no label field to ask about. BUCKET_LIMIT, the configured order and the cut to
+`size` are unchanged, so an ordered or alphabetical facet keeps its meaning:
+ordered among the matching options, then cut.
+
+What this does not change: the indexed-vs-displayed label divergence of §13
+now applies between the engines - Elasticsearch matches `rels.label`, the
+indexed label (`INT~NAME~INDEX` override), the embedded engine the displayed
+half of the term. They differ only where an override exists. A condition that
+analyzes to no word matches nothing on both engines, as before.
+
+Testing: `SearchIndexContractTest` (both adapters) indexes a record referencing
+two places and asks for one bucket under the condition - the matching place
+with count 1 comes back although the unfiltered top-1 would be the other place
+with count 3; the condition's prefix, all-words and `null` cases are pinned
+beside it. `NewApiV1Test.facetOptionsProvideFoldedTypeAhead` seeds a record
+referencing Novák and Jičín, so the endpoint test tells per-relation from
+per-record.

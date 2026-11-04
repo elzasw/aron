@@ -92,6 +92,9 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	/** Name of the per-type counts aggregation (the tilde keeps it clash-free too). */
 	private static final String TYPE_COUNTS_AGG = "types~counts";
 
+	/** Path of the nested relation documents of an APU (IndexedApu.rels). */
+	private static final String RELS_PATH = "rels";
+
 	private static final DateTimeFormatter ISO_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
 	private final ElasticsearchOperations operations;
@@ -222,8 +225,10 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
 			builder.withAggregation(bucket.bucketField(), Aggregation.of(a -> a
 					.filter(aggregationFilter(query, List.of(bucket.filterField()), true))
-					.aggregations("values", Aggregation.of(sub -> sub
-							.terms(t -> t.field(bucket.bucketField()).size(bucket.size()))))));
+					.aggregations("values", bucket.labelQuery() != null
+							? labelFilteredBuckets(bucket)
+							: Aggregation.of(sub -> sub
+									.terms(t -> t.field(bucket.bucketField()).size(bucket.size()))))));
 		}
 		for (var request : query.bounds()) {
 			String field = request.boundsField();
@@ -442,6 +447,32 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 	}
 
 	/**
+	 * Buckets under a label condition: the old UI's autocomplete shape,
+	 * {@code nested(rels) > filter(rels.type = filterField AND rels.label
+	 * match_phrase_prefix) > terms(rels.idLabel)}. The nested documents carry one
+	 * relation per record and target, so the condition selects relations and
+	 * is applied before the terms cap; the {@code reverse_nested} below each
+	 * bucket counts the records carrying it, which is what the flat terms
+	 * aggregation reports and the embedded adapter counts. The relation type is
+	 * the item type whose field the request filters on, and {@code rels.idLabel}
+	 * holds the same {@code uuid|label} strings as the flat {@code ~ID~LABEL}
+	 * field - the bucket values are unchanged.
+	 */
+	private static Aggregation labelFilteredBuckets(ApuSearchQuery.BucketRequest bucket) {
+		return Aggregation.of(n -> n
+				.nested(ne -> ne.path(RELS_PATH))
+				.aggregations("matching", Aggregation.of(f -> f
+						.filter(Query.of(q -> q.bool(b -> b
+								.filter(Query.of(t -> t.term(te -> te
+										.field(RELS_PATH + ".type").value(bucket.filterField()))))
+								.filter(Query.of(m -> m.matchPhrasePrefix(mp -> mp
+										.field(RELS_PATH + ".label").query(bucket.labelQuery())))))))
+						.aggregations("values", Aggregation.of(t -> t
+								.terms(te -> te.field(RELS_PATH + ".idLabel").size(bucket.size()))
+								.aggregations("records", Aggregation.of(r -> r.reverseNested(rn -> rn))))))));
+	}
+
+	/**
 	 * Filter of one aggregation: the OTHER facets' filters (multi-select) plus -
 	 * except for typeCounts - the apuType restriction.
 	 */
@@ -599,7 +630,21 @@ public class ElasticsearchSearchIndex implements SearchIndex {
 				result.put(bucket.bucketField(), List.of());
 				continue;
 			}
-			var terms = aggregation.aggregation().getAggregate().filter().aggregations().get("values").sterms();
+			var values = aggregation.aggregation().getAggregate().filter().aggregations().get("values");
+			if (bucket.labelQuery() != null) {
+				// the nested shape of labelFilteredBuckets: the bucket's own doc_count
+				// is nested relations, the record count sits in its reverse_nested
+				var terms = values.nested().aggregations().get("matching").filter().aggregations().get("values")
+						.sterms();
+				result.put(bucket.bucketField(), terms.buckets().array().stream()
+						.map(b -> new ApuSearchResult.Bucket(b.key().stringValue(),
+								b.aggregations().get("records").reverseNested().docCount()))
+						.sorted(Comparator.comparingLong(ApuSearchResult.Bucket::count).reversed()
+								.thenComparing(ApuSearchResult.Bucket::value))
+						.toList());
+				continue;
+			}
+			var terms = values.sterms();
 			result.put(bucket.bucketField(), terms.buckets().array().stream()
 					.map(b -> new ApuSearchResult.Bucket(b.key().stringValue(), b.docCount()))
 					.toList());

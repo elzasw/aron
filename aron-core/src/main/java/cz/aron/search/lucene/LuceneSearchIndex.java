@@ -380,6 +380,12 @@ public class LuceneSearchIndex implements SearchIndex {
 	 * count descending (ties by value) and capped by the requested size. Cost
 	 * grows with term cardinality - fine for the embedded scale this adapter
 	 * targets.
+	 *
+	 * <p>A label condition ({@link ApuSearchQuery.BucketRequest#labelQuery}) is
+	 * tested on the label half of each {@code uuid|label} term BEFORE the term
+	 * is counted - the order {@link LuceneOldApiSearch#relScope} uses for the old
+	 * UI's nested autocomplete: only the matching terms cost a count query, and
+	 * the match decides per relation (per term), never per record.
 	 */
 	private Map<String, List<ApuSearchResult.Bucket>> countBuckets(IndexSearcher searcher, ApuSearchQuery query,
 			Query mainQuery) throws IOException {
@@ -390,6 +396,7 @@ public class LuceneSearchIndex implements SearchIndex {
 		for (ApuSearchQuery.BucketRequest bucket : query.buckets()) {
 			Query base = withApuType(withFacetFilters(mainQuery, query.filters(), List.of(bucket.filterField())),
 					query.apuType());
+			List<String> labelTokens = bucket.labelQuery() != null ? analyze(bucket.labelQuery()) : null;
 			var buckets = new ArrayList<ApuSearchResult.Bucket>();
 			Terms terms = MultiTerms.getTerms(searcher.getIndexReader(), bucket.bucketField());
 			if (terms != null) {
@@ -397,6 +404,9 @@ public class LuceneSearchIndex implements SearchIndex {
 				BytesRef term;
 				while ((term = iterator.next()) != null) {
 					String value = term.utf8ToString();
+					if (labelTokens != null && !labelMatches(labelTokens, value)) {
+						continue;
+					}
 					long count = searcher.count(new BooleanQuery.Builder()
 							.add(base, Occur.MUST)
 							.add(new TermQuery(new Term(bucket.bucketField(), value)), Occur.FILTER)
@@ -723,6 +733,42 @@ public class LuceneSearchIndex implements SearchIndex {
 		var bool = new BooleanQuery.Builder().setMinimumNumberShouldMatch(1);
 		fields.forEach(field -> bool.add(of.apply(field), Occur.SHOULD));
 		return bool.build();
+	}
+
+	/**
+	 * The label condition of a bucket request on one {@code uuid|label} term: the
+	 * half after the separator, matched like {@link #allWordsLastPrefixQuery}. A
+	 * term without a separator carries no label and never matches - the same
+	 * answer Elasticsearch gives, where such a value has no nested relation.
+	 */
+	private boolean labelMatches(List<String> labelTokens, String idLabel) throws IOException {
+		int separator = idLabel.indexOf('|');
+		return separator >= 0 && matchesAllWordsLastPrefix(labelTokens, idLabel.substring(separator + 1));
+	}
+
+	/**
+	 * The Java side of {@link #allWordsLastPrefixQuery}: every analyzed word of
+	 * the query present in the analyzed value, the last one as a prefix. No word
+	 * matches nothing, as an empty query does on either engine - which is why a
+	 * reference facet's autocomplete offers its options only once the reader
+	 * types. Shared with {@link LuceneOldApiSearch} (the old API's FTXF filter
+	 * on a reconstructed relation).
+	 */
+	boolean matchesAllWordsLastPrefix(List<String> tokens, String value) throws IOException {
+		if (tokens.isEmpty()) {
+			return false;
+		}
+		List<String> valueTokens = analyze(value);
+		for (int i = 0; i < tokens.size(); i++) {
+			String token = tokens.get(i);
+			boolean found = i == tokens.size() - 1
+					? valueTokens.stream().anyMatch(valueToken -> valueToken.startsWith(token))
+					: valueTokens.contains(token);
+			if (!found) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/** Runs the folding analysis chain; shared with {@link LuceneOldApiSearch}. */

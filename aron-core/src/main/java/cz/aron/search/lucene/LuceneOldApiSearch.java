@@ -761,26 +761,12 @@ public class LuceneOldApiSearch implements OldApiSearch {
 	}
 
 	/**
-	 * The Java side of {@link LuceneSearchIndex#allWordsLastPrefixQuery}: every
-	 * analyzed word present, the last one as a prefix. No word matches nothing,
-	 * as an empty query does on either engine - which is why a reference facet's
-	 * autocomplete offers its options only once the reader types.
+	 * The FTXF match on a relation's value - the new API's bucket label condition
+	 * is the same test, so the index owns it (see
+	 * {@link LuceneSearchIndex#matchesAllWordsLastPrefix}).
 	 */
 	private boolean matchesAllWordsLastPrefix(List<String> tokens, String value) throws IOException {
-		if (tokens.isEmpty()) {
-			return false;
-		}
-		List<String> valueTokens = index.analyze(value);
-		for (int i = 0; i < tokens.size(); i++) {
-			String token = tokens.get(i);
-			boolean found = i == tokens.size() - 1
-					? valueTokens.stream().anyMatch(valueToken -> valueToken.startsWith(token))
-					: valueTokens.contains(token);
-			if (!found) {
-				return false;
-			}
-		}
-		return true;
+		return index.matchesAllWordsLastPrefix(tokens, value);
 	}
 
 	/**

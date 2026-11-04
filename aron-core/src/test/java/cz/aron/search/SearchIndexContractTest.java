@@ -513,6 +513,51 @@ public abstract class SearchIndexContractTest {
 	}
 
 	@Test
+	void labelQuerySelectsTheMatchingRelationsBeforeTheCap() {
+		// the type-ahead of a reference facet: a description referencing two
+		// places, one of them matching what the reader typed, must offer that one
+		// only - and a rarely referenced match must survive the size cap that the
+		// frequent non-matching siblings would otherwise fill
+		var two = doc(uuid(38), "Matrika", 1, Map.of());
+		DocumentFixtures.addRefLabel(two, "REL~ENTITY", "apu-a", "Jičín");
+		DocumentFixtures.addRefLabel(two, "REL~ENTITY", "apu-b", "Praha");
+		var one = doc(uuid(39), "Listina", 1, Map.of());
+		DocumentFixtures.addRefLabel(one, "REL~ENTITY", "apu-b", "Praha");
+		var other = doc(uuid(40), "Kronika", 1, Map.of());
+		DocumentFixtures.addRefLabel(other, "REL~ENTITY", "apu-b", "Praha");
+		indexApus(List.of(two, one, other));
+
+		// the controller's shape: the document-level label filter narrows the
+		// candidates (the two-places record passes through Jičín), the label
+		// condition then decides per relation; size 1 would hold Praha (3) alone
+		// if the condition came after the cap
+		var typed = index.search(new ApuSearchQuery(null, null,
+				List.of(new FieldFilter.Text("REL~ENTITY~LABEL", "jic")),
+				List.of(new ApuSearchQuery.BucketRequest("REL~ENTITY~ID~LABEL", "REL~ENTITY", 1, "jic")),
+				List.of(), 0, 0, SortMode.RELEVANCE));
+		assertThat(typed.buckets().get("REL~ENTITY~ID~LABEL"))
+				.containsExactly(new ApuSearchResult.Bucket("apu-a|Jičín", 1));
+
+		// every word must match, the last as a prefix; the count is records
+		var prefix = index.search(new ApuSearchQuery(null, null, List.of(),
+				List.of(new ApuSearchQuery.BucketRequest("REL~ENTITY~ID~LABEL", "REL~ENTITY", 10, "Pra")),
+				List.of(), 0, 0, SortMode.RELEVANCE));
+		assertThat(prefix.buckets().get("REL~ENTITY~ID~LABEL"))
+				.containsExactly(new ApuSearchResult.Bucket("apu-b|Praha", 3));
+		var noMatch = index.search(new ApuSearchQuery(null, null, List.of(),
+				List.of(new ApuSearchQuery.BucketRequest("REL~ENTITY~ID~LABEL", "REL~ENTITY", 10, "Praha jic")),
+				List.of(), 0, 0, SortMode.RELEVANCE));
+		assertThat(noMatch.buckets().get("REL~ENTITY~ID~LABEL")).isEmpty();
+
+		// without the condition the buckets are what they always were
+		var all = index.search(new ApuSearchQuery(null, null, List.of(),
+				List.of(new ApuSearchQuery.BucketRequest("REL~ENTITY~ID~LABEL", "REL~ENTITY", 10)),
+				List.of(), 0, 0, SortMode.RELEVANCE));
+		assertThat(all.buckets().get("REL~ENTITY~ID~LABEL")).containsExactly(
+				new ApuSearchResult.Bucket("apu-b|Praha", 3), new ApuSearchResult.Bucket("apu-a|Jičín", 1));
+	}
+
+	@Test
 	void rangeFiltersOfOtherFacetsApplyToBuckets() {
 		indexApus(List.of(
 				doc(uuid(37), "Stara", 1, Map.of(

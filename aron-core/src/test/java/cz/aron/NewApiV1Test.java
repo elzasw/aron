@@ -114,7 +114,13 @@ class NewApiV1Test extends AbstractTest {
 				"REL~ENTITY~LABEL", List.of("Okresní archiv"),
 				"REL~ENTITY~ID~LABEL", List.of("ent-v1-f|Okresní archiv")));
 		fund.setType("FUND");
-		searchIndex.indexApus(List.of(record1, record2, record3, fund));
+		// a record referencing two entities: the type-ahead must offer the matching
+		// one only. It carries neither the V1S name marker nor a v1-* LANG~CODE, so
+		// the assertions over the four-record fixture never see it
+		var record5 = doc(uuid(5), "Kronika obce", Map.of());
+		DocumentFixtures.addRefLabel(record5, "REL~ENTITY", "ent-v1-a", "Karel Novák");
+		DocumentFixtures.addRefLabel(record5, "REL~ENTITY", "ent-v1-d", "Jičín");
+		searchIndex.indexApus(List.of(record1, record2, record3, fund, record5));
 	}
 
 	@Test
@@ -582,15 +588,21 @@ class NewApiV1Test extends AbstractTest {
 		var request = optionsRequest(ApuType.ARCH_DESC);
 		request.setQ("novak"); // folded form of "Novák"
 		var options = new SearchApi(v1ApiClient()).searchGetFacetOptions("REL~ENTITY", request).getOptions();
+		// the record referencing Novák AND Jičín offers Novák only (per relation,
+		// not per record) and counts towards him
 		assertThat(options)
-				.extracting(FacetBucket::getValue, FacetBucket::getLabel)
-				.containsExactly(tuple("ent-v1-a", "Karel Novák"));
+				.extracting(FacetBucket::getValue, FacetBucket::getLabel, FacetBucket::getCount)
+				.containsExactly(tuple("ent-v1-a", "Karel Novák", 2L));
 
 		// prefix on the last word
 		request.setQ("dvo");
 		assertThat(new SearchApi(v1ApiClient()).searchGetFacetOptions("REL~ENTITY", request).getOptions())
 				.extracting(FacetBucket::getValue)
 				.containsExactly("ent-v1-b");
+		request.setQ("jic");
+		assertThat(new SearchApi(v1ApiClient()).searchGetFacetOptions("REL~ENTITY", request).getOptions())
+				.extracting(FacetBucket::getValue, FacetBucket::getLabel)
+				.containsExactly(tuple("ent-v1-d", "Jičín"));
 
 		// ENUM options match against the value itself
 		var enumRequest = optionsRequest(ApuType.ARCH_DESC);

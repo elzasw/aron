@@ -371,9 +371,14 @@ public class SearchController implements SearchApi {
 	/**
 	 * Options of one enumerable facet (type-ahead): the same multi-select search
 	 * as {@code searchSearch} restricted to the facet's buckets, narrowed by the
-	 * option label. For reference facets a document-level filter on the analyzed
-	 * label companion narrows the candidates; the term-level label match below
-	 * removes the remaining false positives of multi-reference documents.
+	 * option label. For reference facets the typed text goes down to the engine
+	 * twice: as a document-level filter on the analyzed label companion, which
+	 * narrows the candidate records cheaply, and as the bucket request's label
+	 * condition, which selects the relations - a record referencing several
+	 * entities of the facet's type offers only the ones whose own label matches,
+	 * and a matching option is never cut by its non-matching siblings (the
+	 * condition precedes the engines' bucket cap). ENUM facets over plain values
+	 * have no label field; their options are matched here, on the value.
 	 */
 	@Override
 	public ResponseEntity<FacetOptionsResponse> searchGetFacetOptions(String code, FacetOptionsRequest request) {
@@ -403,11 +408,12 @@ public class SearchController implements SearchApi {
 		String bucketField = bucketFieldOf(facet);
 		ApuSearchResult result = indexingService.search(new ApuSearchQuery(
 				request.getApuType().getValue(), relevanceService.plan(blankToNull(request.getQuery())), filters,
-				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT)),
+				List.of(new ApuSearchQuery.BucketRequest(bucketField, facet.getSource(), BUCKET_LIMIT,
+						reference ? q : null)),
 				List.of(), 0, 0, ApuSearchQuery.SortMode.RELEVANCE));
 
 		var options = toFacetBuckets(result.buckets().get(bucketField), reference).stream()
-				.filter(b -> q == null || labelMatches(b.getLabel() != null ? b.getLabel() : b.getValue(), q))
+				.filter(b -> reference || q == null || labelMatches(b.getValue(), q))
 				.collect(Collectors.toCollection(ArrayList::new));
 		var ordered = orderFacetBuckets(options, facet);
 		int size = request.getSize() != null ? request.getSize() : 100;
@@ -732,9 +738,10 @@ public class SearchController implements SearchApi {
 	}
 
 	/**
-	 * Label match of the type-ahead: all folded words of {@code q} must match
-	 * words of the label, the last one as a prefix (the engines' analyzed-match
-	 * semantics, applied engine-neutrally on the option labels).
+	 * Option match of a plain-valued ENUM facet (no label field to ask the engine
+	 * about): all folded words of {@code q} must match words of the value, the
+	 * last one as a prefix - the same semantics the engines apply to a reference
+	 * facet's label condition.
 	 */
 	static boolean labelMatches(String label, String q) {
 		// both sides split like the index analyzers tokenize (non-alphanumerics)
