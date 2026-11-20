@@ -123,3 +123,6 @@ Proxy rules for a public deployment:
   exist on the public port.
 - Decide explicitly whether ``/actuator/**`` is reachable from the outside;
   in most deployments it should be restricted to the monitoring network.
+- Limit the requests for digital objects. The portal applies no limits of its
+  own, so one client downloading in bulk can crowd out the readers;
+  :doc:`bulk-downloading` describes the possibilities.

@@ -24,6 +24,7 @@ administrator's attention.
    admin/configuration
    admin/search
    admin/operations
+   admin/bulk-downloading
 
 .. toctree::
    :maxdepth: 2
