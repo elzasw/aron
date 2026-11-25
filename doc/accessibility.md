@@ -58,7 +58,9 @@ Architectural properties that carry most of the accessibility weight:
   switches language (pinned by `language.test.ts`). Language names inside the
   switcher carry their own `lang` attribute (WCAG 3.1.1, 3.1.2).
 - **Landmark structure on every page** — `<header>`, labelled `<nav>` regions
-  (main menu, breadcrumbs, pagination, type counts), `<main>`, `<footer>`.
+  (main menu, breadcrumbs, pagination, type counts), `<main>`, `<footer>`. The
+  pager stands above and below the search results as two landmarks with
+  different names, so the landmark list tells them apart.
 - **Semantic relationships instead of visual-only cues** — the archival
   description tree uses `role="tree"`/`treeitem` with `aria-level`,
   `aria-expanded` and `aria-selected`; the breadcrumb strip is one labelled
@@ -111,7 +113,10 @@ Architectural properties that carry most of the accessibility weight:
   which end of the range they set).
 - **Asynchronous outcomes are announced** — filters and paging apply without a
   navigation, so the search page keeps one polite live region reporting the
-  result count, the wait and any failure (WCAG 4.1.3). The same holds for an
+  result count, the wait and any failure (WCAG 4.1.3). A page turn in the pager
+  below the results brings the head of the results into view and moves the
+  focus to the page heading with it, so the next Tab continues from where the
+  view is rather than pulling it back down. The same holds for an
   action whose result is invisible: copying a citation, or a viewer link,
   reports itself in a live region rather than only changing a colour.
 - **Footer links are deployment configuration, not code** — the accessibility

@@ -78,6 +78,7 @@
     "noResults": "No records match the given criteria.",
     "error": "The search failed, please try again.",
     "pagination": "Result pagination",
+    "paginationBottom": "Result pagination, below the results",
     "page": "Page {{page}}",
     "firstPage": "First page",
     "prevPage": "Previous page",

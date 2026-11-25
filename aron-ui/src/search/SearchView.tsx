@@ -1,8 +1,8 @@
-import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
+import { Button, Input, makeStyles, Select, Spinner, Text, tokens } from "@fluentui/react-components";
 import { Filter20Regular, FilterDismiss20Regular } from "@fluentui/react-icons";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { searchApi } from "../api/client";
@@ -91,6 +91,13 @@ const useStyles = makeStyles({
     flexDirection: "column",
     gap: tokens.spacingVerticalL,
     minWidth: "0",
+  },
+  // focused programmatically after a page turn below the results - no ring for
+  // a heading, as for the main region after a route change
+  title: {
+    ":focus": {
+      outline: "none",
+    },
   },
   status: {
     color: tokens.colorNeutralForeground3,
@@ -243,6 +250,19 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
   const onFilters = (next: SearchFilter[]) =>
     update({ f: serializeFilters(next), p: null });
   const submitQuery = () => update({ q: queryInput.trim() || null, p: null });
+  const onPage = (p: number) => update({ p: p > 1 ? String(p) : null });
+  const onSize = (s: number) => update({ s: s !== 10 ? String(s) : null, p: null });
+
+  // The pager below the results leaves the reader at the end of a list that is
+  // about to be replaced, so using it returns to the head of the results, as
+  // the old portal did. The focus goes along: left on the pressed button, the
+  // next Tab would pull the view straight back down. The pager above needs
+  // neither - whoever uses it is there already.
+  const titleRef = useRef<HTMLElement>(null);
+  const toTop = () => {
+    titleRef.current?.scrollIntoView({ block: "start" });
+    titleRef.current?.focus({ preventScroll: true });
+  };
 
   const resultOf = (code: string) => facets.data?.facets.find((f) => f.code === code);
   const hasActiveFilter = (code: string) => filters.some((f) => f.facet === code);
@@ -386,7 +406,17 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
         )}
       </div>
       <div className={styles.main}>
-        <Title3 as="h1">{t(titleKey)}</Title3>
+        {/* Title3's own type takes no ref; this is what the preset is made of */}
+        <Text
+          as="h1"
+          size={600}
+          weight="semibold"
+          ref={titleRef}
+          tabIndex={-1}
+          className={styles.title}
+        >
+          {t(titleKey)}
+        </Text>
         {search.data && (
           <>
             {apuType === undefined && facets.data && facets.data.typeCounts.length > 0 && (
@@ -414,8 +444,8 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
               page={page}
               size={size}
               total={search.data.total}
-              onPage={(p) => update({ p: p > 1 ? String(p) : null })}
-              onSize={(s) => update({ s: s !== 10 ? String(s) : null, p: null })}
+              onPage={onPage}
+              onSize={onSize}
               controls={
                 <div className={styles.sortRow}>
                   <label htmlFor="search-sort">{t("search.sortLabel")}</label>
@@ -447,6 +477,25 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
           )}
         </div>
         {search.data && <ResultList items={search.data.items} />}
+        {/* the pager again where a reader who went through the page ends up. The
+            sort stays above only: it was never below, and it reorders the whole
+            list rather than moving within it */}
+        {search.data && search.data.items.length > 0 && (
+          <Pagination
+            label={t("search.paginationBottom")}
+            page={page}
+            size={size}
+            total={search.data.total}
+            onPage={(p) => {
+              onPage(p);
+              toTop();
+            }}
+            onSize={(s) => {
+              onSize(s);
+              toTop();
+            }}
+          />
+        )}
         {search.isPending && <Spinner />}
       </div>
     </div>

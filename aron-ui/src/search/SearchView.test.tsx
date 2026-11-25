@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -97,6 +97,11 @@ function renderGeneralSearch(url = "/apu") {
   return renderWithProviders(<SearchView titleKey="nav.search" />, { initialEntries: [url] });
 }
 
+/** The pager stands above and below the results; each is a landmark of its own name. */
+const pagerAbove = () => screen.getByRole("navigation", { name: "Result pagination" });
+const pagerBelow = () =>
+  screen.getByRole("navigation", { name: "Result pagination, below the results" });
+
 describe("SearchView, general search", () => {
   beforeEach(async () => {
     facets = BUILT_IN_FACETS;
@@ -177,7 +182,7 @@ describe("SearchView, general search", () => {
     );
     await screen.findByRole("checkbox", { name: /Archival records/ });
 
-    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
+    await userEvent.click(within(pagerAbove()).getByRole("button", { name: "Next page" }));
 
     // the facets describe the whole result, which a page turn leaves as it is:
     // every aggregation behind them is spared
@@ -191,6 +196,57 @@ describe("SearchView, general search", () => {
     // and the answer without them leaves the sidebar and the chips as they were
     expect(screen.getByRole("checkbox", { name: /Archival records/ })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Archival records (3)" })).toBeInTheDocument();
+  });
+
+  it("repeats the pager below the results, without the sort", async () => {
+    renderGeneralSearch();
+    await screen.findByRole("heading", { level: 2, name: "Search results" });
+
+    expect(pagerAbove()).toBeInTheDocument();
+    expect(within(pagerBelow()).getByRole("button", { name: "Next page" })).toBeInTheDocument();
+    expect(within(pagerBelow()).getByRole("combobox", { name: "Per page:" })).toBeInTheDocument();
+    // the sort reorders the whole list, so it is offered at its head only
+    expect(screen.getAllByRole("combobox", { name: "Sort by:" })).toHaveLength(1);
+    expect(within(pagerAbove()).getByRole("combobox", { name: "Sort by:" })).toBeInTheDocument();
+  });
+
+  it("offers no pager below a search that found nothing", async () => {
+    response = { ...RESPONSE, total: 0, items: [] };
+    renderGeneralSearch();
+    await screen.findByText("No records match the given criteria.");
+
+    expect(pagerAbove()).toBeInTheDocument();
+    expect(
+      screen.queryByRole("navigation", { name: "Result pagination, below the results" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("returns to the head of the results after a page turn below them", async () => {
+    // jsdom lays nothing out and has no scrollIntoView at all
+    const scrollIntoView = vi.fn();
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    try {
+      response = { ...RESPONSE, total: 25 };
+      renderGeneralSearch();
+      await screen.findByRole("heading", { level: 2, name: "Search results" });
+
+      await userEvent.click(within(pagerBelow()).getByRole("button", { name: "Next page" }));
+
+      await waitFor(() =>
+        expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+          expect.objectContaining({ apuSearchRequest: expect.objectContaining({ from: 10 }) }),
+        ),
+      );
+      // the reader stood at the end of a list that is replaced: the view goes
+      // to its head and the focus with it, or the next Tab would pull the view
+      // back down to the pressed button
+      const title = screen.getByRole("heading", { level: 1 });
+      expect(scrollIntoView).toHaveBeenCalledTimes(1);
+      expect(scrollIntoView.mock.contexts[0]).toBe(title);
+      expect(title).toHaveFocus();
+    } finally {
+      Reflect.deleteProperty(HTMLElement.prototype, "scrollIntoView");
+    }
   });
 
   it("asks for the facets again once the search itself changes", async () => {

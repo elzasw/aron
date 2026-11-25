@@ -80,6 +80,7 @@
     "noResults": "Zadaným podmínkám neodpovídají žádné záznamy.",
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
     "pagination": "Stránkování výsledků",
+    "paginationBottom": "Stránkování výsledků pod seznamem",
     "page": "Stránka {{page}}",
     "firstPage": "První stránka",
     "prevPage": "Předchozí stránka",

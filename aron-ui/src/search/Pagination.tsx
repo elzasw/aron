@@ -1,11 +1,18 @@
-import { Button, Dropdown, makeStyles, mergeClasses, Option, Text, tokens } from "@fluentui/react-components";
+import {
+  Button,
+  Dropdown,
+  makeStyles,
+  mergeClasses,
+  Option,
+  Text,
+  tokens,
+  useId,
+} from "@fluentui/react-components";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const PAGE_SIZES = [10, 20, 50];
-
-const PAGE_SIZE_LABEL_ID = "page-size-label";
 
 const useStyles = makeStyles({
   bar: {
@@ -59,12 +66,21 @@ interface Props {
   onSize: (size: number) => void;
   /** Extra controls (e.g. the sort select) rendered next to the page-size select. */
   controls?: ReactNode;
+  /**
+   * Name of the landmark, for a page that shows the bar more than once: two
+   * navigation regions of one name are the same entry twice in a screen
+   * reader's landmark list.
+   */
+  label?: string;
 }
 
 /** Pagination bar: compact circular pager with a window around the current page + page-size select. */
-export default function Pagination({ page, size, total, onPage, onSize, controls }: Props) {
+export default function Pagination({ page, size, total, onPage, onSize, controls, label }: Props) {
   const styles = useStyles();
   const { t } = useTranslation();
+  // per instance: the bar stands above and below the results, and with a fixed
+  // id the second dropdown would be named by the first one's label
+  const pageSizeLabelId = useId("page-size-label-");
   const pageCount = Math.max(1, Math.ceil(total / size));
 
   const pages: number[] = [];
@@ -88,7 +104,7 @@ export default function Pagination({ page, size, total, onPage, onSize, controls
   );
 
   return (
-    <nav className={styles.bar} aria-label={t("search.pagination")}>
+    <nav className={styles.bar} aria-label={label ?? t("search.pagination")}>
       {pager(t("search.firstPage"), 1, page <= 1, "«")}
       {pager(t("search.prevPage"), page - 1, page <= 1, "‹")}
       {pages[0] > 1 && <Text size={200}>…</Text>}
@@ -116,12 +132,12 @@ export default function Pagination({ page, size, total, onPage, onSize, controls
       <div className={styles.pageSize}>
         {/* the visible text is the dropdown's label; Fluent's trigger button has
             no name of its own (Fluent's documented aria-labelledby pattern) */}
-        <Text size={200} id={PAGE_SIZE_LABEL_ID}>
+        <Text size={200} id={pageSizeLabelId}>
           {t("search.pageSize")}
         </Text>
         <Dropdown
           className={styles.sizeDropdown}
-          aria-labelledby={PAGE_SIZE_LABEL_ID}
+          aria-labelledby={pageSizeLabelId}
           value={String(size)}
           selectedOptions={[String(size)]}
           onOptionSelect={(_, data) => data.optionValue && onSize(Number(data.optionValue))}

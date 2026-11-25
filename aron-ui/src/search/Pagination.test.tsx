@@ -30,6 +30,29 @@ describe("Pagination", () => {
     );
   });
 
+  it("stands twice on a page without the two being mistaken for each other", () => {
+    render(
+      <>
+        <Pagination page={2} size={10} total={95} onPage={vi.fn()} onSize={vi.fn()} />
+        <Pagination page={2} size={10} total={95} onPage={vi.fn()} onSize={vi.fn()} label="Below" />
+      </>,
+    );
+
+    // one landmark name each, so a screen reader's landmark list tells them apart
+    expect(screen.getByRole("navigation", { name: "Result pagination" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Below" })).toBeInTheDocument();
+    // and each dropdown is named by its own label: axe reports a shared id only
+    // as something to review, so nothing else would notice one
+    const sizes = screen.getAllByRole("combobox");
+    expect(sizes).toHaveLength(2);
+    for (const size of sizes) {
+      expect(size).toHaveAccessibleName("Per page:");
+    }
+    expect(sizes[0].getAttribute("aria-labelledby")).not.toBe(
+      sizes[1].getAttribute("aria-labelledby"),
+    );
+  });
+
   it("has no structural accessibility violations", async () => {
     const { container } = renderPagination();
 

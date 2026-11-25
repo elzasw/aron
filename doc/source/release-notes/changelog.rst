@@ -11,6 +11,10 @@ installs, the date is its release date.
 Unreleased
 ----------
 
+- New: the pager is repeated below the search results, as in the old portal;
+  using it there returns to the top of the list.
+- New: a "Clear filters" button in the search sidebar removes every active
+  filter at once, as the old portal's did.
 - New: the first release of the second generation of the portal.
   :doc:`whatsnew-2.0` describes what it brings compared to the old portal,
   :ref:`upgrading-from-old-portal` what a deployment of the old portal has to
