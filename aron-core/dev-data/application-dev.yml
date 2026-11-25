@@ -76,6 +76,9 @@ webResources:
   resultLayout: ../distribution/config/resultLayout.yaml
   # citations run the shipped script over the shipped configuration, as a deployment does
   citation: ../distribution/config/citation.yaml
+  # orders: the basket and the form work against this; sending one needs the
+  # order service, which the dev loop does not start
+  order: ../distribution/config/order.yaml
   # attribution of digital objects (dedication + license statements)
   daoFooter: ./dev-data/config/daoFooter.yaml
   # Two directories, as a real deployment does it: the SHARED Czech configuration

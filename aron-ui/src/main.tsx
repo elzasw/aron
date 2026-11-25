@@ -8,6 +8,7 @@ import { reportApiError } from "./errors/apiErrors";
 import ErrorBoundary from "./errors/ErrorBoundary";
 import "./i18n";
 import "./index.css";
+import { OrdersProvider } from "./orders/OrdersProvider";
 import { serverContextPath } from "./serverContext";
 
 // every failed request surfaces visibly (ApiErrorBar) - never swallowed silently
@@ -24,7 +25,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <BrowserRouter basename={serverContextPath}>
-            <App />
+            <OrdersProvider>
+              <App />
+            </OrdersProvider>
           </BrowserRouter>
         </QueryClientProvider>
       </ErrorBoundary>

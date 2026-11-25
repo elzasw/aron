@@ -16,6 +16,10 @@ partTypes:
   - code: PT_FUND_INFO
     name: Fonds information
     viewType: STANDALONE
+  # the institution's own information: an order is addressed by its code
+  - code: PT_INST_INFO
+    name: Institution information
+    viewType: STANDALONE
 itemTypes:
   - code: TITLE_MAIN
     name: Main title
@@ -98,6 +102,10 @@ itemTypes:
     indexed: true
   - code: CISLO_NAD
     name: Fonds number
+    type: STRING
+    indexed: true
+  - code: INST_CODE
+    name: Institution code
     type: STRING
     indexed: true
   - code: INST_REF

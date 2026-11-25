@@ -28,6 +28,7 @@ import cz.aron.api.v1.model.UiConfig;
 import cz.aron.domain.types.LocalizedText;
 import cz.aron.domain.types.dto.LocalizedItem;
 import cz.aron.service.CitationService;
+import cz.aron.service.OrderService;
 import jakarta.annotation.PostConstruct;
 
 /**
@@ -94,6 +95,8 @@ public class UiConfigLoader {
 
 	private final CitationService citations;
 
+	private final OrderService orders;
+
 	private String name;
 
 	private List<LocalizedItem> nameTranslations;
@@ -127,12 +130,13 @@ public class UiConfigLoader {
 
 	public UiConfigLoader(@Value("${webResources.pageTemplate}") String pageTemplateFile,
 			@Value("${help-url:}") String helpUrl, FacetScope facetScope, DeploymentImages images,
-			CitationService citations) {
+			CitationService citations, OrderService orders) {
 		this.pageTemplateFile = pageTemplateFile;
 		this.helpUrl = helpUrl;
 		this.facetScope = facetScope;
 		this.images = images;
 		this.citations = citations;
+		this.orders = orders;
 	}
 
 	@PostConstruct
@@ -175,6 +179,9 @@ public class UiConfigLoader {
 				.toList();
 		var config = new UiConfig(LocalizedText.pick(nameTranslations, name, locale), localizations, menuItems, links,
 				citationForms);
+		if (orders.isEnabled()) {
+			config.setOrders(Boolean.TRUE);
+		}
 		if (homePage != null) {
 			// image URLs carry this request's context path, so they are built here
 			// rather than at startup (see DeploymentImages)

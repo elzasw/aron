@@ -43,7 +43,8 @@ class UiConfigLoaderTest {
 		Path file = tempDir.resolve("pageTemplate.yaml");
 		Files.writeString(file, yaml, StandardCharsets.UTF_8);
 		var loader = new UiConfigLoader(file.toString(), helpUrl, new FacetScope(List.of()),
-				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null));
+				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null),
+				new cz.aron.service.OrderService("", null, null, null, null));
 		loader.load();
 		return loader;
 	}

@@ -136,6 +136,41 @@ paths:
                   $ref: '#/components/schemas/Citation'
       tags:
         - apu
+  /api/v1/apu/{uuid}/order-item:
+    get:
+      operationId: Apu_getOrderItem
+      description: |-
+        What an order says about one APU - the record as the archive's reading
+        room needs it identified (its fund, its identifiers, where it is stored)
+        and the institution the order goes to. A client puts it into the
+        reader's basket and later sends it, unchanged, to the order service.
+
+        Composed server-side by the deployment's order script for the reason a
+        citation is: it draws on the record's fund and that fund's institution,
+        and on description items a detail response need not carry.
+
+        Offered only for records whose detail says `orderable`. Any other record
+        and a record the script cannot describe - an archival description whose
+        fund is missing, say - are a 422; which piece was missing is logged on
+        the server and travels in the body only where a deployment asks for it,
+        as with `getCitations`. Responses carry no `ETag`: the content follows
+        the deployment's script rather than the record alone.
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/LangParam'
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderItem'
+      tags:
+        - apu
   /api/v1/apu/{uuid}/tree:
     get:
       operationId: Apu_getTreeNodes
@@ -538,6 +573,14 @@ components:
           items:
             $ref: '#/components/schemas/DigitalObjectInfo'
           description: Digital objects, with ready-to-use file/tile URLs.
+        orderable:
+          type: boolean
+          description: |-
+            Present and `true` when this record can be ordered (`Apu.getOrderItem`):
+            the deployment takes orders, of this record type, and the record carries
+            what the deployment requires of an orderable one (a storage unit, say).
+            Decided by the server because that requirement may rest on description
+            items that are not displayed and therefore not in `parts`.
       description: Display-ready detail of one APU (the render model).
     ApuLink:
       type: object
@@ -1419,6 +1462,103 @@ components:
         - NEWS
         - HELP
       description: Portal sections available for the top-level menu.
+    OrderInstitution:
+      type: object
+      required:
+        - name
+        - code
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+          description: Code of the archive - what the order service routes the order by.
+      description: The archive an order is addressed to.
+    OrderItem:
+      type: object
+      required:
+        - archivalie
+        - institution
+      properties:
+        archivalie:
+          allOf:
+            - $ref: '#/components/schemas/OrderedRecord'
+          description: The ordered record.
+        institution:
+          allOf:
+            - $ref: '#/components/schemas/OrderInstitution'
+          description: The archive keeping the record - the addressee of the order.
+        badatelna:
+          allOf:
+            - $ref: '#/components/schemas/OrderReadingRoom'
+          description: |-
+            The reading room the record is ordered into, where the deployment's
+            script distinguishes several of one archive. Records of different
+            reading rooms go into separate orders.
+      description: |-
+        One record as an order names it, with the institution the order goes to.
+
+        The property names are those of the order service's contract
+        (`archivalie`, `badatelna`, ...), deliberately: the order script of a
+        deployment produces this object, the order service consumes it, and the
+        portal only carries it from one to the other.
+    OrderReadingRoom:
+      type: object
+      required:
+        - name
+        - code
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+      description: A reading room of an archive.
+    OrderedRecord:
+      type: object
+      required:
+        - cisloNad
+      properties:
+        cisloNad:
+          type: integer
+          format: int32
+          description: Number of the record's fund in the national register (NAD).
+        dilciList:
+          type: integer
+          format: int32
+          description: Sub-number of the fund (the part after the slash of `12/3`).
+        nazevArchivnihoSouboru:
+          type: string
+          description: Name of the record's fund.
+        ukladaciJednotka:
+          type: string
+          description: Storage unit (box, book, ...) the record is kept in.
+        aipId:
+          type: string
+          description: Identifier of the record's archival information package.
+        archivniIdentifikator:
+          type: string
+          description: Reference code and inventory number, as one text.
+        jineOznaceni:
+          type: string
+          description: Every other identifier the description carries, as one text.
+        popis:
+          type: string
+          description: The record's name.
+        formNazev:
+          type: string
+          description: Name of the record's form.
+        uplnyPopis:
+          type: string
+          description: The record's name preceded by those of its ancestors, root first.
+        url:
+          type: string
+          description: |-
+            Public address of the record. Filled by the client that takes the item
+            into a basket - only it knows the address the portal is published at.
+        datace:
+          type: string
+          description: Dating of the record, as text.
+      description: Identification of an ordered record, as the reading room needs it.
     PartViewType:
       type: string
       enum:
@@ -1919,6 +2059,18 @@ components:
             A list because archival practice knows several citation norms: adding a
             second one is deployment configuration, not a contract change. Empty when
             the deployment configures none, which turns the feature off.
+        orders:
+          type: boolean
+          description: |-
+            Whether this deployment takes orders of archival material: a reader
+            collects records into a basket and sends an order to the archive that
+            keeps them. Absent means it does not, and a client then offers nothing of
+            the feature - not even a basket filled on an earlier visit.
+
+            Which records can be ordered is said per record (`ApuDetail.orderable`),
+            what an order says about one by `Apu.getOrderItem`. Taking the order is
+            not part of this API: it is sent to the deployment's order service,
+            which is published beside the portal at `/api/orders`.
       description: UI configuration of the deployment.
     UnitDateItem:
       type: object

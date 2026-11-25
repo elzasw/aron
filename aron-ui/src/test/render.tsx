@@ -2,10 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, type RenderResult } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { MemoryRouter } from "react-router-dom";
+import { OrdersProvider } from "../orders/OrdersProvider";
 
 /**
- * The providers every rendered component needs: a react-query client and a
- * router. Retries are off, so a test asserting an error state reaches it at
+ * The providers every rendered component needs: a react-query client, a
+ * router and the reader's order basket (header and record page share it). Retries are off, so a test asserting an error state reaches it at
  * once instead of waiting out the default backoff, and each render gets its own
  * client, so nothing is served from the previous test's cache.
  *
@@ -19,7 +20,9 @@ export function renderWithProviders(
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>
+      <MemoryRouter initialEntries={initialEntries}>
+        <OrdersProvider>{ui}</OrdersProvider>
+      </MemoryRouter>
     </QueryClientProvider>,
   );
 }

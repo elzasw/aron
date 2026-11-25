@@ -133,6 +133,11 @@ successor. What they configured moves into server-side files:
        whenever the record carries one
    * - ``showCitationFor`` + ``citation.groovy`` in the working directory
      - ``citation.yaml`` naming the script and the record types
+   * - ``showOrders``, ``orderItemTypes`` + ``order-item-info.groovy`` in
+       the working directory
+     - ``order.yaml`` naming the script, the record types and the required
+       items; the order service stays published at ``/api/orders``
+       (:ref:`orders`)
    * - ``treeHorizontalScroll``
      - no successor: the tree pane always scrolls both ways and is resizable
 

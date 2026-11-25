@@ -233,6 +233,28 @@ deployment's own responsibility, and Phase C territory: the **contrast** of
 white label text over the `primaryColor` band and over any photograph it
 supplies (1.4.3).
 
+**Orders** (added with the feature): "Order" on the record page is a real
+button whose name carries the record's; adding and removing are announced in a
+polite live region (4.1.3), a refusal as an alert beside the button. The
+basket button in the header names the number of records it shows (2.5.3) and
+is present on a narrow screen too. Basket, order form and the confirmations
+are Fluent dialogs (focus trapped, Escape closes; the confirmations are alert
+dialogs). The focus is returned by hand where Fluent cannot do it: to the
+control that opened a nested dialog, or - when that control removed itself, as
+a sent or emptied group does - to the basket's Close button, because a focus
+that falls behind the basket makes the focus management hide the basket from
+assistive technology (2.4.3). Each basket group is a named region with its own
+heading; the access-type select and the remove button of an item name the
+record. The form's fields are labelled `Field`s with their purpose declared
+(`autocomplete` name, email, tel - 1.3.5); mistakes are shown after the first
+attempt to send, as text tied to the field (3.3.1), and the first faulty field
+takes the focus; sending is confirmed (3.3.4) and its outcome - sent, refused,
+and why - is announced where the reader is. While an order is on its way the
+buttons stay focusable. The test renders header and record page without the
+frame, so it checks with axe's page-landmark rule off; jsdom gives elements no
+box, so it supplies one (`src/test/layout.ts`) - otherwise nothing in a dialog
+opened from the header is focusable and the test would see less than a reader.
+
 ### Phase B — permanent automated gate — **done**
 
 Two checks run in the Maven `test` phase (so also on CI, and skipped together by

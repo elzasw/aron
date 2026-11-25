@@ -7,6 +7,14 @@
  <apus>
   <apu type="Institution" uuid="c17a0000-0000-4000-8000-c00000000001">
    <name>CIT Státní okresní archiv Testov</name>
+   <!-- the code an order is addressed by (OrderTest); a citation does not use it -->
+   <prts>
+    <part type="PT_INST_INFO">
+     <itms>
+      <str type="INST_CODE">226101010</str>
+     </itms>
+    </part>
+   </prts>
   </apu>
   <!-- fund with everything a citation can use: its own title and its NAD number -->
   <apu type="Fund" uuid="c17a0000-0000-4000-8000-c00000000002">

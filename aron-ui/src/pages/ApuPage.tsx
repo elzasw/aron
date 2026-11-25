@@ -38,6 +38,7 @@ import DaoGallery from "../dao/DaoGallery";
 import DaoViewer from "../dao/DaoViewer";
 import { MEDIUM, NARROW_TALL, SHORT, SIDE_BY_SIDE, STACKED, THREE_PANES, media } from "../layout/breakpoints";
 import Splitter from "../layout/Splitter";
+import OrderButton from "../orders/OrderButton";
 import useMediaQuery from "../layout/useMediaQuery";
 import { relatedSearchUrl } from "../search/filters";
 
@@ -862,6 +863,16 @@ export default function ApuPage() {
             >
               {t("citation.create")}
             </button>
+          )}
+          {/* the server says which records can be ordered (the rule may rest on
+              items that are not displayed); the deployment flag also hides the
+              action while the configuration is still on its way */}
+          {uiConfig?.orders === true && data.orderable === true && (
+            <OrderButton
+              uuid={data.uuid}
+              name={data.name}
+              className={mergeClasses(styles.action, styles.actionButton)}
+            />
           )}
         </div>
         {citationOpen && (

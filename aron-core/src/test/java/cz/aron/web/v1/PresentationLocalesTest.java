@@ -21,7 +21,8 @@ class PresentationLocalesTest {
 
 	private static PresentationLocales locales(String... localizations) {
 		var loader = new UiConfigLoader("unused", "", new FacetScope(List.of()),
-				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null));
+				new DeploymentImages(new MockHttpServletRequest(), ""), new CitationService("", null, null, null),
+				new cz.aron.service.OrderService("", null, null, null, null));
 		// only the configured localizations matter here - the rest of the page
 		// template is not read (no file behind this loader)
 		ReflectionTestUtils.setField(loader, "localizations", List.of(localizations));

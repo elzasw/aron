@@ -154,6 +154,19 @@ model UiConfig {
 	 * the deployment configures none, which turns the feature off.
 	 */
 	citations: CitationForm[];
+
+	/**
+	 * Whether this deployment takes orders of archival material: a reader
+	 * collects records into a basket and sends an order to the archive that
+	 * keeps them. Absent means it does not, and a client then offers nothing of
+	 * the feature - not even a basket filled on an earlier visit.
+	 *
+	 * Which records can be ordered is said per record (`ApuDetail.orderable`),
+	 * what an order says about one by `Apu.getOrderItem`. Taking the order is
+	 * not part of this API: it is sent to the deployment's order service,
+	 * which is published beside the portal at `/api/orders`.
+	 */
+	orders?: boolean;
 }
 
 /**
@@ -1192,6 +1205,27 @@ namespace Apu {
 	@get
 	@route("/api/v1/apu/{uuid}/citations")
 	op getCitations(@path uuid: string, ...LangParam): Citation[];
+
+	/**
+	 * What an order says about one APU - the record as the archive's reading
+	 * room needs it identified (its fund, its identifiers, where it is stored)
+	 * and the institution the order goes to. A client puts it into the
+	 * reader's basket and later sends it, unchanged, to the order service.
+	 *
+	 * Composed server-side by the deployment's order script for the reason a
+	 * citation is: it draws on the record's fund and that fund's institution,
+	 * and on description items a detail response need not carry.
+	 *
+	 * Offered only for records whose detail says `orderable`. Any other record
+	 * and a record the script cannot describe - an archival description whose
+	 * fund is missing, say - are a 422; which piece was missing is logged on
+	 * the server and travels in the body only where a deployment asks for it,
+	 * as with `getCitations`. Responses carry no `ETag`: the content follows
+	 * the deployment's script rather than the record alone.
+	 */
+	@get
+	@route("/api/v1/apu/{uuid}/order-item")
+	op getOrderItem(@path uuid: string, ...LangParam): OrderItem;
 }
 
 /**
@@ -1335,6 +1369,15 @@ model ApuDetail {
 
 	/** Digital objects, with ready-to-use file/tile URLs. */
 	digitalObjects: DigitalObjectInfo[];
+
+	/**
+	 * Present and `true` when this record can be ordered (`Apu.getOrderItem`):
+	 * the deployment takes orders, of this record type, and the record carries
+	 * what the deployment requires of an orderable one (a storage unit, say).
+	 * Decided by the server because that requirement may rest on description
+	 * items that are not displayed and therefore not in `parts`.
+	 */
+	orderable?: boolean;
 }
 
 /** Reference to another APU, resolved with its display data. */
@@ -1598,6 +1641,86 @@ enum FileType {
 
 	/** Deep-zoom tile source. */
 	TILE,
+}
+
+/**
+ * One record as an order names it, with the institution the order goes to.
+ *
+ * The property names are those of the order service's contract
+ * (`archivalie`, `badatelna`, ...), deliberately: the order script of a
+ * deployment produces this object, the order service consumes it, and the
+ * portal only carries it from one to the other.
+ */
+model OrderItem {
+	/** The ordered record. */
+	archivalie: OrderedRecord;
+
+	/** The archive keeping the record - the addressee of the order. */
+	institution: OrderInstitution;
+
+	/**
+	 * The reading room the record is ordered into, where the deployment's
+	 * script distinguishes several of one archive. Records of different
+	 * reading rooms go into separate orders.
+	 */
+	badatelna?: OrderReadingRoom;
+}
+
+/** Identification of an ordered record, as the reading room needs it. */
+model OrderedRecord {
+	/** Number of the record's fund in the national register (NAD). */
+	cisloNad: int32;
+
+	/** Sub-number of the fund (the part after the slash of `12/3`). */
+	dilciList?: int32;
+
+	/** Name of the record's fund. */
+	nazevArchivnihoSouboru?: string;
+
+	/** Storage unit (box, book, ...) the record is kept in. */
+	ukladaciJednotka?: string;
+
+	/** Identifier of the record's archival information package. */
+	aipId?: string;
+
+	/** Reference code and inventory number, as one text. */
+	archivniIdentifikator?: string;
+
+	/** Every other identifier the description carries, as one text. */
+	jineOznaceni?: string;
+
+	/** The record's name. */
+	popis?: string;
+
+	/** Name of the record's form. */
+	formNazev?: string;
+
+	/** The record's name preceded by those of its ancestors, root first. */
+	uplnyPopis?: string;
+
+	/**
+	 * Public address of the record. Filled by the client that takes the item
+	 * into a basket - only it knows the address the portal is published at.
+	 */
+	url?: string;
+
+	/** Dating of the record, as text. */
+	datace?: string;
+}
+
+/** The archive an order is addressed to. */
+model OrderInstitution {
+	name: string;
+
+	/** Code of the archive - what the order service routes the order by. */
+	code: string;
+}
+
+/** A reading room of an archive. */
+model OrderReadingRoom {
+	name: string;
+
+	code: string;
 }
 
 /** One rendered citation of a record, in one citation form. */

@@ -200,6 +200,68 @@
     "close": "Zavřít",
     "error": "Citaci tohoto záznamu se nepodařilo vytvořit."
   },
+  "orders": {
+    "add": "Objednat",
+    "addFor": "Objednat {{name}}",
+    "remove": "Odebrat z objednávky",
+    "removeFor": "Odebrat z objednávky: {{name}}",
+    "added": "Přidáno do košíku objednávky.",
+    "removed": "Odebráno z košíku objednávky.",
+    "addFailed": "Tento záznam se nepodařilo přidat do objednávky.",
+    "accessType": {
+      "NAHLIZENI": "Nahlížení",
+      "REPLIKA": "Reprodukce a replika",
+      "OVERENI_SHODY": "Ověření shody"
+    },
+    "basket": {
+      "button_one": "Košík objednávky: {{count}} záznam",
+      "button_few": "Košík objednávky: {{count}} záznamy",
+      "button_other": "Košík objednávky: {{count}} záznamů",
+      "title": "Košík objednávky",
+      "empty": "Košík je prázdný.",
+      "removeGroup": "Odebrat všechny záznamy – {{addressee}}",
+      "accessTypeOf": "Způsob zpřístupnění – {{name}}",
+      "order": "Objednat",
+      "orderFrom": "Objednat – {{addressee}}",
+      "clear": "Vyprázdnit celý košík",
+      "close": "Zavřít",
+      "groupRemoved": "Záznamy byly odebrány z košíku – {{addressee}}.",
+      "emptied": "Košík byl vyprázdněn.",
+      "itemRemoved": "Záznam {{name}} byl odebrán z košíku.",
+      "sent": "Objednávka byla úspěšně odeslána – {{addressee}}."
+    },
+    "confirm": {
+      "title": "Potvrzení",
+      "yes": "Potvrdit",
+      "no": "Zrušit",
+      "send": "Chcete odeslat objednávku?",
+      "removeGroup": "Chcete odebrat celou skupinu – {{addressee}}?",
+      "clear": "Chcete vyprázdnit celý košík?"
+    },
+    "form": {
+      "title": "Rezervace archiválií",
+      "name": "Vaše jméno a příjmení",
+      "email": "Váš e-mail",
+      "phone": "Telefonní číslo",
+      "remember": "Zapamatovat hodnoty",
+      "subject": "Předmět zprávy",
+      "defaultSubject": "Předběžná rezervace archiválií",
+      "reserveDate": "Na kdy rezervovat",
+      "summaryFor": "Obsah košíku – {{addressee}}",
+      "messageFor": "Text zprávy pro – {{addressee}}",
+      "required": "Povinné pole",
+      "invalidEmail": "Neplatný formát e-mailu",
+      "send": "Odeslat",
+      "cancel": "Zrušit",
+      "sending": "Odesílám objednávku",
+      "sendFailed": "Objednávku se nepodařilo odeslat. Zkuste to prosím později.",
+      "summary": {
+        "nad": "Číslo listu NAD: {{number}}",
+        "subNumber": "Dílčí list: {{number}}",
+        "link": "Přímý odkaz: {{url}}"
+      }
+    }
+  },
   "notFound": {
     "heading": "Stránka nenalezena",
     "home": "Zpět na úvod"

@@ -1,0 +1,18 @@
+# Objednavky archivalii. Bez tohoto souboru (resp. bez klice
+# webResources.order) portal objednavky nenabizi vubec.
+#
+# Portal objednavku sam neprijima: ctenar si zaznamy sklada do kosiku
+# v prohlizeci a objednavku odesila objednavkove sluzbe, ktera musi byt
+# zverejnena vedle portalu na adrese <adresa portalu>/api/orders (pravidlo
+# reverzni proxy). Zde se nastavuje jen to, co o objednavce vi portal:
+#
+#   script    - skript, ktery pro zaznam sestavi polozku objednavky (cislo
+#               NAD, identifikatory, ukladaci jednotku, archiv, pripadne
+#               badatelnu); hleda se vedle tohoto souboru
+#   apuTypes  - typy zaznamu, ktere lze objednat
+#   itemTypes - volitelne: objednat lze jen zaznam, ktery nese aspon jeden
+#               z uvedenych prvku popisu (kody jako v types.yaml). Bez klice
+#               lze objednat kazdy zaznam uvedenych typu.
+script: order-item-info.groovy
+apuTypes: [ARCH_DESC]
+#itemTypes: [STORAGE]

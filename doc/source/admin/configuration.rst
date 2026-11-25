@@ -497,6 +497,120 @@ configuration; a script name that no form declares is refused. An existing
 script keeps working: it is given the same variables and returns the same
 JSON.
 
+.. _orders:
+
+Orders
+======
+
+A reader can collect archival records into a **basket** and send an order to
+the archive that keeps them: the record page offers "Order", the header shows
+the basket with the number of records, and from the basket one order is sent
+per archive (and per reading room, where the deployment distinguishes them)
+through a form asking for the reader's name, e-mail and an optional message.
+The basket lives in the reader's browser; the portal stores nothing.
+
+Two things take part besides the portal's own pages:
+
+- the **order script** of the deployment, which says what an order states
+  about a record - the fonds number, the identifiers, the storage unit, the
+  institution the order is addressed to. It is configured here;
+- the **order service**, a separate application that takes the order and
+  mails it to the reading room or hands it to the archive's own system. The
+  portal does not contain it and does not talk to it: the reader's browser
+  sends the order to ``<portal address>/api/orders/orders``.
+
+.. important::
+
+   The reverse proxy in front of the portal must publish the order service
+   under the portal's own address at ``/api/orders`` - the same origin, and
+   under the same prefix when the portal runs on a subpath. For Apache:
+
+   .. code-block:: apache
+
+      ProxyPass        "/api/orders" "http://orders.internal:8078/api/orders"
+      ProxyPassReverse "/api/orders" "http://orders.internal:8078/api/orders"
+
+   The rule has to precede the one forwarding the rest of ``/api`` to the
+   portal. Without it the basket works and every order fails on sending.
+
+``order.yaml`` (``webResources.order``) turns the feature on:
+
+.. code-block:: yaml
+
+   script: order-item-info.groovy   # resolved next to this file
+   apuTypes: [ARCH_DESC]            # record types that can be ordered
+   itemTypes: [STORAGE]             # optional
+
+``apuTypes`` and ``itemTypes`` decide where "Order" is **offered**. With
+``itemTypes`` only a record whose description carries at least one of the
+listed items can be ordered - ``[STORAGE]`` limits orders to records with a
+storage unit; the codes are written as in ``types.yaml``. An item marked
+invisible counts: invisible means "not displayed", not "absent". Without the
+key every record of the listed types can be ordered. Without
+``webResources.order`` the portal offers no orders at all, and a basket a
+reader filled earlier is not shown. The shipped ``application.yml.template``
+sets the key, so a deployment that has no order service comments it out.
+
+Everything the portal can check, it checks at **startup**: an unknown key, an
+unknown record or item type, a missing script, a script that does not compile.
+
+The order script
+----------------
+
+The script is Groovy and receives the same four variables as a citation
+script (``id``, ``apuRepository``, ``objectMapper``, ``lang``). It returns
+JSON describing the record, in the vocabulary of the order service, which
+receives it unchanged:
+
+.. code-block:: groovy
+
+   objectMapper.writeValueAsString([
+       archivalie : [cisloNad: 4711, dilciList: null,
+                     nazevArchivnihoSouboru: "Farní úřad Testov",
+                     ukladaciJednotka: "kart. 5",
+                     archivniIdentifikator: "ref. ozn. I/7, inv. č. 3",
+                     jineOznaceni: "sign. A 12",
+                     popis: "Kronika obce", uplnyPopis: "... / Kronika obce",
+                     datace: "1850 - 1900"],
+       institution: [name: "Státní okresní archiv Testov", code: "226101010"],
+   ])
+   objectMapper.writeValueAsString([error: "Fund part not exist"])
+
+``archivalie.cisloNad`` and the institution's ``name`` and ``code`` are
+required - the reading room finds the material by the number and the order
+service routes the order by the code. ``archivalie.url`` is filled in by the
+portal's UI with the record's public address.
+
+An archive with several reading rooms adds ``badatelna: [name: ..., code:
+...]`` for the records that belong to one; the basket then keeps a separate
+order per reading room and the order carries its code. The shipped script
+names none.
+
+The shipped ``order-item-info.groovy`` describes an archival description
+through its fonds and that fonds' institution, and is what a deployment should
+start from.
+
+.. important::
+
+   A record the script cannot describe answers HTTP 422 and the reason is
+   written to the log; the reader is told that the record could not be added
+   and the basket stays as it was. In the shipped script that happens when an
+   archival description names no fonds, the fonds has no NAD number, or the
+   institution has no code (``INST_CODE``).
+
+Coming from the old portal
+--------------------------
+
+The old UI was switched with ``showOrders`` and ``orderItemTypes`` in
+``configuration.js`` and asked the old script endpoint for
+``order-item-info.groovy`` in the application's working directory. Both
+settings are now ``order.yaml``, the script belongs beside it, and the
+endpoint that ran a script named in the URL no longer does. An existing script
+keeps working with two changes: an error must be returned as ``error``
+(it always was - but the old UI put such an answer into the basket, the new
+portal refuses it), and the hard-coded reading room some deployments carried
+for testing should go. The order service and its address are unchanged.
+
 Structured search results
 =========================
 

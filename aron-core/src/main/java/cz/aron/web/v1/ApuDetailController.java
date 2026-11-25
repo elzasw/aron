@@ -1,5 +1,6 @@
 package cz.aron.web.v1;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import cz.aron.api.rest.model.ApuEntityTreeViewDto;
 import cz.aron.api.v1.ApuApi;
 import cz.aron.api.v1.model.ApuDetail;
@@ -25,6 +29,7 @@ import cz.aron.api.v1.model.Citation;
 import cz.aron.api.v1.model.DigitalObjectInfo;
 import cz.aron.api.v1.model.FileInfo;
 import cz.aron.api.v1.model.FileType;
+import cz.aron.api.v1.model.OrderItem;
 import cz.aron.api.v1.model.TreeDirection;
 import cz.aron.api.v1.model.TreeNode;
 import cz.aron.commons.HttpUtils;
@@ -36,6 +41,7 @@ import cz.aron.mapper.ApuSerializer;
 import cz.aron.repository.ApuEntityRepository;
 import cz.aron.service.ApuService;
 import cz.aron.service.CitationService;
+import cz.aron.service.OrderService;
 
 /**
  * Implements the /api/v1 APU detail: the render model of D-9 - display-ready
@@ -74,9 +80,14 @@ public class ApuDetailController implements ApuApi {
 
 	private final CitationService citationService;
 
+	private final OrderService orderService;
+
+	private final ObjectMapper objectMapper;
+
 	public ApuDetailController(ApuEntityRepository apuEntityRepository, ApuService apuService,
 			ApuDetailBuilder detailBuilder, PresentationLocales presentationLocales, DaoFileUrls daoFileUrls,
-			CitationService citationService, DaoFooterConfig daoFooterConfig, DeploymentImages images) {
+			CitationService citationService, DaoFooterConfig daoFooterConfig, DeploymentImages images,
+			OrderService orderService, ObjectMapper objectMapper) {
 		this.presentationLocales = presentationLocales;
 		this.apuEntityRepository = apuEntityRepository;
 		this.apuService = apuService;
@@ -85,6 +96,8 @@ public class ApuDetailController implements ApuApi {
 		this.citationService = citationService;
 		this.daoFooterConfig = daoFooterConfig;
 		this.images = images;
+		this.orderService = orderService;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -117,6 +130,11 @@ public class ApuDetailController implements ApuApi {
 				attachments(apu), digitalObjects(apu, locale));
 		detail.setDescription(apu.getDescription());
 		detail.setPermalink(apu.getPermalink());
+		// decided here rather than by the client: the requirement may rest on items
+		// that are not displayed, and those never reach the parts above
+		if (orderService.isOrderable(apu, parts)) {
+			detail.setOrderable(Boolean.TRUE);
+		}
 
 		return ResponseEntity.ok()
 				.cacheControl(cacheControl)
@@ -151,6 +169,36 @@ public class ApuDetailController implements ApuApi {
 				.body(citations.items().stream()
 						.map(item -> new Citation(item.code(), item.label(), item.text()))
 						.toList());
+	}
+
+	/**
+	 * What an order says about one record, composed by the deployment's order
+	 * script ({@link OrderService}). Not cached, as a citation is not.
+	 * <p>
+	 * A record that cannot be ordered answers 422 - one the detail never marked
+	 * {@code orderable}, and one the script cannot describe (a data error; the
+	 * missing piece is logged by the service). Never a 200 carrying an error:
+	 * the client puts the answer into the reader's basket as it is.
+	 */
+	@Override
+	public ResponseEntity<OrderItem> apuGetOrderItem(String uuid, String lang) {
+		ApuEntity apu = require(uuid);
+		if (!orderService.isOrderable(apu, ApuSerializer.deserialize(apu.getData()))) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "The record cannot be ordered.");
+		}
+		OrderItem item;
+		try {
+			// a deployment's script may say more than the contract carries
+			item = objectMapper.readerFor(OrderItem.class)
+					.without(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+					.readValue(orderService.orderItem(apu, presentationLocales.resolve(lang)));
+		} catch (OrderService.NotOrderableException e) {
+			throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+					"The record cannot be ordered: " + e.getMessage());
+		} catch (IOException e) {
+			throw new IllegalStateException("The order script returned an item of an unexpected shape", e);
+		}
+		return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(item);
 	}
 
 	@Override

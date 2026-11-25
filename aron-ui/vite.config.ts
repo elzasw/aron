@@ -52,6 +52,12 @@ function injectDeploymentPrefixTokens(): Plugin {
 // Dev server proxies the API to the Spring Boot backend so the SPA and API
 // share an origin - ideally the dev mode (`mvn spring-boot:run -Pdev` in
 // aron-core), which needs no external services.
+//
+// Orders are the exception: they are taken by the deployment's order service,
+// a separate application a reverse proxy publishes at /api/orders. The more
+// specific rule comes first - Vite uses the first prefix that matches.
+// ARON_ORDERS_URL points it elsewhere than a locally started service.
+const ordersUrl = process.env.ARON_ORDERS_URL ?? "http://localhost:8078";
 export default defineConfig({
   // Relative asset URLs in the built index.html; they resolve against the
   // server-injected <base href>, so one build works at "/" and under a subpath.
@@ -60,6 +66,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
+      "/api/orders": ordersUrl,
       "/api": "http://localhost:8080",
     },
   },

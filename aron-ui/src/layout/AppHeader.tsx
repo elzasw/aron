@@ -16,6 +16,7 @@ import { Link, NavLink, useHref, useLocation, useNavigate } from "react-router-d
 import { logoUrl } from "../api/client";
 import { useUiConfig } from "../api/useUiConfig";
 import { MenuItem } from "../api/generated";
+import BasketButton from "../orders/BasketButton";
 import { SECTIONS } from "../sections";
 import { STACKED } from "./breakpoints";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -177,6 +178,9 @@ export default function AppHeader() {
           ))}
         </nav>
       )}
+      {/* the reader's order basket: present only where the deployment takes
+          orders and something has been put in */}
+      <BasketButton />
       <LanguageSwitcher localizations={config?.localizations ?? []} />
     </header>
   );

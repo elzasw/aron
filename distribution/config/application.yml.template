@@ -54,6 +54,13 @@ webResources:
   # Skripty, ktere citaci sestavuji, se hledaji vedle uvedeneho souboru;
   # prekladatelne nazvy forem patri do citation_localization.yaml vedle nej.
   citation: ./config/citation.yaml
+  # Objednavky archivalii - volitelne. Bez tohoto klice portal objednavky
+  # nenabizi. Soubor rika, ktere zaznamy lze objednat a kterym skriptem se
+  # sestavi polozka objednavky; objednavku sama prijima objednavkova sluzba,
+  # ktera musi byt zverejnena vedle portalu na adrese /api/orders. Nasazeni
+  # bez objednavkove sluzby klic zakomentuje - jinak by ctenar kosik naplnil
+  # a kazde odeslani objednavky by selhalo.
+  order: ./config/order.yaml
   # Atribuce digitalizatu - volitelne: venovani (stala podekovaci veta) a
   # licencni vety parovane podle licencniho kodu digitalizatu (kod 'default'
   # je zachytny). Texty se pisi jako veta s {odkazy} nad mapou odkazu, stejne

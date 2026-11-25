@@ -71,6 +71,8 @@ webResources:
   # the SHIPPED citation configuration and script: their agreed wording is what
   # CitationTest pins, so the suite guards the deployment artifact itself
   citation: ../distribution/config/citation.yaml
+  # likewise the SHIPPED order configuration and script (OrderTest)
+  order: ../distribution/config/order.yaml
   images: ./src/test/resources/test-config/images
   # attribution of digital objects; DaoServingTest asserts the resolved footer
   daoFooter: ./src/test/resources/test-config/daoFooter.yaml

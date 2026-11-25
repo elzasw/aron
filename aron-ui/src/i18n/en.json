@@ -192,6 +192,67 @@
     "close": "Close",
     "error": "A citation of this record could not be created."
   },
+  "orders": {
+    "add": "Order",
+    "addFor": "Order {{name}}",
+    "remove": "Remove from order",
+    "removeFor": "Remove from order: {{name}}",
+    "added": "Added to the order basket.",
+    "removed": "Removed from the order basket.",
+    "addFailed": "This record could not be added to the order.",
+    "accessType": {
+      "NAHLIZENI": "Consultation",
+      "REPLIKA": "Reproduction and replica",
+      "OVERENI_SHODY": "Verification of conformity"
+    },
+    "basket": {
+      "button_one": "Order basket: {{count}} record",
+      "button_other": "Order basket: {{count}} records",
+      "title": "Order basket",
+      "empty": "The basket is empty.",
+      "removeGroup": "Remove all records of {{addressee}}",
+      "accessTypeOf": "Form of access to {{name}}",
+      "order": "Order",
+      "orderFrom": "Order from {{addressee}}",
+      "clear": "Empty the basket",
+      "close": "Close",
+      "groupRemoved": "The records of {{addressee}} were removed from the basket.",
+      "emptied": "The basket was emptied.",
+      "itemRemoved": "{{name}} was removed from the basket.",
+      "sent": "The order for {{addressee}} was sent."
+    },
+    "confirm": {
+      "title": "Confirmation",
+      "yes": "Confirm",
+      "no": "Cancel",
+      "send": "Send the order?",
+      "removeGroup": "Remove all records of {{addressee}} from the basket?",
+      "clear": "Empty the whole basket?"
+    },
+    "form": {
+      "title": "Reservation of archival material",
+      "name": "Your name and surname",
+      "email": "Your e-mail",
+      "phone": "Phone number",
+      "remember": "Remember these details",
+      "subject": "Subject of the message",
+      "defaultSubject": "Preliminary reservation of archival material",
+      "reserveDate": "Reserve for (date)",
+      "summaryFor": "Basket contents – {{addressee}}",
+      "messageFor": "Message for {{addressee}}",
+      "required": "This field is required.",
+      "invalidEmail": "The e-mail address is not valid.",
+      "send": "Send",
+      "cancel": "Cancel",
+      "sending": "Sending the order",
+      "sendFailed": "The order could not be sent. Please try again later.",
+      "summary": {
+        "nad": "NAD number: {{number}}",
+        "subNumber": "Sub-number: {{number}}",
+        "link": "Direct link: {{url}}"
+      }
+    }
+  },
   "notFound": {
     "heading": "Page not found",
     "home": "Back to home"
