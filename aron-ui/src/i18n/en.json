@@ -79,6 +79,8 @@
     "error": "The search failed, please try again.",
     "pagination": "Result pagination",
     "paginationBottom": "Result pagination, below the results",
+    "jumpBack": "{{pages}} pages back",
+    "jumpForward": "{{pages}} pages forward",
     "page": "Page {{page}}",
     "firstPage": "First page",
     "prevPage": "Previous page",

@@ -11,6 +11,8 @@ installs, the date is its release date.
 Unreleased
 ----------
 
+- New: the pager of the search results can skip ten pages back and forward,
+  as in the old portal.
 - New: the pager is repeated below the search results, as in the old portal;
   using it there returns to the top of the list.
 - New: a "Clear filters" button in the search sidebar removes every active

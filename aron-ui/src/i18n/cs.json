@@ -81,6 +81,8 @@
     "error": "Vyhledávání se nezdařilo, zkuste to prosím znovu.",
     "pagination": "Stránkování výsledků",
     "paginationBottom": "Stránkování výsledků pod seznamem",
+    "jumpBack": "O {{pages}} stránek zpět",
+    "jumpForward": "O {{pages}} stránek vpřed",
     "page": "Stránka {{page}}",
     "firstPage": "První stránka",
     "prevPage": "Předchozí stránka",

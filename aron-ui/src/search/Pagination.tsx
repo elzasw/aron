@@ -8,11 +8,23 @@ import {
   tokens,
   useId,
 } from "@fluentui/react-components";
-import type { ReactNode } from "react";
+import {
+  ArrowNext16Regular,
+  ArrowPrevious16Regular,
+  ChevronDoubleLeft16Regular,
+  ChevronDoubleRight16Regular,
+  ChevronLeft16Regular,
+  ChevronRight16Regular,
+} from "@fluentui/react-icons";
+import type { ReactElement, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PRIMARY_DARK, PRIMARY_MAIN } from "../layout/AppHeader";
 
 const PAGE_SIZES = [10, 20, 50];
+// The window around the current page moves two pages a click and a capped
+// result is a thousand pages long: the old portal's ten-page jump covers the
+// distance between a neighbour and the ends.
+const PAGE_JUMP = 10;
 
 const useStyles = makeStyles({
   bar: {
@@ -88,25 +100,34 @@ export default function Pagination({ page, size, total, onPage, onSize, controls
     pages.push(p);
   }
 
-  const pager = (label: string, target: number, disabled: boolean, symbol: string) => (
+  const pager = (label: string, target: number, disabled: boolean, icon: ReactElement) => (
     <Button
       className={styles.pageButton}
       appearance="subtle"
       shape="circular"
       size="small"
+      icon={icon}
       aria-label={label}
       title={label}
       disabled={disabled}
       onClick={() => onPage(target)}
-    >
-      {symbol}
-    </Button>
+    />
   );
 
   return (
     <nav className={styles.bar} aria-label={label ?? t("search.pagination")}>
-      {pager(t("search.firstPage"), 1, page <= 1, "«")}
-      {pager(t("search.prevPage"), page - 1, page <= 1, "‹")}
+      {/* the icons are the scan viewer's set (ViewerToolbar), so the portal's two
+          page navigations read alike: bar-and-arrow for an end, double chevron
+          for the jump - the meaning it had in the old portal. Nearer than a
+          jump to an end it lands on the end, as the old one did */}
+      {pager(t("search.firstPage"), 1, page <= 1, <ArrowPrevious16Regular />)}
+      {pager(
+        t("search.jumpBack", { pages: PAGE_JUMP }),
+        Math.max(1, page - PAGE_JUMP),
+        page <= 1,
+        <ChevronDoubleLeft16Regular />,
+      )}
+      {pager(t("search.prevPage"), page - 1, page <= 1, <ChevronLeft16Regular />)}
       {pages[0] > 1 && <Text size={200}>…</Text>}
       {pages.map((p) => (
         <Button
@@ -125,8 +146,14 @@ export default function Pagination({ page, size, total, onPage, onSize, controls
         </Button>
       ))}
       {pages[pages.length - 1] < pageCount && <Text size={200}>…</Text>}
-      {pager(t("search.nextPage"), page + 1, page >= pageCount, "›")}
-      {pager(t("search.lastPage"), pageCount, page >= pageCount, "»")}
+      {pager(t("search.nextPage"), page + 1, page >= pageCount, <ChevronRight16Regular />)}
+      {pager(
+        t("search.jumpForward", { pages: PAGE_JUMP }),
+        Math.min(pageCount, page + PAGE_JUMP),
+        page >= pageCount,
+        <ChevronDoubleRight16Regular />,
+      )}
+      {pager(t("search.lastPage"), pageCount, page >= pageCount, <ArrowNext16Regular />)}
       <div className={styles.spacer} />
       {controls !== undefined && <div className={styles.controls}>{controls}</div>}
       <div className={styles.pageSize}>
