@@ -53,6 +53,7 @@
     "relatedTo": "Souvisí s",
     "relatedRemove": "Odebrat filtr souvisejících",
     "activeFilters": "Aktivní filtry",
+    "clearFilters": "Zrušit filtry",
     "advanced": {
       "open": "Všechny filtry",
       "title": "Všechny filtry",

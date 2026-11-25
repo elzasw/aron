@@ -1,5 +1,5 @@
 import { Button, Input, makeStyles, Select, Spinner, Text, Title3, tokens } from "@fluentui/react-components";
-import { Filter20Regular } from "@fluentui/react-icons";
+import { Filter20Regular, FilterDismiss20Regular } from "@fluentui/react-icons";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApiLanguage } from "../i18n/useApiLanguage";
 import { useEffect, useMemo, useState } from "react";
@@ -336,6 +336,18 @@ export default function SearchView({ apuType, titleKey }: { apuType?: ApuType; t
             {t("search.button")}
           </Button>
         </div>
+        {/* the one action over the whole sidebar, so it sits above the facets it
+            acts on; shown only while there is something to clear, which also
+            tells the reader that the results are narrowed */}
+        {filters.length > 0 && (
+          <Button
+            appearance="subtle"
+            icon={<FilterDismiss20Regular />}
+            onClick={() => onFilters([])}
+          >
+            {t("search.clearFilters")}
+          </Button>
+        )}
         {/* a relation constraint is shown once: by the facet panel where that is
             offered, by chips where it is not (a section search, or a constraint
             an action elsewhere set before the definitions arrived) */}

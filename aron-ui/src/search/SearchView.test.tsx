@@ -221,6 +221,41 @@ describe("SearchView, general search", () => {
     );
   });
 
+  it("clears every filter at once and returns to the first page", async () => {
+    const filters = [
+      { kind: FilterKind.Values, facet: TYPE_FACET, values: ["FUND"] },
+      { kind: FilterKind.Range, facet: DATE_FACET, from: "1850", to: "1900" },
+    ];
+    const { container } = renderGeneralSearch(
+      `/apu?q=praha&p=2&f=${encodeURIComponent(JSON.stringify(filters))}`,
+    );
+    await waitFor(() =>
+      expect(searchSearch).toHaveBeenCalledWith(
+        expect.objectContaining({ apuSearchRequest: expect.objectContaining({ from: 10 }) }),
+      ),
+    );
+    await expectNoA11yViolations(container);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Clear filters" }));
+
+    // the query is not a filter: it keeps its own box, and stays
+    await waitFor(() =>
+      expect(searchSearch.mock.calls.at(-1)?.[0]).toEqual(
+        expect.objectContaining({
+          apuSearchRequest: expect.objectContaining({ query: "praha", filters: [], from: 0 }),
+        }),
+      ),
+    );
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  });
+
+  it("offers nothing to clear while no filter is active", async () => {
+    renderGeneralSearch();
+    await screen.findByRole("heading", { level: 2, name: "Dating" });
+
+    expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+  });
+
   it("offers only records a relation can point at, and says which is which", async () => {
     renderGeneralSearch();
     const picker = await screen.findByRole("textbox", { name: "Related to – find a record" });

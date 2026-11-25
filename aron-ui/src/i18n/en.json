@@ -53,6 +53,7 @@
     "relatedTo": "Related to",
     "relatedRemove": "Remove the relation filter",
     "activeFilters": "Active filters",
+    "clearFilters": "Clear filters",
     "advanced": {
       "open": "All filters",
       "title": "All filters",
